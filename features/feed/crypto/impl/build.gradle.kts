@@ -1,6 +1,7 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
     id("configuration")
@@ -33,6 +34,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.decompose)
+    implementation(projects.core.navigation)
     implementation(projects.core.pagination)
     implementation(projects.core.remote)
     implementation(projects.core.ui)
@@ -50,6 +52,7 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.ui.tooling)
     implementation(deps.lifecycle.compose)
+    api(deps.decompose.ext.compose)
 
     /* Other */
     implementation(deps.androidx.appCompat)
@@ -57,6 +60,7 @@ dependencies {
     implementation(deps.decompose)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
 
     /* DI */
     implementation(deps.hilt.android)
@@ -66,4 +70,5 @@ dependencies {
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
     testImplementation(tangemDeps.blockchain)
+    testImplementation(deps.kotlin.serialization)
 }

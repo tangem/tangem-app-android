@@ -26,9 +26,10 @@ sealed interface TransactionItemUM {
     /**
      * Content state.
      *
-     * @property amount         signed numeric value, e.g. "+0.500913" / "-350.31"; no currency symbol embedded.
-     *                          `null` hides the numeric value while [currencySymbol] still shows.
-     * @property currencySymbol currency symbol shown alongside [amount], e.g. "BTC", "USDT"
+     * @property amount             signed numeric value, e.g. "+0.500913" / "-350.31"; no currency symbol embedded.
+     *                              `null` hides the numeric value while [currencySymbol] still shows.
+     * @property currencySymbol     currency symbol shown alongside [amount], e.g. "BTC", "USDT"
+     * @property isPendingSignature awaiting other co-signers (Joint account); shows a clock badge + "Pending" pill
      */
     data class Content(
         override val txHash: String,
@@ -43,6 +44,7 @@ sealed interface TransactionItemUM {
         val subtitle: ContentSubtitle,
         val timestamp: Long,
         val warning: TextReference? = null,
+        val isPendingSignature: Boolean = false,
     ) : TransactionItemUM {
 
         @Immutable
@@ -50,6 +52,7 @@ sealed interface TransactionItemUM {
             data object Failed : Status()
             data object Confirmed : Status()
             data object Unconfirmed : Status()
+            data object PendingSignature : Status()
         }
 
         enum class Direction {
@@ -65,20 +68,24 @@ sealed interface TransactionItemUM {
         data class Plain(val text: TextReference) : ContentSubtitle
 
         /**
-         * Plain-text address subtitle without an identicon — renders "prefix: <address>", where [highlight]
+         * Plain-text address subtitle without an identicon — renders "prefix: <address>", where [address]
          * (a substring of the resolved [text]) is painted in the primary text color while the prefix stays
          * tertiary. Used for contract / validator addresses, external swap addresses and yield "for: <address>".
+         *
+         * [text] carries the **raw** address, never a pre-shortened one: the row shortens it to the width the
+         * subtitle gets. See `EllipsisText`.
          */
-        data class PlainAddress(val text: TextReference, val highlight: String) : ContentSubtitle
+        data class PlainAddress(val text: TextReference, val address: String) : ContentSubtitle
 
         /**
-         * External counterparty address — renders as "to/from: <identicon> <briefAddress>".
+         * External counterparty address — renders as "to/from: <identicon> <rawAddress>".
          * Used for Transfer to/from external addresses.
+         *
+         * The address is kept raw here; the row shortens it to the width the subtitle gets. See `EllipsisText`.
          */
         data class ExternalAddress(
             val direction: Direction,
             val rawAddress: String,
-            val briefAddress: String,
         ) : ContentSubtitle
 
         /**
@@ -87,9 +94,27 @@ sealed interface TransactionItemUM {
         data class OwnAccount(
             val direction: Direction,
             val accountName: TextReference,
-            @DrawableRes val iconResId: Int,
-            val iconBackgroundColor: Color,
+            val avatar: PortfolioAvatar,
         ) : ContentSubtitle
+
+        /**
+         * Leading avatar of whichever counterparty a subtitle names a portfolio for — an own account
+         * ([OwnAccount], [AssetOwner.Account]) or a saved contact ([Contact]). Resolved from that portfolio's icon:
+         * the default `Letter` icon renders the [Monogram] of [Monogram.name], any icon picked in the editor renders
+         * as [Resource].
+         *
+         * [Monogram] carries the whole name rather than its first character because an account name is a
+         * [TextReference] — the main account's title is a localized resource, so its letter is only known once the
+         * reference resolves against the composition's resources. The shape is the enclosing subtitle's call, not the
+         * avatar's: a circle for a contact, a rounded square for an account.
+         */
+        @Immutable
+        sealed interface PortfolioAvatar {
+
+            data class Monogram(val name: TextReference, val color: Color) : PortfolioAvatar
+
+            data class Resource(@DrawableRes val resId: Int, val color: Color) : PortfolioAvatar
+        }
 
         /**
          * Counterparty matches one of the user's own Tangem Pay (Payment) accounts — renders as
@@ -105,6 +130,16 @@ sealed interface TransactionItemUM {
             val direction: Direction,
             val walletName: String,
             val deviceIconUM: DeviceIconUM,
+        ) : ContentSubtitle
+
+        /**
+         * Counterparty saved in one of the user's address books — renders as "to/from: <avatar> <contactName>" in
+         * place of the address, on either side of any transaction the address is shown for.
+         */
+        data class Contact(
+            val direction: Direction,
+            val contactName: String,
+            val avatar: PortfolioAvatar,
         ) : ContentSubtitle
 
         /**
@@ -126,22 +161,33 @@ sealed interface TransactionItemUM {
         ) : ContentSubtitle
 
         /**
-         * The own portfolio a swap leg settled in, shown as the "in <owner>" tail of an [Asset] subtitle. Mirrors the
-         * icon placement of the standalone owner subtitles: [Account] / [PaymentAccount] render the icon before the
-         * name, [Wallet] renders the name before its device icon.
+         * The counterparty a swap leg settled with, shown as the "in <owner>" tail of an [Asset] subtitle — one of the
+         * user's own portfolios, or the [Contact] a foreign payout address is saved as. Mirrors the icon placement of
+         * the standalone owner subtitles: [Account] / [PaymentAccount] / [Contact] render the icon before the name,
+         * [Wallet] renders the name before its device icon.
          */
         @Immutable
         sealed interface AssetOwner {
             data class Account(
                 val name: TextReference,
-                @DrawableRes val iconResId: Int,
-                val iconBackgroundColor: Color,
+                val avatar: PortfolioAvatar,
             ) : AssetOwner
 
             data class PaymentAccount(val name: TextReference) : AssetOwner
 
             data class Wallet(val name: String, val deviceIconUM: DeviceIconUM) : AssetOwner
+
+            /** Payout address saved in an address book — its [avatar] is drawn as a circle, as contacts are. */
+            data class Contact(val name: String, val avatar: PortfolioAvatar) : AssetOwner
         }
+
+        /**
+         * What a fee-only row was paid for — "Send <token icon> USDT"; its amount is the fee itself, not anything
+         * [symbol] moved. A row that cannot name its asset falls back to [Plain].
+         *
+         * @property icon token avatar drawn before the ticker; `null` renders the ticker alone.
+         */
+        data class FeeFor(val symbol: String, val icon: CurrencyIconState?) : ContentSubtitle
 
         /**
          * DeFi provider counterparty — renders as "to/from: <provider icon> <name>", e.g. "from: 🟣 Aave".
@@ -170,7 +216,8 @@ sealed interface TransactionItemUM {
      *                           unlimited approval, a resolved word like "Unlimited"; null for kinds that don't
      *                           carry amount (Vote, Withdraw, Yield mode)
      * @property currencySymbol  currency symbol rendered after [amount]; null when [amount] is null
-     * @property subtitle        optional subtitle (e.g. "to: 33Bd...ga2B" with avatar) for Approve
+     * @property subtitle        optional subtitle — the spender address for Approve, the DeFi provider for a yield
+     *                           supply / withdrawal
      */
     data class Pill(
         override val txHash: String,
@@ -187,13 +234,29 @@ sealed interface TransactionItemUM {
     enum class PillKind {
         STAKING,
         YIELD_MODE,
+
+        /** Funds moved in or out of the yield position — a settled one carries no leading icon, only its provider. */
+        YIELD_SUPPLY,
         APPROVE,
     }
 
     @Immutable
     sealed interface PillSubtitle {
-        /** Address subtitle with inline IdentIcon (Blockies 8×8, hashed from [rawAddress]). */
-        data class Address(val rawAddress: String, val briefAddress: String) : PillSubtitle
+        /**
+         * Address subtitle with inline IdentIcon (Blockies 8×8, hashed from [rawAddress]). The address is kept raw
+         * here; the pill shortens it to the width it gets. See `EllipsisText`.
+         */
+        data class Address(val rawAddress: String) : PillSubtitle
+
+        /**
+         * DeFi provider the funds moved to or from — "to:/from: <provider icon> Aave", the pill's counterpart of
+         * [ContentSubtitle.Provider]: [iconResId] is a bundled full-color drawable rendered untinted in a circle.
+         */
+        data class Provider(
+            val direction: ContentSubtitle.Direction,
+            val name: TextReference,
+            @DrawableRes val iconResId: Int,
+        ) : PillSubtitle
     }
 
     data class Loading(override val txHash: String) : TransactionItemUM

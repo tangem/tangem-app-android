@@ -39,9 +39,9 @@ import kotlin.math.abs
  *                and every onramp purchase are always kept so the user still sees their deals.
  *
  * On-chain transactions no express op claimed pass through as [OnChainTx]. Claiming is per *tx identity*
- * (`identityKey` — hash + type), not per hash: a gasless flow surfaces several events under one on-chain hash and each
- * is a row of its own. Express rows are emitted before the pass-through ones and the sort is stable, so the gasless
- * fee kept apart from the merged row lands right below it — both carry the block's timestamp.
+ * ([identityKey]), not per hash: one on-chain hash can surface as several rows — the deal's payload and the events
+ * kept out of it. Express rows are emitted before the pass-through ones and the sort is stable, so a row kept apart
+ * from the merged one lands right below it — both carry the block's timestamp.
  *
  * @param currency the open currency: its [ExpressAsset.ID] scopes the heuristics to legs of this token (network +
  *  contract — replacing the per-leg token/network check, since [TxInfo] carries no network of its own), and its
@@ -88,7 +88,7 @@ internal fun mergeTxHistoryInfos(
         }
     }
 
-    // Phase 3 — on-chain txs no express op claimed pass through, each event of a shared hash as its own row.
+    // Phase 3 — on-chain txs no express op claimed pass through, each row of a shared hash on its own.
     onChain.forEach { tx ->
         if (tx.identityKey() !in claimedKeys) result += OnChainTx.BSDK(tx)
     }
@@ -135,13 +135,22 @@ internal fun mergeTangemPay(onChain: List<OnChainTx.TangemPay>, express: List<Ex
 /**
  * Which tx of this same-hash group is the express op's on-chain leg.
  *
- * A gasless flow surfaces several events under one hash (`GaslessFee` + the payload tx, e.g. the swap): the payload is
- * the deal's leg, while the fee is a separate charge that stays a row of its own right below the merged one. A group
- * carrying nothing but the fee event (the payload tx is not part of the loaded page) falls back to it — otherwise the
- * op would lose its on-chain leg and surface as a standalone live row next to the fee it paid.
+ * One hash reaches the merge as several rows: the deal's payload, plus the events kept out of it because they carry a
+ * meaning of their own (a yield withdrawal, a gasless fee — see `SdkTransactionHistoryItemConverter`). Only the
+ * payload is the deal's leg; claiming a kept-apart row instead would swallow it into the express row and lose it from
+ * the history. A group carrying nothing but the fee event (the payload is not part of the loaded page) falls back to
+ * it — otherwise the op would lose its on-chain leg and surface as a standalone live row next to the fee it paid.
  */
-private fun List<TxInfo>.expressLeg(): TxInfo? = firstOrNull { it.type != TxInfo.TransactionType.GaslessFee }
-    ?: firstOrNull()
+private fun List<TxInfo>.expressLeg(): TxInfo? = firstOrNull { it.type.isDealPayload() }
+    ?: firstOrNull { it.type is TxInfo.TransactionType.GaslessFee }
+
+private fun TxInfo.TransactionType.isDealPayload(): Boolean = when (this) {
+    is TxInfo.TransactionType.GaslessFee,
+    is TxInfo.TransactionType.YieldSupply.Exit,
+    is TxInfo.TransactionType.YieldSupply.Send,
+    -> false
+    else -> true
+}
 
 private fun ExpressTx.withMatchedOnChain(onChain: OnChainTx): ExpressTx = when (this) {
     is ExpressTx.Swap -> copy(txInfo = onChain)

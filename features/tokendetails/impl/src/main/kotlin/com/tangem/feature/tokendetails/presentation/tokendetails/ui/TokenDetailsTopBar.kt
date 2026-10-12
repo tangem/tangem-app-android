@@ -2,11 +2,13 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.ui
 
 import android.content.res.Configuration
 import androidx.annotation.StringRes
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -24,26 +26,28 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.account.AccountIconSize
-import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
-import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
-import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.components.haze.ProvideHaze
+import com.tangem.core.ui.ds.contextmenu.TangemContextMenu
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_eye_cross_24
+import com.tangem.core.ui.res.generated.icons.ic_globe_24
+import com.tangem.core.ui.test.PopUpMenuTestTags
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -68,31 +72,7 @@ internal fun TokenDetailsTopBar(topAppBarUM: TokenDetailsTopAppBarUM, modifier: 
             )
         },
         endButton = if (topAppBarUM.menuItems.isNotEmpty()) {
-            {
-                var isDropdownMenuShown by rememberSaveable { mutableStateOf(false) }
-                Box {
-                    TangemButton(
-                        modifier = Modifier.testTag(TokenDetailsTopBarTestTags.MORE_BUTTON),
-                        variant = TangemButton.Variant.Material,
-                        size = TangemButton.Size.X11,
-                        iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_more_default_24),
-                        onClick = { isDropdownMenuShown = true },
-                    )
-                    TangemDropdownMenu(
-                        expanded = isDropdownMenuShown,
-                        modifier = Modifier.background(TangemTheme.colors.background.primary),
-                        onDismissRequest = { isDropdownMenuShown = false },
-                        content = {
-                            topAppBarUM.menuItems.fastForEach { menuItem ->
-                                TangemDropdownItem(
-                                    item = menuItem,
-                                    dismissParent = { isDropdownMenuShown = false },
-                                )
-                            }
-                        },
-                    )
-                }
-            }
+            { TokenDetailsOverflowMenu(menuItems = topAppBarUM.menuItems) }
         } else {
             null
         },
@@ -111,6 +91,83 @@ internal fun TokenDetailsTopBar(topAppBarUM: TokenDetailsTopAppBarUM, modifier: 
             )
         },
     )
+}
+
+/**
+ * The top bar's "•••" button and its drop-down [TangemContextMenu]. The destructive row (Hide token) is separated from
+ * the rest by a divider; tapping any row closes the menu and fires its action.
+ */
+@Composable
+private fun TokenDetailsOverflowMenu(
+    menuItems: ImmutableList<TokenDetailsTopAppBarUM.MenuItemUM>,
+    modifier: Modifier = Modifier,
+) {
+    var isMenuShown by rememberSaveable { mutableStateOf(false) }
+    Box(modifier = modifier) {
+        TangemButton(
+            modifier = Modifier.testTag(TokenDetailsTopBarTestTags.MORE_BUTTON),
+            variant = TangemButton.Variant.Material,
+            size = TangemButton.Size.X11,
+            iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_more_default_24),
+            onClick = { isMenuShown = true },
+        )
+        TangemContextMenu(
+            expanded = isMenuShown,
+            onDismissRequest = { isMenuShown = false },
+        ) {
+            menuItems.fastForEachIndexed { index, menuItem ->
+                if (menuItem.isDestructive && index > 0) {
+                    HorizontalDivider(
+                        thickness = 0.5.dp,
+                        color = TangemTheme.colors2.border.neutral.quaternary,
+                    )
+                }
+                TokenDetailsMenuItem(
+                    item = menuItem,
+                    onClick = {
+                        isMenuShown = false
+                        menuItem.onClick()
+                    },
+                )
+            }
+        }
+    }
+}
+
+/**
+ * One row of the top bar's context menu: a leading 24dp glyph and a label, padded to the iOS-style menu metrics (20dp
+ * horizontal, 10dp vertical, 8dp gap). A [destructive][TokenDetailsTopAppBarUM.MenuItemUM.isDestructive] row is tinted
+ * with the error color (icon + text).
+ */
+@Composable
+private fun TokenDetailsMenuItem(
+    item: TokenDetailsTopAppBarUM.MenuItemUM,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 10.dp)
+            .testTag(PopUpMenuTestTags.BUTTON),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = item.icon,
+            contentDescription = null,
+            tint = if (item.isDestructive) TangemTheme.colors3.icon.status.error else TangemTheme.colors3.icon.primary,
+            modifier = Modifier.size(24.dp),
+        )
+        Text(
+            text = item.title.resolveReference(),
+            color = if (item.isDestructive) TangemTheme.colors3.text.status.error else TangemTheme.colors3.text.primary,
+            style = TangemTheme.typography3.body.medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
 }
 
 @Composable
@@ -431,10 +488,16 @@ private fun TokenDetailsTopBar_Preview(
                     subtitle = stringReference("ERC-20 in Ethereum network"),
                     onBackClick = {},
                     menuItems = persistentListOf(
-                        TangemDropdownMenuItem(
-                            title = stringReference("Hide Token"),
-                            textColor = themedColor { TangemTheme.colors.text.warning },
+                        TokenDetailsTopAppBarUM.MenuItemUM(
+                            title = stringReference("Explore"),
+                            icon = Icons.ic_globe_24,
                             onClick = {},
+                        ),
+                        TokenDetailsTopAppBarUM.MenuItemUM(
+                            title = stringReference("Hide token"),
+                            icon = Icons.ic_eye_cross_24,
+                            onClick = {},
+                            isDestructive = true,
                         ),
                     ),
                 ),

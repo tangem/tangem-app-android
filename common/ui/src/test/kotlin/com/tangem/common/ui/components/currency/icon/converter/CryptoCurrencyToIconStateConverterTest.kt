@@ -238,11 +238,7 @@ internal class CryptoCurrencyToIconStateConverterTest {
 
     // region helpers
 
-    private fun buildCoin(
-        isTestnet: Boolean,
-        isCustom: Boolean,
-        iconUrl: String?,
-    ): CryptoCurrency.Coin {
+    private fun buildCoin(isTestnet: Boolean, isCustom: Boolean, iconUrl: String?): CryptoCurrency.Coin {
         val network: Network = mockk { every { this@mockk.isTestnet } returns isTestnet }
         val coin: CryptoCurrency.Coin = mockk()
         every { coin.network } returns network

@@ -11,14 +11,23 @@ sealed interface AddressBookOpenMode {
 
     /**
      * Opened to create a contact for an already-known [address] on [networkId]. [memo] carries the destination tag /
-     * memo that went with it, when the network supports transaction extras and one was entered.
+     * memo that went with it, when the network supports transaction extras and one was entered. [source] is the screen
+     * the user came from — it only feeds analytics, since the editor itself behaves the same either way.
      */
     @Serializable
     data class WithContactCreation(
         val address: String,
         val networkId: String,
         val memo: String? = null,
+        val source: ContactCreationSource = ContactCreationSource.SendSuccess,
     ) : AddressBookOpenMode
+
+    /** Entry point that opened the contact editor with a prefilled address. */
+    @Serializable
+    enum class ContactCreationSource {
+        SendSuccess,
+        TransactionDetails,
+    }
 
     /**
      * Opened from the Send flow to pick a recipient. The list is filtered by [networkId] (the current send network),

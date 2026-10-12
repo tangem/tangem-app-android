@@ -24,13 +24,10 @@ import dagger.assisted.AssistedInject
 internal class AccountListConverter @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
     cryptoPortfolioConverterFactory: CryptoPortfolioConverter.Factory,
-    jointAccountConverterFactory: JointAccountConverter.Factory,
 ) : Converter<GetWalletAccountsResponse, AccountList> {
 
     private val cryptoPortfolioConverter: CryptoPortfolioConverter =
         cryptoPortfolioConverterFactory.create(userWallet)
-
-    private val jointAccountConverter: JointAccountConverter = jointAccountConverterFactory.create(userWallet)
 
     override fun convert(value: GetWalletAccountsResponse): AccountList {
         val sortType = value.wallet.sort?.let(TokensSortTypeConverter::convert) ?: TokensSortType.NONE
@@ -55,20 +52,12 @@ internal class AccountListConverter @AssistedInject constructor(
     }
 
     /**
-     * A row whose `type` this build does not know degrades to a crypto account: the field is raw on purpose, and a
-     * value the backend adds later must not cost the user the whole account list.
-     *
-     * `tokens` is normalised for the same reason. The crypto converter refuses a row without them, and such a row
-     * is exactly what an unknown type may legitimately look like — while the refusal is not even loud: the account
-     * list producer turns it into an endless retry, leaving the wallet screen dead with no visible cause.
+
+     * no tokens at all. The crypto converter refuses an account without them, and the refusal is not even loud — the
+     * account list producer turns it into an endless retry, leaving the wallet screen dead with no visible cause.
      */
     private fun convertAccount(value: WalletAccountDTO): Account {
-        return when (WalletAccountDTO.Type.of(raw = value.type)) {
-            WalletAccountDTO.Type.JOINT -> jointAccountConverter.convert(value)
-            WalletAccountDTO.Type.CRYPTO,
-            null,
-            -> cryptoPortfolioConverter.convert(value.copy(tokens = value.tokens.orEmpty()))
-        }
+        return cryptoPortfolioConverter.convert(value.copy(tokens = value.tokens.orEmpty()))
     }
 
     @AssistedFactory

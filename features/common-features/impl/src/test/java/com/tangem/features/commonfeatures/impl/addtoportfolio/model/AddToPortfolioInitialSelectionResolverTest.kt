@@ -7,6 +7,7 @@ import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
 import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -21,6 +22,8 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
+import io.mockk.Called
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -415,6 +418,32 @@ class AddToPortfolioInitialSelectionResolverTest {
         }
 
     @Test
+    fun `GIVEN joint account WHEN resolve THEN derivation is not checked and first network is picked`() = runTest {
+        val walletId = UserWalletId(WALLET_ID_A)
+        val userWallet = userWallet(walletId)
+        val account = jointAvailableAccount(availableToAddNetworks = setOf(ETHEREUM, BITCOIN))
+
+        val data = availableData(
+            wallets = mapOf(
+                walletId to walletEntry(
+                    userWallet = userWallet,
+                    accounts = mapOf(AccountId.forMainCryptoPortfolio(walletId) to account),
+                ),
+            ),
+        )
+
+        val result = resolver.resolve(
+            availableToAddData = data,
+            orderedNetworks = listOf(ETHEREUM, BITCOIN),
+            selectedWallet = userWallet,
+            tokenParams = tokenParams,
+        )
+
+        Truth.assertThat(result?.network).isEqualTo(ETHEREUM)
+        verify { networkHasDerivationUseCase wasNot Called }
+    }
+
+    @Test
     fun `GIVEN first ordered network has derivation WHEN resolve THEN pick first`() = runTest {
         val walletId = UserWalletId(WALLET_ID_A)
         val userWallet = userWallet(walletId)
@@ -661,8 +690,21 @@ class AddToPortfolioInitialSelectionResolverTest {
     ): AvailableToAddAccount = mockk {
         every { this@mockk.isAvailableToAdd } returns isAvailableToAdd
         every { this@mockk.availableToAddNetworks } returns availableToAddNetworks
-        every { account.account } returns mockk<Account.Personal> {
-            every { this@mockk.derivationIndex } returns derivationIndex
+        // The status is a sealed interface: MockK would mock it through an arbitrary subtype, so pin the personal one
+        every { this@mockk.account } returns mockk<AccountStatus.Personal> {
+            every { this@mockk.account } returns mockk<Account.Personal> {
+                every { this@mockk.derivationIndex } returns derivationIndex
+            }
+        }
+    }
+
+    private fun jointAvailableAccount(
+        availableToAddNetworks: Set<TokenMarketInfo.Network>,
+    ): AvailableToAddAccount = mockk {
+        every { this@mockk.isAvailableToAdd } returns true
+        every { this@mockk.availableToAddNetworks } returns availableToAddNetworks
+        every { this@mockk.account } returns mockk<AccountStatus.Joint> {
+            every { this@mockk.account } returns mockk<Account.Joint>()
         }
     }
 

@@ -35,14 +35,10 @@ import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
-import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.components.topFade
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.ds.button.*
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.message.TangemMessage
-import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -57,6 +53,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
+import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.features.tangempay.common.PayContextMenuBlock
@@ -165,38 +162,38 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
         }
     }
 
-    if (state.errorNotificationConfig != null) {
-        item("errorSessionBannerBlock") {
+    if (state.messageBanner != null) {
+        item("messageBannerBlock") {
             SpacerH12()
-            ErrorMessage(
-                config = state.errorNotificationConfig,
+            MessageBanner(
+                banner = state.messageBanner,
                 modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
             )
         }
     }
 
     val progressBanner = state.balanceBlockState.cardsBlockState?.progressBanner
-
     when (progressBanner) {
         CardsProgressBannerUM.Reissuing -> {
             item("reissuingBannerBlock") {
                 SpacerH12()
-                TangemMessage(
+                TangemMessageBanner(
                     modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
                     title = resourceReference(R.string.tangempay_reissue_card_in_progress),
-                    subtitle = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
+                    showGlowRing = false,
+                    description = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
                 )
             }
         }
         CardsProgressBannerUM.Issuing -> {
             item("issuingBannerBlock") {
                 SpacerH12()
-                TangemMessage(
+                TangemMessageBanner(
                     modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
                     title = resourceReference(R.string.tangempay_issuing_new_digital_card_title),
-                    subtitle = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
-                    contentColor = TangemTheme.colors3.bg.opaque.secondary,
-                    leadingContent = {
+                    showGlowRing = false,
+                    description = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
+                    slotStart = {
                         Icon(
                             modifier = Modifier.size(20.dp),
                             imageVector = ImageVector.vectorResource(R.drawable.ic_clock_24),
@@ -210,12 +207,12 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
         CardsProgressBannerUM.Activating -> {
             item("activatingBannerBlock") {
                 SpacerH12()
-                TangemMessage(
+                TangemMessageBanner(
                     modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
                     title = resourceReference(R.string.tangempay_card_activation_in_progress),
-                    subtitle = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
-                    contentColor = TangemTheme.colors3.bg.opaque.secondary,
-                    leadingContent = {
+                    showGlowRing = false,
+                    description = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
+                    slotStart = {
                         Icon(
                             modifier = Modifier.size(20.dp),
                             imageVector = ImageVector.vectorResource(R.drawable.ic_clock_24),
@@ -274,89 +271,30 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
                 )
             }
         }
-        null -> {
-            if (state.statusBannerState != null) {
-                item("messageBannerBlock") {
-                    SpacerH12()
-                    MessageBanner(
-                        banner = state.statusBannerState,
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    )
-                }
-            }
-        }
+        null -> Unit
     }
 }
 
 @Composable
 private fun MessageBanner(banner: MessageBannerUM, modifier: Modifier = Modifier) {
+    val state = banner.state
     val closeButton: (@Composable () -> Unit)? = banner.onClose?.let { onClose ->
         { TangemMessageBanner.CloseButton(onClick = onClose) }
     }
-    if (closeButton == null) {
-        TangemMessageBanner(state = banner.state, modifier = modifier)
-        return
-    }
-    val iconStart: (@Composable () -> Unit)? = banner.state.iconStart?.let { icon ->
-        { TangemIcon(icon) }
-    }
+    val iconEnd: (@Composable () -> Unit)? = state.iconEnd?.let { icon -> { TangemIcon(icon) } }
     TangemMessageBanner(
-        title = banner.state.title,
+        title = state.title,
         modifier = modifier,
-        variant = banner.state.variant,
-        contentAlign = banner.state.contentAlign,
-        showGlowRing = banner.state.shouldShowGlowRing,
-        description = banner.state.description,
-        secondaryButton = banner.state.secondaryButton,
-        primaryButton = banner.state.primaryButton,
-        slotStart = iconStart,
-        slotEnd = closeButton,
-    )
-}
-
-@Composable
-private fun ErrorMessage(config: NotificationConfig, modifier: Modifier = Modifier) {
-    val button = config.buttonsState
-    TangemMessage(
-        modifier = modifier,
-        title = config.title,
-        subtitle = config.subtitle,
-        trailingContent = config.iconResId.takeIf { it != 0 }?.let { iconRes ->
-            {
-                Icon(
-                    modifier = Modifier.size(20.dp),
-                    imageVector = ImageVector.vectorResource(iconRes),
-                    contentDescription = null,
-                    tint = TangemTheme.colors3.icon.primary,
-                )
-            }
+        variant = state.variant,
+        contentAlign = state.contentAlign,
+        showGlowRing = state.shouldShowGlowRing,
+        description = state.description,
+        secondaryButton = state.secondaryButton,
+        primaryButton = state.primaryButton,
+        slotStart = state.iconStart?.let { icon ->
+            { TangemIcon(icon, modifier = Modifier.testTag(NotificationTestTags.START_ICON)) }
         },
-        buttons = (button as? NotificationConfig.ButtonsState.SecondaryButtonConfig)?.let {
-            {
-                val iconResId = button.iconResId
-                TangemButton(
-                    buttonUM = TangemButtonUM(
-                        text = button.text,
-                        onClick = button.onClick,
-                        isLoading = button.shouldShowProgress,
-                        iconPosition = TangemButtonIconPosition.End,
-                        tangemIconUM = if (iconResId != null) {
-                            TangemIconUM.Icon(
-                                iconRes = iconResId,
-                                tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
-                            )
-                        } else {
-                            null
-                        },
-                        size = TangemButtonSize.X9,
-                        type = TangemButtonType.PrimaryInverse,
-                        shape = TangemButtonShape.Rounded,
-                    ),
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        },
-        messageEffect = TangemMessageEffect.Warning,
+        slotEnd = closeButton ?: iconEnd,
     )
 }
 

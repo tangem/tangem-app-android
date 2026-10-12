@@ -14,7 +14,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.utils.parseBigDecimal
-import com.tangem.datasource.local.swap.SwapBestRateAnimationStore
+import com.tangem.features.swap.v2.impl.amount.store.SwapBestRateAnimationStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressError
@@ -66,7 +66,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
-import java.util.Locale
 import javax.inject.Inject
 import kotlin.properties.Delegates
 import com.tangem.utils.transformer.update as transformerUpdate
@@ -111,7 +110,7 @@ internal class SwapAmountModel @Inject constructor(
     private var primaryFiatRateUSD: BigDecimal? = null
     private var secondaryFiatRateUSD: BigDecimal? = null
 
-    private var userCountry: UserCountry = UserCountry.Other(Locale.getDefault().country)
+    private var userCountry: UserCountry = UserCountry.fromDeviceLocale()
     val bottomSheetNavigation: SlotNavigation<SwapChooseProviderConfig> = SlotNavigation()
     val rateInfoNavigation: SlotNavigation<ExpressRateType> = SlotNavigation()
 
@@ -130,8 +129,7 @@ internal class SwapAmountModel @Inject constructor(
     init {
         modelScope.launch {
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
-            userCountry = getUserCountryUseCase.invokeSync().getOrNull()
-                ?: UserCountry.Other(Locale.getDefault().country)
+            userCountry = getUserCountryUseCase.invokeSync().getOrNull() ?: UserCountry.fromDeviceLocale()
             isShowBestRateAnimation = swapBestRateAnimationStore.getSyncOrNull()
         }
         subscribeOnCryptoCurrencyStatusFlow()

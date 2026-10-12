@@ -97,8 +97,10 @@ internal class PolymarketWalletBlockConverterTest {
     ) = PredictionAccountStatusValue.Active(
         source = source,
         balance = BigDecimal.TEN,
+        positionsValue = null,
         fiatRate = fiatRate,
-        isTradingAllowed = true,
+        depositCurrency = mockk(relaxed = true),
+        depositAddress = null,
     )
 
     internal data class BalanceModel(val status: PredictionAccountStatusValue, val expected: Class<*>)

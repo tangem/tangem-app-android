@@ -17,7 +17,6 @@ dependencies {
     implementation(projects.features.marketing.api)
 
     /** Core */
-    implementation(projects.core.datasource)
     implementation(projects.core.decompose)
     implementation(projects.core.res)
     implementation(projects.core.ui)
@@ -41,6 +40,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.models)
+    implementation(projects.domain.appsflyer)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.account.status)
@@ -86,13 +86,9 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Tests */
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
-    testImplementation(deps.test.coroutine)
+    testImplementation(projects.test.core)
     testImplementation(deps.arrow.core)
     testImplementation(deps.kotlin.coroutines)
     api(deps.kotlin.coroutines)
     api(projects.domain.networks)
-    api(projects.core.configToggles)
 }

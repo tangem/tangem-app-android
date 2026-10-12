@@ -12,13 +12,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.tangem.core.ui.components.bottomsheets.*
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioRoutes
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.uiSpec
@@ -97,13 +100,29 @@ private fun AddToPortfolioRouteContent(animatedStack: ChildStack<AddToPortfolioR
     }
 }
 
+/**
+ * The portfolio selector names itself — "Choose account" or "Choose wallet", depending on whether
+ * accounts mode is on — so its header is read off the component instead of the static route spec.
+ */
+@Composable
+private fun ChildStack<AddToPortfolioRoutes, ComposableContentComponent>.titleOfActiveRoute(): TextReference {
+    val spec = active.configuration.uiSpec()
+    val selector = active.instance as? PortfolioSelectorComponent
+    return if (active.configuration == AddToPortfolioRoutes.PortfolioSelector && selector != null) {
+        // the component names itself only once its portfolios have loaded, so the spec covers the gap
+        selector.title.collectAsStateWithLifecycle().value.takeIf { it != TextReference.EMPTY } ?: spec.title
+    } else {
+        spec.title
+    }
+}
+
 @Composable
 private fun AddToPortfolioBottomSheetTitle(
     stack: ChildStack<AddToPortfolioRoutes, ComposableContentComponent>,
     onCloseClick: () -> Unit,
 ) {
     TangemTopBar(
-        title = stack.active.configuration.uiSpec().title,
+        title = stack.titleOfActiveRoute(),
         type = TangemTopBarType.BottomSheet,
         endContent = {
             Icon(

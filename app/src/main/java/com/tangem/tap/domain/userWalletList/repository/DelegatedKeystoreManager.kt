@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.userWalletList.repository
 
+import com.tangem.common.authentication.keystore.AuthenticationPolicy
 import com.tangem.common.authentication.keystore.KeystoreManager
 import com.tangem.utils.Provider
 import javax.crypto.SecretKey
@@ -11,17 +12,17 @@ internal class DelegatedKeystoreManager(
     override suspend fun get(
         masterKeyConfig: KeystoreManager.MasterKeyConfig,
         keyAlias: String,
-        forceAuthentication: Boolean,
+        authenticationPolicy: AuthenticationPolicy,
     ): SecretKey? {
-        return keystoreManagerProvider().get(masterKeyConfig, keyAlias, forceAuthentication)
+        return keystoreManagerProvider().get(masterKeyConfig, keyAlias, authenticationPolicy)
     }
 
     override suspend fun get(
         masterKeyConfig: KeystoreManager.MasterKeyConfig,
         keyAliases: Set<String>,
-        forceAuthentication: Boolean,
+        authenticationPolicy: AuthenticationPolicy,
     ): Map<String, SecretKey> {
-        return keystoreManagerProvider().get(masterKeyConfig, keyAliases, forceAuthentication)
+        return keystoreManagerProvider().get(masterKeyConfig, keyAliases, authenticationPolicy)
     }
 
     override suspend fun store(masterKeyConfig: KeystoreManager.MasterKeyConfig, keyAlias: String, key: SecretKey) {

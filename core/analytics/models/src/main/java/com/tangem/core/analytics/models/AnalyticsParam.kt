@@ -69,6 +69,12 @@ sealed class AnalyticsParam {
         data object BlockchainSdk : Error("Blockchain Sdk Error")
     }
 
+    enum class ShtorkaState(val value: String) {
+        Collapsed("Collapsed"),
+        Half("Half"),
+        Full("Full"),
+    }
+
     @Serializable
     enum class ScreensSources(val value: String) {
         Settings("Settings"),
@@ -105,6 +111,11 @@ sealed class AnalyticsParam {
         Staking("Staking"),
         Earn("Earn"),
         ForYou("For You"),
+        Predictions("Predictions"),
+        HotCreation("Hot Creation"),
+        ColdCreation("Cold Creation"),
+        FirstSignIn("First Sign In"),
+        MainRequestSheet("Main Request Sheet"),
     }
 
     sealed class TxSentFrom(val value: String) {
@@ -123,6 +134,14 @@ sealed class AnalyticsParam {
             override val feeToken: String,
             override val feeAssetType: FeeAssetType,
         ) : TxSentFrom("Swap"), TxData
+
+        data class Transfer(
+            override val blockchain: String,
+            override val token: String,
+            override val feeType: FeeType,
+            override val feeToken: String,
+            override val feeAssetType: FeeAssetType,
+        ) : TxSentFrom("Transfer"), TxData
 
         data class Staking(
             override val blockchain: String,
@@ -321,6 +340,10 @@ sealed class AnalyticsParam {
         const val STATE = "State"
         const val BATCH = "Batch"
         const val TYPE = "Type"
+        const val FIELD = "Field"
+        const val SECTION = "Section"
+        const val SHTORKA_STATE = "Shtorka State"
+        const val CATEGORY = "Category"
         const val FEE_TYPE = "Fee Type"
         const val WALLET_FORM = "WalletForm"
         const val PERMISSION_TYPE = "Permission Type"
@@ -371,6 +394,11 @@ sealed class AnalyticsParam {
         const val SEARCHED = "Searched"
         const val RATE_TYPE = "Rate Type"
         const val SCREEN_TYPE = "Screen Type"
+        const val ENTRY_REASON = "Entry Reason"
+        const val SHEET = "Sheet"
+        const val DISMISS_REASON = "Dismiss Reason"
+        const val DOCUMENT = "Document"
+        const val STAGE = "Stage"
         const val FEE_ASSET_TYPE = "Fee Asset Type"
         const val SIGN_IN_TYPE = "Sign in type"
         const val WALLETS_COUNT = "Wallets Count"
@@ -382,7 +410,6 @@ sealed class AnalyticsParam {
         const val MANUAL_BACKUP = "Manual Backup"
         const val BACKUP_TYPE = "Backup Type"
         const val BACKUP_COUNT = "Backup Count"
-        const val USER_WALLET_ID = "User Wallet Id"
         const val MEMO = "Memo"
         const val VALUE = "Value"
     }

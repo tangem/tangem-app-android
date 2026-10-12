@@ -1,10 +1,10 @@
 package com.tangem.data.nft
 
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.datasource.local.nft.NFTPersistenceStore
-import com.tangem.datasource.local.nft.NFTPersistenceStoreFactory
-import com.tangem.datasource.local.nft.NFTRuntimeStore
-import com.tangem.datasource.local.nft.NFTRuntimeStoreFactory
+import com.tangem.data.nft.store.NFTPersistenceStore
+import com.tangem.data.nft.store.NFTPersistenceStoreFactory
+import com.tangem.data.nft.store.NFTRuntimeStore
+import com.tangem.data.nft.store.NFTRuntimeStoreFactory
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.*

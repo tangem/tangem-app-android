@@ -1,5 +1,6 @@
 package com.tangem.features.txhistory.model
 
+import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -9,13 +10,21 @@ import com.tangem.domain.txhistory.model.ExpressTx
 /**
  * The owner that a transfer counterparty resolves to, before it is mapped to a UI model. Shared by the history list
  * (subtitle) and the details screen (leg owner) so both apply the same precedence:
- * account (accounts mode on) → wallet (accounts mode off) → external address.
+ * account (accounts mode on) → wallet (accounts mode off) → saved contact → external address.
  */
 internal sealed interface ResolvedOwner {
     data class OwnAccount(val account: Account.CryptoPortfolio) : ResolvedOwner
     data class OwnPaymentAccount(val account: Account.Payment) : ResolvedOwner
     data class OwnWallet(val userWalletId: UserWalletId, val walletInfo: WalletInfo) : ResolvedOwner
-    data class External(val address: String) : ResolvedOwner
+
+    /** A counterparty that is none of the user's own portfolios, so it always has a plain [address]. */
+    sealed interface Foreign : ResolvedOwner {
+        val address: String
+    }
+
+    /** A foreign address saved in an address book — named after [contact] instead of shown as an address. */
+    data class SavedContact(val contact: Contact, override val address: String) : Foreign
+    data class External(override val address: String) : Foreign
 }
 
 /**
@@ -60,6 +69,29 @@ internal fun TxHistoryLookupContext.resolveOwner(address: String, networkRawId: 
 }
 
 /**
+ * Resolves a counterparty [address] the way it is displayed: [resolveOwner] first, and — when the address is none of
+ * the user's own portfolios — the address books, so a saved counterparty reads as its contact name instead of an
+ * address.
+ *
+ * The chain holds for every counterparty an address is shown for, whatever the transaction type and whichever side of
+ * it the address is on: own account → own wallet → saved contact → the raw address. The cross-network fallback of
+ * [resolveOwner] has no counterpart here — an address book entry is always bound to a concrete network, so
+ * [networkRawId] `null` stays external.
+ */
+internal fun TxHistoryLookupContext.resolveCounterparty(address: String, networkRawId: Network.RawID?): ResolvedOwner {
+    val owner = resolveOwner(address, networkRawId)
+    if (owner !is ResolvedOwner.External || networkRawId == null) return owner
+
+    val contact = contacts.resolve(
+        networkId = networkRawId,
+        address = address,
+        preferredWalletId = viewedWalletId,
+    ) ?: return owner
+
+    return ResolvedOwner.SavedContact(contact = contact, address = address)
+}
+
+/**
  * Resolves the (from, to) owners of a [swap]'s legs. Each leg's address is resolved on its own currency's network
  * ([resolveExpressLeg]); the pair is then reduced by [SwapLegOwners]' rules: a swap within one own portfolio names no
  * owner, and an own-wallet leg is dropped when the user has a single wallet.
@@ -86,11 +118,13 @@ internal fun TxHistoryLookupContext.resolveExpressLegOwner(
 
 /**
  * Raw resolution of a swap/onramp leg's [address] (on the leg currency's network) to its owner, before any display
- * rule. `null` when there is no address to resolve (e.g. onramp fiat has no address).
+ * rule. `null` when there is no address to resolve (e.g. onramp fiat has no address). Goes through
+ * [resolveCounterparty], so a leg settling on a saved address reads as that contact — the same naming a plain transfer
+ * to it gets.
  */
 private fun TxHistoryLookupContext.resolveExpressLeg(address: String?, legCurrency: CryptoCurrency?): ResolvedOwner? {
     if (address == null) return null
-    return resolveOwner(address, legCurrency?.network?.id?.rawId)
+    return resolveCounterparty(address, legCurrency?.network?.id?.rawId)
 }
 
 /**

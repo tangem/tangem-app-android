@@ -42,6 +42,16 @@ object EarnDomainModule {
     }
 
     @Provides
+    fun provideFetchEarnTokensCatalogUseCase(repository: EarnRepository): FetchEarnTokensCatalogUseCase {
+        return FetchEarnTokensCatalogUseCase(repository)
+    }
+
+    @Provides
+    fun provideGetEarnTokensCatalogUseCase(repository: EarnRepository): GetEarnTokensCatalogUseCase {
+        return GetEarnTokensCatalogUseCase(repository)
+    }
+
+    @Provides
     fun provideGetEarnTokensBatchFlowUseCase(repository: EarnRepository): GetEarnTokensBatchFlowUseCase {
         return GetEarnTokensBatchFlowUseCase(repository)
     }

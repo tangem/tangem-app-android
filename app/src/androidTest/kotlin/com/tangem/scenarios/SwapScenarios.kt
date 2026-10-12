@@ -351,7 +351,7 @@ private fun BaseTestCase.navigateToSwapForToken(tokenName: String, fromAccountNa
         }
     }
     step("Click on token with name: '$tokenName'") {
-        onMainScreen { findTokenInAnyAccountByName(tokenName).clickWithAssertion() }
+        openTokenDetailsFromAccountSection(tokenName)
     }
     step("Open 'Swap' screen") {
         openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false)
@@ -389,7 +389,7 @@ fun BaseTestCase.openSwapFromZeroBalanceToken(tokenName: String, accountName: St
         }
     }
     step("Click on token with name: '$tokenName'") {
-        onMainScreen { findTokenInAnyAccountByName(tokenName).clickWithAssertion() }
+        openTokenDetailsFromAccountSection(tokenName)
     }
     step("Assert 'Token details' screen is displayed") {
         onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -474,6 +474,29 @@ fun BaseTestCase.changeReceiveToken(tokenName: String) {
     }
 }
 
+/** Opens the FROM token selector via the swap-card icon. The balance filter is only wired for FROM, not TO. */
+fun BaseTestCase.openSwapFromTokenSelector() {
+    step("Click on 'Select token' icon in 'From' field") {
+        onSwapTokenScreen { swapSelectTokenIcon.performClick() }
+    }
+}
+
+/**
+ * Opens the balance-filter dropdown on the FROM token selector and picks [filterLabel].
+ *
+ * The chip only renders once the portfolio block loads, so wait for it before clicking — callers may
+ * reach this right after opening the selector.
+ */
+fun BaseTestCase.selectBalanceFilter(filterLabel: String) {
+    step("Click on balance filter chip") {
+        awaitSuccess { onSwapSelectTokenScreen { balanceFilterChip.assertIsDisplayed() } }
+        onSwapSelectTokenScreen { balanceFilterChip.performClick() }
+    }
+    step("Click on '$filterLabel' filter option") {
+        onSwapSelectTokenScreen { balanceFilterOption(filterLabel).clickWithAssertion() }
+    }
+}
+
 /**
  * From a clean start: open the main screen (cold by default, or an existing hot wallet when
  * [seedPhrase] is given), open Swap for [fromTokenName], choose [receiveTokenName] to receive and
@@ -499,7 +522,7 @@ fun BaseTestCase.openSwapAmountScreen(
         }
     }
     step("Click on token with name: '$fromTokenName'") {
-        onMainScreen { tokenWithTitleAndAddress(fromTokenName).clickWithAssertion() }
+        openTokenDetailsFromTokenList(fromTokenName)
     }
     step("Open 'Swap' screen") {
         openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = storiesExist)
@@ -541,7 +564,12 @@ fun BaseTestCase.switchFeeTokenAndApply(currentFeeToken: String, newFeeToken: St
         openSwapNetworkFeeSelector()
     }
     step("Click on '$currentFeeToken' fee token to open 'Choose token'") {
-        onSendFeeSelectorBottomSheet { feeTokenItem(currentFeeToken).performClick() }
+        // A quote refresh rebuilds the sheet and stales its rows, and only reopening brings them back.
+        awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching { onSwapTokenScreen { networkFeeBlock.performClick() } }
+            runCatching { onSendFeeSelectorBottomSheet { feeTokenItem(currentFeeToken).performClick() } }
+            onSendFeeSelectorBottomSheet { chooseTokenTitle.assertIsDisplayed() }
+        }
     }
     step("Select '$newFeeToken' as the fee-paying token") {
         awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {

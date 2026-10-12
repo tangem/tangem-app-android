@@ -10,19 +10,26 @@ import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher.Mode
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
-import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
+import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import java.math.BigDecimal
 import javax.inject.Inject
+
+private typealias PredictionAccountStatusMerge = (PredictionAccountStatusValue?) -> PredictionAccountStatusValue
 
 /**
  * Refreshes the prediction account status of one wallet into the store.
@@ -44,20 +51,21 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
     private val polymarketRepository: PolymarketRepository,
+    private val positionsRepository: PolymarketPositionsRepository,
     private val recordPolymarketConfirmation: RecordPolymarketConfirmationUseCase,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
-    private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
+    private val collateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PredictionAccountStatusFetcher {
 
     override suspend fun invoke(params: PredictionAccountStatusFetcher.Params): Either<Throwable, Unit> {
         return Either.catchOn(dispatchers.default) {
-            val value = resolve(userWalletId = params.userWalletId)
+            val merge = resolve(userWalletId = params.userWalletId, mode = params.mode)
 
-            if (value == null) {
+            if (merge == null) {
                 markUnrefreshed(userWalletId = params.userWalletId)
             } else {
-                statusStore.store(userWalletId = params.userWalletId, value = value)
+                statusStore.update(userWalletId = params.userWalletId, transform = merge)
             }
         }.onLeft { error ->
             logger.e("Failed to refresh the prediction account of ${params.userWalletId}", error)
@@ -66,10 +74,10 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     }
 
     /**
-     * The status if it could be established, `null` if it could not — in which case the caller keeps whatever is
-     * cached instead of replacing it with a state that claims the account is empty or absent.
+     * The merge to commit if the status could be established, `null` if it could not — in which case the caller
+     * keeps whatever is cached instead of replacing it with a state that claims the account is empty or absent.
      */
-    private suspend fun resolve(userWalletId: UserWalletId): PredictionAccountStatusValue? {
+    private suspend fun resolve(userWalletId: UserWalletId, mode: Mode): PredictionAccountStatusMerge? {
         val userWallet = userWalletsListRepository.getSyncOrNull(userWalletId) ?: return null
         // A locked wallet holds no keys to read the addresses from, which says nothing about the account behind them
         if (userWallet.isLocked) return null
@@ -83,7 +91,7 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
             ?: return null
 
         return toStatusValue(userWalletId = userWalletId, status = state.status) {
-            active(addresses = addresses)
+            active(addresses = addresses, mode = mode)
         }
     }
 
@@ -94,10 +102,10 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     private suspend fun toStatusValue(
         userWalletId: UserWalletId,
         status: PolymarketWalletStatus,
-        whenReady: suspend () -> PredictionAccountStatusValue?,
-    ): PredictionAccountStatusValue? {
+        whenReady: suspend () -> PredictionAccountStatusMerge?,
+    ): PredictionAccountStatusMerge? {
         val value = when (status) {
-            PolymarketWalletStatus.NOT_CREATED -> PredictionAccountStatusValue.NotOnboarded
+            PolymarketWalletStatus.NOT_CREATED -> constant(PredictionAccountStatusValue.NotOnboarded)
             PolymarketWalletStatus.DEPLOYMENT_IN_PROGRESS -> onboarding(
                 PredictionAccountStatusValue.Onboarding.Stage.DEPLOYING,
             )
@@ -107,7 +115,7 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
             )
             PolymarketWalletStatus.DEPLOYMENT_FAILED,
             PolymarketWalletStatus.APPROVALS_FAILED,
-            -> PredictionAccountStatusValue.Error.OnboardingFailed
+            -> constant(PredictionAccountStatusValue.Error.OnboardingFailed)
             // A status this build does not know is "not ready, keep polling" by the BFF contract, not an error
             PolymarketWalletStatus.UNKNOWN -> null
             PolymarketWalletStatus.READY_TO_TRADE -> whenReady()
@@ -125,59 +133,80 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
      * the collateral, not the account. The resolver also answers `KeyNotFound` for any `404` from the CLOB — all the
      * more reason to withhold the wallet total here rather than contribute a zero to it.
      */
-    private suspend fun active(addresses: PolymarketAddresses): PredictionAccountStatusValue? {
-        return getPolymarketBalanceInteractor(addresses = addresses).fold(
-            ifLeft = { error ->
-                when (error) {
-                    is PolymarketAuthError.KeyNotFound -> PredictionAccountStatusValue.Onboarded(
-                        source = StatusSource.ACTUAL,
-                    )
-                    // Throttled, offline or rejected: the balance is unknown, not zero
-                    else -> {
-                        logger.e("Prediction collateral is unavailable: $error")
-                        null
+    private suspend fun active(addresses: PolymarketAddresses, mode: Mode): PredictionAccountStatusMerge? =
+        coroutineScope {
+            val readPositionsValue = async {
+                if (mode == Mode.FULL) readPositionsValue(addresses = addresses) else null
+            }
+
+            getPolymarketBalanceInteractor(addresses = addresses).fold(
+                ifLeft = { error ->
+                    readPositionsValue.cancel()
+                    when (error) {
+                        is PolymarketAuthError.KeyNotFound -> constant(
+                            PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL),
+                        )
+                        // Throttled, offline or rejected: the balance is unknown, not zero
+                        else -> {
+                            logger.e("Prediction collateral is unavailable: $error")
+                            null
+                        }
                     }
-                }
-            },
-            ifRight = { balanceAllowance ->
-                PredictionAccountStatusValue.Active(
-                    source = StatusSource.ACTUAL,
-                    balance = balanceAllowance.balance,
-                    fiatRate = null,
-                    isTradingAllowed = isTradingAllowed(),
-                )
-            },
-        )
-    }
+                },
+                ifRight = { balanceAllowance ->
+                    activeMerge(
+                        balance = balanceAllowance.balance,
+                        positionsValue = readPositionsValue.await(),
+                        mode = mode,
+                    )
+                },
+            )
+        }
 
     /**
-     * A region check that fails is not treated as a block: the screens that let the user trade run their own check
-     * before anything can be sent, so guessing "blocked" here would only hide a balance the user does own.
+     * @param positionsValue the value read by this refresh, `null` when it was not read or could not be read
      */
-    private suspend fun isTradingAllowed(): Boolean {
-        return checkPolymarketGeoblockUseCase().fold(
-            ifLeft = { error ->
-                logger.e("Prediction region check failed, trading is left allowed: $error")
-                true
+    private fun activeMerge(
+        balance: BigDecimal,
+        positionsValue: BigDecimal?,
+        mode: Mode,
+    ): PredictionAccountStatusMerge = { current ->
+        val stored = current as? PredictionAccountStatusValue.Active
+
+        PredictionAccountStatusValue.Active(
+            source = StatusSource.ACTUAL,
+            balance = balance,
+            positionsValue = when (mode) {
+                Mode.FULL -> positionsValue ?: stored?.positionsValue
+                Mode.AVAILABLE_ONLY -> stored?.positionsValue
             },
-            ifRight = { isBlocked -> !isBlocked },
+            fiatRate = null,
+            depositCurrency = collateralCurrencyFactory.createDepositTarget(),
+            depositAddress = stored?.depositAddress,
         )
     }
 
+    private suspend fun readPositionsValue(addresses: PolymarketAddresses): BigDecimal? =
+        positionsRepository.getPositionsValue(addresses = addresses)
+            .onLeft { logger.e("Prediction positions value is unavailable: $it") }
+            .getOrNull()
+
     /** A wallet this device never derived an address for: the backend still knows it by its Tangem wallet id. */
-    private suspend fun resolveWithoutAddresses(userWalletId: UserWalletId): PredictionAccountStatusValue? {
+    private suspend fun resolveWithoutAddresses(userWalletId: UserWalletId): PredictionAccountStatusMerge? {
         val state = polymarketRepository.getWalletStatusByWalletId(walletId = userWalletId.stringValue)
             .onLeft { logger.e("Prediction wallet status by id is unavailable for $userWalletId: $it") }
             .getOrNull()
             ?: return null
 
         return toStatusValue(userWalletId = userWalletId, status = state.status) {
-            PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL)
+            constant(PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL))
         }
     }
 
     private fun onboarding(stage: PredictionAccountStatusValue.Onboarding.Stage) =
-        PredictionAccountStatusValue.Onboarding(source = StatusSource.ACTUAL, stage = stage)
+        constant(PredictionAccountStatusValue.Onboarding(source = StatusSource.ACTUAL, stage = stage))
+
+    private fun constant(value: PredictionAccountStatusValue): PredictionAccountStatusMerge = { value }
 
     /** Guarded: the likeliest reason to be here is that the store itself failed, and this asks it to write again. */
     private suspend fun markUnrefreshed(userWalletId: UserWalletId) {

@@ -8,6 +8,7 @@ import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
 import com.tangem.grow.datasource.gasless.models.GaslessFeeRecipient
 import com.tangem.grow.datasource.gasless.models.GaslessServiceResponse
+import com.tangem.domain.transaction.error.GaslessServiceException
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -31,7 +32,6 @@ internal class DefaultGaslessTransactionRepositoryTest {
     private fun createRepository() = DefaultGaslessTransactionRepository(
         gaslessTxServiceApi = gaslessTxServiceApi,
         gaslessTxServiceApiV2 = gaslessTxServiceApiV2,
-        isGaslessV2Enabled = true,
         coroutineDispatcherProvider = TestingCoroutineDispatcherProvider(),
         responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
     )
@@ -53,6 +53,14 @@ internal class DefaultGaslessTransactionRepositoryTest {
         coEvery { gaslessTxServiceApi.getFeeRecipient() } returns error
     }
 
+    private fun stubFeeRecipientHttpError(code: ApiResponseError.HttpException.Code) {
+        @Suppress("UNCHECKED_CAST")
+        val error = ApiResponse.Error(
+            cause = ApiResponseError.HttpException(code = code, message = null, errorBody = null),
+        ) as ApiResponse<GaslessServiceResponse<GaslessFeeRecipient>>
+        coEvery { gaslessTxServiceApi.getFeeRecipient() } returns error
+    }
+
     @Test
     fun `GIVEN backend returns recipient WHEN getGaslessFeeAddresses THEN hardcoded plus backend address`() = runTest {
         // Arrange
@@ -63,7 +71,7 @@ internal class DefaultGaslessTransactionRepositoryTest {
         val actual = repository.getGaslessFeeAddresses()
 
         // Assert
-        assertThat(actual).containsExactly(HARDCODED_ADDRESS_1, HARDCODED_ADDRESS_2, BACKEND_ADDRESS)
+        assertThat(actual).containsExactly(HARDCODED_ADDRESS_1, HARDCODED_ADDRESS_2, TRON_ADDRESS, BACKEND_ADDRESS)
     }
 
     @Test
@@ -76,7 +84,7 @@ internal class DefaultGaslessTransactionRepositoryTest {
         val actual = repository.getGaslessFeeAddresses()
 
         // Assert
-        assertThat(actual).containsExactly(HARDCODED_ADDRESS_1, HARDCODED_ADDRESS_2)
+        assertThat(actual).containsExactly(HARDCODED_ADDRESS_1, HARDCODED_ADDRESS_2, TRON_ADDRESS)
     }
 
     @Test
@@ -91,8 +99,8 @@ internal class DefaultGaslessTransactionRepositoryTest {
         val secondResult = repository.getGaslessFeeAddresses()
 
         // Assert
-        assertThat(firstResult).containsExactly(HARDCODED_ADDRESS_1, HARDCODED_ADDRESS_2)
-        assertThat(secondResult).containsExactly(HARDCODED_ADDRESS_1, HARDCODED_ADDRESS_2, BACKEND_ADDRESS)
+        assertThat(firstResult).containsExactly(HARDCODED_ADDRESS_1, HARDCODED_ADDRESS_2, TRON_ADDRESS)
+        assertThat(secondResult).containsExactly(HARDCODED_ADDRESS_1, HARDCODED_ADDRESS_2, TRON_ADDRESS, BACKEND_ADDRESS)
     }
 
     @Test
@@ -109,9 +117,24 @@ internal class DefaultGaslessTransactionRepositoryTest {
         coVerify(exactly = 1) { gaslessTxServiceApi.getFeeRecipient() }
     }
 
+    @Test
+    fun `GIVEN backend returns 503 WHEN getTokenFeeReceiverAddress THEN throws error with http code`() = runTest {
+        // Arrange
+        stubFeeRecipientHttpError(ApiResponseError.HttpException.Code.SERVICE_UNAVAILABLE)
+        val repository = createRepository()
+
+        // Act
+        val actual = runCatching { repository.getTokenFeeReceiverAddress() }.exceptionOrNull()
+
+        // Assert
+        assertThat(actual).isInstanceOf(GaslessServiceException::class.java)
+        assertThat((actual as GaslessServiceException).httpCode).isEqualTo(503)
+    }
+
     private companion object {
         const val HARDCODED_ADDRESS_1 = "0xFc719364BcCdc92D055d8C3164eF1ab4f5A9182c"
         const val HARDCODED_ADDRESS_2 = "0xAf722F46145fbb106379d506ED3a5B96f110c8E5"
+        const val TRON_ADDRESS = "TSWsmaEDgWaE2VsP9tCBGh5GbBRbrdHSuZ"
         const val BACKEND_ADDRESS = "0x1111111111111111111111111111111111111111"
     }
 }

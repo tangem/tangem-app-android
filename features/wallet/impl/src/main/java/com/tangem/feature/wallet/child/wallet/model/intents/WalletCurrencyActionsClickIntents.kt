@@ -8,6 +8,7 @@ import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetCo
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
+import com.tangem.common.ui.tokens.getUnavailabilityReasonTitle
 import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -100,6 +101,8 @@ interface WalletCurrencyActionsClickIntents {
     fun onReceiveClick(accountId: AccountId, cryptoCurrencyStatus: CryptoCurrencyStatus, event: AnalyticsEvent? = null)
 
     fun onStakeClick(accountId: AccountId, cryptoCurrencyStatus: CryptoCurrencyStatus, option: StakingOption?)
+
+    fun onUnavailableTokenActionClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
     fun onCopyAddressLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus): TextReference?
 
@@ -572,10 +575,19 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         }
     }
 
+    override fun onUnavailableTokenActionClick(unavailabilityReason: ScenarioUnavailabilityReason) {
+        handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)
+    }
+
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
         if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
 
-        uiMessageSender.send(DialogMessage(message = unavailabilityReason.getUnavailabilityReasonText()))
+        uiMessageSender.send(
+            DialogMessage(
+                message = unavailabilityReason.getUnavailabilityReasonText(),
+                title = unavailabilityReason.getUnavailabilityReasonTitle(),
+            ),
+        )
 
         return true
     }

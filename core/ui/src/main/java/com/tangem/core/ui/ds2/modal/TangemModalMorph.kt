@@ -2,8 +2,19 @@
 
 package com.tangem.core.ui.ds2.modal
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.RoundRect
@@ -11,7 +22,14 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.toRect
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.IntrinsicMeasurable
+import androidx.compose.ui.layout.IntrinsicMeasureScope
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.node.LayoutModifierNode
+import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
@@ -19,14 +37,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
-
-/** Height of the capsule the card collapses into: the drag indicator plus the top navigation row. */
-private val ModalCapsuleHeight = 88.dp
-
-/** Extra per-side margin of the capsule; melts away as the card expands into place. */
-private val ModalCapsuleExtraInset = 24.dp
 
 /** Resting margin of every non-full-height card. */
 private val ModalInsetMedium = 8.dp
@@ -38,37 +54,154 @@ private val ModalBottomCornerRadius = 32.dp
 private const val TIER_FULL_START = 0.9f
 
 /**
- * Slide fraction where the capsule ↔ card morph happens: the capsule travels for the first 60%
- * of the way in and unfolds into the full card over the remaining stretch — so dismissal reads
- * "collapse to a capsule first, then slide away" and appearance "slide in, then unfold".
+ * Share of the dismissal a full predictive-back stretch previews: the card slides down by this
+ * much of its height and the scrim dims by the same fraction (see [combinedOpenProgress]), so
+ * committing the gesture continues the dismissal from where the preview left it.
  */
-private const val MORPH_PHASE_START = 0.6f
+internal const val MODAL_BACK_PREVIEW_FRACTION: Float = 0.4f
 
 @PublishedApi
 internal const val OPEN_PROGRESS_SETTLED: Float = 1f
 
 /**
- * Per-frame morph geometry of one modal, written during layout and read by [ModalMorphShape] and
- * the opacity overlay. Plain (non-snapshot) values: consumers are re-invoked by the size changes
- * the morph itself produces.
+ * Edge-to-edge geometry of one modal. [modalCardLayout] measures how full the card should be and
+ * writes it as [target]; [ModalMorphAnimationEffect] chases the target with a spring; the layout
+ * renders the animated value and publishes it as [flatten] for the shape, the opacity overlay and
+ * the drag indicator.
  */
 @PublishedApi
 internal class ModalMorphGeometry {
 
     /**
-     * How edge-to-edge the card currently is, 0..1: drives the bottom-corner flattening and the
-     * fade of the glass into an opaque surface. 1 when a height-capped (or expanded) modal is
-     * fully open.
+     * Measured morph target, 0..1 — how edge-to-edge the card *should* be given its content height.
+     * Written during layout, [Float.NaN] until the first pass. Snapshot-backed so
+     * [ModalMorphAnimationEffect] observes the changes.
      */
-    var flatten: Float = 0f
+    var target: Float by mutableFloatStateOf(Float.NaN)
 
-    /** Capsule ↔ card phase, 0..1: 0 is the fully-rounded capsule, 1 the settled card. */
-    var unfold: Float = 1f
+    /** Fullness riding toward [target]. Driven by [ModalMorphAnimationEffect]. */
+    val animatedFullness = Animatable(initialValue = 0f)
+
+    /**
+     * Whether [animatedFullness] has caught its first target and drives the layout from now on.
+     * Until then — and forever in previews, where effects don't run — the layout renders the
+     * measured target directly, so the first frame (and a modal opening with full-height content)
+     * starts settled instead of morphing in.
+     */
+    var isAnimationDriven: Boolean by mutableStateOf(false)
+
+    /**
+     * Whether a field inside the card holds focus. Written by the focus observer of the card
+     * content; [ModalMorphAnimationEffect] rides [focusExpansion] toward it.
+     */
+    var isFocused: Boolean by mutableStateOf(false)
+
+    /**
+     * 0..1 share of the focus-driven expansion: a card with a focused field grows to the full
+     * height (and back when focus clears), regardless of its content height — the iOS
+     * keyboard-detent behavior. Independent of [animatedFullness] so a focus change mid-morph
+     * cannot jump the card height.
+     */
+    val focusExpansion = Animatable(initialValue = 0f)
+
+    /**
+     * How edge-to-edge the card currently renders, 0..1: drives the bottom-corner flattening, the
+     * fade of the glass into an opaque surface and the drag-indicator width. 1 when a full-height
+     * modal is open. Written during layout from the animated fullness; snapshot-backed so
+     * draw-phase consumers pick up the frames where the morph moves without a size change.
+     */
+    var flatten: Float by mutableFloatStateOf(0f)
+
+    /**
+     * Bottom strip (px) [modalCardFill] carves out of the card for the navigation bar, growing with
+     * [flatten] as the bottom margin blends away — the content stays clear of the bar throughout.
+     * Plain value: written by [modalCardLayout] and consumed by [modalCardFill] in the same pass.
+     */
+    var contentBottomInset: Int = 0
+
+    /** Cache of the content's probed intrinsic height across morph frames. */
+    val contentHeightCache = ModalContentHeightCache()
+}
+
+/**
+ * Caches the content's intrinsic height across morph animation frames: while one of the morph
+ * springs is running, the extra layout passes are caused by the animated values — the content
+ * itself has not changed — so the last probed height is reused instead of traversing the content
+ * tree on every frame. The trade-off: content that resizes itself mid-morph keeps the previous
+ * height until the spring settles, and the settling pass re-probes it.
+ */
+@PublishedApi
+internal class ModalContentHeightCache {
+
+    private var probeWidth: Int = -1
+    private var height: Int = -1
+
+    fun heightOf(measurable: IntrinsicMeasurable, width: Int, isMorphing: Boolean): Int {
+        if (width != probeWidth || height < 0 || !isMorphing) {
+            probeWidth = width
+            height = measurable.minIntrinsicHeight(width)
+        }
+        return height
+    }
+}
+
+/** Spring the morph rides between its measured targets — the iOS detent-change feel. */
+private val ModalMorphAnimationSpec: AnimationSpec<Float> = spring(stiffness = Spring.StiffnessMediumLow)
+
+/**
+ * Animates [ModalMorphGeometry] between its measured targets: the first target is adopted without
+ * animation — a modal whose content is full-height from the start opens already edge-to-edge — and
+ * every later change (content growing to the screen height or shrinking back) plays the morph.
+ * A field gaining or losing focus plays the same spring on [ModalMorphGeometry.focusExpansion].
+ */
+@Composable
+@PublishedApi
+internal fun ModalMorphAnimationEffect(geometry: ModalMorphGeometry) {
+    LaunchedEffect(geometry) {
+        launch {
+            snapshotFlow { geometry.target }
+                .filter { !it.isNaN() }
+                .collectLatest { target ->
+                    if (geometry.isAnimationDriven) {
+                        geometry.animatedFullness.animateTo(
+                            targetValue = target,
+                            animationSpec = ModalMorphAnimationSpec,
+                        )
+                    } else {
+                        geometry.animatedFullness.snapTo(targetValue = target)
+                        geometry.isAnimationDriven = true
+                    }
+                }
+        }
+        launch {
+            snapshotFlow { geometry.isFocused }.collectLatest { isFocused ->
+                geometry.focusExpansion.animateTo(
+                    targetValue = if (isFocused) 1f else 0f,
+                    animationSpec = ModalMorphAnimationSpec,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Morph target of a card whose content measures [intrinsicHeight] against [maxHeight] available:
+ * 0 for every card resting below [TIER_FULL_START] of the height, blending linearly to 1 as the
+ * content reaches the full height.
+ */
+@PublishedApi
+internal fun modalMorphTarget(intrinsicHeight: Int, maxHeight: Int): Float {
+    if (maxHeight <= 0) return 0f
+    val fraction = intrinsicHeight.toFloat() / maxHeight
+    return ((fraction - TIER_FULL_START) / (1f - TIER_FULL_START)).coerceIn(0f, 1f)
 }
 
 /**
  * How far the modal has slid in: 0 at the hidden anchor, 1 at the expanded anchor, interpolated
- * per frame during drags and settle animations. 1 before the anchors are known.
+ * per frame during drags and settle animations. While the anchors or the offset are unresolvable it
+ * reports the settled [TangemSheetState.currentValue] instead: the first passes run before the
+ * anchors exist, and a fraction derived from an unresolved offset would report a sheet still parked
+ * at the hidden anchor as open.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @PublishedApi
@@ -78,140 +211,157 @@ internal fun TangemSheetState.openProgress(): Float {
     val expanded = anchors.positionOf(TangemSheetValue.Expanded)
     val offset = anchoredDraggableState.offset
     val isResolvable = !hidden.isNaN() && !expanded.isNaN() && !offset.isNaN()
-    if (!isResolvable || hidden == expanded) return 1f
+    if (!isResolvable || hidden == expanded) {
+        return if (currentValue == TangemSheetValue.Hidden) 0f else OPEN_PROGRESS_SETTLED
+    }
     return ((hidden - offset) / (hidden - expanded)).coerceIn(0f, 1f)
 }
 
 /**
- * The capsule ↔ card phase of the slide, 0..1: stays 0 (capsule) while the sheet travels and runs
- * to 1 (full card) over the last stretch near the settled position (see [MORPH_PHASE_START]).
- */
-@PublishedApi
-internal fun morphPhase(openProgress: Float): Float {
-    return ((openProgress - MORPH_PHASE_START) / (1f - MORPH_PHASE_START)).coerceIn(0f, 1f)
-}
-
-/**
- * Folds the predictive-back gesture into the slide progress: a full gesture stretch previews the
- * complete capsule fold (the settled card lands exactly at [MORPH_PHASE_START], where the card is
- * fully collapsed and still bottom-pinned), so committing continues the dismissal from the folded
- * state and cancelling unfolds back into place.
+ * Folds the predictive-back gesture into the slide progress: a full gesture stretch dims the scrim
+ * by the share of the dismissal the gesture previews (see [MODAL_BACK_PREVIEW_FRACTION]), so
+ * committing continues the dismissal from the previewed state and cancelling restores it.
  */
 @PublishedApi
 internal fun combinedOpenProgress(openProgress: Float, backProgress: Float): Float {
-    return openProgress * (1f - backProgress * (1f - MORPH_PHASE_START))
+    return openProgress * (1f - backProgress * MODAL_BACK_PREVIEW_FRACTION)
 }
 
 /**
- * Card layout of the modal, shtorka-style: the resting margin is 8dp for every non-full-height
- * card, blending to 0 (edge-to-edge) as the content reaches the height cap. The bottom margin
- * also keeps clear of [windowInsets] (the navigation bar) until the card goes edge-to-edge.
+ * Card layout of the modal, shtorka-style: the card grows with its content until it reaches
+ * [windowInsets]' top (the status bar), and the resting margin is 8dp for every card shorter than
+ * that, blending to 0 (edge-to-edge) as the content approaches the full height. The bottom margin
+ * keeps clear of [windowInsets] (the navigation bar) while it exists; as it blends away the same
+ * clearance moves inside the card (see [ModalMorphGeometry.contentBottomInset]).
  *
- * While sliding in and out, the card is collapsed into a fully-rounded capsule
- * ([ModalCapsuleHeight] tall, [ModalCapsuleExtraInset] narrower per side) riding the sheet's
- * leading edge; over the last stretch of the slide it unfolds into the full card (see
- * [morphPhase]). The collapse is a real height re-measure — content is clipped by the card shape,
- * whose corners become a capsule automatically as the height drops below the corner diameter.
+ * The card does not morph while the sheet slides in and out — it keeps its settled size and shape
+ * and rides the slide. It morphs when its *content* height moves across the full-height threshold:
+ * the measured target lands in [ModalMorphGeometry.target] and the layout renders the spring-driven
+ * value chasing it (see [ModalMorphAnimationEffect]), re-measuring per animation frame.
  *
- * The *reported* size stays constant for a given content (the full card plus its bottom margin):
- * it feeds the drag anchors, which must not move while the card inside morphs.
+ * A focused field (see [ModalMorphGeometry.isFocused]) expands the card to the full height
+ * regardless of its content height — the height rides [ModalMorphGeometry.focusExpansion] between
+ * the natural and the full height, and the edge-to-edge chrome follows whichever of the two
+ * drivers is further along.
  *
- * The full content height is probed via intrinsic measurement, so the modal content must support
- * intrinsics (the built-in scrollable wrapper does; avoid a top-level lazy list as direct content).
- * [geometry] receives the resulting flatten progress for the shape and opacity.
+ * The content height is probed via intrinsic measurement, so the modal content must support
+ * intrinsics (the built-in scrollable wrapper does; avoid a top-level lazy list as direct
+ * content). [geometry] receives the resulting flatten progress for the shape and opacity.
  */
 @PublishedApi
-@Suppress("LongParameterList")
-internal fun Modifier.modalMorphLayout(
-    geometry: ModalMorphGeometry,
-    isExpanded: Boolean,
-    windowInsets: WindowInsets,
-    progress: () -> Float,
-    anchorProgress: () -> Float,
-): Modifier {
+internal fun Modifier.modalCardLayout(geometry: ModalMorphGeometry, windowInsets: WindowInsets): Modifier {
     return layout { measurable, constraints ->
         val maxWidth = constraints.maxWidth
-        val maxHeight = constraints.maxHeight
-        val openNow = progress()
-        val expandPhase = morphPhase(openNow)
+        // The status bar is the only height limit: a card as tall as its content gets it.
+        val maxHeight = (constraints.maxHeight - windowInsets.getTop(this)).coerceAtLeast(0)
 
         val probeWidth = (maxWidth - 2 * ModalInsetMedium.roundToPx()).coerceAtLeast(0)
-        val intrinsicHeight = measurable.minIntrinsicHeight(probeWidth).coerceAtMost(maxHeight)
+        val isMorphing = geometry.animatedFullness.isRunning || geometry.focusExpansion.isRunning
+        val intrinsicHeight = geometry.contentHeightCache
+            .heightOf(measurable = measurable, width = probeWidth, isMorphing = isMorphing)
+            .coerceAtMost(maxHeight)
 
-        val baseInset: Float
-        val fullness: Float
-        if (isExpanded) {
-            baseInset = 0f
-            fullness = 1f
-        } else {
-            val fraction = if (maxHeight > 0) intrinsicHeight.toFloat() / maxHeight else 0f
-            baseInset = restingInset(fraction)
-            fullness = ((fraction - TIER_FULL_START) / (1f - TIER_FULL_START)).coerceIn(0f, 1f)
-        }
-        geometry.flatten = fullness * expandPhase
-        geometry.unfold = expandPhase
+        val target = modalMorphTarget(intrinsicHeight = intrinsicHeight, maxHeight = maxHeight)
+        if (geometry.target != target) geometry.target = target
+        val contentFullness = if (geometry.isAnimationDriven) geometry.animatedFullness.value else target
+        val focusExpansion = geometry.focusExpansion.value
+        val fullness = max(contentFullness, focusExpansion)
+        if (geometry.flatten != fullness) geometry.flatten = fullness
 
-        val sideInset = (baseInset + ModalCapsuleExtraInset.toPx() * (1f - expandPhase))
-            .roundToInt()
-            .coerceAtLeast(0)
-        val bottomInset = (baseInset + windowInsets.getBottom(this) * (1f - fullness))
-            .roundToInt()
-            .coerceAtLeast(0)
+        val navBottom = windowInsets.getBottom(this)
+        val navInset = (navBottom * fullness).roundToInt()
+        geometry.contentBottomInset = navInset
 
-        val fullHeight = intrinsicHeight.coerceAtMost((maxHeight - bottomInset).coerceAtLeast(0))
-        val capsuleHeight = ModalCapsuleHeight.roundToPx().coerceAtMost(fullHeight)
-        val cardHeight = lerp(capsuleHeight.toFloat(), fullHeight.toFloat(), expandPhase).roundToInt()
+        val baseInset = lerp(ModalInsetMedium.toPx(), 0f, fullness)
+        val sideInset = baseInset.roundToInt().coerceAtLeast(0)
+        val bottomInset = (baseInset + navBottom * (1f - fullness)).roundToInt().coerceAtLeast(0)
+
+        val maxCardHeight = (maxHeight - bottomInset).coerceAtLeast(0)
+        val naturalHeight = (intrinsicHeight + navInset).coerceAtMost(maxCardHeight)
+        val cardHeight = lerp(naturalHeight, maxCardHeight, focusExpansion)
         val cardWidth = (maxWidth - 2 * sideInset).coerceAtLeast(0)
+
         val placeable = measurable.measure(Constraints.fixed(cardWidth, cardHeight))
 
-        // Constant reported size: the anchors see the full card regardless of the morph.
-        val reportedHeight = fullHeight + bottomInset
-        layout(maxWidth, reportedHeight) {
-            // The in-box position compensates the sheet's own translation, keeping the card's
-            // bottom edge screen-fixed while its top collapses/unfolds. The pin must derive from
-            // the sheet's actual position ([anchorProgress]) — not the fold progress, which the
-            // predictive back gesture moves without moving the sheet. Once the sheet travels past
-            // the morph zone, the capsule freezes in the box and rides the slide.
-            val anchoredProgress = anchorProgress().coerceAtLeast(MORPH_PHASE_START)
-            val y = (anchoredProgress * reportedHeight - bottomInset - cardHeight).roundToInt()
-            placeable.placeRelative(x = (maxWidth - cardWidth) / 2, y = y)
+        // The reported size — the card plus its bottom margin — feeds the drag anchors.
+        layout(maxWidth, cardHeight + bottomInset) {
+            placeable.placeRelative(x = (maxWidth - cardWidth) / 2, y = 0)
         }
     }
 }
 
-/** Resting side margin by content-height [fraction]: 8dp, blending to 0dp near the height cap. */
-private fun Density.restingInset(fraction: Float): Float {
-    val medium = ModalInsetMedium.toPx()
-    return when {
-        fraction < TIER_FULL_START -> medium
-        fraction < 1f -> lerp(medium, 0f, (fraction - TIER_FULL_START) / (1f - TIER_FULL_START))
-        else -> 0f
+/**
+ * Fills the card with its content — measured at the card's exact size and pinned to its top edge,
+ * where the drag indicator and the title belong — instead of letting it wrap and be centered by
+ * the surface. The two sizes agree to the pixel only as long as the content measures exactly as
+ * tall as the intrinsic probe promised; a card that ended up wider than the probe width can
+ * re-wrap its text shorter, and a centered card would then float its title below the top corner.
+ *
+ * The bottom of the card carves out [ModalMorphGeometry.contentBottomInset] — the navigation-bar
+ * clearance an edge-to-edge card provides *inside* instead of as a bottom margin.
+ *
+ * Intrinsic queries pass straight through to the content — deliberately without the inset — so the
+ * height probe of [modalCardLayout] reads the content's own intrinsics (a `Column` computes those
+ * from its children and its weights) and the inset cannot feed back into the probed height.
+ *
+ * Expects the fixed constraints [modalCardLayout] measures the card with.
+ */
+@PublishedApi
+internal fun Modifier.modalCardFill(geometry: ModalMorphGeometry): Modifier {
+    return this then ModalCardFillElement(geometry)
+}
+
+private data class ModalCardFillElement(val geometry: ModalMorphGeometry) : ModifierNodeElement<ModalCardFillNode>() {
+
+    override fun create(): ModalCardFillNode = ModalCardFillNode(geometry)
+
+    override fun update(node: ModalCardFillNode) {
+        node.geometry = geometry
     }
+}
+
+private class ModalCardFillNode(var geometry: ModalMorphGeometry) : Modifier.Node(), LayoutModifierNode {
+
+    override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints): MeasureResult {
+        val cardWidth = constraints.maxWidth
+        val cardHeight = constraints.maxHeight
+        val bottomInset = geometry.contentBottomInset.coerceIn(0, cardHeight)
+        val placeable = measurable.measure(Constraints.fixed(width = cardWidth, height = cardHeight - bottomInset))
+        return layout(cardWidth, cardHeight) {
+            placeable.placeRelative(x = 0, y = 0)
+        }
+    }
+
+    override fun IntrinsicMeasureScope.minIntrinsicHeight(measurable: IntrinsicMeasurable, width: Int): Int =
+        measurable.minIntrinsicHeight(width)
+
+    override fun IntrinsicMeasureScope.maxIntrinsicHeight(measurable: IntrinsicMeasurable, width: Int): Int =
+        measurable.maxIntrinsicHeight(width)
+
+    override fun IntrinsicMeasureScope.minIntrinsicWidth(measurable: IntrinsicMeasurable, height: Int): Int =
+        measurable.minIntrinsicWidth(height)
+
+    override fun IntrinsicMeasureScope.maxIntrinsicWidth(measurable: IntrinsicMeasurable, height: Int): Int =
+        measurable.maxIntrinsicWidth(height)
 }
 
 /**
  * Card shape of the modal: 36dp top corners and 32dp bottom corners that flatten to zero as
  * [ModalMorphGeometry.flatten] approaches 1 — the same morph the shtorka does approaching its
- * full detent. As the card collapses into the capsule ([ModalMorphGeometry.unfold] → 0), all
- * corners grow into the fully-rounded half-height radius.
+ * full detent.
  *
- * The geometry is read inside [createOutline] on purpose: the card is re-measured whenever the
- * morph inputs change (its size tracks the slide progress), so the outline is rebuilt exactly
- * when the values can have changed, without any snapshot subscription.
+ * The geometry is read inside [createOutline] on purpose: the flatten is snapshot-backed and the
+ * card re-measures on every morph frame, so the outline is rebuilt as the morph animates.
  */
 @PublishedApi
 internal class ModalMorphShape(private val geometry: ModalMorphGeometry) : Shape {
 
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         val halfMinSide = min(size.width, size.height) / 2f
-        val unfold = geometry.unfold
-        // The rounding target is the *final* capsule's radius, not the current card size —
-        // otherwise a tall card mid-collapse balloons into a big rounded blob.
-        val capsuleRadius = with(density) { ModalCapsuleHeight.toPx() / 2f }.coerceAtMost(halfMinSide)
         val topBase = with(density) { ModalTopCornerRadius.toPx() }.coerceAtMost(halfMinSide)
         val bottomBase = with(density) { ModalBottomCornerRadius.toPx() }.coerceAtMost(halfMinSide)
-        val topRadius = CornerRadius(lerp(capsuleRadius, topBase, unfold))
-        val bottomRadius = CornerRadius(lerp(capsuleRadius, bottomBase * (1f - geometry.flatten), unfold))
+        val topRadius = CornerRadius(topBase)
+        val bottomRadius = CornerRadius(bottomBase * (1f - geometry.flatten))
         return Outline.Rounded(
             RoundRect(
                 rect = size.toRect(),

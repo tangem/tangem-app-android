@@ -19,7 +19,7 @@ import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Called
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -28,7 +28,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -99,8 +98,16 @@ internal class TangemPayVirtualAccountDepositModelTest {
         assertThat(model.uiState.value.fees).isEqualTo(
             TangemPayVirtualAccountDepositUM.FeesUM.Content(
                 rows = persistentListOf(
-                    TangemPayVirtualAccountDepositUM.FeeRow(title = stringReference("ACH"), value = "$1"),
-                    TangemPayVirtualAccountDepositUM.FeeRow(title = stringReference("FedWire"), value = "$11"),
+                    TangemPayVirtualAccountDepositUM.FeeRow(
+                        type = "ACH_ONRAMP",
+                        title = stringReference("ACH"),
+                        value = "$1",
+                    ),
+                    TangemPayVirtualAccountDepositUM.FeeRow(
+                        type = "FEDWIRE_ONRAMP",
+                        title = stringReference("FedWire"),
+                        value = "$11",
+                    ),
                 ),
             ),
         )
@@ -137,7 +144,11 @@ internal class TangemPayVirtualAccountDepositModelTest {
         assertThat(model.uiState.value.fees).isEqualTo(
             TangemPayVirtualAccountDepositUM.FeesUM.Content(
                 rows = persistentListOf(
-                    TangemPayVirtualAccountDepositUM.FeeRow(title = stringReference("ACH"), value = "$1"),
+                    TangemPayVirtualAccountDepositUM.FeeRow(
+                        type = "ACH_ONRAMP",
+                        title = stringReference("ACH"),
+                        value = "$1",
+                    ),
                 ),
             ),
         )
@@ -298,15 +309,4 @@ internal class TangemPayVirtualAccountDepositModelTest {
         accountNumber = "123",
         routingNumber = "456",
     )
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
-    }
 }

@@ -14,6 +14,7 @@ import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
+import com.tangem.common.ui.tokens.getUnavailabilityReasonTitle
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.common.ui.backup.BackupErrorWarningSender
@@ -54,6 +55,7 @@ import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveNotification
+import com.tangem.domain.jointaccount.usecase.IsJointOperationSlotBusyUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -104,7 +106,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.*
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.rating.RatingComponent
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.features.tokendetails.TokenDetailsComponent
@@ -169,6 +170,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
     private val saveViewedTokenReceiveWarningUseCase: SaveViewedTokenReceiveWarningUseCase,
     private val needShowYieldSupplyDepositedWarningUseCase: NeedShowYieldSupplyDepositedWarningUseCase,
+    private val isJointOperationSlotBusyUseCase: IsJointOperationSlotBusyUseCase,
     private val getAccountCryptoCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val yieldSupplyGetRewardsBalanceUseCase: YieldSupplyGetRewardsBalanceUseCase,
@@ -188,7 +190,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
     private val onrampGetDefaultCurrencyUseCase: OnrampGetDefaultCurrencyUseCase,
-    private val swapFeatureToggles: SwapFeatureToggles,
     private val txHistoryFeatureToggle: TxHistoryFeatureToggles,
 ) : Model(),
     TokenDetailsClickIntents,
@@ -385,6 +386,7 @@ internal class TokenDetailsModel @Inject constructor(
                         clickIntents = this@TokenDetailsModel,
                         analyticsEventHandler = analyticsEventsHandler,
                         onActionDispatched = bottomSheetNavigation::dismiss,
+                        isJointAccount = account is Account.Joint,
                     ),
                 )
                 redesignStateController.update(
@@ -597,10 +599,16 @@ internal class TokenDetailsModel @Inject constructor(
             )
             return
         }
-        analyticsEventsHandler.send(
-            TransferAnalyticsEvent.MethodScreenOpened(source = AnalyticsParam.ScreensSources.Token),
-        )
-        bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.Transfer)
+        modelScope.launch {
+            if (isJointOperationSlotBusy()) {
+                showJointOperationSlotBusy()
+                return@launch
+            }
+            analyticsEventsHandler.send(
+                TransferAnalyticsEvent.MethodScreenOpened(source = AnalyticsParam.ScreensSources.Token),
+            )
+            bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.Transfer)
+        }
     }
 
     override fun onBuyClick(unavailabilityReason: ScenarioUnavailabilityReason) {
@@ -712,7 +720,9 @@ internal class TokenDetailsModel @Inject constructor(
             return
         }
         modelScope.launch {
-            if (needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)) {
+            if (isJointOperationSlotBusy()) {
+                showJointOperationSlotBusy()
+            } else if (needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)) {
                 bottomSheetNavigation.activate(
                     configuration = TokenDetailsBottomSheetConfig.YieldSupplyWarning(
                         cryptoCurrency = cryptoCurrency,
@@ -723,6 +733,24 @@ internal class TokenDetailsModel @Inject constructor(
                 sendCurrency()
             }
         }
+    }
+
+    /**
+     * A joint account runs one operation per network at a time, so a busy slot stops the transfer at its button.
+     * The send row checks again: the slot can fill while the transfer sheet is open.
+     */
+    private suspend fun isJointOperationSlotBusy(): Boolean {
+        val jointAccount = account as? Account.Joint ?: return false
+
+        return isJointOperationSlotBusyUseCase(account = jointAccount, network = cryptoCurrency.network)
+    }
+
+    private fun showJointOperationSlotBusy() {
+        bottomSheetNavigation.activate(
+            configuration = TokenDetailsBottomSheetConfig.JointOperationSlotBusy(
+                networkName = cryptoCurrency.network.name,
+            ),
+        )
     }
 
     private fun sendCurrency() {
@@ -838,22 +866,23 @@ internal class TokenDetailsModel @Inject constructor(
         handleSwap(unavailabilityReason, checkYieldSupply = true)
     }
 
+    override fun onAddFundsSwapClick(unavailabilityReason: ScenarioUnavailabilityReason) {
+        val gatedReason = if (unavailabilityReason == ScenarioUnavailabilityReason.JointAccount) {
+            ScenarioUnavailabilityReason.None
+        } else {
+            unavailabilityReason
+        }
+        handleSwap(gatedReason, checkYieldSupply = true)
+    }
+
     /**
      * Routes a tapped marketing-banner deeplink contextually for the current token, reusing the
      * regular swap/buy intents (availability checks, yield-supply warning, analytics). Returns
-     * `false` for external links, and for `tangem://swap` when the swap-deeplink toggle is enabled,
-     * so the banner falls back to the generic deeplink launcher (the swap deeplink handler).
+     * `false` for external links and for `tangem://swap`, so the banner falls back to the generic
+     * deeplink launcher (the swap deeplink handler).
      */
     fun onMarketingBannerDeeplink(deeplink: String): Boolean = when (resolveMarketingDeeplink(deeplink)) {
-        MarketingDeeplink.SWAP -> if (swapFeatureToggles.isSwapDeeplinkEnabled) {
-            false
-        } else {
-            val reason = latestTokenActions
-                .filterIsInstance<TokenActionsState.ActionState.Swap>()
-                .firstOrNull()?.unavailabilityReason ?: ScenarioUnavailabilityReason.None
-            onSwapClick(reason)
-            true
-        }
+        MarketingDeeplink.SWAP -> false
         MarketingDeeplink.BUY -> {
             val reason = latestTokenActions
                 .filterIsInstance<TokenActionsState.ActionState.Buy>()
@@ -901,16 +930,21 @@ internal class TokenDetailsModel @Inject constructor(
                     ),
                 )
             } else {
-                appRouter.push(
-                    AppRoute.Swap(
-                        fromCryptoCurrency = cryptoCurrency,
-                        userWalletId = userWalletId,
-                        screenSource = AnalyticsParam.ScreensSources.Token.value,
-                    ),
-                )
+                appRouter.push(swapRoute())
             }
         }
     }
+
+    private fun swapRoute(): AppRoute.Swap = AppRoute.Swap(
+        fromCryptoCurrency = cryptoCurrency,
+        userWalletId = userWalletId,
+        screenSource = AnalyticsParam.ScreensSources.Token.value,
+        fromCurrencyPosition = if (account is Account.Joint) {
+            AppRoute.Swap.CurrencyPosition.TO
+        } else {
+            AppRoute.Swap.CurrencyPosition.ANY
+        },
+    )
 
     override fun onHideClick() {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonRemoveToken(cryptoCurrency.symbol))
@@ -1254,7 +1288,10 @@ internal class TokenDetailsModel @Inject constructor(
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
         if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
 
-        dialogFactory.showError(text = unavailabilityReason.getUnavailabilityReasonText())
+        dialogFactory.showError(
+            text = unavailabilityReason.getUnavailabilityReasonText(),
+            title = unavailabilityReason.getUnavailabilityReasonTitle(),
+        )
 
         return true
     }
@@ -1385,13 +1422,7 @@ internal class TokenDetailsModel @Inject constructor(
             when (tokenAction) {
                 TokenAction.Receive -> navigateToReceive()
                 TokenAction.Send -> sendCurrency()
-                TokenAction.Swap -> appRouter.push(
-                    AppRoute.Swap(
-                        fromCryptoCurrency = cryptoCurrency,
-                        userWalletId = userWalletId,
-                        screenSource = AnalyticsParam.ScreensSources.Token.value,
-                    ),
-                )
+                TokenAction.Swap -> appRouter.push(swapRoute())
                 TokenAction.Info -> Unit
             }
         }
@@ -1409,6 +1440,7 @@ internal class TokenDetailsModel @Inject constructor(
             is NavigationAction.Staking -> openStaking()
             is NavigationAction.CloreMigration -> onCloreMigrationClick()
             is NavigationAction.YieldSupply,
+            is NavigationAction.JointOperation,
             null,
             -> Unit
         }

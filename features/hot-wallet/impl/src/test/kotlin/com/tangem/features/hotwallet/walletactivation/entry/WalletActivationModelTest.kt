@@ -16,13 +16,12 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.hotwallet.WalletActivationComponent
 import com.tangem.features.hotwallet.walletactivation.entry.routing.WalletActivationRoute
 import com.tangem.hot.sdk.model.HotWalletId
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -189,17 +188,6 @@ internal class WalletActivationModelTest {
             trackingContextProxy = trackingContextProxy,
             analyticsEventHandler = analyticsEventHandler,
             clearHotWalletContextualUnlockUseCase = clearHotWalletContextualUnlockUseCase,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 }

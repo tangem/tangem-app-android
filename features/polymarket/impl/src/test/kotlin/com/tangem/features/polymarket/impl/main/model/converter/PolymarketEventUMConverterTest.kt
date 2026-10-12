@@ -11,6 +11,7 @@ import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -143,12 +144,12 @@ internal class PolymarketEventUMConverterTest {
         // which is unavailable to JVM unit tests.
 
         @Test
-        fun `GIVEN no volume WHEN convert THEN volume is null`() {
+        fun `GIVEN no volume WHEN convert THEN volume is a dash`() {
             // Act
             val actual = converter.convert(createEvent(volume = null))
 
             // Assert
-            Truth.assertThat(actual.volume).isNull()
+            Truth.assertThat(actual.volume).isEqualTo(stringReference(DASH_SIGN))
         }
 
         @Test
@@ -173,7 +174,7 @@ internal class PolymarketEventUMConverterTest {
         }
 
         @Test
-        fun `GIVEN no probability WHEN convert THEN probability is null`() {
+        fun `GIVEN no probability WHEN convert THEN probability is a dash`() {
             // Arrange
             val event = createEvent(
                 markets = listOf(createMarket(outcomes = listOf(createOutcome(probability = null)))),
@@ -183,7 +184,7 @@ internal class PolymarketEventUMConverterTest {
             val actual = converter.convert(event)
 
             // Assert
-            Truth.assertThat(actual.rows.single().probability).isNull()
+            Truth.assertThat(actual.rows.single().probability).isEqualTo(stringReference(DASH_SIGN))
         }
     }
 
@@ -211,29 +212,6 @@ internal class PolymarketEventUMConverterTest {
             // Assert
             Truth.assertThat(actual.rows.single().outcomes.map { it.title })
                 .containsExactly(stringReference("Neim"), stringReference("Todo"))
-                .inOrder()
-        }
-
-        @Test
-        fun `GIVEN labels longer than five characters WHEN convert THEN they are truncated with an ellipsis`() {
-            // Arrange
-            val event = createEvent(
-                markets = listOf(
-                    createMarket(
-                        outcomes = listOf(
-                            createOutcome(assetId = "a", title = "Maybe"),
-                            createOutcome(assetId = "b", title = "Neymar"),
-                        ),
-                    ),
-                ),
-            )
-
-            // Act
-            val actual = converter.convert(event)
-
-            // Assert
-            Truth.assertThat(actual.rows.single().outcomes.map { it.title })
-                .containsExactly(stringReference("Maybe"), stringReference("Neyma…"))
                 .inOrder()
         }
 
@@ -307,6 +285,7 @@ internal class PolymarketEventUMConverterTest {
         outcomes: List<PolymarketOutcome> = listOf(createOutcome()),
     ): PolymarketMarket = PolymarketMarket(
         id = id,
+        conditionId = null,
         eventId = "event-1",
         title = title,
         slug = "market-slug",
@@ -316,6 +295,7 @@ internal class PolymarketEventUMConverterTest {
         imageUrl = null,
         status = PolymarketStatus.ACTIVE,
         isNegRisk = false,
+        isAcceptingOrders = true,
         startDate = null,
         endDate = null,
         startDateIso = null,

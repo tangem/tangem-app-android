@@ -4,7 +4,9 @@ import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -20,7 +22,7 @@ import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.pushnotifications.impl.domain.GetPushNotificationsDoubleAskVariantUseCase
 import com.tangem.features.pushnotifications.impl.domain.DoubleAskVariant
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
@@ -28,12 +30,14 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PushNotificationsModelTest {
@@ -220,16 +224,137 @@ internal class PushNotificationsModelTest {
         coVerify(exactly = 0) { applyPushNotificationFirstActivation(any()) }
     }
 
+    @Test
+    fun `GIVEN root screen with next route WHEN onAllowPermission THEN next route replaces stack once`() = runTest {
+        // Arrange
+        coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+        val model = createModel(testScope = this, nextRoute = NEXT_ROUTE)
+        advanceUntilIdle()
+
+        // Act
+        model.onAllowPermission()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { appRouter.replaceAll(routes = arrayOf(NEXT_ROUTE), onComplete = any()) }
+        verify(exactly = 0) { appRouter.push(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN root screen with next route WHEN onDenyPermission THEN next route replaces stack once`() = runTest {
+        // Arrange
+        coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+        val model = createModel(testScope = this, nextRoute = NEXT_ROUTE)
+        advanceUntilIdle()
+
+        // Act
+        model.onDenyPermission()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { appRouter.replaceAll(routes = arrayOf(NEXT_ROUTE), onComplete = any()) }
+        verify(exactly = 0) { appRouter.push(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN root screen with next route WHEN onLaterClick THEN next route replaces stack once`() = runTest {
+        // Arrange
+        coEvery { getDoubleAskVariantUseCase() } returns DoubleAskVariant.Off
+        val model = createModel(testScope = this, nextRoute = NEXT_ROUTE)
+        advanceUntilIdle()
+
+        // Act
+        model.onLaterClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { appRouter.replaceAll(routes = arrayOf(NEXT_ROUTE), onComplete = any()) }
+        verify(exactly = 0) { appRouter.push(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN bottom sheet with next route WHEN onDenyPermission THEN stack is not changed`() = runTest {
+        // Arrange
+        coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+        val model = createModel(testScope = this, isBottomSheet = true, nextRoute = NEXT_ROUTE)
+        advanceUntilIdle()
+
+        // Act
+        model.onDenyPermission()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { appRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
+        verify(exactly = 0) { appRouter.push(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN root screen WHEN onLaterClick THEN wallet reminder is retired`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this, nextRoute = NEXT_ROUTE)
+        advanceUntilIdle()
+
+        // Act
+        model.onLaterClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) {
+            notificationsRepository.setShouldShowNotifications(
+                key = NotificationId.EnablePushesReminderNotification.key,
+                value = false,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN root screen WHEN the ask is left unanswered THEN wallet reminder stays armed`() = runTest {
+        // Arrange + Act
+        createModel(testScope = this, nextRoute = NEXT_ROUTE)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { notificationsRepository.setShouldShowNotifications(key = any(), value = any()) }
+    }
+
     private fun wallet(id: UserWalletId): UserWallet = mockk { every { walletId } returns id }
+
+    @ParameterizedTest
+    @MethodSource("providePermissionStatusSources")
+    fun `GIVEN a source WHEN permission is answered THEN Permission Status carries the point it came from`(
+        source: AppRoute.PushNotification.Source,
+        expected: AnalyticsParam.ScreensSources,
+        isAllowed: Boolean,
+    ) = runTest {
+        // Arrange
+        val model = createModel(testScope = this, source = source)
+
+        // Act
+        if (isAllowed) model.onAllowPermission() else model.onDenyPermission()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticHandler.send(
+                match<PushNotificationAnalyticEvents.PermissionStatus> {
+                    it.params == mapOf(
+                        AnalyticsParam.STATE to if (isAllowed) "Allow" else "Cancel",
+                        AnalyticsParam.SOURCE to expected.value,
+                    )
+                },
+            )
+        }
+    }
 
     private fun createModel(
         testScope: TestScope,
         isBottomSheet: Boolean = false,
         source: AppRoute.PushNotification.Source = AppRoute.PushNotification.Source.Onboarding,
+        nextRoute: AppRoute? = null,
         paramsContainer: ParamsContainer = MutableParamsContainer(
             value = PushNotificationsParams(
                 isBottomSheet = isBottomSheet,
-                nextRoute = null,
+                nextRoute = nextRoute,
                 modelCallbacks = modelCallbacks,
                 source = source,
             ),
@@ -250,14 +375,19 @@ internal class PushNotificationsModelTest {
         )
     }
 
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
+    companion object {
+        val NEXT_ROUTE: AppRoute = AppRoute.Home()
+
+        @JvmStatic
+        fun providePermissionStatusSources(): List<Arguments> = listOf(
+            AppRoute.PushNotification.Source.Stories to AnalyticsParam.ScreensSources.Stories,
+            AppRoute.PushNotification.Source.Main to AnalyticsParam.ScreensSources.MainRequestSheet,
+            AppRoute.PushNotification.Source.Onboarding to AnalyticsParam.ScreensSources.Onboarding,
+            AppRoute.PushNotification.Source.ColdCreation to AnalyticsParam.ScreensSources.ColdCreation,
+            AppRoute.PushNotification.Source.HotCreation to AnalyticsParam.ScreensSources.HotCreation,
+            AppRoute.PushNotification.Source.FirstSignIn to AnalyticsParam.ScreensSources.FirstSignIn,
+        ).flatMap { (source, expected) ->
+            listOf(Arguments.of(source, expected, true), Arguments.of(source, expected, false))
+        }
     }
 }

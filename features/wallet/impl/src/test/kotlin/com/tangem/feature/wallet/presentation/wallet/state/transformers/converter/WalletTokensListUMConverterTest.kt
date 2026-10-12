@@ -1,6 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.extensions.combinedReference
+import com.tangem.core.ui.extensions.pluralReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.CardTypesResolver
@@ -12,6 +17,7 @@ import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account.Personal.Companion.createMainAccount
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -21,7 +27,12 @@ import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
+import com.tangem.feature.wallet.impl.R
+import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
+import com.tangem.features.jointaccount.main.JointAccountMainUM
+import com.tangem.test.mock.MockAccounts
+import com.tangem.utils.StringsSigns
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -64,12 +75,14 @@ internal class WalletTokensListUMConverterTest {
     private fun createConverter(
         selectedWallet: UserWallet,
         clickIntents: WalletClickIntents = mockk(relaxed = true),
+        isAccountsModeEnabled: Boolean = false,
     ): WalletTokensListUMConverter = WalletTokensListUMConverter(
         appCurrency = AppCurrency.Default,
         selectedWallet = selectedWallet,
         clickIntents = clickIntents,
         yieldModuleApyMap = emptyMap(),
-        isAccountsModeEnabled = false,
+        isAccountsModeEnabled = isAccountsModeEnabled,
+        accountIdsWithInvites = emptySet(),
         expandedAccounts = emptySet(),
         stakingAvailabilityMap = emptyMap(),
         shouldShowMainPromo = false,
@@ -88,6 +101,97 @@ internal class WalletTokensListUMConverterTest {
         }
     }
 
+    @Test
+    fun `GIVEN only a pending joint account WHEN convert THEN its row is shown instead of the empty state`() {
+        // Arrange
+        val converter = createConverter(selectedWallet = mockColdWallet(false, false), isAccountsModeEnabled = true)
+        val accountList = accountListOf(pendingJointStatus())
+
+        // Act
+        val result = converter.convert(accountList)
+
+        // Assert
+        val content = result as WalletTokensListUM.Content
+        val row = content.tokenList.single() as TokensListItemUM2.JointPending
+        assertThat(row.state).isInstanceOf(JointAccountMainUM.WaitingMembers::class.java)
+    }
+
+    @Test
+    fun `GIVEN personal and active joint accounts WHEN convert THEN rows follow the domain order`() {
+        // Arrange
+        val converter = createConverter(selectedWallet = mockColdWallet(false, false), isAccountsModeEnabled = true)
+        val personal = AccountStatus.Personal(
+            account = createMainAccount(userWalletId),
+            tokenList = ungroupedTokenList(),
+            priceChangeLce = Unit.lceError(),
+        )
+        val accountList = accountListOf(personal, activeJointStatus())
+
+        // Act
+        val result = converter.convert(accountList)
+
+        // Assert
+        val content = result as WalletTokensListUM.Content
+        assertThat(content.tokenList).hasSize(2)
+        val jointRow = content.tokenList[1] as TokensListItemUM2.Portfolio
+        assertThat(jointRow.isCollapsable).isTrue()
+        assertThat(jointRow.tokenList).hasSize(1)
+        val subtitle = (jointRow.tokenRowUM as TangemTokenRowUM.Content).subtitleUM
+        assertThat(subtitle).isEqualTo(
+            TangemTokenRowUM.SubtitleUM.Content(
+                text = combinedReference(
+                    pluralReference(R.plurals.common_tokens_count, 1, wrappedList(1)),
+                    stringReference(" ${StringsSigns.DOT} "),
+                    pluralReference(R.plurals.joint_account_members_count, 3, wrappedList(3)),
+                ),
+            ),
+        )
+    }
+
+    private fun jointAccount() = MockAccounts.createJointAccount(
+        ownerKeyIndex = 0,
+        cryptoCurrencies = listOf(createToken()),
+        userWalletId = userWalletId,
+    )
+
+    private fun pendingJointStatus(): AccountStatus.Joint {
+        return AccountStatus.Joint(
+            account = jointAccount(),
+            value = JointAccountStatusValue.Pending(StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 3),
+            tokenList = TokenList.Empty,
+            priceChangeLce = Unit.lceError(),
+        )
+    }
+
+    private fun activeJointStatus(): AccountStatus.Joint {
+        return AccountStatus.Joint(
+            account = jointAccount(),
+            value = JointAccountStatusValue.Active(StatusSource.ACTUAL, totalMembers = 3, safeAddress = "0x5afe"),
+            tokenList = ungroupedTokenList(),
+            priceChangeLce = Unit.lceError(),
+        )
+    }
+
+    private fun ungroupedTokenList(): TokenList.Ungrouped {
+        return TokenList.Ungrouped(
+            currencies = listOf(createLoadedStatus(createToken())),
+            totalFiatBalance = TotalFiatBalance.Loaded(BigDecimal.ZERO, StatusSource.ACTUAL),
+            sortedBy = TokensSortType.NONE,
+        )
+    }
+
+    private fun accountListOf(vararg statuses: AccountStatus): AccountStatusList {
+        return AccountStatusList(
+            userWalletId = userWalletId,
+            accountStatuses = statuses.toList(),
+            totalAccounts = statuses.size,
+            totalArchivedAccounts = 0,
+            totalFiatBalance = TotalFiatBalance.Loaded(BigDecimal.ZERO, StatusSource.ACTUAL),
+            sortType = TokensSortType.NONE,
+            groupType = TokensGroupType.NONE,
+        )
+    }
+
     private fun nonEmptyAccountList(): AccountStatusList {
         val tokenList = TokenList.Ungrouped(
             currencies = listOf(createLoadedStatus(createToken())),
@@ -97,7 +201,7 @@ internal class WalletTokensListUMConverterTest {
         return AccountStatusList(
             userWalletId = userWalletId,
             accountStatuses = listOf(
-                AccountStatus.CryptoPortfolio(
+                AccountStatus.Personal(
                     account = createMainAccount(userWalletId),
                     tokenList = tokenList,
                     priceChangeLce = Unit.lceError(),

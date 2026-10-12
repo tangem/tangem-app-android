@@ -1,7 +1,10 @@
 package com.tangem.core.ui.extensions
 
+import android.util.Patterns
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
@@ -185,6 +188,52 @@ fun formatAnnotatedWithLinks(
 }
 
 /**
+ * Returns an [AnnotatedString] where every web address found in [text] (e.g. `coinmarketcap.com`) is
+ * underlined and clickable. An address without a scheme gets `https://`; one with a scheme other than
+ * `http`/`https` (e.g. `rtsp://`) is left as plain text.
+ *
+ * Addresses are detected by [Patterns.WEB_URL], which takes any `label.tld` for an address (`README.md`
+ * included), so it is meant for short strings under our control. Prefer [formatAnnotatedWithLinks] with
+ * explicit markdown links when the string can carry them.
+ *
+ * Links keep the color of the text they sit in unless [linkColor] is specified.
+ *
+ * @param onLinkClick called with the full address when a link is clicked
+ */
+@Composable
+fun formatAnnotatedWithUrls(
+    text: String,
+    linkColor: Color = Color.Unspecified,
+    onLinkClick: (url: String) -> Unit,
+): AnnotatedString {
+    val currentOnLinkClick by rememberUpdatedState(onLinkClick)
+    return remember(text, linkColor) {
+        val linkStyles = TextLinkStyles(
+            style = SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline),
+        )
+        buildAnnotatedString {
+            append(text)
+            val matcher = Patterns.WEB_URL.matcher(text)
+            while (matcher.find()) {
+                val fullUrl = toWebUrlOrNull(matcher.group()) ?: continue
+                val link = LinkAnnotation.Clickable(
+                    tag = fullUrl,
+                    styles = linkStyles,
+                    linkInteractionListener = { currentOnLinkClick(fullUrl) },
+                )
+                addLink(link, matcher.start(), matcher.end())
+            }
+        }
+    }
+}
+
+private fun toWebUrlOrNull(address: String): String? = when {
+    WEB_SCHEMES.any { address.startsWith(it, ignoreCase = true) } -> address
+    address.contains(SCHEME_DELIMITER) -> null
+    else -> "$HTTPS_SCHEME$address"
+}
+
+/**
  * Appends a single space character to the [AnnotatedString.Builder].
  */
 fun AnnotatedString.Builder.appendSpace() = append(" ")
@@ -244,3 +293,7 @@ fun AnnotatedString.Builder.appendWithStyledPlaceholder(
     val afterIndex = index + placeholder.length
     if (afterIndex < template.length) append(template.substring(afterIndex))
 }
+
+private const val SCHEME_DELIMITER = "://"
+private const val HTTPS_SCHEME = "https://"
+private val WEB_SCHEMES = listOf("http://", HTTPS_SCHEME)

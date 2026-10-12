@@ -9,6 +9,7 @@ import com.tangem.data.networks.fetcher.CommonNetworkStatusFetcher
 import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.store.setSourceAsCache
 import com.tangem.data.networks.store.setSourceAsOnlyCache
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.test.core.assertEither
@@ -471,6 +472,40 @@ internal class DefaultMultiNetworkStatusFetcherTest {
         assertEither(actual, expected)
     }
 
+    @Test
+    fun `GIVEN a joint network WHEN fetch THEN it is fetched like any other network`() = runTest {
+        // Arrange
+        val params = MultiNetworkStatusFetcher.Params(
+            userWalletId = userWalletId,
+            networks = setOf(ethereum.network, jointEthereum.network),
+        )
+        coEvery { cardCryptoCurrencyFactory.create(params.userWalletId, params.networks) } returns mapOf(
+            ethereum.network to listOf(ethereum),
+            jointEthereum.network to listOf(jointEthereum),
+        )
+        coEvery { commonNetworkStatusFetcher.fetch(any(), any(), any(), any()) } returns Either.Right(Unit)
+
+        // Act
+        val actual = fetcher(params)
+
+        // Assert
+        assertEither(actual, Either.Right(Unit))
+        coVerify(exactly = 1) {
+            commonNetworkStatusFetcher.fetch(
+                userWalletId = params.userWalletId,
+                network = jointEthereum.network,
+                networkCurrencies = setOf(jointEthereum),
+                xpub = null,
+            )
+            commonNetworkStatusFetcher.fetch(
+                userWalletId = params.userWalletId,
+                network = ethereum.network,
+                networkCurrencies = setOf(ethereum),
+                xpub = null,
+            )
+        }
+    }
+
     private fun setupTwoNetworkParams(): MultiNetworkStatusFetcher.Params {
         val params = MultiNetworkStatusFetcher.Params(
             userWalletId = userWalletId,
@@ -488,5 +523,13 @@ internal class DefaultMultiNetworkStatusFetcherTest {
         val cryptoCurrencyFactory = MockCryptoCurrencyFactory()
         val ethereum = cryptoCurrencyFactory.ethereum
         val cardano = cryptoCurrencyFactory.cardano
+        val jointEthereum = ethereum.network.let { network ->
+            val derivationPath = Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/0")
+            val jointNetwork = network.copy(
+                id = Network.ID(rawId = network.id.rawId, derivationPath = derivationPath),
+                derivationPath = derivationPath,
+            )
+            ethereum.copy(network = jointNetwork)
+        }
     }
 }

@@ -16,6 +16,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.error.mapToGaslessSendError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
@@ -54,7 +55,12 @@ class CreateAndSendTronGaslessTransactionUseCase(
                 val feeToken = (fee.transactionFee.normal.amount.type as? AmountType.Token)?.token
                     ?: error("Tron gasless fee must be denominated in a token")
 
-                val quote = quoteForFinalAmount(quotedFee = quotedFee, original = original, feeToken = feeToken)
+                val quote = quoteForFinalAmount(
+                    userWallet = userWallet,
+                    quotedFee = quotedFee,
+                    original = original,
+                    feeToken = feeToken,
+                )
 
                 // Fail loudly on a backend token mismatch so it cannot silently transfer
                 // the wrong asset to the fee recipient (base58 addresses, case-sensitive).
@@ -85,6 +91,7 @@ class CreateAndSendTronGaslessTransactionUseCase(
                 require(signed.size == 2) { "Expected 2 signed transactions, got ${signed.size}" }
 
                 val result = tronGaslessTransactionRepository.submit(
+                    userWalletId = userWallet.walletId,
                     quoteId = quote.quoteId,
                     signedCompensationTx = signed[0],
                     signedOriginalTx = signed[1],
@@ -95,11 +102,12 @@ class CreateAndSendTronGaslessTransactionUseCase(
                 }
                 result.originalTxHash
             },
-            catch = { raise(SendTransactionError.DataError(it.message)) },
+            catch = { raise(it.mapToGaslessSendError()) },
         )
     }
 
     private suspend fun quoteForFinalAmount(
+        userWallet: UserWallet,
         quotedFee: TronGaslessQuote,
         original: TransactionData.Uncompiled,
         feeToken: Token,
@@ -110,6 +118,7 @@ class CreateAndSendTronGaslessTransactionUseCase(
 
         val refreshed = tronGaslessTransactionRepository.estimate(
             TronGaslessEstimateParams(
+                userWalletId = userWallet.walletId,
                 fromAddress = original.sourceAddress,
                 toAddress = original.destinationAddress,
                 tokenContract = original.contractAddress ?: feeToken.contractAddress,

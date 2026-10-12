@@ -20,7 +20,6 @@ import com.tangem.feature.swap.domain.fee.DexSwapFeeCalculator
 import com.tangem.feature.swap.domain.fee.PatchEthGasLimitForSwap
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractor
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractorImpl
-import com.tangem.features.swap.SwapFeatureToggles
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -77,7 +76,6 @@ internal class SwapDomainModule {
         walletManagersFacade: WalletManagersFacade,
         @SwapDexGasLimit patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
         wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase,
-        swapFeatureToggles: SwapFeatureToggles,
     ): DexSwapFeeCalculator = DexSwapFeeCalculator(
         getFeeUseCase = getFeeUseCase,
         getEthSpecificFeeUseCase = getEthSpecificFeeUseCase,
@@ -86,7 +84,6 @@ internal class SwapDomainModule {
         walletManagersFacade = walletManagersFacade,
         patchEthGasLimitForSwap = patchEthGasLimitForSwap,
         wrapYieldSwapCallDataWithUpgradeUseCase = wrapYieldSwapCallDataWithUpgradeUseCase,
-        swapFeatureToggles = swapFeatureToggles,
     )
 
     @Provides

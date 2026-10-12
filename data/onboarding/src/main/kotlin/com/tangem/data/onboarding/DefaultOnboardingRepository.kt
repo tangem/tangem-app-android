@@ -1,7 +1,7 @@
 package com.tangem.data.onboarding
 
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.*
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onboarding.repository.OnboardingRepository
@@ -16,36 +16,40 @@ import kotlinx.coroutines.flow.Flow
  */
 internal class DefaultOnboardingRepository(
     private val appPreferencesStore: AppPreferencesStore,
+    private val storePreferencesKeys: StorePreferencesKeys,
 ) : OnboardingRepository {
 
     override fun wasTwinsOnboardingShown(): Flow<Boolean> {
-        return appPreferencesStore.get(key = PreferencesKeys.WAS_TWINS_ONBOARDING_SHOWN, default = false)
+        return appPreferencesStore.get(key = storePreferencesKeys.wasTwinsOnboardingShownKey, default = false)
     }
 
     override suspend fun wasTwinsOnboardingShownSync(): Boolean {
-        return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.WAS_TWINS_ONBOARDING_SHOWN, default = false)
+        return appPreferencesStore.getSyncOrDefault(
+            key = storePreferencesKeys.wasTwinsOnboardingShownKey,
+            default = false,
+        )
     }
 
     override suspend fun saveTwinsOnboardingShown() {
-        appPreferencesStore.store(key = PreferencesKeys.WAS_TWINS_ONBOARDING_SHOWN, value = true)
+        appPreferencesStore.store(key = storePreferencesKeys.wasTwinsOnboardingShownKey, value = true)
     }
 
     override suspend fun getUnfinishedFinalizeOnboarding(): ScanResponse? {
         return appPreferencesStore
-            .getObjectSyncOrNull<ScanResponse>(PreferencesKeys.ONBOARDING_FINALIZE_SCAN_RESPONSE_KEY)
+            .getObjectSyncOrNull<ScanResponse>(storePreferencesKeys.onboardingFinalizeScanResponseKey)
     }
 
     override suspend fun saveUnfinishedFinalizeOnboarding(scanResponse: ScanResponse) {
         appPreferencesStore
             .storeObject<ScanResponse>(
-                PreferencesKeys.ONBOARDING_FINALIZE_SCAN_RESPONSE_KEY,
+                storePreferencesKeys.onboardingFinalizeScanResponseKey,
                 scanResponse,
             )
     }
 
     override suspend fun clearUnfinishedFinalizeOnboarding() {
         appPreferencesStore.editData { mutablePreferences ->
-            mutablePreferences.remove(PreferencesKeys.ONBOARDING_FINALIZE_SCAN_RESPONSE_KEY)
+            mutablePreferences.remove(storePreferencesKeys.onboardingFinalizeScanResponseKey)
         }
     }
 }

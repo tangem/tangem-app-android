@@ -60,6 +60,7 @@ import com.tangem.features.send.common.SendConfirmAlertFactory
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.send.analytics.SendAnalyticEvents
 import com.tangem.features.send.send.confirm.SendConfirmComponent
+import com.tangem.features.send.send.joint.JointSendDelegate
 import com.tangem.features.send.send.success.SendConfirmSuccessComponent
 import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.features.send.subcomponents.destination.model.transformers.SendDestinationInitialStateTransformer
@@ -107,6 +108,7 @@ internal class SendModel @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val sendAmountUpdateTrigger: SendAmountUpdateTrigger,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val jointSendDelegate: JointSendDelegate,
 ) : Model(), SendComponentCallback {
 
     private val params: SendComponent.Params = paramsContainer.require()
@@ -338,6 +340,15 @@ internal class SendModel @Inject constructor(
     }
 
     suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
+        if (accountFlow.value is Account.Joint) {
+            return jointSendDelegate.loadFee(
+                userWalletId = userWallet.walletId,
+                currency = cryptoCurrency,
+                amountUM = uiState.value.amountUM,
+                destinationUM = uiState.value.destinationUM,
+            )
+        }
+
         val transferTransaction = prepareTransferTransaction()
             .getOrElse { return GetFeeError.DataError(it).left() }
 
@@ -359,6 +370,7 @@ internal class SendModel @Inject constructor(
             feeToken is CryptoCurrency.Token &&
                 tronDefaultFeeLoader.isGaslessAvailable(userWallet.walletId, feeToken.network, feeToken) ->
                 getTronGaslessFeeUseCase(
+                    userWalletId = userWallet.walletId,
                     transactionData = transferTransaction,
                     feeToken = feeToken,
                 )
@@ -450,10 +462,7 @@ internal class SendModel @Inject constructor(
                         accountFlow.value = account
 
                         cryptoCurrencyStatusFlow.value = cryptoCurrencyStatus
-                        feeCryptoCurrencyStatusFlow.value = getFeePaidCryptoCurrencyStatusSyncUseCase(
-                            userWalletId = params.userWalletId,
-                            cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        ).getOrNull() ?: cryptoCurrencyStatus
+                        feeCryptoCurrencyStatusFlow.value = resolveFeeCurrencyStatus(account, cryptoCurrencyStatus)
                     }.flowOn(dispatchers.default)
                         .launchIn(modelScope)
                 },
@@ -464,6 +473,25 @@ internal class SendModel @Inject constructor(
                 },
             )
         }
+    }
+
+    private suspend fun resolveFeeCurrencyStatus(
+        account: Account?,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): CryptoCurrencyStatus {
+        val resolved = if (account is Account.Joint) {
+            jointSendDelegate.resolveFeeCurrencyStatus(
+                userWalletId = params.userWalletId,
+                account = account,
+                status = cryptoCurrencyStatus,
+            )
+        } else {
+            getFeePaidCryptoCurrencyStatusSyncUseCase(
+                userWalletId = params.userWalletId,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+            ).getOrNull()
+        }
+        return resolved ?: cryptoCurrencyStatus
     }
 
     private fun subscribeOnStatusForInitialNavigation() {

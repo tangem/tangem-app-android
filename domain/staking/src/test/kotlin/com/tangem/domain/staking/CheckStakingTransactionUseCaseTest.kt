@@ -14,7 +14,6 @@ import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.models.staking.NetworkType
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
-import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.staking.verification.StakingBlockAidRequestFactory
 import com.tangem.domain.staking.verification.StakingTransactionRecognizer
 import io.mockk.clearMocks
@@ -34,7 +33,6 @@ internal class CheckStakingTransactionUseCaseTest {
     private val blockAidVerifier: BlockAidVerifier = mockk()
     private val recognizer: StakingTransactionRecognizer = mockk()
     private val requestFactory: StakingBlockAidRequestFactory = mockk()
-    private val featureToggles: StakingFeatureToggles = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val analyticsExceptionHandler: AnalyticsExceptionHandler = mockk(relaxed = true)
 
@@ -42,7 +40,6 @@ internal class CheckStakingTransactionUseCaseTest {
         blockAidVerifier = blockAidVerifier,
         recognizer = recognizer,
         requestFactory = requestFactory,
-        stakingFeatureToggles = featureToggles,
         analyticsEventHandler = analyticsEventHandler,
         analyticsExceptionHandler = analyticsExceptionHandler,
     )
@@ -61,11 +58,9 @@ internal class CheckStakingTransactionUseCaseTest {
             blockAidVerifier,
             recognizer,
             requestFactory,
-            featureToggles,
             analyticsEventHandler,
             analyticsExceptionHandler,
         )
-        every { featureToggles.isTransactionValidationEnabled } returns true
         every { requestFactory.create(any(), any(), any()) } returns transactionData
     }
 
@@ -76,14 +71,6 @@ internal class CheckStakingTransactionUseCaseTest {
     )
 
     // ───────────────────────────── early-exit paths ─────────────────────────────
-
-    @Test
-    fun `GIVEN toggle off WHEN invoke THEN SAFE and no analytics`() = runTest {
-        every { featureToggles.isTransactionValidationEnabled } returns false
-        assertThat(useCase(NetworkType.BINANCE, "0xaa", "{}", "BNB", "BSC", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.SAFE)
-        verify(exactly = 0) { analyticsEventHandler.send(any()) }
-    }
 
     @Test
     fun `GIVEN null unsigned tx WHEN invoke THEN UNSAFE and no analytics`() = runTest {
@@ -391,15 +378,6 @@ internal class CheckStakingTransactionUseCaseTest {
         coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns blockAidResult(ValidationResult.SAFE).right()
 
         useCase(NetworkType.ETHEREUM, "0xaa", "{}", "ETH", "Ethereum", "StakeKit")
-
-        verify(exactly = 0) { analyticsExceptionHandler.sendException(any()) }
-    }
-
-    @Test
-    fun `GIVEN toggle off WHEN invoke THEN non-fatal not sent`() = runTest {
-        every { featureToggles.isTransactionValidationEnabled } returns false
-
-        useCase(NetworkType.SOLANA, "0xaa", "00", "SOL", "Solana", "StakeKit")
 
         verify(exactly = 0) { analyticsExceptionHandler.sendException(any()) }
     }

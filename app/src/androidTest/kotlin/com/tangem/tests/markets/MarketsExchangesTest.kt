@@ -1,6 +1,6 @@
 package com.tangem.tests.markets
 
-import com.tangem.datasource.api.common.config.TangemTech
+import com.tangem.core.remote.config.TangemGatewayApiConfig
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import com.tangem.common.BaseTestCase
@@ -9,9 +9,11 @@ import com.tangem.common.annotations.ApiEnvConfig
 import com.tangem.common.extensions.*
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.scenarios.searchTokenInMarkets
 import com.tangem.scenarios.assertMarketsExchangesScreen
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openMarketsExchangesScreen
+import com.tangem.scenarios.openMarketsTokenDetails
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onMarketsExchangesScreen
@@ -25,14 +27,14 @@ import org.junit.Test
 class MarketsExchangesTest : BaseTestCase() {
 
     @Test
-    @ApiEnv(ApiEnvConfig(TangemTech.KEY, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(TangemGatewayApiConfig.TANGEM_TECH_KEY, ApiEnvironment.PROD))
     @AllureId("58")
     @DisplayName("Markets: verify exchanges list screen")
     fun marketsExchangesListTest() {
         val tokenName = "Solana"
         setupHooks().run {
             step("Open 'Markets Exhanges Screen with token: $tokenName'") {
-                openMarketsExchangesScreen(tokenName = tokenName, shouldClickSeeAllButton = true)
+                openMarketsExchangesScreen(tokenName = tokenName)
             }
             step("Assert 'Exchanges' list screen is displayed") {
                 assertMarketsExchangesScreen()
@@ -43,7 +45,7 @@ class MarketsExchangesTest : BaseTestCase() {
     @OptIn(ExperimentalTestApi::class)
     @Test
     @AllureId("56")
-    @ApiEnv(ApiEnvConfig(TangemTech.KEY, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(TangemGatewayApiConfig.TANGEM_TECH_KEY, ApiEnvironment.PROD))
     @DisplayName("Markets: verify exchanges block is displayed in token details")
     fun marketsExchangesBlockDisplayedTest() {
         val tokenName = "Bitcoin"
@@ -57,6 +59,9 @@ class MarketsExchangesTest : BaseTestCase() {
             step("Open 'Markets' screen") {
                 onMainScreen { marketsSheetDragHandle.clickWithAssertion() }
                 waitForIdle()
+            }
+            step("Search for '$tokenName' token") {
+                searchTokenInMarkets(tokenName)
             }
             step("Click on '$tokenName' token") {
                 onMarketsScreen { tokenWithTitle(tokenName).clickWithAssertion() }
@@ -86,7 +91,7 @@ class MarketsExchangesTest : BaseTestCase() {
 
     @Test
     @AllureId("60")
-    @ApiEnv(ApiEnvConfig(TangemTech.KEY, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(TangemGatewayApiConfig.TANGEM_TECH_KEY, ApiEnvironment.PROD))
     @DisplayName("Markets: verify exchanges list is sorted by volume descending")
     fun marketsExchangesListSortedByVolumeTest() {
         val tokenName = "Bitcoin"
@@ -104,7 +109,7 @@ class MarketsExchangesTest : BaseTestCase() {
 
     @Test
     @AllureId("61")
-    @ApiEnv(ApiEnvConfig(TangemTech.KEY, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(TangemGatewayApiConfig.TANGEM_TECH_KEY, ApiEnvironment.PROD))
     @DisplayName("Markets: verify exchange types are CEX or DEX")
     fun marketsExchangesTypeTest() {
         val tokenName = "Bitcoin"
@@ -122,7 +127,7 @@ class MarketsExchangesTest : BaseTestCase() {
 
     @Test
     @AllureId("62")
-    @ApiEnv(ApiEnvConfig(TangemTech.KEY, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(TangemGatewayApiConfig.TANGEM_TECH_KEY, ApiEnvironment.PROD))
     @DisplayName("Markets: verify exchange trust scores are valid")
     fun marketsExchangesTrustScoreTest() {
         val tokenName = "Bitcoin"
@@ -149,8 +154,8 @@ class MarketsExchangesTest : BaseTestCase() {
                 setWireMockScenarioState(scenarioName = scenarioName, state = "EmptyExchanges")
             }
         ).run {
-            step("Open 'Markets Exhanges Screen with token: $tokenName'") {
-                openMarketsExchangesScreen(tokenName)
+            step("Open '$tokenName' token details in Markets") {
+                openMarketsTokenDetails(tokenName)
             }
             step("Assert 'Listed on exchanges' block shows no exchanges") {
                 onMarketsScreen { listedOnEmptyText.assertIsDisplayed() }

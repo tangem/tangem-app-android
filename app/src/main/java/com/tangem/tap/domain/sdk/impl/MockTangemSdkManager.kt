@@ -20,10 +20,10 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
-import com.tangem.domain.visa.model.VirtualAccountActivationData
+import com.tangem.domain.visa.model.MoneyAccountActivationData
 import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
@@ -93,6 +93,7 @@ class MockTangemSdkManager(
         mnemonic: String,
         passphrase: String?,
         shouldReset: Boolean,
+        shouldForceColdRegistration: Boolean,
     ): CompletionResult<CreateProductWalletTaskResponse> {
         return MockProvider.getImportWalletResponse()
     }
@@ -120,7 +121,7 @@ class MockTangemSdkManager(
         return CompletionResult.Success(true)
     }
 
-    override suspend fun resetBackupCard(cardNumber: Int, userWalletId: UserWalletId): CompletionResult<Boolean> {
+    override suspend fun resetBackupCard(cardNumber: Int, userWallet: UserWallet.Cold): CompletionResult<Boolean> {
         return CompletionResult.Success(true)
     }
 
@@ -167,6 +168,11 @@ class MockTangemSdkManager(
         @DrawableRes iconScanRes: Int?,
         registerColdWallet: Boolean,
     ): CompletionResult<T> = error("This method is deprecated")
+
+    override fun <T> withColdWalletRegistration(
+        runnable: CardSessionRunnable<T>,
+        shouldForceRegistration: Boolean,
+    ): CardSessionRunnable<T> = runnable
 
     override fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
         // intentionally do nothing
@@ -239,9 +245,9 @@ class MockTangemSdkManager(
         error("Not implemented")
     }
 
-    override suspend fun tangemPayProduceVirtualAccountData(
+    override suspend fun tangemPayProduceMoneyAccountData(
         preflightReadFilter: PreflightReadFilter,
-    ): Either<Throwable, VirtualAccountActivationData> {
+    ): Either<Throwable, MoneyAccountActivationData> {
         error("Not implemented")
     }
 
