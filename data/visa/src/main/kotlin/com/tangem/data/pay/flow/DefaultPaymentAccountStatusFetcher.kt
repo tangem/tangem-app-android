@@ -477,18 +477,19 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         balance: PaymentAccountStatusValue.Balance?,
         networks: List<PaymentNetworkStatus>,
         fiatRate: BigDecimal?,
-    ): PaymentAccountStatusValue {
-        if (resolveIssuanceOrderStatus(userWalletId) != OrderStatus.CANCELED) {
-            return PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
+    ): PaymentAccountStatusValue? {
+        return if (resolveIssuanceOrderStatus(userWalletId) == OrderStatus.CANCELED) {
+            cardIssueFailed(
+                userWalletId = userWalletId,
+                customerId = customerId,
+                tariff = tariffPlan,
+                balance = balance,
+                networks = networks,
+                fiatRate = fiatRate,
+            )
+        } else {
+            null
         }
-        return cardIssueFailed(
-            userWalletId = userWalletId,
-            customerId = customerId,
-            tariff = tariffPlan,
-            balance = balance,
-            networks = networks,
-            fiatRate = fiatRate,
-        )
     }
 
     private suspend fun CustomerInfo.resolveBalance(userWalletId: UserWalletId): ResolvedBalance {
@@ -583,13 +584,14 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val allCards = orderedCards + issuingCards
 
         if (allCards.isEmpty()) {
-            return resolveCardlessAccountStatus(
+            val cardlessAccountStatus = resolveCardlessAccountStatus(
                 userWalletId = userWalletId,
                 customerId = customerId,
                 balance = balance,
                 networks = networks,
                 fiatRate = fiatRate,
             )
+            if (cardlessAccountStatus != null) return cardlessAccountStatus
         }
 
         val tariffPlanState = tariffPlan?.let { tariff ->
