@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -121,6 +122,9 @@ internal class ModalMorphGeometry {
 
     /** Cache of the content's probed intrinsic height across morph frames. */
     val contentHeightCache = ModalContentHeightCache()
+
+    /** The card height chasing the content's, so swapping the content resizes the card smoothly. */
+    val contentHeight = ModalContentHeightAnimation()
 }
 
 /**
@@ -142,6 +146,37 @@ internal class ModalContentHeightCache {
             height = measurable.minIntrinsicHeight(width)
         }
         return height
+    }
+}
+
+/**
+ * The card is measured from its content's intrinsic height, and an intrinsic probe reports the final size of the
+ * content at once — an `animateContentSize` inside never reaches the card. So when the content changes height on a
+ * shown card (one screen of a modal replacing another), the card itself rides a spring to the new height. The first
+ * height is adopted as is: a modal opens at its size instead of growing out of nothing.
+ */
+@PublishedApi
+internal class ModalContentHeightAnimation {
+
+    /** Latest probed content height (px), written during layout; -1 until the first pass. */
+    var target: Int by mutableIntStateOf(-1)
+
+    private val animatedHeight = Animatable(initialValue = 0f)
+
+    /** Whether the first height has been adopted; until then — and in previews — the measured height renders as is. */
+    private var isAnimationDriven: Boolean by mutableStateOf(false)
+
+    fun heightOf(measuredHeight: Int): Int {
+        return if (isAnimationDriven) animatedHeight.value.roundToInt() else measuredHeight
+    }
+
+    suspend fun follow(height: Int) {
+        if (isAnimationDriven) {
+            animatedHeight.animateTo(targetValue = height.toFloat(), animationSpec = ModalMorphAnimationSpec)
+        } else {
+            animatedHeight.snapTo(targetValue = height.toFloat())
+            isAnimationDriven = true
+        }
     }
 }
 
@@ -172,6 +207,11 @@ internal fun ModalMorphAnimationEffect(geometry: ModalMorphGeometry) {
                         geometry.isAnimationDriven = true
                     }
                 }
+        }
+        launch {
+            snapshotFlow { geometry.contentHeight.target }
+                .filter { it >= 0 }
+                .collectLatest { height -> geometry.contentHeight.follow(height = height) }
         }
         launch {
             snapshotFlow { geometry.isFocused }.collectLatest { isFocused ->
@@ -261,6 +301,9 @@ internal fun Modifier.modalCardLayout(geometry: ModalMorphGeometry, windowInsets
             .heightOf(measurable = measurable, width = probeWidth, isMorphing = isMorphing)
             .coerceAtMost(maxHeight)
 
+        if (geometry.contentHeight.target != intrinsicHeight) geometry.contentHeight.target = intrinsicHeight
+        val contentHeight = geometry.contentHeight.heightOf(measuredHeight = intrinsicHeight).coerceAtMost(maxHeight)
+
         val target = modalMorphTarget(intrinsicHeight = intrinsicHeight, maxHeight = maxHeight)
         if (geometry.target != target) geometry.target = target
         val contentFullness = if (geometry.isAnimationDriven) geometry.animatedFullness.value else target
@@ -277,7 +320,7 @@ internal fun Modifier.modalCardLayout(geometry: ModalMorphGeometry, windowInsets
         val bottomInset = (baseInset + navBottom * (1f - fullness)).roundToInt().coerceAtLeast(0)
 
         val maxCardHeight = (maxHeight - bottomInset).coerceAtLeast(0)
-        val naturalHeight = (intrinsicHeight + navInset).coerceAtMost(maxCardHeight)
+        val naturalHeight = (contentHeight + navInset).coerceAtMost(maxCardHeight)
         val cardHeight = lerp(naturalHeight, maxCardHeight, focusExpansion)
         val cardWidth = (maxWidth - 2 * sideInset).coerceAtLeast(0)
 
