@@ -52,6 +52,7 @@ import com.tangem.domain.transaction.models.AllowanceInfo
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldModuleAddressProvider
@@ -106,6 +107,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private val currenciesRepository: CurrenciesRepository,
     private val validateTransactionUseCase: ValidateTransactionUseCase,
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
+    private val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     private val getAssetRequirementsUseCase: GetAssetRequirementsUseCase,
     private val amountFormatter: AmountFormatter,
@@ -1088,6 +1090,7 @@ internal class SwapInteractorImpl @Inject constructor(
 
     /**
      * Branch selection:
+     *  - Tron gasless path: the loaded fee carries a `tronGaslessQuote` → `createAndSendTronGaslessTransactionUseCase`.
      *  - Gasless token path: `swapFee.transactionFeeResult is LoadedExtended && selectedFeeToken.currency is Token`
      *    → `createAndSendGaslessTransactionUseCase`.
      *  - Otherwise → `sendTransactionUseCase` with `swapFee.fee`.
@@ -1182,16 +1185,22 @@ internal class SwapInteractorImpl @Inject constructor(
             return SwapTransactionState.Error.UnknownError
         }
 
-        val isGaslessToken = fee.selectedFeeToken.currency is CryptoCurrency.Token &&
-            fee.transactionFeeResult is TransactionFeeResult.LoadedExtended
-        val result = if (isGaslessToken) {
-            createAndSendGaslessTransactionUseCase.invoke(
-                transactionData = txData,
+        val feeExtended = (fee.transactionFeeResult as? TransactionFeeResult.LoadedExtended)?.fee
+        val result = when {
+            feeExtended?.tronGaslessQuote != null -> createAndSendTronGaslessTransactionUseCase(
                 userWallet = userWallet,
-                fee = fee.transactionFeeResult.fee,
+                network = fromSwapCurrencyStatus.currency.network,
+                transactionData = txData,
+                fee = feeExtended,
             )
-        } else {
-            sendTransactionUseCase(
+            feeExtended != null && fee.selectedFeeToken.currency is CryptoCurrency.Token -> {
+                createAndSendGaslessTransactionUseCase.invoke(
+                    transactionData = txData,
+                    userWallet = userWallet,
+                    fee = feeExtended,
+                )
+            }
+            else -> sendTransactionUseCase(
                 txData = txData,
                 userWallet = userWallet,
                 network = fromSwapCurrencyStatus.currency.network,
