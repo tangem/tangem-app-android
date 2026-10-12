@@ -183,7 +183,7 @@ internal class PrepareClaimBeforeWithdrawUseCaseTest {
         val actual = useCase(
             userWallet = userWallet,
             cryptoCurrencyStatus = model.status,
-            feeCryptoCurrencyStatus = statusOf(model.feeCurrency ?: coin(), balance = model.feeBalance),
+            feeCryptoCurrencyStatus = statusOf(model.feeCurrency, balance = model.feeBalance),
             withdrawalFee = WITHDRAWAL_FEE,
         )
 
@@ -195,8 +195,7 @@ internal class PrepareClaimBeforeWithdrawUseCaseTest {
         val reason: String,
         val status: CryptoCurrencyStatus,
         val feeBalance: BigDecimal,
-        /** The native coin, unless a case is specifically about the fee being paid in something else. */
-        val feeCurrency: CryptoCurrency? = null,
+        val feeCurrency: CryptoCurrency = coin(),
         val arrange: () -> Unit,
     ) {
         override fun toString(): String = reason
