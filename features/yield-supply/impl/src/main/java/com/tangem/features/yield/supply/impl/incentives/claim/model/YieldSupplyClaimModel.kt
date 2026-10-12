@@ -37,6 +37,7 @@ import com.tangem.features.yield.supply.impl.incentives.claim.YieldSupplyClaimCo
 import com.tangem.features.yield.supply.impl.incentives.claim.di.YieldClaimTimeSource
 import com.tangem.features.yield.supply.impl.incentives.claim.entity.YieldSupplyClaimNotificationUM
 import com.tangem.features.yield.supply.impl.incentives.claim.entity.YieldSupplyClaimUM
+import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
@@ -199,7 +200,21 @@ internal class YieldSupplyClaimModel @Inject constructor(
                     },
                 )
             },
-            ifRight = { params.onDismiss() },
+            // The result replaces this sheet in the slot; dismissing would close it
+            ifRight = { onClaimSubmitted() },
+        )
+    }
+
+    private fun onClaimSubmitted() {
+        val state = uiState.value
+
+        params.onSubmitted(
+            YieldSupplyClaimResultUM(
+                status = YieldSupplyClaimResultUM.Status.Submitted,
+                total = state.total,
+                serviceFee = state.serviceFee,
+                networkFee = state.networkFee,
+            ),
         )
     }
 
