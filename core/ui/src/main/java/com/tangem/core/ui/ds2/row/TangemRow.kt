@@ -45,8 +45,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.atoms.text.EllipsisText
-import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.conditionalCompose
@@ -416,7 +414,8 @@ fun TangemRowText(
 
 /**
  * [TangemRowText] whose value is a blockchain [address]: instead of being cut at its end, it keeps as much of itself
- * as the slot's width allows and drops characters from its middle — see [EllipsisText].
+ * as the slot's width allows and drops characters from its middle. A plain [Text] rather than `EllipsisText`, whose
+ * `SubcomposeLayout` cannot report an intrinsic height and so crashes inside a `TangemModal`.
  *
  * The length follows the measured width, so give it a bounded slot (`Modifier.weight()` inside the row scope);
  * unbounded, the address renders in full.
@@ -428,13 +427,14 @@ fun TangemRowText(
 @Composable
 @NonRestartableComposable
 fun TangemRowAddressText(address: String, role: TangemRowTextRole, modifier: Modifier = Modifier) {
-    EllipsisText(
+    Text(
         text = address,
         modifier = modifier,
         color = rowTextColor(role),
         style = rowTextStyle(role),
         textAlign = rowTextAlign(role),
-        ellipsis = TextEllipsis.Middle,
+        maxLines = 1,
+        overflow = TextOverflow.MiddleEllipsis,
     )
 }
 
