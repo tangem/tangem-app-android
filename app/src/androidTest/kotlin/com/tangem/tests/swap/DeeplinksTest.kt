@@ -2,6 +2,7 @@ package com.tangem.tests.swap
 
 import androidx.test.InstrumentationRegistry.getTargetContext
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.MORALIS_EVM_TOKEN_BALANCES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
@@ -40,6 +41,13 @@ class DeeplinksTest : BaseTestCase() {
     private val dexProviderState = "DexProvider"
     private val quoteScenarioName = "exchange_quote_ethereum"
     private val quoteUnreachableState = "Unreachable"
+    private val ethereumTokenSymbol = "ETH"
+    private val usdcTokenSymbol = "USDC"
+    private val emptyAmountPlaceholder = "0.00"
+    private val ethereumUsdcUserTokensState = "YieldUSDCEthereum"
+    private val ethereumUsdcAssetsState = "YieldUSDCEthereumExchangeEnabled"
+    private val ethereumPairsScenarioName = "ethereum_pairs"
+    private val ethereumUsdcChangellyState = "EthUsdcChangelly"
 
     @AllureId("10913")
     @DisplayName("Deeplinks: full set of valid params opens Swap prefilled")
@@ -107,8 +115,6 @@ class DeeplinksTest : BaseTestCase() {
     @DisplayName("Deeplinks: FROM/TO pair without amount opens Swap with an empty amount field")
     @Test
     fun pairWithoutAmountTest() {
-        val emptyAmountPlaceholder = "0.00"
-
         setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -467,6 +473,142 @@ class DeeplinksTest : BaseTestCase() {
             }
             step("Assert 'Refresh' button is displayed") {
                 onSwapTokenScreen { refreshButton.assertIsDisplayed() }
+            }
+        }
+    }
+
+    @AllureId("10915")
+    @DisplayName("Deeplinks: only FROM and from_amount without TO opens Swap with FROM prefilled and no amount")
+    @Test
+    fun onlyFromWithAmountTest() {
+        val tokenBalancesState = "NonZeroEvmBalances"
+        val ethereumBalanceScenarioName = "eth_network_balance"
+        val ethereumLessFundedThanUsdcState = "LessThanDollar"
+
+        setupHooks().run {
+            step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$ethereumUsdcUserTokensState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = ethereumUsdcUserTokensState)
+            }
+            step("Set WireMock scenario '$assetsScenarioName' to '$ethereumUsdcAssetsState'") {
+                setWireMockScenarioState(scenarioName = assetsScenarioName, state = ethereumUsdcAssetsState)
+            }
+            step("Set WireMock scenario '$MORALIS_EVM_TOKEN_BALANCES_API_SCENARIO' to '$tokenBalancesState'") {
+                setWireMockScenarioState(
+                    scenarioName = MORALIS_EVM_TOKEN_BALANCES_API_SCENARIO,
+                    state = tokenBalancesState,
+                )
+            }
+            step("Set WireMock scenario '$ethereumBalanceScenarioName' to '$ethereumLessFundedThanUsdcState'") {
+                setWireMockScenarioState(
+                    scenarioName = ethereumBalanceScenarioName,
+                    state = ethereumLessFundedThanUsdcState,
+                )
+            }
+            step("Open 'Main' screen with existing hot wallet") {
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
+            }
+            step("Open the deeplink with only FROM and 'from_amount'") {
+                openAppByDeepLink("tangem://swap?from_token_id=ethereum&from_network_id=ethereum&from_amount=0.5")
+            }
+            step("Close 'Stories' screen if shown") { closeFirstTimeSwapStoriesIfShown() }
+            step("Assert FROM token '$ethereumTokenSymbol' is prefilled") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { swapTokenSymbol(ethereumTokenSymbol).assertIsDisplayed() }
+                }
+            }
+            step("Assert TO token is not selected") {
+                onSwapTokenScreen { receiveChooseTokenButton.assertIsDisplayed() }
+            }
+            step("Assert amount field is empty") {
+                onSwapTokenScreen { textInput.assertTextEquals(emptyAmountPlaceholder) }
+            }
+        }
+    }
+
+    @AllureId("10916")
+    @DisplayName("Deeplinks: only TO and from_amount without FROM opens Swap with the most funded token as FROM and no amount")
+    @Test
+    fun onlyToWithAmountTest() {
+        setupHooks().run {
+            step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$ethereumUsdcUserTokensState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = ethereumUsdcUserTokensState)
+            }
+            step("Set WireMock scenario '$assetsScenarioName' to '$ethereumUsdcAssetsState'") {
+                setWireMockScenarioState(scenarioName = assetsScenarioName, state = ethereumUsdcAssetsState)
+            }
+            step("Set WireMock scenario '$ethereumPairsScenarioName' to '$ethereumUsdcChangellyState'") {
+                setWireMockScenarioState(scenarioName = ethereumPairsScenarioName, state = ethereumUsdcChangellyState)
+            }
+            step("Open 'Main' screen with existing hot wallet") {
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
+            }
+            step("Open the deeplink with only TO and 'from_amount'") {
+                openAppByDeepLink("tangem://swap?to_token_id=usd-coin&to_network_id=ethereum&from_amount=0.5")
+            }
+            step("Close 'Stories' screen if shown") { closeFirstTimeSwapStoriesIfShown() }
+            step("Assert TO token '$usdcTokenSymbol' is prefilled") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { receiveTokenSymbol(usdcTokenSymbol).assertIsDisplayed() }
+                }
+            }
+            step("Assert FROM token is the most funded '$ethereumTokenSymbol'") {
+                onSwapTokenScreen { swapTokenSymbol(ethereumTokenSymbol).assertIsDisplayed() }
+            }
+            step("Assert amount field is empty") {
+                onSwapTokenScreen { textInput.assertTextEquals(emptyAmountPlaceholder) }
+            }
+        }
+    }
+
+    @AllureId("10918")
+    @DisplayName("Deeplinks: provider_id valid for the pair preselects that provider")
+    @Test
+    fun providerIdValidForPairTest() {
+        val amount = "0.5"
+        val changellyProviderName = "Changelly"
+
+        setupHooks().run {
+            step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$ethereumUsdcUserTokensState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = ethereumUsdcUserTokensState)
+            }
+            step("Set WireMock scenario '$assetsScenarioName' to '$ethereumUsdcAssetsState'") {
+                setWireMockScenarioState(scenarioName = assetsScenarioName, state = ethereumUsdcAssetsState)
+            }
+            step("Set WireMock scenario '$ethereumPairsScenarioName' to '$ethereumUsdcChangellyState'") {
+                setWireMockScenarioState(scenarioName = ethereumPairsScenarioName, state = ethereumUsdcChangellyState)
+            }
+            step("Set WireMock scenario '$quoteScenarioName' to '$ethereumUsdcChangellyState'") {
+                setWireMockScenarioState(scenarioName = quoteScenarioName, state = ethereumUsdcChangellyState)
+            }
+            step("Open 'Main' screen with existing hot wallet") {
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
+            }
+            step("Open the deeplink with the ETH → USDC pair, amount and 'provider_id=changelly'") {
+                openAppByDeepLink(
+                    "tangem://swap" +
+                        "?from_token_id=ethereum&from_network_id=ethereum" +
+                        "&to_token_id=usd-coin&to_network_id=ethereum" +
+                        "&from_amount=$amount&provider_id=changelly",
+                )
+            }
+            step("Close 'Stories' screen if shown") { closeFirstTimeSwapStoriesIfShown() }
+            step("Assert FROM token '$ethereumTokenSymbol'") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { swapTokenSymbol(ethereumTokenSymbol).assertIsDisplayed() }
+                }
+            }
+            step("Assert TO token '$usdcTokenSymbol'") {
+                onSwapTokenScreen { receiveTokenSymbol(usdcTokenSymbol).assertIsDisplayed() }
+            }
+            step("Assert amount is prefilled with '$amount'") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { textInput.assertTextEquals(amount) }
+                }
+            }
+            step("Assert provider '$changellyProviderName' is preselected") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providerNameText.assertTextContains(changellyProviderName) }
+                }
             }
         }
     }
