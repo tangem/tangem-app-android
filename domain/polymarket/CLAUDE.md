@@ -81,8 +81,8 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 - **Balance**: `syncBalanceAllowance` must precede `getBalanceAllowance` — the CLOB serves a cached figure it
   recomputes only when asked, so a wallet funded after onboarding would report zero forever. The sync is
   best-effort.
-- **Funding window** (5 s polling instead of 30 s) opens only on a send this app made; an external
-  transfer's timing is unknown.
+- **Funding window** (5 s polling instead of 30 s, up to 90 s like iOS) opens only on a send this app made; an
+  external transfer's timing is unknown.
 - **Positions value** is kept apart from the account status: it needs only the deposit-wallet address
   (public data API), and a failed read must not touch the balance. `PredictionTotalBalance.of` is the one
   place collateral and positions are added. Runtime only — persist it when the wallet total starts counting
