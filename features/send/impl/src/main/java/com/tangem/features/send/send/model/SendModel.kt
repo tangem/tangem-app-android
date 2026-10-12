@@ -360,11 +360,13 @@ internal class SendModel @Inject constructor(
     }
 
     suspend fun loadFeeExtended(maybeToken: CryptoCurrencyStatus?): Either<GetFeeError, TransactionFeeExtended> {
-        if (accountFlow.value is Account.Joint) {
+        val account = accountFlow.value
+        if (account is Account.Joint) {
             return jointSendDelegate.loadFeeExtended(
                 userWalletId = userWallet.walletId,
+                account = account,
                 currency = cryptoCurrency,
-                feeCoin = feeCryptoCurrencyStatusFlow.value.currency,
+                feeCoinStatus = feeCryptoCurrencyStatusFlow.value,
                 feeCurrencyStatus = maybeToken,
                 amountUM = uiState.value.amountUM,
                 destinationUM = uiState.value.destinationUM,
