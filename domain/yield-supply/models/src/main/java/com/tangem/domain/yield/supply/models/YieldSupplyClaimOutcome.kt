@@ -16,4 +16,5 @@ data class YieldSupplyClaimOutcome(
     val chainId: Int,
     val userAddress: String,
     val outcome: YieldSupplyTransactionOutcome,
+    val origin: YieldSupplyClaimOrigin,
 )
