@@ -47,9 +47,18 @@ internal class DefaultSocialLoginProviderRepository @Inject constructor(
                     // Asked right after the account picker, so both Google prompts come before the app's
                     // own progress instead of popping up over it.
                     appDataTokenProvider.getAccessToken(interactive = true)
-                        .mapLeft(GoogleAuthError::toDomainError)
+                        .mapLeft(::toSignInError)
                         .map { SocialProviderIdToken(value = idToken.value, nonce = nonce.forRequest) }
                 }
+        }
+    }
+
+    // No wallet is being restored yet, so a grant that failed here is a failed sign-in rather than the
+    // restore-only "no access to the cloud" error.
+    private fun toSignInError(error: GoogleAuthError): SocialLoginError {
+        return when (val domainError = error.toDomainError()) {
+            SocialLoginError.CloudUnavailable -> SocialLoginError.SignInFailed()
+            else -> domainError
         }
     }
 
