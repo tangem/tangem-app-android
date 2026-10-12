@@ -49,12 +49,23 @@ internal class DefaultPolymarketCollateralCurrencyFactory @Inject constructor() 
             currencySymbol = blockchain.currency,
             derivationPath = Network.DerivationPath.None,
             isTestnet = blockchain.isTestnet(),
-            standardType = Network.StandardType.Unspecified(blockchain.name),
+            standardType = blockchain.standardType(),
             hasFiatFeeRate = true,
             canHandleTokens = true,
             transactionExtrasType = blockchain.getSupportedTransactionExtras(),
-            nameResolvingType = Network.NameResolvingType.NONE,
+            nameResolvingType = blockchain.nameResolvingType(),
         )
+    }
+
+    private fun Blockchain.standardType(): Network.StandardType = when (this) {
+        Blockchain.Ethereum -> Network.StandardType.ERC20
+        Blockchain.BSC -> Network.StandardType.BEP20
+        else -> Network.StandardType.Unspecified(name)
+    }
+
+    private fun Blockchain.nameResolvingType(): Network.NameResolvingType = when (this) {
+        Blockchain.Ethereum -> Network.NameResolvingType.ENS
+        else -> Network.NameResolvingType.NONE
     }
 
     private fun token(network: Network, contractAddress: String, name: String, symbol: String, decimals: Int) =
