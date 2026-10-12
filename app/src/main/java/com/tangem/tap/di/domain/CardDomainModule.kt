@@ -4,6 +4,7 @@ import com.tangem.domain.card.BackupValidator
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.card.ResetCardUseCase
+import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -17,6 +18,7 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.card.DefaultResetCardUseCase
 import com.tangem.tap.domain.card.FirmwareFeatureToggles
+import com.tangem.tap.domain.scanCard.DefaultScanCardProcessor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,6 +28,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object CardDomainModule {
+
+    @Provides
+    fun provideScanCardProcessor(scanCardProcessor: DefaultScanCardProcessor): ScanCardProcessor {
+        return scanCardProcessor
+    }
 
     @Provides
     @Singleton

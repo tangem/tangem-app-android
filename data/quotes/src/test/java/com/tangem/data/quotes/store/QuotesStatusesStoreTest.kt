@@ -35,7 +35,7 @@ internal class QuotesStatusesStoreTest {
     private var store: DefaultQuotesStatusesStore by Delegates.notNull()
 
     // region Data models
-    private val btcQuoteDM = "BTC" to MockQuoteResponseFactory.createSinglePrice(BigDecimal.ZERO)
+    private val btcQuoteDM = "BTC" to MockQuoteResponseFactory.createSinglePrice(BigDecimal.TEN)
     private val ethQuoteDM = "ETH" to MockQuoteResponseFactory.createSinglePrice(BigDecimal.ONE)
     // endregion
 

@@ -21,15 +21,24 @@ internal class SendAnalyticHelper @Inject constructor(
     private val getAccountCurrencyByAddressUseCase: GetAccountCurrencyByAddressUseCase,
 ) {
 
+    /**
+     * [jointComposition] is set for a send from a joint account: the event then marks the creation of the request,
+     * not a transaction in the chain, and the Safe's fee is fixed with no nonce to set
+     */
     suspend fun sendSuccessAnalytics(
         cryptoCurrency: CryptoCurrency,
         sendUM: SendUM,
         feeToken: CryptoCurrency,
         account: Account?,
+        jointComposition: AnalyticsParam.JointComposition? = null,
     ) {
         val destinationUM = sendUM.destinationUM as? DestinationUM.Content
-        val feeSelectorUM = sendUM.feeSelectorUM as? FeeSelectorUM.Content ?: return
-        val feeType = feeSelectorUM.toAnalyticType()
+        val feeSelectorUM = sendUM.feeSelectorUM as? FeeSelectorUM.Content
+        val feeType = when {
+            jointComposition != null -> AnalyticsParam.FeeType.Fixed
+            feeSelectorUM != null -> feeSelectorUM.toAnalyticType()
+            else -> return
+        }
         val feeTokenSymbol = feeToken.symbol
         val feeAssetType = if (feeToken is CryptoCurrency.Coin) {
             AnalyticsParam.FeeAssetType.Coin
@@ -41,17 +50,21 @@ internal class SendAnalyticHelper @Inject constructor(
         val destinationAccount = getAccountCurrencyByAddressUseCase(destination)
             .getOrNull()?.account
         val toDerivationIndex = destinationAccount?.derivationIndex?.value
+        val fromAccountType = account.toAnalyticsAccountType()
         analyticsEventHandler.send(
             SendAnalyticEvents.TransactionScreenOpened(
                 token = cryptoCurrency.symbol,
                 feeType = feeType,
                 blockchain = cryptoCurrency.network.name,
-                isNonceNotEmpty = feeSelectorUM.feeNonce is FeeNonce.Nonce,
+                isNonceNotEmpty = jointComposition == null && feeSelectorUM?.feeNonce is FeeNonce.Nonce,
                 ensStatus = getEnsStatus(sendUM),
                 fromDerivationIndex = fromDerivationIndex,
                 toDerivationIndex = toDerivationIndex,
                 feeToken = feeTokenSymbol,
                 feeAssetType = feeAssetType,
+                fromAccountType = fromAccountType,
+                toAccountType = destinationAccount?.toAnalyticsAccountType(),
+                jointComposition = jointComposition,
             ),
         )
         analyticsEventHandler.send(
@@ -66,8 +79,15 @@ internal class SendAnalyticHelper @Inject constructor(
                 memoType = getSendTransactionMemoType(destinationUM.memoTextField),
                 isCustomToken = cryptoCurrency.isCustom,
                 isCustomFeeToken = feeToken.isCustom,
+                accountType = fromAccountType,
+                jointComposition = jointComposition,
             ),
         )
+    }
+
+    private fun Account?.toAnalyticsAccountType(): AnalyticsParam.AccountType = when (this) {
+        is Account.Joint -> AnalyticsParam.AccountType.Joint
+        else -> AnalyticsParam.AccountType.Crypto
     }
 
     private fun getSendTransactionMemoType(

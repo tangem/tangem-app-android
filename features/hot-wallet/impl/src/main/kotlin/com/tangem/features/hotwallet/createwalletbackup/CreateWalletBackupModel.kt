@@ -151,7 +151,8 @@ internal class CreateWalletBackupModel @Inject constructor(
         }
 
         override fun onUpgradeClick(userWalletId: UserWalletId) {
-            router.popTo<AppRoute.WalletSettings>()
+            // Back to the Hardware wallet screen that started the backup, as when no backup was needed
+            router.popTo<AppRoute.WalletHardwareBackup>()
             router.push(
                 AppRoute.UpgradeWallet(
                     userWalletId = userWalletId,

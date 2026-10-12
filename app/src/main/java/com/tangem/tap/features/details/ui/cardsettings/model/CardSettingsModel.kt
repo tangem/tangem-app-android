@@ -3,6 +3,7 @@ package com.tangem.tap.features.details.ui.cardsettings.model
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
@@ -61,12 +62,14 @@ internal class CardSettingsModel @Inject constructor(
 
     private var isBiometricsRequestPolicyPrevious: Boolean = false
 
+    private var cardIdDisplayFormatPrevious: CardIdDisplayFormat? = null
+
     private val userWalletId = params.userWalletId
 
     val screenState: MutableStateFlow<CardSettingsScreenState> = MutableStateFlow(getInitialState())
 
     init {
-        updateAccessCodeRequestPolicy()
+        overrideSdkConfig()
 
         cardSettingsInteractor.scannedScanResponse
             .filterNotNull()
@@ -78,14 +81,16 @@ internal class CardSettingsModel @Inject constructor(
         super.onDestroy()
         // Reset card scanned data
         cardSettingsInteractor.clear()
-        // Restore the previous value of access code request policy
+        // Restore the previous values of SDK config overridden by this screen
         cardSdkConfigRepository.restoreAccessCodeRequestPolicy(isBiometricsRequestPolicyPrevious)
+        cardIdDisplayFormatPrevious?.let(cardSdkConfigRepository::restoreCardIdDisplayFormat)
     }
 
-    private fun updateAccessCodeRequestPolicy() {
+    private fun overrideSdkConfig() {
         runBlocking {
-            // !!!IMPORTANT!!!: Do not forget to restore the previous value in onCleared() method
+            // !!!IMPORTANT!!!: Do not forget to restore the previous values in onDestroy() method
             isBiometricsRequestPolicyPrevious = cardSdkConfigRepository.isBiometricsRequestPolicy
+            cardIdDisplayFormatPrevious = cardSdkConfigRepository.cardIdDisplayFormat
 
             val userWallet = getUserWalletUseCase(userWalletId)
                 .getOrElse { error("User wallet $userWalletId not found") }
@@ -93,6 +98,9 @@ internal class CardSettingsModel @Inject constructor(
 
             cardSdkConfigRepository.isBiometricsRequestPolicy = userWallet.scanResponse.card.isAccessCodeSet &&
                 settingsRepository.shouldSaveAccessCodes()
+
+            // The card of this wallet isn't necessarily the selected one, whose format is set globally
+            tangemSdkManager.changeDisplayedCardIdNumbersCount(userWallet.scanResponse)
         }
     }
 

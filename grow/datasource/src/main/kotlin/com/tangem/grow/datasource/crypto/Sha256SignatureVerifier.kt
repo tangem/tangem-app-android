@@ -25,6 +25,7 @@ internal class Sha256SignatureVerifier(
         val expressConfig = apiConfigsManager.getEnvironmentConfig(Express.ID)
         return when (expressConfig.environment) {
             ApiEnvironment.PROD -> growEnvironmentConfig.express?.signVerifierPublicKey
+            ApiEnvironment.PROD_NEW -> growEnvironmentConfig.express?.signVerifierPublicKey
             else -> growEnvironmentConfig.devExpress?.signVerifierPublicKey
         }
     }

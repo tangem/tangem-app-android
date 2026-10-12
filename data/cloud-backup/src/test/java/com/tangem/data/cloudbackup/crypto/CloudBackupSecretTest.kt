@@ -11,7 +11,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import java.io.ByteArrayInputStream
 
 /**
- * Guards the cross-platform payload format (UC-07 §4.1). A change here silently breaks restoring
+ * Guards the cross-platform payload format. A change here silently breaks restoring
 
  */
 @OptIn(ExperimentalSerializationApi::class)
