@@ -229,9 +229,14 @@ internal class McpPairModel @Inject constructor(
             McpAgentUM(
                 name = stringReference(clientName),
                 origin = verification.clientOrigin?.let(::stringReference),
+                iconUrl = verification.clientIconUrl,
             )
         } else {
-            McpAgentUM(name = stringReference(verification.clientOrigin ?: verification.userCode), origin = null)
+            McpAgentUM(
+                name = stringReference(verification.clientOrigin ?: verification.userCode),
+                origin = null,
+                iconUrl = verification.clientIconUrl,
+            )
         }
     }
 
