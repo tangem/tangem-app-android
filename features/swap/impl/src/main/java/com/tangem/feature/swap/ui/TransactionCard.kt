@@ -387,7 +387,9 @@ private fun Content(cardData: SwapCardState.SwapCardData, priceImpact: PriceImpa
 
             SpacerH4()
 
-            if (amountEquivalent != null) {
+            if (cardData.amountCurrencyOverride != null) {
+                Spacer(modifier = Modifier.height(20.dp))
+            } else if (amountEquivalent != null) {
                 when (type) {
                     is TransactionCardType.ReadOnly -> ReceiveAmountEquivalent(
                         amountEquivalent = amountEquivalent,
@@ -437,8 +439,10 @@ internal fun AmountInputField(
         isEnabled = type.isEnabled,
         isAutoResize = true,
         visualTransformation = AmountVisualTransformation(
-            currencyCode = cardData.appCurrency.code.takeIf { amountField.isFiatValue },
-            symbol = activeAmount.currencySymbol.takeIf { amountField.isFiatValue },
+            currencyCode = cardData.amountCurrencyOverride?.code
+                ?: cardData.appCurrency.code.takeIf { amountField.isFiatValue },
+            symbol = cardData.amountCurrencyOverride?.symbol
+                ?: activeAmount.currencySymbol.takeIf { amountField.isFiatValue },
             decimals = activeAmount.decimals,
             symbolColor = TangemTheme.colors.text.disabled,
         ),
