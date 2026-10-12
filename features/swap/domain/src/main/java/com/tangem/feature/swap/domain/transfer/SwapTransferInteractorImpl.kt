@@ -48,6 +48,7 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkFeeCoverage
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.first
 import java.math.BigDecimal
@@ -322,7 +323,10 @@ class SwapTransferInteractorImpl @Inject constructor(
                 fromSwapCurrency.network.rawId == toSwapCurrency.network.rawId
             }
             fromSwapCurrency is CryptoCurrency.Token && toSwapCurrency is CryptoCurrency.Token -> {
-                val isContractAddressSame = fromSwapCurrency.contractAddress == toSwapCurrency.contractAddress
+                val isContractAddressSame = fromSwapCurrency.contractAddress.equals(
+                    other = toSwapCurrency.contractAddress,
+                    ignoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(fromSwapCurrency.network.rawId),
+                )
                 fromSwapCurrency.network.rawId == toSwapCurrency.network.rawId && isContractAddressSame
             }
             else -> false

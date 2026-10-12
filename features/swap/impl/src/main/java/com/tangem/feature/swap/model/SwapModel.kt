@@ -2319,6 +2319,7 @@ internal class SwapModel @Inject constructor(
      * authoritative; only the displayed value and equivalent are recomputed (no quote reload).
      */
     private fun onCurrencyChange(isFiat: Boolean) {
+        if (isPredictionWithdrawFlow) return
         if (isFiat == isFiatInput.value) return
         val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return
         val fiatRate = fromSwapCurrencyStatus.status.value.fiatRate
@@ -3067,7 +3068,11 @@ internal class SwapModel @Inject constructor(
     private fun SwapStateHolder.withAccountFlowPresentation(): SwapStateHolder = withAccountFlowPresentation(
         accountFlow = accountFlow,
         isReverseLocked = isReverseLocked,
-        predictionCollateralBalance = dataState.toSwapCurrencyStatus?.status?.value?.amount,
+        predictionCollateralBalance = if (isPredictionWithdrawFlow) {
+            dataState.fromSwapCurrencyStatus?.status?.value?.amount
+        } else {
+            dataState.toSwapCurrencyStatus?.status?.value?.amount
+        },
     )
 
     // Mode-based detection (accountFlow is Withdraw) covers the Tangem Pay withdraw-via-swap entry
