@@ -3,11 +3,9 @@ package com.tangem.feature.swap.domain.transfer
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -50,6 +48,7 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkFeeCoverage
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.first
 import java.math.BigDecimal
@@ -326,7 +325,7 @@ class SwapTransferInteractorImpl @Inject constructor(
             fromSwapCurrency is CryptoCurrency.Token && toSwapCurrency is CryptoCurrency.Token -> {
                 val isContractAddressSame = fromSwapCurrency.contractAddress.equals(
                     other = toSwapCurrency.contractAddress,
-                    ignoreCase = Blockchain.fromNetworkId(fromSwapCurrency.network.rawId)?.isEvm() == true,
+                    ignoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(fromSwapCurrency.network.rawId),
                 )
                 fromSwapCurrency.network.rawId == toSwapCurrency.network.rawId && isContractAddressSame
             }
