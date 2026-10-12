@@ -9,8 +9,10 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.Address
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.isZero
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
@@ -18,21 +20,23 @@ import java.math.BigDecimal
  * Convert [TransactionData] to [TxInfo]
  *
  * @property walletAddresses wallet addresses
+ * @property currency        currency whose history the rows are built for; `null` when they belong to no single
+ *                           currency (the wallet-level snapshot), which leaves every type as decoded
  *
 [REDACTED_AUTHOR]
  */
 internal class TransactionDataToTxHistoryItemConverter(
     private val walletAddresses: Set<Address>,
-    private val feePaidCurrency: FeePaidCurrency,
+    private val currency: CryptoCurrency? = null,
 ) : Converter<TransactionData.Uncompiled, TxInfo?> {
 
     override fun convert(value: TransactionData.Uncompiled): TxInfo? {
         val hash = value.hash ?: return null
         val millis = value.date?.timeInMillis ?: return null
-        val amount = getTransactionAmountValue(value.amount, value.fee?.amount) ?: return null
+        val amount = getTransactionAmountValue(value.amount) ?: return null
         val isOutgoing = value.sourceAddress in walletAddresses.map(Address::value)
 
-        return TxInfo(
+        return TxInfo.Single(
             txHash = hash,
             timestampInMillis = millis,
             isOutgoing = isOutgoing,
@@ -45,40 +49,24 @@ internal class TransactionDataToTxHistoryItemConverter(
                 TransactionStatus.Confirmed -> TxInfo.TransactionStatus.Confirmed
                 TransactionStatus.Unconfirmed -> TxInfo.TransactionStatus.Unconfirmed
             },
-            type = getTransactionType(value),
+            type = getTransactionType(value).orCoinFeeOnly(isOutgoing = isOutgoing, moved = value.amount.value),
             amount = amount,
             fee = value.fee?.amount?.toDomain(),
         )
     }
 
-    private fun getTransactionAmountValue(amount: Amount, feeAmount: Amount?): BigDecimal? {
-        val feeValue = feeAmount?.value ?: BigDecimal.ZERO
+    /**
+     * What the transaction moves, with the fee left out — [TxInfo.fee] carries that separately, and the confirmed
+     * row the explorer later reports counts the same way, so the row keeps its value once it is confirmed.
+     */
+    private fun getTransactionAmountValue(amount: Amount): BigDecimal? {
         val value = amount.value
 
         if (value == null) {
             TangemLogger.w("Transaction amount must not be null: ${amount.currencySymbol}")
         }
 
-        return when (feePaidCurrency) {
-            FeePaidCurrency.SameCurrency -> value?.plus(feeValue)
-            FeePaidCurrency.Coin -> {
-                if (amount.type is AmountType.Coin) value?.plus(feeValue) else value
-            }
-            is FeePaidCurrency.Token -> {
-                val token = (amount.type as? AmountType.Token)?.token ?: return value
-                if (isSameToken(token, feePaidCurrency.token)) {
-                    value?.plus(feeValue)
-                } else {
-                    value
-                }
-            }
-            is FeePaidCurrency.FeeResource -> value
-        }
-    }
-
-    private fun isSameToken(amountToken: Token, feeToken: Token): Boolean {
-        return amountToken.contractAddress.equals(feeToken.contractAddress, ignoreCase = true) &&
-            amountToken.symbol.equals(feeToken.symbol, ignoreCase = true)
+        return value
     }
 
     private fun getInteractionAddressType(
@@ -98,6 +86,23 @@ internal class TransactionDataToTxHistoryItemConverter(
         else -> TxInfo.InteractionAddressType.User(
             address = if (isOutgoing) value.destinationAddress else value.sourceAddress,
         )
+    }
+
+    /**
+     * A protocol call describes what the token did. In the coin's own history the wallet moved no coin and paid
+     * nothing but the fee, so the row reads as a plain operation — the same fallback the confirmed row takes in
+     * [SdkTransactionTypeConverter], so the row does not change shape once the explorer reports it. The call itself
+     * rides along as [TxInfo.TransactionType.Operation.recognized]: the fee row names what it paid for, and names it
+     * the same before and after the explorer reports the transaction. The method name stays empty — here the call is
+     * decoded from its call data, which carries the selector and not the name the explorer would give it.
+     */
+    private fun TxInfo.TransactionType.orCoinFeeOnly(isOutgoing: Boolean, moved: BigDecimal?): TxInfo.TransactionType {
+        val isCoinFeeOnly = currency is CryptoCurrency.Coin &&
+            isOutgoing &&
+            moved?.isZero() == true &&
+            this is TxInfo.TransactionType.YieldSupply
+
+        return if (isCoinFeeOnly) TxInfo.TransactionType.Operation(name = "", recognized = this) else this
     }
 
     private fun getTransactionType(transactionData: TransactionData.Uncompiled?): TxInfo.TransactionType {

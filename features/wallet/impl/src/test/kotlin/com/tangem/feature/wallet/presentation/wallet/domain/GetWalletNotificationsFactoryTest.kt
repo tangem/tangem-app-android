@@ -14,6 +14,7 @@ import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.hotwallet.GetAccessCodeSkippedUseCase
+import com.tangem.domain.jointaccount.usecase.GetMissingJointOwnerKeysCountUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
@@ -26,6 +27,7 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
@@ -36,6 +38,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificat
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
 import io.mockk.clearMocks
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -66,7 +69,9 @@ internal class GetWalletNotificationsFactoryTest {
     private val getAppUpdateStateUseCase: GetAppUpdateStateUseCase = mockk()
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase = mockk()
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
+    private val getMissingJointOwnerKeysCountUseCase: GetMissingJointOwnerKeysCountUseCase = mockk()
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
+    private val onboardingRepository: OnboardingRepository = mockk()
     private val clickIntents: WalletClickIntents = mockk(relaxed = true)
 
     private val currencyFactory = MockCryptoCurrencyFactory()
@@ -86,11 +91,14 @@ internal class GetWalletNotificationsFactoryTest {
         getAppUpdateStateUseCase = getAppUpdateStateUseCase,
         isWalletBackedUpUseCase = isWalletBackedUpUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
+        getMissingJointOwnerKeysCountUseCase = getMissingJointOwnerKeysCountUseCase,
+        onboardingRepository = onboardingRepository,
     )
 
     @BeforeEach
     fun setup() {
         clearMocks(
+            onboardingRepository,
             isDemoCardUseCase,
             isNeedToBackupUseCase,
             isWalletBackupProblematicUseCase,
@@ -101,6 +109,7 @@ internal class GetWalletNotificationsFactoryTest {
             getAppUpdateStateUseCase,
             isWalletBackedUpUseCase,
             getUserWalletUseCase,
+            getMissingJointOwnerKeysCountUseCase,
             singleAccountStatusListSupplier,
             clickIntents,
             coldResolver,
@@ -119,8 +128,10 @@ internal class GetWalletNotificationsFactoryTest {
         every { getAppUpdateStateUseCase.getBannerStateFlow() } returns flowOf(AppUpdateState.NoUpdate)
         every { hasSingleWalletSignedHashesUseCase(any(), any()) } returns flowOf(false)
         every { isWalletBackedUpUseCase.flow(any()) } returns flowOf(true)
+        every { onboardingRepository.isMainOnboardingBannerHidden(any()) } returns flowOf(false)
         every { getUserWalletUseCase.invokeFlow(any()) } returns
             flowOf(GetUserWalletError.UserWalletNotFound.left())
+        coEvery { getMissingJointOwnerKeysCountUseCase(any(), any()) } returns 0
         // Balance is loaded and non-zero, so both the outdated-data and add-funds banners stay hidden.
         stubAccountStatusList(balance = LOADED_NON_ZERO)
 
@@ -395,6 +406,45 @@ internal class GetWalletNotificationsFactoryTest {
             val banner = result.filterIsInstance<WalletNotificationUM.MissingAddresses>().single()
             assertThat(banner.isHotWallet).isTrue()
             assertThat(banner.missingAddressesCount).isEqualTo(1)
+        }
+
+    @Test
+    fun `GIVEN missing joint owner key only WHEN create THEN missing-addresses banner is shown`() = runTest {
+        // Arrange
+        val jointAccount = mockk<Account.Joint>()
+        stubAccountStatusList(
+            balance = LOADED_NON_ZERO,
+            currencies = emptyList(),
+            accountStatuses = listOf(jointAccountStatus(jointAccount)),
+        )
+        coEvery { getMissingJointOwnerKeysCountUseCase(listOf(jointAccount), coldWallet) } returns 1
+
+        // Act
+        val result = factory.create(coldWallet, clickIntents).first()
+
+        // Assert
+        val banner = result.filterIsInstance<WalletNotificationUM.MissingAddresses>().single()
+        assertThat(banner.missingAddressesCount).isEqualTo(1)
+    }
+
+    @Test
+    fun `GIVEN missed derivation currencies and a missing joint owner key WHEN create THEN counts are combined`() =
+        runTest {
+            // Arrange
+            val jointAccount = mockk<Account.Joint>()
+            stubAccountStatusList(
+                balance = LOADED_NON_ZERO,
+                currencies = listOf(missedDerivationStatus(currencyFactory.ethereum)),
+                accountStatuses = listOf(jointAccountStatus(jointAccount)),
+            )
+            coEvery { getMissingJointOwnerKeysCountUseCase(listOf(jointAccount), coldWallet) } returns 1
+
+            // Act
+            val result = factory.create(coldWallet, clickIntents).first()
+
+            // Assert
+            val banner = result.filterIsInstance<WalletNotificationUM.MissingAddresses>().single()
+            assertThat(banner.missingAddressesCount).isEqualTo(2)
         }
     // endregion
 
@@ -754,6 +804,7 @@ internal class GetWalletNotificationsFactoryTest {
             value = model.value,
         )
         stubAccountStatusList(balance = LOADED_NON_ZERO, accountStatuses = listOf(paymentStatus))
+        every { onboardingRepository.isMainOnboardingBannerHidden(WALLET_ID) } returns flowOf(model.isPromoHidden)
 
         // Act
         val result = factory.create(coldWallet, clickIntents).first()
@@ -767,6 +818,7 @@ internal class GetWalletNotificationsFactoryTest {
 
     internal data class TangemPayModel(
         val value: PaymentAccountStatusValue,
+        val isPromoHidden: Boolean = false,
         val expectRefreshNeeded: Boolean = false,
         val expectPromo: Boolean = false,
         val expectUnreachable: Boolean = false,
@@ -775,6 +827,7 @@ internal class GetWalletNotificationsFactoryTest {
     private fun provideTangemPayModels() = listOf(
         TangemPayModel(value = PaymentAccountStatusValue.Error.NotSynced, expectRefreshNeeded = true),
         TangemPayModel(value = PaymentAccountStatusValue.NotCreated, expectPromo = true),
+        TangemPayModel(value = PaymentAccountStatusValue.NotCreated, isPromoHidden = true),
         TangemPayModel(value = PaymentAccountStatusValue.Error.Unavailable, expectUnreachable = true),
         // Non-actionable statuses produce no TangemPay notification.
         TangemPayModel(value = PaymentAccountStatusValue.Loading),
@@ -804,6 +857,7 @@ internal class GetWalletNotificationsFactoryTest {
         val list = mockk<AccountStatusList> {
             every { totalFiatBalance } returns balance
             every { flattenCurrencies() } returns currencies
+            every { flattenPersonalCurrencies() } returns currencies
             every { this@mockk.accountStatuses } returns accountStatuses
         }
         every {
@@ -825,6 +879,10 @@ internal class GetWalletNotificationsFactoryTest {
         currency = currency,
         value = CryptoCurrencyStatus.NoAmount(priceChange = null, fiatRate = null),
     )
+
+    private fun jointAccountStatus(jointAccount: Account.Joint): AccountStatus.Joint = mockk {
+        every { account } returns jointAccount
+    }
 
     private fun provideBooleans() = listOf(true, false)
 

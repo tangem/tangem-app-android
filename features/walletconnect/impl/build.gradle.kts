@@ -79,6 +79,7 @@ dependencies {
 
     /** Test libraries */
     testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.orgJson)
     testImplementation(deps.test.truth)
     api(deps.kotlin.coroutines)
 }

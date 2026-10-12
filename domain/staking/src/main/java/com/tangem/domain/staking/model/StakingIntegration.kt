@@ -25,6 +25,9 @@ sealed interface StakingIntegration {
 
     val targets: List<StakingTarget>
 
+    /** [targets] plus inactive ones (e.g. jailed validators) — for resolving existing balances, never for picking */
+    val allTargets: List<StakingTarget>
+
     val preferredTargets: List<StakingTarget>
 
     val areAllTargetsFull: Boolean

@@ -10,6 +10,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
@@ -24,6 +26,7 @@ import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
+import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.features.tokendetails.deeplink.ExpressDeepLinkListener
@@ -66,6 +69,8 @@ internal class TxHistoryModel @Inject constructor(
     private val appTxHistoryFetcher: AppTxHistoryFetcher,
     private val router: Router,
     private val cryptoCurrencyDeepLinkListener: ExpressDeepLinkListener,
+    private val vibratorHapticManager: VibratorHapticManager,
+    getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     repository: TxHistoryRepositoryV2,
     paramsContainer: ParamsContainer,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
@@ -74,9 +79,15 @@ internal class TxHistoryModel @Inject constructor(
     private val params: TxHistoryComponent.Params = paramsContainer.require()
     val txDetailsNavigation = SlotNavigation<TxHistoryDetailsSlotConfig>()
 
-    private val lookupDataFlow: Flow<TxHistoryLookupContext> = ownerLookupProducer()
+    private val lookupDataFlow: Flow<TxHistoryLookupContext> = ownerLookupProducer(params.userWalletId)
         .flowOn(dispatchers.default)
         .shareIn(modelScope, SharingStarted.WhileSubscribed(), replay = 1)
+
+    private val networkTokensFlow: StateFlow<Set<CryptoCurrency.Token>> = flow {
+        emit(getCachedTokenInfoUseCase(params.userWalletId, params.currency.network.rawId))
+    }
+        .flowOn(dispatchers.io)
+        .stateIn(modelScope, SharingStarted.Eagerly, initialValue = emptySet())
 
     @RemoveWithToggle("AND_15767_NEW_TX_HISTORY_ENABLED")
     private val txHistoryListManager: TxHistoryListManager? = if (!txHistoryFeatureToggle.isNewTxHistoryEnabled) {
@@ -143,15 +154,20 @@ internal class TxHistoryModel @Inject constructor(
             combine(
                 flow = historyTxListManager.state,
                 flow2 = lookupDataFlow,
-                transform = { state, lookup -> state to lookup },
+                flow3 = networkTokensFlow,
+                transform = { state, lookup, tokens -> Triple(state, lookup, tokens) },
             )
-                .onEach { (state, lookup) -> applyHistoryState(state, lookup) }
+                .onEach { (state, lookup, tokens) -> applyHistoryState(state, lookup, tokens) }
                 .flowOn(dispatchers.default)
                 .launchIn(modelScope)
         }
     }
 
-    private fun applyHistoryState(state: HistoryTxListManager.HistoryState, lookup: TxHistoryLookupContext) {
+    private fun applyHistoryState(
+        state: HistoryTxListManager.HistoryState,
+        lookup: TxHistoryLookupContext,
+        networkTokens: Set<CryptoCurrency.Token>,
+    ) {
         when (state) {
             HistoryTxListManager.HistoryState.Loading ->
                 stateController.setLoadingIfNotContent(onExploreClick = ::openExplorer)
@@ -163,7 +179,7 @@ internal class TxHistoryModel @Inject constructor(
                 stateController.setError(onReloadClick = ::reload, onExploreClick = ::openExplorer)
             is HistoryTxListManager.HistoryState.Content -> {
                 stateController.setContent(
-                    snapshot = TxHistoryItemsSnapshot.Items(buildUiItems(state.items, lookup)),
+                    snapshot = TxHistoryItemsSnapshot.Items(buildUiItems(state.items, lookup, networkTokens)),
                     loadMore = ::loadMoreItems,
                     onExploreClick = ::openExplorer,
                 )
@@ -175,12 +191,14 @@ internal class TxHistoryModel @Inject constructor(
     private fun buildUiItems(
         merged: List<TxHistoryInfo>,
         lookup: TxHistoryLookupContext,
+        networkTokens: Set<CryptoCurrency.Token>,
     ): ImmutableList<TxHistoryItemsUM.TxHistoryItemUM> {
         val converter = TxHistoryInfoToTransactionItemUMConverter(
             txInfoConverter = TxHistoryItemToTransactionItemUMConverter(
                 currency = params.currency,
                 txHistoryUiActions = this,
                 lookupContext = lookup,
+                networkTokens = networkTokens,
             ),
             expressConverter = ExpressTxToTransactionItemUMConverter(
                 currency = params.currency,
@@ -243,8 +261,12 @@ internal class TxHistoryModel @Inject constructor(
     fun reload() {
         if (stateController.isNotSupported) return
 
-        stateController.setLoadingIfNotContent(onExploreClick = ::openExplorer)
-        historyTxListManager?.reload()
+        if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
+            historyTxListManager?.reload()
+        } else {
+            stateController.setLoadingIfNotContent(onExploreClick = ::openExplorer)
+        }
+
         modelScope.launch {
             txHistoryListManager?.let { legacy ->
                 txHistoryItemsCountUseCase.invoke(userWalletId = params.userWalletId, currency = params.currency)
@@ -295,10 +317,9 @@ internal class TxHistoryModel @Inject constructor(
 
     private fun handleErrorState(error: TxHistoryStateError) {
         when (error) {
-            is TxHistoryStateError.DataError -> stateController.setError(
-                onReloadClick = ::reload,
-                onExploreClick = ::openExplorer,
-            )
+            is TxHistoryStateError.DataError,
+            is TxHistoryStateError.AddressNotReady,
+            -> stateController.setError(onReloadClick = ::reload, onExploreClick = ::openExplorer)
             TxHistoryStateError.EmptyTxHistories -> stateController.setEmpty(onExploreClick = ::openExplorer)
             TxHistoryStateError.TxHistoryNotImplemented -> stateController.setNotSupported(
                 onExploreClick = ::openExplorer,
@@ -332,6 +353,7 @@ internal class TxHistoryModel @Inject constructor(
                         currency = params.currency,
                         txHistoryUiActions = this,
                         lookupContext = lookupContext,
+                        networkTokens = networkTokensFlow.value,
                     )
                     pending.map(converter::convert).toPersistentList()
                 },
@@ -357,6 +379,7 @@ internal class TxHistoryModel @Inject constructor(
         // manager is non-null only under the new tx-history toggle.
         val manager = historyTxListManager
         if (manager != null) {
+            vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Tick)
             txDetailsNavigation.activate(TxHistoryDetailsSlotConfig(item.txId))
         } else {
             item.explorerHash?.let(::openTxInExplorer)

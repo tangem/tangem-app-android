@@ -22,4 +22,14 @@ interface FeedTabComponent {
      */
     @Composable
     fun Content(bottomSheetState: State<BottomSheetState>, contentPadding: PaddingValues, modifier: Modifier)
+
+    /**
+     * Returns the tab's list to its top.
+     *
+     * Called on every tab of the feed home when the hosting shtorka leaves the expanded state: the
+     * top blocks re-expand with it and are drawn over the list, so a tab left scrolled would come
+     * back with its middle under them. Search tabs never render under the blocks — hence the no-op
+     * default.
+     */
+    fun resetScroll() {}
 }

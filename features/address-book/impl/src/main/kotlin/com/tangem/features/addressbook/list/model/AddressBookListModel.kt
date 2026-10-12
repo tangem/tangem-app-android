@@ -166,7 +166,7 @@ internal class AddressBookListModel @Inject constructor(
 
     private fun onPickContact(contact: MatchedContact) {
         // Reported on tap, before the address is substituted; onPickContact is only invoked in selector (Send) mode.
-        analyticsSender.sendContactSelectedInSend(contactId = contact.contactId, scope = modelScope)
+        analyticsSender.sendContactSelectedInSend(contactId = contact.contactId)
         val singleEntry = contact.entries.singleOrNull()
         if (singleEntry != null) {
             deliverSelection(contact.toSelectedContact(singleEntry))
@@ -180,7 +180,6 @@ internal class AddressBookListModel @Inject constructor(
         analyticsSender.sendContactListScreenOpened(
             source = params.mode.toAnalyticsSource(),
             contactsCount = contacts.size,
-            scope = modelScope,
         )
     }
 

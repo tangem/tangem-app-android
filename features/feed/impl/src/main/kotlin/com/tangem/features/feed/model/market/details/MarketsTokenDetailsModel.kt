@@ -50,6 +50,12 @@ import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_info_20
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
 import com.tangem.features.foryou.TokenSummaryComponent
@@ -76,6 +82,7 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.CountryNames
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
@@ -84,7 +91,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.joda.time.DateTime
 import java.math.BigDecimal
-import java.util.Locale
 import javax.inject.Inject
 
 @Suppress("LargeClass", "LongParameterList")
@@ -93,7 +99,7 @@ import javax.inject.Inject
 internal class MarketsTokenDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    getUserCountryUseCase: GetUserCountryUseCase,
+    private val getUserCountryUseCase: GetUserCountryUseCase,
     paramsContainer: ParamsContainer,
     addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
@@ -247,8 +253,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     val addToPortfolioSheetNavigation = SlotNavigation<AddToPortfolioSlotRoute>()
     val addFundsSheetNavigation = SlotNavigation<AddFundsSlotRoute>()
 
-    private val isAddToPortfolioAvailable: Boolean =
-        params.shouldShowPortfolio
+    private val isAddToPortfolioAvailable: Boolean = params.shouldShowPortfolio
     val addToPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
         scope = modelScope,
         settings = AddToPortfolioManager.Settings(
@@ -257,8 +262,11 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         analyticsParams = AddToPortfolioManager.AnalyticsParams(params.analyticsParams?.source),
     )
 
+    private val regionRestriction: TangemMessageBanner.State? = regionRestrictionState()
+
     val state = MutableStateFlow(
         MarketsTokenDetailsUM(
+            regionRestriction = regionRestriction,
             tokenName = params.token.name,
             symbol = params.token.symbol,
             priceText = params.token.tokenQuotes.currentPrice.format {
@@ -336,8 +344,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         .distinctUntilChanged()
 
     init {
-        userCountry = getUserCountryUseCase.invokeSync().getOrNull()
-            ?: UserCountry.Other(Locale.getDefault().country)
+        userCountry = getUserCountryUseCase.invokeSync().getOrNull() ?: UserCountry.fromDeviceLocale()
         // reload screen if currency changed
         modelScope.launch {
             currentAppCurrency
@@ -430,6 +437,11 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         addToPortfolioSheetNavigation.activate(AddToPortfolioSlotRoute)
     }
 
+    /**
+     * Opens for a region-restricted asset too: the sheet carries the restriction and closes buying and
+     * swapping inside it, leaving receiving available. Operations for an asset the user already holds live
+     * on the wallet's own token screen and are NOT covered here.
+     */
     fun openAddFunds(rawCurrencyId: com.tangem.domain.models.currency.CryptoCurrency.RawID) {
         analyticsEventHandler.send(analyticsEventBuilder.addFundsClicked())
         addFundsSheetNavigation.activate(AddFundsSlotRoute(rawCurrencyId = rawCurrencyId))
@@ -448,6 +460,34 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 networks = (networksState.value as? TokenNetworksState.NetworksAvailable)?.networks.orEmpty(),
             ),
             tokenSummaryPeriodConverter.convert(state.value.selectedInterval).id,
+        )
+    }
+
+    /**
+     * Names the region when the platform can, and falls back to the region-less wording when it cannot —
+     * printing a bare country code would read worse than saying nothing.
+     */
+    private fun regionRestrictionState(): TangemMessageBanner.State? {
+        if (!params.token.isRestrictedForCountry) return null
+
+        val regionName = getUserCountryUseCase.invokeSync().getOrNull()
+            ?.let { CountryNames.resolveDisplayName(countryCode = it.code) }
+
+        return TangemMessageBanner.State(
+            title = resourceReference(R.string.buy_swap_region_restriction_title),
+            variant = TangemMessageBanner.Variant.Warning,
+            iconEnd = TangemIconUM.Icon(
+                imageVector = Icons.ic_info_20,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+            description = if (regionName == null) {
+                resourceReference(R.string.buy_swap_region_restriction_description)
+            } else {
+                resourceReference(
+                    id = R.string.buy_swap_region_restriction_description_region,
+                    formatArgs = wrappedList(regionName),
+                )
+            },
         )
     }
 

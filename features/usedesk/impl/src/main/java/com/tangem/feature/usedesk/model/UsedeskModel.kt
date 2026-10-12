@@ -7,7 +7,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.repository.FeedbackRepository
@@ -32,6 +32,7 @@ import javax.inject.Inject
 internal class UsedeskModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val appPreferencesStore: AppPreferencesStore,
+    private val storePreferencesKeys: StorePreferencesKeys,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val feedbackRepository: FeedbackRepository,
     private val usedeskTokenTtlManager: UsedeskTokenTtlManager,
@@ -113,9 +114,9 @@ internal class UsedeskModel @Inject constructor(
     private suspend fun getOrCreateClientId(): String {
         var clientId = ""
         appPreferencesStore.editData { preferences ->
-            val existing = preferences[PreferencesKeys.USEDESK_CLIENT_ID_KEY]
+            val existing = preferences[storePreferencesKeys.usedeskClientIdKey]
             clientId = if (existing.isNullOrBlank()) {
-                UUID.randomUUID().toString().also { preferences[PreferencesKeys.USEDESK_CLIENT_ID_KEY] = it }
+                UUID.randomUUID().toString().also { preferences[storePreferencesKeys.usedeskClientIdKey] = it }
             } else {
                 existing
             }

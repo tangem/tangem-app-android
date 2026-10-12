@@ -14,10 +14,14 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.domain.jointaccount.model.JointAccount
+import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationRecipientListUM
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
@@ -26,6 +30,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.common.ui.state.ConfirmUM
+import com.tangem.features.send.common.ui.state.SendSignaturesUM
 import com.tangem.features.send.send.SendModelTestBase
 import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.test.core.ProvideTestModels
@@ -34,6 +39,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.*
@@ -247,6 +253,70 @@ internal class SendConfirmModelTest : SendModelTestBase() {
     }
 
     @Nested
+    inner class RecordPaymentAccountTransfer {
+
+        @Test
+        fun `GIVEN a successful send WHEN it completes THEN the transfer is recorded`() = runTest {
+            // Arrange
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            coEvery { sendTransactionUseCase(any(), any(), any()) } returns "txHash".right()
+            val account = Account.Personal.createMainAccount(testUserWalletId)
+            val walletId = testUserWallet.walletId
+            val params = MutableParamsContainer(
+                defaultSendConfirmParams(
+                    state = normalFeeState(),
+                    cryptoCurrencyStatus = loadedFeeStatus,
+                    feeCryptoCurrencyStatus = loadedFeeStatus,
+                ).copy(accountFlow = MutableStateFlow(account)),
+            )
+            createSendConfirmModel(this, params)
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                recordTokenTransferFromSendUseCase(
+                    userWalletId = walletId,
+                    sourceAccount = account,
+                    currency = loadedFeeStatus.currency,
+                    destinationAddress = DESTINATION_ADDRESS,
+                )
+            }
+        }
+
+        @Test
+        fun `GIVEN a failing send WHEN it completes THEN nothing is recorded`() = runTest {
+            // Arrange
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            coEvery { sendTransactionUseCase(any(), any(), any()) } returns
+                mockk<SendTransactionError>(relaxed = true).left()
+            val params = MutableParamsContainer(
+                defaultSendConfirmParams(
+                    state = normalFeeState(),
+                    cryptoCurrencyStatus = loadedFeeStatus,
+                    feeCryptoCurrencyStatus = loadedFeeStatus,
+                ),
+            )
+            createSendConfirmModel(this, params)
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) {
+                recordTokenTransferFromSendUseCase(any(), any(), any(), any())
+            }
+        }
+    }
+
+    @Nested
     inner class TronGaslessMaxSend {
 
         @BeforeEach
@@ -452,6 +522,127 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             feeSelectorUM = FeeSelectorUM.Loading,
             confirmUM = ConfirmUM.Empty,
             confirmData = null,
+        )
+    }
+
+    @Nested
+    inner class JointOperation {
+
+        private val jointAccount: Account.Joint = mockk(relaxed = true)
+        private val storedJointAccount: JointAccount = mockk {
+            every { threshold } returns 2
+            every { membersCount } returns 3
+        }
+
+        @Test
+        fun `GIVEN joint account WHEN onSendClick THEN the operation is created and the summary opens`() = runTest {
+            // Arrange
+            val onSendTransaction: () -> Unit = mockk(relaxed = true)
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
+            coEvery { jointSendDelegate.createOperation(jointAccount, any(), any(), any()) } returns Unit.right()
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            val confirmUM = sut.uiState.value.confirmUM as ConfirmUM.Success
+            assertThat(confirmUM.signaturesUM).isEqualTo(SendSignaturesUM(threshold = 2, membersCount = 3))
+            assertThat(confirmUM.txUrl).isEmpty()
+            verify(exactly = 1) { onSendTransaction() }
+            coVerify(exactly = 0) {
+                createTransferTransactionUseCase(any(), any<Fee>(), any(), any(), any(), any(), any())
+            }
+        }
+
+        @Test
+        fun `GIVEN busy slot WHEN onSendClick THEN the slot alert is shown and the step stays editable`() = runTest {
+            // Arrange
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
+            coEvery {
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any())
+            } returns JointOperationCreateError.SlotBusy.left()
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            val confirmUM = sut.uiState.value.confirmUM as ConfirmUM.Content
+            assertThat(confirmUM.isSending).isFalse()
+            verify(exactly = 1) { sendConfirmAlertFactory.getJointSlotBusyState() }
+        }
+
+        @Test
+        fun `GIVEN the joint account is not active WHEN onSendClick THEN the not activated alert is shown`() = runTest {
+            // Arrange
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery {
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any())
+            } returns JointOperationCreateError.AccountNotReady.left()
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { sendConfirmAlertFactory.getJointAccountNotReadyState() }
+        }
+
+        @Test
+        fun `GIVEN the network state moved WHEN onSendClick THEN the network changed alert is shown`() = runTest {
+            // Arrange
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery {
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any())
+            } returns JointOperationCreateError.NetworkStateMoved.left()
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { sendConfirmAlertFactory.getJointNetworkStateMovedState() }
+        }
+
+        @Test
+        fun `GIVEN the composition mismatches WHEN onSendClick THEN the sending blocked alert is shown`() = runTest {
+            // Arrange
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery {
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any())
+            } returns JointOperationCreateError.CompositionMismatch.left()
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { sendConfirmAlertFactory.getJointSendBlockedState(onSupportClick = any()) }
+        }
+
+        /** Confirm starts empty so the model builds the real Content with the signatures itself */
+        private fun jointConfirmParams(onSendTransaction: () -> Unit) = MutableParamsContainer(
+            defaultSendConfirmParams(
+                state = normalFeeState().copy(confirmUM = ConfirmUM.Empty),
+                cryptoCurrencyStatus = loadedFeeStatus,
+                feeCryptoCurrencyStatus = loadedFeeStatus,
+            ).copy(
+                accountFlow = MutableStateFlow(jointAccount),
+                onSendTransaction = onSendTransaction,
+            ),
         )
     }
 

@@ -35,7 +35,6 @@ import com.tangem.features.feed.model.feed.FeedModelClickIntents
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.EntryContent
-import com.tangem.features.foryou.ForYouFeatureToggles
 import com.tangem.features.foryou.TokenSummaryComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -46,7 +45,6 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted entryRoute: FeedEntryRoute?,
     private val feedEntryChildFactory: FeedEntryChildFactory,
-    private val forYouFeatureToggles: ForYouFeatureToggles,
 ) : FeedEntryComponent, AppComponentContext by context {
 
     private val model: FeedEntryModel = getOrCreateModel()
@@ -71,7 +69,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                         token = token,
                         appCurrency = appCurrency,
                         shouldShowPortfolio = true,
-                        isTokenSummaryEnabled = forYouFeatureToggles.isForYouEnabled,
+                        isTokenSummaryEnabled = true,
                         analyticsParams = DefaultMarketsTokenDetailsComponent.AnalyticsParams(
                             blockchain = null,
                             newsId = newsId,
@@ -267,7 +265,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                     token = entryRoute.token,
                     appCurrency = entryRoute.appCurrency,
                     shouldShowPortfolio = entryRoute.shouldShowPortfolio,
-                    isTokenSummaryEnabled = forYouFeatureToggles.isForYouEnabled,
+                    isTokenSummaryEnabled = true,
                     analyticsParams = entryRoute.analyticsParams?.let { params ->
                         DefaultMarketsTokenDetailsComponent.AnalyticsParams(
                             blockchain = params.blockchain,

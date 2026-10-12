@@ -22,17 +22,23 @@ object MockAccounts {
 
     val fullAccountList = createAccountList(activeAccounts = 20)
 
+    val fullJointAccountList = createAccountList(activeAccounts = 1, jointAccounts = 20)
+
     fun createAccountList(
         activeAccounts: Int,
         totalAccounts: Int = activeAccounts,
         totalArchivedAccounts: Int = 0,
+        jointAccounts: Int = 0,
+        totalJointAccounts: Int = jointAccounts,
         userWalletId: UserWalletId = this.userWalletId,
     ): AccountList {
         return AccountList(
             userWalletId = userWalletId,
-            accounts = createAccounts(count = activeAccounts, userWalletId = userWalletId),
+            accounts = createAccounts(count = activeAccounts, userWalletId = userWalletId) +
+                createJointAccounts(count = jointAccounts, userWalletId = userWalletId),
             totalAccounts = totalAccounts,
             totalArchivedAccounts = totalArchivedAccounts,
+            totalJointAccounts = totalJointAccounts,
         ).getOrNull()!!
     }
 
@@ -46,6 +52,10 @@ object MockAccounts {
                 add(account)
             }
         }
+    }
+
+    fun createJointAccounts(count: Int, userWalletId: UserWalletId = this.userWalletId): List<Account.Joint> {
+        return List(count) { createJointAccount(ownerKeyIndex = it, userWalletId = userWalletId) }
     }
 
     fun createJointAccount(
@@ -107,6 +117,7 @@ object MockAccounts {
                 fiatRate = fiatRate,
                 error = null,
                 virtualAccount = null,
+                isBankOfframpAvailable = null,
                 tariffPlan = null,
             ),
         )

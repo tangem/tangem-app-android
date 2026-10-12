@@ -13,9 +13,10 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.createWalletActionButtons
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
-import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
+import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
@@ -29,23 +30,24 @@ internal class SetTokenListTransformer(
     private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
     private val shouldShowMainPromo: Boolean,
     private val isAccountsModeEnabled: Boolean,
-    private val isAccountMultichainEnabled: Boolean,
     private val isHotBackedUp: Boolean? = null,
+    private val accountIdsWithInvites: Set<String> = emptySet(),
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val tangemPayConverter by lazy {
-        TangemPayMainBlockConverter(
-            tangemPayClickIntents = clickIntents,
-            isAccountMultichainEnabled = isAccountMultichainEnabled,
-        )
+        TangemPayMainBlockConverter(tangemPayClickIntents = clickIntents)
     }
 
-    private val virtualAccountConverter by lazy {
-        VirtualAccountMainBlockConverter()
+    private val moneyAccountConverter by lazy {
+        MoneyAccountMainBlockConverter()
     }
 
     private val polymarketConverter by lazy {
         PolymarketWalletBlockConverter(appCurrency = appCurrency, clickIntents = clickIntents)
+    }
+
+    private val collectiblesConverter by lazy {
+        CollectiblesWalletBlockConverter(appCurrency = appCurrency, clickIntents = clickIntents)
     }
 
     override fun transform(prevState: WalletState): WalletState {
@@ -55,8 +57,9 @@ internal class SetTokenListTransformer(
                     walletCardState = prevState.walletCardState.toLoadedState(),
                     tokensListState = prevState.tokensListState.toLoadedState(),
                     tangemPayMainUM = prevState.tangemPayMainUM.toLoadedState(),
-                    virtualAccountMainUM = prevState.virtualAccountMainUM.toLoadedVirtualState(),
+                    moneyAccountMainUM = prevState.moneyAccountMainUM.toLoadedMoneyAccountState(),
                     polymarketWalletBlockUM = predictionBlockState(),
+                    collectiblesWalletBlockUM = collectiblesBlockState(),
                     buttons = prevState.enableButtons(),
                 )
             }
@@ -76,13 +79,14 @@ internal class SetTokenListTransformer(
         return when (walletUM) {
             is WalletUM.Content -> {
                 val tokensListUM = toLoadedState()
-                val isTokensEmpty = tokensListUM is WalletTokensListUM.Empty
+                val isTokensEmpty = !hasPersonalCurrencies()
                 val areActionsAvailable = getTotalFiatBalance().areActionsAvailable()
                 walletUM.copy(
                     walletsBalanceUM = walletUM.walletsBalanceUM.toLoadedState2(),
                     tangemPayMainUM = walletUM.tangemPayMainUM.toLoadedState(),
-                    virtualAccountMainUM = walletUM.virtualAccountMainUM.toLoadedVirtualState(),
+                    moneyAccountMainUM = walletUM.moneyAccountMainUM.toLoadedMoneyAccountState(),
                     polymarketWalletBlockUM = predictionBlockState(),
+                    collectiblesWalletBlockUM = collectiblesBlockState(),
                     tokensListUM = tokensListUM,
                     areActionsAvailable = areActionsAvailable,
                     buttons = createWalletActionButtons(
@@ -99,6 +103,11 @@ internal class SetTokenListTransformer(
                 walletUM
             }
         }
+    }
+
+    private fun hasPersonalCurrencies(): Boolean = when (params) {
+        is TokenConverterParams.Account -> params.accountList.flattenPersonalCurrencies().isNotEmpty()
+        is TokenConverterParams.Wallet -> params.tokenList.flattenCurrencies().isNotEmpty()
     }
 
     private fun getTotalFiatBalance(): TotalFiatBalance = when (params) {
@@ -156,15 +165,26 @@ internal class SetTokenListTransformer(
         return tangemPayConverter.convert(paymentAccountStatus)
     }
 
-    private fun VirtualAccountMainUM.toLoadedVirtualState(): VirtualAccountMainUM {
-        val virtualAccountStatus = when (params) {
+    private fun MoneyAccountMainUM.toLoadedMoneyAccountState(): MoneyAccountMainUM {
+        val moneyAccountStatus = when (params) {
             is TokenConverterParams.Account -> params.accountList.accountStatuses
-                .filterIsInstance<AccountStatus.Virtual>()
+                .filterIsInstance<AccountStatus.Money>()
                 .firstOrNull()
-            is TokenConverterParams.Wallet -> return VirtualAccountMainUM.Empty
+            is TokenConverterParams.Wallet -> return MoneyAccountMainUM.Empty
         } ?: return this
 
-        return virtualAccountConverter.convert(virtualAccountStatus)
+        return moneyAccountConverter.convert(moneyAccountStatus)
+    }
+
+    private fun collectiblesBlockState(): CollectiblesWalletBlockUM {
+        val collectiblesAccountStatus = when (params) {
+            is TokenConverterParams.Account -> params.accountList.accountStatuses
+                .filterIsInstance<AccountStatus.Collectibles>()
+                .firstOrNull()
+            is TokenConverterParams.Wallet -> return CollectiblesWalletBlockUM.Hidden
+        } ?: return CollectiblesWalletBlockUM.Hidden
+
+        return collectiblesConverter.convert(collectiblesAccountStatus)
     }
 
     private fun predictionBlockState(): PolymarketWalletBlockUM {
@@ -196,6 +216,7 @@ internal class SetTokenListTransformer(
             shouldShowMainPromo = shouldShowMainPromo,
             isAccountsModeEnabled = isAccountsModeEnabled,
             expandedAccounts = params.expandedAccounts,
+            accountIdsWithInvites = accountIdsWithInvites,
         ).convert(value = params.accountList)
     }
 }

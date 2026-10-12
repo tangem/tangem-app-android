@@ -20,7 +20,6 @@ import org.joda.time.DateTimeZone
 
 internal class TangemPayTxHistoryItemsConverter(
     private val txHistoryUiActions: TangemPayTxHistoryUiActions,
-    private val isCashbackEnabled: Boolean,
 ) : Converter<TangemPayTxHistoryItem, TangemPayTransactionState.Content> {
 
     private val paySpendSubtitleConverter = PaySpendSubtitleConverter
@@ -80,11 +79,11 @@ internal class TangemPayTxHistoryItemsConverter(
     }
 
     /**
-     * Maps [cashback] to the inline badge UM, or `null` to hide it. Hidden when the feature toggle is
-     * off, cashback is absent, excluded/awaiting/unknown, or has a zero/absent amount.
+     * Maps [cashback] to the inline badge UM, or `null` to hide it. Hidden when cashback is absent,
+     * excluded/awaiting/unknown, or has a zero/absent amount.
      */
     private fun buildCashbackUm(cashback: TangemPayTxHistoryItem.Cashback?): TangemPayTransactionCashbackUM? {
-        if (!isCashbackEnabled || cashback == null) return null
+        if (cashback == null) return null
         return when (cashback.status) {
             TangemPayTxHistoryItem.Cashback.Status.CONFIRMED ->
                 cashback.toBadgeUm(TangemPayTransactionCashbackUM.Style.Confirmed)

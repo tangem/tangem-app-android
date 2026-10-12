@@ -20,7 +20,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.analytics.IntroductionProcess.CreateWalletIntroScreenOpened.ScreenType
@@ -66,7 +66,7 @@ internal class CreateWalletStartModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
 ) : Model() {
 
@@ -142,7 +142,7 @@ internal class CreateWalletStartModel @Inject constructor(
                         CreateWalletStartComponent.Mode.ColdWallet -> ScreenType.Cold
                         CreateWalletStartComponent.Mode.HotWallet -> ScreenType.Hot
                     },
-                    referralId = appsFlyerStore.get()?.refcode,
+                    referralId = appsFlyerRepository.getConversionData()?.refcode,
                 ),
             )
         }

@@ -31,8 +31,7 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.model.stakingBalanceData
 import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
-import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusSupplier
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -45,15 +44,15 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
+import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 
 /**
  * Covers the **wiring** of the balance-contributions seam inside the status producer — the part the factory and
- * provider unit tests cannot reach: which flow feeds the status, and what the `TWI_1717_BALANCE_CONTRIBUTIONS`
- * branch actually switches.
+ * provider unit tests cannot reach: which flow feeds the status.
  *
- * With the toggle off the producer must keep using its legacy staking join and expose no contributions; with it on
- * the registered [BalanceContributionProvider]s must supply them while the legacy join is short-circuited — and
- * the balance a reader ends up seeing must be the same either way.
+ * The registered [BalanceContributionProvider]s are the only source of extra balances; the typed `stakingBalance`
+ * field is never back-filled, and readers reach the balance through the accessor that resolves it out of the
+ * contributions.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SingleAccountStatusListProducerContributionsTest {
@@ -64,80 +63,36 @@ internal class SingleAccountStatusListProducerContributionsTest {
     private val walletId = userWallet.walletId
 
     @Test
-    fun `GIVEN toggle off WHEN produced THEN staking comes from the legacy join and no contributions are exposed`() =
-        runTest {
-            // Act
-            val status = produceCurrencyStatus(useContributions = false)
-
-            // Assert
-            assertThat(status.value.contributions).isEmpty()
-            assertThat(status.value.stakingBalance).isNotNull()
-            assertThat((status.value.stakingBalance as StakingBalance.Data).totalDeltaCryptoAmount())
-                .isEqualTo(REWARDS) // Cardano: rewards only
-        }
-
-    @Test
-    fun `GIVEN toggle on WHEN produced THEN contributions come from the providers`() = runTest {
+    fun `GIVEN registered providers WHEN produced THEN contributions come from the providers`() = runTest {
         // Act
-        val status = produceCurrencyStatus(useContributions = true)
+        val status = produceCurrencyStatus()
 
         // Assert
         assertThat(status.value.contributions).hasSize(1)
         assertThat(status.value.contributions.single().totalDeltaCryptoAmount()).isEqualTo(REWARDS)
-        // the typed field is no longer back-filled on this path; Axis-2 readers reach the balance through the
-        // accessor, which resolves it out of the contributions
+        // the typed field is never back-filled; Axis-2 readers reach the balance through the accessor, which
+        // resolves it out of the contributions
         assertThat(status.value.stakingBalance).isNull()
         assertThat(status.value.stakingBalanceData).isEqualTo(status.value.contributions.single())
     }
 
     @Test
-    fun `GIVEN the same wallet WHEN produced with the toggle off and on THEN the observable balance matches`() =
-        runTest {
-            // Act
-            val legacy = produceCurrencyStatus(useContributions = false)
-            val contributions = produceCurrencyStatus(useContributions = true)
-
-            // Assert — the contributions list and the typed field differ by design; nothing a reader sees may
-            assertThat(contributions.value.stakingBalanceData).isEqualTo(legacy.value.stakingBalanceData)
-            assertThat(contributions.value.amount).isEqualTo(legacy.value.amount)
-            assertThat(contributions.value.fiatAmount).isEqualTo(legacy.value.fiatAmount)
-            assertThat(contributions.value.sources.total).isEqualTo(legacy.value.sources.total)
-        }
-
-    @Test
-    fun `GIVEN no contribution providers WHEN produced with the toggle on THEN nothing is contributed`() = runTest {
+    fun `GIVEN no contribution providers WHEN produced THEN nothing is contributed`() = runTest {
         // Act — an empty set is a legitimate graph state; the `@Multibinds` declaration exists to allow it
-        val status = produceCurrencyStatus(useContributions = true, contributionProviders = emptySet())
+        val status = produceCurrencyStatus(contributionProviders = emptySet())
 
         // Assert — the guard short-circuits to an empty frame instead of combining zero flows, which would emit
-        // nothing at all and stall the whole status. The legacy join stays off, so nothing is attached either.
+        // nothing at all and stall the whole status.
         assertThat(status.value.contributions).isEmpty()
         assertThat(status.value.stakingBalance).isNull()
-    }
-
-    @Test
-    fun `GIVEN a single-currency wallet WHEN produced with the toggle off THEN staking is not joined`() = runTest {
-        // Act — staking is a multi-currency-wallet feature, so the legacy join must not even subscribe
-        val status = produceCurrencyStatus(
-            useContributions = false,
-            wallet = MockUserWalletFactory.createSingleWalletWithToken(),
-        )
-
-        // Assert — note this pins the *policy*, not either guard individually: `stakingFlow` and
-        // `findStakingBalance` both check `isMultiCurrency`, so removing only one of them changes nothing
-        // observable here. Both have to go before this test goes red.
-        assertThat(status.value.stakingBalance).isNull()
-        assertThat(status.value.contributions).isEmpty()
     }
 
     /** Drives the producer end to end and returns the single currency status it built. */
     private fun TestScope.produceCurrencyStatus(
-        useContributions: Boolean,
         wallet: UserWallet = userWallet,
         contributionProviders: Set<BalanceContributionProvider>? = null,
     ): CryptoCurrencyStatus {
         val producer = createProducer(
-            useContributions = useContributions,
             wallet = wallet,
             contributionProviders = contributionProviders,
         )
@@ -151,7 +106,6 @@ internal class SingleAccountStatusListProducerContributionsTest {
 
     @Suppress("LongMethod")
     private fun createProducer(
-        useContributions: Boolean,
         wallet: UserWallet = userWallet,
         contributionProviders: Set<BalanceContributionProvider>? = null,
     ): DefaultSingleAccountStatusListProducer {
@@ -171,19 +125,25 @@ internal class SingleAccountStatusListProducerContributionsTest {
             userWalletsListRepository = mockk<UserWalletsListRepository> {
                 every { userWallets } returns MutableStateFlow(listOf(wallet))
             },
+            singleJointAccountListSupplier = mockk<SingleJointAccountListSupplier> {
+                every { this@mockk.invoke(userWalletId = any()) } returns flowOf(emptyList())
+            },
             singleAccountListSupplier = mockk<SingleAccountListSupplier> {
                 every { this@mockk.invoke(id) } returns flowOf(accountList(id))
             },
             paymentAccountStatusSupplier = mockk<PaymentAccountStatusSupplier> {
                 every { this@mockk.invoke(userWalletId = id) } returns flowOf(mockk(relaxed = true))
             },
-            virtualAccountStatusSupplier = mockk<VirtualAccountStatusSupplier> {
+            moneyAccountStatusSupplier = mockk<MoneyAccountStatusSupplier> {
                 every { this@mockk.invoke(userWalletId = id) } returns flowOf(mockk(relaxed = true))
             },
             predictionAccountStatusSupplier = mockk<PredictionAccountStatusSupplier> {
                 every { this@mockk.invoke(userWalletId = id) } returns flowOf(PredictionAccountStatusValue.Loading)
             },
             polymarketFeatureToggles = mockk { every { isPolymarketEnabled } returns true },
+            // the toggle is off, so the supplier is never invoked
+            collectiblesAccountStatusSupplier = mockk(),
+            collectiblesFeatureToggles = mockk { every { isCollectiblesEnabled } returns false },
             networksRepository = mockk<NetworksRepository> {
                 coEvery { hasCachedStatuses(id) } returns true
             },
@@ -193,12 +153,6 @@ internal class SingleAccountStatusListProducerContributionsTest {
             },
             quoteStatusSupplier = mockk<MultiQuoteStatusSupplier> {
                 every { this@mockk.invoke(Unit) } returns flowOf(mapOf(currency.id.rawCurrencyId!! to quoteStatus()))
-            },
-            stakingBalanceSupplier = stakingBalanceSupplier,
-            stakingIdFactory = stakingIdFactory,
-            analyticsExceptionHandler = analyticsExceptionHandler,
-            tokensFeatureToggles = mockk<TokensFeatureToggles> {
-                every { isBalanceContributionsEnabled } returns useContributions
             },
             // the real providers: this is what makes it a wiring test rather than a mock dance
             balanceContributionProviders = contributionProviders ?: setOf(

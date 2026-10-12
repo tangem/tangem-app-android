@@ -21,6 +21,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.notifications.models.NotificationType
+import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.usecase.ResolveAndSelectUserWalletUseCase
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
@@ -95,6 +96,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                     route = AppRoute.CurrencyDetails(
                         userWalletId = userWallet.walletId,
                         currency = cryptoCurrency,
+                        navigationAction = navigationActionFor(type = type, transactionId = transactionId),
                     ),
                     onComplete = { walletDeepLinkActionTrigger.selectWallet(userWallet.walletId) },
                 )
@@ -107,6 +109,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                     NotificationType.SwapStatus,
                     NotificationType.OnrampStatus,
                     -> tokenDetailsDeepLinkActionTrigger.trigger(transactionId)
+                    NotificationType.JointTx,
                     NotificationType.Promo,
                     NotificationType.IncomeTransactions,
                     NotificationType.JointMembers,
@@ -118,6 +121,11 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
             }
             if (isFromOnNewIntent) fetchCurrency(userWallet, cryptoCurrency)
         }
+    }
+
+    private fun navigationActionFor(type: NotificationType, transactionId: String?): NavigationAction? {
+        if (transactionId == null || type != NotificationType.JointTx) return null
+        return NavigationAction.JointOperation(operationId = transactionId)
     }
 
     /**
@@ -225,9 +233,12 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     private fun CryptoCurrency.matches(networkId: String?, tokenId: String?, derivationPath: String?): Boolean {
         val isNetwork = network.rawId.equals(networkId, ignoreCase = true)
         val isCurrency = id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
-        val isDefaultDerivation = network.derivationPath is Network.DerivationPath.Card
-        val isCustomDerivation = derivationPath?.equals(network.derivationPath.value) == true
-        return isNetwork && isCurrency && (isDefaultDerivation || isCustomDerivation)
+        val isDerivation = if (derivationPath.isNullOrBlank()) {
+            network.derivationPath is Network.DerivationPath.Card
+        } else {
+            derivationPath == network.derivationPath.value
+        }
+        return isNetwork && isCurrency && isDerivation
     }
 
     @AssistedFactory

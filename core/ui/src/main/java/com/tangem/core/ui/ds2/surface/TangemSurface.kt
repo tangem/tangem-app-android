@@ -1,5 +1,7 @@
 package com.tangem.core.ui.ds2.surface
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -23,9 +25,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeEffectTangem
+import com.tangem.core.ui.ds2.animation.TangemAnimationSpec
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.softLayerShadow
 import com.tangem.core.ui.res.LocalHazeState
+import com.tangem.core.ui.res.LocalMaterialRenderingEnabled
 import com.tangem.core.ui.res.LocalMaterialShadowEnabled
 import com.tangem.core.ui.res.LocalRootBackgroundColor
 import com.tangem.core.ui.res.TangemTheme
@@ -45,7 +49,8 @@ import dev.chrisbanes.haze.HazeTint
  *   tinted with `material.fill.blur`. When `LocalHazeState.blurEnabled` is `false` (e.g.
  *   previews, low-end devices), the surface falls back to opaque `material.fill.solid` overlaid
  *   with translucent `material.tint.solid` so both layers remain visible. [materialStyle] picks the
- *   token set all of the above is read from.
+ *   token set all of the above is read from. Under [LocalMaterialRenderingEnabled] `false` none of
+ *   this chrome is drawn and only [content] remains; it is dropped at once and fades back in.
  *
  * Interaction:
  * - When [onClick] is non-null the surface is clickable. The v2 ripple configuration is provided
@@ -77,6 +82,7 @@ fun TangemSurface(
     color: Color = TangemTheme.colors3.bg.primary,
     isMaterial: Boolean = false,
     materialStyle: TangemSurface.MaterialStyle = TangemSurface.MaterialStyle.Default,
+    isMaterialBorderEnabled: Boolean = true,
     border: BorderStroke? = null,
     shape: Shape = RoundedCornerShape(16.dp),
     onClick: (() -> Unit)? = null,
@@ -86,16 +92,19 @@ fun TangemSurface(
     content: @Composable () -> Unit,
 ) {
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    val materialOpacity = materialChromeOpacity(isMaterial)
+    val isMaterialDrawn = materialOpacity > 0f
+    val isBorderDrawn = isMaterialDrawn && isMaterialBorderEnabled
 
     val surface: @Composable () -> Unit = {
         Box(
             modifier = modifier
-                .conditionalCompose(isMaterial) { materialShadow(shape, shadowRadius) }
+                .conditionalCompose(isMaterialDrawn) { materialShadow(shape, shadowRadius, materialOpacity) }
                 .conditionalCompose(border != null) { border(border!!, shape) }
-                .conditionalCompose(isMaterial) { materialBorder(shape = shape, style = materialStyle) }
+                .conditionalCompose(isBorderDrawn) { materialBorder(shape, materialStyle, materialOpacity) }
                 .clip(shape)
                 .background(if (isMaterial) Color.Transparent else color, shape)
-                .conditionalCompose(isMaterial) { materialFill(style = materialStyle) }
+                .conditionalCompose(isMaterialDrawn) { materialFill(materialStyle, materialOpacity) }
                 .conditionalCompose(onClick != null) {
                     clickable(
                         interactionSource = resolvedInteractionSource,
@@ -141,13 +150,32 @@ object TangemSurface {
 // region material rendering
 
 /**
- * Drop shadow for the material variant.
+ * Opacity the material chrome — shadow, stroke and fill — is drawn with.
+ *
+ * Toggling `isMaterial` fades the chrome both ways. Under [LocalMaterialRenderingEnabled] `false` it
+ * is dropped at once instead: the surface then sits in a clipped transient layer, where fading it
+ * would just show the cropped halo dimmed. Coming back the layer is gone, so it fades in rather than
+ * popping in under settled content.
+ */
+@Composable
+private fun materialChromeOpacity(isMaterial: Boolean): Float {
+    val isChromeEnabled = LocalMaterialRenderingEnabled.current
+    val opacity by animateFloatAsState(
+        targetValue = if (isMaterial && isChromeEnabled) 1f else 0f,
+        animationSpec = if (isChromeEnabled) TangemAnimationSpec.Alpha else snap(),
+        label = "materialOpacity",
+    )
+    return opacity
+}
+
+/**
+ * Drop shadow for the material variant, drawn at [opacity] of its nominal alpha.
  *
  * The material fill is translucent, so the shadow is clipped to the area outside [shape] (via
  * `isAlphaContentClip`) to avoid the dark blur bleeding through the surface.
  */
 @Composable
-private fun Modifier.materialShadow(shape: Shape, radius: Dp): Modifier {
+private fun Modifier.materialShadow(shape: Shape, radius: Dp, opacity: Float): Modifier {
     // Inside a transient graphics layer the halo below would be clipped to this surface's bounding
     // box and read as a hard rectangle around it, so the layer's owner opts the shadow out.
     if (!LocalMaterialShadowEnabled.current) return this
@@ -160,7 +188,7 @@ private fun Modifier.materialShadow(shape: Shape, radius: Dp): Modifier {
     val isBlurEnabled = LocalHazeState.current.blurEnabled
     return softLayerShadow(
         radius = radius,
-        color = Color.Black.copy(alpha = MATERIAL_SHADOW_ALPHA),
+        color = Color.Black.copy(alpha = MATERIAL_SHADOW_ALPHA * opacity),
         shape = shape,
         spread = 0.dp,
         offset = DpOffset(x = 0.dp, y = 8.dp),
@@ -179,16 +207,17 @@ private const val MATERIAL_SHADOW_ALPHA = 0.12f
 private const val MIN_SHADOW_QUANTIZATION_STEPS = 3f
 private const val MAX_CHANNEL_VALUE = 255f
 
-/** Diagonal gradient stroke that wraps the material variant. */
+/** Diagonal gradient stroke that wraps the material variant, drawn at [opacity]. */
 @Composable
-private fun Modifier.materialBorder(shape: Shape, style: TangemSurface.MaterialStyle): Modifier = border(
-    width = 1.dp,
-    brush = materialBorderBrush(style),
-    shape = shape,
-)
+private fun Modifier.materialBorder(shape: Shape, style: TangemSurface.MaterialStyle, opacity: Float): Modifier =
+    border(
+        width = 1.dp,
+        brush = materialBorderBrush(style, opacity),
+        shape = shape,
+    )
 
 /**
- * Translucent fill for the material variant.
+ * Translucent fill for the material variant, drawn at [opacity].
  *
  * When the haze state is enabled, paints a haze-blurred backdrop. When disabled, layers two
  * solid colors so the result still reads as "tinted fill" instead of going transparent.
@@ -198,7 +227,7 @@ private fun Modifier.materialBorder(shape: Shape, style: TangemSurface.MaterialS
  * surface fully transparent.
  */
 @Composable
-private fun Modifier.materialFill(style: TangemSurface.MaterialStyle): Modifier {
+private fun Modifier.materialFill(style: TangemSurface.MaterialStyle, opacity: Float): Modifier {
     val isBlurEnabled = LocalHazeState.current.blurEnabled
     val material = materialColors(style)
     val hazed = hazeEffectTangem(
@@ -207,17 +236,23 @@ private fun Modifier.materialFill(style: TangemSurface.MaterialStyle): Modifier 
             blurRadius = 32.dp,
             tints = listOf(
                 HazeTint(material.fillBlur),
+                HazeTint(material.tintBlur),
             ),
         ),
     ) {
+        // Fades the blur too; scaling the tint alone would leave the backdrop blurred.
+        alpha = opacity
         fallbackTint = HazeTint(Color.Transparent)
     }
     return hazed.conditionalCompose(!isBlurEnabled) {
         // Paint the opaque fill first, then layer the translucent tint on top so both are visible.
-        background(material.fillSolid)
-            .background(material.tintSolid)
+        background(material.fillSolid.scaleAlpha(opacity))
+            .background(material.tintSolid.scaleAlpha(opacity))
     }
 }
+
+/** Multiplies the existing alpha channel by [factor]. */
+private fun Color.scaleAlpha(factor: Float): Color = if (factor == 1f) this else copy(alpha = alpha * factor)
 
 /**
  * Material colors of the requested [style]. `colors3.material` and `colors3.materialInverted` are
@@ -230,6 +265,7 @@ private fun materialColors(style: TangemSurface.MaterialStyle): MaterialColors {
     return when (style) {
         TangemSurface.MaterialStyle.Default -> MaterialColors(
             fillBlur = colors.material.fill.blur,
+            tintBlur = colors.material.tint.blur,
             fillSolid = colors.material.fill.solid,
             tintSolid = colors.material.tint.solid,
             borderStart = colors.material.border.start,
@@ -237,6 +273,7 @@ private fun materialColors(style: TangemSurface.MaterialStyle): MaterialColors {
         )
         TangemSurface.MaterialStyle.Inverted -> MaterialColors(
             fillBlur = colors.materialInverted.fill.blur,
+            tintBlur = colors.materialInverted.tint.blur,
             fillSolid = colors.materialInverted.fill.solid,
             tintSolid = colors.materialInverted.tint.solid,
             borderStart = colors.materialInverted.border.start,
@@ -244,6 +281,7 @@ private fun materialColors(style: TangemSurface.MaterialStyle): MaterialColors {
         )
         TangemSurface.MaterialStyle.Modal -> MaterialColors(
             fillBlur = colors.materialModal.fill.blur,
+            tintBlur = colors.materialModal.tint.blur,
             fillSolid = colors.materialModal.fill.solid,
             tintSolid = colors.materialModal.tint.solid,
             borderStart = colors.materialModal.border.start,
@@ -255,6 +293,7 @@ private fun materialColors(style: TangemSurface.MaterialStyle): MaterialColors {
 
 private class MaterialColors(
     val fillBlur: Color,
+    val tintBlur: Color,
     val fillSolid: Color,
     val tintSolid: Color,
     val borderStart: Color,
@@ -265,11 +304,11 @@ private class MaterialColors(
 @Suppress("MagicNumber")
 @Composable
 @ReadOnlyComposable
-private fun materialBorderBrush(style: TangemSurface.MaterialStyle): Brush {
+private fun materialBorderBrush(style: TangemSurface.MaterialStyle, opacity: Float): Brush {
     val material = materialColors(style)
-    val startColor = material.borderStart
-    val midColor = material.borderMid
-    val endColor = material.borderEnd
+    val startColor = material.borderStart.scaleAlpha(opacity)
+    val midColor = material.borderMid.scaleAlpha(opacity)
+    val endColor = material.borderEnd.scaleAlpha(opacity)
     return object : ShaderBrush() {
         override fun createShader(size: Size): Shader {
             val w = size.width

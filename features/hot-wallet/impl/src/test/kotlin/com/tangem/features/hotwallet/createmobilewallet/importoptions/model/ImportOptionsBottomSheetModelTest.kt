@@ -8,11 +8,12 @@ import com.tangem.domain.cloudbackup.models.CloudBackupAccount
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
+import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
 import com.tangem.features.hotwallet.createmobilewallet.importoptions.ImportOptionsBottomSheetComponent
 import com.tangem.features.hotwallet.createmobilewallet.importoptions.entity.ImportOptionsBottomSheetUM
-import com.tangem.features.hotwallet.restorecloudbackup.CloudRestoreResult
-import com.tangem.features.hotwallet.restorecloudbackup.CloudRestoreResultHolder
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.domain.cloudbackup.restore.CloudRestoreResult
+import com.tangem.domain.cloudbackup.restore.CloudRestoreResultHolder
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -21,7 +22,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -41,6 +41,7 @@ internal class ImportOptionsBottomSheetModelTest {
 
     private val backupInfo = CloudBackupInfo(
         fileId = "file-1",
+        backupName = "My Wallet",
         walletName = "My Wallet",
         createdAtMillis = 0L,
         walletId = "011",
@@ -145,7 +146,8 @@ internal class ImportOptionsBottomSheetModelTest {
     fun `GIVEN no backups WHEN cloud backup clicked THEN warning error shown`() = runTest {
         // Arrange
         coEvery { cloudBackupRepository.findBackups(interactive = true, validateContent = true) } returns emptyList<CloudBackupInfo>().right()
-        val model = createModel(this, CloudRestoreResultHolder())
+        val holder = CloudRestoreResultHolder()
+        val model = createModel(this, holder)
 
         // Act
         model.options().onCloudBackupClick()
@@ -153,6 +155,7 @@ internal class ImportOptionsBottomSheetModelTest {
 
         // Assert
         assertThat(model.error().isWarning).isTrue()
+        assertThat(holder.result.value).isNull()
         verify(exactly = 0) { onCloudBackupsResolved(any()) }
     }
 
@@ -227,20 +230,11 @@ internal class ImportOptionsBottomSheetModelTest {
     private fun createModel(testScope: TestScope, holder: CloudRestoreResultHolder) = ImportOptionsBottomSheetModel(
         paramsContainer = paramsContainer,
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
-        cloudBackupRepository = cloudBackupRepository,
-        cloudRestoreResultHolder = holder,
+        resolveCloudRestoreBackups = ResolveCloudRestoreBackupsUseCase(
+            cloudBackupRepository = cloudBackupRepository,
+            cloudRestoreResultHolder = holder,
+        ),
     )
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
-    }
 
     private companion object {
         const val ACCOUNT_EMAIL = "user@gmail.com"

@@ -147,7 +147,7 @@ internal class ReclassifyOwnOperationAsTransferTest {
         sourceType: TxInfo.SourceType = TxInfo.SourceType.Single(address = sourceAddress),
         destinationType: TxInfo.DestinationType =
             TxInfo.DestinationType.Single(addressType = TxInfo.AddressType.User(destinationAddress)),
-    ): TxInfo = TxInfo(
+    ): TxInfo.Single = TxInfo.Single(
         txHash = "0xtxhash",
         timestampInMillis = 1_700_000_000_000L,
         isOutgoing = isOutgoing,
@@ -161,9 +161,9 @@ internal class ReclassifyOwnOperationAsTransferTest {
 
     internal data class Model(
         val name: String,
-        val tx: TxInfo,
+        val tx: TxInfo.Single,
         val lookup: TxHistoryLookupContext,
-        val expected: TxInfo,
+        val expected: TxInfo.Single,
     ) {
         override fun toString(): String = name
     }

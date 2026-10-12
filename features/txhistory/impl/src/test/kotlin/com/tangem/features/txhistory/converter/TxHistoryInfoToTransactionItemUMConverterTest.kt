@@ -89,7 +89,7 @@ internal class TxHistoryInfoToTransactionItemUMConverterTest {
         verify { txHistoryUiActions.onTransactionClick(item) }
     }
 
-    private fun txInfo(type: TransactionType): TxInfo = TxInfo(
+    private fun txInfo(type: TransactionType): TxInfo.Single = TxInfo.Single(
         txHash = TX_HASH,
         timestampInMillis = TIMESTAMP,
         isOutgoing = false,

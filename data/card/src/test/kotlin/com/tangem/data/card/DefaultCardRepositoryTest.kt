@@ -3,9 +3,9 @@ package com.tangem.data.card
 import androidx.datastore.preferences.core.emptyPreferences
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.local.card.UsedCardInfo
+import com.tangem.data.card.model.UsedCardInfo
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.datasource.local.preferences.utils.storeObjectList
 import com.tangem.test.core.ProvideTestModels
@@ -37,7 +37,9 @@ internal class DefaultCardRepositoryTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = dataStore,
     )
-    private val repository = DefaultCardRepository(appPreferencesStore)
+    private val storePreferencesKeys = StorePreferencesKeys()
+
+    private val repository = DefaultCardRepository(appPreferencesStore, storePreferencesKeys)
 
     @BeforeEach
     fun resetStore() {
@@ -272,11 +274,11 @@ internal class DefaultCardRepositoryTest {
     }
 
     private suspend fun seedCards(vararg cards: UsedCardInfo) {
-        appPreferencesStore.storeObjectList(key = PreferencesKeys.USED_CARDS_INFO_KEY, value = cards.toList())
+        appPreferencesStore.storeObjectList(key = storePreferencesKeys.usedCardsInfoKey, value = cards.toList())
     }
 
     private suspend fun storedCards(): List<UsedCardInfo> {
-        return appPreferencesStore.getObjectListSync(key = PreferencesKeys.USED_CARDS_INFO_KEY)
+        return appPreferencesStore.getObjectListSync(key = storePreferencesKeys.usedCardsInfoKey)
     }
 
     internal data class ActivationInProgressModel(val stored: UsedCardInfo?, val expected: Boolean)

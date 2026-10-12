@@ -25,5 +25,6 @@ class GetMarketsTokenListFlowUseCase(
     ) {
         Main(firstBatchSize = 150, nextBatchSize = 100),
         Search(firstBatchSize = 50, nextBatchSize = 50),
+        Featured(firstBatchSize = 10, nextBatchSize = 10),
     }
 }

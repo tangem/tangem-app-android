@@ -45,7 +45,6 @@ internal class TxHistoryStatusPillConverterTest {
         assertThat(result.currencySymbol).isEqualTo("ETH")
         val subtitle = result.subtitle as TransactionItemUM.PillSubtitle.Address
         assertThat(subtitle.rawAddress).isEqualTo(USER_ADDRESS)
-        assertThat(subtitle.briefAddress).isEqualTo(USER_ADDRESS_BRIEF)
     }
 
     @Test
@@ -215,13 +214,24 @@ internal class TxHistoryStatusPillConverterTest {
     // region YieldSupply
 
     @Test
-    fun `GIVEN YieldEnter uiStatus Confirmed WHEN convert THEN enter label and no amount`() {
+    fun `GIVEN YieldEnter uiStatus Confirmed WHEN convert THEN two-tone Yield mode Enabled`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Enter(address = USER_ADDRESS))
 
         val result = converter.convert(Input(tx, Status.Confirmed, YieldEnterSpec))
 
         assertThat(result.kind).isEqualTo(TransactionItemUM.PillKind.YIELD_MODE)
-        assertThat(result.label).isEqualTo(resRef(R.string.yield_module_transaction_enter))
+        assertThat(result.label).isEqualTo(resRef(R.string.common_yield_mode_inline))
+        assertThat(result.amount).isEqualTo(resRef(R.string.common_enabled))
+        assertThat(result.currencySymbol).isNull()
+    }
+
+    @Test
+    fun `GIVEN YieldEnter uiStatus Unconfirmed WHEN convert THEN single-tone enabling label`() {
+        val tx = txInfo(type = TransactionType.YieldSupply.Enter(address = USER_ADDRESS))
+
+        val result = converter.convert(Input(tx, Status.Unconfirmed, YieldEnterSpec))
+
+        assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_enabling_yield_mode))
         assertThat(result.amount).isNull()
     }
 
@@ -232,17 +242,19 @@ internal class TxHistoryStatusPillConverterTest {
         val result = converter.convert(Input(tx, Status.Failed, YieldEnterSpec))
 
         assertThat(result.label).isEqualTo(
-            resRef(R.string.common_action_failed, listOf(resRef(R.string.common_yield_mode))),
+            resRef(R.string.common_action_failed, listOf(resRef(R.string.common_yield_mode_inline))),
         )
+        assertThat(result.amount).isNull()
     }
 
     @Test
-    fun `GIVEN YieldExit uiStatus Confirmed WHEN convert THEN exit label`() {
+    fun `GIVEN YieldExit uiStatus Confirmed WHEN convert THEN two-tone Yield mode Disabled`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Exit(address = USER_ADDRESS))
 
         val result = converter.convert(Input(tx, Status.Confirmed, YieldExitSpec))
 
-        assertThat(result.label).isEqualTo(resRef(R.string.yield_module_transaction_exit))
+        assertThat(result.label).isEqualTo(resRef(R.string.common_yield_mode_inline))
+        assertThat(result.amount).isEqualTo(resRef(R.string.common_disabled))
     }
 
     @Test
@@ -256,6 +268,85 @@ internal class TxHistoryStatusPillConverterTest {
                 R.string.common_action_failed,
                 listOf(resRef(R.string.transaction_history_disabling_yield_mode)),
             ),
+        )
+    }
+
+    @Test
+    fun `GIVEN YieldSupply uiStatus Confirmed WHEN convert THEN supplied label and Aave provider`() {
+        val tx = txInfo(type = TransactionType.YieldSupply.Topup)
+
+        val result = converter.convert(Input(tx, Status.Confirmed, YieldSupplySpec))
+
+        assertThat(result.kind).isEqualTo(TransactionItemUM.PillKind.YIELD_SUPPLY)
+        assertThat(result.label).isEqualTo(resRef(R.string.yield_module_transaction_supplied))
+        assertThat(result.amount).isNull()
+        assertThat(result.currencySymbol).isNull()
+        assertThat(result.subtitle).isEqualTo(
+            TransactionItemUM.PillSubtitle.Provider(
+                direction = TransactionItemUM.ContentSubtitle.Direction.TO,
+                name = resRef(R.string.yield_module_provider),
+                iconResId = R.drawable.img_aave_22,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN YieldSupply uiStatus Unconfirmed WHEN convert THEN supplying label keeps the provider`() {
+        val tx = txInfo(type = TransactionType.YieldSupply.Topup)
+
+        val result = converter.convert(Input(tx, Status.Unconfirmed, YieldSupplySpec))
+
+        assertThat(result.label).isEqualTo(resRef(R.string.common_supplying))
+        assertThat(result.subtitle).isInstanceOf(TransactionItemUM.PillSubtitle.Provider::class.java)
+    }
+
+    @Test
+    fun `GIVEN YieldSupply uiStatus Failed WHEN convert THEN composed supply failed label and no provider`() {
+        val tx = txInfo(type = TransactionType.YieldSupply.Topup)
+
+        val result = converter.convert(Input(tx, Status.Failed, YieldSupplySpec))
+
+        assertThat(result.label).isEqualTo(
+            resRef(R.string.common_action_failed, listOf(resRef(R.string.yield_module_supply))),
+        )
+        assertThat(result.subtitle).isNull()
+    }
+
+    @Test
+    fun `GIVEN YieldWithdraw uiStatus Confirmed WHEN convert THEN withdrawn label and Aave provider`() {
+        val tx = txInfo(type = TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = true))
+
+        val result = converter.convert(Input(tx, Status.Confirmed, YieldWithdrawSpec))
+
+        assertThat(result.kind).isEqualTo(TransactionItemUM.PillKind.YIELD_SUPPLY)
+        assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_withdrawn))
+        assertThat(result.amount).isNull()
+        assertThat(result.subtitle).isEqualTo(
+            TransactionItemUM.PillSubtitle.Provider(
+                direction = TransactionItemUM.ContentSubtitle.Direction.FROM,
+                name = resRef(R.string.yield_module_provider),
+                iconResId = R.drawable.img_aave_22,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN YieldWithdraw uiStatus Unconfirmed WHEN convert THEN withdrawing label`() {
+        val tx = txInfo(type = TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = true))
+
+        val result = converter.convert(Input(tx, Status.Unconfirmed, YieldWithdrawSpec))
+
+        assertThat(result.label).isEqualTo(resRef(R.string.common_withdrawing))
+    }
+
+    @Test
+    fun `GIVEN YieldWithdraw uiStatus Failed WHEN convert THEN composed withdrawal failed label`() {
+        val tx = txInfo(type = TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = true))
+
+        val result = converter.convert(Input(tx, Status.Failed, YieldWithdrawSpec))
+
+        assertThat(result.label).isEqualTo(
+            resRef(R.string.common_action_failed, listOf(resRef(R.string.common_withdrawal))),
         )
     }
 
@@ -291,7 +382,7 @@ internal class TxHistoryStatusPillConverterTest {
         type: TransactionType,
         amount: BigDecimal = BigDecimal.ONE,
         interactionAddressType: TxInfo.InteractionAddressType? = null,
-    ): TxInfo = TxInfo(
+    ): TxInfo.Single = TxInfo.Single(
         txHash = TX_HASH,
         timestampInMillis = TIMESTAMP,
         isOutgoing = false,
@@ -341,7 +432,6 @@ internal class TxHistoryStatusPillConverterTest {
         const val TX_HASH = "0xtxhash"
         const val TIMESTAMP = 1_700_000_000_000L
         const val USER_ADDRESS = "0x1234567890abcdef1234"
-        const val USER_ADDRESS_BRIEF = "0x1234...1234"
     }
 
     // endregion

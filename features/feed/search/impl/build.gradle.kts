@@ -23,10 +23,7 @@ dependencies {
     implementation(projects.core.utils)
 
     /* Project - Domain */
-    implementation(projects.domain.appCurrency)
-    implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.feed.search)
-    implementation(projects.domain.markets.models)
 
     /* Compose */
     implementation(deps.compose.foundation)
@@ -49,5 +46,4 @@ dependencies {
 
     /* Testing */
     testImplementation(projects.test.core)
-    testImplementation(projects.domain.models)
 }

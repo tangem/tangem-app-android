@@ -4,21 +4,21 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.data.wallets.cold.UserWalletIdPreflightReadFilter
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
-import com.tangem.tap.domain.tasks.UserWalletIdPreflightReadFilter
 
 /**
  * Task for resetting backup card.
  *
- * 1. Read card and check if card is corresponding to expected user wallet id.
+ * 1. Read card and check if card is corresponding to expected user wallet.
  * 2. Reset card.
  *
 [REDACTED_AUTHOR]
  */
 internal class ResetBackupCardTask(
-    private val userWalletId: UserWalletId,
+    private val userWallet: UserWallet.Cold,
 ) : CardSessionRunnable<Boolean> {
 
     override val allowsRequestAccessCodeFromRepository: Boolean = false
@@ -30,7 +30,7 @@ internal class ResetBackupCardTask(
             readMode = PreflightReadMode.FullCardRead(
                 options = setOf(PreflightReadMode.FullCardRead.Option.ReadMasterSecret),
             ),
-            filter = UserWalletIdPreflightReadFilter(expectedUserWalletId = userWalletId),
+            filter = UserWalletIdPreflightReadFilter(expectedUserWallet = userWallet),
             secureStorage = session.environment.secureStorage,
         ).run(session) { result ->
             when (result) {

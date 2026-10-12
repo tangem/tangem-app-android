@@ -1,7 +1,7 @@
 package com.tangem.datasource.local.converter
 
 import com.tangem.grow.datasource.express.models.response.ExchangeProvider
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressProviderEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressProviderEntity
 
 /**
  * Maps an [ExchangeProvider] API response into its persisted [ExpressProviderEntity] representation.

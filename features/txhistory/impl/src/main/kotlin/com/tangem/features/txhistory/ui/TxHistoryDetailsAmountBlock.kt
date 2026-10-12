@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.TangemCurrencyIcon
 import com.tangem.core.ui.extensions.TextReference
@@ -34,6 +35,12 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 
 private val IconSize = 72.dp
+
+/**
+ * The network badge of the single icon. [TangemCurrencyIcon] would draw it at its own fixed 14.dp, sized for the
+ * ~36.dp icons of the history list — a fifth of the width here, where the design asks for a third.
+ */
+private val NetworkBadgeSize = 24.dp
 private val PairOverlap = 20.dp
 private val PairRing = 4.dp
 private val LeadingSize = IconSize + PairRing * 2
@@ -80,7 +87,7 @@ internal fun TxHistoryDetailsAmountBlock(
             },
             style = TangemTheme.typography3.heading.medium,
             textAlign = TextAlign.Center,
-            textDecoration = if (amountBlock.isFailed) TextDecoration.LineThrough else null,
+            textDecoration = if (amountBlock.isFailed && !isBalanceHidden) TextDecoration.LineThrough else null,
         )
         amountBlock.fiatAmount?.let { fiatAmount ->
             SpacerH(4.dp)
@@ -101,9 +108,13 @@ internal fun TxHistoryDetailsAmountBlock(
 @Composable
 private fun AmountIcon(icon: TxHistoryDetailsUM.AmountIconUM, modifier: Modifier = Modifier) {
     when (icon) {
-        is TxHistoryDetailsUM.AmountIconUM.Single -> AmountIconItem(
-            item = TxHistoryDetailsUM.AmountIconUM.Item.Currency(icon.currencyIcon),
+        // Sized through CurrencyIcon rather than TangemCurrencyIcon: the badge and the icon's own decode resolution
+        // both have to follow this card's icon, which is twice the size the plain component is built around.
+        is TxHistoryDetailsUM.AmountIconUM.Single -> CurrencyIcon(
+            state = icon.currencyIcon,
             modifier = modifier,
+            networkBadgeSize = NetworkBadgeSize,
+            iconSize = IconSize,
         )
         is TxHistoryDetailsUM.AmountIconUM.OverlappingPair -> Box(
             modifier = modifier
@@ -114,7 +125,6 @@ private fun AmountIcon(icon: TxHistoryDetailsUM.AmountIconUM, modifier: Modifier
             AmountIconItem(
                 item = icon.trailing,
                 modifier = Modifier.align(Alignment.CenterEnd),
-                shouldDisplayNetwork = false,
             )
             // Leading on top, left, wrapped in a background-colored ring that separates it from the trailing icon.
             Box(
@@ -124,23 +134,20 @@ private fun AmountIcon(icon: TxHistoryDetailsUM.AmountIconUM, modifier: Modifier
                     .background(TangemTheme.colors3.bg.secondary, CircleShape)
                     .padding(PairRing),
             ) {
-                AmountIconItem(item = icon.leading, shouldDisplayNetwork = false)
+                AmountIconItem(item = icon.leading)
             }
         }
     }
 }
 
+/** One half of an [TxHistoryDetailsUM.AmountIconUM.OverlappingPair], which never shows a network badge. */
 @Composable
-private fun AmountIconItem(
-    item: TxHistoryDetailsUM.AmountIconUM.Item,
-    modifier: Modifier = Modifier,
-    shouldDisplayNetwork: Boolean = true,
-) {
+private fun AmountIconItem(item: TxHistoryDetailsUM.AmountIconUM.Item, modifier: Modifier = Modifier) {
     when (item) {
         is TxHistoryDetailsUM.AmountIconUM.Item.Currency -> TangemCurrencyIcon(
             state = item.state,
             modifier = modifier.size(IconSize),
-            shouldDisplayNetwork = shouldDisplayNetwork,
+            shouldDisplayNetwork = false,
         )
         is TxHistoryDetailsUM.AmountIconUM.Item.Resource -> Image(
             painter = painterResource(item.resId),

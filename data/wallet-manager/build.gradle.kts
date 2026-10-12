@@ -32,7 +32,7 @@ dependencies {
     // endregion
 
     // region Core
-    api(projects.core.datasource)
+    implementation(projects.core.local)
     api(projects.core.utils)
     // endregion
 
@@ -41,12 +41,15 @@ dependencies {
     api(projects.domain.models)
     api(projects.domain.transaction)
     implementation(projects.domain.card)
+    implementation(projects.domain.jointAccount)
+    implementation(projects.domain.txhistory)
     implementation(projects.domain.walletManager)
     implementation(projects.domain.wallets)
     // endregion
 
     // region Domain models
     implementation(projects.domain.demo.models)
+    implementation(projects.domain.express.models)
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.walletManager.models)
@@ -59,5 +62,6 @@ dependencies {
     // region Testing libraries
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    testImplementation(tangemDeps.hot.core)
     // endregion
 }

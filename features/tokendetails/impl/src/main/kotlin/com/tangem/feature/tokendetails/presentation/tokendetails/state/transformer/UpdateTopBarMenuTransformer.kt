@@ -1,16 +1,18 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
-import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.themedColor
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_split_top_24
+import com.tangem.core.ui.res.generated.icons.ic_document_24
+import com.tangem.core.ui.res.generated.icons.ic_eye_cross_24
+import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.transformer.Transformer
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 internal class UpdateTopBarMenuTransformer(
@@ -21,41 +23,56 @@ internal class UpdateTopBarMenuTransformer(
     private val clickIntents: TokenDetailsClickIntents,
 ) : Transformer<TokenDetailsUM> {
 
+    /** A single-wallet-with-token card manages no portfolio — it can neither hide the token nor switch its addresses. */
+    private val isSingleWalletWithToken: Boolean =
+        userWallet is UserWallet.Cold && userWallet.cardTypesResolver.isSingleWalletWithToken()
+
     override fun transform(prevState: TokenDetailsUM): TokenDetailsUM = prevState.copy(
         topAppBarUM = prevState.topAppBarUM.copy(menuItems = createMenuItems()),
     )
 
-    private fun createMenuItems() = if (userWallet is UserWallet.Cold &&
-        userWallet.cardTypesResolver.isSingleWalletWithToken()
-    ) {
-        persistentListOf()
-    } else {
-        buildList {
+    /**
+     * "Explore" is present for every wallet type, so the "•••" button is never empty and the explorer stays reachable
+     * whatever state the coin's history is in — it took over the explorer link the pre-redesign history block used to
+     * carry in its own title row. It sits last before the destructive "Hide token" row, which closes the menu.
+     */
+    private fun createMenuItems() = buildList {
+        if (!isSingleWalletWithToken) {
             if (isDynamicAddressesAvailable) {
                 add(
-                    TangemDropdownMenuItem(
+                    TokenDetailsTopAppBarUM.MenuItemUM(
                         title = resourceReference(R.string.dynamic_addresses),
-                        textColor = themedColor { TangemTheme.colors.text.primary1 },
+                        icon = Icons.ic_arrow_split_top_24,
                         onClick = clickIntents::onDynamicAddressesClick,
                     ),
                 )
             }
             if (isXpubSupported && hasDerivations) {
                 add(
-                    TangemDropdownMenuItem(
+                    TokenDetailsTopAppBarUM.MenuItemUM(
                         title = resourceReference(R.string.token_details_generate_xpub),
-                        textColor = themedColor { TangemTheme.colors.text.primary1 },
+                        icon = Icons.ic_document_24,
                         onClick = clickIntents::onGenerateExtendedKey,
                     ),
                 )
             }
+        }
+        add(
+            TokenDetailsTopAppBarUM.MenuItemUM(
+                title = resourceReference(R.string.common_explore),
+                icon = Icons.ic_globe_24,
+                onClick = clickIntents::onExploreClick,
+            ),
+        )
+        if (!isSingleWalletWithToken) {
             add(
-                TangemDropdownMenuItem(
+                TokenDetailsTopAppBarUM.MenuItemUM(
                     title = resourceReference(R.string.token_details_hide_token),
-                    textColor = themedColor { TangemTheme.colors.text.warning },
+                    icon = Icons.ic_eye_cross_24,
                     onClick = clickIntents::onHideClick,
+                    isDestructive = true,
                 ),
             )
-        }.toImmutableList()
-    }
+        }
+    }.toImmutableList()
 }

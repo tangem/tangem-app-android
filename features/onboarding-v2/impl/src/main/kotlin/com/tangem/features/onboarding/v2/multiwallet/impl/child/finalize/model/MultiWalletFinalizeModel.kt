@@ -62,6 +62,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.tangem.domain.sociallogin.usecase.DeleteSocialRecoveryUseCase
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -87,6 +89,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val derivationsHelper: DerivationsHelper,
     private val walletCardsBackupReporter: WalletCardsBackupReporter,
+    private val deleteSocialRecoveryUseCase: DeleteSocialRecoveryUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -372,6 +375,16 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                     ).onRight {
                         launch(NonCancellable) {
                             runSuspendCatching { walletsRepository.upgradeWallet(userWalletCreated.walletId) }
+                                .onFailure { TangemLogger.e("Failed to mark the wallet as upgraded", it) }
+                                // FR-16: the social account must not restore a wallet that now lives
+                                // on a card. Only once the upgrade is recorded, so a failure above does
+                                // not take the recovery away from a still-hot wallet. Best effort from
+                                // here — the card is written and there is nothing to roll back to.
+                                .onSuccess {
+                                    deleteSocialRecoveryUseCase(userWalletCreated.walletId).onLeft { error ->
+                                        TangemLogger.e("Failed to drop the social recovery after upgrade: $error")
+                                    }
+                                }
                         }
                     }.getOrElse {
                         error("Failed to upgrade to cold wallet. Error: $it")

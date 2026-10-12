@@ -6,6 +6,7 @@ import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.parseNumericBalance
 import com.tangem.common.extensions.tapBackButton
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onAppCurrencySelectorScreen
@@ -144,7 +145,7 @@ class TotalBalanceTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on '$tokenName' token") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Get Total balance") {
                 flakySafely {

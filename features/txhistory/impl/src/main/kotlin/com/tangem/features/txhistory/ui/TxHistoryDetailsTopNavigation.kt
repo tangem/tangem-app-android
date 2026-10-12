@@ -36,6 +36,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.*
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
+import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.HeaderUM.StatusStyle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -47,7 +48,8 @@ import kotlinx.collections.immutable.persistentListOf
  * trailing overflow context-menu (grouped in a Material pill) + close buttons in the end slots.
  *
  * Three visual states are driven by [TxHistoryDetailsUM.HeaderUM.status]: the action-icon circle background, the icon
- * tint and the title color change between in-progress (brand/blue), confirmed (neutral) and failed (red). The icon
+ * tint and the title color change between in-progress (brand/blue), confirmed (neutral) and failed (red), unless
+ * [statusStyle][TxHistoryDetailsUM.HeaderUM.statusStyle] overrides all three with the amber alert look. The icon
  * glyph itself is kept as-is on failure — only recolored.
  *
  * Hosted inside a modal bottom sheet, so [WindowInsets] is zeroed (no status-bar reservation) and the background blur
@@ -59,12 +61,13 @@ internal fun TxHistoryDetailsTopNavigation(
     onCloseClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val palette = header.palette()
     TangemTopNavigation(
         modifier = modifier,
         windowInsets = WindowInsets(0),
         contentPadding = PaddingValues(16.dp),
         blurBackground = false,
-        startButton = { StatusActionIcon(icon = header.icon, status = header.status) },
+        startButton = { StatusActionIcon(icon = header.icon, palette = palette) },
         endButtonsGroup = {
             if (header.menu.isNotEmpty() || header.debugModel != null) {
                 TxHistoryDetailsOverflowMenu(menu = header.menu, debugModel = header.debugModel)
@@ -74,7 +77,7 @@ internal fun TxHistoryDetailsTopNavigation(
         contentColumn = {
             Text(
                 text = header.title.resolveReference(),
-                color = header.status.titleColor,
+                color = palette.title,
                 style = TangemTheme.typography3.body.medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -82,7 +85,7 @@ internal fun TxHistoryDetailsTopNavigation(
             Text(
                 text = header.subtitle.resolveReference(),
                 style = TangemTheme.typography3.caption.medium,
-                color = TangemTheme.colors3.text.secondary,
+                color = header.subtitleStyle.color,
             )
         },
     )
@@ -104,6 +107,7 @@ private fun TxHistoryDetailsOverflowMenu(
     Box(modifier = modifier) {
         TangemButton(
             variant = TangemButton.Variant.Ghost,
+            size = TangemButton.Size.X9,
             iconStart = TangemIconUM.Icon(Icons.ic_dots_horizontal_20),
             contentDescription = resourceReference(R.string.common_more).resolveReference(),
             onClick = { isMenuExpanded = true },
@@ -212,18 +216,18 @@ private fun TxHistoryDetailsMenuItem(
 }
 
 @Composable
-private fun StatusActionIcon(icon: TxIcon, status: Status, modifier: Modifier = Modifier) {
+private fun StatusActionIcon(icon: TxIcon, palette: HeaderPalette, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .size(44.dp)
             .clip(CircleShape)
-            .background(status.circleBackground),
+            .background(palette.circle),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = icon.asImageVector(),
             contentDescription = null,
-            tint = status.iconTint,
+            tint = palette.icon,
             modifier = Modifier.size(20.dp),
         )
     }
@@ -231,25 +235,48 @@ private fun StatusActionIcon(icon: TxIcon, status: Status, modifier: Modifier = 
 
 // region Status -> colors3 tokens (three states)
 
+/** The header's three status-tinted colors, resolved together so an override cannot recolor only part of the look. */
+private data class HeaderPalette(val circle: Color, val icon: Color, val title: Color)
+
+@Composable
+private fun TxHistoryDetailsUM.HeaderUM.palette(): HeaderPalette = when (statusStyle) {
+    StatusStyle.Default -> HeaderPalette(
+        circle = status.circleBackground,
+        icon = status.iconTint,
+        title = status.titleColor,
+    )
+    StatusStyle.Warning -> HeaderPalette(
+        circle = TangemTheme.colors3.bg.status.warningSubtle,
+        icon = TangemTheme.colors3.icon.accent.yellow,
+        title = TangemTheme.colors3.text.status.warning,
+    )
+}
+
 private val Status.circleBackground: Color
     @Composable get() = when (this) {
-        is Status.Confirmed -> TangemTheme.colors3.bg.tertiary
+        is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.bg.tertiary
         is Status.Unconfirmed -> TangemTheme.colors3.bg.status.infoSubtle
         is Status.Failed -> TangemTheme.colors3.bg.status.errorSubtle
     }
 
 private val Status.iconTint: Color
     @Composable get() = when (this) {
-        is Status.Confirmed -> TangemTheme.colors3.icon.primary
+        is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.icon.primary
         is Status.Unconfirmed -> TangemTheme.colors3.icon.accent.blue
         is Status.Failed -> TangemTheme.colors3.icon.accent.red
     }
 
 private val Status.titleColor: Color
     @Composable get() = when (this) {
-        is Status.Confirmed -> TangemTheme.colors3.text.primary
+        is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.text.primary
         is Status.Unconfirmed -> TangemTheme.colors3.text.brand
         is Status.Failed -> TangemTheme.colors3.text.status.error
+    }
+
+private val TxHistoryDetailsUM.HeaderUM.SubtitleStyle.color: Color
+    @Composable get() = when (this) {
+        TxHistoryDetailsUM.HeaderUM.SubtitleStyle.Default -> TangemTheme.colors3.text.secondary
+        TxHistoryDetailsUM.HeaderUM.SubtitleStyle.Warning -> TangemTheme.colors3.text.status.warning
     }
 
 // endregion
@@ -277,6 +304,12 @@ private fun TxHistoryDetailsTopNavigationPreview() {
             )
             TxHistoryDetailsTopNavigation(
                 header = previewHeader(Status.Failed, stringReference("Swapping failed")),
+                onCloseClick = {},
+            )
+            // Paused by the provider: in flight, but alerting in amber instead of ordinary blue progress.
+            TxHistoryDetailsTopNavigation(
+                header = previewHeader(Status.Unconfirmed, stringReference("Top up paused"))
+                    .copy(statusStyle = StatusStyle.Warning),
                 onCloseClick = {},
             )
         }
