@@ -383,6 +383,43 @@ internal class YieldSupplyRewardsBannerModelTest {
         }
 
     @Test
+    fun `GIVEN a confirmed claim WHEN the rewards cannot be read THEN the banner stays and is read again later`() =
+        runTest {
+            // Arrange
+            val claimable = YieldRewardsSummary.Claimable(
+                moduleAddress = MODULE_ADDRESS,
+                claimable = listOf(reward(claimable = "1000")),
+                pending = emptyList(),
+                unsupported = emptyList(),
+                supportedRewardTokens = emptySet(),
+                totalNetUsd = BigDecimal("12.34"),
+            )
+            coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returnsMany listOf(
+                claimable.right(),
+                YieldIncentivesError.Unavailable.left(),
+                YieldRewardsSummary.None.right(),
+            )
+            val model = createModel()
+            advanceUntilIdle()
+            val shown = model.uiState.value
+
+            // Act
+            claimOutcomes.emit(confirmedOutcome())
+            runCurrent()
+            val afterFailedRead = model.uiState.value
+            advanceTimeBy(delayTimeMillis = 31_000)
+            runCurrent()
+
+            // Assert
+            assertThat(shown).isNotNull()
+            assertThat(afterFailedRead).isEqualTo(shown)
+            coVerify(exactly = 3) { getRewardsSummaryUseCase(any(), any()) }
+            assertThat(model.uiState.value).isNull()
+
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN the claim stops being in flight mid-refresh WHEN confirmed THEN the unchanged rewards are read again`() =
         runTest {
             // Arrange
