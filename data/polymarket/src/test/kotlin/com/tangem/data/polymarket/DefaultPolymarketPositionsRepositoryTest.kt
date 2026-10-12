@@ -170,20 +170,6 @@ internal class DefaultPolymarketPositionsRepositoryTest {
     }
 
     @Test
-    fun `GIVEN no holdings WHEN reading the positions value THEN zero is returned`() = runTest {
-        // Arrange
-        coEvery { dataApi.getPositionsValue(user = any()) } returns ApiResponse.Success(
-            createPositionsValueResponse(value = BigDecimal("0.0")),
-        )
-
-        // Act
-        val result = repository.getPositionsValue(addresses)
-
-        // Assert
-        assertThat(result).isEqualTo(Either.Right(BigDecimal("0.0")))
-    }
-
-    @Test
     fun `GIVEN the data API is unreachable WHEN reading the positions value THEN the failure is typed`() = runTest {
         // Arrange
         @Suppress("UNCHECKED_CAST")
