@@ -68,6 +68,7 @@ internal class TangemPayTxHistoryItemToDMConverter @Inject constructor() :
     private fun TangemPayTxHistoryItem.Type.toDM(): TangemPayTxHistoryItemDM.Type = when (this) {
         TangemPayTxHistoryItem.Type.Deposit -> TangemPayTxHistoryItemDM.Type.Deposit
         TangemPayTxHistoryItem.Type.Withdrawal -> TangemPayTxHistoryItemDM.Type.Withdrawal
+        TangemPayTxHistoryItem.Type.Cashback -> TangemPayTxHistoryItemDM.Type.Cashback
     }
 
     private fun CashbackDomain.toDM(): CashbackDM = CashbackDM(
@@ -159,6 +160,7 @@ internal class TangemPayTxHistoryItemToDomainConverter @Inject constructor() :
     private fun TangemPayTxHistoryItemDM.Type.toDomain(): TangemPayTxHistoryItem.Type = when (this) {
         TangemPayTxHistoryItemDM.Type.Deposit -> TangemPayTxHistoryItem.Type.Deposit
         TangemPayTxHistoryItemDM.Type.Withdrawal -> TangemPayTxHistoryItem.Type.Withdrawal
+        TangemPayTxHistoryItemDM.Type.Cashback -> TangemPayTxHistoryItem.Type.Cashback
     }
 
     private fun CashbackDM.toDomain(): CashbackDomain = CashbackDomain(
