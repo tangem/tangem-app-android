@@ -27,6 +27,7 @@ enum class TangemPayPushNotificationType {
     DECLINED_REASON_17,
     COLLATERAL_WITHDRAW,
     COLLATERAL_DEPOSIT,
+    CASHBACK_TOPUP,
     THRESHOLD1_TOP_UP,
     ;
 
@@ -69,6 +70,7 @@ enum class TangemPayPushNotificationType {
             DECLINED_REASON_17 -> "declined_reason17"
             COLLATERAL_WITHDRAW -> "collateral_withdraw"
             COLLATERAL_DEPOSIT -> "collateral_deposit"
+            CASHBACK_TOPUP -> "cashback_topup"
             THRESHOLD1_TOP_UP -> "threshold1_top_up"
         }
     }
@@ -97,6 +99,6 @@ fun TangemPayPushNotificationType.action(): Action = when (this) {
     DECLINED_REASON_16,
     DECLINED_REASON_17,
     -> Action.SPEND_DETAILS
-    COLLATERAL_WITHDRAW, COLLATERAL_DEPOSIT -> Action.COLLATERAL_DETAILS
+    COLLATERAL_WITHDRAW, COLLATERAL_DEPOSIT, CASHBACK_TOPUP -> Action.COLLATERAL_DETAILS
     THRESHOLD1_TOP_UP -> Action.TOP_UP
 }
