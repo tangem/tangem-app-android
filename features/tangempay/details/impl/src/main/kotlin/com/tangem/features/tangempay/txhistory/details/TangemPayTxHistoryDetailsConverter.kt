@@ -102,11 +102,11 @@ internal object TangemPayTxHistoryDetailsConverter :
         }
     }
 
-    private fun TangemPayTxHistoryItem.extractTransactionTitle(): TextReference {
+    private fun TangemPayTxHistoryItem.extractTransactionTitle(): TextReference? {
         return when (this) {
             is TangemPayTxHistoryItem.Spend -> stringReference(this.enrichedMerchantName ?: this.merchantName)
             is TangemPayTxHistoryItem.Payment -> resourceReference(R.string.common_transfer)
-            is TangemPayTxHistoryItem.Collateral -> resourceReference(R.string.common_transfer)
+            is TangemPayTxHistoryItem.Collateral -> null
             is TangemPayTxHistoryItem.Fee -> {
                 this.description?.let(::stringReference) ?: resourceReference(R.string.tangem_pay_fee_subtitle)
             }
