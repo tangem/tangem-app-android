@@ -21,6 +21,7 @@ import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.yield.supply.YieldModuleAddressProvider
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardDestination
@@ -411,6 +412,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
                     chainId = CHAIN_ID,
                     userAddress = SOURCE_ADDRESS,
                     transactionHash = TX_HASH,
+                    origin = YieldSupplyClaimOrigin.ClaimSheet,
                 )
             }
 
