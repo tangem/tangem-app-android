@@ -5,9 +5,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
@@ -15,6 +12,7 @@ import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
 import com.tangem.domain.yield.supply.usecase.GetYieldRewardsSummaryUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMarketFlowUseCase
 import com.tangem.features.yield.supply.impl.common.formatter.formatAmount
+import com.tangem.features.yield.supply.impl.common.formatter.formatUsd
 import com.tangem.features.yield.supply.impl.incentives.banner.DefaultYieldSupplyRewardsBannerComponent
 import com.tangem.features.yield.supply.impl.incentives.banner.entity.YieldSupplyRewardsBannerUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -95,12 +93,10 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
             descriptionResId = CoreResR.string.yield_module_rewards_banner_below_threshold_subtitle,
             claim = YieldSupplyRewardsBannerUM.Claim.Disabled,
         )
-        // Stays disabled until the claim sheet is there to open: an enabled CTA that answers nothing reads as a
-        // broken button rather than as a part still to come.
         is YieldRewardsSummary.Claimable -> claimableUM(
             totalNetUsd = totalNetUsd,
             descriptionResId = CoreResR.string.yield_module_rewards_banner_subtitle,
-            claim = YieldSupplyRewardsBannerUM.Claim.Disabled,
+            claim = YieldSupplyRewardsBannerUM.Claim.Enabled,
         )
     }
 
@@ -113,14 +109,6 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
             description = resourceReference(descriptionResId),
             claim = claim,
         )
-
-    /** The backend estimates rewards in USD whatever currency the app displays, so the symbol is not the app's. */
-    private fun BigDecimal.formatUsd(): String = format {
-        fiat(
-            fiatCurrencyCode = AppCurrency.Default.code,
-            fiatCurrencySymbol = AppCurrency.Default.symbol,
-        )
-    }
 
     private fun List<YieldReward>.formatAmounts(): String = joinToString { reward ->
         reward.formatAmount(reward.pendingAmount)

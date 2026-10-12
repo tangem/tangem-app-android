@@ -208,7 +208,12 @@ internal class YieldSupplyActiveModel @Inject constructor(
     }
 
     fun onClaimRewardsClick() {
-        // The claim sheet arrives with the claim part of the Merkl incentives series.
+        slotNavigation.activate(YieldSupplyActiveRoute.Claim)
+    }
+
+    /** The claim sheet is not driven by [transactionInProgressFlow]; it vetoes its own dismissal while signing. */
+    fun onClaimDismiss() {
+        slotNavigation.dismiss()
     }
 
     private fun onApyInfoClick() {

@@ -11,14 +11,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.TextShimmer
+import com.tangem.core.ui.components.label.Label
+import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.yield.supply.impl.R
 
+/** @param badge network the fee is paid in, shown beside the value when it is not the token being claimed. */
 @Composable
-internal fun YieldSupplyFeeRow(title: TextReference, value: TextReference?, modifier: Modifier = Modifier) {
+internal fun YieldSupplyFeeRow(
+    title: TextReference,
+    value: TextReference?,
+    modifier: Modifier = Modifier,
+    badge: TextReference? = null,
+) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -30,6 +38,7 @@ internal fun YieldSupplyFeeRow(title: TextReference, value: TextReference?, modi
             color = TangemTheme.colors.text.primary1,
         )
         SpacerWMax()
+        badge?.let { Label(state = LabelUM(text = it)) }
         AnimatedContent(
             targetState = value,
         ) { targetValue ->
