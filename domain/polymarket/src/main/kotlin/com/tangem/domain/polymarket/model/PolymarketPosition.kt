@@ -50,6 +50,7 @@ sealed interface PolymarketPosition {
         val isLive: Boolean,
         val resolutionStatus: PolymarketResolutionStatus,
         val result: PolymarketPositionResult?,
+        val version: PolymarketMarketVersion?,
         val gameId: String? = null,
         val score: String? = null,
         val period: String? = null,
