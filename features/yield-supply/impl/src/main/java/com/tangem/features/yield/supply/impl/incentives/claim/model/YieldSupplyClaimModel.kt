@@ -18,6 +18,7 @@ import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSy
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
@@ -27,6 +28,7 @@ import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.yield.supply.models.incentives.YieldClaimCalldata
 import com.tangem.domain.yield.supply.usecase.BuildYieldClaimTransactionUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.formatter.YieldSupplyAmountFormatter
 import com.tangem.features.yield.supply.impl.common.formatter.formatUsd
@@ -73,6 +75,7 @@ internal class YieldSupplyClaimModel @Inject constructor(
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
+    private val yieldSupplyClaimTracker: YieldSupplyClaimTracker,
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
@@ -193,8 +196,25 @@ internal class YieldSupplyClaimModel @Inject constructor(
                     },
                 )
             },
-            ifRight = { _ -> params.onDismiss() },
+            ifRight = { transactionHash -> onClaimSubmitted(transactionHash) },
         )
+    }
+
+    /**
+     * Hands the claim over to the tracker: the transaction is still pending, and neither this model nor this sheet
+     * is alive long enough to see what becomes of it.
+     */
+    private fun onClaimSubmitted(transactionHash: String) {
+        (cryptoCurrency as? CryptoCurrency.Token)?.let { token ->
+            yieldSupplyClaimTracker.track(
+                userWalletId = params.userWallet.walletId,
+                cryptoCurrency = token,
+                chainId = params.chainId,
+                userAddress = params.userAddress,
+                transactionHash = transactionHash,
+            )
+        }
+        params.onDismiss()
     }
 
     private suspend fun resolveStorage(): AccountTitleUM.Account? {
