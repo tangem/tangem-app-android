@@ -59,7 +59,7 @@ internal class YieldSupplyRewardsBannerModelTest {
     }
 
     @Test
-    fun `GIVEN recommended rewards WHEN model created THEN banner shows them with the claim CTA inert`() = runTest {
+    fun `GIVEN recommended rewards WHEN model created THEN banner offers claim`() = runTest {
         // Arrange
         coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
             MockYieldSupply.claimableSummary(
@@ -76,7 +76,7 @@ internal class YieldSupplyRewardsBannerModelTest {
             YieldSupplyRewardsBannerUM(
                 title = resourceReference(R.string.yield_module_rewards_banner_title, wrappedList("\$30.00")),
                 description = resourceReference(R.string.yield_module_rewards_banner_subtitle),
-                claim = YieldSupplyRewardsBannerUM.Claim.Disabled,
+                claim = YieldSupplyRewardsBannerUM.Claim.Enabled,
             ),
         )
 
@@ -244,7 +244,7 @@ internal class YieldSupplyRewardsBannerModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value?.claim).isEqualTo(YieldSupplyRewardsBannerUM.Claim.Disabled)
+        assertThat(model.uiState.value?.claim).isEqualTo(YieldSupplyRewardsBannerUM.Claim.Enabled)
 
         model.onDestroy()
     }
