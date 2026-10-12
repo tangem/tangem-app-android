@@ -29,10 +29,11 @@ import com.tangem.domain.yield.supply.usecase.BuildYieldClaimTransactionUseCase
 import com.tangem.domain.yield.supply.usecase.GetFreshYieldClaimCalldataUseCase
 import com.tangem.domain.yield.supply.usecase.GetYieldRewardsSummaryUseCase
 import com.tangem.domain.yield.supply.usecase.ValidateYieldClaimCalldataUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyMarketFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
+import com.tangem.domain.yield.supply.usecase.YieldSupplyMarketFlowUseCase
 import com.tangem.features.yield.supply.impl.incentives.claim.YieldSupplyClaimComponent
 import com.tangem.features.yield.supply.impl.incentives.claim.entity.YieldSupplyClaimUM
+import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
 import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
@@ -50,6 +51,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -80,6 +82,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
 
     private var originalLocale: Locale = Locale.getDefault()
     private var isSheetDismissed = false
+    private val submittedResults = mutableListOf<YieldSupplyClaimResultUM>()
     private val claimTracker: YieldSupplyClaimTracker = mockk(relaxed = true)
 
     @BeforeEach
@@ -87,6 +90,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         originalLocale = Locale.getDefault()
         Locale.setDefault(Locale.US)
         isSheetDismissed = false
+        submittedResults.clear()
         clearMocks(claimTracker)
 
         every { marketFlowUseCase(any()) } returns flowOf(market())
@@ -374,38 +378,48 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
             }
             coVerify(exactly = 2) { getFreshClaimCalldataUseCase(chainId = CHAIN_ID, userAddress = SOURCE_ADDRESS) }
             assertThat(sentTransaction.captured).isEqualTo(uncompiledTx().copy(fee = ethFee(BigDecimal("2"))))
-            assertThat(isSheetDismissed).isTrue()
+            assertThat(submittedResults).hasSize(1)
 
             model.onDestroy()
         }
 
     @Test
-    fun `GIVEN a sent claim WHEN confirmed THEN the claim is followed and the sheet closes`() = runTest {
-        // Arrange
-        val model = createModel()
-        advanceUntilIdle()
+    fun `GIVEN a sent claim WHEN confirmed THEN the signed figures are handed over and the claim is followed`() =
+        runTest {
+            // Arrange
+            val model = createModel()
+            advanceUntilIdle()
+            val state = model.uiState.value
 
-        // Act
-        model.onClaimClick()
-        advanceUntilIdle()
+            // Act
+            model.onClaimClick()
+            advanceUntilIdle()
 
-        // Assert
-        verify(exactly = 1) {
-            claimTracker.track(
-                userWalletId = userWalletId,
-                cryptoCurrency = token,
-                chainId = CHAIN_ID,
-                userAddress = SOURCE_ADDRESS,
-                transactionHash = TX_HASH,
+            // Assert
+            assertThat(isSheetDismissed).isFalse()
+            assertThat(submittedResults).containsExactly(
+                YieldSupplyClaimResultUM(
+                    status = YieldSupplyClaimResultUM.Status.Submitted,
+                    total = state.total,
+                    serviceFee = state.serviceFee,
+                    networkFee = state.networkFee,
+                ),
             )
-        }
-        assertThat(isSheetDismissed).isTrue()
+            verify(exactly = 1) {
+                claimTracker.track(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = token,
+                    chainId = CHAIN_ID,
+                    userAddress = SOURCE_ADDRESS,
+                    transactionHash = TX_HASH,
+                )
+            }
 
-        model.onDestroy()
-    }
+            model.onDestroy()
+        }
 
     @Test
-    fun `GIVEN sending fails WHEN confirmed THEN no claim is followed`() = runTest {
+    fun `GIVEN sending fails WHEN confirmed THEN nothing is handed over and no claim is followed`() = runTest {
         // Arrange
         coEvery { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) } returns
             SendTransactionError.UnknownError().left()
@@ -417,6 +431,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         advanceUntilIdle()
 
         // Assert
+        assertThat(submittedResults).isEmpty()
         verify { claimTracker wasNot called }
 
         model.onDestroy()
@@ -506,7 +521,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         assertThat(isClaimInProgress).isTrue()
         coVerify(exactly = 2) { getFreshClaimCalldataUseCase(chainId = CHAIN_ID, userAddress = SOURCE_ADDRESS) }
         coVerify(exactly = 1) { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) }
-        assertThat(isSheetDismissed).isTrue()
+        assertThat(submittedResults).hasSize(1)
 
         model.onDestroy()
     }
@@ -580,6 +595,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
             YieldSupplyClaimComponent.Params(
                 userWallet = userWallet,
                 cryptoCurrencyStatusFlow = cryptoCurrencyStatusFlow,
+                onSubmitted = { submittedResults += it },
                 onDismiss = { isSheetDismissed = true },
             ),
         ),
@@ -599,6 +615,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         getAccountCurrencyStatusUseCase = getAccountCurrencyStatusUseCase,
         isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
     )
+
     private fun summaryOf(vararg claimable: YieldReward) = YieldRewardsSummary.Claimable(
         moduleAddress = MODULE_ADDRESS,
         claimable = claimable.toList(),
