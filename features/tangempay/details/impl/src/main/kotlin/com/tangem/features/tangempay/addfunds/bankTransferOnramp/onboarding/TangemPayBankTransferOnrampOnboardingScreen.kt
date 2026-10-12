@@ -21,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
@@ -49,8 +48,7 @@ import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.isEmpty
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
-private const val GLOW_ALPHA = 0.35f
-private const val GLOW_RADIUS_FACTOR = 1.1f
+private val HeaderTintColor = Color(0xFF41ADFB)
 private val IllustrationTopPadding = 133.dp
 private val IllustrationBottomPadding = 155.dp
 private val DisclaimerLineHeight = 18.sp
@@ -104,12 +102,12 @@ internal fun TangemPayBankTransferOnrampOnboardingScreen(
 
 @Composable
 private fun Header() {
-    val accentBlue = TangemTheme.colors3.icon.accent.blue
+    val tint = Brush.verticalGradient(listOf(HeaderTintColor, TangemTheme.colors3.bg.primary.copy(alpha = 0f)))
     Column(modifier = Modifier.fillMaxWidth()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(accentBlue, Color.Transparent)))
+                .background(tint)
                 .statusBarsPadding()
                 .padding(top = IllustrationTopPadding, bottom = IllustrationBottomPadding),
             contentAlignment = Alignment.Center,
@@ -137,19 +135,7 @@ private fun Header() {
 @Composable
 private fun GovernmentIllustration(color: Color) {
     Icon(
-        modifier = Modifier
-            .size(144.dp)
-            .drawBehind {
-                val radius = size.maxDimension * GLOW_RADIUS_FACTOR
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(color.copy(alpha = GLOW_ALPHA), Color.Transparent),
-                        center = center,
-                        radius = radius,
-                    ),
-                    radius = radius,
-                )
-            },
+        modifier = Modifier.size(144.dp),
         imageVector = Icons.ic_government_28,
         contentDescription = null,
         tint = color,
