@@ -62,7 +62,7 @@ internal class CollectiblesBlockComponent(
                 portfolioFetcher = model.portfolioFetcher,
                 controller = model.portfolioSelectorController,
                 bsCallback = model.portfolioSelectorCallback,
-                settings = PortfolioSelectorComponent.Settings(isWalletSelectionOnly = true),
+                settings = PortfolioSelectorComponent.Settings(isWalletSelectionOnly = true, isDs3Modal = true),
             ),
         )
 
