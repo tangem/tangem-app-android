@@ -9,6 +9,7 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOutcome
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
@@ -73,6 +74,22 @@ internal class YieldSupplyClaimOutcomeAnnouncerTest {
         verify(exactly = 0) { uiMessageSender.send(any()) }
     }
 
+    @Test
+    fun `GIVEN a claim made on the way out WHEN it reverts THEN nothing is announced`() = runTest {
+        // Arrange
+        startAnnouncer()
+
+        // Act
+        outcomes.emit(
+            outcome(outcome = YieldSupplyTransactionOutcome.Reverted, origin = YieldSupplyClaimOrigin.Withdrawal),
+        )
+        runCurrent()
+
+        // Assert — the user was never told this claim was happening, so a failure dialog would point at the
+        // withdrawal they did make
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+    }
+
     /** The announcer never stops collecting, so it runs on the background scope and subscribes before the Act. */
     private fun TestScope.startAnnouncer() {
         YieldSupplyClaimOutcomeAnnouncer(
@@ -85,7 +102,10 @@ internal class YieldSupplyClaimOutcomeAnnouncerTest {
         runCurrent()
     }
 
-    private fun outcome(outcome: YieldSupplyTransactionOutcome) = YieldSupplyClaimOutcome(
+    private fun outcome(
+        outcome: YieldSupplyTransactionOutcome,
+        origin: YieldSupplyClaimOrigin = YieldSupplyClaimOrigin.ClaimSheet,
+    ) = YieldSupplyClaimOutcome(
         userWalletId = UserWalletId("00"),
         cryptoCurrencyId = CryptoCurrency.ID(
             prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
@@ -95,5 +115,6 @@ internal class YieldSupplyClaimOutcomeAnnouncerTest {
         chainId = 1,
         userAddress = "0xowner",
         outcome = outcome,
+        origin = origin,
     )
 }

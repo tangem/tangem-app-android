@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOutcome
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.test.core.ProvideTestModels
@@ -61,6 +62,7 @@ internal class YieldSupplyClaimTrackerTest {
                     chainId = CHAIN_ID,
                     userAddress = USER_ADDRESS,
                     outcome = YieldSupplyTransactionOutcome.Confirmed,
+                    origin = YieldSupplyClaimOrigin.ClaimSheet,
                 ),
             )
             coVerify(exactly = 1) {
@@ -181,6 +183,7 @@ internal class YieldSupplyClaimTrackerTest {
                 chainId = CHAIN_ID,
                 userAddress = USER_ADDRESS,
                 transactionHash = OTHER_TX_HASH,
+                origin = YieldSupplyClaimOrigin.ClaimSheet,
             )
             advanceUntilIdle()
 
@@ -209,6 +212,7 @@ internal class YieldSupplyClaimTrackerTest {
         chainId = CHAIN_ID,
         userAddress = USER_ADDRESS,
         transactionHash = TX_HASH,
+        origin = YieldSupplyClaimOrigin.ClaimSheet,
     )
 
     /**

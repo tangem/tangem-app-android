@@ -12,6 +12,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOutcome
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
@@ -480,6 +481,7 @@ internal class YieldSupplyRewardsBannerModelTest {
             chainId = chainId,
             userAddress = userAddress,
             outcome = YieldSupplyTransactionOutcome.Confirmed,
+            origin = YieldSupplyClaimOrigin.ClaimSheet,
         )
 
     private fun TestScope.createModel(
