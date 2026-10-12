@@ -18,6 +18,8 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -77,6 +79,21 @@ internal class GetPredictionDepositCurrencyStatusesUseCaseTest {
 
         // Assert
         assertThat(actual).containsExactly(polygonStatus, solanaStatus).inOrder()
+    }
+
+    @Test
+    fun `GIVEN the status never leaves loading WHEN invoke THEN gives up and returns empty`() = runTest {
+        // Arrange
+        every { predictionAccountStatusSupplier(USER_WALLET_ID) } returns flow {
+            emit(PredictionAccountStatusValue.Loading)
+            awaitCancellation()
+        }
+
+        // Act
+        val actual = useCase(USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEmpty()
     }
 
     @Test
