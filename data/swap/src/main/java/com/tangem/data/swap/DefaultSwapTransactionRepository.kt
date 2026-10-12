@@ -11,7 +11,6 @@ import com.tangem.data.swap.models.SwapStatusDTO
 import com.tangem.data.swap.models.SwapTransactionDTO
 import com.tangem.data.swap.models.SwapTransactionListDTO
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectList
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.datasource.local.preferences.utils.getObjectMap
@@ -25,6 +24,7 @@ import com.tangem.domain.swap.SwapTransactionRepository
 import com.tangem.domain.swap.models.SwapStatusModel
 import com.tangem.domain.swap.models.SwapTransactionListModel
 import com.tangem.domain.swap.models.SwapTransactionModel
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.flow.Flow
@@ -37,6 +37,7 @@ internal class DefaultSwapTransactionRepository(
     private val networkFactory: NetworkFactory,
     private val dispatchers: CoroutineDispatcherProvider,
     private val multiAccountListSupplier: MultiAccountListSupplier,
+    private val growPreferencesKeys: GrowPreferencesKeys,
 ) : SwapTransactionRepository {
 
     private val listConverter by lazy(LazyThreadSafetyMode.NONE) {
@@ -71,7 +72,7 @@ internal class DefaultSwapTransactionRepository(
         }
         appPreferencesStore.editData { mutablePreferences ->
             val savedTransactions: List<SwapTransactionListDTO>? = mutablePreferences.getObjectList(
-                key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
+                key = growPreferencesKeys.swapTransactionsKey,
             )
             val tokenTransactions = savedTransactions
                 ?.firstOrNull { swapTxList ->
@@ -91,7 +92,7 @@ internal class DefaultSwapTransactionRepository(
                 ) ?: listOf(converter.convert(transaction))
 
             mutablePreferences.setObject(
-                key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
+                key = growPreferencesKeys.swapTransactionsKey,
                 value = savedTransactions?.updateList(
                     fromUserWalletId = fromUserWalletId,
                     toUserWalletId = toUserWalletId,
@@ -120,10 +121,10 @@ internal class DefaultSwapTransactionRepository(
         cryptoCurrencyId: CryptoCurrency.ID,
     ): Flow<List<SwapTransactionListModel>?> = combine(
         flow = appPreferencesStore.getObjectList<SwapTransactionListDTO>(
-            key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
+            key = growPreferencesKeys.swapTransactionsKey,
         ),
         flow2 = appPreferencesStore.getObjectMap<SwapStatusDTO>(
-            key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
+            key = growPreferencesKeys.swapTransactionsStatusesKey,
         ),
         flow3 = multiAccountListSupplier(),
     ) { savedTransactions, txStatuses, multiAccountList ->
@@ -150,7 +151,7 @@ internal class DefaultSwapTransactionRepository(
         clearTransactionsStatuses(txId = txId)
         appPreferencesStore.editData { mutablePreferences ->
             val savedList: List<SwapTransactionListDTO>? = mutablePreferences.getObjectList(
-                key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
+                key = growPreferencesKeys.swapTransactionsKey,
             )
             val tokenTransactions = savedList
                 ?.asSequence()
@@ -160,10 +161,10 @@ internal class DefaultSwapTransactionRepository(
                 ?.toList()
 
             if (tokenTransactions.isNullOrEmpty()) {
-                mutablePreferences.remove(key = PreferencesKeys.SWAP_TRANSACTIONS_KEY)
+                mutablePreferences.remove(key = growPreferencesKeys.swapTransactionsKey)
             } else {
                 mutablePreferences.setObject(
-                    key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
+                    key = growPreferencesKeys.swapTransactionsKey,
                     value = tokenTransactions,
                 )
             }
@@ -177,7 +178,7 @@ internal class DefaultSwapTransactionRepository(
     ) {
         appPreferencesStore.editData { mutablePreferences ->
             val savedMap = mutablePreferences.getObjectMap<SwapStatusDTO>(
-                key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
+                key = growPreferencesKeys.swapTransactionsStatusesKey,
             )
 
             val updatesMap = savedMap.toMutableMap()
@@ -190,7 +191,7 @@ internal class DefaultSwapTransactionRepository(
             )
 
             mutablePreferences.setObjectMap(
-                key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
+                key = growPreferencesKeys.swapTransactionsStatusesKey,
                 value = updatesMap,
             )
         }
@@ -198,7 +199,7 @@ internal class DefaultSwapTransactionRepository(
 
     override suspend fun getLastSwappedCryptoCurrencyId(userWalletId: UserWalletId): String? {
         val lastSwappedCurrencies = appPreferencesStore.getObjectListSync<LastSwappedCryptoCurrencyDTO>(
-            key = PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY,
+            key = growPreferencesKeys.lastSwappedCryptoCurrencyIdKey,
         )
 
         return lastSwappedCurrencies.find { userWalletId.stringValue == it.userWalletId }?.cryptoCurrencyId
@@ -210,7 +211,7 @@ internal class DefaultSwapTransactionRepository(
     ) {
         appPreferencesStore.editData { mutablePreferences ->
             val lastSwappedCryptoCurrencies: List<LastSwappedCryptoCurrencyDTO>? = mutablePreferences.getObjectList(
-                key = PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY,
+                key = growPreferencesKeys.lastSwappedCryptoCurrencyIdKey,
             )
 
             val newList = if (lastSwappedCryptoCurrencies != null) {
@@ -222,7 +223,7 @@ internal class DefaultSwapTransactionRepository(
             }
 
             mutablePreferences.setObjectList(
-                key = PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY,
+                key = growPreferencesKeys.lastSwappedCryptoCurrencyIdKey,
                 value = newList,
             )
         }
@@ -281,15 +282,15 @@ internal class DefaultSwapTransactionRepository(
     private suspend fun clearTransactionsStatuses(txId: String) {
         appPreferencesStore.editData { mutablePreferences ->
             val savedList = mutablePreferences.getObjectMap<SwapStatusModel>(
-                key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
+                key = growPreferencesKeys.swapTransactionsStatusesKey,
             )
             val editedList = savedList.filterNot { it.key == txId }
 
             if (editedList.isEmpty()) {
-                mutablePreferences.remove(key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY)
+                mutablePreferences.remove(key = growPreferencesKeys.swapTransactionsStatusesKey)
             } else {
                 mutablePreferences.setObjectMap(
-                    key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
+                    key = growPreferencesKeys.swapTransactionsStatusesKey,
                     value = editedList,
                 )
             }

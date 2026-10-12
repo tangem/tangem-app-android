@@ -27,7 +27,6 @@ import com.tangem.common.ui.notifications.notifications
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.topFade
@@ -35,10 +34,11 @@ import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_eye_cross_24
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
@@ -49,7 +49,9 @@ import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.rating.RatingComponent
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
+import com.tangem.features.txhistory.component.JointCosignRequestsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.txhistory.entity.JointCosignRequestsUM
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
@@ -74,11 +76,13 @@ internal fun TokenDetailsScreen(
     yieldSupplyComponent: YieldSupplyComponent,
     txHistoryComponent: TxHistoryComponent,
     expressTransactionsComponent: ExpressTransactionsComponent,
+    jointCosignRequestsComponent: JointCosignRequestsComponent,
     ratingComponent: RatingComponent?,
     marketingBannerComponent: MarketingBannerComponent,
     modifier: Modifier = Modifier,
 ) {
     val expressState by expressTransactionsComponent.state.collectAsStateWithLifecycle()
+    val jointCosignRequestsState by jointCosignRequestsComponent.state.collectAsStateWithLifecycle()
     val statusBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getTop(this).toDp() }
     val topBarTotalHeight = TopBarHeight + statusBarHeight
     val hazeState = rememberHazeState()
@@ -111,6 +115,8 @@ internal fun TokenDetailsScreen(
                     txHistoryComponent = txHistoryComponent,
                     expressTransactionsComponent = expressTransactionsComponent,
                     expressTransactionsToDisplay = expressState.transactionsToDisplay,
+                    jointCosignRequestsComponent = jointCosignRequestsComponent,
+                    jointCosignRequestsState = jointCosignRequestsState,
                     marketingBannerComponent = marketingBannerComponent,
                     rootBackground = rootBackground,
                     buttonsHazeState = buttonsHazeState,
@@ -177,6 +183,8 @@ private fun TokenDetailsBody(
     txHistoryComponent: TxHistoryComponent,
     expressTransactionsComponent: ExpressTransactionsComponent,
     expressTransactionsToDisplay: PersistentList<ExpressTransactionStateUM>,
+    jointCosignRequestsComponent: JointCosignRequestsComponent,
+    jointCosignRequestsState: JointCosignRequestsUM,
     marketingBannerComponent: MarketingBannerComponent,
     rootBackground: Color,
     buttonsHazeState: HazeState,
@@ -266,6 +274,9 @@ private fun TokenDetailsBody(
                 modifier = expressTransactionModifier,
             )
         }
+        with(jointCosignRequestsComponent) {
+            jointCosignRequestsContent(state = jointCosignRequestsState)
+        }
         with(txHistoryComponent) {
             txHistoryContent(listState = listState, state = txHistoryState)
         }
@@ -293,10 +304,11 @@ private fun TokenDetailsScreen_Preview() {
                     subtitle = stringReference("ERC-20 in Ethereum network"),
                     onBackClick = {},
                     menuItems = persistentListOf(
-                        TangemDropdownMenuItem(
-                            title = stringReference("Hide Token"),
-                            textColor = themedColor { TangemTheme.colors.text.warning },
+                        TokenDetailsTopAppBarUM.MenuItemUM(
+                            title = stringReference("Hide token"),
+                            icon = Icons.ic_eye_cross_24,
                             onClick = {},
+                            isDestructive = true,
                         ),
                     ),
                 ),
@@ -341,6 +353,7 @@ private fun TokenDetailsScreen_Preview() {
                 override fun Content(modifier: Modifier) = Unit
             },
             expressTransactionsComponent = PreviewExpressTransactionsComponent,
+            jointCosignRequestsComponent = PreviewJointCosignRequestsComponent,
             ratingComponent = null,
             marketingBannerComponent = object : MarketingBannerComponent {
                 @Composable
@@ -356,6 +369,15 @@ private fun previewActionButton(): TangemButtonUM = TangemButtonUM(
     isEnabled = true,
     type = TangemButtonType.Secondary,
 )
+
+private val PreviewJointCosignRequestsComponent = object : JointCosignRequestsComponent {
+    override val state: StateFlow<JointCosignRequestsUM> = MutableStateFlow(JointCosignRequestsUM.Empty)
+
+    override fun LazyListScope.jointCosignRequestsContent(state: JointCosignRequestsUM) = Unit
+
+    @Composable
+    override fun Content(modifier: Modifier) = Unit
+}
 
 private val PreviewExpressTransactionsComponent = object : ExpressTransactionsComponent {
     override val state: StateFlow<ExpressTransactionsBlockState> = MutableStateFlow(

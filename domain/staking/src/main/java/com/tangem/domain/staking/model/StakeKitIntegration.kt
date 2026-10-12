@@ -28,6 +28,8 @@ class StakeKitIntegration(
 
     override val targets: List<StakingTarget> = yield.validators.map { it.toStakingTarget() }
 
+    override val allTargets: List<StakingTarget> = yield.allValidators.map { it.toStakingTarget() }
+
     override val preferredTargets: List<StakingTarget> = yield.preferredValidators.map { it.toStakingTarget() }
 
     override val areAllTargetsFull: Boolean = yield.allValidatorsFull

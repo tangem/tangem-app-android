@@ -35,6 +35,7 @@ dependencies {
     /** Features api */
     api(projects.features.txhistory.api)
     implementation(projects.features.tokendetails.api)
+    implementation(projects.features.jointAccount.api)
     implementation(projects.features.rating.api)
 
     /** Domain */
@@ -46,8 +47,14 @@ dependencies {
     api(projects.domain.txhistory)
     api(projects.domain.wallets)
     implementation(projects.domain.account)
+    implementation(projects.domain.addressBook)
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.express.models)
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.tokens.models)
@@ -84,9 +91,5 @@ dependencies {
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
     testImplementation(deps.kotlin.coroutines)
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
-    testImplementation(deps.test.coroutine)
     testImplementation(tangemDeps.blockchain)
 }

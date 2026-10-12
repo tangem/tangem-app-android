@@ -15,6 +15,7 @@ import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.test.TangemPayTestTags
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.findCardWithId
@@ -121,7 +122,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
     }
 
     private fun onAmountChange(newValue: String) {
-        if (newValue.isNotEmpty() && newValue.toBigDecimalOrNull() == null) return
+        if (newValue.isNotEmpty() && newValue.parseBigDecimalOrNull() == null) return
         uiState.update { state ->
             state.copy(
                 amountFieldModel = state.amountFieldModel.copy(value = newValue),
@@ -135,7 +136,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
     }
 
     private fun onSubmitClick() {
-        val amount = uiState.value.amountFieldModel.value.toBigDecimalOrNull() ?: return
+        val amount = uiState.value.amountFieldModel.value.parseBigDecimalOrNull() ?: return
         modelScope.launch {
             uiState.update { it.copy(isSubmitButtonLoading = true) }
             analytics.send(TangemPayAnalyticsEvents.LimitChangeConfirmed(amount.toPlainString()))
@@ -162,7 +163,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
     }
 
     private fun isValid(value: String): Boolean {
-        val amount = value.toBigDecimalOrNull() ?: return false
+        val amount = value.parseBigDecimalOrNull() ?: return false
         val isLessThanMax = currentAdminLimit?.let { amount <= it } != false
         return amount >= MIN_LIMIT && isLessThanMax
     }

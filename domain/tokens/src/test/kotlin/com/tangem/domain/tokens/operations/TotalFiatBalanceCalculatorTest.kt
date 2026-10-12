@@ -537,17 +537,17 @@ class TotalFiatBalanceCalculatorTest {
     }
 
     /**
-     * Dual-run gate for `TWI_1717_BALANCE_CONTRIBUTIONS`: the same portfolio must total the same whether extra
-     * balances arrive through `Value.contributions` (toggle on) or through the legacy typed field (toggle off).
+     * The same portfolio must total the same whether extra balances arrive through `Value.contributions` or
+     * through the legacy typed field, which producers that do not report contributions still populate.
      *
-     * Each case is asserted against the *other* mode rather than a literal, which alone cannot catch "both wrong
-     * the same way" — the literal-asserted contribution cases in [CalculateCurrenciesComputable] are the anchor
-     * that makes these meaningful. The fixtures null the typed field on the toggle-on side, exactly as
-     * `CryptoCurrencyStatusFactory` does; keeping it populated would let a dead contributions path pass here.
+     * Each case is asserted against the *other* representation rather than a literal, which alone cannot catch
+     * "both wrong the same way" — the literal-asserted contribution cases in [CalculateCurrenciesComputable] are
+     * the anchor that makes these meaningful. The fixtures null the typed field on the contributions side,
+     * exactly as `CryptoCurrencyStatusFactory` does; keeping it populated would let a dead path pass here.
      */
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class ToggleParity {
+    inner class RepresentationParity {
 
         @Test
         fun `GIVEN Cardano staking rewards WHEN toggle on and off THEN totals match`() {

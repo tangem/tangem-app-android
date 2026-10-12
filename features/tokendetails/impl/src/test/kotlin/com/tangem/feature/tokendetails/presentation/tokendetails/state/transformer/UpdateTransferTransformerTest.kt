@@ -382,6 +382,27 @@ class UpdateTransferTransformerTest {
     }
 
     @Test
+    fun `GIVEN joint account with swap available WHEN swapAndSend onClick invoked THEN it is forced to JointAccount reason`() {
+        // Arrange
+        val transformer = createTransformer(
+            actions = listOf(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.None, false)),
+            isJointAccount = true,
+        )
+
+        // Act
+        val content = transformer.transform(initialState()).transferUM as TransferUM.Content
+        content.swapAndSend!!.onClick()
+
+        // Assert
+        assertThat(content.swap?.isEnabled).isTrue()
+        verifyOrder {
+            analyticsEventHandler.send(ofType<TransferAnalyticsEvent.ButtonSwapAndSend>())
+            onActionDispatched.invoke()
+            clickIntents.onSwapAndSendClick(ScenarioUnavailabilityReason.JointAccount)
+        }
+    }
+
+    @Test
     fun `GIVEN no Swap action WHEN transform THEN swapAndSend row is null`() {
         // Arrange
         val transformer = createTransformer(
@@ -418,12 +439,14 @@ class UpdateTransferTransformerTest {
     private fun createTransformer(
         actions: List<TokenActionsState.ActionState>,
         networkSource: StatusSource = StatusSource.ACTUAL,
+        isJointAccount: Boolean = false,
     ) = UpdateTransferTransformer(
         actions = actions,
         networkSource = networkSource,
         clickIntents = clickIntents,
         analyticsEventHandler = analyticsEventHandler,
         onActionDispatched = onActionDispatched,
+        isJointAccount = isJointAccount,
     )
 
     private fun initialState(): TokenDetailsUM = TokenDetailsUM(

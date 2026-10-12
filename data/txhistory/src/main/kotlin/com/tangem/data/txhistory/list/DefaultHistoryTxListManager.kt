@@ -145,8 +145,22 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
             .onEach { onChainHistory.sendAction(it) }
             .launchIn(this)
 
-        onChainHistory.history().collect { channel.send(it) }
+        onChainHistory.history()
+            .map { it.emptyAsUnavailable(historySources.onChainSource) }
+            .collect { channel.send(it) }
     }
+
+    /**
+     * A currency on [OnChainSource.IndexTable] has no blockchain history behind it — all it can ever list is express
+     * operations. So an empty list there does not mean "no transactions yet", it means the blockchain's own history is
+     * not supported, and the screen must say so instead of inviting the user to make their first transaction.
+     */
+    private fun HistoryState.emptyAsUnavailable(onChainSource: OnChainSource): HistoryState =
+        if (this is HistoryState.Empty && onChainSource == OnChainSource.IndexTable) {
+            HistoryState.Unavailable
+        } else {
+            this
+        }
 
     private suspend fun loadSources(): HistorySources = coroutineScope {
         val onChainSource = async { resolveOnChainSource() }
@@ -175,6 +189,7 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
                 ifLeft = { error ->
                     when (error) {
                         is TxHistoryStateError.DataError -> throw error
+                        is TxHistoryStateError.AddressNotReady -> throw error
                         TxHistoryStateError.EmptyTxHistories -> OnChainSource.BSDK
                         TxHistoryStateError.TxHistoryNotImplemented -> OnChainSource.IndexTable
                     }

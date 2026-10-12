@@ -1,8 +1,8 @@
 package com.tangem.data.networks.converters
 
 import com.google.common.truth.Truth
-import com.tangem.datasource.local.network.entity.NetworkStatusDM
-import com.tangem.datasource.local.network.entity.NetworkStatusDM.CurrencyId
+import com.tangem.data.networks.entity.NetworkStatusDM
+import com.tangem.data.networks.entity.NetworkStatusDM.CurrencyId
 import com.tangem.domain.models.currency.CryptoCurrency.ID
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus

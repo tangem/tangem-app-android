@@ -25,7 +25,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -36,8 +35,10 @@ import kotlin.coroutines.resumeWithException
  * client needs user interaction it returns a resolution `PendingIntent`, which is launched through
  * [GoogleAuthActivityResultBridge]. An interactive authorization first asks which account to use, see
  * [resolveAccount]. The access token is never logged.
+ *
+ * Not a singleton: [selectedAccount] belongs to one scope's files, so an account pinned for the hidden
+ * folder cannot redirect the user's ordinary Drive backups to it.
  */
-@Singleton
 internal class GoogleIdentityAuthorizer @Inject constructor(
     @ApplicationContext private val context: Context,
     private val activityResultBridge: GoogleAuthActivityResultBridge,
@@ -83,6 +84,10 @@ internal class GoogleIdentityAuthorizer @Inject constructor(
         }
     }
 
+    override fun selectAccount(accountName: String) {
+        selectedAccount = Account(accountName, GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE)
+    }
+
     override fun clearAuthorization() {
         selectedAccount = null
     }
@@ -92,8 +97,9 @@ internal class GoogleIdentityAuthorizer @Inject constructor(
      *
      * `AuthorizationClient` reuses the account of the granted session and offers no way to change it, so
      * without an explicit pick a user with several accounts is stuck with the one used first. The pick is
-     * held until [clearAuthorization]. Silent authorization shows no UI and so gets no pick; a missing
-     * launcher falls back to the implicit account rather than failing the authorization.
+     * held until [clearAuthorization] and may equally come from [selectAccount]. Silent authorization
+     * shows no UI and so gets no pick; a missing launcher falls back to the implicit account rather than
+     * failing the authorization.
      */
     private suspend fun resolveAccount(interactive: Boolean): Either<GoogleAuthError, Account?> {
         selectedAccount?.let { return it.right() }

@@ -2,7 +2,10 @@ package com.tangem.feature.walletsettings.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -10,17 +13,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -36,19 +38,15 @@ internal fun AddAccountTypeBS(
     onJointAccountClick: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
+    TangemModal<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        type = TangemBottomSheetType.Modal,
-        containerColor = TangemTheme.colors3.bg.secondary,
         title = {
-            TangemTopNavigation(
+            TangemModal.TopNavigation(
                 title = resourceReference(R.string.account_form_title_create),
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
-                blurBackground = false,
                 onClose = onDismiss,
             )
         },
@@ -70,9 +68,7 @@ private fun AddAccountTypeContent(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .padding(bottom = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(top = 16.dp, bottom = 24.dp),
     ) {
         AccountTypeItem(
             icon = Icons.ic_user_20,
@@ -100,10 +96,7 @@ private fun AccountTypeItem(
 ) {
     TangemRow(
         onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(color = TangemTheme.colors3.bg.tertiary),
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = {
             TangemIcon(

@@ -14,7 +14,6 @@ import com.tangem.domain.tangempay.model.TangemPayTxHistoryListConfig
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.fetcher.BatchFetcher
@@ -26,20 +25,16 @@ import javax.inject.Inject
 
 private const val INITIAL_CURSOR = "initial_cursor_key"
 
-@Suppress("LongParameterList")
 internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
     private val requestPerformer: TangemPayRequestPerformer,
     private val visaApi: TangemPayApi,
     private val cacheRegistry: CacheRegistry,
     private val txHistoryItemsStore: TangemPayTxHistoryItemsStore,
-    tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
     @NetworkMoshi private val moshi: Moshi,
 ) : TangemPayTxHistoryRepository {
 
     private val txHistoryItemConverter by lazy { TangemPayTxHistoryItemConverter(moshi) }
-
-    private val shouldUseNewTransactionsEndpoint = tangemPayFeatureToggles.isCashbackEnabled
 
     override fun getTxHistoryBatchFlow(
         userWalletId: UserWalletId,
@@ -111,11 +106,7 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
         transactionId: String,
     ): Either<VisaApiError, TangemPayTxHistoryItem?> {
         return requestPerformer.performRequest(userWalletId = userWalletId) { authHeader ->
-            if (shouldUseNewTransactionsEndpoint) {
-                visaApi.getTransaction(authHeader = authHeader, transactionId = transactionId)
-            } else {
-                visaApi.getTransactionLegacy(authHeader = authHeader, transactionId = transactionId)
-            }
+            visaApi.getTransaction(authHeader = authHeader, transactionId = transactionId)
         }.map { response ->
             txHistoryItemConverter.convert(response.result)
         }
@@ -123,11 +114,7 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
 
     private suspend fun fetch(userWalletId: UserWalletId, cursor: String?, pageSize: Int) {
         requestPerformer.performRequest(userWalletId = userWalletId) { authHeader ->
-            if (shouldUseNewTransactionsEndpoint) {
-                visaApi.getTangemPayTxHistory(authHeader = authHeader, limit = pageSize, cursor = cursor)
-            } else {
-                visaApi.getTangemPayTxHistoryLegacy(authHeader = authHeader, limit = pageSize, cursor = cursor)
-            }
+            visaApi.getTangemPayTxHistory(authHeader = authHeader, limit = pageSize, cursor = cursor)
         }.onLeft {
             error(it.toString())
         }.onRight { response ->

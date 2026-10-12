@@ -1,9 +1,9 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.common.ui.earn.EarnBlockUM
 import com.tangem.core.ui.ds.image.DeviceIconUM
@@ -32,8 +32,20 @@ internal data class TokenDetailsTopAppBarUM(
     val titleState: TitleState,
     val subtitle: TextReference,
     val onBackClick: () -> Unit,
-    val menuItems: ImmutableList<TangemDropdownMenuItem>,
+    val menuItems: ImmutableList<MenuItemUM>,
 ) {
+    /**
+     * One row of the top bar's "•••" context menu: a leading glyph and a label. [isDestructive] renders the row in the
+     * error color and puts a divider above it (Hide token).
+     */
+    @Immutable
+    data class MenuItemUM(
+        val title: TextReference,
+        val icon: ImageVector,
+        val onClick: () -> Unit,
+        val isDestructive: Boolean = false,
+    )
+
     @Immutable
     sealed interface TitleState {
         val tokenName: String

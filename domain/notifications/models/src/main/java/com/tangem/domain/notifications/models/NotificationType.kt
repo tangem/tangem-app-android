@@ -7,6 +7,7 @@ enum class NotificationType(val type: String) {
     OnrampStatus("onramp_status_update"),
     JointMembers("joint_members"),
     JointOverview("joint_overview"),
+    JointTx("joint_tx"),
     JointTxSent("joint_tx_sent"),
     Unknown("unknown"),
     ;

@@ -25,12 +25,14 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.StakingRegionUnavailableBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.TransferBottomSheetComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
+import com.tangem.features.jointaccount.slotbusy.JointOperationSlotBusyComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.rating.RatingComponent
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
+import com.tangem.features.txhistory.component.JointCosignRequestsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
@@ -45,9 +47,11 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     tokenMarketBlockComponentFactory: TokenMarketBlockComponent.Factory,
     txHistoryComponentFactory: TxHistoryComponent.Factory,
     expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
+    jointCosignRequestsComponentFactory: JointCosignRequestsComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyWarningComponentFactory: YieldSupplyDepositedWarningComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
+    private val jointOperationSlotBusyComponentFactory: JointOperationSlotBusyComponent.Factory,
     yieldSupplyComponentFactory: YieldSupplyComponent.Factory,
     private val ratingComponentFactory: RatingComponent.Factory,
     marketingBannerComponentFactory: MarketingBannerComponent.Factory,
@@ -70,6 +74,15 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             currency = params.currency,
             onRatingRequested = model::activateRatingForExpressTx,
             onRatingDismiss = { model.ratingSlotNavigation.dismiss() },
+        ),
+    )
+
+    private val jointCosignRequestsComponent = jointCosignRequestsComponentFactory.create(
+        context = child("jointCosignRequestsComponent"),
+        params = JointCosignRequestsComponent.Params(
+            userWalletId = params.userWalletId,
+            currency = params.currency,
+            pendingOperationId = (params.navigationAction as? NavigationAction.JointOperation)?.operationId,
         ),
     )
 
@@ -130,6 +143,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             yieldSupplyComponent = yieldSupplyComponent,
             txHistoryComponent = txHistoryComponent,
             expressTransactionsComponent = expressTransactionsComponent,
+            jointCosignRequestsComponent = jointCosignRequestsComponent,
             ratingComponent = ratingSlotState.child?.instance,
             marketingBannerComponent = marketingBannerComponent,
             modifier = modifier,
@@ -137,6 +151,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
 
         bottomSheet.child?.instance?.BottomSheet()
         txHistoryComponent.Content(modifier)
+        jointCosignRequestsComponent.Content(modifier)
     }
 
     private fun CryptoCurrency.toTokenMarketParam(): TokenMarketBlockComponent.Params? {
@@ -195,6 +210,13 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         )
         is TokenDetailsBottomSheetConfig.RegionUnavailable -> StakingRegionUnavailableBottomSheetComponent(
             onDismiss = model.bottomSheetNavigation::dismiss,
+        )
+        is TokenDetailsBottomSheetConfig.JointOperationSlotBusy -> jointOperationSlotBusyComponentFactory.create(
+            context = childByContext(componentContext),
+            params = JointOperationSlotBusyComponent.Params(
+                networkName = route.networkName,
+                onDismiss = model.bottomSheetNavigation::dismiss,
+            ),
         )
     }
 

@@ -57,10 +57,10 @@ fun BaseTestCase.verifyAddresses(seedPhrase: String, apiAddressesJson: String) {
 }
 
 /**
- * Polls [walletManagersStore] until the wallet manager count stops growing for [WALLET_MANAGERS_SETTLE_MS].
+ * Polls [walletManagersFacade] until the wallet manager count stops growing for [WALLET_MANAGERS_SETTLE_MS].
 
  *
- * Uses [getAllSync] with a polling interval instead of Flow, because the Flow only emits on changes —
+ * Uses [getStoredWalletManagers] with a polling interval instead of Flow, because the Flow only emits on changes —
  * if the count stabilizes, there would be no new emission to check the settle timeout against.
  */
 private fun BaseTestCase.awaitWalletManagersStabilized() {
@@ -72,7 +72,7 @@ private fun BaseTestCase.awaitWalletManagersStabilized() {
     runBlocking {
         withTimeout(WAIT_UNTIL_TIMEOUT_VERY_LONG) {
             while (true) {
-                val currentSize = walletManagersStore.getAllSync(walletId).size
+                val currentSize = walletManagersFacade.getStoredWalletManagers(walletId).size
                 val now = System.currentTimeMillis()
 
                 if (currentSize != lastSize) {

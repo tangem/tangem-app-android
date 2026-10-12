@@ -189,6 +189,20 @@ internal class GoogleIdentityAuthorizerTest {
     }
 
     @Test
+    fun `GIVEN account selected upfront WHEN authorize THEN picker is skipped and the request is pinned`() = runTest {
+        // Arrange
+        stubAuthorize(successTask(authResult(hasResolution = false, token = "tok")))
+        authorizer.selectAccount("user@gmail.com")
+
+        // Act
+        authorizer.authorize(scopes, interactive = true)
+
+        // Assert
+        coVerify(exactly = 0) { bridge.launchAccountPicker(any()) }
+        verify(exactly = 1) { builder.setAccount(any()) }
+    }
+
+    @Test
     fun `GIVEN picked account WHEN clearAuthorization THEN next authorize asks for the account again`() = runTest {
         // Arrange
         stubAuthorize(successTask(authResult(hasResolution = false, token = "tok")))

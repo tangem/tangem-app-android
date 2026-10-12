@@ -30,9 +30,11 @@ dependencies {
 
     /** Features api */
     api(projects.features.tangempay.details.api)
+    implementation(projects.features.tangempay.commonUi)
+    implementation(projects.features.tangempay.eligibility.api)
     api(projects.features.tokenRecieve.api)
     api(projects.features.promoBanners.api)
-    api(projects.features.virtualAccounts.details.api)
+    api(projects.features.moneyAccount.details.api)
 
     /** Domain */
     api(projects.domain.balanceHiding)
@@ -42,8 +44,9 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.visa.models)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
     runtimeOnly(projects.domain.txhistory)
-    runtimeOnly(projects.domain.wallets)
 
     /** Compose */
     api(deps.compose.coil)
@@ -75,8 +78,5 @@ dependencies {
 
     /** Test */
     testImplementation(projects.test.core)
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
-    testImplementation(deps.test.coroutine)
+    testImplementation(projects.test.mock)
 }

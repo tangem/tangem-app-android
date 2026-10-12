@@ -11,5 +11,10 @@ import com.tangem.domain.models.wallet.UserWalletId
  */
 interface PredictionAccountStatusFetcher : FlowFetcher<PredictionAccountStatusFetcher.Params> {
 
-    data class Params(val userWalletId: UserWalletId)
+    /**
+     * @param mode [Mode.FULL] re-reads the positions value too; [Mode.AVAILABLE_ONLY] keeps the cached one
+     */
+    data class Params(val userWalletId: UserWalletId, val mode: Mode)
+
+    enum class Mode { FULL, AVAILABLE_ONLY }
 }

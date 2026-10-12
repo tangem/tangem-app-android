@@ -7,7 +7,9 @@ import com.tangem.domain.models.account.TangemPayOnrampFee
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.visa.error.VisaApiError
+import kotlinx.coroutines.flow.Flow
 
 @Suppress("TooManyFunctions")
 interface OnboardingRepository {
@@ -28,7 +30,12 @@ interface OnboardingRepository {
 
     suspend fun getOnrampFees(userWalletId: UserWalletId): Either<VisaApiError, List<TangemPayOnrampFee>>
 
-    suspend fun createOrder(userWalletId: UserWalletId): Either<VisaApiError, String>
+    suspend fun createOrder(
+        userWalletId: UserWalletId,
+        deeplinkValue: String? = null,
+        specificationName: String = DEFAULT_ISSUE_SPECIFICATION_NAME,
+        type: OrderType = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
+    ): Either<VisaApiError, String>
 
     suspend fun clearOrderId(userWalletId: UserWalletId)
 
@@ -50,7 +57,7 @@ interface OnboardingRepository {
     suspend fun hasTangemPayInWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean>
 
     suspend fun checkCustomerEligibility(): List<TangemPayEligibilityType>
-    suspend fun getCustomerEligibility(): List<TangemPayEligibilityType>
+    suspend fun getCustomerEligibility(): List<TangemPayEligibilityType>?
 
     /**
      * Fetches eligibility channels fresh via the user token (always hits the network, no cache read/write).
@@ -62,11 +69,15 @@ interface OnboardingRepository {
 
     fun getSavedCustomerInfo(userWalletId: UserWalletId): CustomerInfo?
 
-    suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean
+    fun isMainOnboardingBannerHidden(userWalletId: UserWalletId): Flow<Boolean>
 
     suspend fun setHideMainOnboardingBanner(userWalletId: UserWalletId)
 
     suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit>
 
     suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean
+
+    companion object {
+        const val DEFAULT_ISSUE_SPECIFICATION_NAME = "SP_000004"
+    }
 }

@@ -17,7 +17,6 @@ internal class UpdateDisplayNameInitialStateTransformer(
 
     override fun transform(prevState: JointAccountDisplayNameUM): JointAccountDisplayNameUM = prevState.copy(
         name = initialName,
-        isError = validator.hasForbiddenChars(initialName),
         buttonText = buttonText,
         isButtonEnabled = validator.isValid(initialName),
         onNameChange = onNameChange,

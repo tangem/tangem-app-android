@@ -26,18 +26,17 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
-import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
 import com.tangem.features.polymarket.impl.common.PolymarketLegalLine
+import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.payout
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
-import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSummaryIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionDetailsBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionNotificationsBlock
@@ -48,7 +47,7 @@ import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredi
 @Composable
 internal fun PlacePredictionSummaryContent(
     state: PlacePredictionUM,
-    intents: PlacePredictionIntents,
+    intents: PlacePredictionSummaryIntents,
     modifier: Modifier = Modifier,
 ) {
     var footerHeight by remember { mutableIntStateOf(0) }
@@ -57,7 +56,12 @@ internal fun PlacePredictionSummaryContent(
         modifier = modifier,
         topBar = {
             TangemTopNavigation(
-                title = resourceReference(R.string.prediction_place_summary_title),
+                title = resourceReference(
+                    when (state.order) {
+                        is OrderSideUM.Buy -> R.string.prediction_place_summary_title
+                        is OrderSideUM.Sell -> R.string.prediction_close_title
+                    },
+                ),
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 onBack = intents::onBackClick,
                 onClose = intents::onCloseClick,
@@ -79,7 +83,12 @@ internal fun PlacePredictionSummaryContent(
                     size = TangemButton.Size.X12,
                     isLoading = state.submit !is SubmitUM.Idle,
                     iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24),
-                    text = resourceReference(R.string.prediction_place_button),
+                    text = resourceReference(
+                        when (state.order) {
+                            is OrderSideUM.Buy -> R.string.prediction_place_button
+                            is OrderSideUM.Sell -> R.string.prediction_close_button
+                        },
+                    ),
                     isEnabled = state.isPrimaryButtonEnabled,
                     onClick = intents::onPlaceClick,
                 )
@@ -96,12 +105,11 @@ internal fun PlacePredictionSummaryContent(
             PredictionPaymentBlock(
                 amountValue = state.amountValue,
                 payout = state.quote.payout(),
-                payment = state.payment,
+                collateral = state.collateral,
+                order = state.order,
             )
-            TangemSurface(color = TangemTheme.colors3.bg.secondary) {
-                PredictionMarketBlock(state = state.market)
-            }
-            PredictionDetailsBlock(state = state)
+            PredictionMarketBlock(state = state.market)
+            PredictionDetailsBlock(state = state, onFeeClick = intents::onFeeClick)
             PredictionNotificationsBlock(
                 notifications = state.notifications,
                 onRetryClick = intents::onQuoteRetryClick,

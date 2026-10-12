@@ -147,8 +147,14 @@ internal class SwapAmountSetQuotesTransformer(
         }.toPersistentList()
     }
 
+    /**
+     * Best quote among [quotes], ignoring region-restricted ones: such a quote is displayable but not
+     * executable, so it wins neither the best-rate badge nor the automatic selection. When every quote
+     * is restricted the full list stands in, so a quote is still picked.
+     */
     private fun findBestQuote(quotes: List<SwapQuoteUM>, comparator: Comparator<SwapQuoteUM>): SwapQuoteUM? {
-        return quotes.sortedWith(comparator).firstOrNull()
+        val availableQuotes = quotes.filterNot { (it as? SwapQuoteUM.Content)?.isRestricted == true }
+        return availableQuotes.ifEmpty { quotes }.minWithOrNull(comparator)
     }
 
     private class SwapQuotesComparator(private val selectedAmountType: SwapAmountType) : Comparator<SwapQuoteUM> {

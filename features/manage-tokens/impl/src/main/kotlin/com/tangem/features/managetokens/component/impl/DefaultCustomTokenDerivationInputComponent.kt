@@ -130,6 +130,9 @@ internal class DefaultCustomTokenDerivationInputComponent @AssistedInject constr
                     DerivationPathValidationException.Invalid -> {
                         resourceReference(R.string.custom_token_invalid_derivation_path)
                     }
+                    DerivationPathValidationException.ReservedForJointAccounts -> {
+                        resourceReference(R.string.custom_token_derivation_path_reserved)
+                    }
                 },
                 isConfirmEnabled = false,
             )

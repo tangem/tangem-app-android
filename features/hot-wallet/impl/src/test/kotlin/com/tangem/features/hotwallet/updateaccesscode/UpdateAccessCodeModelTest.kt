@@ -12,7 +12,7 @@ import com.tangem.domain.hotwallet.SetAccessCodeSkippedUseCase
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.hotwallet.UpdateAccessCodeComponent
 import com.tangem.features.hotwallet.updateaccesscode.routing.UpdateAccessCodeRoute
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -22,7 +22,6 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -161,17 +160,6 @@ internal class UpdateAccessCodeModelTest {
             analyticsEventHandler = analyticsEventHandler,
             uiMessageSender = uiMessageSender,
             setAccessCodeSkippedUseCase = setAccessCodeSkippedUseCase,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 }

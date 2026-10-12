@@ -33,8 +33,11 @@ import com.tangem.utils.converter.Converter
  * ID: 8edc9b5f-...
  * ```
  *
+ * The shared id is the express deal's own [ExpressTx.txId], the same one the "Transaction ID" row copies — support
+ * finds the deal and every on-chain leg tied to it by that id, not by the provider's external one.
+ *
  * A line whose data is absent is dropped rather than left blank — an onramp has no pay-in address (the fiat was paid by
- * card), an unresolved provider has no name to print, and not every deal carries an id.
+ * card) and an unresolved provider has no name to print.
  */
 internal class ExpressTxToShareTextConverter : Converter<ExpressTx, TextReference> {
 
@@ -45,8 +48,7 @@ internal class ExpressTxToShareTextConverter : Converter<ExpressTx, TextReferenc
             receivedAmount = value.tx.toAsset.formatAmount(),
             receivedToAddress = value.tx.payoutAddress,
             provider = value.provider,
-            // The provider-side id is the one their support desk can look up; the deal id stands in when absent.
-            id = value.tx.externalTxId ?: value.txId,
+            id = value.txId,
             onChainHash = value.onChainHashOrNull(),
         )
         is ExpressTx.Onramp -> buildShareText(
@@ -55,7 +57,7 @@ internal class ExpressTxToShareTextConverter : Converter<ExpressTx, TextReferenc
             receivedAmount = value.tx.toAsset.formatAmount(),
             receivedToAddress = value.tx.payoutAddress,
             provider = value.provider,
-            id = value.tx.externalTxId ?: value.txId,
+            id = value.txId,
             onChainHash = value.onChainHashOrNull(),
         )
     }

@@ -70,6 +70,10 @@ internal class AddExistingWalletModel @Inject constructor(
 
     init {
         trackingContextProxy.addHotWalletContext()
+        // After the context: interceptors run when the event is processed, so it carries Product Type only this way.
+        if (params.shouldSendOnboardingStarted) {
+            analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Started())
+        }
     }
 
     override fun onDestroy() {

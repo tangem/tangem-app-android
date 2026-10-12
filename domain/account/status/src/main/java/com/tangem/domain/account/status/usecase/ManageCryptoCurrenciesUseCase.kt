@@ -3,6 +3,7 @@ package com.tangem.domain.account.status.usecase
 import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
+import arrow.core.right
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -14,6 +15,7 @@ import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -114,6 +116,7 @@ class ManageCryptoCurrenciesUseCase(
         val userWalletId = accountId.userWalletId
         withContext(NonCancellable) {
             val accountStatus = getAccountStatus(accountId = accountId)
+            ensureAcceptsTokens(accountStatus)
 
             var modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
                 .modify(add = add, remove = remove)
@@ -123,7 +126,11 @@ class ManageCryptoCurrenciesUseCase(
                 return@withContext
             }
 
-            val derivingResult = derivePublicKeys(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
+            val derivingResult = if (accountStatus is AccountStatus.Joint) {
+                Unit.right()
+            } else {
+                derivePublicKeys(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
+            }
 
             if (!skipDerivationErrors && derivingResult.isLeft()) {
                 modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
@@ -164,6 +171,9 @@ class ManageCryptoCurrenciesUseCase(
 
         withContext(NonCancellable) {
             val accountStatus = getAccountStatus(accountId = accountId)
+            if (accountStatus is AccountStatus.Joint) {
+                raise(IllegalStateException("A joint account takes its tokens through Manage Tokens: $accountId"))
+            }
 
             val foundToken = accountStatus.tokenList.flattenCurrencies()
                 .mapNotNull { it.currency as? CryptoCurrency.Token }
@@ -192,6 +202,14 @@ class ManageCryptoCurrenciesUseCase(
             }
 
             tokenToAdd
+        }
+    }
+
+    private fun Raise<Throwable>.ensureAcceptsTokens(accountStatus: AccountStatus.CryptoPortfolio) {
+        val isInactiveJoint = accountStatus is AccountStatus.Joint &&
+            accountStatus.value !is JointAccountStatusValue.Active
+        if (isInactiveJoint) {
+            raise(IllegalStateException("A joint account takes tokens once it is active: ${accountStatus.accountId}"))
         }
     }
 
@@ -279,6 +297,10 @@ class ManageCryptoCurrenciesUseCase(
         return destination
     }
 
+    private fun List<CryptoCurrency>.withoutJointNetworks(): List<CryptoCurrency> {
+        return filterNot { it.network.derivationPath is Network.DerivationPath.Joint }
+    }
+
     private suspend fun Raise<Throwable>.saveAccount(account: Account.CryptoPortfolio) {
         catch(
             block = { accountsCRUDRepository.saveAccount(account) },
@@ -344,7 +366,7 @@ class ManageCryptoCurrenciesUseCase(
      * @param currencies The list of cryptocurrencies for which to create wallet managers.
      */
     private suspend fun createWalletManagers(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        val networks = currencies.mapTo(hashSetOf(), CryptoCurrency::network)
+        val networks = currencies.withoutJointNetworks().mapTo(hashSetOf(), CryptoCurrency::network)
 
         for (network in networks) {
             runSuspendCatching {
@@ -355,11 +377,12 @@ class ManageCryptoCurrenciesUseCase(
     }
 
     private suspend fun refreshExpress(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        if (currencies.isEmpty()) return
+        val expressCurrencies = currencies.withoutJointNetworks()
+        if (expressCurrencies.isEmpty()) return
 
         coroutineScope {
             launch {
-                val assetIds = currencies.mapTo(hashSetOf()) { currency ->
+                val assetIds = expressCurrencies.mapTo(hashSetOf()) { currency ->
                     ExpressAsset.ID(
                         networkId = currency.network.rawId,
                         contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,

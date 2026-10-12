@@ -27,7 +27,6 @@ dependencies {
     /** Project - Core */
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
-    api(projects.core.configToggles)
     api(projects.core.decompose)
     api(projects.core.utils)
     implementation(projects.core.ui)
@@ -60,7 +59,6 @@ dependencies {
     implementation(projects.domain.staking.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.yieldSupply.models)
-    implementation(projects.libs.crypto)
     implementation(projects.libs.blockchainSdk)
 
     /** Compose */

@@ -1,6 +1,7 @@
 package com.tangem.features.jointaccount.creation.composition.state.transformers
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.features.jointaccount.creation.composition.ui.state.JointAccountCompositionUM
 import com.tangem.features.jointaccount.creation.model.JointAccountCreationDraft
 import com.tangem.test.core.ProvideTestModels
@@ -105,8 +106,8 @@ internal class CompositionStepperTransformersTest {
         return JointAccountCompositionUM(
             totalMembers = JointAccountCompositionUM.StepperUM(
                 value = totalMembers,
-                isDecrementEnabled = totalMembers > JointAccountCompositionUM.MIN_MEMBERS,
-                isIncrementEnabled = totalMembers < JointAccountCompositionUM.MAX_MEMBERS,
+                isDecrementEnabled = totalMembers > JointAccountConfig.MIN_MEMBERS_COUNT,
+                isIncrementEnabled = totalMembers < JointAccountConfig.MAX_MEMBERS_COUNT,
                 onDecrement = onDecrementTotal,
                 onIncrement = onIncrementTotal,
             ),
@@ -117,7 +118,7 @@ internal class CompositionStepperTransformersTest {
                 onDecrement = onDecrementRequired,
                 onIncrement = onIncrementRequired,
             ),
-            maxMembers = JointAccountCompositionUM.MAX_MEMBERS,
+            maxMembers = JointAccountConfig.MAX_MEMBERS_COUNT,
             onContinueClick = onContinue,
             onBackClick = onBack,
         )

@@ -5,7 +5,9 @@ import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.test.core.getEmittedValues
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -13,13 +15,22 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 internal class IsWalletBackedUpUseCaseTest {
 
     private val cloudBackupRepository: CloudBackupRepository = mockk()
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase = mockk()
 
-    private val useCase = IsWalletBackedUpUseCase(cloudBackupRepository)
+    private val useCase = IsWalletBackedUpUseCase(cloudBackupRepository, isSocialBackupCompletedUseCase)
+
+    @BeforeEach
+    fun setUpSocialBackupAbsent() {
+        clearMocks(cloudBackupRepository, isSocialBackupCompletedUseCase)
+        coEvery { isSocialBackupCompletedUseCase(any()) } returns false
+        every { isSocialBackupCompletedUseCase.flow(any()) } returns flowOf(false)
+    }
 
     // region invoke
     @Test
@@ -59,6 +70,20 @@ internal class IsWalletBackedUpUseCaseTest {
 
         // THEN
         assertThat(result).isFalse()
+    }
+
+    @Test
+    fun `GIVEN hot wallet with only social recovery WHEN invoke THEN true`() = runTest {
+        // GIVEN
+        val wallet = hotWallet(backedUp = false)
+        coEvery { cloudBackupRepository.isBackedUp(WALLET_ID) } returns false
+        coEvery { isSocialBackupCompletedUseCase(wallet.walletId) } returns true
+
+        // WHEN
+        val result = useCase(wallet)
+
+        // THEN
+        assertThat(result).isTrue()
     }
 
     @Test
@@ -111,6 +136,20 @@ internal class IsWalletBackedUpUseCaseTest {
 
         // THEN
         assertThat(values).containsExactly(false, true).inOrder()
+    }
+
+    @Test
+    fun `GIVEN hot wallet with only social recovery WHEN flow THEN emits true`() = runTest {
+        // GIVEN
+        val wallet = hotWallet(backedUp = false)
+        every { cloudBackupRepository.isBackedUpFlow(WALLET_ID) } returns flowOf(false)
+        every { isSocialBackupCompletedUseCase.flow(wallet.walletId) } returns flowOf(true)
+
+        // WHEN
+        val values = getEmittedValues(useCase.flow(wallet))
+
+        // THEN
+        assertThat(values).containsExactly(true)
     }
 
     @Test
