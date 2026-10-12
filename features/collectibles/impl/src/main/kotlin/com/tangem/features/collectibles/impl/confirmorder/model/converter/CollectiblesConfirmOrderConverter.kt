@@ -8,7 +8,10 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.collectibles.account.covers
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
+import com.tangem.domain.collectibles.models.OpenPackStep
+import com.tangem.domain.collectibles.models.total
 import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM
 import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM.ButtonUM
@@ -29,17 +32,20 @@ internal class CollectiblesConfirmOrderConverter(
             onBackClick = onBackClick,
             order = createOrder(value),
             onApproveClick = onApproveClick,
+            isPackOpened = value.step is OpenPackStep.Opened,
+            isBackVisible = value.step is OpenPackStep.NotStarted || value.step is OpenPackStep.Failed,
         )
     }
 
     private fun createOrder(value: Input): OrderUM {
         val machine = value.machine
         val fee = machine.feeAmount
-        val total = machine.price + fee
+        val total = machine.total
 
         return OrderUM(
             rows = persistentListOf(
                 PriceRowUM(
+                    // Always one pack: phase one sells packs one at a time
                     labelRef = stringReference("${machine.shortName.ifBlank { machine.name }} x1"),
                     value = machine.price.toFiat(),
                 ),
@@ -54,35 +60,48 @@ internal class CollectiblesConfirmOrderConverter(
                     hasDivider = false,
                 ),
             ),
-            button = createButton(value = value, total = total),
+            button = createButton(value = value),
             packImageUrl = machine.imageUrl,
         )
     }
 
-    private fun createButton(value: Input, total: BigDecimal): ButtonUM {
-        val hasEnoughFunds = value.vaultBalance.usdcAmount >= total
+    private fun createButton(value: Input): ButtonUM {
+        val hasEnoughFunds = value.vaultBalance.covers(value.machine)
 
-        return when {
-            // TODO handle and localize all possible states
-            value.isConfirming -> ButtonUM(
-                textRef = stringReference("Opening pack…"),
+        return when (value.step) {
+            OpenPackStep.Generating -> ButtonUM(
+                textRef = resourceReference(R.string.collectibles_confirm_order_generating_pack_button),
                 isEnabled = false,
             )
-            !hasEnoughFunds -> ButtonUM(
-                textRef = resourceReference(R.string.collectibles_confirm_order_not_enough_funds_button),
+            OpenPackStep.Confirming -> ButtonUM(
+                textRef = resourceReference(R.string.collectibles_confirm_order_confirming_transaction_button),
                 isEnabled = false,
             )
-            else -> ButtonUM(
-                textRef = resourceReference(R.string.collectibles_confirm_order_approve_button),
-                isEnabled = true,
+            OpenPackStep.Opening,
+            is OpenPackStep.Opened,
+            -> ButtonUM(
+                textRef = resourceReference(R.string.collectibles_confirm_order_opening_pack_button),
+                isEnabled = false,
             )
+            OpenPackStep.NotStarted,
+            is OpenPackStep.Failed,
+            -> when {
+                !hasEnoughFunds -> ButtonUM(
+                    textRef = resourceReference(R.string.collectibles_confirm_order_not_enough_funds_button),
+                    isEnabled = false,
+                )
+                else -> ButtonUM(
+                    textRef = resourceReference(R.string.collectibles_confirm_order_approve_button),
+                    isEnabled = true,
+                )
+            }
         }
     }
 
     data class Input(
         val machine: CollectibleGachaMachine,
         val vaultBalance: CollectiblesVaultBalance,
-        val isConfirming: Boolean,
+        val step: OpenPackStep,
     )
 
     private fun BigDecimal.toFiat(): String = format {

@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -20,6 +21,8 @@ import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetc
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
+import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -59,6 +62,8 @@ internal class CollectiblesMainModel @Inject constructor(
     private val collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier,
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val hotDelegate: CollectiblesHotDelegate,
+    private val clipboardManager: ClipboardManager,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -82,8 +87,24 @@ internal class CollectiblesMainModel @Inject constructor(
 
     private var vaultStatus: CollectiblesVaultBalance? = null
 
+    private var hotDelegateAddress: String? = null
+
     init {
         observeBalance()
+        loadHotDelegate()
+    }
+
+    // TODO testing only, remove once Gasless pays the spin fee
+    private fun loadHotDelegate() {
+        modelScope.launch {
+            val key = hotDelegate.getPublicKeyOrNull(AccountId.forCollectiblesAccount(params.userWalletId))
+                ?: return@launch
+
+            hotDelegateAddress = key.base58
+            uiState.update { state ->
+                state.copy(menu = menuConverter.convert(key.base58).copy(isShown = state.menu.isShown))
+            }
+        }
     }
 
     private fun observeBalance() {
@@ -125,7 +146,7 @@ internal class CollectiblesMainModel @Inject constructor(
                 ),
                 onClick = ::onCollectionClick,
             ),
-            menu = menuConverter.convert(Unit),
+            menu = menuConverter.convert(null),
             isBalanceRefreshing = false,
             onBackClick = ::onBackClick,
         )
@@ -156,6 +177,7 @@ internal class CollectiblesMainModel @Inject constructor(
             CollectiblesMenuItem.DELIVERIES -> onDeliveriesClick()
             CollectiblesMenuItem.HOW_IT_WORKS -> onHowItWorksClick()
             CollectiblesMenuItem.GET_ASSISTANCE -> onGetAssistanceClick()
+            CollectiblesMenuItem.HOT_DELEGATE -> onHotDelegateClick()
             CollectiblesMenuItem.CLOSE_ACCOUNT -> onCloseAccountClick()
         }
     }
@@ -233,6 +255,11 @@ internal class CollectiblesMainModel @Inject constructor(
     @Suppress("EmptyFunctionBlock")
     private fun onGetAssistanceClick() {
         // TODO([REDACTED_TASK_KEY]): support entry point is not wired yet.
+    }
+
+    private fun onHotDelegateClick() {
+        onMenuDismiss()
+        hotDelegateAddress?.let { address -> clipboardManager.setText(text = address, isSensitive = false) }
     }
 
     private fun onCloseAccountClick() {

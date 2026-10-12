@@ -82,7 +82,7 @@ data class OpenedCollectiblePack(
     val rarity: CollectibleRarity?,
     val gradingCompany: String?,
     val grade: String?,
-    val gradingId: String,
+    val gradingId: String?,
     val year: String?,
     val set: String?,
     val serialNumber: String?,
