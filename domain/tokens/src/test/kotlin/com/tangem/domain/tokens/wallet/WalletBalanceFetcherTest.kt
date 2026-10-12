@@ -920,7 +920,6 @@ internal class WalletBalanceFetcherTest {
             predictionAccountStatusFetcher(
                 params = PredictionAccountStatusFetcher.Params(
                     userWalletId = userWalletId,
-                    mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
                 ),
             )
         }

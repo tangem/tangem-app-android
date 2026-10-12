@@ -1,20 +1,20 @@
 package com.tangem.grow.datasource.collectibles.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
 import com.tangem.grow.datasource.collectibles.models.response.model.MachineNftDTO
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Response for GET /api/v1/machine/{externalId}/nfts
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class MachineNftsResponse(
-    @Json(name = "nfts")
+    @SerialName("nfts")
     val nfts: List<MachineNftDTO>,
-    @Json(name = "hasMore")
+    @SerialName("hasMore")
     val hasMore: Boolean,
-    @Json(name = "page")
+    @SerialName("page")
     val page: Int,
-    @Json(name = "limit")
+    @SerialName("limit")
     val limit: Int,
 )

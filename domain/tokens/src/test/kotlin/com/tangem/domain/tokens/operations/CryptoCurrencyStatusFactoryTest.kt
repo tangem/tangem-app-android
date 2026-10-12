@@ -400,7 +400,6 @@ class CryptoCurrencyStatusFactoryTest {
                     fiatAmount = null,
                     fiatRate = null,
                     priceChange = null,
-                    stakingBalance = null,
                     yieldSupplyStatus = null,
                     hasCurrentNetworkTransactions = false,
                     pendingTransactions = emptySet(),
@@ -441,7 +440,6 @@ class CryptoCurrencyStatusFactoryTest {
             // Assert
             val expected = CryptoCurrencyStatus.NoQuote(
                 amount = BigDecimal.TEN,
-                stakingBalance = null,
                 yieldSupplyStatus = yieldSupplyStatuses[currency.id]!!,
                 hasCurrentNetworkTransactions = true,
                 pendingTransactions = pendingTransactions[currency.id]!!,
@@ -479,7 +477,6 @@ class CryptoCurrencyStatusFactoryTest {
                 fiatAmount = BigDecimal.TEN * fullQuote.fiatRate,
                 fiatRate = fullQuote.fiatRate,
                 priceChange = fullQuote.priceChange,
-                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
@@ -493,15 +490,14 @@ class CryptoCurrencyStatusFactoryTest {
 
     /**
      * The extra balances arrive already resolved from the seam's `BalanceContributionProvider`s, so the factory
-     * neither matches nor stamps anything — it stores the list and reports one source per contribution. The typed
-     * `stakingBalance` field is never written; readers resolve the staking balance out of the contributions.
+     * neither matches nor stamps anything — it stores the list and reports one source per contribution.
      */
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class ContributionsFromSeam {
 
         @Test
-        fun `GIVEN staking contribution WHEN create THEN it is stored and the typed field stays null`() {
+        fun `GIVEN staking contribution WHEN create THEN it is stored as is`() {
             // Arrange
             val currency = cryptoCurrencyFactory.cardano
             val contribution = stakeKitBalance(currency).copy(isStakedIncludedInNetworkBalance = true)
@@ -512,15 +508,13 @@ class CryptoCurrencyStatusFactoryTest {
                 contributions = listOf(contribution),
             )
 
-            // Assert — the contribution is the only source; readers reach it through `stakingBalanceData` rather
-            // than through the typed field
+            // Assert — the contribution is the only source; readers reach it through `stakingBalanceData`
             Truth.assertThat(actual.value.contributions).containsExactly(contribution)
-            Truth.assertThat(actual.value.stakingBalance).isNull()
         }
 
         @Test
-        fun `GIVEN a contribution that is not staking WHEN create THEN the typed field stays null`() {
-            // Arrange — yield supply contributes zero and has no typed field to back-fill
+        fun `GIVEN a contribution that is not staking WHEN create THEN it is stored as is`() {
+            // Arrange — yield supply contributes zero, but it still has to reach the status
             val currency = cryptoCurrencyFactory.cardano
             val contribution = YieldSupplyContribution(
                 status = YieldSupplyStatus(
@@ -540,7 +534,6 @@ class CryptoCurrencyStatusFactoryTest {
 
             // Assert
             Truth.assertThat(actual.value.contributions).containsExactly(contribution)
-            Truth.assertThat(actual.value.stakingBalance).isNull()
         }
 
         @Test
@@ -644,7 +637,6 @@ class CryptoCurrencyStatusFactoryTest {
             // Assert
             Truth.assertThat(actual.value.contributions).isEmpty()
             Truth.assertThat(actual.value.sources.contributionSources).isEmpty()
-            Truth.assertThat(actual.value.stakingBalance).isNull()
         }
 
         @ParameterizedTest

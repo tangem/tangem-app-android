@@ -1,29 +1,18 @@
 package com.tangem.spend.datasource.pay.models.response
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.ToJson
+import com.tangem.core.remote.json.NetworkJsonFactory
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 internal class CustomerMePlasticCardParsingTest {
 
-    private class BigDecimalAdapter {
-        @FromJson
-        fun fromJson(value: String) = BigDecimal(value)
-
-        @ToJson
-        fun toJson(value: BigDecimal) = value.toString()
-    }
-
-    private val moshi = Moshi.Builder().add(BigDecimalAdapter()).build()
-    private val adapter = moshi.adapter(CustomerMeResponse.Result::class.java)
+    private val json = NetworkJsonFactory.create()
 
     @Test
     fun `GIVEN plastic card awaiting activation WHEN parse THEN card type status and PI status are mapped`() {
         // Act
-        val result = adapter.fromJson(PLASTIC_AWAITING_ACTIVATION_JSON)!!
+        val result = json.decodeFromString(CustomerMeResponse.Result.serializer(), PLASTIC_AWAITING_ACTIVATION_JSON)
 
         // Assert
         val plasticCard = result.cards.single { it.cardType == "PHYSICAL" }
@@ -39,7 +28,7 @@ internal class CustomerMePlasticCardParsingTest {
     @Test
     fun `GIVEN plastic card awaiting activation WHEN parse THEN virtual card stays active`() {
         // Act
-        val result = adapter.fromJson(PLASTIC_AWAITING_ACTIVATION_JSON)!!
+        val result = json.decodeFromString(CustomerMeResponse.Result.serializer(), PLASTIC_AWAITING_ACTIVATION_JSON)
 
         // Assert
         val virtualCard = result.cards.single { it.cardType == "VIRTUAL" }
@@ -52,7 +41,7 @@ internal class CustomerMePlasticCardParsingTest {
     @Test
     fun `GIVEN plastic card awaiting activation WHEN parse THEN order data fields come from the profile`() {
         // Act
-        val result = adapter.fromJson(PLASTIC_AWAITING_ACTIVATION_JSON)!!
+        val result = json.decodeFromString(CustomerMeResponse.Result.serializer(), PLASTIC_AWAITING_ACTIVATION_JSON)
 
         // Assert
         assertThat(result.profile).isEqualTo(
@@ -68,7 +57,7 @@ internal class CustomerMePlasticCardParsingTest {
     @Test
     fun `GIVEN decimal amounts sent as JSON numbers WHEN parse THEN amounts are read`() {
         // Act
-        val result = adapter.fromJson(PLASTIC_AWAITING_ACTIVATION_JSON)!!
+        val result = json.decodeFromString(CustomerMeResponse.Result.serializer(), PLASTIC_AWAITING_ACTIVATION_JSON)
 
         // Assert
         assertThat(result.balance?.fiat?.availableBalance).isEqualTo(BigDecimal("103.77"))

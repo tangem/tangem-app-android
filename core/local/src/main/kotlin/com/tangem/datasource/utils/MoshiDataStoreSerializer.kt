@@ -4,6 +4,7 @@ import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.Serializer
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
+import com.tangem.utils.annotations.RemoveWithToggle
 import java.io.InputStream
 import java.io.OutputStream
 import java.lang.reflect.ParameterizedType
@@ -19,6 +20,10 @@ import java.lang.reflect.ParameterizedType
 @Deprecated(
     message = "Prefer kotlinx-serialization: annotate the model with @Serializable and use " +
         "KotlinxDataStoreSerializer (or AppDataStoreFactory.create with a KSerializer).",
+)
+@RemoveWithToggle(
+    toggleName = "AND_18288_KOTLINX_DATASTORE_ENABLED",
+    description = "Only the toggle-off branches of the DataStore call sites use it",
 )
 class MoshiDataStoreSerializer<T>(
     override val defaultValue: T,

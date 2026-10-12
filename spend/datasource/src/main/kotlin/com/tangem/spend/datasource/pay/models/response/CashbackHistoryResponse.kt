@@ -1,26 +1,26 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
-import java.math.BigDecimal
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Response from `GET /v1/customer/cashback/history`
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class CashbackHistoryResponse(
-    @Json(name = "result") val result: Result?,
+    @SerialName("result") val result: Result?,
 ) {
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "items") val items: List<Item>?,
+        @SerialName("items") val items: List<Item>?,
     )
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Item(
-        @Json(name = "year") val year: Int,
-        @Json(name = "month") val month: Int,
-        @Json(name = "confirmed_amount") val confirmedAmount: BigDecimal,
-        @Json(name = "currency") val currency: String,
+        @SerialName("year") val year: Int,
+        @SerialName("month") val month: Int,
+        @SerialName("confirmed_amount") val confirmedAmount: SerializedBigDecimal,
+        @SerialName("currency") val currency: String,
     )
 }

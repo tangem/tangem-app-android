@@ -104,7 +104,7 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         }
 
         // Act
-        route.captured.onConfirm(BigDecimal("1.5"))
+        route.captured.onConfirm(BigDecimal("5"))
         amount.onResume()
         runCurrent()
         amount.onNextClick()
@@ -115,8 +115,8 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         verify(exactly = 0) { router.push(any<PlacePredictionRoute.Summary>(), any()) }
         advanceTimeBy(1_001)
         val prepared = prepareOrder(amount)
-        assertThat(prepared.state.slippage.percent).isEqualTo(BigDecimal("1.5"))
-        coVerify(exactly = 1) { getQuoteUseCase(match { it.slippagePercent == BigDecimal("1.5") }) }
+        assertThat(prepared.state.slippage.percent).isEqualTo(BigDecimal("5"))
+        coVerify(exactly = 1) { getQuoteUseCase(match { it.slippagePercent == BigDecimal("5") }) }
     }
 
     @Test

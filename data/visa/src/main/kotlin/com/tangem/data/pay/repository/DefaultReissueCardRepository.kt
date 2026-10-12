@@ -14,6 +14,7 @@ import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 internal class DefaultReissueCardRepository @Inject constructor(
@@ -36,10 +37,11 @@ internal class DefaultReissueCardRepository @Inject constructor(
             }.bind()
 
             val result = response.result
-            val fee = TangemPayReissueCardFee(
-                amount = result.amount.toBigDecimal(),
-                currencyCode = result.currency,
-            )
+            val amount = result.amount.toBigDecimalOrNull() ?: run {
+                TangemLogger.e("Reissue card fee amount is not a number: ${result.amount}")
+                raise(VisaApiError.UnknownWithoutCode)
+            }
+            val fee = TangemPayReissueCardFee(amount = amount, currencyCode = result.currency)
 
             runSuspendCatching {
                 tangemPayReissueCardStore.storeReissueFee(userWalletId, fee)

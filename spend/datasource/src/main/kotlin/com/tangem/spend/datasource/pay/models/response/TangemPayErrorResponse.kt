@@ -1,15 +1,26 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class TangemPayErrorResponse(
-    @Json(name = "error") val error: Error,
+    @SerialName("error") val error: Error,
 ) {
-    @JsonClass(generateAdapter = true)
+
+    @Serializable
     data class Error(
-        @Json(name = "code") val code: Int,
-        @Json(name = "name") val name: String?,
+        @SerialName("code") val code: Int,
+        @SerialName("name") val name: String?,
     )
+
+    companion object {
+
+        fun decodeOrNull(json: Json, body: String?): TangemPayErrorResponse? {
+            if (body == null) return null
+
+            return runCatching { json.decodeFromString(serializer(), body) }.getOrNull()
+        }
+    }
 }

@@ -7,6 +7,7 @@ import com.tangem.lib.auth.social.SocialRecoveryError
 internal fun SocialRecoveryError.toDomainError(): SocialLoginError = when (this) {
     SocialRecoveryError.BindingNotFound -> SocialLoginError.BindingNotFound
     SocialRecoveryError.BindingConflict -> SocialLoginError.BindingConflict
+    SocialRecoveryError.NonceExpired -> SocialLoginError.SessionExpired
     SocialRecoveryError.NoActiveSession,
     SocialRecoveryError.DeviceKeyUnavailable,
     -> SocialLoginError.ServerError()

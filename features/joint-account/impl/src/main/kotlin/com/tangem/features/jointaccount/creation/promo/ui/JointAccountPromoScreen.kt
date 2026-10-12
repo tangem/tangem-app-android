@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -35,6 +36,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_shield_checkmark_20
 import com.tangem.core.ui.res.generated.icons.ic_user_plus_20
 import com.tangem.core.ui.res.generated.icons.ic_users_20
+import com.tangem.core.ui.test.accounts.JointAccountCreationTestTags
 import com.tangem.features.jointaccount.impl.R
 import com.tangem.features.jointaccount.creation.promo.ui.state.JointAccountPromoUM
 import kotlinx.collections.immutable.ImmutableList
@@ -161,6 +163,7 @@ private fun Footer(onContinueClick: () -> Unit, modifier: Modifier = Modifier) {
 
         TangemButton(
             modifier = Modifier
+                .testTag(JointAccountCreationTestTags.PROMO_CONTINUE_BUTTON)
                 .fillMaxWidth()
                 .padding(top = 16.dp)
                 .padding(horizontal = 16.dp, vertical = 12.dp),

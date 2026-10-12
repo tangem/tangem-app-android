@@ -7,13 +7,13 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
 
 /**
  * Actions of a token of a joint account. The set mirrors what a personal account would offer in the same context —
  * an action a personal account would hide (no staking for the currency) stays hidden, one it would disable keeps its
- * natural reason — but swap, sell, stake and yield mode are held back with [ScenarioUnavailabilityReason.JointAccount],
- * because the token belongs to a Safe contract and the wallet's own keys spend nothing from it. Send targets the
+ * natural reason — but swap, sell and stake are held back with [ScenarioUnavailabilityReason.JointAccount], because
+ * the token belongs to a Safe contract and the wallet's own keys spend nothing from it. Yield mode is not offered at
+ * all: the Safe makes no sends of its own, so there is nothing to promise yet. Send targets the
  * Safe contract and follows the regular availability rules, and so does buy: a purchase is a deposit to the Safe
  * address the wallet manager reports, the same as receiving. Receiving to the Safe address, copying that address,
  * analytics and hiding the token stay available.
@@ -27,7 +27,6 @@ internal class JointAccountActionsFactory(
         userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         stakingAvailability: StakingAvailability,
-        yieldSupplyAvailability: YieldSupplyAvailability,
     ): Set<ActionState> {
         val isAddressAvailable = isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)
         val hideTokenUnavailabilityReason = getTokenHideUnavailabilityReason(userWallet)
@@ -81,13 +80,6 @@ internal class JointAccountActionsFactory(
             addHeldBack(natural = naturalSell) { ActionState.Sell(unavailabilityReason = it) }
 
             ActionState.HideToken(unavailabilityReason = hideTokenUnavailabilityReason).addByReason()
-
-            if (yieldSupplyAvailability is YieldSupplyAvailability.Available) {
-                ActionState.YieldMode(
-                    unavailabilityReason = ScenarioUnavailabilityReason.JointAccount,
-                    apy = yieldSupplyAvailability.apy,
-                ).active()
-            }
         }
     }
 

@@ -12,7 +12,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.event.EventEffect
-import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
+import com.tangem.core.ui.security.SensitiveContentEffect
 import com.tangem.features.hotwallet.accesscode.ui.AccessCode
 import com.tangem.domain.models.wallet.UserWalletId
 import dagger.assisted.Assisted
@@ -43,7 +43,7 @@ internal class AccessCodeComponent @AssistedInject constructor(
             focusRequester.requestFocus()
         }
 
-        DisableScreenshotsDisposableEffect()
+        SensitiveContentEffect()
         AccessCode(
             modifier = modifier,
             focusRequester = focusRequester,
