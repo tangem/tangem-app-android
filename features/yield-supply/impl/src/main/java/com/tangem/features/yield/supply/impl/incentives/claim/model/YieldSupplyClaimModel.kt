@@ -141,6 +141,11 @@ internal class YieldSupplyClaimModel @Inject constructor(
         prepare()
     }
 
+    /** The close icon bypasses the sheet's drag veto, so it is held back the same way while the claim is signed. */
+    fun onCloseClick() {
+        if (!uiState.value.isClaimInProgress) params.onDismiss()
+    }
+
     fun onClaimClick() {
         if (claimJob?.isActive == true) return
 

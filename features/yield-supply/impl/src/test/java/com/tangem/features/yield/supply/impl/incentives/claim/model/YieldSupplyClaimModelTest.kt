@@ -480,6 +480,43 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN a claim in flight WHEN the close icon is tapped THEN the sheet stays open`() = runTest {
+        // Arrange
+        coEvery { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) } coAnswers {
+            delay(SLOW_CALL_MILLIS)
+            TX_HASH.right()
+        }
+        val model = createModel()
+        advanceUntilIdle()
+        model.onClaimClick()
+        advanceTimeBy(SLOW_CALL_MILLIS / 2)
+
+        // Act
+        model.onCloseClick()
+
+        // Assert
+        assertThat(isSheetDismissed).isFalse()
+
+        advanceUntilIdle()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no claim in flight WHEN the close icon is tapped THEN the sheet is dismissed`() = runTest {
+        // Arrange
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.onCloseClick()
+
+        // Assert
+        assertThat(isSheetDismissed).isTrue()
+
+        model.onDestroy()
+    }
+
     private fun TestScope.createModel() = YieldSupplyClaimModel(
         paramsContainer = MutableParamsContainer(
             YieldSupplyClaimComponent.Params(
