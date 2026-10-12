@@ -22,8 +22,10 @@ import java.util.Currency
 
 internal const val POLYGON_CHAIN_ID = 137L
 internal const val BASE_CHAIN_ID = 8453L
+internal const val BSC_CHAIN_ID = 56L
 internal const val USDC_POLYGON = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
 internal const val USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+internal const val USDC_BSC = "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d"
 
 /** A complete personal recipient's 14 form answers, shared by the new-recipient-draft tests that need one. */
 internal val personalFormValues: Map<BankWithdrawFormField, String> = mapOf(
