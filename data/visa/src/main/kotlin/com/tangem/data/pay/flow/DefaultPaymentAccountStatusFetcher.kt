@@ -174,16 +174,9 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private suspend fun proceedWithoutOrder(account: Account.Payment): PaymentAccountStatusValue {
         return onboardingRepository.getCustomerInfo(account.userWalletId).fold(
             ifLeft = { error ->
-                val cache = paymentAccountStatusesStore.getSyncOrNull(account.userWalletId)
-                if (cache != null && cache.value.hasAccountData()) {
-                    cache.value.copySealed(
-                        source = StatusSource.ONLY_CACHE,
-                        error = error.toErrorValue(),
-                    )
-                } else {
-                    logger.e("proceedWithoutOrder ${account.userWalletId} error: $error")
-                    error.toStatusValueWhenHasTangemPay(account.userWalletId)
-                }
+                logger.e("proceedWithoutOrder ${account.userWalletId} error: $error")
+                error.toCachedStatusOrNull(account.userWalletId)
+                    ?: error.toStatusValueWhenHasTangemPay(account.userWalletId)
             },
             ifRight = { customerInfo ->
                 logger.i("proceedWithoutOrder data customerInfo ${account.userWalletId}")
@@ -316,7 +309,8 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val customerInfo = onboardingRepository.getCustomerInfo(account.userWalletId).fold(
             ifLeft = { error ->
                 logger.e("proceedWithOrderId KYC check ${account.userWalletId} error: $error")
-                return error.toStatusValueWhenHasTangemPay(account.userWalletId)
+                return error.toCachedStatusOrNull(account.userWalletId)
+                    ?: error.toStatusValueWhenHasTangemPay(account.userWalletId)
             },
             ifRight = { it },
         )
@@ -922,18 +916,18 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     ): PaymentAccountStatusValue {
         return when (this) {
             is VisaApiError.NotFound -> constructNotCreatedOrEmptyStatus(userWalletId)
-            else -> {
-                val previousValue = paymentAccountStatusesStore.getSyncOrNull(userWalletId)?.value
-                if (previousValue != null && previousValue.hasAccountData()) {
-                    previousValue.copySealed(
-                        source = StatusSource.ONLY_CACHE,
-                        error = toErrorValue(),
-                    )
-                } else {
-                    constructNotCreatedOrEmptyStatus(userWalletId)
-                }
-            }
+            else -> toCachedStatusOrNull(userWalletId) ?: constructNotCreatedOrEmptyStatus(userWalletId)
         }
+    }
+
+    private suspend fun VisaApiError.toCachedStatusOrNull(userWalletId: UserWalletId): PaymentAccountStatusValue? {
+        val cached = paymentAccountStatusesStore.getSyncOrNull(userWalletId)?.value ?: return null
+        val isKeptOnFailure = when (cached) {
+            is PaymentAccountStatusValue.UnderReview -> this !is VisaApiError.RefreshTokenExpired
+            else -> cached.hasAccountData()
+        }
+        if (!isKeptOnFailure) return null
+        return cached.copySealed(source = StatusSource.ONLY_CACHE, error = toErrorValue())
     }
 
     private fun VisaApiError.toErrorValue(): PaymentAccountStatusValue.Error = when (this) {
