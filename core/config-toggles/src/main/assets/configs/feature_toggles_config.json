@@ -121,11 +121,11 @@
     },
     {
         "name": "TWI_1771_PAY_RESIDENCY_STEP_ENABLED",
-        "version": "undefined"
+        "version": "6.5"
     },
     {
         "name": "TWI_1753_VISA_ONRAMP_V2_ENABLED",
-        "version": "undefined"
+        "version": "6.5"
     },
     {
         "name": "TWI_1520_MERKL_INCENTIVES_ENABLED",
@@ -133,15 +133,15 @@
     },
     {
         "name": "TWI_1705_PROMO_CAMPAIGNS_V2_ENABLED",
-        "version": "undefined"
+        "version": "6.5"
     },
     {
         "name": "TWI_1062_GOOGLE_WALLET_PUSH_PROVISIONING_ENABLED",
-        "version": "undefined"
+        "version": "6.5"
     },
     {
         "name": "TWI_1062_GOOGLE_WALLET_BUTTON_ALWAYS_SHOWN",
-        "version": "undefined"
+        "version": "6.5"
     },
     {
         "name": "TWI_1357_HARDWARE_UPGRADE_STORIES_AB_ENABLED",
@@ -161,7 +161,7 @@
     },
     {
         "name": "TWI_1674_SWAP_CUSTOM_SLIPPAGE_ENABLED",
-        "version": "undefined"
+        "version": "6.5"
     },
     {
         "name": "TWI_1700_POLYMARKET_PHASE_TWO_ENABLED",
