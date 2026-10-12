@@ -81,7 +81,6 @@ data class OpenedCollectiblePack(
     val imageBackUrl: String?,
     val rarity: CollectibleRarity?,
     val gradingCompany: String?,
-    val grade: String?,
     val gradingId: String?,
     val year: String?,
     val set: String?,
