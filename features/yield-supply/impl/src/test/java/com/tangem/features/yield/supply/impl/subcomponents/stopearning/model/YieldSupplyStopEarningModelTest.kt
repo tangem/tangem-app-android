@@ -3,6 +3,7 @@ package com.tangem.features.yield.supply.impl.subcomponents.stopearning.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -12,6 +13,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.yield.supply.YieldSupplyError
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.usecase.PrepareClaimBeforeWithdrawUseCase
 import com.tangem.domain.yield.supply.usecase.YieldPreClaim
 import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
@@ -20,23 +22,30 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.slot
 import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase() {
@@ -230,8 +239,214 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
         }
     }
 
+    /** The principal withdrawal must leave regardless of what the rewards claim preceding it does. */
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ClaimBeforeWithdrawal {
+
+        private val claimTransaction = uncompiledTx().copy(destinationAddress = CLAIM_ADDRESS)
+
+        @BeforeEach
+        fun resetClaimMocks() {
+            clearMocks(
+                stopEarningUseCase,
+                deactivateUseCase,
+                prepareClaimUseCase,
+                claimTracker,
+                callback,
+                pendingTracker,
+                sendTransactionUseCase,
+                getFeeUseCase,
+            )
+            coEvery { stopEarningUseCase(any(), any(), any()) } returns uncompiledTx().right()
+            coEvery { getFeeUseCase(any(), any(), any()) } returns transactionFee().right()
+            coEvery {
+                sendTransactionUseCase(txData = any(), userWallet = any(), network = any())
+            } returns "0xhash".right()
+            coEvery { deactivateUseCase(any(), any()) } returns true.right()
+            coEvery {
+                prepareClaimUseCase(
+                    userWallet = any(),
+                    cryptoCurrencyStatus = any(),
+                    feeCryptoCurrencyStatus = any(),
+                    withdrawalFee = any(),
+                )
+            } returns readyPreClaim()
+        }
+
+        @Test
+        fun `GIVEN a prepared claim WHEN withdrawing THEN it is signed before the withdrawal and followed`() = runTest {
+            // Arrange
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            model.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            val sent = sentTransactions()
+            assertThat(sent).hasSize(2)
+            assertThat(sent.first()).isEqualTo(claimTransaction)
+            verify {
+                claimTracker.track(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = token,
+                    chainId = CHAIN_ID,
+                    userAddress = SOURCE_ADDRESS,
+                    transactionHash = "0xhash",
+                    origin = YieldSupplyClaimOrigin.Withdrawal,
+                )
+
+                model.onDestroy()
+            }
+            verify { callback.onStopEarningTransactionSent() }
+        }
+
+        @Test
+        fun `GIVEN the claim sheet was offered WHEN withdrawing THEN nothing is claimed behind the owner`() = runTest {
+            // Arrange
+            val model = createModel(wasClaimOffered = true)
+            advanceUntilIdle()
+
+            // Act
+            model.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            val sent = sentTransactions()
+            assertThat(sent).hasSize(1)
+            coVerify(exactly = 0) { prepareClaimUseCase(any(), any(), any(), any()) }
+            verify { callback.onStopEarningTransactionSent() }
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a withdrawal fee WHEN preparing the claim THEN the claim is weighed against that fee`() =
+            runTest {
+                // Arrange
+                val withdrawalFee = slot<BigDecimal>()
+                val model = createModel()
+                advanceUntilIdle()
+
+                // Act
+                model.onClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify {
+                    prepareClaimUseCase(
+                        userWallet = any(),
+                        cryptoCurrencyStatus = any(),
+                        feeCryptoCurrencyStatus = any(),
+                        withdrawalFee = capture(withdrawalFee),
+                    )
+                }
+                val withdrawal = sentTransactions().last() as TransactionData.Uncompiled
+                assertThat(withdrawalFee.captured).isEqualTo(withdrawal.fee?.amount?.value)
+                assertThat(withdrawalFee.captured).isGreaterThan(BigDecimal.ZERO)
+
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN the claim preparation stalls WHEN withdrawing THEN the withdrawal still goes out`() = runTest {
+            // Arrange
+            coEvery {
+                prepareClaimUseCase(
+                    userWallet = any(),
+                    cryptoCurrencyStatus = any(),
+                    feeCryptoCurrencyStatus = any(),
+                    withdrawalFee = any(),
+                )
+            } coAnswers {
+                delay(STALL_MILLIS)
+                readyPreClaim()
+            }
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            model.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentTransactions().single()).isNotEqualTo(claimTransaction)
+            verify { callback.onStopEarningTransactionSent() }
+
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN the claim does not go through WHEN withdrawing THEN the withdrawal still goes out`(
+            model: PreClaimFailureModel,
+        ) = runTest {
+            // Arrange
+            model.arrange()
+            val stopEarningModel = createModel()
+            advanceUntilIdle()
+
+            // Act
+            stopEarningModel.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            val withdrawal = sentTransactions().last()
+            assertThat(withdrawal).isNotEqualTo(claimTransaction)
+            verify { callback.onStopEarningTransactionSent() }
+            coVerify { pendingTracker.addPending(userWalletId, any(), any()) }
+            verify(exactly = 0) { claimTracker.track(any(), any(), any(), any(), any(), any()) }
+
+            stopEarningModel.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            PreClaimFailureModel(reason = "the claim could not be prepared") {
+                coEvery {
+                    prepareClaimUseCase(
+                        userWallet = any(),
+                        cryptoCurrencyStatus = any(),
+                        feeCryptoCurrencyStatus = any(),
+                        withdrawalFee = any(),
+                    )
+                } returns YieldPreClaim.Skip
+            },
+            PreClaimFailureModel(reason = "the user declined the claim signature") {
+                coEvery {
+                    sendTransactionUseCase(txData = claimTransaction, userWallet = any(), network = any())
+                } returns SendTransactionError.UserCancelledError.left()
+            },
+            PreClaimFailureModel(reason = "the claim submission failed") {
+                coEvery {
+                    sendTransactionUseCase(txData = claimTransaction, userWallet = any(), network = any())
+                } returns SendTransactionError.UnknownError().left()
+            },
+        )
+
+        private fun sentTransactions(): List<TransactionData> {
+            val captured = mutableListOf<TransactionData>()
+            coVerify { sendTransactionUseCase(txData = capture(captured), userWallet = any(), network = any()) }
+
+            return captured
+        }
+
+        private fun readyPreClaim() = YieldPreClaim.Ready(
+            transactionData = claimTransaction,
+            chainId = CHAIN_ID,
+            userAddress = SOURCE_ADDRESS,
+            token = token,
+        )
+    }
+
+    internal data class PreClaimFailureModel(val reason: String, val arrange: () -> Unit) {
+        override fun toString(): String = reason
+    }
+
     private fun TestScope.createModel(
         statusFlow: StateFlow<CryptoCurrencyStatus> = cryptoCurrencyStatusFlow,
+        wasClaimOffered: Boolean = false,
     ): YieldSupplyStopEarningModel = YieldSupplyStopEarningModel(
         dispatchers = createTestingCoroutineDispatcherProvider(),
         paramsContainer = MutableParamsContainer(
@@ -239,7 +454,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
                 userWallet = userWallet,
                 cryptoCurrencyStatusFlow = statusFlow,
                 callback = callback,
-                wasClaimOffered = false,
+                wasClaimOffered = wasClaimOffered,
             ),
         ),
         analytics = analytics,
@@ -261,5 +476,8 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
 
     private companion object {
         const val BLOG_URL = "https://tangem.com/blog"
+        const val CHAIN_ID = 1
+        const val STALL_MILLIS = 60_000L
+        const val CLAIM_ADDRESS = "0x3333333333333333333333333333333333333333"
     }
 }
