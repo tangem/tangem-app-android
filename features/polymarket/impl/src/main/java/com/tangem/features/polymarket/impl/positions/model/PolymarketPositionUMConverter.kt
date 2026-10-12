@@ -11,8 +11,6 @@ import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import com.tangem.features.polymarket.impl.common.outcomeAccent
 import com.tangem.features.polymarket.impl.common.toBubbleVariant
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionUM
-import com.tangem.features.polymarket.impl.positiondetails.model.canOpenPositionDetails
-import com.tangem.features.polymarket.impl.positionresult.model.canOpenPositionResult
 import com.tangem.utils.converter.Converter
 
 internal class PolymarketPositionUMConverter(
@@ -54,9 +52,7 @@ internal class PolymarketPositionUMConverter(
                 }
             else -> null
         },
-        onClick = onPositionClick
-            ?.takeIf { value.canOpenPositionDetails || value.canOpenPositionResult }
-            ?.let { { it(value) } },
+        onClick = onPositionClick?.let { { it(value) } },
     )
 
     private fun convertClosed(value: PolymarketPosition.Closed): PolymarketPositionUM {

@@ -65,7 +65,7 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
                 toContractAddress = any(), fromAddress = any(), toNetwork = any(),
                 fromAmount = any(), fromDecimals = any(), toDecimals = any(),
                 providerId = any(), rateType = any(), toAddress = any(),
-                expressOperationType = any(), refundAddress = any(),
+                expressOperationType = any(), refundAddress = any(), intentId = any(),
             )
         } returns ExpressDataError.UnknownError().left()
         // DEX path: extras must resolve (createDexTxExtras errors on null), then createTransaction
@@ -121,6 +121,28 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
 
         coVerifyGetExchangeData(times = 1)
     }
+
+    // region MCP intent
+
+    @Test
+    fun `GIVEN intent WHEN onSwap with CEX provider THEN exchange data is requested for the intent`() = runTest {
+        // Act
+        onSwap(provider = ExchangeProviderType.CEX, swapData = null, intentId = INTENT_ID)
+
+        // Assert
+        coVerifyGetExchangeData(times = 1, intentId = INTENT_ID)
+    }
+
+    @Test
+    fun `GIVEN no intent WHEN onSwap with CEX provider THEN exchange data is requested without an intent`() = runTest {
+        // Act
+        onSwap(provider = ExchangeProviderType.CEX, swapData = null)
+
+        // Assert
+        coVerifyGetExchangeData(times = 1, intentId = null)
+    }
+
+    // endregion
 
     // region integrated approve+swap (sendIntegratedApproveAndSwap)
 
@@ -440,7 +462,7 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
 
     // region helpers
 
-    private suspend fun onSwap(provider: ExchangeProviderType, swapData: SwapDataModel?) {
+    private suspend fun onSwap(provider: ExchangeProviderType, swapData: SwapDataModel?, intentId: String? = null) {
         sut.onSwap(
             fromSwapCurrencyStatus = hotStatus(),
             toSwapCurrencyStatus = hotStatus(),
@@ -451,6 +473,7 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
             fee = buildSwapFee(),
             expressOperationType = ExpressOperationType.SWAP,
             isTangemPayWithdrawal = false,
+            intentId = intentId,
         )
     }
 
@@ -494,13 +517,13 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
         ),
     )
 
-    private fun coVerifyGetExchangeData(times: Int) = coVerify(exactly = times) {
+    private fun coVerifyGetExchangeData(times: Int, intentId: String? = null) = coVerify(exactly = times) {
         repository.getExchangeData(
             userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
             toContractAddress = any(), fromAddress = any(), toNetwork = any(),
             fromAmount = any(), fromDecimals = any(), toDecimals = any(),
             providerId = any(), rateType = any(), toAddress = any(),
-            expressOperationType = any(), refundAddress = any(),
+            expressOperationType = any(), refundAddress = any(), intentId = intentId,
         )
     }
 
@@ -524,6 +547,7 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
         const val DEX_ROUTER = "0xDexRouter"
         const val YIELD_PROXY = "0xYieldProxy"
         const val WALLET_ADDRESS = "0xTestAddress"
+        const val INTENT_ID = "intent-id"
 
         val MIN_FEE: Fee = feeOf(BigDecimal("0.001"))
         val NORMAL_FEE: Fee = feeOf(BigDecimal("0.002"))

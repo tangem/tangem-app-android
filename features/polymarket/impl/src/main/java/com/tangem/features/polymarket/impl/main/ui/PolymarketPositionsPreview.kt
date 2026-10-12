@@ -1,5 +1,7 @@
 package com.tangem.features.polymarket.impl.main.ui
 
+import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -19,12 +22,14 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_right_16
-import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadingState
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import com.tangem.features.polymarket.impl.positions.ui.PolymarketPositionCard
+import com.tangem.features.polymarket.impl.positions.ui.PolymarketPositionCardSkeleton
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun PolymarketPositionsPreview(
@@ -61,7 +66,7 @@ internal fun PolymarketPositionsPreview(
             }
         }
         when (state) {
-            PolymarketPositionsPreviewUM.Loading -> PolymarketLoadingState()
+            PolymarketPositionsPreviewUM.Loading -> PolymarketPositionCardSkeleton()
             is PolymarketPositionsPreviewUM.Error -> PolymarketReloadPrompt(
                 text = resourceReference(R.string.prediction_positions_load_error),
                 onReloadClick = state.onRetry,
@@ -69,11 +74,7 @@ internal fun PolymarketPositionsPreview(
             is PolymarketPositionsPreviewUM.Content -> {
                 state.positions.forEach { PolymarketPositionCard(state = it) }
                 if (state.positions.isEmpty() && state.onRetry == null) {
-                    Text(
-                        text = stringResourceSafe(R.string.prediction_positions_empty_active),
-                        color = TangemTheme.colors3.text.secondary,
-                        style = TangemTheme.typography3.body.medium,
-                    )
+                    PolymarketPositionsEmptyState()
                 }
                 state.onRetry?.let { onRetry ->
                     Text(
@@ -100,5 +101,21 @@ internal fun PolymarketPositionsPreview(
                 )
             }
         }
+    }
+}
+
+@Preview(name = "Empty Light", showBackground = true, widthDp = 360)
+@Preview(name = "Empty Dark", showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(name = "Empty Narrow", showBackground = true, widthDp = 320)
+@Preview(name = "Empty Large Font", showBackground = true, widthDp = 320, fontScale = 2f)
+@Composable
+private fun PolymarketPositionsEmptyPreview() {
+    TangemThemePreviewRedesign {
+        PolymarketPositionsPreview(
+            state = PolymarketPositionsPreviewUM.Content(persistentListOf()),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary).padding(vertical = 16.dp),
+            onActiveClick = {},
+            onFinishedClick = {},
+        )
     }
 }

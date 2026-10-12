@@ -64,8 +64,7 @@ private fun ComponentPreview(state: TangemTokenRowMarketStory) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(TangemTheme.colors3.bg.primary)
-            .padding(vertical = 16.dp),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         if (state.isShimmer) {
             TangemTokenRowMarket.Shimmer()

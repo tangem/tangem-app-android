@@ -3,7 +3,7 @@ package com.tangem.domain.tokens
 import arrow.core.Either
 import arrow.core.right
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
@@ -114,7 +114,7 @@ class BalanceFetchingOperations(
     ): Either<Throwable, Unit> {
         // A joint account is a Safe contract: it has no staking address of its own, and asking the wallet manager
         // for one would try to build a manager for a network that has no key
-        val stakableCurrencies = currencies.filterNot { it.network.derivationPath is Network.DerivationPath.Joint }
+        val stakableCurrencies = currencies.filterNot { it.isJoint }
 
         val stakingIds = stakableCurrencies.mapNotNullTo(hashSetOf()) { currency ->
             val stakingId = stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = currency)

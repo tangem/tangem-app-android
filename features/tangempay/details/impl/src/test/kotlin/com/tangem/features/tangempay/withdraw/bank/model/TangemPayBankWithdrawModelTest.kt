@@ -210,6 +210,7 @@ internal class TangemPayBankWithdrawModelTest {
                 amountInCents = 50_000L,
                 chainId = POLYGON_CHAIN_ID,
                 tokenContractAddress = USDC_POLYGON,
+                tokenDecimals = 6,
                 rail = BankRail.ACH,
                 recipient = BankOfframpRecipient.Saved(bankAccountId = "acc-5"),
             ),

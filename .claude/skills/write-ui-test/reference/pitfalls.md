@@ -28,7 +28,8 @@ step 3). The reviewer (`reference/reviewer.md`) checks the diff against the same
     the inner `TangemButton`: match it with `withdrawButtonControl` / `addFundsButtonControl`.
 
   On a node with no click action, `assertHasNoClickAction()` passes in both states and proves
-  nothing. `TangemHoldToConfirmButton` exposes neither (see `compose-traps.md`).
+  nothing. `TangemHoldToConfirmButton` has no click action but sets `Disabled` when
+  `enabled = false`, so `assertIsEnabled()` / `assertIsNotEnabled()` work on it (see `compose-traps.md`).
 - **A screen-wide tag matches the previous screen too.** `TopAppBarTestTags.TITLE` alone matches every
   app bar, so "Assert confirm screen is displayed" passes while the test is still on the Address
   screen. Gate a transition on a tag or text unique to the target screen.
