@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.confirmorder.model.converter
+package com.tangem.features.collectibles.impl.packopening.model.converter
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.res.R
@@ -8,7 +8,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.OpenPackStep
-import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM.ButtonUM
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.ButtonUM
 import com.tangem.features.collectibles.impl.createMachine
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.collectibles.MockCollectibles
@@ -18,7 +18,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class CollectiblesConfirmOrderConverterTest {
+internal class CollectiblesPackOpeningConverterTest {
 
     @Test
     fun `GIVEN a machine WHEN convert THEN the order reads pack fee and total`() {
@@ -144,15 +144,15 @@ internal class CollectiblesConfirmOrderConverterTest {
         ButtonModel(usdcBalance = BigDecimal.ZERO, step = FAILED_BEFORE_PAYMENT, expected = NOT_ENOUGH_FUNDS),
     )
 
-    private val converter = CollectiblesConfirmOrderConverter(onBackClick = {}, onCloseClick = {}, onApproveClick = {})
+    private val converter = CollectiblesPackOpeningConverter(onBackClick = {}, onCloseClick = {}, onApproveClick = {})
 
-    private fun convert(input: CollectiblesConfirmOrderConverter.Input) = converter.convert(input).order
+    private fun convert(input: CollectiblesPackOpeningConverter.Input) = converter.convert(input).order
 
     private fun input(
         machine: CollectibleGachaMachine,
         usdcBalance: BigDecimal = BigDecimal("1000"),
         step: OpenPackStep = OpenPackStep.NotStarted,
-    ) = CollectiblesConfirmOrderConverter.Input(
+    ) = CollectiblesPackOpeningConverter.Input(
         machine = machine,
         vaultBalance = MockCollectibles.vaultBalance(amount = usdcBalance),
         step = step,

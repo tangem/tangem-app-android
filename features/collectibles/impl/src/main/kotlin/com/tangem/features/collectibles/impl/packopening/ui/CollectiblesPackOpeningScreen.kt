@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.confirmorder.ui
+package com.tangem.features.collectibles.impl.packopening.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
@@ -32,9 +32,9 @@ import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImage
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImageErrorCard
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesStatus
 import com.tangem.features.collectibles.impl.common.ui.PACK_IMAGE_CARD_RADIUS
-import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM
-import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM.OrderUM
-import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM.PriceRowUM
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.OrderUM
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.PriceRowUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -47,7 +47,7 @@ private val ROWS_MARGIN = 8.dp
 private val PACK_GLOW_RADIUS = 48.dp
 
 @Composable
-internal fun CollectiblesConfirmOrderScreen(state: CollectiblesConfirmOrderUM, modifier: Modifier = Modifier) {
+internal fun CollectiblesPackOpeningScreen(state: CollectiblesPackOpeningUM, modifier: Modifier = Modifier) {
     // Kept out of the model: a StateFlow would recompose the screen on every animation frame
     val dip = remember { Animatable(0f) }
     val launchUp = remember { Animatable(0f) }
@@ -57,7 +57,7 @@ internal fun CollectiblesConfirmOrderScreen(state: CollectiblesConfirmOrderUM, m
     var footerHeight by remember { mutableIntStateOf(0) }
 
     // Thrown once the card is known: an earlier throw could not be taken back if the purchase then failed
-    val isPackOpened = (state as? CollectiblesConfirmOrderUM.Content)?.isPackOpened == true
+    val isPackOpened = (state as? CollectiblesPackOpeningUM.Content)?.isPackOpened == true
     LaunchedEffect(isPackOpened) {
         if (!isPackOpened) return@LaunchedEffect
 
@@ -74,13 +74,13 @@ internal fun CollectiblesConfirmOrderScreen(state: CollectiblesConfirmOrderUM, m
         topBar = { ConfirmOrderTopBar(state = state, exit = progress.exit) },
         overlay = {
             when (state) {
-                is CollectiblesConfirmOrderUM.Loading -> CollectiblesConfirmOrderFooterSkeleton(
+                is CollectiblesPackOpeningUM.Loading -> CollectiblesPackOpeningFooterSkeleton(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .onSizeChanged { size -> footerHeight = size.height },
                 )
-                is CollectiblesConfirmOrderUM.Error -> Unit
-                is CollectiblesConfirmOrderUM.Content -> ConfirmFooter(
+                is CollectiblesPackOpeningUM.Error -> Unit
+                is CollectiblesPackOpeningUM.Content -> ConfirmFooter(
                     order = state.order,
                     onConfirm = state.onApproveClick,
                     modifier = Modifier
@@ -92,9 +92,9 @@ internal fun CollectiblesConfirmOrderScreen(state: CollectiblesConfirmOrderUM, m
         },
     ) { contentPadding ->
         when (state) {
-            is CollectiblesConfirmOrderUM.Loading -> CollectiblesConfirmOrderSkeleton(footerHeight = footerHeight)
-            is CollectiblesConfirmOrderUM.Error -> ConfirmOrderError(state = state, contentPadding = contentPadding)
-            is CollectiblesConfirmOrderUM.Content -> ConfirmOrderContent(
+            is CollectiblesPackOpeningUM.Loading -> CollectiblesPackOpeningSkeleton(footerHeight = footerHeight)
+            is CollectiblesPackOpeningUM.Error -> ConfirmOrderError(state = state, contentPadding = contentPadding)
+            is CollectiblesPackOpeningUM.Content -> ConfirmOrderContent(
                 order = state.order,
                 progress = progress,
                 footerHeight = footerHeight,
@@ -104,8 +104,8 @@ internal fun CollectiblesConfirmOrderScreen(state: CollectiblesConfirmOrderUM, m
 }
 
 @Composable
-private fun ConfirmOrderTopBar(state: CollectiblesConfirmOrderUM, exit: Float) {
-    val isNavigationVisible = (state as? CollectiblesConfirmOrderUM.Content)?.isNavigationVisible != false
+private fun ConfirmOrderTopBar(state: CollectiblesPackOpeningUM, exit: Float) {
+    val isNavigationVisible = (state as? CollectiblesPackOpeningUM.Content)?.isNavigationVisible != false
 
     TangemTopNavigation(
         contentAlign = TangemTopNavigation.ContentAlign.Center,
@@ -142,7 +142,7 @@ private fun NavigationButtonSlot(isVisible: Boolean, button: @Composable () -> U
 }
 
 @Composable
-private fun ConfirmOrderError(state: CollectiblesConfirmOrderUM.Error, contentPadding: PaddingValues) {
+private fun ConfirmOrderError(state: CollectiblesPackOpeningUM.Error, contentPadding: PaddingValues) {
     Box(
         modifier = Modifier
             .fillMaxSize()

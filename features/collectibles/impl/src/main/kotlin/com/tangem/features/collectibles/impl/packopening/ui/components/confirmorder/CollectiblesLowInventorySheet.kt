@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.confirmorder.ui
+package com.tangem.features.collectibles.impl.packopening.ui.components.confirmorder
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
