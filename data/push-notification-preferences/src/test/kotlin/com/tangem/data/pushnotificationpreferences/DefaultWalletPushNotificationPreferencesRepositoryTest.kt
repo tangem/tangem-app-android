@@ -5,6 +5,7 @@ import app.cash.turbine.test
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
+
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.PushNotificationPreferencesBody
@@ -14,6 +15,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationCategory
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationPreference
 import com.tangem.domain.pushnotificationpreferences.models.WalletPushNotificationPreferences
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -45,6 +47,7 @@ class DefaultWalletPushNotificationPreferencesRepositoryTest {
         tangemTechApi = tangemTechApi,
         cache = RuntimeSharedStore(),
         appPreferencesStore = appPreferencesStore,
+        storePreferencesKeys = StorePreferencesKeys(),
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 

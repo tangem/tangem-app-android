@@ -12,4 +12,7 @@ dependencies {
     api(deps.moshi)
     api(deps.moshi.adapters)
     api(deps.hilt.core)
+
+    testImplementation(deps.test.junit5)
+    testImplementation(deps.test.truth)
 }

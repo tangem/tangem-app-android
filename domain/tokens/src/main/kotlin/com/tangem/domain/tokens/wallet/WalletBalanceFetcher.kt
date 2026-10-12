@@ -2,6 +2,8 @@ package com.tangem.domain.tokens.wallet
 
 import arrow.core.Either
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencies
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
@@ -27,9 +29,10 @@ import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
-import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
@@ -62,10 +65,12 @@ class WalletBalanceFetcher internal constructor(
     private val singleWalletBalanceFetcher: BaseWalletBalanceFetcher,
     private val balanceFetchingOperations: BalanceFetchingOperations,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
-    private val virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
+    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
-    private val virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
+    private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
+    private val moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
     private val polymarketFeatureToggles: PolymarketFeatureToggles,
+    private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : FlowFetcher<WalletBalanceFetcher.Params> {
 
@@ -80,11 +85,13 @@ class WalletBalanceFetcher internal constructor(
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
-        virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
+        moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
+        collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
         stakingIdFactory: StakingIdFactory,
-        virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
+        moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
         polymarketFeatureToggles: PolymarketFeatureToggles,
+        collectiblesFeatureToggles: CollectiblesFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ) : this(
         userWalletsListRepository = userWalletsListRepository,
@@ -99,10 +106,12 @@ class WalletBalanceFetcher internal constructor(
             stakingIdFactory = stakingIdFactory,
         ),
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
-        virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+        moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
-        virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+        collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
+        moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         polymarketFeatureToggles = polymarketFeatureToggles,
+        collectiblesFeatureToggles = collectiblesFeatureToggles,
         dispatchers = dispatchers,
     )
 
@@ -117,10 +126,12 @@ class WalletBalanceFetcher internal constructor(
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
-        virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
+        moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
-        virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
+        collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
+        moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
         polymarketFeatureToggles: PolymarketFeatureToggles,
+        collectiblesFeatureToggles: CollectiblesFeatureToggles,
         stakingIdFactory: StakingIdFactory,
         dispatchers: CoroutineDispatcherProvider,
     ) : this(
@@ -143,10 +154,12 @@ class WalletBalanceFetcher internal constructor(
             stakingIdFactory = stakingIdFactory,
         ),
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
-        virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+        moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
-        virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+        collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
+        moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         polymarketFeatureToggles = polymarketFeatureToggles,
+        collectiblesFeatureToggles = collectiblesFeatureToggles,
         dispatchers = dispatchers,
     )
 
@@ -209,15 +222,38 @@ class WalletBalanceFetcher internal constructor(
                 polymarketFeatureToggles.isPolymarketEnabled
             ) {
                 launch { balanceFetchingOperations.fetchQuotes(rawCurrencyIds = setOf(PredictionCollateral.RAW_ID)) }
-                launch { predictionAccountStatusFetcher.invoke(PredictionAccountStatusFetcher.Params(userWalletId)) }
+                launch {
+                    predictionAccountStatusFetcher.invoke(
+                        PredictionAccountStatusFetcher.Params(
+                            userWalletId = userWalletId,
+                            mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
+                        ),
+                    )
+                }
             }
 
-            // Fetch Virtual account separately for the same reason as TangemPay
             if (
-                fetchingSources.any { it is WalletFetchingSource.VirtualAccount } &&
-                virtualAccountsFeatureToggles.isVirtualAccountsEnabled
+                fetchingSources.any { it is WalletFetchingSource.Collectibles } &&
+                collectiblesFeatureToggles.isCollectiblesEnabled
             ) {
-                virtualAccountStatusFetcher.invoke(VirtualAccountStatusFetcher.Params(userWalletId))
+                launch {
+                    balanceFetchingOperations.fetchQuotes(
+                        rawCurrencyIds = setOf(CollectiblesVaultCurrencies.USDC_RAW_ID),
+                    )
+                }
+                launch {
+                    collectiblesAccountStatusFetcher.invoke(
+                        CollectiblesAccountStatusFetcher.Params(userWalletId),
+                    )
+                }
+            }
+
+            // Fetch Money account separately for the same reason as TangemPay
+            if (
+                fetchingSources.any { it is WalletFetchingSource.Money } &&
+                moneyAccountsFeatureToggles.isMoneyAccountsEnabled
+            ) {
+                moneyAccountStatusFetcher.invoke(MoneyAccountStatusFetcher.Params(userWalletId))
             }
         }
     }

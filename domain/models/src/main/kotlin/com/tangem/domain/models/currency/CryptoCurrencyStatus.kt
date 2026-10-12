@@ -70,10 +70,8 @@ data class CryptoCurrencyStatus(
          * Read it generically — `contributions.sumOf { it.totalDeltaCryptoAmount() }` — instead of branching on
          * concrete balance types. Downcast only for a type-specific breakdown ("Axis 2").
          *
-         * Filled by `CryptoCurrencyStatusFactory` **only while `TWI_1717_BALANCE_CONTRIBUTIONS` is on**; with the
-         * toggle off it stays empty and readers fall back to the legacy typed fields
-         * (`com.tangem.common.getExtraBalanceOrNull`). That makes an empty list the switch between the two
-         * architectures — the reason it is stored rather than derived from [stakingBalance].
+         * Filled by `CryptoCurrencyStatusFactory`. Producers that do not report contributions leave it empty, and
+         * readers then fall back to the legacy typed fields (`com.tangem.common.getExtraBalanceOrNull`).
          *
          * Not serialized (enforced with `@Transient` on every override): statuses are derived in memory, never
          * persisted, and [BalanceContribution] is an open interface with no polymorphic registration — encoding

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -51,6 +52,7 @@ internal fun TangemFadeStory(state: TangemFadeStory, modifier: Modifier = Modifi
         ComponentPreview(state = state)
         VariantSelector(selected = state.variant, onSelect = state.onVariantChange)
         PositionSelector(selected = state.position, onSelect = state.onPositionChange)
+        HeightSelector(selected = state.height, onSelect = state.onHeightChange)
         Toggles(state = state)
     }
 }
@@ -73,11 +75,10 @@ private fun ComponentPreview(state: TangemFadeStory) {
             position = state.position,
             variant = state.variant,
             blur = state.isBlur,
-            modifier = when (state.variant) {
-                // The fade is sized by the call site — fill the container or set a height.
-                TangemFade.Variant.Hard -> Modifier.matchParentSize()
-                TangemFade.Variant.Soft -> Modifier
-                    .height(96.dp)
+            modifier = when (state.height) {
+                TangemFadeStory.Height.MatchParent -> Modifier.matchParentSize()
+                TangemFadeStory.Height.Half -> Modifier
+                    .fillMaxHeight(0.5f)
                     .align(
                         when (state.position) {
                             TangemFade.Position.Top -> Alignment.TopCenter
@@ -143,6 +144,18 @@ private fun PositionSelector(selected: TangemFade.Position, onSelect: (TangemFad
         ChipGrid(
             items = TangemFade.Position.entries,
             label = { it.name },
+            isSelected = { it == selected },
+            onSelect = onSelect,
+        )
+    }
+}
+
+@Composable
+private fun HeightSelector(selected: TangemFadeStory.Height, onSelect: (TangemFadeStory.Height) -> Unit) {
+    Section(label = "Height") {
+        ChipGrid(
+            items = TangemFadeStory.Height.entries,
+            label = { it.label },
             isSelected = { it == selected },
             onSelect = onSelect,
         )

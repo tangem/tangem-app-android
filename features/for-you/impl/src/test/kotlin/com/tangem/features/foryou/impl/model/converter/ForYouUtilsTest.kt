@@ -468,7 +468,7 @@ internal class ForYouUtilsTest {
             every { accountStatuses } returns statuses.toList()
         }
 
-        private fun cryptoPortfolioStatus(account: Account.CryptoPortfolio): AccountStatus.CryptoPortfolio = mockk {
+        private fun cryptoPortfolioStatus(account: Account.Personal): AccountStatus.Personal = mockk {
             every { this@mockk.account } returns account
             every { accountId } returns account.accountId
         }

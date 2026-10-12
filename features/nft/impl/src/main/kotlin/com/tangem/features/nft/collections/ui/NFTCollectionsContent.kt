@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -36,6 +37,7 @@ import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.NFTCollectionsScreenTestTags
 import com.tangem.features.nft.collections.entity.*
 import com.tangem.features.nft.impl.R
 import kotlinx.collections.immutable.persistentListOf
@@ -97,7 +99,8 @@ internal fun NFTCollectionsContent(content: NFTCollectionsUM.Content, modifier: 
                         .padding(
                             top = TangemTheme.dimens.spacing16,
                             bottom = bottomPadding,
-                        ),
+                        )
+                        .testTag(NFTCollectionsScreenTestTags.LAZY_LIST),
                     // .clip(TangemTheme.shapes.roundedCornersXMedium)
                     // .background(TangemTheme.colors.background.primary),
                     state = listState,
@@ -338,7 +341,8 @@ private fun LazyListScope.assetsListContent(
                             .weight(1f)
                             .clip(TangemTheme.shapes.roundedCornersXMedium)
                             .clickable { item1.onItemClick() }
-                            .padding(paddingValues),
+                            .padding(paddingValues)
+                            .testTag(NFTCollectionsScreenTestTags.ASSET_ITEM),
                         state = item1,
                     )
                     if (item2 == null) {
@@ -353,7 +357,8 @@ private fun LazyListScope.assetsListContent(
                                 .weight(1f)
                                 .clip(TangemTheme.shapes.roundedCornersXMedium)
                                 .clickable { item2.onItemClick() }
-                                .padding(paddingValues),
+                                .padding(paddingValues)
+                                .testTag(NFTCollectionsScreenTestTags.ASSET_ITEM),
                             state = item2,
                         )
                     }

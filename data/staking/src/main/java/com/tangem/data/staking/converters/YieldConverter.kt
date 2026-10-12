@@ -5,7 +5,7 @@ import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO
 import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO.MetadataDTO.RewardScheduleDTO
 import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO.ValidatorDTO.ValidatorStatusDTO
 import com.tangem.datasource.local.token.converter.YieldTokenConverter
-import com.tangem.datasource.local.txhistory.db.entity.staking.StakingValidatorEntity
+import com.tangem.store.datasource.txhistory.db.entity.staking.StakingValidatorEntity
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.model.stakekit.AddressArgument
@@ -33,6 +33,15 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
 
     override fun convert(value: YieldDTO): Yield {
         val rewardType = convertRewardType(value.rewardType.asMandatory("rewardType"))
+        val allValidators = value.validators.asMandatory("validators")
+            .asSequence()
+            .distinctBy { it.address }
+            // StakeKit sends addressless non-active entries; failing on them would drop the whole yield
+            .filter { it.address != null || it.status == ValidatorStatusDTO.ACTIVE }
+            .map { convertValidator(validatorDTO = it, rewardType = rewardType) }
+            .sortedByDescending { it.rewardInfo?.rate?.orZero() }
+            .sortedByDescending { it.isStrategicPartner }
+            .toImmutableList()
         return Yield(
             id = value.id.asMandatory("id"),
             token = YieldTokenConverter.convert(value.token.asMandatory("token")),
@@ -43,15 +52,9 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
             rewardRate = value.rewardRate.asMandatory("rewardRate"),
             rewardType = rewardType,
             metadata = convertMetadata(value.metadata.asMandatory("metadata")),
-            validators = value.validators.asMandatory("validators")
-                .asSequence()
-                .distinctBy { it.address }
-                .filter { it.status == ValidatorStatusDTO.ACTIVE }
-                .map { convertValidator(validatorDTO = it, rewardType = rewardType) }
-                .sortedByDescending { it.rewardInfo?.rate?.orZero() }
-                .sortedByDescending { it.isStrategicPartner }
-                .toImmutableList(),
+            validators = allValidators.filter { it.status == ValidatorStatus.ACTIVE }.toImmutableList(),
             isAvailable = value.isAvailable.asMandatory("isAvailable"),
+            allValidators = allValidators,
         )
     }
 

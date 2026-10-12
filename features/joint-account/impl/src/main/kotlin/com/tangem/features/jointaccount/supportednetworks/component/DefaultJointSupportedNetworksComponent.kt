@@ -2,7 +2,6 @@ package com.tangem.features.jointaccount.supportednetworks.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -15,13 +14,17 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultJointSupportedNetworksComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
-    @Assisted params: Unit,
+    @Assisted private val params: JointSupportedNetworksComponent.Params,
 ) : JointSupportedNetworksComponent, AppComponentContext by appComponentContext {
 
     private val model: JointSupportedNetworksModel = getOrCreateModel(params = params)
 
+    override fun dismiss() {
+        params.onDismiss()
+    }
+
     @Composable
-    override fun Content(modifier: Modifier) {
+    override fun BottomSheet() {
         val state by model.uiState.collectAsStateWithLifecycle()
 
         JointSupportedNetworksBottomSheet(state = state)
@@ -29,6 +32,9 @@ internal class DefaultJointSupportedNetworksComponent @AssistedInject constructo
 
     @AssistedFactory
     interface Factory : JointSupportedNetworksComponent.Factory {
-        override fun create(context: AppComponentContext, params: Unit): DefaultJointSupportedNetworksComponent
+        override fun create(
+            context: AppComponentContext,
+            params: JointSupportedNetworksComponent.Params,
+        ): DefaultJointSupportedNetworksComponent
     }
 }

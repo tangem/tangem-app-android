@@ -20,11 +20,14 @@ internal class DefaultIntroductionVideoPlayerFactory @Inject constructor(
 ) : IntroductionVideoPlayer.Factory {
 
     override fun create(@RawRes videoRes: Int, listener: IntroductionVideoPlayer.Listener): IntroductionVideoPlayer {
+        val player = buildPlayer()
         return DefaultIntroductionVideoPlayer(
-            player = buildPlayer(),
+            player = player,
+            decoderCounters = { player.videoDecoderCounters },
             videoItem = MediaItem.fromUri(RawResourceDataSource.buildRawResourceUri(videoRes)),
             isMotionEnabled = isMotionEnabled(),
             listener = listener,
+            teardownScheduler = MainThreadVideoTeardownScheduler(),
         )
     }
 
@@ -41,6 +44,7 @@ internal class DefaultIntroductionVideoPlayerFactory @Inject constructor(
             volume = 0f
             // Resizing a SurfaceView instead is one of the few things that still flashes black.
             videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
+            addAnalyticsListener(IntroductionVideoDiagnostics())
         }
 
     private fun isMotionEnabled(): Boolean = Settings.Global

@@ -7,6 +7,6 @@ internal class DefaultJointAccountFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : JointAccountFeatureToggles {
 
-    override val isJointAccountCreationEnabled: Boolean
+    override val isJointAccountEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(toggle = FeatureToggles.TWI_1611_JOINT_ACCOUNT_ENABLED)
 }

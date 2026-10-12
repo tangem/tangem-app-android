@@ -9,9 +9,12 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
+import com.tangem.domain.transaction.error.GaslessServiceException
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
+import com.tangem.domain.transaction.error.TronActivationRefusal
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.raiseIllegalStateError
@@ -25,12 +28,16 @@ import com.tangem.domain.transaction.raiseIllegalStateError
  * regardless of balance: insufficiency is surfaced as a send notification (see
  * GetBalanceNotEnoughForFeeWarningUseCase), so the fee row keeps showing the amount while Send stays
  * blocked.
+ *
+ * A non-activated sender is handled by the service: it sponsors the account activation and folds its
+ * cost into the compensation, or refuses the quote when the sender is not eligible for sponsorship.
  */
 class GetTronGaslessFeeUseCase(
     private val tronGaslessTransactionRepository: TronGaslessTransactionRepository,
 ) {
 
     suspend operator fun invoke(
+        userWalletId: UserWalletId,
         transactionData: TransactionData,
         feeToken: CryptoCurrency.Token,
     ): Either<GetFeeError, TransactionFeeExtended> = either {
@@ -42,6 +49,7 @@ class GetTronGaslessFeeUseCase(
 
                 val quote = tronGaslessTransactionRepository.estimate(
                     TronGaslessEstimateParams(
+                        userWalletId = userWalletId,
                         fromAddress = uncompiled.sourceAddress,
                         toAddress = uncompiled.destinationAddress,
                         tokenContract = uncompiled.contractAddress ?: feeToken.contractAddress,
@@ -70,7 +78,19 @@ class GetTronGaslessFeeUseCase(
                     tronGaslessQuote = quote,
                 )
             },
-            catch = { raise(GaslessError.DataError(it)) },
+            catch = { raise(it.toGaslessError(feeToken)) },
         )
     }
+
+    private fun Throwable.toGaslessError(feeToken: CryptoCurrency.Token): GaslessError =
+        when (val refusal = (this as? GaslessServiceException)?.tronActivationRefusal) {
+            is TronActivationRefusal.BalanceTooLow -> GaslessError.TronActivationNotEnoughFunds(
+                minimumAmount = refusal.minimumAmountRaw.toBigDecimal()
+                    .movePointLeft(feeToken.decimals)
+                    .stripTrailingZeros(),
+                tokenSymbol = feeToken.symbol,
+            )
+            is TronActivationRefusal.RateLimited -> GaslessError.TronActivationRateLimited(refusal.isPerWallet)
+            null -> GaslessError.DataError(this)
+        }
 }

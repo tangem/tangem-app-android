@@ -251,6 +251,65 @@ internal class QuickActionsConverterTest {
         assertThat(result).isEqualTo(ScenarioUnavailabilityReason.None)
     }
 
+    @Test
+    fun `GIVEN joint account actions WHEN context is Transfer THEN swapAndSend row stays`() {
+        // Arrange
+        val actions = listOf(
+            TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.JointAccount),
+            TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.JointAccount, shouldShowBadge = false),
+            TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.JointAccount),
+        )
+
+        // Act
+        val result = QuickActionsConverter.toQuickActions(
+            actions = actions,
+            context = TokenActionsContext.Transfer,
+        )
+
+        // Assert
+        assertThat(result).containsExactly(
+            QuickActionUM.V2.Send,
+            QuickActionUM.V2.Exchange(shouldShowBadge = false),
+            QuickActionUM.V2.SwapAndSend,
+            QuickActionUM.V2.Sell,
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN joint account actions WHEN context is AddFunds THEN nothing is marked disabled`() {
+        // Arrange
+        val actions = listOf(
+            TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.JointAccount),
+            TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.JointAccount, shouldShowBadge = false),
+            TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.None),
+        )
+
+        // Act
+        val result = QuickActionsConverter.quickActions(
+            cryptoData = cryptoData(actions),
+            tokenActionsHandler = mockk(relaxed = true),
+            context = TokenActionsContext.AddFunds,
+        )
+
+        // Assert
+        assertThat(result.disabledActions).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN unavailable swap WHEN unavailabilityReason for SendWithSwap THEN inherits the swap reason`() {
+        // Arrange
+        val actions = listOf(
+            TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.None),
+            TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.JointAccount, shouldShowBadge = false),
+        )
+
+        // Act
+        val result = QuickActionsConverter.unavailabilityReason(TokenActionsBSContentUM.Action.SendWithSwap, actions)
+
+        // Assert
+        assertThat(result).isEqualTo(ScenarioUnavailabilityReason.JointAccount)
+    }
+
     private fun cryptoData(actions: List<TokenActionsState.ActionState>) = CryptoCurrencyData(
         userWallet = mockk(relaxed = true),
         status = mockk(relaxed = true),

@@ -16,9 +16,10 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
-import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
+import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -68,8 +69,9 @@ internal class WalletLoadingStateFactory(
                 is UserWallet.Hot -> WalletType.Hot
             },
             tangemPayMainUM = TangemPayMainUM.Empty,
-            virtualAccountMainUM = VirtualAccountMainUM.Empty,
+            moneyAccountMainUM = MoneyAccountMainUM.Empty,
             polymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden,
+            collectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden,
         )
     }
 

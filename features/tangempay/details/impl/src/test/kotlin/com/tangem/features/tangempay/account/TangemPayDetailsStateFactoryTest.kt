@@ -8,7 +8,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.PaymentNetworkStatus
-import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
@@ -47,16 +46,6 @@ internal class TangemPayDetailsStateFactoryTest {
         onBack = {},
         onOpenMenu = {},
         intents = intents,
-        isTiersPlusPlanEnabled = true,
-        isMultichainEnabled = true,
-    )
-
-    private val singleNetworkFactory = TangemPayDetailsStateFactory(
-        onBack = {},
-        onOpenMenu = {},
-        intents = intents,
-        isTiersPlusPlanEnabled = true,
-        isMultichainEnabled = false,
     )
 
     @BeforeEach
@@ -65,7 +54,7 @@ internal class TangemPayDetailsStateFactoryTest {
     }
 
     @Test
-    fun `GIVEN multichain enabled WHEN building any state THEN top bar subtitle is Multinetwork`() {
+    fun `GIVEN any status WHEN building any state THEN top bar subtitle is Multinetwork`() {
         // Arrange
         val status = loadedStatus(statusSource = StatusSource.ACTUAL, statusError = null)
         val expected = resourceReference(R.string.tangempay_multinetwork)
@@ -73,18 +62,6 @@ internal class TangemPayDetailsStateFactoryTest {
         // Act & Assert
         assertThat(factory.getLoadingState().topBarConfig.subtitle).isEqualTo(expected)
         assertThat(factory.getLoadedState(status).topBarConfig.subtitle).isEqualTo(expected)
-    }
-
-    @Test
-    fun `GIVEN multichain disabled WHEN building any state THEN top bar subtitle names the single network`() {
-        // Arrange
-        val expected = resourceReference(R.string.tangempay_usdc_on_polygon_network)
-
-        // Act
-        val subtitle = singleNetworkFactory.getLoadingState().topBarConfig.subtitle
-
-        // Assert
-        assertThat(subtitle).isEqualTo(expected)
     }
 
     @ParameterizedTest
@@ -161,7 +138,7 @@ internal class TangemPayDetailsStateFactoryTest {
 
     @ParameterizedTest
     @MethodSource("provideAddFundsCases")
-    fun `GIVEN deposit destination WHEN getLoadedState THEN add funds gated by it`(case: AddFundsCase) {
+    fun `GIVEN networks WHEN getLoadedState THEN add funds gated by an available network`(case: AddFundsCase) {
         // Arrange
         val status = loadedStatus(
             statusNetworks = case.networks.map { isAvailable ->
@@ -266,7 +243,7 @@ internal class TangemPayDetailsStateFactoryTest {
         val state = factory.getCardIssueFailedState(status, isBannerDismissed = false)
 
         // Assert
-        val banner = state.statusBannerState
+        val banner = state.messageBanner
         assertThat(banner?.state?.title).isEqualTo(resourceReference(R.string.tangempay_failed_to_issue_card))
         assertThat(banner?.state?.variant).isEqualTo(TangemMessageBanner.Variant.Error)
         assertThat(banner?.state?.secondaryButton?.text)
@@ -275,7 +252,6 @@ internal class TangemPayDetailsStateFactoryTest {
         banner?.state?.secondaryButton?.onClick?.invoke()
         verify(exactly = 1) { intents.onCardIssueFailedBannerDismissed() }
         verify(exactly = 1) { intents.onCardIssueFailedSupportClick() }
-        assertThat(state.errorNotificationConfig).isNull()
         assertThat(state.balanceBlockState.cardsBlockState?.cards).isEmpty()
         assertThat(state.balanceBlockState.cardsBlockState?.isAddCardEnabled).isTrue()
         assertThat(state.addFundsButton.isEnabled).isFalse()
@@ -355,7 +331,7 @@ internal class TangemPayDetailsStateFactoryTest {
         val state = factory.getCardIssueFailedState(status, isBannerDismissed = true)
 
         // Assert
-        assertThat(state.statusBannerState).isNull()
+        assertThat(state.messageBanner).isNull()
     }
 
     @Test

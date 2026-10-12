@@ -20,6 +20,8 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
+import com.tangem.blockchain.tokenbalance.models.TokenBalance
+import com.tangem.blockchain.transactionhistory.TransactionHistoryProvider
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
 import com.tangem.blockchainsdk.BlockchainSDKFactory
@@ -27,13 +29,16 @@ import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.core.local.assets.AssetLoader
+import com.tangem.core.local.assets.loadMap
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.data.walletmanager.store.WalletManagersStore
 import com.tangem.data.walletmanager.utils.*
-import com.tangem.datasource.asset.loader.AssetLoader
-import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.demo.models.DemoConfig
+import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
+import com.tangem.domain.jointaccount.derivation.isJointAccountReservedPath
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
@@ -41,16 +46,21 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryState
+import com.tangem.domain.txhistory.models.TxHistoryStateError
+import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.walletmanager.model.RentData
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.domain.walletmanager.model.TokenInfo
 import com.tangem.domain.walletmanager.utils.SdkPageConverter
 import com.tangem.domain.wallets.extension.hasDerivation
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import dagger.Lazy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -67,6 +77,9 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val assetLoader: AssetLoader,
     private val dispatchers: CoroutineDispatcherProvider,
     private val gaslessTransactionRepository: GaslessTransactionRepository,
+    private val jointAccountSafeAddressResolver: Lazy<JointAccountSafeAddressResolver>,
+    private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
+    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     blockchainSDKFactory: BlockchainSDKFactory,
 ) : WalletManagersFacade {
 
@@ -228,30 +241,15 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     }
 
     override suspend fun getTxHistoryState(userWalletId: UserWalletId, currency: CryptoCurrency): TxHistoryState {
-        val walletManager = getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            network = currency.network,
-        )
-
-        requireNotNull(walletManager) {
-            "Unable to get a wallet manager for blockchain: ${currency.network}"
+        val source = getTransactionHistorySource(userWalletId, currency.network)
+        if (source == null) {
+            requireJointNetwork(currency.network)
+            return TxHistoryState.AddressNotReady
         }
 
-        val transactionHistoryState = walletManager.getTransactionHistoryState(
-            address = walletManager.wallet.address,
-            filterType = when (currency) {
-                is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
-                is CryptoCurrency.Token -> {
-                    val blockchainToken = Token(
-                        name = currency.name,
-                        symbol = currency.symbol,
-                        contractAddress = currency.contractAddress,
-                        decimals = currency.decimals,
-                        id = currency.id.rawCurrencyId?.value,
-                    )
-                    TransactionHistoryRequest.FilterType.Contract(blockchainToken)
-                }
-            },
+        val transactionHistoryState = source.provider.getTransactionHistoryState(
+            address = source.address,
+            filterType = currency.toTransactionHistoryFilterType(),
         )
 
         return txHistoryStateConverter.convert(transactionHistoryState)
@@ -263,36 +261,11 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         page: Page,
         pageSize: Int,
     ): PaginationWrapper<TxInfo> {
-        val walletManager = getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            network = currency.network,
-        )
-
-        requireNotNull(walletManager) {
-            "Unable to get a wallet manager for blockchain: ${currency.network}"
+        val source = getTransactionHistorySource(userWalletId, currency.network)
+        if (source == null) {
+            requireJointNetwork(currency.network)
+            throw TxHistoryStateError.AddressNotReady()
         }
-
-        val itemsResult = walletManager.getTransactionsHistory(
-            request = TransactionHistoryRequest(
-                address = walletManager.wallet.address,
-                decimals = currency.decimals,
-                page = page,
-                pageSize = pageSize,
-                filterType = when (currency) {
-                    is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
-                    is CryptoCurrency.Token -> {
-                        val blockchainToken = Token(
-                            name = currency.name,
-                            symbol = currency.symbol,
-                            contractAddress = currency.contractAddress,
-                            decimals = currency.decimals,
-                            id = currency.id.rawCurrencyId?.value,
-                        )
-                        TransactionHistoryRequest.FilterType.Contract(blockchainToken)
-                    }
-                },
-            ),
-        )
 
         val gaslessFeeAddresses = try {
             gaslessTransactionRepository.getGaslessFeeAddresses()
@@ -300,6 +273,18 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             TangemLogger.e("Failed to load gasless fee addresses; falling back to empty set", error)
             emptySet()
         }
+
+        val itemsResult = source.provider.getTransactionsHistory(
+            request = TransactionHistoryRequest(
+                address = source.address,
+                decimals = currency.decimals,
+                page = page,
+                pageSize = pageSize,
+                filterType = currency.toTransactionHistoryFilterType(),
+                gaslessFeeAddresses = gaslessFeeAddresses,
+            ),
+        )
+
         return when (itemsResult) {
             is Result.Success -> PaginationWrapper(
                 currentPage = sdkPageConverter.convert(page),
@@ -309,7 +294,13 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     yieldSupplyAddresses = YIELD_SUPPLY_ADDRESSES,
                     gaslessFeeAddresses = gaslessFeeAddresses,
                     currency = currency,
-                    networkTokens = walletManager.cardTokens.toSet(),
+                    currencyAddresses = getAddresses(userWalletId, currency.network),
+                    txHistoryFeatureToggles = txHistoryFeatureToggles,
+                    getCachedTokenInfoUseCase = getCachedTokenInfoUseCase,
+                    networkTokens = getCachedTokenInfoUseCase(
+                        userWalletId = userWalletId,
+                        networkId = currency.network.rawId,
+                    ),
                 ).convertList(itemsResult.data.items),
             )
             is Result.Failure -> throw TxHistoryLoadException(currency, itemsResult.error)
@@ -318,6 +309,49 @@ internal class DefaultWalletManagersFacade @Inject constructor(
 
     private fun getUserWallet(userWalletId: UserWalletId): UserWallet? =
         userWalletsListRepository.getSyncOrNull(userWalletId)
+
+    private class TransactionHistorySource(
+        val provider: TransactionHistoryProvider,
+        val address: String,
+    )
+
+    /**
+     * Only a joint network may legitimately lack a wallet manager: its Safe address, and so its manager, arrive
+     * once the account is active. For any other network the absence is a defect and stays loud.
+     */
+    private fun requireJointNetwork(network: Network) {
+        require(network.derivationPath is Network.DerivationPath.Joint) {
+            "Unable to get a transaction history source for blockchain: $network"
+        }
+    }
+
+    private suspend fun getTransactionHistorySource(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): TransactionHistorySource? {
+        return getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+            ?.let { walletManager ->
+                TransactionHistorySource(
+                    provider = walletManager,
+                    address = walletManager.wallet.address,
+                )
+            }
+    }
+
+    private fun CryptoCurrency.toTransactionHistoryFilterType(): TransactionHistoryRequest.FilterType {
+        return when (this) {
+            is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
+            is CryptoCurrency.Token -> TransactionHistoryRequest.FilterType.Contract(
+                Token(
+                    name = name,
+                    symbol = symbol,
+                    contractAddress = contractAddress,
+                    decimals = decimals,
+                    id = id.rawCurrencyId?.value,
+                ),
+            )
+        }
+    }
 
     private suspend fun getAndUpdateWalletManager(
         userWallet: UserWallet,
@@ -418,6 +452,12 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             )
             val path = derivationPath?.let { DerivationPath(rawPath = it) }
 
+            if (walletManager == null && path != null && isJointAccountReservedPath(rawPath = derivationPath)) {
+                walletManager = createSafeWalletManager(userWallet, blockchain, path) ?: return null
+                walletManagersStore.store(userWalletId, walletManager)
+                return walletManager
+            }
+
             if (walletManager == null) {
                 when (userWallet) {
                     is UserWallet.Hot -> {
@@ -506,6 +546,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         }
     }
 
+    @RemoveWithToggle("TWI_1783_TRON_GASLESS_ACCOUNT_ACTIVATION_ENABLED")
     override suspend fun isTronAccountActivated(userWalletId: UserWalletId, network: Network): Boolean =
         withContext(dispatchers.io) {
             val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
@@ -622,6 +663,15 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     @Deprecated("Will be removed in future")
     override suspend fun getStoredWalletManagers(userWalletId: UserWalletId): List<WalletManager> {
         return walletManagersStore.getAllSync(userWalletId)
+    }
+
+    @Deprecated("Will be removed in future")
+    override suspend fun getStoredWalletManager(
+        userWalletId: UserWalletId,
+        blockchain: Blockchain,
+        derivationPath: String?,
+    ): WalletManager? {
+        return walletManagersStore.getSyncOrNull(userWalletId, blockchain, derivationPath)
     }
 
     override suspend fun getDefaultAddress(userWalletId: UserWalletId, network: Network): String? {
@@ -787,18 +837,23 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             return emptyList()
         }
 
+        return walletManager.wallet.recentTransactions.toTxInfos(
+            currency = currency,
+            ownAddresses = SdkAddressToAddressConverter.convertList(walletManager.wallet.addresses).toSet(),
+        )
+    }
+
+    private fun List<TransactionData.Uncompiled>.toTxInfos(
+        currency: CryptoCurrency,
+        ownAddresses: Set<UpdateWalletManagerResult.Address>,
+    ): List<TxInfo> {
         val transactionDataConverter = TransactionDataToTxHistoryItemConverter(
-            walletAddresses = SdkAddressToAddressConverter.convertList(walletManager.wallet.addresses).toSet(),
-            feePaidCurrency = walletManager.wallet.blockchain.feePaidCurrency(),
+            walletAddresses = ownAddresses,
+            currency = currency,
         )
 
-        return walletManager.wallet.recentTransactions
-            .filter { transaction ->
-                when (currency) {
-                    is CryptoCurrency.Coin -> transaction.amount.type is AmountType.Coin
-                    is CryptoCurrency.Token -> transaction.contractAddress == currency.contractAddress
-                }
-            }
+        return this
+            .filter { transaction -> transaction.belongsToHistoryOf(currency) }
             .mapNotNull(transactionDataConverter::convert)
     }
 
@@ -845,6 +900,19 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             }
             ?.value?.value
             ?: BigDecimal.ZERO
+    }
+
+    override suspend fun getTokenBalances(
+        userWalletId: UserWalletId,
+        network: Network,
+        address: String,
+    ): List<TokenBalance> {
+        return withContext(dispatchers.io) {
+            val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+                ?: return@withContext emptyList()
+
+            walletManager.getTokenBalances(walletAddress = address)
+        }
     }
 
     override suspend fun getAssetRequirements(
@@ -973,6 +1041,37 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
         val initializableAccountWalletManger = walletManager as? InitializableAccount ?: return true
         return initializableAccountWalletManger.accountInitializationState == InitializableAccount.State.INITIALIZED
+    }
+
+    /**
+     * A joint network's manager is the Safe's: built on the owner key at [path] once the account has a Safe address.
+     * `null` means the manager cannot be built yet — the address has not arrived, or the owner key at [path] is not
+     * derived on this wallet — so the caller reads nothing and may retry later. The resolver is lazy: it sits behind
+     * the accounts fetcher, which reaches this facade through the tokens saver.
+     */
+    private suspend fun createSafeWalletManager(
+        userWallet: UserWallet,
+        blockchain: Blockchain,
+        path: DerivationPath,
+    ): WalletManager? {
+        val safeAddress = jointAccountSafeAddressResolver.get()
+            .resolveByOwnerPath(userWalletId = userWallet.walletId, ownerPaths = setOf(path.rawPath))[path.rawPath]
+            ?: run {
+                TangemLogger.i("No Safe address for the joint network $blockchain at ${path.rawPath} yet")
+                return null
+            }
+
+        return walletManagerFactory.createSafeWalletManager(
+            userWallet = userWallet,
+            blockchain = blockchain,
+            derivationPath = path,
+            safeAddress = safeAddress,
+        )
+            ?: run {
+                // The owner key is missing or the SDK refused the address: a caller reads nothing, it never crashes
+                TangemLogger.e("Unable to create the Safe wallet manager for $blockchain at ${path.rawPath}")
+                null
+            }
     }
 
     private fun getWmInitializationMutex(

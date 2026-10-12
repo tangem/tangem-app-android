@@ -37,6 +37,7 @@ private fun TxInfo.TransactionType.toAnalyticsType(isOutgoing: Boolean): String 
     is TxInfo.TransactionType.Staking -> "Staking"
     is TxInfo.TransactionType.YieldSupply -> "Yield Supply"
     TxInfo.TransactionType.GaslessFee -> "Gasless Fee"
+    is TxInfo.TransactionType.NetworkFee -> "Network Fee"
     is TxInfo.TransactionType.Operation -> name
     TxInfo.TransactionType.UnknownOperation -> "Unknown"
 }
@@ -53,15 +54,8 @@ internal fun TxHistoryInfo.toAnalyticsStatus(): String = when (this) {
 }.toAnalyticsStatusString()
 
 private fun Status?.toAnalyticsStatusString(): String = when (this) {
-    is Status.Confirmed -> "Confirmed"
+    is Status.Confirmed, is Status.PendingSignature -> "Confirmed"
     is Status.Failed -> "Failed"
     is Status.Unconfirmed -> "Pending"
     null -> "Unknown"
-}
-
-/** "Title" analytics param — the [type] label, qualified with the outcome once the transaction is settled. */
-internal fun analyticsTitle(type: String, status: String): String = when (status) {
-    "Failed" -> "$type Failed"
-    "Pending" -> "$type Pending"
-    else -> type
 }

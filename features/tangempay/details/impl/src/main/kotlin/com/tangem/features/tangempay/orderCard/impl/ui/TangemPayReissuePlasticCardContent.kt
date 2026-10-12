@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,7 +38,6 @@ import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
-import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
@@ -50,6 +50,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_32
 import com.tangem.core.ui.res.generated.icons.ic_error_28
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayReissuePlasticCardUM
 
@@ -120,7 +121,9 @@ private fun ReplaceContent(content: TangemPayReissuePlasticCardUM.Content?, onDi
     SpacerH(16.dp)
     Column(modifier = Modifier.fillMaxWidth()) {
         TangemButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.REISSUE_PLASTIC_SHEET_CANCEL_BUTTON),
             size = TangemButton.Size.X12,
             variant = TangemButton.Variant.Secondary,
             onClick = onDismissRequest,
@@ -128,7 +131,9 @@ private fun ReplaceContent(content: TangemPayReissuePlasticCardUM.Content?, onDi
         )
         SpacerH(8.dp)
         TangemButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.REISSUE_PLASTIC_SHEET_REPLACE_BUTTON),
             size = TangemButton.Size.X12,
             variant = TangemButton.Variant.Primary,
             onClick = content?.onReplaceClick ?: {},
@@ -149,23 +154,23 @@ private fun DeliveryRows(content: TangemPayReissuePlasticCardUM.Content?) {
     TangemRow(
         divider = true,
         contentLead = TangemRowContentLead.End,
-        verticalAlignment = TangemRowVerticalAlignment.Center,
         titleSlot = {
             TangemRowText(
                 text = resourceReference(R.string.tangempay_order_type_delivery_fee),
                 role = TangemRowTextRole.Title,
             )
         },
-        valueSlot = {
-            if (content?.isInsufficientFunds == true) {
+        valueSlot = { RowValue(text = content?.let { stringReference(it.deliveryFee) }) },
+        subvalueSlot = if (content?.isInsufficientFunds == true) {
+            {
                 TangemBadge(
-                    modifier = Modifier.align(Alignment.CenterVertically),
                     text = resourceReference(R.string.tangempay_order_type_not_enough_money),
                     status = TangemBadge.Status.Warning,
                     size = TangemBadge.Size.X4,
                 )
             }
-            RowValue(text = content?.let { stringReference(it.deliveryFee) })
+        } else {
+            null
         },
     )
     InfoRow(

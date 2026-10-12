@@ -63,13 +63,6 @@ internal class TangemPayCashbackDetailUmConverterTest {
     }
 
     @Test
-    fun `GIVEN cashback feature disabled WHEN convert THEN row is hidden`() {
-        val result = convert(cashback = cashback(), loadState = TransactionLoadState.Loaded, isCashbackEnabled = false)
-
-        assertThat(result).isNull()
-    }
-
-    @Test
     fun `GIVEN non-spend transaction WHEN convert THEN row is hidden`() {
         val result = convert(
             transaction = paymentTransaction(),
@@ -84,12 +77,10 @@ internal class TangemPayCashbackDetailUmConverterTest {
         transaction: TangemPayTxHistoryItem = spendTransaction(),
         cashback: TangemPayTxHistoryItem.Cashback?,
         loadState: TransactionLoadState,
-        isCashbackEnabled: Boolean = true,
     ): CashbackDetailUM? = TangemPayCashbackDetailUmConverter.convert(
         transaction = transaction,
         cashback = cashback,
         loadState = loadState,
-        isCashbackEnabled = isCashbackEnabled,
         onRefreshClick = {},
     )
 
@@ -140,6 +131,10 @@ internal class TangemPayCashbackDetailUmConverterTest {
                     formatArgs = wrappedList("0"),
                 ),
             ),
+        ),
+        CashbackRowModel(
+            cashback = cashback(status = Status.EXCLUDED, amount = ZERO, exclusionReason = Reason.COMPLIANCE_RISK),
+            expected = excluded(R.string.tangem_pay_transaction_details_cashback_compliance_risk),
         ),
         CashbackRowModel(
             cashback = cashback(status = Status.EXCLUDED, amount = ZERO),

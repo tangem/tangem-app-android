@@ -19,6 +19,11 @@ data class Yield(
     val metadata: Metadata,
     val validators: List<Validator>,
     val isAvailable: Boolean,
+    /**
+     * Every validator regardless of status. [validators] holds only active ones (what a new stake may pick);
+     * this list is for resolving existing balances, which can sit at a jailed or inactive validator.
+     */
+    val allValidators: List<Validator> = validators,
 ) {
 
     val allValidatorsFull: Boolean = validators.all { it.status == Validator.ValidatorStatus.FULL }

@@ -11,6 +11,7 @@ import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.store.setSourceAsOnlyCache
 import com.tangem.data.networks.store.storeStatus
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
@@ -130,6 +131,97 @@ internal class CommonNetworkStatusFetcherTest {
         coVerify(inverse = true) {
             networksStatusesStore.setSourceAsOnlyCache(userWalletId = any(), network = any())
         }
+    }
+
+    @Test
+    fun `GIVEN joint network with a Safe manager WHEN fetch THEN the update result is stored`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("011")
+        val network = jointNetwork
+        val coin = cryptoCurrencyFactory.ethereum.copy(network = network)
+        val safeAddress = "0x5afe"
+        val updateResult = UpdateWalletManagerResult.Verified(
+            selectedAddress = safeAddress,
+            addresses = setOf(
+                UpdateWalletManagerResult.Address(safeAddress, UpdateWalletManagerResult.Address.Type.Primary),
+            ),
+            currenciesAmounts = setOf(UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(java.math.BigDecimal.ONE)),
+            currentTransactions = emptySet(),
+        )
+        val expectedStatus = NetworkStatus(
+            network = network,
+            value = NetworkStatus.Verified(
+                address = NetworkAddress.Single(
+                    NetworkAddress.Address(safeAddress, NetworkAddress.Address.Type.Primary),
+                ),
+                amounts = mapOf(coin.id to NetworkStatus.Amount.Loaded(java.math.BigDecimal.ONE)),
+                pendingTransactions = emptyMap(),
+                yieldSupplyStatuses = mapOf(coin.id to null),
+                source = com.tangem.domain.models.StatusSource.ACTUAL,
+            ),
+        )
+        coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, network) } returns mockk()
+        coEvery { walletManagersFacade.update(userWalletId, network, emptySet()) } returns updateResult
+        coEvery { networksStatusesStore.storeStatus(userWalletId = userWalletId, status = expectedStatus) } returns Unit
+
+        // Act
+        val actual = fetcher.fetch(userWalletId = userWalletId, network = network, networkCurrencies = setOf(coin))
+
+        // Assert
+        Truth.assertThat(actual).isEqualTo(Either.Right(Unit))
+        coVerifyOrder {
+            walletManagersFacade.update(userWalletId, network, emptySet())
+            networksStatusesStore.storeStatus(userWalletId = userWalletId, status = expectedStatus)
+        }
+    }
+
+    @Test
+    fun `GIVEN joint network without a Safe manager yet WHEN fetch THEN nothing is fetched or stored`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("011")
+        val coin = cryptoCurrencyFactory.ethereum.copy(network = jointNetwork)
+        coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, jointNetwork) } returns null
+
+        // Act
+        val actual = fetcher.fetch(userWalletId = userWalletId, network = jointNetwork, networkCurrencies = setOf(coin))
+
+        // Assert
+        Truth.assertThat(actual).isEqualTo(Either.Right(Unit))
+        coVerify(inverse = true) { walletManagersFacade.update(any(), any(), any(), any()) }
+        verify { networksStatusesStore wasNot Called }
+    }
+
+    @Test
+    fun `GIVEN the Safe manager cannot be built WHEN fetch THEN the failure is returned and the cache downgraded`() =
+        runTest {
+            // Arrange
+            val userWalletId = UserWalletId("011")
+            val coin = cryptoCurrencyFactory.ethereum.copy(network = jointNetwork)
+            val cause = IllegalArgumentException("Unable to create the Safe wallet manager")
+            coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, jointNetwork) } throws cause
+            coEvery {
+                networksStatusesStore.setSourceAsOnlyCache(userWalletId = userWalletId, network = jointNetwork)
+            } returns Unit
+
+            // Act
+            val actual = fetcher.fetch(
+                userWalletId = userWalletId,
+                network = jointNetwork,
+                networkCurrencies = setOf(coin),
+            )
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(Either.Left(cause))
+            coVerify(inverse = true) { walletManagersFacade.update(any(), any(), any(), any()) }
+        }
+
+    private val jointNetwork = cryptoCurrencyFactory.ethereum.network.let { network ->
+        val derivationPath = Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/0")
+
+        network.copy(
+            id = Network.ID(rawId = network.id.rawId, derivationPath = derivationPath),
+            derivationPath = derivationPath,
+        )
     }
 
     @Suppress("unused")

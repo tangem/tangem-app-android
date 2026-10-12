@@ -10,10 +10,10 @@ import com.tangem.datasource.api.common.response.fold
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.store.datasource.news.NewsApi
 import com.tangem.store.datasource.news.models.response.NewsTrendingResponse
-import com.tangem.datasource.local.news.details.NewsDetailsStore
-import com.tangem.datasource.local.news.liked.NewsLikedStore
-import com.tangem.datasource.local.news.trending.TrendingNewsStore
-import com.tangem.datasource.local.news.viewed.NewsViewedStore
+import com.tangem.data.news.store.details.NewsDetailsStore
+import com.tangem.data.news.store.liked.NewsLikedStore
+import com.tangem.data.news.store.trending.TrendingNewsStore
+import com.tangem.data.news.store.viewed.NewsViewedStore
 import com.tangem.domain.models.news.ArticleCategory
 import com.tangem.domain.models.news.DetailedArticle
 import com.tangem.domain.models.news.ShortArticle

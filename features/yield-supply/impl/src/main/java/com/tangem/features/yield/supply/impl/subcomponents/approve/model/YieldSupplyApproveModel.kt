@@ -197,6 +197,8 @@ internal class YieldSupplyApproveModel @Inject constructor(
             Basic.TransactionSent(
                 sentFrom = event,
                 memoType = Basic.TransactionSent.MemoType.Null,
+                isCustomToken = cryptoCurrency.isCustom,
+                isCustomFeeToken = feeCryptoCurrencyStatus.currency.isCustom,
             ),
         )
         analyticsEventHandler.send(

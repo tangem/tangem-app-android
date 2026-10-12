@@ -19,11 +19,12 @@ dependencies {
 
     // region DI
     implementation(deps.hilt.android)
+    runtimeOnly(deps.room.runtime)
     kapt(deps.hilt.kapt)
     // endregion
 
     // region Core
-    api(projects.core.datasource)
+    implementation(projects.store.datasource)
     api(projects.core.utils)
     // endregion
 
