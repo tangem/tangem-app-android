@@ -11,6 +11,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.GetWalletNotificatio
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetWarningsTransformer
+import com.tangem.features.hotwallet.HardwareUpgradeLauncher
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -31,9 +32,12 @@ internal class WalletNotificationsSubscriber @AssistedInject constructor(
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
     private val walletWarningsSingleEventSender: WalletWarningsSingleEventSender,
     private val getStoryContentUseCase: GetStoryContentUseCase,
+    private val hardwareUpgradeLauncher: HardwareUpgradeLauncher,
 ) : WalletSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<ImmutableList<WalletNotificationUM>> {
+        var wasUpgradePromoShown = false
+
         return combine(
             flow = getWalletNotificationsFactory.create(userWallet, clickIntents).conflate().distinctUntilChanged(),
             flow2 = getWalletNotificationsCarouselFactory.create(userWallet, clickIntents).conflate()
@@ -47,6 +51,11 @@ internal class WalletNotificationsSubscriber @AssistedInject constructor(
                     )
                 }
             }
+
+            // Only when the banner appears: a failed prefetch isn't cached, so each emission would redo it.
+            val isUpgradePromoShown = notifications.any { it is WalletNotificationUM.UpgradeHotWalletPromo }
+            if (isUpgradePromoShown && !wasUpgradePromoShown) hardwareUpgradeLauncher.prefetch()
+            wasUpgradePromoShown = isUpgradePromoShown
 
             val displayedWalletUM = stateHolder.getWalletUM(userWallet.walletId)
 
@@ -74,7 +83,11 @@ internal class WalletNotificationsSubscriber @AssistedInject constructor(
 
             val totalNotifications = (notifications + alteredNotificationsCarousel).toPersistentList()
 
-            walletWarningsAnalyticsSender.send(displayedWalletUM, totalNotifications)
+            walletWarningsAnalyticsSender.send(
+                userWalletId = userWallet.walletId,
+                displayedWalletUM = displayedWalletUM,
+                newNotifications = totalNotifications,
+            )
             walletWarningsSingleEventSender.send(
                 userWalletId = userWallet.walletId,
                 displayedWalletUM = displayedWalletUM,

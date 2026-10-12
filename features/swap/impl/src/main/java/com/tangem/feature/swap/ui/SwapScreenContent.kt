@@ -95,7 +95,17 @@ internal fun SwapScreenContent(
                 ProviderItemBlock(state = state.providerState)
             }
 
-            feeBlock?.invoke(Modifier.fillMaxWidth())
+            val slippageUM = state.visibleSlippageUM
+            if (slippageUM != null && state.swapUIMode == SwapUIMode.Detailed) {
+                SwapSlippageAndFeeBlock(slippageUM = slippageUM, feeBlock = feeBlock)
+            } else {
+                feeBlock?.invoke(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(TangemTheme.shapes.roundedCornersXMedium)
+                        .background(TangemTheme.colors3.bg.secondary),
+                )
+            }
 
             if (state.notifications.isNotEmpty()) {
                 SwapNotifications(
@@ -198,6 +208,7 @@ private fun MainInfo(state: SwapStateHolder) {
             TransactionCardSimple(
                 priceImpact = priceImpact,
                 swapCardState = state.receiveCardData,
+                slippageUM = state.visibleSlippageUM,
                 modifier = Modifier.constrainAs(bottomCard) {
                     top.linkTo(topCard.bottom, margin = marginCard)
                 },

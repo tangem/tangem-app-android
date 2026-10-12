@@ -38,10 +38,10 @@ interface TangemPayApi {
     suspend fun setPendingTariffPlanTransition(
         @Header("Authorization") authHeader: String,
         @Body body: SetPendingTariffPlanTransitionRequest,
-    ): ApiResponse<Any>
+    ): ApiResponse<Unit>
 
     @POST("v1/customer/tariff-plan/pending-transition/cancel")
-    suspend fun cancelPendingTariffPlanTransition(@Header("Authorization") authHeader: String): ApiResponse<Any>
+    suspend fun cancelPendingTariffPlanTransition(@Header("Authorization") authHeader: String): ApiResponse<Unit>
 
     /** Fiat bank requisites for the Virtual Account on-ramp (VA MVP0, TWI-1638). */
     @GET("v1/account/bank-credentials/{product_instance_id}")
@@ -69,7 +69,7 @@ interface TangemPayApi {
     suspend fun setTangemPayEnabledStatus(
         @Header("Authorization") authHeader: String,
         @Body body: SetTangemPayEnabledRequest,
-    ): ApiResponse<Any>
+    ): ApiResponse<Unit>
 
     @POST("v1/deeplink/validate")
     suspend fun validateDeeplink(@Body body: DeeplinkValidityRequest): ApiResponse<DeeplinkValidityResponse>
@@ -95,8 +95,8 @@ interface TangemPayApi {
     @GET("v1/eligibility/check")
     suspend fun checkEligibilityForCountry(
         @Query("product") product: String,
-        @Query("country") country: String,
-        @Query("region") region: String?,
+        @Query("country_code") country: String,
+        @Query("region_code") region: String?,
     ): ApiResponse<EligibilityCheckResponse>
 
     @GET("v1/eligibility/check")
@@ -133,20 +133,14 @@ interface TangemPayApi {
     @POST("v1/order")
     suspend fun createOrder(
         @Header("Authorization") authHeader: String,
+        @Header("X-Idempotency-Key") idempotencyKey: String,
         @Body body: OrderRequest,
-    ): ApiResponse<OrderResponse>
-
-    // TODO: Doston: [REDACTED_TASK_KEY] Unify with method above
-    @POST("v1/order")
-    suspend fun createVirtualAccountOrder(
-        @Header("Authorization") authHeader: String,
-        @Body body: VirtualAccountOrderRequest,
     ): ApiResponse<OrderResponse>
 
     @POST("v1/order")
     suspend fun createBankOfframpOrder(
         @Header("Authorization") authHeader: String,
-        @Header("Idempotency-Key") idempotencyKey: String,
+        @Header("X-Idempotency-Key") idempotencyKey: String,
         @Body body: BankOfframpPlaceOrderRequest,
     ): ApiResponse<OrderResponse>
 
@@ -154,7 +148,7 @@ interface TangemPayApi {
     @POST("v1/order/{order_id}/bank-offramp/signature")
     suspend fun submitBankOfframpSignature(
         @Header("Authorization") authHeader: String,
-        @Header("Idempotency-Key") idempotencyKey: String,
+        @Header("X-Idempotency-Key") idempotencyKey: String,
         @Path("order_id") orderId: String,
         @Body body: BankOfframpSignatureRequest,
     ): ApiResponse<Unit>
@@ -163,7 +157,7 @@ interface TangemPayApi {
     suspend fun cancelOrder(
         @Header("Authorization") authHeader: String,
         @Path("order_id") orderId: String,
-    ): ApiResponse<Any>
+    ): ApiResponse<Unit>
 
     /** Customer offers — used to gate the issue-additional-card flow. */
     @GET("v1/customer/offers")
@@ -224,8 +218,11 @@ interface TangemPayApi {
     @GET("v1/fees")
     suspend fun getFees(
         @Header("Authorization") authHeader: String,
-        @Query("groups") groups: String,
+        @Query("groups") groups: List<String>,
     ): ApiResponse<FeesResponse>
+
+    @GET("v1/payment-methods")
+    suspend fun getPaymentMethods(): ApiResponse<PaymentMethodsResponse>
 
     @POST("v1/customer/card/reissue")
     suspend fun reissueCard(

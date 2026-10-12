@@ -5,11 +5,13 @@ import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.SendScreenTestTags
 import com.tangem.core.ui.test.TopAppBarTestTags
+import com.tangem.utils.StringsSigns.TILDE_SIGN
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import com.tangem.features.send.impl.R as SendR
+import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
 
 class SendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
@@ -82,6 +84,27 @@ class SendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     fun swapTokenName(tokenName: String): KNode = child {
         hasTestTag(SendScreenTestTags.SWAP_TOKEN_NAME)
         hasText(tokenName)
+        useUnmergedTree = true
+    }
+
+    val fixedRateBadge: KNode = child {
+        hasText(getResourceString(SendR.string.send_rate_is_fixed))
+        useUnmergedTree = true
+    }
+
+    val floatingRateBadge: KNode = child {
+        hasText(getResourceString(SendR.string.send_rate_floating_info_title))
+        useUnmergedTree = true
+    }
+
+    val swapReceiveAmount: KNode = child {
+        hasParent(withTestTag(SendScreenTestTags.SWAP_SUBTITLE_RIGHT))
+        hasText(TILDE_SIGN, substring = true)
+        useUnmergedTree = true
+    }
+
+    val swapSendAmount: KNode = child {
+        hasParent(withTestTag(SendScreenTestTags.SWAP_SEND_SUBTITLE_VALUE))
         useUnmergedTree = true
     }
 

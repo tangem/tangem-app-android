@@ -15,6 +15,7 @@ import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.error.TokenListSortingError
+import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -300,6 +301,46 @@ internal class ApplyTokenListSortingUseCaseTest {
             sortedTokensIdsByAccount = mapOf(accountList.mainAccount to sortedTokens.toList()),
             isGroupedByNetwork = false,
             isSortedByBalance = false,
+        )
+
+        // Assert
+        val expected = Unit.right()
+        Truth.assertThat(actual).isEqualTo(expected)
+
+        coVerifyOrder {
+            accountsCRUDRepository.getAccountListSync(userWalletId)
+            accountsCRUDRepository.saveAccountsLocally(updatedAccountList)
+            accountsCRUDRepository.syncTokens(userWalletId)
+        }
+    }
+
+    @Test
+    fun `GIVEN list with an active joint account WHEN apply sorting THEN sorted list keeps the joint counter`() = runTest {
+        // Arrange
+        val token1 = mockk<CryptoCurrency>(relaxed = true)
+        val token2 = mockk<CryptoCurrency>(relaxed = true)
+        val jointAccount = MockAccounts.createJointAccount(userWalletId = userWalletId)
+
+        val accountList = (AccountList.empty(userWalletId = userWalletId, cryptoCurrencies = listOf(token1, token2)) +
+            jointAccount).getOrNull()!!
+        coEvery { accountsCRUDRepository.getAccountListSync(userWalletId) } returns accountList.some()
+
+        val sortedTokens = listOf(token2, token1)
+        val updatedAccountList = AccountList(
+            userWalletId = userWalletId,
+            accounts = listOf(accountList.mainAccount.copy(cryptoCurrencies = sortedTokens), jointAccount),
+            totalAccounts = accountList.totalAccounts,
+            totalArchivedAccounts = accountList.totalArchivedAccounts,
+            totalJointAccounts = accountList.totalJointAccounts,
+            sortType = TokensSortType.BALANCE,
+            groupType = TokensGroupType.NETWORK,
+        ).getOrNull()!!
+
+        // Act
+        val actual = useCase(
+            sortedTokensIdsByAccount = mapOf(accountList.mainAccount to sortedTokens),
+            isGroupedByNetwork = true,
+            isSortedByBalance = true,
         )
 
         // Assert

@@ -149,7 +149,6 @@ internal class ChooseTokenListItemConverterPaymentAccountTest {
                     value = DEPOSIT_ADDRESS,
                 ),
             ),
-            stakingBalance = null,
             yieldSupplyStatus = null,
             hasCurrentNetworkTransactions = false,
             pendingTransactions = emptySet(),
