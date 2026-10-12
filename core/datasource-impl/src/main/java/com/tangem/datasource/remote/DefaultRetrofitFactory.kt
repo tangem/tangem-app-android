@@ -3,6 +3,7 @@ package com.tangem.datasource.remote
 import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.squareup.moshi.Moshi
+import com.tangem.core.remote.ApiSerialization
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.RetrofitFactory
@@ -18,6 +19,7 @@ import com.tangem.datasource.remote.response.ApiResponseCallAdapterFactory
 import com.tangem.core.remote.ConnectTimeout
 import com.tangem.core.remote.ReadTimeout
 import com.tangem.core.remote.WriteTimeout
+import com.tangem.core.remote.json.NetworkJson
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.logs.AppLogsStore
@@ -31,9 +33,12 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.serialization.json.Json
 import okhttp3.Authenticator
 import okhttp3.Interceptor
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import retrofit2.Converter
 import retrofit2.Invocation
 import retrofit2.Retrofit
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -46,6 +51,7 @@ import javax.inject.Singleton
  *
  * @property apiConfigsManager     manages API configurations for different environments
  * @property moshi                 moshi
+ * @property json                  kotlinx-serialization json
  * @property analyticsErrorHandler handles analytics-related errors
  * @property context               application context
  * @property appLogsStore          application logs store
@@ -58,6 +64,7 @@ internal class DefaultRetrofitFactory @Inject constructor(
     private val apiConfigs: ApiConfigs,
     private val apiConfigsManager: ApiConfigsManager,
     @NetworkMoshi private val moshi: Moshi,
+    @NetworkJson private val json: Json,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
     @ApplicationContext private val context: Context,
     private val appLogsStore: AppLogsStore,
@@ -90,6 +97,7 @@ internal class DefaultRetrofitFactory @Inject constructor(
         timeouts = spec.timeouts,
         logsSaving = spec.shouldSaveLogs,
         loggable = spec.isLoggable,
+        serialization = spec.serialization,
     )
 
     private fun <T : Any> createApi(
@@ -100,11 +108,12 @@ internal class DefaultRetrofitFactory @Inject constructor(
         timeouts: Timeouts?,
         logsSaving: Boolean,
         loggable: Boolean,
+        serialization: ApiSerialization,
     ): T {
         val environmentConfig = apiConfigsManager.getEnvironmentConfig(apiConfigId)
 
         return Retrofit.Builder()
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .addConverterFactory(serialization.toConverterFactory())
             .addCallAdapterFactory(ApiResponseCallAdapterFactory.create(analyticsErrorHandler))
             .baseUrl(environmentConfig.baseUrl)
             .client(
@@ -126,6 +135,11 @@ internal class DefaultRetrofitFactory @Inject constructor(
             )
             .build()
             .create(clazz)
+    }
+
+    private fun ApiSerialization.toConverterFactory(): Converter.Factory = when (this) {
+        ApiSerialization.MOSHI -> MoshiConverterFactory.create(moshi)
+        ApiSerialization.KOTLINX -> json.asConverterFactory(JSON_MEDIA_TYPE.toMediaType())
     }
 
     private fun OkHttpClient.Builder.applySessionAuth(condition: Boolean): OkHttpClient.Builder {
@@ -237,5 +251,9 @@ internal class DefaultRetrofitFactory @Inject constructor(
         } else {
             this
         }
+    }
+
+    private companion object {
+        const val JSON_MEDIA_TYPE = "application/json; charset=UTF-8"
     }
 }

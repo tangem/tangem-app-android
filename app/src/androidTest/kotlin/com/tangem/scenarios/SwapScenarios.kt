@@ -16,6 +16,8 @@ import com.tangem.common.extensions.clickWhenEnabled
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.isDisplayedSafely
+import com.tangem.common.utils.findBroadcastApproveAmounts
+import com.tangem.common.utils.findBroadcastTransactions
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
@@ -23,6 +25,8 @@ import com.tangem.screens.*
 import com.tangem.tap.domain.sdk.mocks.MockContent
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
+import org.junit.Assert.assertEquals
+import java.math.BigInteger
 import com.tangem.common.ui.R as CommonUiR
 
 private val firstStoryIndex = 0
@@ -51,8 +55,13 @@ fun BaseTestCase.openSwapScreen(
             onTokenDetailsScreen { swapButton.clickWhenEnabled() }
             }
 
-        SwapEntryPoint.MarketsTokenDetails -> step("Click on 'Swap' button on 'Markets' token details screen") {
-            onMarketsTokenDetailsScreen { swapPortfolioQuickActionButton.performClick() }
+        SwapEntryPoint.MarketsTokenDetails -> {
+            step("Click on 'Add funds' button on 'Markets' token details screen") {
+                onMarketsTokenDetailsScreen { addFundsButton.clickWithAssertion() }
+            }
+            step("Click on 'Swap' action in the bottom sheet") {
+                onAddFundsBottomSheet { swapButton.clickWithAssertion() }
+            }
         }
 
         SwapEntryPoint.TokenActionsBottomSheet -> step("Click on 'Swap' button on token actions bottom sheet") {
@@ -728,5 +737,39 @@ fun BaseTestCase.openProviderSheetWithTypeFilter(allFilter: String) {
     }
     step("Assert the '$allFilter' filter is displayed") {
         awaitSuccess { onChooseProviderBottomSheet { filterButton(allFilter).assertIsDisplayed() } }
+    }
+}
+
+private const val APPROVE_AND_SWAP_TRANSACTIONS = 2
+
+fun BaseTestCase.confirmSwapAndAssertApproveBroadcast(
+    rpcPathPattern: String,
+    spenderAddress: String,
+    expectedApproveAmount: BigInteger,
+) {
+    val broadcastsBefore = findBroadcastTransactions(rpcPathPattern).size
+    val approvesBefore = findBroadcastApproveAmounts(rpcPathPattern, spenderAddress)
+
+    step("Confirm the swap by holding the 'Swap' button and sign") {
+        confirmSwapByHolding()
+    }
+    step("Assert the 'Swap in progress' screen is displayed") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) { onSwapSuccessScreen { title.assertIsDisplayed() } }
+    }
+    step("Assert the approve and the swap were broadcast together") {
+        awaitSuccess {
+            assertEquals(
+                broadcastsBefore + APPROVE_AND_SWAP_TRANSACTIONS,
+                findBroadcastTransactions(rpcPathPattern).size,
+            )
+        }
+    }
+    step("Assert one approve for '$expectedApproveAmount' was broadcast") {
+        val approvesAfter = findBroadcastApproveAmounts(rpcPathPattern, spenderAddress)
+        assertEquals(approvesBefore.size + 1, approvesAfter.size)
+        assertEquals(
+            approvesBefore.count { it == expectedApproveAmount } + 1,
+            approvesAfter.count { it == expectedApproveAmount },
+        )
     }
 }

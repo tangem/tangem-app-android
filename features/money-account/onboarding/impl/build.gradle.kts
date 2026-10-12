@@ -1,6 +1,7 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
     id("configuration")
@@ -15,6 +16,7 @@ dependencies {
     api(projects.core.decompose)
     api(projects.core.utils)
     implementation(projects.core.error)
+    implementation(projects.core.navigation)
     implementation(projects.core.ui)
 
     /** Common */
@@ -22,11 +24,14 @@ dependencies {
 
     /** Api */
     api(projects.features.moneyAccount.onboarding.api)
+    implementation(projects.features.tangempay.eligibility.api)
 
     /** Domain */
     api(projects.domain.common)
     api(projects.domain.visa)
     implementation(projects.domain.models)
+    implementation(projects.domain.moneyAccount)
+    implementation(projects.domain.visa.models)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -43,6 +48,11 @@ dependencies {
     implementation(deps.androidx.appCompat)
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
     implementation(deps.lifecycle.compose)
     implementation(deps.lifecycle.runtime.ktx)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }

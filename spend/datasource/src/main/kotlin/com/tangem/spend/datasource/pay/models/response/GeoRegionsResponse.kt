@@ -1,20 +1,20 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Response of `bff-v2/v1/geo/countries/{country_code}/regions`
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class GeoRegionsResponse(
-    @Json(name = "result") val result: List<Region>,
+    @SerialName("result") val result: List<Region>,
 ) {
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Region(
-        @Json(name = "code") val code: String,
-        @Json(name = "name") val name: String,
-        @Json(name = "suggested") val isSuggested: Boolean?,
+        @SerialName("code") val code: String,
+        @SerialName("name") val name: String,
+        @SerialName("suggested") val isSuggested: Boolean?,
     )
 }

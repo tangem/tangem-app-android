@@ -12,7 +12,6 @@ import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.toBadgeStatus
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardFrame
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
@@ -48,12 +47,12 @@ internal fun PredictionMarketBlock(state: MarketHeaderUM, modifier: Modifier = M
 private fun MarketHeaderUM.outcomeLabel(): String {
     val livePrice = when {
         isPriceUnavailable -> DASH_SIGN
-        outcomePriceCents != null -> "$outcomePriceCents${PolymarketConst.CENT_SIGN}"
+        outcomePrice != null -> outcomePrice
         else -> return outcomeTitle
     }
-    val entryPrice = entryPriceCents?.let { "$it${PolymarketConst.CENT_SIGN} $PRICE_ARROW " }.orEmpty()
+    val entryPricePrefix = entryPrice?.let { "$it $PRICE_ARROW " }.orEmpty()
 
-    return "$outcomeTitle $entryPrice$livePrice"
+    return "$outcomeTitle $entryPricePrefix$livePrice"
 }
 
 private const val PRICE_ARROW = "→"

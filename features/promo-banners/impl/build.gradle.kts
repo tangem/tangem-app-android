@@ -12,9 +12,11 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.remote)
     /** Project - API */
     api(projects.features.promoBanners.api)
     implementation(projects.features.commonFeatures.api)
+    implementation(projects.features.wallet.api)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
 
@@ -24,6 +26,9 @@ dependencies {
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
+    implementation(projects.domain.settings)
     implementation(projects.domain.markets.models)
 
     /** Data */
@@ -39,6 +44,7 @@ dependencies {
     api(projects.domain.wallets)
     api(projects.domain.account)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.configToggles)
     implementation(projects.core.ui)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.markets.models)
@@ -50,6 +56,7 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.material3)
     implementation(deps.lifecycle.compose)
+    implementation(deps.compose.coil)
 
     /** Other */
     implementation(deps.androidx.appCompat)
@@ -71,5 +78,6 @@ dependencies {
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
     testImplementation(deps.arrow.core)
+    testImplementation(deps.kotlin.datetime)
     testImplementation(tangemDeps.blockchain)
 }

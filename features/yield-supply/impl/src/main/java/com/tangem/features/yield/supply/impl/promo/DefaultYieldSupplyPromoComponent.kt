@@ -2,6 +2,7 @@ package com.tangem.features.yield.supply.impl.promo
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -14,7 +15,9 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.features.yield.supply.api.YieldSupplyPromoComponent
 import com.tangem.features.yield.supply.impl.apy.YieldSupplyApyComponent
 import com.tangem.features.yield.supply.impl.promo.model.YieldSupplyPromoModel
+import com.tangem.features.yield.supply.impl.promo.v2.model.YieldSupplyPromoV2Model
 import com.tangem.features.yield.supply.impl.promo.ui.YieldSupplyPromoContent
+import com.tangem.features.yield.supply.impl.promo.v2.ui.YieldSupplyPromoV2Content
 import com.tangem.features.yield.supply.impl.subcomponents.startearning.YieldSupplyStartEarningEntryComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -26,6 +29,7 @@ internal class DefaultYieldSupplyPromoComponent @AssistedInject constructor(
 ) : YieldSupplyPromoComponent, AppComponentContext by appComponentContext {
 
     private val model: YieldSupplyPromoModel = getOrCreateModel(params = params)
+    private val incentiveModel: YieldSupplyPromoV2Model = getOrCreateModel(params = params)
 
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
@@ -36,32 +40,56 @@ internal class DefaultYieldSupplyPromoComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state = model.uiState
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
-        YieldSupplyPromoContent(
-            yieldSupplyPromoUM = state,
-            clickIntents = model,
-            modifier = modifier,
-        )
+        // The boost promo multiplies a rate the wallet has earned, and says so with its own title, card and terms.
+        // The redesigned screen has no room for any of that, so a boosted wallet keeps the screen built for it.
+        if (params.isPromoEnabled) {
+            YieldSupplyPromoContent(
+                yieldSupplyPromoUM = model.uiState,
+                clickIntents = model,
+                modifier = modifier,
+            )
+        } else {
+            val incentiveState by incentiveModel.uiState.collectAsStateWithLifecycle()
+            YieldSupplyPromoV2Content(
+                state = incentiveState,
+                clickIntents = model,
+                modifier = modifier,
+            )
+        }
 
         bottomSheet.child?.instance?.BottomSheet()
+    }
+
+    private fun apyComponent(componentContext: ComponentContext, isPlainRate: Boolean) = YieldSupplyApyComponent(
+        appComponentContext = childByContext(componentContext),
+        params = YieldSupplyApyComponent.Params(
+            cryptoCurrency = params.currency,
+            apy = openingRate(isPlainRate),
+            isPlainRate = isPlainRate,
+            onBackClick = { model.bottomSheetNavigation.dismiss() },
+        ),
+    )
+
+    /**
+     * The rate the screen was opened with is the plain market one only for a boosted wallet; anywhere else it is the
+     * incentivised total. Each sheet therefore opens on the rate it plots — the redesigned screen has the plain one
+     * from its own market request — and a sheet with nothing to put there waits for the market instead of
+     * headlining its neighbour's number.
+     */
+    private fun openingRate(isPlainRate: Boolean): String? = when {
+        params.isPromoEnabled -> params.apy.takeIf { isPlainRate }
+        isPlainRate -> incentiveModel.plainApy.value
+        else -> params.apy
     }
 
     private fun bottomSheetChild(
         config: YieldSupplyPromoConfig,
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent = when (config) {
-        YieldSupplyPromoConfig.Apy -> YieldSupplyApyComponent(
-            appComponentContext = childByContext(componentContext),
-            params = YieldSupplyApyComponent.Params(
-                cryptoCurrency = params.currency,
-                apy = params.apy,
-                onBackClick = {
-                    model.bottomSheetNavigation.dismiss()
-                },
-            ),
-        )
+        YieldSupplyPromoConfig.VariableRate -> apyComponent(componentContext, isPlainRate = true)
+        YieldSupplyPromoConfig.IncentiveRate -> apyComponent(componentContext, isPlainRate = false)
         YieldSupplyPromoConfig.Action -> YieldSupplyStartEarningEntryComponent(
             appComponentContext = childByContext(componentContext),
             params = YieldSupplyStartEarningEntryComponent.Params(

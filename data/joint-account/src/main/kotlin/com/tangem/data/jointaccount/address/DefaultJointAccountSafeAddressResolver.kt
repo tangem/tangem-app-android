@@ -8,6 +8,7 @@ import com.tangem.domain.jointaccount.derivation.toNetworkDerivationPath
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.isJoint
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -26,7 +27,7 @@ internal class DefaultJointAccountSafeAddressResolver @Inject constructor(
 ) : JointAccountSafeAddressResolver {
 
     override suspend fun resolve(userWalletId: UserWalletId, networks: Set<Network>): Map<Network, String> {
-        val jointNetworks = networks.filter { it.derivationPath is Network.DerivationPath.Joint }
+        val jointNetworks = networks.filter(Network::isJoint)
         if (jointNetworks.isEmpty()) return emptyMap()
 
         val wantedPaths = jointNetworks.mapNotNull { it.derivationPath.value }.toSet()

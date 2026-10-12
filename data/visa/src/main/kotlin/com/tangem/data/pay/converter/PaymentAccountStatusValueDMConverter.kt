@@ -10,6 +10,7 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.*
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.utils.converter.Converter
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,16 +25,19 @@ import javax.inject.Singleton
 @Singleton
 internal class PaymentAccountStatusValueDMConverter @Inject constructor(
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
-) {
+) : Converter<PaymentAccountStatusValue, PaymentAccountStatusValueDM?> {
 
-    fun convert(value: PaymentAccountStatusValue): PaymentAccountStatusValueDM? {
+    override fun convert(value: PaymentAccountStatusValue): PaymentAccountStatusValueDM? {
         return when (value) {
-            is PaymentAccountStatusValue.NotCreated -> PaymentAccountStatusValueDM.NotCreated()
+            is PaymentAccountStatusValue.NotCreated -> PaymentAccountStatusValueDM.NotCreated
+            is PaymentAccountStatusValue.KycRequired -> PaymentAccountStatusValueDM.KycRequired(
+                customerId = value.customerId,
+            )
             is PaymentAccountStatusValue.UnderReview -> PaymentAccountStatusValueDM.UnderReview(
                 kycStatus = value.kycStatus,
                 customerId = value.customerId,
             )
-            is PaymentAccountStatusValue.IssuingCard -> PaymentAccountStatusValueDM.IssuingCard()
+            is PaymentAccountStatusValue.IssuingCard -> PaymentAccountStatusValueDM.IssuingCard
             is PaymentAccountStatusValue.Loaded -> PaymentAccountStatusValueDM.ActiveAccount(
                 customerId = value.customerId,
                 currencyCode = value.balance?.fiatBalance?.currency,
@@ -68,7 +72,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 fiatRate = value.fiatRate,
                 balance = value.balance?.toDM(),
             )
-            is PaymentAccountStatusValue.Empty -> PaymentAccountStatusValueDM.Empty()
+            is PaymentAccountStatusValue.Empty -> PaymentAccountStatusValueDM.Empty
             is PaymentAccountStatusValue.Deactivated -> PaymentAccountStatusValueDM.DeactivatedAccount(
                 customerId = value.customerId,
                 fiatRate = value.fiatRate,
@@ -129,6 +133,10 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 virtualAccount = null,
                 isBankOfframpAvailable = null,
                 tariffPlan = null,
+            )
+            is PaymentAccountStatusValueDM.KycRequired -> PaymentAccountStatusValue.KycRequired(
+                source = StatusSource.CACHE,
+                customerId = value.customerId,
             )
             is PaymentAccountStatusValueDM.UnderReview -> PaymentAccountStatusValue.UnderReview(
                 source = StatusSource.CACHE,

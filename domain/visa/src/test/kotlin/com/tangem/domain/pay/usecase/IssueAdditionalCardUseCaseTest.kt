@@ -7,6 +7,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.IssueAdditionalCardError
 import com.tangem.domain.pay.model.IssueAdditionalCardResult
 import com.tangem.domain.pay.model.CustomerOffers
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
@@ -62,7 +63,7 @@ internal class IssueAdditionalCardUseCaseTest {
             coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns customerOffers().right()
 
             // Act
-            val result = useCase(USER_WALLET_ID)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY)
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(IssueAdditionalCardError.Other(VisaApiError.Unspecified))
@@ -77,7 +78,7 @@ internal class IssueAdditionalCardUseCaseTest {
                 customerOffers(VIRTUAL_OFFER.copy(data = VIRTUAL_OFFER.data.copy(specificationName = null))).right()
 
             // Act
-            val result = useCase(USER_WALLET_ID)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY)
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(IssueAdditionalCardError.Other(VisaApiError.Unspecified))
@@ -98,7 +99,7 @@ internal class IssueAdditionalCardUseCaseTest {
             } returns listOf(existing).right()
 
             // Act
-            val result = useCase(USER_WALLET_ID)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY)
 
             // Assert
             assertThat(result.getOrNull()).isEqualTo(IssueAdditionalCardResult.Resumed(existing))
@@ -115,11 +116,11 @@ internal class IssueAdditionalCardUseCaseTest {
             coEvery {
                 orderRepository.findOrders(userWalletId = USER_WALLET_ID, types = any(), statuses = any())
             } returns listOf(existing).right()
-            coEvery { orderRepository.createOrder(any(), any(), any(), any(), any(), any(), any(), any()) } returns
+            coEvery { orderRepository.createOrder(any(), any(), any()) } returns
                 created.right()
 
             // Act
-            val result = useCase(USER_WALLET_ID)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY)
 
             // Assert
             assertThat(result.getOrNull()).isEqualTo(IssueAdditionalCardResult.Created(created))
@@ -132,15 +133,17 @@ internal class IssueAdditionalCardUseCaseTest {
             coEvery {
                 orderRepository.createOrder(
                     userWalletId = USER_WALLET_ID,
-                    type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
-                    specificationName = SPEC,
-                    idempotencyKey = any(),
-                    deeplinkValue = null,
+                    request = CustomerOrderRequest.CardIssue(
+                        type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
+                        specificationName = SPEC,
+                        deeplinkValue = null,
+                    ),
+                    idempotencyKey = IDEMPOTENCY_KEY,
                 )
             } returns VisaApiError.CardIssueInsufficientBalance.left()
 
             // Act
-            val result = useCase(USER_WALLET_ID)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY)
 
             // Assert
             assertThat(result.leftOrNull())
@@ -155,15 +158,17 @@ internal class IssueAdditionalCardUseCaseTest {
             coEvery {
                 orderRepository.createOrder(
                     userWalletId = USER_WALLET_ID,
-                    type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
-                    specificationName = SPEC,
-                    idempotencyKey = any(),
-                    deeplinkValue = null,
+                    request = CustomerOrderRequest.CardIssue(
+                        type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
+                        specificationName = SPEC,
+                        deeplinkValue = null,
+                    ),
+                    idempotencyKey = IDEMPOTENCY_KEY,
                 )
             } returns created.right()
 
             // Act
-            val result = useCase(USER_WALLET_ID)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY)
 
             // Assert
             assertThat(result.getOrNull()).isEqualTo(IssueAdditionalCardResult.Created(created))
@@ -185,15 +190,17 @@ internal class IssueAdditionalCardUseCaseTest {
                 coEvery {
                     orderRepository.createOrder(
                         userWalletId = USER_WALLET_ID,
-                        type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
-                        specificationName = CAMPAIGN_SPEC,
-                        idempotencyKey = any(),
-                        deeplinkValue = DEEPLINK_VALUE,
+                        request = CustomerOrderRequest.CardIssue(
+                            type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+                            specificationName = CAMPAIGN_SPEC,
+                            deeplinkValue = DEEPLINK_VALUE,
+                        ),
+                        idempotencyKey = IDEMPOTENCY_KEY,
                     )
                 } returns created.right()
 
                 // Act
-                val result = useCase(USER_WALLET_ID, deeplinkValue = DEEPLINK_VALUE)
+                val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY, deeplinkValue = DEEPLINK_VALUE)
 
                 // Assert
                 assertThat(result.getOrNull()).isEqualTo(IssueAdditionalCardResult.Created(created))
@@ -206,7 +213,7 @@ internal class IssueAdditionalCardUseCaseTest {
             coEvery { offersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE) } returns customerOffers(VIRTUAL_OFFER).right()
 
             // Act
-            val result = useCase(USER_WALLET_ID, deeplinkValue = DEEPLINK_VALUE)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY, deeplinkValue = DEEPLINK_VALUE)
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(IssueAdditionalCardError.NoCampaignOffer)
@@ -217,11 +224,11 @@ internal class IssueAdditionalCardUseCaseTest {
         fun `GIVEN backend rejects the offer WHEN invoked with deeplink THEN OfferNotAvailable`() = runTest {
             // Arrange
             coEvery { offersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE) } returns customerOffers(CAMPAIGN_OFFER).right()
-            coEvery { orderRepository.createOrder(any(), any(), any(), any(), any(), any(), any(), any()) } returns
+            coEvery { orderRepository.createOrder(any(), any(), any()) } returns
                 VisaApiError.CardIssueOfferNotAvailable.left()
 
             // Act
-            val result = useCase(USER_WALLET_ID, deeplinkValue = DEEPLINK_VALUE)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY, deeplinkValue = DEEPLINK_VALUE)
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(IssueAdditionalCardError.OfferNotAvailable)
@@ -234,7 +241,7 @@ internal class IssueAdditionalCardUseCaseTest {
                 VisaApiError.ServerUnavailable.left()
 
             // Act
-            val result = useCase(USER_WALLET_ID, deeplinkValue = DEEPLINK_VALUE)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY, deeplinkValue = DEEPLINK_VALUE)
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(IssueAdditionalCardError.Other(VisaApiError.ServerUnavailable))
@@ -254,7 +261,7 @@ internal class IssueAdditionalCardUseCaseTest {
             } returns listOf(existing).right()
 
             // Act
-            val result = useCase(USER_WALLET_ID, deeplinkValue = DEEPLINK_VALUE)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY, deeplinkValue = DEEPLINK_VALUE)
 
             // Assert
             assertThat(result.getOrNull()).isEqualTo(IssueAdditionalCardResult.Resumed(existing))
@@ -272,11 +279,11 @@ internal class IssueAdditionalCardUseCaseTest {
             coEvery {
                 orderRepository.findOrders(userWalletId = USER_WALLET_ID, types = any(), statuses = any())
             } returns listOf(plastic).right()
-            coEvery { orderRepository.createOrder(any(), any(), any(), any(), any(), any(), any(), any()) } returns
+            coEvery { orderRepository.createOrder(any(), any(), any()) } returns
                 created.right()
 
             // Act
-            val result = useCase(USER_WALLET_ID, deeplinkValue = DEEPLINK_VALUE)
+            val result = useCase(USER_WALLET_ID, IDEMPOTENCY_KEY, deeplinkValue = DEEPLINK_VALUE)
 
             // Assert
             assertThat(result.getOrNull()).isEqualTo(IssueAdditionalCardResult.Created(created))
@@ -284,7 +291,7 @@ internal class IssueAdditionalCardUseCaseTest {
     }
 
     private fun verifyNoOrderCreated() {
-        coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any()) }
     }
 
     private fun order(id: String, type: OrderType, status: OrderStatus): Order = Order(
@@ -306,6 +313,7 @@ internal class IssueAdditionalCardUseCaseTest {
     private companion object {
         val USER_WALLET_ID = UserWalletId("1234567890ABCDEF")
         const val SPEC = "SP_000004"
+        const val IDEMPOTENCY_KEY = "caller-owned-key"
         const val CAMPAIGN_SPEC = "SP_000009"
         const val DEEPLINK_VALUE = "tpay_for_oxford"
 
