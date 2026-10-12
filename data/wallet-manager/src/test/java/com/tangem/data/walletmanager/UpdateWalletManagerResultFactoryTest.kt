@@ -14,6 +14,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -853,8 +854,8 @@ internal class UpdateWalletManagerResultFactoryTest {
         )
     }
 
-    private fun createTxInfo(status: TxInfo.TransactionStatus, amount: BigDecimal): TxInfo {
-        return TxInfo(
+    private fun createTxInfo(status: TxInfo.TransactionStatus, amount: BigDecimal): TxInfo.Single {
+        return TxInfo.Single(
             txHash = "hash",
             timestampInMillis = 1748251839317,
             isOutgoing = true,

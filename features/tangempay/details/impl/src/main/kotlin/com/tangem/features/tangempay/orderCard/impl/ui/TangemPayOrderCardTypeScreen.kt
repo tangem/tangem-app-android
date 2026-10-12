@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.orderCard.impl.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,6 +27,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -58,6 +60,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.common.TangemPayCardArtwork
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderCardType
@@ -117,7 +120,8 @@ private fun OrderTypeContent(
                 contentScale = ContentScale.FillWidth,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .testTag(state.backgroundTestTag()),
             )
         }
         Column(modifier = Modifier.fillMaxSize()) {
@@ -232,17 +236,9 @@ private fun DetailsArea(
     pagerState: PagerState,
     modifier: Modifier = Modifier,
 ) {
-    val heightReserve = remember {
-        Plastic.Available(
-            country = "",
-            deliveryFee = "",
-            deliveryEta = TangemPayOrderCardTypeUM.DeliveryEta(minBusinessDays = null, maxBusinessDays = 1),
-            feeState = FeeState.InsufficientFunds,
-        )
-    }
-    Box(modifier = modifier.fillMaxWidth()) {
+    Box(modifier = modifier.fillMaxWidth().animateContentSize()) {
         Column(modifier = Modifier.fillMaxWidth().alpha(0f).clearAndSetSemantics {}) {
-            PlasticDetails(plastic = heightReserve, isLoading = false)
+            PlasticDetails(plastic = state.plastic, isLoading = false)
         }
         HorizontalPager(
             state = pagerState,
@@ -396,10 +392,15 @@ private fun DeliverToRow(plastic: Plastic, isLoading: Boolean) {
 
 @Composable
 private fun DeliveryFeeRow(plastic: Plastic.Available) {
+    val isInsufficientFunds = plastic.feeState == FeeState.InsufficientFunds
     TangemRow(
         divider = true,
         contentLead = TangemRowContentLead.End,
-        verticalAlignment = TangemRowVerticalAlignment.Center,
+        verticalAlignment = if (isInsufficientFunds) {
+            TangemRowVerticalAlignment.Top
+        } else {
+            TangemRowVerticalAlignment.Center
+        },
         titleSlot = {
             TangemRowText(
                 text = resourceReference(R.string.tangempay_order_type_delivery_fee),
@@ -407,16 +408,11 @@ private fun DeliveryFeeRow(plastic: Plastic.Available) {
             )
         },
         valueSlot = {
-            when (plastic.feeState) {
-                FeeState.InsufficientFunds -> StatusBadge(
-                    text = resourceReference(R.string.tangempay_order_type_not_enough_money),
-                    status = TangemBadge.Status.Warning,
-                )
-                FeeState.FreeDelivery -> StatusBadge(
+            if (plastic.feeState == FeeState.FreeDelivery) {
+                StatusBadge(
                     text = resourceReference(R.string.tangempay_order_type_first_delivery_free),
                     status = TangemBadge.Status.Success,
                 )
-                FeeState.Default -> Unit
             }
             plastic.deliveryFee?.let { fee ->
                 RowValueText(
@@ -426,6 +422,16 @@ private fun DeliveryFeeRow(plastic: Plastic.Available) {
                     },
                 )
             }
+        },
+        subvalueSlot = if (isInsufficientFunds) {
+            {
+                StatusBadge(
+                    text = resourceReference(R.string.tangempay_order_type_not_enough_money),
+                    status = TangemBadge.Status.Warning,
+                )
+            }
+        } else {
+            null
         },
     )
 }
@@ -529,7 +535,9 @@ private fun SelectButton(
         OrderCardType.Plastic -> state.onSelectPlastic
     }
     TangemButton(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(TangemPayTestTags.ORDER_CARD_TYPE_SELECT_BUTTON),
         variant = TangemButton.Variant.Primary,
         size = TangemButton.Size.X12,
         text = resourceReference(R.string.tangempay_order_type_select),
@@ -594,6 +602,12 @@ private fun TangemPayOrderCardTypeUM.backgroundRes(): Int = if (isBasicPlan) {
     R.drawable.ill_tangempay_order_card_bg_basic
 } else {
     R.drawable.ill_tangempay_order_card_bg_plus
+}
+
+private fun TangemPayOrderCardTypeUM.backgroundTestTag(): String = if (isBasicPlan) {
+    TangemPayTestTags.ORDER_CARD_TYPE_BACKGROUND_BASIC
+} else {
+    TangemPayTestTags.ORDER_CARD_TYPE_BACKGROUND_PLUS
 }
 
 private fun OrderCardType.titleRes(): Int = when (this) {

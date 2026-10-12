@@ -3,6 +3,7 @@ package com.tangem.screens.tangempay
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.SendScreenTestTags
+import com.tangem.core.ui.test.StatusScreenTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
@@ -28,7 +29,7 @@ class TangemPayDailyLimitPageObject(semanticsProvider: SemanticsNodeInteractions
     }
 
     val successTitle: KNode = child {
-        hasTestTag(TangemPayTestTags.DAILY_LIMIT_SUCCESS_TITLE)
+        hasTestTag(StatusScreenTestTags.TITLE)
         useUnmergedTree = true
     }
 

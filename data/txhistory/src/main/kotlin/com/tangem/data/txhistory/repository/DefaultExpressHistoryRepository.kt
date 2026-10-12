@@ -4,7 +4,6 @@ import androidx.room.withTransaction
 import com.tangem.data.common.txhistory.ExpressHistoryRepository
 import com.tangem.data.txhistory.repository.converter.toHistoryIndexEntities
 import com.tangem.data.txhistory.repository.converter.toHistoryIndexEntity
-import com.tangem.data.txhistory.repository.factory.TokenInfoRepository
 import com.tangem.data.txhistory.repository.factory.toAssetId
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.grow.datasource.express.TangemExpressApi
@@ -14,16 +13,14 @@ import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryDeltaRespo
 import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryResponse
 import com.tangem.grow.datasource.onramp.models.response.OnrampItemResponse
 import com.tangem.datasource.local.converter.toEntity
-import com.tangem.datasource.local.txhistory.db.TxHistoryDatabase
-import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
-import com.tangem.datasource.local.txhistory.db.dao.ExpressSyncStateDao
-import com.tangem.datasource.local.txhistory.db.dao.HistoryIndexDao
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressSyncStateEntity
-import com.tangem.domain.express.models.ExpressAsset
+import com.tangem.store.datasource.txhistory.db.TxHistoryDatabase
+import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
+import com.tangem.store.datasource.txhistory.db.dao.ExpressSyncStateDao
+import com.tangem.store.datasource.txhistory.db.dao.HistoryIndexDao
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressSyncStateEntity
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.domain.txhistory.repository.TokenInfoRepository
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -39,7 +36,6 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
     private val expressSyncStateDao: ExpressSyncStateDao,
     private val tokenInfoRepository: TokenInfoRepository,
     private val database: TxHistoryDatabase,
-    private val appScope: AppCoroutineScope,
 ) : ExpressHistoryRepository {
 
     suspend fun fetchExchangeHistory(userWalletId: UserWalletId, limit: Int = DEFAULT_LIMIT): ExchangeHistoryResponse {
@@ -129,7 +125,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
             expressHistoryDao.upsertExchanges(entities)
             historyIndexDao.upsert(entities.flatMap { it.toHistoryIndexEntities() })
         }
-        fetchMissingTokenInfo(
+        tokenInfoRepository.fetchMissing(
             buildSet {
                 entities.forEach { entity ->
                     add(entity.from.toAssetId())
@@ -146,15 +142,11 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
             expressHistoryDao.upsertOnramps(entities)
             historyIndexDao.upsert(entities.map { it.toHistoryIndexEntity() })
         }
-        fetchMissingTokenInfo(entities.mapTo(mutableSetOf()) { it.to.toAssetId() })
+        tokenInfoRepository.fetchMissing(entities.mapTo(mutableSetOf()) { it.to.toAssetId() })
     }
 
     suspend fun syncState(type: ExpressSyncStateEntity.Type, userWalletId: UserWalletId): ExpressSyncStateEntity? {
         return expressSyncStateDao.observe(type = type.name, userWalletId = userWalletId.stringValue).first()
-    }
-
-    private fun fetchMissingTokenInfo(assetIds: Set<ExpressAsset.ID>) {
-        appScope.launch { tokenInfoRepository.fetchMissing(assetIds) }
     }
 
     private suspend fun persistHistoryState(

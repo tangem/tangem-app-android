@@ -9,7 +9,7 @@ import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.data.networks.toDataModel
 import com.tangem.data.networks.toSimple
 import com.tangem.core.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.data.networks.entity.NetworkStatusDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus

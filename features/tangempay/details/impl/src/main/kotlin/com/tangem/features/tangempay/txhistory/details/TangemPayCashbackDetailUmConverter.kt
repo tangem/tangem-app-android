@@ -29,10 +29,8 @@ internal object TangemPayCashbackDetailUmConverter {
         transaction: TangemPayTxHistoryItem,
         cashback: TangemPayTxHistoryItem.Cashback?,
         loadState: TransactionLoadState,
-        isCashbackEnabled: Boolean,
         onRefreshClick: () -> Unit,
     ): CashbackDetailUM? {
-        if (!isCashbackEnabled) return null
         if (transaction !is TangemPayTxHistoryItem.Spend) return null
         return when (loadState) {
             TransactionLoadState.Loading -> CashbackDetailUM.Loading
@@ -78,6 +76,8 @@ internal object TangemPayCashbackDetailUmConverter {
             id = R.string.tangem_pay_transaction_details_cashback_below_min,
             formatArgs = wrappedList(BELOW_MIN_STUB),
         )
+        ExclusionReason.COMPLIANCE_RISK ->
+            resourceReference(R.string.tangem_pay_transaction_details_cashback_compliance_risk)
         ExclusionReason.UNKNOWN,
         null,
         -> null

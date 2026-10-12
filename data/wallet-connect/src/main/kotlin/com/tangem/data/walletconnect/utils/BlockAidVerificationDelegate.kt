@@ -1,7 +1,7 @@
 package com.tangem.data.walletconnect.utils
 
 import com.domain.blockaid.models.transaction.*
-import com.tangem.data.walletconnect.sign.BlockAidChainNameConverter
+import com.tangem.blockchainsdk.utils.BlockAidChainNameConverter
 import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow

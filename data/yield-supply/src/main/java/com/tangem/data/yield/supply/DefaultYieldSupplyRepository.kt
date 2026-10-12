@@ -14,7 +14,7 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.grow.datasource.yield.YieldSupplyApi
 import com.tangem.grow.datasource.yield.models.YieldSupplyChangeTokenStatusBody
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.grow.datasource.yield.local.YieldMarketsStore
@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 
+@Suppress("LongParameterList")
 internal class DefaultYieldSupplyRepository(
     private val yieldSupplyApi: YieldSupplyApi,
     private val store: YieldMarketsStore,
@@ -39,6 +40,7 @@ internal class DefaultYieldSupplyRepository(
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val appPreferencesStore: AppPreferencesStore,
+    private val growPreferencesKeys: GrowPreferencesKeys,
 ) : YieldSupplyRepository {
 
     private val statusMapFlow = MutableStateFlow<Map<String, YieldSupplyPendingStatus>>(emptyMap())
@@ -175,11 +177,11 @@ internal class DefaultYieldSupplyRepository(
     }
 
     override fun getShouldShowYieldPromoBanner(): Flow<Boolean> {
-        return appPreferencesStore.get(PreferencesKeys.YIELD_SUPPLY_SHOULD_SHOW_MAIN_PROMO_KEY, true)
+        return appPreferencesStore.get(growPreferencesKeys.yieldSupplyShouldShowMainPromoKey, true)
     }
 
     override suspend fun setShouldShowYieldPromoBanner(shouldShow: Boolean) {
-        appPreferencesStore.store(PreferencesKeys.YIELD_SUPPLY_SHOULD_SHOW_MAIN_PROMO_KEY, shouldShow)
+        appPreferencesStore.store(growPreferencesKeys.yieldSupplyShouldShowMainPromoKey, shouldShow)
     }
 
     private fun getTokenProtocolStatusKey(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): String =

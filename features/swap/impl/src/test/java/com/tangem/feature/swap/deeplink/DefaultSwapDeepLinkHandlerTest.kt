@@ -39,7 +39,6 @@ import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.domain.SwapPairLeast
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.logging.TangemLogger
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -72,7 +71,6 @@ internal class DefaultSwapDeepLinkHandlerTest {
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val rampStateManager: RampStateManager = mockk()
     private val swapInteractor: SwapInteractor = mockk()
-    private val swapFeatureToggles: SwapFeatureToggles = mockk()
 
     private val walletId = UserWalletId("011")
 
@@ -81,7 +79,6 @@ internal class DefaultSwapDeepLinkHandlerTest {
         mockkObject(TangemLogger)
         every { TangemLogger.e(any<String>()) } just Runs
         every { TangemLogger.e(any<String>(), any()) } just Runs
-        every { swapFeatureToggles.isSwapDeeplinkEnabled } returns true
         every { getSelectedWalletSyncUseCase() } returns Either.Right(wallet(walletId))
         every { getWalletsUseCase.invokeSync() } returns listOf(wallet(walletId))
         coEvery { selectWalletUseCase(any()) } answers { Either.Right(wallet(firstArg())) }
@@ -166,8 +163,8 @@ internal class DefaultSwapDeepLinkHandlerTest {
 
     /** Stubs [singleAccountStatusListSupplier] to return a single crypto-portfolio account with [statuses]. */
     private fun givenPortfolio(id: AccountId = mainAccountId, statuses: List<CryptoCurrencyStatus>) {
-        val account: Account.CryptoPortfolio = mockk { every { accountId } returns id }
-        val portfolio: AccountStatus.CryptoPortfolio = mockk {
+        val account: Account.Personal = mockk { every { accountId } returns id }
+        val portfolio: AccountStatus.Personal = mockk {
             every { this@mockk.account } returns account
             every { flattenCurrencies() } returns statuses
         }
@@ -183,8 +180,8 @@ internal class DefaultSwapDeepLinkHandlerTest {
         accountAStatuses: List<CryptoCurrencyStatus>,
         accountBStatuses: List<CryptoCurrencyStatus>,
     ) {
-        fun portfolioOf(id: AccountId, statuses: List<CryptoCurrencyStatus>): AccountStatus.CryptoPortfolio {
-            val account: Account.CryptoPortfolio = mockk { every { accountId } returns id }
+        fun portfolioOf(id: AccountId, statuses: List<CryptoCurrencyStatus>): AccountStatus.Personal {
+            val account: Account.Personal = mockk { every { accountId } returns id }
             return mockk {
                 every { this@mockk.account } returns account
                 every { flattenCurrencies() } returns statuses
@@ -212,37 +209,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             rampStateManager = rampStateManager,
             swapInteractor = swapInteractor,
-            swapFeatureToggles = swapFeatureToggles,
         )
-
-    @Test
-    fun `GIVEN toggle OFF WHEN handle THEN bare swap for selected`() = runTest {
-        // Arrange
-        every { swapFeatureToggles.isSwapDeeplinkEnabled } returns false
-        val expected = bareSwap(walletId)
-
-        // Act
-        createHandler(this, emptyMap())
-        advanceUntilIdle()
-
-        // Assert
-        verify { router.push(route = expected, onComplete = any()) }
-        coVerify(exactly = 0) { selectWalletUseCase(any()) }
-    }
-
-    @Test
-    fun `GIVEN toggle OFF and no selected wallet WHEN handle THEN nothing happens`() = runTest {
-        // Arrange
-        every { swapFeatureToggles.isSwapDeeplinkEnabled } returns false
-        every { getSelectedWalletSyncUseCase() } returns Either.Left(GetUserWalletError.UserWalletNotFound)
-
-        // Act
-        createHandler(this, emptyMap())
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
-    }
 
     @Test
     fun `GIVEN no params and wallet selected WHEN handle THEN bare swap for selected`() = runTest {
@@ -942,24 +909,6 @@ internal class DefaultSwapDeepLinkHandlerTest {
         verify { router.replaceCurrent(route = expected, onComplete = any()) }
         verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
     }
-
-    @Test
-    fun `GIVEN toggle OFF and swap route already on top WHEN handle THEN it is replaced instead of pushed`() =
-        runTest {
-            // Arrange
-            every { swapFeatureToggles.isSwapDeeplinkEnabled } returns false
-            val opened = bareSwap(walletId).copy(fromCryptoCurrency = currency("btc", "bitcoin"))
-            every { router.stack } returns listOf(AppRoute.Wallet, opened)
-            val expected = bareSwap(walletId)
-
-            // Act
-            createHandler(this, emptyMap())
-            advanceUntilIdle()
-
-            // Assert
-            verify { router.replaceCurrent(route = expected, onComplete = any()) }
-            verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
-        }
 
     @Test
     fun `GIVEN another screen on top WHEN handle THEN swap is pushed`() = runTest {

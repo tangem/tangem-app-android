@@ -15,6 +15,7 @@ internal object StoriesSlideConfigs {
     fun getSlides(storyId: String): ImmutableList<SlideConfig> = when (storyId) {
         StoryContentIds.STORY_FIRST_TIME_SWAP.id -> swapSlides()
         StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id -> yieldPromoSlides()
+        StoryContentIds.STORY_POLYMARKET_ONBOARDING.id -> polymarketOnboardingSlides()
         else -> persistentListOf()
     }
 
@@ -53,6 +54,25 @@ internal object StoriesSlideConfigs {
         SlideConfig(
             CoreResR.string.yield_apy_boost_story_fourth_title,
             CoreResR.string.yield_apy_boost_story_fourth_subtitle,
+        ),
+    )
+
+    private fun polymarketOnboardingSlides(): ImmutableList<SlideConfig> = persistentListOf(
+        SlideConfig(
+            CoreResR.string.prediction_onboarding_story_first_title,
+            CoreResR.string.prediction_onboarding_story_first_subtitle,
+        ),
+        SlideConfig(
+            CoreResR.string.prediction_onboarding_story_second_title,
+            CoreResR.string.prediction_onboarding_story_second_subtitle,
+        ),
+        SlideConfig(
+            CoreResR.string.prediction_onboarding_story_third_title,
+            CoreResR.string.prediction_onboarding_story_third_subtitle,
+        ),
+        SlideConfig(
+            CoreResR.string.prediction_onboarding_story_fourth_title,
+            CoreResR.string.prediction_onboarding_story_fourth_subtitle,
         ),
     )
 }

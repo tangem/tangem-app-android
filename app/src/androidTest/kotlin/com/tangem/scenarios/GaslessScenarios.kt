@@ -97,7 +97,7 @@ fun BaseTestCase.openGaslessSendScreenWithHotWallet(
         openMainScreenWithExistingHotWallet(seedPhrase)
     }
     step("Click on token with name: '$tokenName'") {
-        onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+        openTokenDetailsFromTokenList(tokenName)
     }
     step("Click on 'Transfer' button") {
         onTokenDetailsScreen { transferButton.clickWithAssertion() }
@@ -122,7 +122,7 @@ fun BaseTestCase.openSendViaSwapScreenWithHotWallet(
         openMainScreenWithExistingHotWallet(seedPhrase)
     }
     step("Click on token with name: '$tokenName'") {
-        onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+        openTokenDetailsFromTokenList(tokenName)
     }
     step("Select '$swapTokenName' as the token to receive via swap") {
         selectTokenToSendViaSwap(

@@ -1,6 +1,8 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.txhistory.repository.TokenInfoRepository
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
+import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
@@ -17,6 +19,11 @@ internal object TxHistoryDomainModule {
     @Provides
     fun provideGetTxHistoryItemsCountUseCase(txHistoryRepository: TxHistoryRepository): GetTxHistoryItemsCountUseCase {
         return GetTxHistoryItemsCountUseCase(repository = txHistoryRepository)
+    }
+
+    @Provides
+    fun provideGetCachedTokenInfoUseCase(tokenInfoRepository: TokenInfoRepository): GetCachedTokenInfoUseCase {
+        return GetCachedTokenInfoUseCase(repository = tokenInfoRepository)
     }
 
     @Provides

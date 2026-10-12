@@ -22,7 +22,7 @@ import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -35,7 +35,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -295,17 +294,6 @@ internal class PolymarketSearchModelTest {
         ).also { model = it }
     }
 
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
-    }
-
     private fun successResult(last: Boolean) = BatchFetchResult.Success(
         data = listOf(createEvent()),
         empty = false,
@@ -332,6 +320,7 @@ internal class PolymarketSearchModelTest {
         markets = listOf(
             PolymarketMarket(
                 id = "market-1",
+                conditionId = null,
                 eventId = id,
                 title = "Market question",
                 slug = "market-slug",
@@ -341,6 +330,7 @@ internal class PolymarketSearchModelTest {
                 imageUrl = null,
                 status = PolymarketStatus.ACTIVE,
                 isNegRisk = false,
+                isAcceptingOrders = true,
                 startDate = null,
                 endDate = null,
                 startDateIso = null,

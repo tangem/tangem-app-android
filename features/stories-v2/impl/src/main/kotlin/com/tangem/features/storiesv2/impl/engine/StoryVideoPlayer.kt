@@ -128,12 +128,16 @@ internal class StoryVideoPlayer(
             return player.playbackState != Player.STATE_READY
         }
 
+        val wasIdle = player.playbackState == Player.STATE_IDLE
         frames.reset()
         player.seekTo(itemIndex, 0L)
         // Seeking an IDLE player only moves its position; preparing the playlist is what brings the rest of the
         // run back after one item failed to play.
-        if (player.playbackState == Player.STATE_IDLE) player.prepare()
-        return true
+        if (wasIdle) player.prepare()
+        // A seek inside a prepared run keeps the previous slide's frame on the surface until the target's first
+        // frame replaces it — the way every stories player behaves on a tap. Covering it with the poster instead
+        // reads as a flash: two hard cuts where one belongs.
+        return wasIdle
     }
 
     fun setRunning(running: Boolean) {

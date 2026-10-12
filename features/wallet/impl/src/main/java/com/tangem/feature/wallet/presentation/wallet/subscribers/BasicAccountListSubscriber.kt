@@ -12,7 +12,6 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListTransformer
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import java.math.BigDecimal
@@ -28,7 +27,6 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
     abstract val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase
     abstract val stateController: WalletStateController
     abstract val clickIntents: WalletClickIntents
-    abstract val tangemPayFeatureToggles: TangemPayFeatureToggles
 
     override val singleAccountStatusListSupplier: SingleAccountStatusListSupplier
         get() = accountDependencies.singleAccountStatusListSupplier
@@ -47,6 +45,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
         shouldShowMainPromo: Boolean = false,
         isHotBackedUp: Boolean? = null,
+        accountIdsWithInvites: Set<String> = emptySet(),
     ) {
         stateController.update(
             SetTokenListTransformer(
@@ -58,8 +57,8 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 stakingAvailabilityMap = stakingAvailabilityMap,
                 shouldShowMainPromo = shouldShowMainPromo,
                 isAccountsModeEnabled = isAccountMode,
-                isAccountMultichainEnabled = tangemPayFeatureToggles.isAccountMultichainEnabled,
                 isHotBackedUp = isHotBackedUp,
+                accountIdsWithInvites = accountIdsWithInvites,
             ),
         )
     }

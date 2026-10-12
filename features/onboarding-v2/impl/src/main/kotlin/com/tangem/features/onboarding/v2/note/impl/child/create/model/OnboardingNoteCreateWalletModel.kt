@@ -8,7 +8,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.artwork.ArtworkUM
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
@@ -34,7 +34,7 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingNoteCreateWalletComponent.Params>()
@@ -69,7 +69,7 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
                     analyticsEventHandler.send(
                         event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
                             passPhraseState = AnalyticsParam.EmptyFull.Empty,
-                            referralId = appsFlyerStore.get()?.refcode,
+                            referralId = appsFlyerRepository.getConversionData()?.refcode,
                         ),
                     )
                     createWalletAndNavigateBackWithDone(scanResponse.copy(card = result.data.card))

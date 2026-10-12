@@ -2,19 +2,25 @@ package com.tangem.data.polymarket.cleaner
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
 import com.tangem.data.polymarket.store.WalletIdWithPredictionStatusDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
+import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
+import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PredictionWithdrawalRecord
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.MockStateDataStore
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -27,16 +33,20 @@ internal class PolymarketUserWalletDataCleanerTest {
     private val credentialsStore: PolymarketCredentialsStore = mockk(relaxUnitFun = true)
     private val statusStore: PredictionAccountStatusStore = mockk(relaxUnitFun = true)
     private val onboardedStore: PolymarketOnboardedStore = mockk(relaxUnitFun = true)
+    private val requisitesStore: PredictionDepositRequisitesStore = mockk(relaxUnitFun = true)
+    private val withdrawalStore: PredictionWithdrawalStore = mockk(relaxUnitFun = true)
 
     private val cleaner = PolymarketUserWalletDataCleaner(
         credentialsStore = credentialsStore,
         predictionAccountStatusStore = statusStore,
         onboardedStore = onboardedStore,
+        requisitesStore = requisitesStore,
+        withdrawalStore = withdrawalStore,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(credentialsStore, statusStore, onboardedStore)
+        clearMocks(credentialsStore, statusStore, onboardedStore, requisitesStore, withdrawalStore)
     }
 
     @Test
@@ -121,6 +131,8 @@ internal class PolymarketUserWalletDataCleanerTest {
             credentialsStore = store,
             predictionAccountStatusStore = statusStore,
             onboardedStore = onboardedStore,
+            requisitesStore = requisitesStore,
+            withdrawalStore = withdrawalStore,
         ).clear(listOf(WALLET_A))
 
         // Assert
@@ -138,28 +150,104 @@ internal class PolymarketUserWalletDataCleanerTest {
             credentialsStore = credentialsStore,
             predictionAccountStatusStore = store,
             onboardedStore = onboardedStore,
+            requisitesStore = requisitesStore,
+            withdrawalStore = withdrawalStore,
         ).clear(listOf(WALLET_A))
 
         // Assert
         assertThat(store.getSyncOrNull(WALLET_A)).isNull()
     }
 
+    @Test
+    fun `GIVEN wallets deleted WHEN cleared THEN the funding requisites are cleared too`() = runTest {
+        // Arrange
+        val userWalletIds = listOf(WALLET_A)
+
+        // Act
+        cleaner.clear(userWalletIds)
+
+        // Assert
+        coVerify(exactly = 1) { requisitesStore.clear(WALLET_A) }
+    }
+
+    @Test
+    fun `GIVEN wallets deleted WHEN cleared THEN the withdrawal record is cleared too`() = runTest {
+        // Act
+        cleaner.clear(listOf(WALLET_A, WALLET_B))
+
+        // Assert
+        coVerify(exactly = 1) { withdrawalStore.clear(WALLET_A) }
+        coVerify(exactly = 1) { withdrawalStore.clear(WALLET_B) }
+    }
+
+    @Test
+    fun `GIVEN a signed withdrawal awaiting delivery WHEN clear THEN a re-added wallet reads nothing in flight`() =
+        runTest {
+            // Arrange
+            val records = mutableMapOf(WALLET_A to RECORD)
+            val store = object : PredictionWithdrawalStore {
+                override suspend fun save(userWalletId: UserWalletId, record: PredictionWithdrawalRecord) {
+                    records[userWalletId] = record
+                }
+
+                override suspend fun get(userWalletId: UserWalletId): PredictionWithdrawalRecord? =
+                    records[userWalletId]
+
+                override suspend fun clear(userWalletId: UserWalletId) {
+                    records.remove(userWalletId)
+                }
+            }
+
+            // Act
+            PolymarketUserWalletDataCleaner(
+                credentialsStore = credentialsStore,
+                predictionAccountStatusStore = statusStore,
+                onboardedStore = onboardedStore,
+                requisitesStore = requisitesStore,
+                withdrawalStore = store,
+            ).clear(listOf(WALLET_A))
+
+            // Assert
+            assertThat(store.get(WALLET_A)).isNull()
+        }
+
+    @Test
+    fun `GIVEN the withdrawal store fails to clear WHEN clear THEN the other wallets are still cleared`() = runTest {
+        // Arrange
+        coEvery { withdrawalStore.clear(WALLET_A) } throws IllegalStateException("disk full")
+
+        // Act
+        cleaner.clear(listOf(WALLET_A, WALLET_B))
+
+        // Assert
+        coVerify(exactly = 1) { withdrawalStore.clear(WALLET_B) }
+    }
+
     private fun createStatusStore(testScope: TestScope) = PredictionAccountStatusStore(
+        dtoConverter = PredictionAccountStatusValueDTOConverter(
+            collateralCurrencyFactory = mockk { every { createDepositTarget() } returns COLLATERAL },
+        ),
         runtimeStore = RuntimeSharedStore(),
         persistenceDataStore = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap()),
         scope = TestAppCoroutineScope(testScope),
     )
 
     private companion object {
+        val COLLATERAL: CryptoCurrency.Token = mockk(relaxed = true)
+
         val WALLET_A = UserWalletId("011")
         val WALLET_B = UserWalletId("022")
 
         val ACTIVE = PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal("12.5"),
+            positionsValue = null,
             fiatRate = null,
-            isTradingAllowed = true,
+            depositCurrency = COLLATERAL,
+            depositAddress = "0xbridge0000000000000000000000000000000001",
         )
+
+        val RECORD: PredictionWithdrawalRecord = mockk()
 
         val CREDENTIALS = PolymarketApiCredentials(
             apiKey = "key",

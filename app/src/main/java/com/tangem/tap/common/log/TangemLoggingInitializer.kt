@@ -6,13 +6,12 @@ import com.tangem.Log
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
-import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.logs.SensitiveUrlMasker
-import com.tangem.datasource.utils.NetworkLogsSaveInterceptor
-import com.tangem.datasource.utils.WireMockRedirectInterceptor
-import com.tangem.domain.common.LogConfig
+import com.tangem.datasource.remote.interceptors.NetworkLogsSaveInterceptor
+import com.tangem.datasource.remote.interceptors.WireMockRedirectInterceptor
+import com.tangem.datasource.remote.interceptors.createNetworkLoggingInterceptor
 import com.tangem.operations.attestation.api.TangemApiServiceSettings
 import com.tangem.utils.JsonStringValuesExtractor
 import com.tangem.utils.logging.TangemLogger
@@ -69,7 +68,7 @@ class TangemLoggingInitializer(
             if (BuildConfig.MOCK_DATA_SOURCE) {
                 add(WireMockRedirectInterceptor())
             }
-            addAll(consoleLoggingInterceptors(application))
+            addAll(createConsoleInterceptors(application))
             add(
                 NetworkLogsSaveInterceptor(
                     appLogsStore = appLogsStore,
@@ -84,7 +83,7 @@ class TangemLoggingInitializer(
                 if (BuildConfig.MOCK_DATA_SOURCE) {
                     add(WireMockRedirectInterceptor())
                 }
-                addAll(consoleLoggingInterceptors(application))
+                addAll(createConsoleInterceptors(application))
                 add(NetworkLogsSaveInterceptor(appLogsStore))
             }.toTypedArray(),
         )
@@ -94,10 +93,11 @@ class TangemLoggingInitializer(
      * Logcat and Chucker output, unlike [NetworkLogsSaveInterceptor], never reaches the exported log
      * file, so it stays limited to builds that can actually show it.
      */
-    private fun consoleLoggingInterceptors(application: Application): List<Interceptor> = buildList {
-        if (LogConfig.network.isBlockchainSdkNetworkLogEnabled) {
-            add(createNetworkLoggingInterceptor())
-            add(ChuckerInterceptor(application))
+    private fun createConsoleInterceptors(application: Application): List<Interceptor> {
+        return if (BuildConfig.LOG_ENABLED) {
+            listOf(createNetworkLoggingInterceptor(), ChuckerInterceptor(application))
+        } else {
+            emptyList()
         }
     }
 

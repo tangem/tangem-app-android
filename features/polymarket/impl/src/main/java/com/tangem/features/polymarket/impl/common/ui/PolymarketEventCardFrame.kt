@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,14 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-
-private val CardShape = RoundedCornerShape(16.dp)
 
 /**
  * The chrome every Polymarket card shares: a surface with a title, a round icon on the right, an optional
@@ -38,13 +36,14 @@ internal fun PolymarketEventCardFrame(
     iconUrl: String?,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
+    titleMetaSpacing: Dp = 4.dp,
     meta: (@Composable () -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     TangemSurface(
         modifier = modifier.fillMaxWidth(),
         color = TangemTheme.colors3.bg.secondary,
-        shape = CardShape,
+        shape = PolymarketCardShape,
         onClick = onClick,
     ) {
         Column(
@@ -59,7 +58,7 @@ internal fun PolymarketEventCardFrame(
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(titleMetaSpacing),
                 ) {
                     Text(
                         text = title.resolveReference(),

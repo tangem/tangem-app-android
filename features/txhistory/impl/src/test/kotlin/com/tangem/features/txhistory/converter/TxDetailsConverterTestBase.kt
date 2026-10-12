@@ -5,6 +5,8 @@ import androidx.compose.ui.graphics.Color
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.addressbook.model.Contact
+import com.tangem.domain.addressbook.model.ContactAddressLookup
 import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressAsset.ID as ExpressAssetId
 import com.tangem.domain.express.models.ExpressExchangeStatus
@@ -82,6 +84,8 @@ internal open class TxDetailsConverterTestBase {
         vaults: List<P2PEthPoolVault> = emptyList(),
         lookup: TxHistoryLookupContext = lookupOf(),
         isBalanceHidden: Boolean = false,
+        networkTokens: Set<CryptoCurrency.Token> = emptySet(),
+        fiatConversion: FiatConversion = FiatConversion.NONE,
     ) = OnChainTxToDetailsUMConverter(
         currency = currency,
         onCopyAddress = copiedAddresses::add,
@@ -90,20 +94,26 @@ internal open class TxDetailsConverterTestBase {
             validators.forEach { put(it.address, it.toStakingTarget()) }
             vaults.forEach { put(it.vaultAddress, it.toStakingTarget()) }
         },
-        onOpenValidator = openedUrls::add,
+        onExploreProvider = openedUrls::add,
         lookup = lookup,
         isBalanceHidden = isBalanceHidden,
+        networkTokens = networkTokens,
+        fiatConversion = fiatConversion,
     )
 
     protected fun expressConverter(
         lookup: TxHistoryLookupContext = lookupOf(),
         menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM> = persistentListOf(),
         isBalanceHidden: Boolean = false,
+        nowMillis: Long = TIMESTAMP,
     ) = ExpressTxToDetailsUMConverter(
+        currency = currency,
         onGoToProvider = openedUrls::add,
+        onCopyAddress = copiedAddresses::add,
         lookup = lookup,
         menu = menu,
         isBalanceHidden = isBalanceHidden,
+        nowMillis = { nowMillis },
     )
 
     protected fun txInfo(
@@ -116,7 +126,7 @@ internal open class TxDetailsConverterTestBase {
             TxInfo.DestinationType.Single(addressType = TxInfo.AddressType.User(USER_ADDRESS)),
         sourceType: TxInfo.SourceType = TxInfo.SourceType.Single(address = USER_ADDRESS),
         fee: SdkAmount? = null,
-    ): TxInfo = TxInfo(
+    ): TxInfo.Single = TxInfo.Single(
         txHash = TX_HASH,
         timestampInMillis = TIMESTAMP,
         isOutgoing = isOutgoing,
@@ -201,13 +211,14 @@ internal open class TxDetailsConverterTestBase {
         fromAddress: String = FROM_ADDRESS,
         payoutAddress: String = PAYOUT_ADDRESS,
         fromCurrency: CryptoCurrency? = null,
+        payinHash: String? = null,
     ): ExpressTx.Swap = ExpressTx.Swap(
         tx = ExchangeTransaction(
             txId = "swap-1",
             status = status,
             createdAtMillis = TIMESTAMP,
             provider = provider,
-            payinHash = null,
+            payinHash = payinHash,
             payoutHash = null,
             fromAddress = fromAddress,
             payoutAddress = payoutAddress,
@@ -294,7 +305,7 @@ internal open class TxDetailsConverterTestBase {
         cryptoCurrency = cryptoCurrency,
     )
 
-    /** Builds a details lookup with the given per-network own-address maps. */
+    /** Builds a details lookup with the given per-network own-address maps and, optionally, saved [contacts]. */
     protected fun lookupOf(
         vararg networks: Pair<Network.RawID, Map<String, Account>>,
         isAccountsModeEnabled: Boolean = true,
@@ -304,10 +315,13 @@ internal open class TxDetailsConverterTestBase {
                 deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
             ),
         ),
+        contacts: List<Contact> = emptyList(),
     ): TxHistoryLookupContext = TxHistoryLookupContext(
         ownAccountByNetwork = networks.toMap(),
         isAccountsModeEnabled = isAccountsModeEnabled,
         walletInfoById = walletInfoById,
+        contacts = ContactAddressLookup.of(contacts),
+        viewedWalletId = MockAccounts.userWalletId,
     )
 
     /** A `walletInfoById` with the own [MockAccounts.userWalletId] plus a second wallet, so an own-wallet leg has

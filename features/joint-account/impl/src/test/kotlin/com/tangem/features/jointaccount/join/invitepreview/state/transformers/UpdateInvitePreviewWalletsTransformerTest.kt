@@ -20,7 +20,7 @@ internal class UpdateInvitePreviewWalletsTransformerTest {
         name = "My wallet 2",
     )
 
-    private val initialState = JointAccountInvitePreviewUM(
+    private val initialState = JointAccountInvitePreviewUM.Content(
         accountName = "Family savings",
         accountIcon = AccountIconUM.CryptoPortfolio(
             value = CryptoPortfolioIcon.Icon.Family,
@@ -29,6 +29,7 @@ internal class UpdateInvitePreviewWalletsTransformerTest {
         requiredToSign = 2,
         totalMembers = 5,
         creatorName = "Igor Sinyak",
+        creatorAddress = "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf",
         wallet = null,
         confirmation = null,
         onCreatorInfoClick = {},
@@ -42,7 +43,7 @@ internal class UpdateInvitePreviewWalletsTransformerTest {
         val transformer = createTransformer(wallets = listOf(firstWallet), selectedWallet = firstWallet)
 
         // Act
-        val actual = transformer.transform(prevState = initialState)
+        val actual = transformer.transform(prevState = initialState) as JointAccountInvitePreviewUM.Content
 
         // Assert
         assertThat(actual.wallet).isNull()
@@ -57,7 +58,7 @@ internal class UpdateInvitePreviewWalletsTransformerTest {
         )
 
         // Act
-        val actual = transformer.transform(prevState = initialState)
+        val actual = transformer.transform(prevState = initialState) as JointAccountInvitePreviewUM.Content
 
         // Assert
         assertThat(actual.wallet?.name).isEqualTo(secondWallet.name)
@@ -69,10 +70,23 @@ internal class UpdateInvitePreviewWalletsTransformerTest {
         val transformer = createTransformer(wallets = listOf(firstWallet, secondWallet), selectedWallet = null)
 
         // Act
-        val actual = transformer.transform(prevState = initialState)
+        val actual = transformer.transform(prevState = initialState) as JointAccountInvitePreviewUM.Content
 
         // Assert
         assertThat(actual.wallet).isNull()
+    }
+
+    @Test
+    fun `GIVEN non-content state WHEN transform THEN state is unchanged`() {
+        // Arrange
+        val loadingState = JointAccountInvitePreviewUM.Loading(onCloseClick = {})
+        val transformer = createTransformer(wallets = listOf(firstWallet, secondWallet), selectedWallet = firstWallet)
+
+        // Act
+        val actual = transformer.transform(prevState = loadingState)
+
+        // Assert
+        assertThat(actual).isEqualTo(loadingState)
     }
 
     private fun createTransformer(

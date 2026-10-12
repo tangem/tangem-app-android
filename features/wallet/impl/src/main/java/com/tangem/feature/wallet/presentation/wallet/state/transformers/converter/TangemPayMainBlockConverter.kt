@@ -19,8 +19,14 @@ import java.util.Currency
 
 internal class TangemPayMainBlockConverter(
     private val tangemPayClickIntents: TangemPayIntents,
-    private val isAccountMultichainEnabled: Boolean,
 ) : Converter<AccountStatus.Payment, TangemPayMainUM> {
+
+    /**
+     * A multichain account aggregates several stablecoins, so no single token symbol describes the
+     * balance — it is denominated in USD instead.
+     */
+    private val balanceSubtitle: TextReference = stringReference(USD_CURRENCY_CODE)
+
     @Suppress("LongMethod", "CyclomaticComplexMethod")
     override fun convert(value: AccountStatus.Payment): TangemPayMainUM {
         return when (val statusValue = value.value) {
@@ -61,7 +67,7 @@ internal class TangemPayMainBlockConverter(
                 subtitle = TextReference.Res(R.string.tangempay_status_deactivated),
                 isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                 balance = getBalanceText(statusValue.balance),
-                balanceSubtitle = getBalanceSubtitle(statusValue.cryptoCurrency.symbol),
+                balanceSubtitle = balanceSubtitle,
                 shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
                 onClick = { tangemPayClickIntents.openDetails(value) },
             )
@@ -80,7 +86,7 @@ internal class TangemPayMainBlockConverter(
                     subtitle = subtitle,
                     isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                     balance = getBalanceText(statusValue.balance),
-                    balanceSubtitle = getBalanceSubtitle(statusValue.cryptoCurrency.symbol),
+                    balanceSubtitle = balanceSubtitle,
                     shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
                     onClick = { tangemPayClickIntents.openDetails(value) },
                 )
@@ -88,10 +94,7 @@ internal class TangemPayMainBlockConverter(
         }
     }
 
-    private fun getBalanceSubtitle(currencySymbol: String): TextReference {
-        return stringReference(if (isAccountMultichainEnabled) USD_CURRENCY_CODE else currencySymbol)
-    }
-
+    /** Balance figure, or a dash when the account exists but its balances are unavailable. */
     private fun getBalanceText(balance: PaymentAccountStatusValue.Balance?): TextReference {
         if (balance == null) return stringReference(DASH_SIGN)
         val currency = Currency.getInstance(balance.fiatBalance.currency)

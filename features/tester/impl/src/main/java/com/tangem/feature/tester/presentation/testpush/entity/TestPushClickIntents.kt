@@ -3,6 +3,8 @@ package com.tangem.feature.tester.presentation.testpush.entity
 import androidx.compose.ui.text.input.TextFieldValue
 
 interface TestPushClickIntents {
+    fun onPayloadChange(value: TextFieldValue)
+
     fun onTitleChange(value: TextFieldValue)
     fun onMessageChange(value: TextFieldValue)
 

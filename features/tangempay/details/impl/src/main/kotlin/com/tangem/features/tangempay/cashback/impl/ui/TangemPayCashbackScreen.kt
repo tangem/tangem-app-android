@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
@@ -46,8 +47,10 @@ import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.core.ui.res.generated.icons.ic_percent_backward_20
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayAdditionalCashbackUM
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackHistogramUM
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackHistogramUM.Style
@@ -146,11 +149,12 @@ private fun CashbackError(onReloadClick: () -> Unit, modifier: Modifier = Modifi
                 .clip(CircleShape)
                 .background(TangemTheme.colors3.bg.inverse)
                 .clickable(role = Role.Button, onClick = onReloadClick)
+                .testTag(TangemPayTestTags.CASHBACK_RELOAD_BUTTON)
                 .padding(10.dp),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                painter = painterResource(CoreUiR.drawable.ic_refresh_24),
+                imageVector = Icons.ic_arrow_refresh_20,
                 contentDescription = resourceReference(CoreUiR.string.common_reload).resolveReference(),
                 tint = TangemTheme.colors3.icon.inverse,
                 modifier = Modifier.size(20.dp),
@@ -162,6 +166,7 @@ private fun CashbackError(onReloadClick: () -> Unit, modifier: Modifier = Modifi
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
+            modifier = Modifier.testTag(TangemPayTestTags.CASHBACK_ERROR_TEXT),
         )
     }
 }
@@ -217,7 +222,9 @@ private fun HeroBlock(state: TangemPayCashbackUM, modifier: Modifier = Modifier)
             style = TangemTheme.typography3.heading.medium,
             color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.CASHBACK_HEADER_TITLE),
         )
         state.subtitle?.let { subtitle ->
             Text(
@@ -225,7 +232,9 @@ private fun HeroBlock(state: TangemPayCashbackUM, modifier: Modifier = Modifier)
                 style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(TangemPayTestTags.CASHBACK_HEADER_SUBTITLE),
             )
         }
     }
@@ -258,6 +267,7 @@ private fun CashbackBanner(banner: TangemPayCashbackUM.Banner, modifier: Modifie
             text = banner.text.resolveReference(),
             style = TangemTheme.typography3.subheading.medium,
             color = contentColor,
+            modifier = Modifier.testTag(TangemPayTestTags.CASHBACK_BANNER),
         )
     }
 }

@@ -5,6 +5,7 @@ import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.extensions.TextReference
 
 internal data class AccountDetailsUM(
+    val title: TextReference,
     val accountName: TextReference,
     val accountIcon: AccountIconUM.CryptoPortfolio,
     val archiveMode: ArchiveMode,
@@ -12,6 +13,7 @@ internal data class AccountDetailsUM(
     val onCloseClick: () -> Unit,
     val onManageTokensClick: () -> Unit,
     val onAccountEditClick: (() -> Unit)?,
+    val isPendingActivation: Boolean = false,
     val members: MembersRowUM? = null,
     val networksInfo: NetworksInfoUM? = null,
 ) {

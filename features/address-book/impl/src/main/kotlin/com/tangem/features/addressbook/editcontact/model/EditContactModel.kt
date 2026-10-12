@@ -229,12 +229,9 @@ internal class EditContactModel @Inject constructor(
         ) { name, walletId -> name to walletId }
             .mapLatest { (name, walletId) -> walletId to validateName(name, walletId) }
             .distinctUntilChanged()
-            .onEach { (walletId, error) ->
+            .onEach { (_, error) ->
                 if (error == ContactNameValidationError.Duplicate) {
-                    analyticsSender.sendDuplicateNameErrorShown(
-                        walletId = walletId,
-                        contactId = params.contactId?.value,
-                    )
+                    analyticsSender.sendDuplicateNameErrorShown(contactId = params.contactId?.value)
                 }
                 stateController.update(UpdateNameErrorTransformer(error?.let(ContactNameErrorConverter()::convert)))
             }
@@ -333,11 +330,7 @@ internal class EditContactModel @Inject constructor(
             result.fold(
                 ifLeft = { error ->
                     handleSaveError(error)
-                    analyticsSender.sendSaveErrorShown(
-                        walletId = userWallet.walletId,
-                        contactId = params.contactId?.value,
-                        error = error,
-                    )
+                    analyticsSender.sendSaveErrorShown(contactId = params.contactId?.value, error = error)
                     saveJob?.cancel()
                     refreshSaveButton()
                 },
@@ -351,9 +344,9 @@ internal class EditContactModel @Inject constructor(
                         )
                     }
                     analyticsSender.sendContactSaved(
-                        walletId = userWallet.walletId,
                         contactId = contact.id.value,
                         isEdit = params.contactId != null,
+                        source = params.creationSource,
                     )
                     params.onBackClick()
                 },
@@ -414,9 +407,7 @@ internal class EditContactModel @Inject constructor(
             // Removing the last address deletes the whole contact — analytics is emitted from the confirmed delete.
             showDeleteContactDialog(fromLastAddressRemoval = true)
         } else {
-            contactWalletId()?.let { walletId ->
-                analyticsSender.sendAddressRemoved(walletId = walletId, contactId = params.contactId?.value.orEmpty())
-            }
+            analyticsSender.sendAddressRemoved(contactId = params.contactId?.value.orEmpty())
             stateController.update(RemoveValidatedAddressTransformer(address = address, maxAddresses = MAX_ADDRESSES))
         }
     }
@@ -426,7 +417,7 @@ internal class EditContactModel @Inject constructor(
     // region Helpers
 
     private fun sendContactScreenOpenedEvent() {
-        analyticsSender.sendContactScreenOpened(contactId = params.contactId?.value.orEmpty(), scope = modelScope)
+        analyticsSender.sendContactScreenOpened(contactId = params.contactId?.value.orEmpty())
     }
 
     private fun addAddress(address: ValidatedAddress) {
@@ -496,10 +487,9 @@ internal class EditContactModel @Inject constructor(
 
     private fun deleteContact(fromLastAddressRemoval: Boolean) {
         val contactId = params.contactId ?: return
-        val walletId = contactWalletId()
         // The address removal precedes the backend delete; the contact-deleted event follows a successful response.
-        if (fromLastAddressRemoval && walletId != null) {
-            analyticsSender.sendAddressRemoved(walletId = walletId, contactId = contactId.value)
+        if (fromLastAddressRemoval) {
+            analyticsSender.sendAddressRemoved(contactId = contactId.value)
         }
         modelScope.launch {
             deleteContactUseCase(contactId).fold(
@@ -507,16 +497,12 @@ internal class EditContactModel @Inject constructor(
                     if (error is AddressBookSyncError.VersionMismatch) showUpdateAppDialog() else showDeleteError()
                 },
                 ifRight = {
-                    if (walletId != null) {
-                        analyticsSender.sendContactDeleted(walletId = walletId, contactId = contactId.value)
-                    }
+                    analyticsSender.sendContactDeleted(contactId = contactId.value)
                     params.onBackClick()
                 },
             )
         }
     }
-
-    private fun contactWalletId(): UserWalletId? = loadedContact.value?.walletId ?: selectedWallet.value?.walletId
 
     private fun showDiscardDialog() {
         messageSender.send(

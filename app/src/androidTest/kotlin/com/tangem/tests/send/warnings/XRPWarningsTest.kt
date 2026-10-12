@@ -1,10 +1,13 @@
 package com.tangem.tests.send.warnings
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.XRP_ACTIVATED_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.XRP_NON_ACTIVATED_RECIPIENT_ADDRESS
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.scenarios.checkSendWarning
+import com.tangem.scenarios.openSendConfirmScreenViaContinueButton
+import com.tangem.scenarios.openSendConfirmScreenViaNextButton
 import com.tangem.scenarios.openSendScreen
 import com.tangem.screens.onSendAddressScreen
 import com.tangem.screens.onSendConfirmScreen
@@ -49,8 +52,8 @@ class XRPWarningsTest : BaseTestCase() {
             step("Type non activated address in input text field") {
                 onSendAddressScreen { addressTextField.performTextReplacement(XRP_NON_ACTIVATED_RECIPIENT_ADDRESS) }
             }
-            step("Click on 'Next' button") {
-                onSendAddressScreen { nextButton.clickWithAssertion() }
+            step("Open 'Send confirm' screen via 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { openSendConfirmScreenViaNextButton() }
             }
             step("Assert 'Invalid reserve amount warning' is displayed") {
                 checkSendWarning(
@@ -64,8 +67,8 @@ class XRPWarningsTest : BaseTestCase() {
             step("Type an activated address in input text field") {
                 onSendAddressScreen { addressTextField.performTextReplacement(XRP_ACTIVATED_RECIPIENT_ADDRESS) }
             }
-            step("Click on 'Next' button") {
-                onSendScreen { continueButton.clickWithAssertion() }
+            step("Open 'Send confirm' screen via 'Continue' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { openSendConfirmScreenViaContinueButton() }
             }
             step("Assert 'Invalid reserve amount warning' is not displayed") {
                 checkSendWarning(
@@ -97,8 +100,8 @@ class XRPWarningsTest : BaseTestCase() {
             step("Type non activated address in input text field") {
                 onSendAddressScreen { addressTextField.performTextReplacement(XRP_NON_ACTIVATED_RECIPIENT_ADDRESS) }
             }
-            step("Click on 'Next' button") {
-                onSendAddressScreen { nextButton.clickWithAssertion() }
+            step("Open 'Send confirm' screen via 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { openSendConfirmScreenViaNextButton() }
             }
             step("Assert 'Invalid reserve amount warning' is not displayed") {
                 checkSendWarning(
@@ -113,8 +116,8 @@ class XRPWarningsTest : BaseTestCase() {
             step("Type an activated address in input text field") {
                 onSendAddressScreen { addressTextField.performTextReplacement(XRP_ACTIVATED_RECIPIENT_ADDRESS) }
             }
-            step("Click on 'Next' button") {
-                onSendScreen { continueButton.clickWithAssertion() }
+            step("Open 'Send confirm' screen via 'Continue' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { openSendConfirmScreenViaContinueButton() }
             }
             step("Assert 'Invalid reserve amount warning' is not displayed") {
                 checkSendWarning(
@@ -146,8 +149,8 @@ class XRPWarningsTest : BaseTestCase() {
             step("Type non activated address in input text field") {
                 onSendAddressScreen { addressTextField.performTextReplacement(XRP_NON_ACTIVATED_RECIPIENT_ADDRESS) }
             }
-            step("Click on 'Next' button") {
-                onSendAddressScreen { nextButton.clickWithAssertion() }
+            step("Open 'Send confirm' screen via 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { openSendConfirmScreenViaNextButton() }
             }
             step("Assert 'Invalid reserve amount warning' is not displayed") {
                 checkSendWarning(
@@ -162,8 +165,8 @@ class XRPWarningsTest : BaseTestCase() {
             step("Type an activated address in input text field") {
                 onSendAddressScreen { addressTextField.performTextReplacement(XRP_ACTIVATED_RECIPIENT_ADDRESS) }
             }
-            step("Click on 'Next' button") {
-                onSendScreen { continueButton.clickWithAssertion() }
+            step("Open 'Send confirm' screen via 'Continue' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { openSendConfirmScreenViaContinueButton() }
             }
             step("Assert 'Invalid reserve amount warning' is not displayed") {
                 checkSendWarning(

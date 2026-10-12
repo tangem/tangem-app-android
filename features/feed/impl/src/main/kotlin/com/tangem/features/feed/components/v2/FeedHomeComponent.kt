@@ -7,32 +7,35 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.children.ChildNavState
 import com.arkivanov.decompose.router.pages.ChildPages
 import com.arkivanov.decompose.router.pages.Pages
-import com.arkivanov.decompose.router.pages.PagesNavigation
 import com.arkivanov.decompose.router.pages.childPages
-import com.arkivanov.decompose.router.pages.select
 import com.arkivanov.decompose.value.Value
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
+import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
-import com.tangem.features.feed.nav.FeedScreenComponent
-import com.tangem.features.feed.nav.FeedTabComponent
-import com.tangem.features.feed.nav.FeedTabContributor
-import com.tangem.features.feed.nav.FeedTabId
-import com.tangem.features.feed.nav.FeedTabSet
-import com.tangem.features.feed.ui.FeedTabUM
+import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.feed.analytics.FeedSectionAnalyticsEvent
+import com.tangem.features.feed.components.v2.blocks.analytics.FeedBlocksAnalytics
+import com.tangem.features.feed.components.v2.model.FeedHomeModel
+import com.tangem.features.feed.nav.*
 import com.tangem.features.feed.ui.v2.FeedV2Content
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 /**
  * Root of the v2 feed stack ([FeedHomeRoute]): top blocks + the tab pager.
@@ -42,25 +45,29 @@ import kotlinx.collections.immutable.toImmutableList
  */
 internal class FeedHomeComponent(
     context: AppComponentContext,
-    tabSet: FeedTabSet,
+    portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    addAccountTypeComponentFactory: AddAccountTypeComponent.Factory,
+    analyticsEventHandler: AnalyticsEventHandler,
+    blocksAnalytics: FeedBlocksAnalytics,
+    requestedTab: Flow<FeedTabId>,
 ) : FeedScreenComponent, AppComponentContext by context {
 
-    private val topBlocksComponent = FeedTopBlocksComponent(context = child("feedTopBlocks"))
+    override val isPartialExpansionSupported: Boolean = true
 
-    private val contributors: List<FeedTabContributor> = tabSet.tabs
+    private val model: FeedHomeModel = getOrCreateModel()
 
-    private val contributorsById: Map<FeedTabId, FeedTabContributor> = contributors.associateBy { it.id }
-
-    private val tabs: ImmutableList<FeedTabUM> = contributors
-        .map { FeedTabUM(id = it.id.value, title = it.title) }
-        .toImmutableList()
-
-    private val pagesNavigation = PagesNavigation<FeedTabId>()
+    private val topBlocksComponent = FeedTopBlocksComponent(
+        context = child("feedTopBlocks"),
+        params = FeedTopBlocksComponent.Params(callbacks = model.topBlocksCallbacks),
+        portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
+        addAccountTypeComponentFactory = addAccountTypeComponentFactory,
+        blocksAnalytics = blocksAnalytics,
+    )
 
     private val pages: Value<ChildPages<FeedTabId, FeedTabComponent>> = childPages(
-        source = pagesNavigation,
+        source = model.pagesNavigation,
         serializer = null,
-        initialPages = { Pages(items = contributors.map { it.id }, selectedIndex = 0) },
+        initialPages = { Pages(items = model.contributors.map { it.id }, selectedIndex = 0) },
         key = "feedTabs",
         pageStatus = { index, pages ->
             if (index == pages.selectedIndex) ChildNavState.Status.RESUMED else ChildNavState.Status.CREATED
@@ -68,6 +75,30 @@ internal class FeedHomeComponent(
         handleBackButton = false,
         childFactory = ::createTab,
     )
+
+    private val sheetState = MutableStateFlow(BottomSheetState.COLLAPSED)
+
+    init {
+        requestedTab
+            .onEach(model::selectSection)
+            .launchIn(componentScope)
+
+        sheetState
+            .filter { state -> state != BottomSheetState.EXPANDED }
+            .onEach { pages.value.items.forEach { page -> page.instance?.resetScroll() } }
+            .launchIn(componentScope)
+
+        sheetState
+            .filter { state -> state == BottomSheetState.EXPANDED }
+            .onEach {
+                analyticsEventHandler.send(
+                    event = FeedSectionAnalyticsEvent.MarketsScreenOpened(
+                        pages.value.items[pages.value.selectedIndex].configuration.analyticsSection,
+                    ),
+                )
+            }
+            .launchIn(componentScope)
+    }
 
     @Composable
     override fun Content(
@@ -78,16 +109,20 @@ internal class FeedHomeComponent(
     ) {
         val pagesState by pages.subscribeAsState()
 
+        val currentSheetState = bottomSheetState.value
+        LaunchedEffect(currentSheetState) { sheetState.value = currentSheetState }
+
         FeedV2Content(
-            tabs = tabs,
+            tabs = model.tabs,
             selectedTabIndex = pagesState.selectedIndex,
-            onTabSelect = { index -> pagesNavigation.select(index = index) },
+            onTabSelect = model::selectTab,
             isExpanded = bottomSheetState.value == BottomSheetState.EXPANDED,
             contentPadding = contentPadding,
             onExpandSheet = onExpandSheet,
+            collapseTopBlocksRequests = model.topBlocksCollapseRequests,
             modifier = modifier,
             topBlocks = { blockModifier -> topBlocksComponent.Content(modifier = blockModifier) },
-            tabContent = { tabModifier ->
+            tabContent = { tabModifier, tabContentPadding ->
                 AnimatedContent(
                     targetState = pagesState.selectedIndex,
                     transitionSpec = {
@@ -106,8 +141,7 @@ internal class FeedHomeComponent(
                 ) { pageIndex ->
                     pagesState.items.getOrNull(pageIndex)?.instance?.Content(
                         bottomSheetState = bottomSheetState,
-                        // the feed chrome (top blocks + tab row) is laid out above, not overlaid
-                        contentPadding = PaddingValues(0.dp),
+                        contentPadding = tabContentPadding,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
@@ -116,7 +150,7 @@ internal class FeedHomeComponent(
     }
 
     private fun createTab(id: FeedTabId, componentContext: ComponentContext): FeedTabComponent {
-        val contributor = requireNotNull(contributorsById[id]) { "No tab contributor for ${id.value}" }
+        val contributor = requireNotNull(model.contributorsById[id]) { "No tab contributor for ${id.value}" }
         return contributor.createTab(context = childByContext(componentContext = componentContext))
     }
 }

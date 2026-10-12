@@ -49,11 +49,11 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
         )
     }
 
-    override fun createVirtualAccountToken(userWalletId: UserWalletId): CryptoCurrency.Token {
+    override fun createMoneyAccountToken(userWalletId: UserWalletId): CryptoCurrency.Token {
         val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
         val network = networkFactory.create(
             blockchain = VisaUtilities.visaBlockchain,
-            derivationPath = Network.DerivationPath.Custom(VisaUtilities.virtualAccountDerivationPath.rawPath),
+            derivationPath = Network.DerivationPath.Custom(VisaUtilities.moneyAccountDerivationPath.rawPath),
             userWallet = userWallet,
         )
         return cryptoCurrencyFactory.createToken(

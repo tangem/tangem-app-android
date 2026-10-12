@@ -12,6 +12,7 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
+import com.tangem.blockchain.tokenbalance.models.TokenBalance
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -22,6 +23,7 @@ import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.RentData
 import com.tangem.domain.walletmanager.model.TokenInfo
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
 import java.util.EnumSet
@@ -121,6 +123,13 @@ interface WalletManagersFacade {
 
     @Deprecated("Will be removed in future")
     suspend fun getStoredWalletManagers(userWalletId: UserWalletId): List<WalletManager>
+
+    @Deprecated("Will be removed in future")
+    suspend fun getStoredWalletManager(
+        userWalletId: UserWalletId,
+        blockchain: Blockchain,
+        derivationPath: String?,
+    ): WalletManager?
 
     /**
      * Returns default network address for selected wallet in given network
@@ -238,6 +247,17 @@ interface WalletManagersFacade {
     ): BigDecimal
 
     /**
+     * Balances of the token accounts [address] owns in [network], as the chain lists them.
+     *
+     * [address] is read as an address, so it needs no key on this device and need not be the wallet's own account
+     * in [network] — but the wallet manager it is read through is still the wallet's, so [network] decides which
+     * chain is asked.
+     *
+     * An address with no token accounts, and one that could not be read, both answer with an empty list.
+     */
+    suspend fun getTokenBalances(userWalletId: UserWalletId, network: Network, address: String): List<TokenBalance>
+
+    /**
      * Computes the on-chain miner fee embedded in a Bitcoin swap [psbtBase64], in satoshi.
      *
      * Swap providers return a "naked" PSBT whose fee is implied by `sum(inputs) - sum(outputs)`
@@ -259,6 +279,7 @@ interface WalletManagersFacade {
         signer: TransactionSigner,
     ): List<String>?
 
+    @RemoveWithToggle("TWI_1783_TRON_GASLESS_ACCOUNT_ACTIVATION_ENABLED")
     suspend fun isTronAccountActivated(userWalletId: UserWalletId, network: Network): Boolean
 
     suspend fun isSwapSpenderAllowed(userWalletId: UserWalletId, network: Network, spenderAddress: String): Boolean

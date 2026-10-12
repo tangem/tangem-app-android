@@ -37,7 +37,7 @@ class AmplitudeAnalyticsHandler(
                         key = requireNotNull(data.config.amplitudeApiKeyDev) {
                             "Amplitude api key not found in ${BuildConfig.BUILD_TYPE}"
                         },
-                        logger = AnalyticsEventsLogger(name = ID, jsonConverter = data.jsonConverter),
+                        logger = AnalyticsEventsLogger(name = ID),
                     )
                 } else {
                     AmplitudeClient(

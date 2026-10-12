@@ -1,6 +1,8 @@
 package com.tangem.features.txhistory.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.domain.models.network.SdkAmount
@@ -16,7 +18,9 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TxHistoryTitleConverterTest {
 
-    private val converter = TxHistoryTitleConverter()
+    private val coin = MockCryptoCurrencyFactory().createCoin(Blockchain.Ethereum)
+
+    private val converter = TxHistoryTitleConverter(coin)
 
     @ParameterizedTest
     @ProvideTestModels
@@ -34,6 +38,16 @@ internal class TxHistoryTitleConverterTest {
         TitleModel(
             tx = txInfo(TransactionType.Approve(amount = SdkAmount(currencySymbol = "USDT", value = null, decimals = 6), address = "0xspender")),
             expected = resRef(R.string.common_approved),
+        ),
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.Approve(
+                    amount = SdkAmount(currencySymbol = "USDT", value = null, decimals = 6),
+                    address = "0xspender",
+                ),
+                status = TransactionStatus.Failed,
+            ),
+            expected = resRef(R.string.transaction_history_status_approve_failed),
         ),
         TitleModel(
             tx = txInfo(TransactionType.Staking.Stake),
@@ -146,7 +160,64 @@ internal class TxHistoryTitleConverterTest {
         ),
         TitleModel(
             tx = txInfo(TransactionType.YieldSupply.Topup),
-            expected = resRef(R.string.yield_module_transaction_topup),
+            expected = resRef(R.string.transaction_history_supplied),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.YieldSupply.Topup, status = TransactionStatus.Unconfirmed),
+            expected = resRef(R.string.common_supplying),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.YieldSupply.Topup, status = TransactionStatus.Failed),
+            expected = resRef(R.string.transaction_history_status_supply_failed),
+        ),
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.YieldSupply.Send(address = "0xdest", isYieldSupplyWithdraw = true),
+                status = TransactionStatus.Failed,
+            ),
+            expected = resRef(R.string.transaction_history_status_withdraw_failed),
+        ),
+        // A non-withdraw Send is a plain transfer, so it follows the same own-vs-external wording as Transfer
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.YieldSupply.Send(address = "0xdest", isYieldSupplyWithdraw = false),
+                isOutgoing = true,
+            ),
+            isOwnTransfer = true,
+            expected = resRef(R.string.common_transferred),
+        ),
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.YieldSupply.Send(address = "0xdest", isYieldSupplyWithdraw = false),
+                isOutgoing = false,
+            ),
+            isOwnTransfer = true,
+            expected = resRef(R.string.common_transferred),
+        ),
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.YieldSupply.Send(address = "0xdest", isYieldSupplyWithdraw = false),
+                isOutgoing = true,
+                status = TransactionStatus.Unconfirmed,
+            ),
+            isOwnTransfer = true,
+            expected = resRef(R.string.transaction_history_status_transferring),
+        ),
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.YieldSupply.Send(address = "0xdest", isYieldSupplyWithdraw = false),
+                isOutgoing = true,
+                status = TransactionStatus.Failed,
+            ),
+            isOwnTransfer = true,
+            expected = resRef(R.string.transaction_history_status_transfer_failed),
+        ),
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.YieldSupply.Send(address = "0xdest", isYieldSupplyWithdraw = false),
+                isOutgoing = true,
+            ),
+            expected = resRef(R.string.common_sent),
         ),
         TitleModel(
             tx = txInfo(TransactionType.UnknownOperation),
@@ -154,7 +225,34 @@ internal class TxHistoryTitleConverterTest {
         ),
         TitleModel(
             tx = txInfo(TransactionType.GaslessFee),
-            expected = resRef(R.string.gasless_transaction_fee),
+            expected = resRef(R.string.common_network_fee_title),
+        ),
+        TitleModel(
+            tx = txInfo(
+                TransactionType.NetworkFee(
+                    amount = null,
+                    address = "0x3333333333333333333333333333333333333333",
+                ),
+            ),
+            expected = resRef(R.string.common_network_fee_title),
+        ),
+        // An outgoing coin call that moved nothing is titled by the fee it cost, named method or not
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.Operation(name = "YieldSend"),
+                isOutgoing = true,
+                amount = BigDecimal.ZERO,
+            ),
+            expected = resRef(R.string.common_network_fee_title),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.UnknownOperation, isOutgoing = true, amount = BigDecimal.ZERO),
+            expected = resRef(R.string.common_network_fee_title),
+        ),
+        // The same call incoming was paid for by its sender, so it keeps the operation title
+        TitleModel(
+            tx = txInfo(TransactionType.Operation(name = "YieldSend"), amount = BigDecimal.ZERO),
+            expected = TextReference.Str("YieldSend"),
         ),
     )
 
@@ -168,7 +266,8 @@ internal class TxHistoryTitleConverterTest {
         type: TransactionType,
         status: TransactionStatus = TransactionStatus.Confirmed,
         isOutgoing: Boolean = false,
-    ): TxInfo = TxInfo(
+        amount: BigDecimal = BigDecimal.ONE,
+    ): TxInfo.Single = TxInfo.Single(
         txHash = "0xtxhash",
         timestampInMillis = 1_700_000_000_000L,
         isOutgoing = isOutgoing,
@@ -177,7 +276,7 @@ internal class TxHistoryTitleConverterTest {
         interactionAddressType = null,
         status = status,
         type = type,
-        amount = BigDecimal.ONE,
+        amount = amount,
     )
 
     private fun resRef(id: Int): TextReference = TextReference.Res(id = id)

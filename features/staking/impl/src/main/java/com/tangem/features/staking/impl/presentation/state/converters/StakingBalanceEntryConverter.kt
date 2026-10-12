@@ -12,7 +12,6 @@ import com.tangem.domain.models.staking.*
 import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.domain.staking.model.Period
 import com.tangem.domain.staking.model.StakingIntegration
-import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.staking.model.stakingBalanceData
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.BalanceState
@@ -36,7 +35,7 @@ internal class StakingBalanceEntryConverter(
         val appCurrency = appCurrencyProvider()
         val cryptoCurrency = cryptoCurrencyStatus.currency
 
-        val target = findTarget(value)
+        val target = integration.findBalanceTarget(address = value.validator?.address, name = value.validator?.name)
         val cryptoAmount = value.getBalanceValue()
         val fiatAmount = cryptoCurrencyStatus.value.fiatRate?.times(cryptoAmount)
 
@@ -68,12 +67,6 @@ internal class StakingBalanceEntryConverter(
                 isPending = value.isPending,
                 targetAddress = value.validator?.address,
             )
-        }
-    }
-
-    private fun findTarget(entry: StakingBalanceEntry): StakingTarget? {
-        return integration.targets.firstOrNull {
-            entry.validator?.address?.contains(it.address, ignoreCase = true) == true
         }
     }
 

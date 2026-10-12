@@ -2,7 +2,6 @@ package com.tangem.feature.swap.model
 
 import arrow.core.right
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
-import com.tangem.common.ui.backup.BackupErrorFeatureToggles
 import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -13,24 +12,32 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
+import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
-import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
+import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.flow.PredictionFundingWindow
+import com.tangem.domain.polymarket.flow.PredictionWithdrawalTracker
+import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
+import com.tangem.domain.polymarket.model.PredictionWithdrawDestination
+import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
@@ -105,10 +112,18 @@ internal abstract class SwapModelTestBase {
     protected val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk(relaxed = true)
     protected val feeSelectorReloadTrigger: FeeSelectorReloadTrigger = mockk(relaxed = true)
     protected val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase = mockk(relaxed = true)
-    protected val appsFlyerStore: AppsFlyerStore = mockk(relaxed = true)
+    protected val appsFlyerRepository: AppsFlyerRepository = mockk(relaxed = true)
     protected val messageSender: UiMessageSender = mockk(relaxed = true)
     protected val initialCurrenciesResolver: InitialCurrenciesResolver = mockk(relaxed = true)
     protected val accountUnderlyingCurrencies: AccountUnderlyingCurrencies = mockk(relaxed = true)
+    protected val multiAccountStatusListSupplier: MultiAccountStatusListSupplier = mockk(relaxed = true)
+    protected val getPredictionWithdrawDestinationsUseCase: GetPredictionWithdrawDestinationsUseCase =
+        mockk(relaxed = true)
+    protected val polymarketCollateralCurrencyFactory: PolymarketCollateralCurrencyFactory = mockk()
+    protected val submitPredictionWithdrawalInteractor: SubmitPredictionWithdrawalInteractor = mockk(relaxed = true)
+    protected val predictionWithdrawalTracker: PredictionWithdrawalTracker = mockk(relaxUnitFun = true)
+    protected val predictionFundingWindow: PredictionFundingWindow = mockk(relaxUnitFun = true)
+    protected val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase = mockk(relaxed = true)
     protected val allowPermissionsHandler: AllowPermissionsHandler = mockk(relaxed = true)
     protected val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
     protected val getSwapUiModeUseCase: GetSwapUiModeUseCase = mockk(relaxed = true)
@@ -116,13 +131,9 @@ internal abstract class SwapModelTestBase {
     protected val calculateAmountUseCase: CalculateAmountUseCase = mockk(relaxed = true)
     protected val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase = mockk(relaxed = true)
     protected val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase = mockk(relaxed = true)
+    protected val recordTokenTransferFromSwapUseCase: RecordTokenTransferFromSwapUseCase = mockk(relaxed = true)
     protected val backupErrorWarningSender: BackupErrorWarningSender = mockk {
         every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
-    }
-    protected val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase = mockk(relaxed = true)
-    protected val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase = mockk(relaxed = true)
-    protected val backupErrorFeatureToggles: BackupErrorFeatureToggles = mockk {
-        every { isTopUpWarningEnabled } returns true
     }
 
     private val chooseTokenBridgeFactory: ChooseTokenBridge.Factory = mockk(relaxed = true)
@@ -151,8 +162,6 @@ internal abstract class SwapModelTestBase {
         every { getBalanceHidingSettingsUseCase.invoke() } returns emptyFlow()
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
         coEvery { shouldShowStoriesInteractor.invokeSync(any()) } returns false
-        // Match regardless of `isAccountFlowEnabled` (driven by the account-swap-flow toggle) —
-        // relying on the trailing defaults here would silently only cover the toggle-OFF (false) call.
         coEvery {
             initialCurrenciesResolver.invoke(
                 userWalletId = any(),
@@ -160,10 +169,12 @@ internal abstract class SwapModelTestBase {
                 swapCurrencyPosition = any(),
                 accountFlow = any(),
                 initialToCryptoCurrency = any(),
-                isAccountFlowEnabled = any(),
             )
         } returns (null to null)
         every { getSelectedAppCurrencyUseCase.invoke() } returns emptyFlow()
+        coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns
+            emptyMap<CryptoCurrency.ID, PredictionWithdrawDestination>().right()
+        every { polymarketCollateralCurrencyFactory.createDepositTarget() } returns usdcPolygonToken()
         // Unstubbed, a relaxed mock would fabricate a nested SwapCurrencyStatus/Account chain instead of
         // echoing the real fromSwapCurrencyStatus, which can trip Account-type checks (e.g. isTangemPayWithdrawal).
         every {
@@ -173,6 +184,21 @@ internal abstract class SwapModelTestBase {
                 toSwapCurrencyStatus = any(),
             )
         } answers { secondArg() }
+    }
+
+    private fun usdcPolygonToken(): CryptoCurrency.Token {
+        val id: CryptoCurrency.ID = mockk {
+            every { rawCurrencyId } returns CryptoCurrency.RawID("usd-coin")
+        }
+        return mockk(relaxed = true) {
+            every { this@mockk.id } returns id
+            every { network } returns mockk(relaxed = true) { every { rawId } returns "polygon-pos" }
+            every { contractAddress } returns PolymarketContracts.USDC_TOKEN_ADDRESS
+            every { decimals } returns 6
+            every { name } returns "USDC"
+            every { symbol } returns "USDC"
+            every { iconUrl } returns null
+        }
     }
 
     protected fun createParams(
@@ -198,6 +224,7 @@ internal abstract class SwapModelTestBase {
         params: SwapComponent.Params = createParams(),
         accountFlow: AccountFlow? = null,
         dispatchers: CoroutineDispatcherProvider = TestingCoroutineDispatcherProvider(),
+        swapTransferStateBuilder: SwapTransferStateBuilder = this.swapTransferStateBuilder,
     ): SwapModel = SwapModel(
         paramsContainer = MutableParamsContainer(
             if (accountFlow != null) createParams(accountFlow = accountFlow) else params,
@@ -231,10 +258,17 @@ internal abstract class SwapModelTestBase {
         isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
         feeSelectorReloadTrigger = feeSelectorReloadTrigger,
         getTangemPayCustomerIdUseCase = getTangemPayCustomerIdUseCase,
-        appsFlyerStore = appsFlyerStore,
+        appsFlyerRepository = appsFlyerRepository,
         messageSender = messageSender,
         initialCurrenciesResolver = initialCurrenciesResolver,
         accountUnderlyingCurrencies = accountUnderlyingCurrencies,
+        multiAccountStatusListSupplier = multiAccountStatusListSupplier,
+        getPredictionWithdrawDestinationsUseCase = getPredictionWithdrawDestinationsUseCase,
+        polymarketCollateralCurrencyFactory = polymarketCollateralCurrencyFactory,
+        submitPredictionWithdrawalInteractor = submitPredictionWithdrawalInteractor,
+        predictionWithdrawalTracker = predictionWithdrawalTracker,
+        predictionFundingWindow = predictionFundingWindow,
+        derivePolymarketAddressesUseCase = derivePolymarketAddressesUseCase,
         allowPermissionsHandler = allowPermissionsHandler,
         swapFeatureToggles = swapFeatureToggles,
         getSwapUiModeUseCase = getSwapUiModeUseCase,
@@ -242,10 +276,8 @@ internal abstract class SwapModelTestBase {
         calculateAmountUseCase = calculateAmountUseCase,
         isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
         getCurrencyUSDQuoteUseCase = getCurrencyUSDQuoteUseCase,
+        recordTokenTransferFromSwapUseCase = recordTokenTransferFromSwapUseCase,
         backupErrorWarningSender = backupErrorWarningSender,
-        backupErrorFeatureToggles = backupErrorFeatureToggles,
-        isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
-        sendBackupProblemEmailUseCase = sendBackupProblemEmailUseCase,
     )
 
     // region builders

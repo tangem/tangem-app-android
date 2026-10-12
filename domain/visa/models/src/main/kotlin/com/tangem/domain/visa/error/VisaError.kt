@@ -90,7 +90,17 @@ sealed class VisaApiError(
     data object CardReissuePlasticInvalidShippingAddress : VisaApiError(104140136)
     data object CardReissuePlasticInvalidEmbossName : VisaApiError(104140143)
 
+    data object BankOfframpUnsupportedConfiguration : VisaApiError(104140141)
+
+    data object WaitlistInvalidEmail : VisaApiError(-1)
+
     companion object {
+        private const val WAITLIST_INVALID_EMAIL_NAME = "WaitlistInvalidEmailException"
+
+        fun fromBackendName(backendErrorName: String?): VisaApiError? = when (backendErrorName) {
+            WAITLIST_INVALID_EMAIL_NAME -> WaitlistInvalidEmail
+            else -> null
+        }
 
         @Suppress("CyclomaticComplexMethod")
         fun fromBackendError(backendErrorCode: Int): VisaApiError {
@@ -118,6 +128,7 @@ sealed class VisaApiError(
                 CardReissuePlasticNotAvailable.errorCode -> CardReissuePlasticNotAvailable
                 CardReissuePlasticInvalidShippingAddress.errorCode -> CardReissuePlasticInvalidShippingAddress
                 CardReissuePlasticInvalidEmbossName.errorCode -> CardReissuePlasticInvalidEmbossName
+                BankOfframpUnsupportedConfiguration.errorCode -> BankOfframpUnsupportedConfiguration
                 else -> Unknown(universalErrorCode)
             }
         }

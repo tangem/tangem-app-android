@@ -26,10 +26,10 @@ class MultiWalletBackupComponent(
     private val model: MultiWalletBackupModel = getOrCreateModel(params)
 
     init {
-        params.innerNavigation.update {
-            it.copy(
+        params.innerNavigation.update { navigationState ->
+            navigationState.copy(
                 stackSize = 5,
-                stackMaxSize = 9,
+                stackMaxSize = 10,
             )
         }
 

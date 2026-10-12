@@ -12,7 +12,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectMapSync
 import com.tangem.domain.assetsdiscovery.AssetsDiscoveryFacade
 import com.tangem.domain.assetsdiscovery.model.AssetsDiscoveryProgress
@@ -48,6 +48,7 @@ internal class DefaultAssetsDiscoveryRepository(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val networkFactory: NetworkFactory,
     private val appPreferencesStore: AppPreferencesStore,
+    private val storePreferencesKeys: StorePreferencesKeys,
     private val assetsDiscoveryStoreFactory: AssetsDiscoveryStoreFactory,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -108,7 +109,7 @@ internal class DefaultAssetsDiscoveryRepository(
 
     override suspend fun getPendingDiscoveryWalletIds(): List<UserWalletId> {
         val pendingMap = appPreferencesStore
-            .getObjectMapSync<Boolean>(PreferencesKeys.PENDING_ASSETS_DISCOVERY_KEY)
+            .getObjectMapSync<Boolean>(storePreferencesKeys.pendingAssetsDiscoveryKey)
         return pendingMap
             .filter { it.value }
             .map { UserWalletId(it.key) }
@@ -292,8 +293,8 @@ internal class DefaultAssetsDiscoveryRepository(
     private suspend fun setPendingFlag(userWalletId: UserWalletId, value: Boolean) {
         appPreferencesStore.editData { prefs ->
             prefs.setObjectMap(
-                key = PreferencesKeys.PENDING_ASSETS_DISCOVERY_KEY,
-                value = prefs.getObjectMap<Boolean>(PreferencesKeys.PENDING_ASSETS_DISCOVERY_KEY)
+                key = storePreferencesKeys.pendingAssetsDiscoveryKey,
+                value = prefs.getObjectMap<Boolean>(storePreferencesKeys.pendingAssetsDiscoveryKey)
                     .plus(userWalletId.stringValue to value),
             )
         }

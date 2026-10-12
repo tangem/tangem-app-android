@@ -145,7 +145,10 @@ internal class TokenReceiveStateFactory(
                 add(
                     NotificationUM.Warning(
                         title = resourceReference(notification.title),
-                        subtitle = resourceReference(notification.subtitle),
+                        subtitle = resourceReference(
+                            id = notification.subtitle,
+                            formatArgs = WrappedList(notification.formatArgs),
+                        ),
                     ),
                 )
             }

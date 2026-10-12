@@ -118,7 +118,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
             } returns Either.Right(plan)
 
             // Act
-            val result = createUseCase(isYieldWithdrawEnabled = true).invoke(
+            val result = createUseCase().invoke(
                 userWallet = userWallet,
                 amount = SWAP_AMOUNT,
                 sendingTokenCurrencyStatus = tokenStatus(
@@ -151,7 +151,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
         } returns Either.Left(GetFeeError.GaslessError.YieldBalanceUnavailable)
 
         // Act
-        val result = createUseCase(isYieldWithdrawEnabled = true).invoke(
+        val result = createUseCase().invoke(
             userWallet = userWallet,
             amount = SWAP_AMOUNT,
             sendingTokenCurrencyStatus = tokenStatus(
@@ -161,34 +161,6 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
         )
 
         // Assert
-        val feeExtended = result.getOrNull()
-        assertThat(feeExtended).isNotNull()
-        assertThat(feeExtended!!.feeTokenId).isEqualTo(nativeCoin.id)
-        assertThat(feeExtended.gaslessFeePlan).isNull()
-    }
-
-    @Test
-    fun `GIVEN yield withdraw toggle is off WHEN estimate THEN falls back to the native fee`() = runTest {
-        // Arrange
-        val yieldStatus = activeYieldStatus(effectiveProtocolBalance = SWAP_AMOUNT + BigDecimal("5"))
-        givenAccountStatusList(
-            nativeBalance = BigDecimal.ZERO,
-            tokenBalance = SWAP_AMOUNT + BigDecimal("5"),
-            yieldSupplyStatus = yieldStatus,
-        )
-        coEvery { walletManager.getGasLimit(any(), FEE_RECEIVER, any()) } returns insufficientFundsFailure()
-
-        // Act
-        val result = createUseCase(isYieldWithdrawEnabled = false).invoke(
-            userWallet = userWallet,
-            amount = SWAP_AMOUNT,
-            sendingTokenCurrencyStatus = tokenStatus(
-                balance = SWAP_AMOUNT + BigDecimal("5"),
-                yieldSupplyStatus = yieldStatus,
-            ),
-        )
-
-        // Assert — no gasless token fee is possible, but the block must still render a native fee
         val feeExtended = result.getOrNull()
         assertThat(feeExtended).isNotNull()
         assertThat(feeExtended!!.feeTokenId).isEqualTo(nativeCoin.id)
@@ -208,7 +180,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
         } returns Result.Success(BigInteger("60000"))
 
         // Act
-        val result = createUseCase(isYieldWithdrawEnabled = true).invoke(
+        val result = createUseCase().invoke(
             userWallet = userWallet,
             amount = SWAP_AMOUNT,
             sendingTokenCurrencyStatus = tokenStatus(
@@ -238,7 +210,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
         )
 
         // Act
-        val result = createUseCase(isYieldWithdrawEnabled = true).invoke(
+        val result = createUseCase().invoke(
             userWallet = userWallet,
             amount = SWAP_AMOUNT,
             sendingTokenCurrencyStatus = tokenStatus(balance = SWAP_AMOUNT, yieldSupplyStatus = null),
@@ -253,7 +225,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
 
     // region Fixtures
 
-    private fun createUseCase(isYieldWithdrawEnabled: Boolean) = EstimateFeeForGaslessTxUseCase(
+    private fun createUseCase() = EstimateFeeForGaslessTxUseCase(
         walletManagersFacade = walletManagersFacade,
         demoConfig = mockk { every { isDemoCardId(any()) } returns false },
         gaslessTransactionRepository = gaslessTransactionRepository,
@@ -262,7 +234,6 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
         estimateFeeUseCase = estimateFeeUseCase,
         currencyChecksRepository = currencyChecksRepository,
         resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
-        isYieldWithdrawEnabled = isYieldWithdrawEnabled,
     )
 
     private fun givenAccountStatusList(
@@ -280,7 +251,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
     private fun accountStatusList(statuses: List<CryptoCurrencyStatus>) = AccountStatusList(
         userWalletId = userWalletId,
         accountStatuses = listOf(
-            AccountStatus.CryptoPortfolio(
+            AccountStatus.Personal(
                 account = Account.Personal.createMainAccount(userWalletId),
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,
