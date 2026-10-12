@@ -8,10 +8,13 @@ import com.tangem.data.common.network.NetworkFactory
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketDepositBlockchain
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.model.PolymarketDepositAsset
 import com.tangem.domain.polymarket.model.PredictionCollateral
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 /** Describing the network by hand is only safe while it agrees with what the shared factory builds. */
 internal class DefaultPolymarketCollateralCurrencyFactoryTest {
@@ -84,6 +87,26 @@ internal class DefaultPolymarketCollateralCurrencyFactoryTest {
         assertThat(actual.network).isEqualTo(expectedNetwork)
     }
 
+    @ParameterizedTest
+    @MethodSource("provideDepositAssets")
+    fun `GIVEN a catalogued deposit asset WHEN its target is created THEN its network is the one the app builds`(
+        asset: PolymarketDepositAsset,
+    ) {
+        // Arrange
+        val expected = NetworkFactory(excludedBlockchains).create(
+            blockchain = asset.blockchain,
+            extraDerivationPath = null,
+            derivationStyleProvider = null,
+            canHandleTokens = true,
+        )
+
+        // Act
+        val actual = factory.createDepositTarget(asset).network
+
+        // Assert
+        assertThat(actual).isEqualTo(expected)
+    }
+
     @Test
     fun `GIVEN the collateral WHEN it is created THEN it matches the token the shared factory would build`() {
         // Arrange
@@ -101,5 +124,11 @@ internal class DefaultPolymarketCollateralCurrencyFactoryTest {
 
         // Assert
         assertThat(actual).isEqualTo(expected)
+    }
+
+    private companion object {
+
+        @JvmStatic
+        fun provideDepositAssets() = PolymarketDepositAsset.CATALOG
     }
 }
