@@ -9,6 +9,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import androidx.test.espresso.Espresso
+import arrow.core.getOrElse
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
@@ -38,6 +39,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.screens.*
 import com.tangem.screens.tangempay.*
@@ -1338,12 +1340,14 @@ fun BaseTestCase.returnToMainFromTangemPay() {
 
 fun BaseTestCase.awaitTangemPayStatusOfSelectedWallet(
     userWalletsListRepository: UserWalletsListRepository,
+    paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     expectedStatus: KClass<out PaymentAccountStatusValue>,
 ) {
     awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
         val userWalletId = checkNotNull(userWalletsListRepository.selectedUserWallet.value).walletId
         val status = runBlocking {
+            paymentAccountStatusFetcher(userWalletId).getOrElse { throw it }
             withTimeoutOrNull(PAYMENT_STATUS_READ_TIMEOUT_MILLIS) { paymentAccountStatusSupplier(userWalletId).first() }
         }
         check(expectedStatus.isInstance(status?.value)) { "Tangem Pay status is ${status?.value}" }

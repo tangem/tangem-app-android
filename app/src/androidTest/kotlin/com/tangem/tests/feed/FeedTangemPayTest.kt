@@ -11,6 +11,7 @@ import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.scenarios.addNewCardWallet
 import com.tangem.scenarios.awaitTangemPayStatusOfSelectedWallet
@@ -40,6 +41,9 @@ class FeedTangemPayTest : BaseTestCase() {
 
     @Inject
     lateinit var userWalletsListRepository: UserWalletsListRepository
+
+    @Inject
+    lateinit var paymentAccountStatusFetcher: PaymentAccountStatusFetcher
 
     @Inject
     lateinit var paymentAccountStatusSupplier: PaymentAccountStatusSupplier
@@ -270,6 +274,7 @@ class FeedTangemPayTest : BaseTestCase() {
             step("Wait for Tangem Pay status 'Not available'") {
                 awaitTangemPayStatusOfSelectedWallet(
                     userWalletsListRepository = userWalletsListRepository,
+                    paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                     paymentAccountStatusSupplier = paymentAccountStatusSupplier,
                     expectedStatus = PaymentAccountStatusValue.Empty::class,
                 )
