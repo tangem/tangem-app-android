@@ -44,6 +44,7 @@ import com.tangem.features.yield.supply.impl.R
 import com.tangem.core.res.R as CoreResR
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
+import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
 import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
 import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
 import com.tangem.features.yield.supply.impl.common.formatter.formatApy
@@ -58,6 +59,7 @@ import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import javax.inject.Inject
@@ -70,6 +72,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val analyticsHandler: AnalyticsEventHandler,
     private val yieldSupplyGetProtocolBalanceUseCase: YieldSupplyGetProtocolBalanceUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
+    private val getYieldRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
     private val yieldSupplyGetCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase,
     private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
@@ -108,6 +111,10 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     private val userWalletId = params.userWalletId
     private val cryptoCurrency = cryptoCurrencyStatusFlow.value.currency
+
+    /** Read by the withdrawal sheet: once the owner has been asked, it stops claiming on their behalf. */
+    var wasClaimOfferedBeforeWithdrawal = false
+        private set
     private var appCurrency = AppCurrency.Default
 
     val marketingRequest: Flow<MarketingBannerRequest?> = flowOf(
@@ -206,8 +213,40 @@ internal class YieldSupplyActiveModel @Inject constructor(
         activateSheet(YieldSupplyActiveRoute.Approve)
     }
 
+    /**
+     * The first withdrawal attempt with claimable rewards opens the claim sheet instead: the withdrawal deactivates
+     * the module the rewards sit on, and taking them is the owner's decision, not a transaction to slip in under a
+     * tap on Stop earning. Offered once — a second tap goes through to the withdrawal whatever they chose.
+     */
     fun onStopEarning() {
-        activateSheet(YieldSupplyActiveRoute.Exit)
+        modelScope.launch {
+            if (shouldOfferClaimBeforeWithdrawal()) {
+                wasClaimOfferedBeforeWithdrawal = true
+                activateSheet(YieldSupplyActiveRoute.Claim)
+            } else {
+                activateSheet(YieldSupplyActiveRoute.Exit)
+            }
+        }
+    }
+
+    private suspend fun shouldOfferClaimBeforeWithdrawal(): Boolean {
+        if (wasClaimOfferedBeforeWithdrawal) return false
+
+        val token = cryptoCurrency as? CryptoCurrency.Token ?: return false
+        val chainId = yieldSupplyGetTokenStatusUseCase(token).getOrNull()?.chainId ?: return false
+        val userAddress = cryptoCurrencyStatusFlow.value.value.networkAddress
+            ?.defaultAddress
+            ?.value
+            ?: return false
+
+        val isClaimInFlight = yieldSupplyClaimTracker
+            .isClaimInFlight(chainId = chainId, userAddress = userAddress)
+            .firstOrNull()
+        if (isClaimInFlight != false) return false
+
+        val summary = getYieldRewardsSummaryUseCase(chainId = chainId, userAddress = userAddress).getOrNull()
+
+        return summary is YieldRewardsSummary.Claimable
     }
 
     /** Dismiss that skips the in-transaction guard of [onDismissClick] — the About APY sheet signs nothing. */
