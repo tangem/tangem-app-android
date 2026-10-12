@@ -91,8 +91,8 @@ internal class DefaultScanCardProcessor @Inject constructor(
             shouldLaunchOnboarding = true,
             callback = object : ScanConfig.Callback {
                 override suspend fun onProgressStateChange(showProgress: Boolean) = onProgressStateChange(showProgress)
-                override suspend fun onWalletNotCreated() = onWalletNotCreated()
-                override suspend fun onCancel() = onCancel()
+                override suspend fun onOnboardingRequired() = onWalletNotCreated()
+                override suspend fun onCardVerificationFailed() = onCancel()
                 override suspend fun onFailure(error: TangemError) = onFailure(error)
                 override suspend fun onSuccess(scanResponse: ScanResponse) = onSuccess(scanResponse)
             },
@@ -134,7 +134,7 @@ internal class DefaultScanCardProcessor @Inject constructor(
                         onCancel = {
                             appCoroutineScope.launch(dispatchers.main) {
                                 callback.onProgressStateChange(showProgress = false)
-                                callback.onCancel()
+                                callback.onCardVerificationFailed()
                             }
                         },
                     )
@@ -151,7 +151,7 @@ internal class DefaultScanCardProcessor @Inject constructor(
                             scanResponse = scanResponse,
                             onProgressStateChange = callback::onProgressStateChange,
                             onSuccess = callback::onSuccess,
-                            onWalletNotCreated = callback::onWalletNotCreated,
+                            onWalletNotCreated = callback::onOnboardingRequired,
                         )
                     } else {
                         callback.onSuccess(scanResponse)
