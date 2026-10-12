@@ -16,6 +16,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOutcome
 import com.tangem.domain.yield.supply.promo.usecase.GetYieldBoostStatusUseCase
+import com.tangem.domain.yield.supply.usecase.GetYieldRewardsSummaryUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetCurrentFeeUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetDustMinAmountUseCase
@@ -43,6 +44,7 @@ internal abstract class YieldSupplyActiveModelTestBase {
     protected val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk(relaxed = true)
     protected val appRouter: AppRouter = mockk(relaxed = true)
     protected val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase = mockk(relaxed = true)
+    protected val getYieldRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase = mockk(relaxed = true)
     protected val claimTracker: YieldSupplyClaimTracker = mockk()
     protected val claimOutcomes = MutableSharedFlow<YieldSupplyClaimOutcome>(extraBufferCapacity = 1)
 
@@ -77,6 +79,7 @@ internal abstract class YieldSupplyActiveModelTestBase {
         analyticsHandler = mockk<AnalyticsEventHandler>(relaxed = true),
         yieldSupplyGetProtocolBalanceUseCase = yieldSupplyGetProtocolBalanceUseCase,
         yieldSupplyGetTokenStatusUseCase = yieldSupplyGetTokenStatusUseCase,
+        getYieldRewardsSummaryUseCase = getYieldRewardsSummaryUseCase,
         yieldSupplyMinAmountUseCase = mockk<YieldSupplyMinAmountUseCase>(relaxed = true),
         yieldSupplyGetCurrentFeeUseCase = mockk<YieldSupplyGetCurrentFeeUseCase>(relaxed = true),
         yieldSupplyGetMaxFeeUseCase = mockk<YieldSupplyGetMaxFeeUseCase>(relaxed = true),

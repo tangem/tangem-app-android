@@ -12,6 +12,9 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.yield.supply.YieldSupplyError
+import com.tangem.domain.yield.supply.usecase.PrepareClaimBeforeWithdrawUseCase
+import com.tangem.domain.yield.supply.usecase.YieldPreClaim
+import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
@@ -27,6 +30,7 @@ import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -39,6 +43,8 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
 
     private val stopEarningUseCase: YieldSupplyStopEarningUseCase = mockk()
     private val deactivateUseCase: YieldSupplyDeactivateUseCase = mockk()
+    private val prepareClaimUseCase: PrepareClaimBeforeWithdrawUseCase = mockk()
+    private val claimTracker: YieldSupplyClaimTracker = mockk(relaxed = true)
     private val callback: YieldSupplyStopEarningComponent.ModelCallback = mockk(relaxed = true)
 
     @BeforeEach
@@ -47,6 +53,14 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
         coEvery { getFeeUseCase(any(), any(), any()) } returns transactionFee().right()
         coEvery { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) } returns "0xhash".right()
         coEvery { deactivateUseCase(any(), any()) } returns true.right()
+        coEvery {
+            prepareClaimUseCase(
+                userWallet = any(),
+                cryptoCurrencyStatus = any(),
+                feeCryptoCurrencyStatus = any(),
+                withdrawalFee = any(),
+            )
+        } returns YieldPreClaim.Skip
     }
 
     @Test
@@ -225,6 +239,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
                 userWallet = userWallet,
                 cryptoCurrencyStatusFlow = statusFlow,
                 callback = callback,
+                wasClaimOffered = false,
             ),
         ),
         analytics = analytics,
@@ -240,6 +255,8 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
         yieldSupplyRepository = yieldSupplyRepository,
         yieldSupplyPendingTracker = pendingTracker,
         appsFlyerRepository = appsFlyerRepository,
+        prepareClaimBeforeWithdrawUseCase = prepareClaimUseCase,
+        yieldSupplyClaimTracker = claimTracker,
     )
 
     private companion object {

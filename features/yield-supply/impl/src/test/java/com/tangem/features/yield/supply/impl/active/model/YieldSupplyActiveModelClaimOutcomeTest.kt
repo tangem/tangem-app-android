@@ -1,5 +1,6 @@
 package com.tangem.features.yield.supply.impl.active.model
 
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.stringReference
@@ -25,6 +26,7 @@ internal class YieldSupplyActiveModelClaimOutcomeTest : YieldSupplyActiveModelTe
     @BeforeEach
     fun setUp() {
         coEvery { getYieldBoostStatusUseCase(any(), any()) } returns YieldBoostStatus.NotStarted.right()
+        coEvery { yieldSupplyGetTokenStatusUseCase(any()) } returns IllegalStateException("no market").left()
     }
 
     @Test
@@ -98,6 +100,7 @@ internal class YieldSupplyActiveModelClaimOutcomeTest : YieldSupplyActiveModelTe
         val slot = FakeSlotHost(model.slotNavigation)
         advanceUntilIdle()
         model.onStopEarning()
+        advanceUntilIdle()
 
         // Act
         claimOutcomes.emit(outcome(YieldSupplyTransactionOutcome.Reverted))
