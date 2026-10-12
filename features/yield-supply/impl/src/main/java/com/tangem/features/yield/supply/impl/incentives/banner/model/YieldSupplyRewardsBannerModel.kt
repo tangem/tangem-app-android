@@ -1,5 +1,7 @@
 package com.tangem.features.yield.supply.impl.incentives.banner.model
 
+import arrow.core.Either
+import arrow.core.right
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -118,8 +120,10 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
                 // Compared without the claim-state overlay on purpose: the tracker clears the in-flight flag just
                 // before it reports the outcome, so the CTA flips at the same moment and would read as a change.
                 val before = rewards
-                val refreshed = publishBanner()
-                if (refreshed != before) return@onEach
+                val refreshed = publishBanner(keepOnFailure = true)
+                // Only a read that answers and differs shows Merkl has processed the claim; a failed one is retried
+                // past the cache window just like an unchanged one.
+                if (refreshed.fold(ifLeft = { false }, ifRight = { banner -> banner != before })) return@onEach
 
                 delay(INCENTIVES_CACHE_SECONDS.seconds)
                 context?.let { bannerContext ->
@@ -133,27 +137,34 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private suspend fun publishBanner(): YieldSupplyRewardsBannerUM? = publishMutex.withLock {
-        val address = userAddress ?: return null
-        val banner = withContext(dispatchers.io) { resolveBanner(market = market, userAddress = address) }
+    /**
+     * @param keepOnFailure leaves the banner as it is when the rewards cannot be read: right after a claim settles, a
+     * failed read says nothing about the rewards, and clearing the banner would leave no later event to restore it
+     */
+    private suspend fun publishBanner(
+        keepOnFailure: Boolean = false,
+    ): Either<YieldIncentivesError, YieldSupplyRewardsBannerUM?> = publishMutex.withLock {
+        val address = userAddress ?: return null.right()
+        val lookup = withContext(dispatchers.io) { resolveBanner(market = market, userAddress = address) }
+        if (lookup.isLeft() && keepOnFailure) return lookup
+
+        val banner = lookup.getOrNull()
         rewards = banner
         uiState.update { banner?.withClaimInFlight(isClaimInFlight) }
 
-        banner
+        lookup
     }
 
-    private suspend fun resolveBanner(market: YieldMarketToken?, userAddress: String): YieldSupplyRewardsBannerUM? {
-        if (market?.campaign?.hasActiveCampaign != true) return null
+    private suspend fun resolveBanner(
+        market: YieldMarketToken?,
+        userAddress: String,
+    ): Either<YieldIncentivesError, YieldSupplyRewardsBannerUM?> {
+        if (market?.campaign?.hasActiveCampaign != true) return null.right()
         context = BannerContext(chainId = market.chainId, userAddress = userAddress)
 
         return getYieldRewardsSummaryUseCase(chainId = market.chainId, userAddress = userAddress)
-            .fold(
-                ifLeft = { error ->
-                    logHidden(error)
-                    null
-                },
-                ifRight = { summary -> summary.toUM() },
-            )
+            .onLeft(::logHidden)
+            .map { summary -> summary.toUM() }
     }
 
     private fun logHidden(error: YieldIncentivesError) = when (error) {
