@@ -24,6 +24,7 @@ sealed interface PolymarketPosition {
      * [cashPnl] and [percentPnl] describe only the remaining holding; [realizedPnl] covers earlier sales.
      * [currentValue] is an indicative mark, not guaranteed sale proceeds.
      * [score] and [period] retain the provider's format; [dataFetchedAt] dates the backend's event snapshot.
+     * A `null` [version] means upstream did not serve it, unlike [PolymarketMarketVersion.UNKNOWN].
      */
     data class Open(
         override val id: PolymarketPositionId,
