@@ -7,8 +7,6 @@ import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 /**
- * Claim sheet contents.
- *
  * A fee is `null` while it is still being estimated, which is what the fee rows render a shimmer for.
  *
  * @property isClaimInProgress a claim is being prepared and signed; the sheet neither reloads nor closes meanwhile.

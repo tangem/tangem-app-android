@@ -2,17 +2,16 @@ package com.tangem.features.yield.supply.impl.incentives.claim.model
 
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
-import com.tangem.common.ui.account.toUM
-import com.tangem.common.ui.account.CryptoPortfolioIconConverter
-import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
-import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -27,6 +26,7 @@ import com.tangem.domain.yield.supply.usecase.ValidateYieldClaimCalldataUseCase
 import com.tangem.domain.yield.supply.usecase.YieldClaimValidationContext
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMarketFlowUseCase
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
+import com.tangem.features.yield.supply.impl.common.formatter.YieldSupplyAmountFormatter
 import com.tangem.features.yield.supply.impl.common.formatter.formatUsd
 import com.tangem.features.yield.supply.impl.incentives.claim.YieldSupplyClaimComponent
 import com.tangem.features.yield.supply.impl.incentives.claim.entity.YieldSupplyClaimUM
@@ -52,8 +52,6 @@ import java.math.BigDecimal
 import javax.inject.Inject
 
 /**
- * Claim sheet state.
- *
  * The network fee can only be estimated for the exact transaction, so the sheet goes all the way to a validated
  * payload before it can show a fee at all: rewards, fresh calldata, the claim gate, then the fee. Anything that
  * fails along the way leaves the fees dashed and the button disabled rather than offering a claim the backend has
@@ -206,8 +204,8 @@ internal class YieldSupplyClaimModel @Inject constructor(
     }
 
     /**
-     * The account the owner group pays into. Absent while accounts are off or the currency sits in none of them —
-     * the header then names the destination alone, as it did before accounts existed.
+     * The account the owner group pays into. Absent while accounts are off or the currency sits in none of them, and
+     * the header then names the destination alone.
      */
     private suspend fun resolveStorage(): YieldSupplyClaimUM.StorageUM? {
         if (!isAccountsModeEnabledUseCase.invokeSync()) return null
@@ -365,7 +363,7 @@ internal class YieldSupplyClaimModel @Inject constructor(
             ifRight = { fee ->
                 val feeValue = fee.normal.amount.value.orZero()
                 uiState.update {
-                    it.copy(networkFee = stringReference(feeValue.toFiat()), isClaimEnabled = true)
+                    it.copy(networkFee = feeValue.toFiat(), isClaimEnabled = true)
                 }
                 yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
                     data = YieldSupplyNotificationData(feeValue = feeValue, feeError = null),
@@ -402,11 +400,10 @@ internal class YieldSupplyClaimModel @Inject constructor(
         return fee <= feeCryptoCurrencyStatusFlow.value.value.amount.orZero()
     }
 
-    private fun BigDecimal.toFiat(): String {
-        val fiatValue = feeCryptoCurrencyStatusFlow.value.value.fiatRate?.let(::multiply)
-
-        return fiatValue.format { fiat(appCurrency.code, appCurrency.symbol) }
-    }
+    private fun BigDecimal.toFiat(): TextReference = YieldSupplyAmountFormatter(
+        feeCryptoCurrency = feeCryptoCurrencyStatusFlow.value.currency,
+        appCurrency = appCurrency,
+    ).invoke(feeValue = this, fiatRate = feeCryptoCurrencyStatusFlow.value.value.fiatRate, showCrypto = false)
 
     private data class ClaimContext(val chainId: Int, val userAddress: String)
 

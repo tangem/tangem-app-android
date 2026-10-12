@@ -19,7 +19,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.yield.supply.impl.R
 
-/** @param badge network the fee is paid in, shown beside the value when it is not the token being claimed. */
+/** @param badge optional label shown beside the value */
 @Composable
 internal fun YieldSupplyFeeRow(
     title: TextReference,
