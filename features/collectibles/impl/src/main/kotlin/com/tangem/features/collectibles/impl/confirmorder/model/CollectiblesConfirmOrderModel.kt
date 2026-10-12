@@ -1,31 +1,53 @@
 package com.tangem.features.collectibles.impl.confirmorder.model
 
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.collectibles.account.covers
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
+import com.tangem.domain.collectibles.models.OpenPackRequest
+import com.tangem.domain.collectibles.models.OpenPackStep
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineUseCase
+import com.tangem.domain.collectibles.usecase.OpenCollectiblePackUseCase
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
+import com.tangem.domain.models.account.CollectiblesVaultBalance
+import com.tangem.features.collectibles.impl.CollectiblesRoute
+import com.tangem.features.collectibles.impl.confirmorder.CollectiblesConfirmOrderBottomSheetConfig
 import com.tangem.features.collectibles.impl.confirmorder.CollectiblesConfirmOrderComponent
 import com.tangem.features.collectibles.impl.confirmorder.model.converter.CollectiblesConfirmOrderConverter
 import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class CollectiblesConfirmOrderModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getMachineUseCase: GetCollectibleGachaMachineUseCase,
     private val accountStatusSupplier: CollectiblesAccountStatusSupplier,
+    private val openCollectiblePackUseCase: OpenCollectiblePackUseCase,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val messageSender: UiMessageSender,
     private val router: Router,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -37,7 +59,13 @@ internal class CollectiblesConfirmOrderModel @Inject constructor(
             CollectiblesConfirmOrderUM.Loading(onBackClick = ::onBackClick),
         )
 
-    private val isConfirming = MutableStateFlow(false)
+    val bottomSheetNavigation = SlotNavigation<CollectiblesConfirmOrderBottomSheetConfig>()
+
+    private val openPackStep = MutableStateFlow<OpenPackStep>(OpenPackStep.NotStarted)
+    private var openPackJob: Job? = null
+
+    private var machine: CollectibleGachaMachine? = null
+    private var vaultBalance: CollectiblesVaultBalance? = null
 
     private val orderConverter = CollectiblesConfirmOrderConverter(
         onBackClick = ::onBackClick,
@@ -50,7 +78,6 @@ internal class CollectiblesConfirmOrderModel @Inject constructor(
 
     private fun loadMachine(skipCache: Boolean = false) {
         modelScope.launch {
-            // Served from memory when opened from the catalogue
             getMachineUseCase(externalId = params.externalId, skipCache = skipCache)
                 .fold(
                     ifLeft = {
@@ -73,29 +100,106 @@ internal class CollectiblesConfirmOrderModel @Inject constructor(
         loadMachine(skipCache = true)
     }
 
-    // The catalogue below in the stack keeps this flow subscribed, so the balance is replayed without a request
     private suspend fun observeBalance(machine: CollectibleGachaMachine) {
+        this.machine = machine
+
         val vaultBalanceFlow = accountStatusSupplier(params.userWalletId)
             .mapNotNull { status -> status.balance }
             .distinctUntilChanged()
+            .onEach { balance -> vaultBalance = balance }
 
-        combine(vaultBalanceFlow, isConfirming) { vaultBalance, isConfirming ->
+        combine(vaultBalanceFlow, openPackStep) { vaultBalance, step ->
             orderConverter.convert(
                 CollectiblesConfirmOrderConverter.Input(
                     machine = machine,
                     vaultBalance = vaultBalance,
-                    isConfirming = isConfirming,
+                    step = step,
                 ),
             )
         }.collect { content -> uiState.value = content }
     }
 
     private fun onApproveClick() {
-        isConfirming.value = true
-        // TODO([REDACTED_TASK_KEY]): generateTx -> sign -> submitTx
+        // Re-checked on tap, the same rule the button is drawn by
+        if (!hasEnoughFunds()) {
+            messageSender.send(
+                SnackbarMessage(
+                    message = resourceReference(R.string.collectibles_confirm_order_not_enough_funds_button),
+                ),
+            )
+
+            return
+        }
+
+        runOpenPack(OpenPackRequest.Buy(machineId = params.externalId, isTurboEnabled = params.isTurboEnabled))
     }
 
+    private fun runOpenPack(request: OpenPackRequest) {
+        if (openPackJob?.isActive == true) return
+
+        openPackJob = modelScope.launch {
+            val userWallet = userWalletsListRepository.getSyncOrNull(params.userWalletId)
+                ?: return@launch showOpenPackError(OpenPackStep.Failed.PurchaseFailed)
+
+            openCollectiblePackUseCase(userWallet, request).collect { step ->
+                if (step is OpenPackStep.Failed) showOpenPackError(step)
+
+                openPackStep.value = step
+            }
+        }
+    }
+
+    private fun hasEnoughFunds(): Boolean {
+        val machine = machine ?: return false
+        val balance = vaultBalance ?: return false
+
+        return balance.covers(machine)
+    }
+
+    private fun showOpenPackError(failure: OpenPackStep.Failed) {
+        when (failure) {
+            is OpenPackStep.Failed.PackUnopened -> bottomSheetNavigation.activate(
+                CollectiblesConfirmOrderBottomSheetConfig.PackUnopened(failure.txId),
+            )
+            OpenPackStep.Failed.LowInventory -> bottomSheetNavigation.activate(
+                CollectiblesConfirmOrderBottomSheetConfig.LowInventory,
+            )
+            // TODO an expired and a refunded purchase will likely open screens of their own; not localized yet
+            OpenPackStep.Failed.Expired -> showSnackbar(stringReference("Your purchase has expired"))
+            OpenPackStep.Failed.Refunded -> showSnackbar(stringReference("Your payment has been refunded"))
+            OpenPackStep.Failed.PurchaseFailed,
+            OpenPackStep.Failed.Unexpected,
+            -> showSnackbar(resourceReference(R.string.common_something_went_wrong))
+        }
+    }
+
+    private fun showSnackbar(message: TextReference) {
+        messageSender.send(SnackbarMessage(message = message))
+    }
+
+    fun onReopenPack(txId: String) {
+        bottomSheetNavigation.dismiss()
+        runOpenPack(OpenPackRequest.Reopen(txId))
+    }
+
+    fun onEnableTurboMode() {
+        bottomSheetNavigation.dismiss()
+        router.pop()
+    }
+
+    fun onExplorePacks() {
+        bottomSheetNavigation.dismiss()
+        router.popTo(CollectiblesRoute.Main(params.userWalletId))
+    }
+
+    fun onDismissBottomSheet() {
+        bottomSheetNavigation.dismiss()
+    }
+
+    /** Hidden and ignored while a purchase runs: leaving would cancel it, and a paid pack with it. */
     private fun onBackClick() {
+        if (openPackJob?.isActive == true) return
+
         router.pop()
     }
 }
