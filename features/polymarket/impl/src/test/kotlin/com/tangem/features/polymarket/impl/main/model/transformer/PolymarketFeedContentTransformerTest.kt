@@ -2,14 +2,11 @@ package com.tangem.features.polymarket.impl.main.model.transformer
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PolymarketAccessMode
-import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchListState
-import com.tangem.domain.polymarket.model.PolymarketMarket
-import com.tangem.domain.polymarket.model.PolymarketOutcome
-import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.features.polymarket.impl.common.funding.RequisitesState
+import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.features.polymarket.impl.main.model.PredictionBalanceMode
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
@@ -208,49 +205,9 @@ internal class PolymarketFeedContentTransformerTest {
         requestCursor = null,
     )
 
-    private fun createEvent(id: String = "event-1"): PolymarketEvent = PolymarketEvent(
+    private fun createEvent(id: String = "event-1"): PolymarketEvent = createPolymarketEvent(
         id = id,
         slug = "$id-slug",
-        title = "Event title",
-        description = "Event description",
-        rulesUrl = "https://polymarket.com/rules",
-        iconUrl = null,
-        imageUrl = null,
-        status = PolymarketStatus.ACTIVE,
-        startDate = null,
-        endDate = null,
-        volume = null,
-        volume24h = null,
-        liquidity = null,
-        totalMarketsCount = 1,
-        isNegRisk = false,
-        isLive = false,
-        displayMode = PolymarketDisplayMode.PLAIN_MARKETS,
-        markets = listOf(
-            PolymarketMarket(
-                id = "market-1",
-                conditionId = null,
-                eventId = id,
-                title = "Market question",
-                slug = "market-slug",
-                description = "Market description",
-                groupItemTitle = null,
-                iconUrl = null,
-                imageUrl = null,
-                status = PolymarketStatus.ACTIVE,
-                isNegRisk = false,
-                isAcceptingOrders = true,
-                startDate = null,
-                endDate = null,
-                startDateIso = null,
-                endDateIso = null,
-                volume = null,
-                volume24h = null,
-                liquidity = null,
-                orderIndex = 0,
-                outcomes = listOf(PolymarketOutcome(assetId = "asset-1", title = "Yes", probability = null)),
-            ),
-        ),
     )
 
     private companion object {
