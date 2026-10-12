@@ -1,15 +1,18 @@
 package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.performFirstLinkClick
+import androidx.compose.ui.text.LinkAnnotation
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.*
 import com.tangem.wallet.R
+import io.github.kakaocup.compose.intercept.operation.ComposeOperationType
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
-import androidx.compose.ui.test.hasText as withText
 import androidx.compose.ui.test.hasTestTag as withTestTag
+import androidx.compose.ui.test.hasText as withText
 import com.tangem.core.ui.R as CoreUiR
 
 class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
@@ -40,6 +43,35 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         hasTestTag(BaseAmountBlockTestTags.SECONDARY_AMOUNT)
         useUnmergedTree = true
     }
+
+    val swapSendAmount: KNode = child {
+        hasTestTag(BaseAmountBlockTestTags.PRIMARY_AMOUNT)
+        hasPosition(0)
+        useUnmergedTree = true
+    }
+
+    val swapReceiveAmount: KNode = child {
+        hasTestTag(BaseAmountBlockTestTags.PRIMARY_AMOUNT)
+        hasPosition(1)
+        useUnmergedTree = true
+    }
+
+    val fcaWarning: KNode = child {
+        hasText(getResourceString(R.string.express_provider_in_fca_warning_list))
+        useUnmergedTree = true
+    }
+
+    fun clickTermsOfUseLink() = clickLegalLink(TERMS_OF_USE_LINK_TAG)
+
+    fun clickPrivacyPolicyLink() = clickLegalLink(PRIVACY_POLICY_LINK_TAG)
+
+    private fun clickLegalLink(linkTag: String) {
+        sendingText.delegate.perform(LegalLinkAction.CLICK) {
+            performFirstLinkClick { (it.item as? LinkAnnotation.Clickable)?.tag == linkTag }
+        }
+    }
+
+    private enum class LegalLinkAction : ComposeOperationType { CLICK }
 
     fun leaveDepositButton(amount: String): KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
@@ -189,6 +221,9 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
     }
 
 }
+
+private const val TERMS_OF_USE_LINK_TAG = "TOS_TAG"
+private const val PRIVACY_POLICY_LINK_TAG = "POLICY_TAG"
 
 internal fun BaseTestCase.onSendConfirmScreen(function: SendConfirmPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)

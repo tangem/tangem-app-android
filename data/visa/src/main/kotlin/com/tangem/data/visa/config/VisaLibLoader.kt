@@ -3,7 +3,6 @@ package com.tangem.data.visa.config
 import com.tangem.data.visa.BuildConfig
 import com.tangem.data.visa.utils.VisaConstants
 import com.tangem.core.local.assets.AssetLoader
-import com.tangem.core.local.assets.load
 import com.tangem.lib.visa.VisaContractInfoProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.sync.Mutex
@@ -56,7 +55,7 @@ internal class VisaLibLoader @Inject constructor(
     private suspend fun getOrLoadConfig(): VisaConfig = createMutex2.withLock {
         if (config != null) return@withLock requireNotNull(config)
 
-        config = assetLoader.load<VisaConfig>(VISA_CONFIG_FILE_NAME)
+        config = assetLoader.load(fileName = VISA_CONFIG_FILE_NAME, deserializer = VisaConfig.serializer())
 
         return@withLock requireNotNull(config) {
             "Visa config is not loaded"

@@ -4,13 +4,13 @@ import android.util.Base64
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.RecoveryKey
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.WalletSigner
-import com.tangem.lib.auth.session.WalletSignerProvider
 import com.tangem.lib.auth.social.SocialRecoveryClient
 import com.tangem.lib.auth.social.SocialRecoveryError
 import com.tangem.test.core.ProvideTestModels
@@ -33,16 +33,19 @@ import java.util.Base64 as JavaBase64
 internal class DefaultSocialRecoveryRepositoryTest {
 
     private val client: SocialRecoveryClient = mockk()
-    private val walletSignerProvider: WalletSignerProvider = mockk()
+    private val hotWalletSignerFactory: HotWalletSignerFactory = mockk()
+    private val userWallet: UserWallet.Hot = mockk {
+        every { walletId } returns WALLET_ID
+    }
 
     private val repository = DefaultSocialRecoveryRepository(
         client = client,
-        walletSignerProvider = walletSignerProvider,
+        hotWalletSignerFactory = hotWalletSignerFactory,
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(client, walletSignerProvider)
+        clearMocks(client, hotWalletSignerFactory)
         mockkStatic(Base64::class)
         every { Base64.encodeToString(any(), any()) } answers {
             JavaBase64.getEncoder().encodeToString(firstArg())
@@ -81,13 +84,13 @@ internal class DefaultSocialRecoveryRepositoryTest {
     fun `GIVEN a hot wallet WHEN registerRecoveryKey THEN the wallet is addressed by its base64 id`() = runTest {
         // Arrange
         val signer: WalletSigner = mockk()
-        coEvery { walletSignerProvider.signerFor(BACKEND_WALLET_ID) } returns signer
+        every { hotWalletSignerFactory.signerFor(userWallet) } returns signer
         coEvery { client.registerBinding(any(), any(), any(), any()) } returns Unit.right()
 
         // Act
         val actual = repository.registerRecoveryKey(
             idToken = ID_TOKEN,
-            walletId = WALLET_ID,
+            userWallet = userWallet,
             recoveryKey = RECOVERY_KEY,
         )
 
@@ -104,20 +107,31 @@ internal class DefaultSocialRecoveryRepositoryTest {
     }
 
     @Test
-    fun `GIVEN no signer for the wallet WHEN registerRecoveryKey THEN nothing is bound`() = runTest {
-        // Arrange — a cold wallet, or one this device cannot sign for
-        coEvery { walletSignerProvider.signerFor(any()) } returns null
+    fun `GIVEN a hot wallet WHEN registerRestoredWallet THEN it is registered under its base64 id`() = runTest {
+        // Arrange
+        val signer: WalletSigner = mockk()
+        every { hotWalletSignerFactory.signerFor(userWallet) } returns signer
+        coEvery { client.registerWallet(any(), any()) } returns Unit.right()
 
         // Act
-        val actual = repository.registerRecoveryKey(
-            idToken = ID_TOKEN,
-            walletId = WALLET_ID,
-            recoveryKey = RECOVERY_KEY,
-        )
+        val actual = repository.registerRestoredWallet(userWallet)
 
-        // Assert — a local shortfall, not a rejection by a backend that was never called
-        assertThat(actual).isEqualTo(SocialLoginError.Unknown().left())
-        coVerify(exactly = 0) { client.registerBinding(any(), any(), any(), any()) }
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 1) { client.registerWallet(walletId = BACKEND_WALLET_ID, signer = signer) }
+    }
+
+    @Test
+    fun `GIVEN the backend is unreachable WHEN registerRestoredWallet THEN the error is translated`() = runTest {
+        // Arrange
+        every { hotWalletSignerFactory.signerFor(userWallet) } returns mockk()
+        coEvery { client.registerWallet(any(), any()) } returns SocialRecoveryError.Api(AuthError.NetworkError).left()
+
+        // Act
+        val actual = repository.registerRestoredWallet(userWallet)
+
+        // Assert
+        assertThat(actual).isEqualTo(SocialLoginError.NetworkError.left())
     }
 
     @Test
@@ -154,6 +168,7 @@ internal class DefaultSocialRecoveryRepositoryTest {
         return listOf(
             ErrorModel(SocialRecoveryError.BindingNotFound, SocialLoginError.BindingNotFound),
             ErrorModel(SocialRecoveryError.BindingConflict, SocialLoginError.BindingConflict),
+            ErrorModel(SocialRecoveryError.NonceExpired, SocialLoginError.SessionExpired),
             ErrorModel(SocialRecoveryError.NoActiveSession, SocialLoginError.ServerError()),
             ErrorModel(SocialRecoveryError.DeviceKeyUnavailable, SocialLoginError.ServerError()),
             ErrorModel(SocialRecoveryError.SigningFailed(cause), SocialLoginError.ServerError(cause)),

@@ -4,10 +4,12 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.GaslessYieldRepository
+import com.tangem.domain.yield.supply.models.YieldSupplyEnterOutcome
 import java.math.BigDecimal
 
 interface YieldSupplyTransactionRepository : GaslessYieldRepository {
@@ -36,4 +38,15 @@ interface YieldSupplyTransactionRepository : GaslessYieldRepository {
 
     /** Returns the on-chain version status of the user's yield module for [network]. */
     suspend fun getYieldModuleVersionStatus(userWalletId: UserWalletId, network: Network): YieldModuleVersionStatus
+
+    /**
+     * Resolve what happened to the broadcast "enter" transaction [transactionHash].
+     *
+     * @return null while the transaction has not been mined yet — the outcome is not knowable until then.
+     */
+    suspend fun getEnterTransactionOutcome(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency.Token,
+        transactionHash: String,
+    ): YieldSupplyEnterOutcome?
 }

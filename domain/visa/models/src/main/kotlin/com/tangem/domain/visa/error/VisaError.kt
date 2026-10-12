@@ -68,6 +68,8 @@ sealed class VisaApiError(
 
     fun isRetryable() = this == ServerUnavailable || this == UnknownWithoutCode
 
+    fun isOutcomeUnknown() = this == ServerUnavailable || this == UnknownWithoutCode || this == RefreshTokenExpired
+
     data object RefreshTokenExpired : VisaApiError(104004001)
     data object NotFound : VisaApiError(104004002)
     data object WithdrawalDataError : VisaApiError(104004003)
@@ -93,12 +95,15 @@ sealed class VisaApiError(
     data object BankOfframpUnsupportedConfiguration : VisaApiError(104140141)
 
     data object WaitlistInvalidEmail : VisaApiError(-1)
+    data object AccountIssueActiveOrderExists : VisaApiError(-1)
 
     companion object {
         private const val WAITLIST_INVALID_EMAIL_NAME = "WaitlistInvalidEmailException"
+        private const val ACCOUNT_ISSUE_ACTIVE_ORDER_EXISTS_NAME = "AccountIssueActiveOrderExistsException"
 
         fun fromBackendName(backendErrorName: String?): VisaApiError? = when (backendErrorName) {
             WAITLIST_INVALID_EMAIL_NAME -> WaitlistInvalidEmail
+            ACCOUNT_ISSUE_ACTIVE_ORDER_EXISTS_NAME -> AccountIssueActiveOrderExists
             else -> null
         }
 

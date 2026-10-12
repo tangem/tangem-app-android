@@ -14,10 +14,12 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.remote)
 
     // region Kotlin
     api(deps.kotlin.coroutines)
     implementation(deps.kotlin.datetime)
+    implementation(deps.kotlin.serialization.core)
     // endregion
 
     // region Other libraries

@@ -81,7 +81,7 @@ internal fun StoryBookListScreen(state: StoryBookUM, modifier: Modifier = Modifi
         items(items = stories, key = { it.title }) { item ->
             PrimaryButton(
                 text = item.title,
-                onClick = { state.onStoryClick(item.factory) },
+                onClick = { state.onStoryClick(item.factory, null) },
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .fillMaxWidth(),

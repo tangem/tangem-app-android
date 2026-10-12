@@ -29,10 +29,19 @@ internal class SdkTransactionTypeConverter(
     smartContractMethods: Map<String, SmartContractMethod>,
     private val yieldSupplyAddresses: Set<String>,
     gaslessFeeAddresses: Set<String>,
+    jointRefundReceiver: String? = null,
     private val currency: CryptoCurrency,
     private val networkTokens: Set<CryptoCurrency.Token> = emptySet(),
     private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
+    safeAddress: String? = null,
 ) : Converter<TransactionHistoryItem, TxInfo.TransactionType> {
+
+    private val safeExecutionDecoder = SafeExecutionTypeDecoder(
+        currency = currency,
+        networkTokens = networkTokens,
+        safeAddress = safeAddress,
+        jointRefundReceiver = jointRefundReceiver,
+    )
 
     /** The SDK reports a selector prefixed or bare depending on the source; the asset is keyed prefixed. */
     private val smartContractMethods: Map<String, SmartContractMethod> =
@@ -46,6 +55,8 @@ internal class SdkTransactionTypeConverter(
     }
 
     override fun convert(value: TransactionHistoryItem): TxInfo.TransactionType {
+        safeExecutionDecoder.refund(value)?.let { return it }
+
         return when (val type = value.type) {
             is TransactionType.ContractMethod -> {
                 getTransactionType(
@@ -145,6 +156,9 @@ internal class SdkTransactionTypeConverter(
             }
             "supplyTopUp" -> TxInfo.TransactionType.YieldSupply.Topup
             "gaslessTransaction" -> getTypeForGaslessMethod(destination, source, methodName)
+            "execTransaction",
+            "aggregate3",
+            -> safeExecutionDecoder.decode(callData = callData, item = historyItem)
             else -> fallbackOperation(methodName)
         } ?: fallbackOperation(methodName)
 
@@ -269,13 +283,6 @@ internal class SdkTransactionTypeConverter(
         }
         return result
     }
-
-    private fun CryptoCurrency.Token.toSdkAmount(rawValue: BigDecimal?): SdkAmount = SdkAmount(
-        currencySymbol = symbol,
-        value = rawValue?.movePointLeft(decimals),
-        decimals = decimals,
-        type = SdkAmountType.Token(contractAddress = contractAddress, id = id.rawCurrencyId?.value),
-    )
 
     private fun String.toSelectorKey(): String = lowercase().formatHex()
 

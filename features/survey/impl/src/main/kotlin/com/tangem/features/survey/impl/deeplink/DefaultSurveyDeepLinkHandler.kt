@@ -32,9 +32,11 @@ internal class DefaultSurveyDeepLinkHandler @AssistedInject constructor(
         override fun create(queryParams: Map<String, String>): DefaultSurveyDeepLinkHandler
     }
 
-    private companion object {
-        const val TAG = "SurveyDeepLink"
-        const val QUERY_TOKEN = "token"
-        const val QUERY_DISPLAY_ID = "display_id"
+    companion object {
+        const val DEEPLINK_KEY = "tangem://survey"
+
+        private const val TAG = "SurveyDeepLink"
+        private const val QUERY_TOKEN = "token"
+        private const val QUERY_DISPLAY_ID = "display_id"
     }
 }

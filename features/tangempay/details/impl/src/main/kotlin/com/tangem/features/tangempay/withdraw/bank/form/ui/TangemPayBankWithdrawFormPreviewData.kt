@@ -26,6 +26,7 @@ internal object TangemPayBankWithdrawFormPreviewData {
         onSelectorClick = {},
         onSuggestionClick = {},
         onContinueClick = {},
+        onRevealFieldsClick = {},
     )
 
     val personalEmpty: TangemPayBankWithdrawFormUM = create(
