@@ -46,7 +46,7 @@ import kotlin.coroutines.cancellation.CancellationException
  * [CloudBackupRepository] backed by the Google Drive API v3.
  *
  * Backup files are stored in a visible (not hidden) folder [BACKUPS_FOLDER_NAME] of "My Drive"
- * (FR-03, transparency over security by obscurity). Tangem files are marked and looked up
+ * (transparency over security by obscurity). Tangem files are marked and looked up
  * by [KEY_IS_TANGEM_BACKUP] in `appProperties`, so renames done by the user don't break discovery.
  */
 internal class DefaultCloudBackupRepository(
@@ -241,7 +241,7 @@ internal class DefaultCloudBackupRepository(
                     api.deleteFile(authorization = auth, fileId = fileId)
                 }
 
-                // deleting an already absent file is a success (backup is desynced, UC-07 alt flow 5.2)
+                // deleting an already absent file is a success (backup is desynced)
                 if (!response.isSuccessful && response.code() != HttpURLConnection.HTTP_NOT_FOUND) {
                     raise(response.toError { CloudBackupError.WriteError(it) })
                 }

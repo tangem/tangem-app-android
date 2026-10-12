@@ -16,6 +16,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.mcp.api.McpComponentFactory
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
@@ -39,6 +40,7 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
     private val feeSelectorBlockComponentFactory: FeeSelectorBlockComponent.Factory,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     private val feeSelectorComponentFactory: FeeSelectorComponent.Factory,
+    private val mcpComponentFactory: McpComponentFactory,
 ) : AppComponentContext by appComponentContext, WcRoutingComponent {
 
     private val model: WcRoutingModel = getOrCreateModel()
@@ -135,6 +137,8 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
                     alertType = RequiredReconnectWithNetwork(config.networkName) { model.innerRouter.pop() },
                 ),
             )
+            is WcInnerRoute.McpRequestRoute -> mcpComponentFactory
+                .create(context = childContext, request = config.request)
         }
     }
 

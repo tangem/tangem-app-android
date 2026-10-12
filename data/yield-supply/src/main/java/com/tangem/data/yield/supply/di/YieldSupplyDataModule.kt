@@ -1,12 +1,15 @@
 package com.tangem.data.yield.supply.di
 
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.yield.supply.DefaultYieldModuleAddressProvider
 import com.tangem.data.yield.supply.DefaultYieldSupplyRepository
 import com.tangem.data.yield.supply.DefaultYieldSupplyErrorResolver
 import com.tangem.data.yield.supply.DefaultYieldSupplyTransactionRepository
 import com.tangem.data.yield.supply.promo.DefaultYieldPromoRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.grow.datasource.yield.YieldIncentivesApi
 import com.tangem.grow.datasource.yield.YieldSupplyApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
@@ -54,23 +57,30 @@ internal object YieldSupplyDataModule {
 
     @Provides
     @Singleton
+    @Suppress("LongParameterList")
     fun provideYieldSupplyMarketRepository(
         yieldSupplyApi: YieldSupplyApi,
+        yieldIncentivesApi: YieldIncentivesApi,
         store: YieldMarketsStore,
         walletManagersFacade: WalletManagersFacade,
         dispatchers: CoroutineDispatcherProvider,
         analyticsExceptionHandler: AnalyticsExceptionHandler,
         appPreferencesStore: AppPreferencesStore,
         growPreferencesKeys: GrowPreferencesKeys,
+        featureTogglesManager: FeatureTogglesManager,
     ): YieldSupplyRepository {
         return DefaultYieldSupplyRepository(
             yieldSupplyApi = yieldSupplyApi,
+            yieldIncentivesApi = yieldIncentivesApi,
             store = store,
             dispatchers = dispatchers,
             walletManagersFacade = walletManagersFacade,
             analyticsExceptionHandler = analyticsExceptionHandler,
             appPreferencesStore = appPreferencesStore,
             growPreferencesKeys = growPreferencesKeys,
+            isMerklIncentivesEnabled = featureTogglesManager.isFeatureEnabled(
+                FeatureToggles.TWI_1520_MERKL_INCENTIVES_ENABLED,
+            ),
         )
     }
 

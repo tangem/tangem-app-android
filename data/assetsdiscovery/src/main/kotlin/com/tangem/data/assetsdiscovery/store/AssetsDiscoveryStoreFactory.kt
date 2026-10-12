@@ -8,6 +8,7 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.listTypes
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -29,12 +30,17 @@ class AssetsDiscoveryStoreFactory @Inject constructor(
     fun provide(userWalletId: UserWalletId): AssetsDiscoveryStore {
         val userWalletStringId = userWalletId.formatted()
         return stores.computeIfAbsent(userWalletStringId) {
+            val fileName = "token_sync_$userWalletStringId"
             DefaultAssetsDiscoveryStore(
-                persistenceStore = createPersistenceStore(
-                    fileName = "token_sync_$userWalletStringId",
-                    types = listTypes<UserTokensResponse.Token>(),
-                    defaultValue = emptyList(),
-                ),
+                persistenceStore = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+                    dataStoreFactory.create(defaultValue = emptyList<UserTokensResponse.Token>(), fileName = fileName)
+                } else {
+                    createPersistenceStore(
+                        fileName = fileName,
+                        types = listTypes<UserTokensResponse.Token>(),
+                        defaultValue = emptyList(),
+                    )
+                },
             )
         }
     }

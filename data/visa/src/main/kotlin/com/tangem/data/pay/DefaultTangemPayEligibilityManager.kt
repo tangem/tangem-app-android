@@ -98,10 +98,10 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
         return coroutineScope {
             map { wallet ->
                 async {
-                    val isCustomer = onboardingRepository
+                    val hasTangemPay = onboardingRepository
                         .hasTangemPayInWallet(wallet.walletId)
                         .getOrNull() == true
-                    wallet to isCustomer
+                    wallet to hasTangemPay
                 }
             }
                 .awaitAll()

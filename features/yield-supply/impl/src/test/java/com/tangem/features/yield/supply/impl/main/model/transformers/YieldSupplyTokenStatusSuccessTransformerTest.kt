@@ -10,6 +10,7 @@ import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.yield.supply.models.YieldMarketToken
+import com.tangem.domain.yield.supply.models.incentives.YieldIncentiveCampaign
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import org.junit.jupiter.api.Test
@@ -100,6 +101,78 @@ internal class YieldSupplyTokenStatusSuccessTransformerTest {
         assertThat(learnMoreClicked).isTrue()
     }
 
+    @Test
+    fun `GIVEN active campaign without boost WHEN transform THEN Available with effective apy`() {
+        // Arrange
+        val transformer = createTransformer(
+            tokenStatus = marketToken(
+                isActive = true,
+                apy = BigDecimal("5.5"),
+                campaign = campaign(hasActiveCampaign = true),
+            ),
+        )
+
+        // Act
+        val result = transformer.transform(YieldSupplyUM.Initial)
+
+        // Assert
+        val available = result as YieldSupplyUM.Available
+        assertThat(available.apy).isEqualTo("7.0")
+        assertThat(available.apyText).isEqualTo(
+            combinedReference(
+                resourceReference(R.string.yield_module_token_details_earn_notification_apy),
+                stringReference(" 7.0%"),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN campaign is over WHEN transform THEN Available with base apy`() {
+        // Arrange
+        val transformer = createTransformer(
+            tokenStatus = marketToken(
+                isActive = true,
+                apy = BigDecimal("5.5"),
+                campaign = campaign(hasActiveCampaign = false),
+            ),
+        )
+
+        // Act
+        val result = transformer.transform(YieldSupplyUM.Initial)
+
+        // Assert
+        assertThat((result as YieldSupplyUM.Available).apy).isEqualTo("5.5")
+    }
+
+    @Test
+    fun `GIVEN active campaign and boost WHEN transform THEN boost multiplies the base apy`() {
+        // Arrange
+        val transformer = createTransformer(
+            tokenStatus = marketToken(
+                isActive = true,
+                apy = BigDecimal("5.5"),
+                campaign = campaign(hasActiveCampaign = true),
+            ),
+            boostedApy = BigDecimal("16.5"),
+        )
+
+        // Act
+        val result = transformer.transform(YieldSupplyUM.Initial)
+
+        // Assert
+        assertThat((result as YieldSupplyUM.Available).apyText).isEqualTo(
+            annotatedReference(
+                buildAnnotatedString {
+                    append("APY ")
+                    withStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) {
+                        append("5.5%")
+                    }
+                    append(" x3 → 16.5%")
+                },
+            ),
+        )
+    }
+
     private fun createTransformer(
         tokenStatus: YieldMarketToken,
         boostedApy: BigDecimal? = null,
@@ -110,13 +183,23 @@ internal class YieldSupplyTokenStatusSuccessTransformerTest {
         boostedApy = boostedApy,
     )
 
-    private fun marketToken(isActive: Boolean, apy: BigDecimal = BigDecimal("5.5")): YieldMarketToken =
-        YieldMarketToken(
-            tokenAddress = "0xToken",
-            chainId = 1,
-            apy = apy,
-            isActive = isActive,
-            maxFeeNative = BigDecimal.ZERO,
-            maxFeeUSD = BigDecimal.ZERO,
-        )
+    private fun marketToken(
+        isActive: Boolean,
+        apy: BigDecimal = BigDecimal("5.5"),
+        campaign: YieldIncentiveCampaign? = null,
+    ): YieldMarketToken = YieldMarketToken(
+        tokenAddress = "0xToken",
+        chainId = 1,
+        apy = apy,
+        isActive = isActive,
+        maxFeeNative = BigDecimal.ZERO,
+        maxFeeUSD = BigDecimal.ZERO,
+        campaign = campaign,
+    )
+
+    private fun campaign(hasActiveCampaign: Boolean) = YieldIncentiveCampaign(
+        hasActiveCampaign = hasActiveCampaign,
+        rewardsApr = BigDecimal("1.5"),
+        totalApyEst = BigDecimal("7.0"),
+    )
 }

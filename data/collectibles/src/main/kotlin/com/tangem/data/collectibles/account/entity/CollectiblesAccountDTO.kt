@@ -68,4 +68,5 @@ internal sealed interface CollectiblesAccountStatusValueDTO {
 internal data class CollectiblesVaultBalanceDTO(
     @SerialName("usdc_amount") val usdcAmount: SerializedBigDecimal,
     @SerialName("usdc_mint") val usdcMint: String,
+    @SerialName("usdc_ata_address") val usdcAtaAddress: String,
 )

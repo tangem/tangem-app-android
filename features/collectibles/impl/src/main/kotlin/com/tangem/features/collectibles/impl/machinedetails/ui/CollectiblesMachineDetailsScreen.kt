@@ -9,19 +9,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.ds2.loader.TangemLoader
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.collectibles.impl.R
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesLoadMoreEffect
+import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImage
+import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImageErrorCard
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesStatus
+import com.tangem.features.collectibles.impl.common.ui.PACK_IMAGE_CARD_RADIUS
 import com.tangem.features.collectibles.impl.machinedetails.ui.components.*
 import com.tangem.features.collectibles.impl.machinedetails.ui.state.CollectiblesMachineDetailsUM
 import kotlinx.collections.immutable.ImmutableList
+import kotlin.collections.chunked
+import kotlin.collections.forEach
 
 @Composable
 internal fun CollectiblesMachineDetailsScreen(
@@ -64,7 +71,11 @@ internal fun CollectiblesMachineDetailsScreen(
                     .padding(contentPadding),
                 contentAlignment = Alignment.Center,
             ) {
-                CollectiblesStatus(message = state.message, onReloadClick = state.onReloadClick)
+                CollectiblesStatus(
+                    message = state.message,
+                    onReloadClick = state.onReloadClick,
+                    isReloading = state.isReloading,
+                )
             }
             is CollectiblesMachineDetailsUM.Content -> MachineDetailsInfoList(
                 state = state,
@@ -98,59 +109,74 @@ private fun MachineDetailsInfoList(
         contentPadding = contentPadding,
     ) {
         item(key = PackDetailsKeys.HERO) {
-            CollectiblesPackHero(imageUrl = state.imageUrl)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 48.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                HeroPackImage(imageUrl = state.imageUrl)
+            }
         }
         item(key = PackDetailsKeys.TIERS) {
             Column {
-                SpacerH(32.dp)
                 CollectiblesSectionHeading(
                     title = resourceReference(R.string.collectibles_machine_value_and_odds_section),
                 )
-                CardGrid(items = state.tiers) { tier -> CollectiblesTierCard(state = tier) }
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    state.tiers.forEach { tier ->
+                        CollectiblesTierCard(state = tier)
+                    }
+                }
             }
         }
+
         item(key = PackDetailsKeys.DETAILS) {
             Column {
-                SpacerH(32.dp)
+                SpacerH(24.dp)
                 CollectiblesSectionHeading(title = resourceReference(R.string.collectibles_machine_details_section))
                 CardGrid(items = state.details) { detail -> CollectiblesDetailCard(state = detail) }
                 PoweredBy()
             }
         }
-        item(key = PackDetailsKeys.PRIZE_POOL_HEADING) {
-            SpacerH(32.dp)
-            CollectiblesSectionHeading(title = resourceReference(R.string.collectibles_machine_prize_pool_section))
-        }
 
-        prizePool(state = state.prizePool)
+        prizePool(state = state)
     }
 }
 
-private fun LazyListScope.prizePool(state: CollectiblesMachineDetailsUM.PrizePoolUM) {
-    when (state) {
+private fun LazyListScope.prizePool(state: CollectiblesMachineDetailsUM.Content) {
+    if (state.prizePool is CollectiblesMachineDetailsUM.PrizePoolUM.Error) {
+        item(key = PackDetailsKeys.PRIZE_POOL_HEADING) { SpacerH(24.dp) }
+    } else {
+        item(key = PackDetailsKeys.PRIZE_POOL_HEADING) {
+            SpacerH(24.dp)
+            CollectiblesSectionHeading(title = resourceReference(R.string.collectibles_machine_prize_pool_section))
+        }
+    }
+
+    when (val prizePool = state.prizePool) {
         is CollectiblesMachineDetailsUM.PrizePoolUM.Loading -> item(key = PackDetailsKeys.PRIZE_POOL_STATUS) {
             CollectiblesPrizeGridSkeleton()
         }
+
         is CollectiblesMachineDetailsUM.PrizePoolUM.Error -> item(key = PackDetailsKeys.PRIZE_POOL_STATUS) {
             CollectiblesStatus(
-                message = state.message,
-                onReloadClick = state.onReloadClick,
-                modifier = Modifier.padding(vertical = 24.dp),
+                message = prizePool.message,
+                onReloadClick = prizePool.onReloadClick,
+                isReloading = prizePool.isReloading,
+                modifier = Modifier.padding(top = 118.dp, bottom = 88.dp),
             )
         }
-        is CollectiblesMachineDetailsUM.PrizePoolUM.Empty -> item(key = PackDetailsKeys.PRIZE_POOL_STATUS) {
-            CollectiblesStatus(
-                message = state.message,
-                onReloadClick = null,
-                modifier = Modifier.padding(vertical = 24.dp),
-            )
-        }
+
         is CollectiblesMachineDetailsUM.PrizePoolUM.Content -> {
-            items(items = state.rows, key = { row -> row.id }, contentType = { row -> row::class.java }) { row ->
+            items(items = prizePool.rows, key = { row -> row.id }, contentType = { row -> row::class.java }) { row ->
                 PrizeRow(row = row)
             }
 
-            if (state.isLoadingNextPage) {
+            if (prizePool.isLoadingNextPage) {
                 item(key = PackDetailsKeys.PRIZE_POOL_NEXT_PAGE) {
                     Box(
                         modifier = Modifier
@@ -209,10 +235,9 @@ private fun PoweredBy(modifier: Modifier = Modifier) {
         text = resourceReference(
             id = R.string.collectibles_machine_powered_by,
             formatArgs = wrappedList(
-                styledStringReference(
-                    value = "Collector Crypt",
-                    spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.primary) },
-                ),
+                annotatedReference {
+                    withStyle(SpanStyle(color = TangemTheme.colors3.text.primary)) { append(PROVIDER_NAME) }
+                },
             ),
         ).resolveAnnotatedReference(),
         style = TangemTheme.typography3.caption.medium,
@@ -221,6 +246,25 @@ private fun PoweredBy(modifier: Modifier = Modifier) {
     )
 }
 
+@Composable
+private fun HeroPackImage(imageUrl: String?) {
+    var isImageLoading by remember(imageUrl) { mutableStateOf(true) }
+
+    Box(modifier = Modifier.size(width = 204.dp, height = 294.dp)) {
+        CollectiblesPackImage(
+            imageUrl = imageUrl,
+            glowRadius = 48.dp,
+            onLoadingChange = { isImageLoading = it },
+            modifier = Modifier.matchParentSize(),
+            errorContent = { CollectiblesPackImageErrorCard() },
+        )
+        if (isImageLoading) {
+            TangemShimmer(modifier = Modifier.matchParentSize(), radius = PACK_IMAGE_CARD_RADIUS)
+        }
+    }
+}
+
+private const val PROVIDER_NAME = "Collector Crypt"
 private const val CARDS_PER_ROW = 2
 private const val PRIZES_PER_ROW = 2
 

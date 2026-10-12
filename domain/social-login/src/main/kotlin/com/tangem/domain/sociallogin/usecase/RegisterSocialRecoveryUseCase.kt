@@ -1,7 +1,7 @@
 package com.tangem.domain.sociallogin.usecase
 
 import arrow.core.Either
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.models.RecoveryKey
 import com.tangem.domain.sociallogin.models.SocialLoginError
@@ -12,7 +12,7 @@ import javax.inject.Inject
  * Binds a wallet to a provider identity and stores its recovery key with the backend.
  *
  * Does not mark the wallet as socially backed up: the cloud file comes after, and until it is there the
- * wallet is bound but not restorable (NFR-01). Setting the flag is the caller's.
+ * wallet is bound but not restorable. Setting the flag is the caller's.
  */
 class RegisterSocialRecoveryUseCase @Inject constructor(
     private val socialRecoveryRepository: SocialRecoveryRepository,
@@ -20,11 +20,11 @@ class RegisterSocialRecoveryUseCase @Inject constructor(
 
     suspend operator fun invoke(
         idToken: SocialProviderIdToken,
-        walletId: UserWalletId,
+        userWallet: UserWallet.Hot,
         recoveryKey: RecoveryKey,
     ): Either<SocialLoginError, Unit> = socialRecoveryRepository.registerRecoveryKey(
         idToken = idToken,
-        walletId = walletId,
+        userWallet = userWallet,
         recoveryKey = recoveryKey,
     )
 }

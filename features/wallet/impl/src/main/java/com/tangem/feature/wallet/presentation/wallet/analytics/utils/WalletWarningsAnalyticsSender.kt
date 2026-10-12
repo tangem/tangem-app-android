@@ -4,12 +4,14 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen.*
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.PushBannerPromo.PushBanner
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 @ModelScoped
@@ -17,6 +19,8 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val screenLifecycleProvider: ScreenLifecycleProvider,
 ) {
+
+    private val sentNotifications = ConcurrentHashMap<UserWalletId, List<WalletNotificationUM>>()
 
     fun send(displayedUiState: WalletState?, newWarnings: List<WalletNotification>) {
         if (screenLifecycleProvider.isBackgroundState.value) return
@@ -32,15 +36,17 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
         }
     }
 
-    fun send(displayedWalletUM: WalletUM?, newNotifications: List<WalletNotificationUM>) {
+    /**
+     * Sends a notice once per appearance. Compared with what was last sent, not with what is displayed, since the
+     * screen updates while sending is skipped. Compared by freshly built events: notifications hold click lambdas and
+     * never equal their previous copy, and a sent event is enriched in place by the analytics handlers.
+     */
+    fun send(userWalletId: UserWalletId, displayedWalletUM: WalletUM?, newNotifications: List<WalletNotificationUM>) {
         if (screenLifecycleProvider.isBackgroundState.value) return
-        if (newNotifications.isEmpty()) return
         if (displayedWalletUM == null || displayedWalletUM.pullToRefreshConfig.isRefreshing) return
 
-        val totalNotifications = displayedWalletUM.notifications + displayedWalletUM.notificationsCarousel
-        val notificationsDiff = newNotifications.filter { it !in totalNotifications }
-
-        val eventsToSend = getEvents2(notificationsDiff)
+        val eventsToSend = getEvents2(newNotifications) - getEvents2(sentNotifications[userWalletId].orEmpty())
+        sentNotifications[userWalletId] = newNotifications
 
         eventsToSend.forEach { event ->
             analyticsEventHandler.send(event)
@@ -97,7 +103,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.AddFunds -> NoticeAddFunds()
             is WalletNotification.Warning.TangemPayRefreshNeeded -> null
             is WalletNotification.Warning.TangemPayUnreachable -> null
-            is WalletNotification.UpgradeHotWalletPromo -> null
             is WalletNotification.YieldBoostPromo -> null
             is WalletNotification.AssetsDiscoveryCompleted -> null
             is WalletNotification.CreateTangemPayAccount -> TangemPayAnalyticsEvents.PermanentBannerShowed()
@@ -135,6 +140,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotificationUM.PushNotifications -> PushBanner()
             is WalletNotificationUM.AddFunds -> NoticeAddFunds()
             is WalletNotificationUM.TangemPayPromo -> TangemPayAnalyticsEvents.PermanentBannerShowed()
+            is WalletNotificationUM.UpgradeHotWalletPromo -> NoticeUpgradeToColdWallet()
             is WalletNotificationUM.UnlockWallets,
             is WalletNotificationUM.NoAccount,
             is WalletNotificationUM.LowSignatures,

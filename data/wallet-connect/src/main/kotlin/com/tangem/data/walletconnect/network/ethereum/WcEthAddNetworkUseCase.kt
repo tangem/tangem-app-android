@@ -5,12 +5,12 @@ import arrow.core.left
 import arrow.core.right
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.Wallet.Model
-import com.reown.walletkit.client.WalletKit
 import com.tangem.blockchain.extensions.hexToInt
 import com.tangem.data.walletconnect.model.CAIP10
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork.NamespaceConverter.Companion.ETH_NAMESPACE_KEY
 import com.tangem.data.walletconnect.respond.WcRespondService
+import com.tangem.data.walletconnect.sdk.WcSdk
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.domain.models.network.Network
@@ -25,11 +25,10 @@ import com.tangem.domain.walletconnect.usecase.method.WcNetworkDerivationState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 
 internal class WcEthAddNetworkUseCase @AssistedInject constructor(
     private val respondService: WcRespondService,
+    private val wcSdk: WcSdk,
     private val networksConverter: WcNetworksConverter,
     addSwitchCommonDelegateFactory: WcEthAddSwitchCommonDelegate.Factory,
     @Assisted val context: WcMethodUseCaseContext,
@@ -94,15 +93,8 @@ internal class WcEthAddNetworkUseCase @AssistedInject constructor(
         return respondService.respond(rawSdkRequest, "")
     }
 
-    private suspend fun sdkUpdateSession(sessionUpdate: Wallet.Params.SessionUpdate): Either<Throwable, Unit> {
-        return suspendCancellableCoroutine { continuation ->
-            WalletKit.updateSession(
-                params = sessionUpdate,
-                onSuccess = { if (continuation.isActive) continuation.resume(Unit.right()) },
-                onError = { if (continuation.isActive) continuation.resume(it.throwable.left()) },
-            )
-        }
-    }
+    private suspend fun sdkUpdateSession(sessionUpdate: Wallet.Params.SessionUpdate) =
+        wcSdk.updateSession(sessionUpdate)
 
     override fun reject() {
         respondService.rejectRequestNonBlock(rawSdkRequest)
