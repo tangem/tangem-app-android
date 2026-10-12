@@ -9,14 +9,18 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.account.MoneyAccountStatusValue
+import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
+import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.features.moneyaccount.details.component.MoneyAccountMainComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class MoneyAccountMainModel @Inject constructor(
@@ -26,9 +30,12 @@ internal class MoneyAccountMainModel @Inject constructor(
     private val router: Router,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val urlOpener: UrlOpener,
+    private val getExploreUrlUseCase: GetExploreUrlUseCase,
+    moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory,
 ) : Model() {
 
     private val params = paramsContainer.require<MoneyAccountMainComponent.Params>()
+    val currency: CryptoCurrency.Token = moneyAccountCurrencyFactory.create(params.userWalletId)
     private val stateFactory = MoneyAccountMainStateFactory(
         onTermsClick = ::onTermsClick,
         onSupportClick = ::onSupportClick,
@@ -56,6 +63,13 @@ internal class MoneyAccountMainModel @Inject constructor(
 
     private fun onBackClick() {
         router.pop()
+    }
+
+    fun onExploreClick() {
+        modelScope.launch {
+            val url = getExploreUrlUseCase(userWalletId = params.userWalletId, currency = currency)
+            if (url.isNotBlank()) urlOpener.openUrl(url)
+        }
     }
 
     private fun onTermsClick() {
