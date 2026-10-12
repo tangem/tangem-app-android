@@ -34,7 +34,6 @@ import com.tangem.operations.files.ReadFilesTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.visa.VisaCardScanHandler
-import com.tangem.tap.mainScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -281,7 +280,7 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        mainScope.launch {
+        session.scope.launch {
             val isActivationInProgress = cardRepository.isActivationInProgress(card.cardId)
 
             @Suppress("ComplexCondition")

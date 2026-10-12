@@ -8,6 +8,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Locale
@@ -337,6 +338,54 @@ internal class BigDecimalCryptoFormatTest {
 
         Truth.assertThat(formatted)
             .isEqualTo("50.000,12".addSymbolWithSpaceRight(symbol))
+    }
+
+    @Test
+    fun `any decimals amount rounds down`() {
+        val testValue = BigDecimal("1.999999999")
+
+        val formatted = testValue.format {
+            crypto(
+                symbol = symbol,
+                decimals = 18,
+                locale = testLocale,
+            ).anyDecimals(maxDecimals = 8, minDecimals = 2, roundingMode = RoundingMode.DOWN)
+        }
+
+        Truth.assertThat(formatted)
+            .isEqualTo("1.99999999".addSymbolWithSpaceLeft(symbol))
+    }
+
+    @Test
+    fun `any decimals amount below the cap keeps its lower sign`() {
+        val testValue = BigDecimal("0.000000001")
+
+        val formatted = testValue.format {
+            crypto(
+                symbol = symbol,
+                decimals = 18,
+                locale = testLocale,
+            ).anyDecimals(maxDecimals = 8, minDecimals = 2, canBeLower = true)
+        }
+
+        Truth.assertThat(formatted)
+            .isEqualTo("<" + CURRENCY_SPACE_FOR_TESTS + "0.00000001".addSymbolWithSpaceLeft(symbol))
+    }
+
+    @Test
+    fun `any decimals amount below the cap reads as zero without the lower sign`() {
+        val testValue = BigDecimal("0.000000001")
+
+        val formatted = testValue.format {
+            crypto(
+                symbol = symbol,
+                decimals = 18,
+                locale = testLocale,
+            ).anyDecimals(maxDecimals = 8, minDecimals = 2)
+        }
+
+        Truth.assertThat(formatted)
+            .isEqualTo("0.00".addSymbolWithSpaceLeft(symbol))
     }
 
     // === fee ===

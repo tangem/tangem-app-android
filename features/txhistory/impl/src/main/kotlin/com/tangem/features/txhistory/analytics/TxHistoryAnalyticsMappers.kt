@@ -31,7 +31,9 @@ private fun TangemPayTxHistoryItem.toAnalyticsType(): String = when (this) {
 }
 
 private fun TxInfo.TransactionType.toAnalyticsType(isOutgoing: Boolean): String = when (this) {
-    TxInfo.TransactionType.Transfer -> if (isOutgoing) "Send" else "Receive"
+    TxInfo.TransactionType.Transfer,
+    is TxInfo.TransactionType.Joint.Transfer,
+    -> if (isOutgoing) "Send" else "Receive"
     is TxInfo.TransactionType.Approve -> "Approve"
     TxInfo.TransactionType.Swap -> "Swap"
     is TxInfo.TransactionType.Staking -> "Staking"

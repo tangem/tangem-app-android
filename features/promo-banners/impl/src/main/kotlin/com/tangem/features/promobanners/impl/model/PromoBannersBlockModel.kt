@@ -12,8 +12,15 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.promo.usecase.GetPromoCampaignsUseCase
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
+import com.tangem.features.promobanners.api.PromoBannersFeatureToggles
 import com.tangem.features.promobanners.impl.analytics.PromoBannerAnalyticsEvent
+import com.tangem.features.promobanners.impl.campaigns.service.CampaignsService
+import com.tangem.features.promobanners.impl.campaigns.v2.model.PromoBannerCampaignMatcher
+import com.tangem.features.promobanners.impl.campaigns.v2.model.WalletCampaigns
 import com.tangem.features.promobanners.impl.converters.PromoBannerDisplayToNotificationConverter
 import com.tangem.features.promobanners.impl.repository.PromoBannersRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -41,6 +48,10 @@ internal class PromoBannersBlockModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val userWalletsListRepository: UserWalletsListRepository,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
+    promoBannersFeatureToggles: PromoBannersFeatureToggles,
+    private val getPromoCampaignsUseCase: GetPromoCampaignsUseCase,
+    private val campaignMatcher: PromoBannerCampaignMatcher,
+    private val campaignsService: CampaignsService,
 ) : Model() {
 
     private val params = paramsContainer.require<PromoBannersBlockComponent.Params>()
@@ -52,20 +63,35 @@ internal class PromoBannersBlockModel @Inject constructor(
     private val savedDisplayIdByWalletId: MutableMap<String, Int> = mutableMapOf()
     private val prefetchedWalletIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
     private val prefetchSemaphore = Semaphore(permits = PREFETCH_PARALLELISM)
+    private val isCampaignsV2Enabled = promoBannersFeatureToggles.isPromoCampaignsV2Enabled
+    private val requestedCampaignWalletIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
     /** Raw banners per wallet, filled from cache/prefetch/network. Source of truth for the UI. */
     private val rawBannersByWalletId = MutableStateFlow<Map<String, List<PromoBannerDisplay>>>(emptyMap())
+
+    /** Filled only with campaigns v2 enabled; decides which campaign banners of [rawBannersByWalletId] are shown. */
+    private val campaignsByWalletId = MutableStateFlow<Map<String, WalletCampaigns>>(emptyMap())
 
     private val selectedWalletId = MutableStateFlow<String?>(null)
 
     private val screenVisible = MutableStateFlow(params.isInitiallyVisibleOnScreen)
 
     private val baseBannerStates: StateFlow<Map<String, PromoBannersBlockUM>> =
-        rawBannersByWalletId
-            .map { rawByWallet ->
-                rawByWallet.mapValues { (walletId, banners) -> buildState(walletId, banners, isVisible = false) }
+        combine(rawBannersByWalletId, campaignsByWalletId) { rawByWallet, campaignsByWallet ->
+            rawByWallet.mapValues { (walletId, banners) ->
+                val shownBanners = if (isCampaignsV2Enabled) {
+                    campaignMatcher.filter(banners, campaignsByWallet[walletId])
+                } else {
+                    banners
+                }
+                buildState(
+                    walletId = walletId,
+                    banners = shownBanners,
+                    walletCampaigns = campaignsByWallet[walletId],
+                    isVisible = false,
+                )
             }
-            .stateIn(modelScope, SharingStarted.Eagerly, emptyMap())
+        }.stateIn(modelScope, SharingStarted.Eagerly, emptyMap())
 
     /**
      * Per-wallet UI states, so a pager page can render its own wallet's banners synchronously from
@@ -106,9 +132,10 @@ internal class PromoBannersBlockModel @Inject constructor(
         modelScope.launch {
             userWalletsListRepository.selectedUserWallet
                 .filterNotNull()
-                .map { it.walletId.stringValue }
-                .distinctUntilChanged()
-                .collectLatest { walletId ->
+                .distinctUntilChangedBy { it.walletId }
+                .collectLatest { userWallet ->
+                    val walletId = userWallet.walletId.stringValue
+                    requestCampaigns(userWallet)
                     wasCarouselScrolled = false
                     selectedWalletId.value = walletId
                     loadWallet(walletId)
@@ -128,6 +155,7 @@ internal class PromoBannersBlockModel @Inject constructor(
                 .filterNotNull()
                 .collect { wallets ->
                     wallets.forEach { wallet ->
+                        requestCampaigns(wallet)
                         val walletId = wallet.walletId.stringValue
                         if (prefetchedWalletIds.add(walletId)) {
                             modelScope.launch {
@@ -141,6 +169,29 @@ internal class PromoBannersBlockModel @Inject constructor(
                         }
                     }
                 }
+        }
+    }
+
+    /**
+     * Campaigns load next to the banners of every wallet, so a campaign banner is decided by the time it can be
+     * shown. The repository caches them per wallet for the session; a failed wallet is retried on its next selection.
+     */
+    private fun requestCampaigns(userWallet: UserWallet) {
+        if (!isCampaignsV2Enabled) return
+        val walletId = userWallet.walletId.stringValue
+        if (!requestedCampaignWalletIds.add(walletId)) return
+
+        modelScope.launch {
+            getPromoCampaignsUseCase(userWallet).fold(
+                ifLeft = { error ->
+                    TangemLogger.e("Failed to load promo campaigns for banners", error)
+                    requestedCampaignWalletIds.remove(walletId)
+                    campaignsByWalletId.update { it + (walletId to WalletCampaigns.Failed) }
+                },
+                ifRight = { campaigns ->
+                    campaignsByWalletId.update { it + (walletId to WalletCampaigns.Loaded(userWallet, campaigns)) }
+                },
+            )
         }
     }
 
@@ -168,13 +219,36 @@ internal class PromoBannersBlockModel @Inject constructor(
     private fun buildState(
         walletId: String,
         banners: List<PromoBannerDisplay>,
+        walletCampaigns: WalletCampaigns?,
         isVisible: Boolean,
     ): PromoBannersBlockUM {
+        val campaignNames = campaignNamesByDisplayId(banners, walletCampaigns)
         val bannerUMs = banners.map { banner ->
+            val campaignName = campaignNames[banner.id]
             converter.convert(
                 banner = banner,
-                onDeeplinkClick = { deeplink -> onButtonClick(banner.id, deeplink) },
-                onDismiss = { displayId -> onBannerDismiss(walletId, displayId) },
+                onDeeplinkClick = { deeplink -> onButtonClick(
+                    displayId = banner.id,
+                    deeplink = deeplink,
+                    campaignName = campaignName,
+                ) },
+                onDismiss = { displayId -> onBannerDismiss(
+                    walletId = walletId,
+                    displayId = displayId,
+                    campaignName = campaignName,
+                ) },
+                onCampaignClick = if (isCampaignsV2Enabled) {
+                    { campaignId ->
+                        onCampaignClick(
+                            walletId = walletId,
+                            displayId = banner.id,
+                            campaignId = campaignId,
+                            campaignName = campaignName,
+                        )
+                    }
+                } else {
+                    null
+                },
             )
         }.toImmutableList()
 
@@ -191,16 +265,29 @@ internal class PromoBannersBlockModel @Inject constructor(
             banners = bannerUMs,
             isVisibleOnScreen = isVisible,
             placeholder = params.placeholder,
-            onBannerShown = { displayId -> onBannerShown(walletId, displayId) },
+            onBannerShown = { displayId -> onBannerShown(walletId, displayId, campaignNames[displayId]) },
             onCarouselScrolled = ::onCarouselScrolled,
             onPageChanged = { displayId -> savedDisplayIdByWalletId[walletId] = displayId },
         )
     }
 
-    private fun onBannerShown(walletId: String, displayId: Int) {
+    /** Campaign banners report their campaign's name; it is known whenever one is shown, see [campaignMatcher]. */
+    private fun campaignNamesByDisplayId(
+        banners: List<PromoBannerDisplay>,
+        walletCampaigns: WalletCampaigns?,
+    ): Map<Int, String> {
+        val campaigns = (walletCampaigns as? WalletCampaigns.Loaded)?.campaigns ?: return emptyMap()
+
+        return banners.mapNotNull { banner ->
+            val campaign = campaigns.firstOrNull { it.id == banner.campaignId } ?: return@mapNotNull null
+            banner.id to campaign.name
+        }.toMap()
+    }
+
+    private fun onBannerShown(walletId: String, displayId: Int, campaignName: String?) {
         if (walletId != selectedWalletId.value) return
         if (shownBannerIds.add(walletId to displayId)) {
-            analyticsEventHandler.send(PromoBannerAnalyticsEvent.Shown(displayId, placeholderName))
+            analyticsEventHandler.send(PromoBannerAnalyticsEvent.Shown(displayId, placeholderName, campaignName))
         }
     }
 
@@ -211,14 +298,19 @@ internal class PromoBannersBlockModel @Inject constructor(
         }
     }
 
-    private fun onButtonClick(displayId: Int, deeplink: String?) {
-        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Clicked(displayId, placeholderName))
+    private fun onButtonClick(displayId: Int, deeplink: String?, campaignName: String?) {
+        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Clicked(displayId, placeholderName, campaignName))
 
         if (deeplink.isNullOrBlank()) {
             uiMessageSender.send(ToastMessage(message = resourceReference(R.string.common_something_went_wrong)))
         } else {
             deeplinkLauncher.launch(appendSurveyDisplayId(deeplink, displayId))
         }
+    }
+
+    private fun onCampaignClick(walletId: String, displayId: Int, campaignId: Int, campaignName: String?) {
+        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Clicked(displayId, placeholderName, campaignName))
+        campaignsService.show(campaignId = campaignId.toString(), userWalletId = UserWalletId(walletId))
     }
 
     private fun appendSurveyDisplayId(deeplink: String, displayId: Int): String {
@@ -243,8 +335,8 @@ internal class PromoBannersBlockModel @Inject constructor(
         onPageChanged = {},
     )
 
-    private fun onBannerDismiss(walletId: String, displayId: Int) {
-        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Dismissed(displayId, placeholderName))
+    private fun onBannerDismiss(walletId: String, displayId: Int, campaignName: String?) {
+        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Dismissed(displayId, placeholderName, campaignName))
         rawBannersByWalletId.update { byWallet ->
             val banners = byWallet[walletId] ?: return@update byWallet
             byWallet + (walletId to banners.filterNot { it.id == displayId })

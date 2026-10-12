@@ -1,6 +1,8 @@
 package com.tangem.features.tangempay.addfunds
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
@@ -23,7 +25,8 @@ internal class TangemPayAddFundsComponent(
 
     @Composable
     override fun BottomSheet() {
-        TangemPayAddFundsContent(state = model.uiState)
+        val state by model.uiState.collectAsStateWithLifecycle()
+        TangemPayAddFundsContent(state = state)
     }
 
     data class Params(
@@ -41,5 +44,6 @@ internal interface AddFundsListener {
     fun onClickReceive(data: TangemPayTopUpData)
     fun onClickSwap(data: TangemPayTopUpData)
     fun onClickBankTransfer()
+    fun onBankingDetailsLoadFailed(productInstanceId: String)
     fun onDismissAddFunds()
 }

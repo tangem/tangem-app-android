@@ -8,7 +8,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
-import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.currency.isJoint
 import com.tangem.features.txhistory.component.JointCosignRequestsComponent
 import com.tangem.features.txhistory.entity.JointCosignRequestsUM
 import com.tangem.features.txhistory.joint.requests.JointOperationSlotConfig
@@ -41,7 +41,7 @@ internal class JointCosignRequestsModel @Inject constructor(
 
     private val params: JointCosignRequestsComponent.Params = paramsContainer.require()
 
-    private val isJointCurrency = params.currency.network.derivationPath is Network.DerivationPath.Joint
+    private val isJointCurrency = params.currency.isJoint
 
     private val isResumed = MutableStateFlow(false)
 
@@ -77,7 +77,7 @@ internal class JointCosignRequestsModel @Inject constructor(
     }
 
     /**
-     * The backend won't silent-push a new cosign request, so while this screen is on top a 60-second poll keeps
+     * The backend won't silent-push a new cosign request, so while this screen is on top a 5-second poll keeps
 
      * while none was known yet would never be discovered. [pollingCoordinator] paces itself — this only decides
      * whether to collect, and only for a currency that actually belongs to a joint account.

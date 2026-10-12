@@ -1,14 +1,13 @@
 package com.tangem.data.visa
 
 import arrow.core.Either
-import com.squareup.moshi.Moshi
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.spend.datasource.pay.models.request.RefreshTokenByCardIdRequest
 import com.tangem.spend.datasource.pay.models.response.TangemPayErrorResponse
 import com.tangem.spend.datasource.visa.VisaApi
 import com.tangem.spend.datasource.visa.models.request.*
-import com.tangem.core.remote.moshi.NetworkMoshi
+import com.tangem.core.remote.json.NetworkJson
 import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.VisaAuthChallenge
@@ -17,15 +16,14 @@ import com.tangem.domain.visa.model.VisaAuthSignedChallenge
 import com.tangem.domain.visa.model.VisaAuthTokens
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 internal class DefaultVisaAuthRemoteDataSource @Inject constructor(
-    @NetworkMoshi private val moshi: Moshi,
+    @NetworkJson private val json: Json,
     private val visaApi: VisaApi,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : VisaAuthRemoteDataSource {
-
-    private val errorAdapter by lazy { moshi.adapter(TangemPayErrorResponse::class.java) }
 
     override suspend fun getCardAuthChallenge(
         cardId: String,
@@ -152,8 +150,8 @@ internal class DefaultVisaAuthRemoteDataSource @Inject constructor(
             if (responseError is ApiResponseError.HttpException &&
                 responseError.errorBody != null
             ) {
-                val errorCode =
-                    errorAdapter.fromJson(responseError.errorBody!!)?.error?.code ?: responseError.code.numericCode
+                val errorCode = TangemPayErrorResponse.decodeOrNull(json, responseError.errorBody)?.error?.code
+                    ?: responseError.code.numericCode
                 return Either.Left(VisaApiError.fromBackendError(errorCode))
             }
 
