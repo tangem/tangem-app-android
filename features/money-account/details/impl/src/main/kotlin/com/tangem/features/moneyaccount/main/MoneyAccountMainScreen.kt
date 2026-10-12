@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.topFade
 import com.tangem.core.ui.ds.contextmenu.TangemContextMenu
@@ -38,10 +39,14 @@ import com.tangem.core.ui.res.generated.icons.*
 import com.tangem.features.moneyaccount.common.ui.TangemBalanceHeader
 import com.tangem.features.moneyaccount.common.ui.TangemBalanceHeaderState
 import com.tangem.features.moneyaccount.common.ui.TangemCircleActionButton
-import com.tangem.features.moneyaccount.common.ui.TangemEmptyState
 import com.tangem.features.moneyaccount.details.impl.R
+import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.txhistory.entity.TxHistoryItemsUM
+import com.tangem.features.txhistory.entity.TxHistoryUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import com.tangem.core.ui.R as CoreUiR
 
 private val InitialTopBarHeight: Dp = 64.dp
@@ -51,8 +56,13 @@ private const val UNAVAILABLE_BALANCE_ALPHA = 0.4f
 private val MessageBannerCornerRadius: Dp = 28.dp
 
 @Composable
-internal fun MoneyAccountMainScreen(state: MoneyAccountMainUM, modifier: Modifier = Modifier) {
+internal fun MoneyAccountMainScreen(
+    state: MoneyAccountMainUM,
+    txHistoryComponent: TxHistoryComponent,
+    modifier: Modifier = Modifier,
+) {
     val listState = rememberLazyListState()
+    val txHistoryState by txHistoryComponent.txHistoryState.collectAsStateWithLifecycle()
     val density = LocalDensity.current
     val statusBarHeight = with(density) { WindowInsets.systemBars.getTop(this).toDp() }
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
@@ -83,6 +93,8 @@ internal fun MoneyAccountMainScreen(state: MoneyAccountMainUM, modifier: Modifie
             body(
                 state = state,
                 listState = listState,
+                txHistoryComponent = txHistoryComponent,
+                txHistoryState = txHistoryState,
             )
         }
         TopBar(
@@ -94,7 +106,12 @@ internal fun MoneyAccountMainScreen(state: MoneyAccountMainUM, modifier: Modifie
     }
 }
 
-private fun LazyListScope.body(state: MoneyAccountMainUM, listState: LazyListState) {
+private fun LazyListScope.body(
+    state: MoneyAccountMainUM,
+    listState: LazyListState,
+    txHistoryComponent: TxHistoryComponent,
+    txHistoryState: TxHistoryItemsUM,
+) {
     val isBalanceUnavailable = state.balance is MoneyAccountBalanceBlockState.Unavailable
     val balanceAlpha = if (isBalanceUnavailable) UNAVAILABLE_BALANCE_ALPHA else 1f
 
@@ -123,16 +140,11 @@ private fun LazyListScope.body(state: MoneyAccountMainUM, listState: LazyListSta
             )
         }
     }
-    item("emptyTransactions") {
+    item("transactionsSpacer") {
         SpacerH24()
-        TangemEmptyState(
-            icon = Icons.ic_binoculars_20,
-            text = resourceReference(R.string.virtual_account_transactions_empty),
-            modifier = Modifier
-                .heightIn(min = rememberRemainingViewportHeight(listState, "emptyTransactions"))
-                .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens2.x4, vertical = TangemTheme.dimens2.x3),
-        )
+    }
+    with(txHistoryComponent) {
+        txHistoryContent(listState = listState, state = txHistoryState)
     }
 }
 
@@ -280,20 +292,6 @@ private fun MenuItem(item: MoneyAccountMenuItemUM, onMenuDismiss: () -> Unit) {
     }
 }
 
-@Composable
-private fun rememberRemainingViewportHeight(listState: LazyListState, itemKey: Any): Dp {
-    val density = LocalDensity.current
-    val remainingPx by remember(listState, itemKey) {
-        derivedStateOf {
-            val info = listState.layoutInfo
-            val item = info.visibleItemsInfo.firstOrNull { it.key == itemKey }
-                ?: return@derivedStateOf 0
-            (info.viewportEndOffset - info.afterContentPadding - item.offset).coerceAtLeast(minimumValue = 0)
-        }
-    }
-    return with(density) { remainingPx.toDp() }
-}
-
 @Preview(device = Devices.PIXEL_7_PRO)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.PIXEL_7_PRO)
 @Composable
@@ -313,6 +311,7 @@ private fun MoneyAccountMainScreenPreview() {
                 onAddFundsClick = {},
                 onSendClick = {},
             ),
+            txHistoryComponent = PreviewTxHistoryComponent,
         )
     }
 }
@@ -333,6 +332,24 @@ private fun MoneyAccountMainScreenBalanceUnavailablePreview() {
                 onAddFundsClick = {},
                 onSendClick = {},
             ),
+            txHistoryComponent = PreviewTxHistoryComponent,
         )
     }
+}
+
+private object PreviewTxHistoryComponent : TxHistoryComponent {
+    override val legacyTxHistoryState: StateFlow<TxHistoryUM> = MutableStateFlow(
+        value = TxHistoryUM.Empty(isBalanceHidden = false, onExploreClick = {}),
+    )
+
+    override val txHistoryState: StateFlow<TxHistoryItemsUM> = MutableStateFlow(
+        value = TxHistoryItemsUM.Empty(isBalanceHidden = false, onExploreClick = {}),
+    )
+
+    override fun LazyListScope.txHistoryContentLegacy(listState: LazyListState, state: TxHistoryUM) = Unit
+
+    override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryItemsUM) = Unit
+
+    @Composable
+    override fun Content(modifier: Modifier) = Unit
 }

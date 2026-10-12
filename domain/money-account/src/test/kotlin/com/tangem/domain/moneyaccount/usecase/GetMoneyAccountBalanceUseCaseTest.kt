@@ -12,6 +12,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
+import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
@@ -29,14 +30,14 @@ import java.math.BigDecimal
 
 internal class GetMoneyAccountBalanceUseCaseTest {
 
-    private val tangemPayCurrencyFactory: TangemPayCurrencyFactory = mockk()
+    private val moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory = mockk()
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher = mockk()
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier = mockk()
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher = mockk()
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier = mockk()
 
     private val useCase = GetMoneyAccountBalanceUseCase(
-        tangemPayCurrencyFactory = tangemPayCurrencyFactory,
+        moneyAccountCurrencyFactory = moneyAccountCurrencyFactory,
         singleNetworkStatusFetcher = singleNetworkStatusFetcher,
         singleNetworkStatusSupplier = singleNetworkStatusSupplier,
         singleQuoteStatusFetcher = singleQuoteStatusFetcher,
@@ -56,13 +57,13 @@ internal class GetMoneyAccountBalanceUseCaseTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(
-            tangemPayCurrencyFactory,
+            moneyAccountCurrencyFactory,
             singleNetworkStatusFetcher,
             singleNetworkStatusSupplier,
             singleQuoteStatusFetcher,
             singleQuoteStatusSupplier,
         )
-        every { tangemPayCurrencyFactory.createMoneyAccountToken(userWalletId) } returns token
+        every { moneyAccountCurrencyFactory.create(userWalletId) } returns token
         coEvery { singleNetworkStatusFetcher(any()) } returns Unit.right()
         coEvery { singleQuoteStatusFetcher(any()) } returns Unit.right()
     }
@@ -140,7 +141,7 @@ internal class GetMoneyAccountBalanceUseCaseTest {
     @Test
     fun `GIVEN token cannot be created WHEN invoke THEN left returned`() = runTest {
         // Arrange
-        every { tangemPayCurrencyFactory.createMoneyAccountToken(userWalletId) } throws IllegalArgumentException()
+        every { moneyAccountCurrencyFactory.create(userWalletId) } throws IllegalArgumentException()
 
         // Act
         val actual = useCase(userWalletId)
