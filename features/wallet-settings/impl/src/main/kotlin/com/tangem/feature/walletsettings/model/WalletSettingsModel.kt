@@ -41,6 +41,7 @@ import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
+import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.analytics.toAnalyticsState
@@ -720,7 +721,10 @@ internal class WalletSettingsModel @Inject constructor(
         messageSender.send(
             DialogMessage(
                 title = resourceReference(R.string.social_wallet_log_out_title),
-                message = resourceReference(R.string.social_wallet_log_out_description),
+                message = resourceReference(
+                    R.string.social_wallet_log_out_description_v2,
+                    wrappedList(SocialLoginProvider.Google.displayName),
+                ),
                 firstActionBuilder = {
                     EventMessageAction(
                         title = resourceReference(R.string.social_wallet_settings_log_out),
@@ -749,7 +753,10 @@ internal class WalletSettingsModel @Inject constructor(
                         backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                     }
                     title = resourceReference(R.string.social_wallet_delete_title)
-                    body = resourceReference(R.string.social_wallet_delete_description, wrappedList(PROVIDER_NAME))
+                    body = resourceReference(
+                        R.string.social_wallet_delete_description,
+                        wrappedList(SocialLoginProvider.Google.displayName),
+                    )
                 }
                 secondaryButton {
                     text = resourceReference(R.string.social_wallet_delete_anyway)
@@ -786,5 +793,3 @@ internal class WalletSettingsModel @Inject constructor(
         )
     }
 }
-
-private const val PROVIDER_NAME = "Google"

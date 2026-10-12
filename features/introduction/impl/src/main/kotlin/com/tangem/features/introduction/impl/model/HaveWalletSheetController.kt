@@ -74,11 +74,11 @@ internal class HaveWalletSheetController(
                 icon = WalletOptionUM.Icon.Image(CoreUiR.drawable.img_google_32),
                 title = resourceReference(
                     id = CoreResR.string.introduction_i_have_wallet_social_title,
-                    formatArgs = wrappedList(provider.displayName()),
+                    formatArgs = wrappedList(provider.displayName),
                 ),
                 description = resourceReference(
                     id = CoreResR.string.introduction_i_have_wallet_social_description,
-                    formatArgs = wrappedList(provider.displayName()),
+                    formatArgs = wrappedList(provider.displayName),
                 ),
                 isEnabled = !isSigningInSocially(),
                 isLoading = isSigningInSocially(),

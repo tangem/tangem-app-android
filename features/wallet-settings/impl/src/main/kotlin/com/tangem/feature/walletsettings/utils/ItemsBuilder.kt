@@ -200,7 +200,7 @@ internal class ItemsBuilder @Inject constructor() {
     private fun buildLogOutAndDeleteItem(onLogOutClick: () -> Unit, onDeleteWalletClick: () -> Unit) =
         WalletSettingsItemUM.WithItems(
             id = "forget",
-            description = resourceReference(R.string.settings_forget_wallet_footer),
+            description = resourceReference(R.string.social_wallet_settings_delete_wallet_footer),
             blocks = persistentListOf(
                 BlockUM(
                     text = resourceReference(R.string.social_wallet_settings_log_out),
