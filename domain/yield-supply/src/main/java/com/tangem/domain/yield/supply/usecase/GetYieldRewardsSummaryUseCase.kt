@@ -1,6 +1,7 @@
 package com.tangem.domain.yield.supply.usecase
 
 import arrow.core.Either
+import com.tangem.domain.models.normalizeEvmAddress
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentives
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
@@ -28,6 +29,12 @@ class GetYieldRewardsSummaryUseCase(
 
         val claimable = incentives.rewards.filter(::isClaimable)
         val pending = incentives.rewards.filter(::hasPending)
+        val unsupported = incentives.rewards.filterNot { it.isSupported }
+        // Amounts deliberately left out: a cumulative proof keeps listing a token long after its claimable amount
+        // is gone, and admitting a claim is about what may be routed, not about what is owed right now.
+        val supportedRewardTokens = incentives.rewards
+            .filter { it.isSupported }
+            .mapTo(mutableSetOf()) { it.rewardToken.normalizeEvmAddress() }
 
         return when {
             claimable.isEmpty() && pending.isEmpty() -> YieldRewardsSummary.None
@@ -36,12 +43,16 @@ class GetYieldRewardsSummaryUseCase(
                 moduleAddress = moduleAddress,
                 claimable = claimable,
                 pending = pending,
+                unsupported = unsupported,
+                supportedRewardTokens = supportedRewardTokens,
                 totalNetUsd = claimable.totalNetUsd(),
             )
             else -> YieldRewardsSummary.Deferred(
                 moduleAddress = moduleAddress,
                 claimable = claimable,
                 pending = pending,
+                unsupported = unsupported,
+                supportedRewardTokens = supportedRewardTokens,
                 totalNetUsd = claimable.totalNetUsd(),
             )
         }

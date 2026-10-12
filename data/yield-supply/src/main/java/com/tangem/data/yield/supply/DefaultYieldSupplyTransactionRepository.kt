@@ -97,6 +97,31 @@ internal class DefaultYieldSupplyTransactionRepository(
         )
     }
 
+    override suspend fun createClaimRewardsTransaction(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        destinationAddress: String,
+        callData: SmartContractCallData,
+        fee: Fee?,
+    ): TransactionData.Uncompiled = withContext(dispatchers.io) {
+        val cryptoCurrency = cryptoCurrencyStatus.currency as CryptoCurrency.Token
+
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = cryptoCurrency.network.toBlockchain(),
+            derivationPath = cryptoCurrency.network.derivationPath.value,
+        ) ?: error("Wallet manager not found")
+
+        createTransaction(
+            walletManager = walletManager,
+            cryptoCurrency = cryptoCurrency,
+            callData = callData,
+            destinationAddress = destinationAddress,
+            amount = BigDecimal.ZERO.convertToSdkAmount(cryptoCurrencyStatus),
+            fee = fee,
+        )
+    }
+
     override suspend fun getEffectiveProtocolBalance(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
