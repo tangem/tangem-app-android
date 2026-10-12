@@ -20,7 +20,7 @@ class TangemPayServiceUnavailableSheetPageObject(semanticsProvider: SemanticsNod
 
     val description: KNode = child {
         hasTestTag(WarningBottomSheetTestTags.MESSAGE)
-        hasText(getResourceString(CoreResR.string.tangempay_service_unavailable_description))
+        hasText(getResourceString(CoreResR.string.tangempay_card_details_receive_error_description))
         useUnmergedTree = true
     }
 
