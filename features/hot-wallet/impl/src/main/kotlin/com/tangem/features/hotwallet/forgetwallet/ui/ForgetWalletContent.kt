@@ -77,7 +77,7 @@ internal fun ForgetWalletContent(state: ForgetWalletUM, modifier: Modifier = Mod
             modifier = Modifier.padding(horizontal = 16.dp),
             checked = state.isCheckboxChecked,
             onCheckedChange = state.onCheckboxClick,
-            text = stringResourceSafe(R.string.hw_remove_wallet_warning_access),
+            text = state.checkboxText.resolveReference(),
         )
         Spacer(modifier = Modifier.height(32.dp))
         PrimaryButton(
@@ -148,6 +148,7 @@ private fun PreviewForgetWalletContent() {
             state = ForgetWalletUM(
                 onBackClick = {},
                 description = resourceReference(R.string.hw_remove_wallet_attention_description),
+                checkboxText = resourceReference(R.string.hw_remove_wallet_warning_access),
                 buttonText = resourceReference(R.string.hw_remove_wallet_action_forget_title),
                 isCheckboxChecked = false,
                 onCheckboxClick = {},
