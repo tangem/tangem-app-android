@@ -25,9 +25,8 @@ import kotlinx.coroutines.launch
  * and published to whoever is still on screen. Nothing is published after [MAX_ATTEMPTS] checks: the transaction may
  * still land, and calling it a failure would be a worse answer than saying nothing.
  *
- * A claim names no token and takes every reward the module holds, so the module — not the token it was started from —
- * is what an in-flight claim is keyed by, and a second token on the same chain cannot offer the same cumulative proof
- * for signing while the first is still being followed.
+ * A claim names no token and takes every reward the module holds, so an in-flight claim is keyed by the module, not
+ * by the token it was started from.
  *
  * Separate from [YieldSupplyPendingTracker] deliberately: that one owns the enter/exit protocol state and would
  * re-announce the module as active, which a claim must not do.
@@ -42,7 +41,7 @@ class YieldSupplyClaimTracker(
 
     private val trackedKeys = MutableStateFlow<Set<TrackedKey>>(emptySet())
 
-    /** Terminal outcomes only; a listener that comes late sees nothing, which is why the banner refreshes anyway. */
+    /** Terminal outcomes only; a listener that subscribes late misses them. */
     val outcomes: SharedFlow<YieldSupplyClaimOutcome>
         field = MutableSharedFlow<YieldSupplyClaimOutcome>(extraBufferCapacity = OUTCOME_BUFFER)
 
@@ -69,8 +68,8 @@ class YieldSupplyClaimTracker(
         if (!isAdded) return
 
         coroutineScope.launch {
-            // Released in a finally: a key left behind would keep the claim button disabled for the rest of the
-            // process, with nothing to clear it.
+            // Released in a finally, so a claim that times out or is cancelled does not stay in flight for the rest
+            // of the process.
             try {
                 val outcome = awaitOutcome(userWalletId = userWalletId, token = cryptoCurrency, hash = transactionHash)
                     ?: return@launch
