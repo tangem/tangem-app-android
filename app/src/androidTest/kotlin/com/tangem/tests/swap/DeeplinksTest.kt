@@ -20,6 +20,7 @@ import com.tangem.scenarios.awaitCryptoPortfolioAccount
 import com.tangem.scenarios.closeFirstTimeSwapStoriesIfShown
 import com.tangem.scenarios.openAppByDeepLink
 import com.tangem.scenarios.openMainScreenWithExistingHotWallet
+import com.tangem.scenarios.waitUntilMainScreenTokenBalanceLoaded
 import com.tangem.screens.onSwapTokenScreen
 import com.tangem.screens.onTokenDetailsScreen
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -42,6 +43,7 @@ class DeeplinksTest : BaseTestCase() {
     private val quoteScenarioName = "exchange_quote_ethereum"
     private val quoteUnreachableState = "Unreachable"
     private val ethereumTokenSymbol = "ETH"
+    private val ethereumTokenTitle = "Ethereum"
     private val usdcTokenSymbol = "USDC"
     private val emptyAmountPlaceholder = "0.00"
     private val ethereumUsdcUserTokensState = "YieldUSDCEthereum"
@@ -507,6 +509,12 @@ class DeeplinksTest : BaseTestCase() {
             step("Open 'Main' screen with existing hot wallet") {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
+            step("Wait until '$ethereumTokenTitle' balance is loaded on 'Main' screen") {
+                waitUntilMainScreenTokenBalanceLoaded(ethereumTokenTitle)
+            }
+            step("Wait until '$usdcTokenSymbol' balance is loaded on 'Main' screen") {
+                waitUntilMainScreenTokenBalanceLoaded(usdcTokenSymbol)
+            }
             step("Open the deeplink with only FROM and 'from_amount'") {
                 openAppByDeepLink("tangem://swap?from_token_id=ethereum&from_network_id=ethereum&from_amount=0.5")
             }
@@ -541,6 +549,12 @@ class DeeplinksTest : BaseTestCase() {
             }
             step("Open 'Main' screen with existing hot wallet") {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
+            }
+            step("Wait until '$ethereumTokenTitle' balance is loaded on 'Main' screen") {
+                waitUntilMainScreenTokenBalanceLoaded(ethereumTokenTitle)
+            }
+            step("Wait until '$usdcTokenSymbol' balance is loaded on 'Main' screen") {
+                waitUntilMainScreenTokenBalanceLoaded(usdcTokenSymbol)
             }
             step("Open the deeplink with only TO and 'from_amount'") {
                 openAppByDeepLink("tangem://swap?to_token_id=usd-coin&to_network_id=ethereum&from_amount=0.5")
