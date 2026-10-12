@@ -74,6 +74,7 @@ dependencies {
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.datetime)
+    implementation(deps.jodatime)
 
     /** DI */
     implementation(deps.hilt.android)
