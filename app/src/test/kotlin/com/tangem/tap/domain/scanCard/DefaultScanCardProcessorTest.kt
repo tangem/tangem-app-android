@@ -359,6 +359,28 @@ internal class DefaultScanCardProcessorTest {
         }
 
         @Test
+        fun `GIVEN card id in config WHEN scan THEN scans only that card`() = runTest {
+            // Arrange
+            val processor = createProcessor()
+            stubScanResult(CompletionResult.Success(scanResponse))
+
+            // Act
+            processor.scan(config.copy(cardId = CARD_ID))
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                tangemSdkManager.scanProduct(
+                    cardId = CARD_ID,
+                    messageRes = any(),
+                    allowsRequestAccessCodeFromRepository = any(),
+                    shouldCheckIsAlreadyActivated = any(),
+                    source = source,
+                )
+            }
+        }
+
+        @Test
         fun `GIVEN card without wallet WHEN scan THEN wallet not created and onboarding launched`() = runTest {
             // Arrange
             val processor = createProcessor()

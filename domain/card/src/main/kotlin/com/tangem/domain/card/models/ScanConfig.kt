@@ -8,6 +8,7 @@ import com.tangem.domain.models.scan.ScanResponse
  * Options of a card scan. Prefer the [signIn] and [rescanKnownCard] presets over a custom combination.
  *
  * @property analyticsSource                    screen that started the scan
+ * @property cardId                             ID of the card to scan; any card is accepted when `null`
  * @property shouldConfirmWalletOwnership       lets the SDK confirm that the wallet belongs to the user
  * ("This is my wallet")
  * @property canRequestAccessCodeFromRepository allows the SDK to use the saved access code
@@ -20,6 +21,7 @@ import com.tangem.domain.models.scan.ScanResponse
  */
 data class ScanConfig(
     val analyticsSource: AnalyticsParam.ScreensSources,
+    val cardId: String? = null,
     val shouldConfirmWalletOwnership: Boolean,
     val canRequestAccessCodeFromRepository: Boolean,
     val shouldUpdateCardIdDisplayFormat: Boolean,
