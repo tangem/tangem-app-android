@@ -25,6 +25,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.features.hotwallet.upgradewallet.entity.UpgradeWalletUM
 
 @Suppress("LongMethod")
@@ -91,13 +92,16 @@ internal fun UpgradeWalletContent(state: UpgradeWalletUM, modifier: Modifier = M
                 modifier = Modifier
                     .padding(top = 24.dp),
                 title = stringResourceSafe(R.string.hw_upgrade_general_security_title),
-                description = if (state.isCloudBackupRemovalShown) {
-                    stringResourceSafe(
+                description = when {
+                    state.isSocialLoginWallet -> stringResourceSafe(
+                        R.string.hw_upgrade_general_security_description_social,
+                        SocialLoginProvider.Google.displayName,
+                    )
+                    state.isCloudBackupRemovalShown -> stringResourceSafe(
                         R.string.hw_upgrade_general_security_description_v2,
                         stringResourceSafe(R.string.hw_cloud_backup_service_name),
                     )
-                } else {
-                    stringResourceSafe(R.string.hw_upgrade_general_security_description)
+                    else -> stringResourceSafe(R.string.hw_upgrade_general_security_description)
                 },
                 iconRes = R.drawable.ic_protect_24,
             )
