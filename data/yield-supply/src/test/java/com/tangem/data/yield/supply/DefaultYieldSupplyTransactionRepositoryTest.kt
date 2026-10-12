@@ -73,6 +73,15 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         coEvery { getOrCreateWalletManager(any(), any(), any()) } returns walletManager
     }
     private lateinit var repository: DefaultYieldSupplyTransactionRepository
+    private val receiptWalletManager = mockk<WalletManager>(
+        relaxed = true,
+        moreInterfaces = arrayOf(TransactionReceiptProvider::class),
+    )
+    private val outcomeWalletManagersFacade: WalletManagersFacade = mockk()
+    private val outcomeRepository = DefaultYieldSupplyTransactionRepository(
+        walletManagersFacade = outcomeWalletManagersFacade,
+        dispatchers = TestingCoroutineDispatcherProvider(),
+    )
 
     @BeforeEach
     fun setUp() {
@@ -84,6 +93,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
             recordPrivateCalls = true,
         )
         every { mockk<Token>().contractAddress } returns mockedContractAddress
+        clearMocks(receiptWalletManager, outcomeWalletManagersFacade)
     }
 
     @Test
@@ -418,21 +428,6 @@ class DefaultYieldSupplyTransactionRepositoryTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class GetEnterTransactionOutcome {
 
-        private val receiptWalletManager = mockk<WalletManager>(
-            relaxed = true,
-            moreInterfaces = arrayOf(TransactionReceiptProvider::class),
-        )
-        private val outcomeWalletManagersFacade: WalletManagersFacade = mockk()
-        private val outcomeRepository = DefaultYieldSupplyTransactionRepository(
-            walletManagersFacade = outcomeWalletManagersFacade,
-            dispatchers = TestingCoroutineDispatcherProvider(),
-        )
-
-        @BeforeEach
-        fun resetMocks() {
-            clearMocks(receiptWalletManager, outcomeWalletManagersFacade)
-        }
-
         @ParameterizedTest
         @ProvideTestModels
         fun `GIVEN receipt WHEN getEnterTransactionOutcome THEN maps outcome`(model: OutcomeModel) = runTest {
@@ -466,50 +461,31 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         private fun provideTestModels() = listOf(
             OutcomeModel(receipt = Result.Success(null), expected = null),
             OutcomeModel(receipt = Result.Failure(BlockchainSdkError.CustomError("rpc down")), expected = null),
-            OutcomeModel(receipt = Result.Success(receipt(isSuccess = true)), expected = YieldSupplyEnterOutcome.Deposited),
             OutcomeModel(
-                receipt = Result.Success(receipt(isSuccess = false)),
+                receipt = Result.Success(receipt(transactionHash = ENTER_TX_HASH, isSuccess = true)),
+                expected = YieldSupplyEnterOutcome.Deposited,
+            ),
+            OutcomeModel(
+                receipt = Result.Success(receipt(transactionHash = ENTER_TX_HASH, isSuccess = false)),
                 protocolBalance = null,
                 expected = YieldSupplyEnterOutcome.Failed,
             ),
             OutcomeModel(
-                receipt = Result.Success(receipt(isSuccess = false)),
+                receipt = Result.Success(receipt(transactionHash = ENTER_TX_HASH, isSuccess = false)),
                 protocolBalance = BigDecimal.TEN,
                 expected = YieldSupplyEnterOutcome.DepositedByRelayer,
             ),
             OutcomeModel(
-                receipt = Result.Success(receipt(isSuccess = true)),
+                receipt = Result.Success(receipt(transactionHash = ENTER_TX_HASH, isSuccess = true)),
                 isReceiptProvider = false,
                 expected = null,
             ),
-        )
-
-        private fun receipt(isSuccess: Boolean) = EthereumTransactionReceipt(
-            transactionHash = ENTER_TX_HASH,
-            isSuccess = isSuccess,
-            blockNumber = BigInteger.ONE,
-            gasUsed = BigInteger.ONE,
         )
     }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class GetTransactionOutcome {
-
-        private val receiptWalletManager = mockk<WalletManager>(
-            relaxed = true,
-            moreInterfaces = arrayOf(TransactionReceiptProvider::class),
-        )
-        private val outcomeWalletManagersFacade: WalletManagersFacade = mockk()
-        private val outcomeRepository = DefaultYieldSupplyTransactionRepository(
-            walletManagersFacade = outcomeWalletManagersFacade,
-            dispatchers = TestingCoroutineDispatcherProvider(),
-        )
-
-        @BeforeEach
-        fun resetMocks() {
-            clearMocks(receiptWalletManager, outcomeWalletManagersFacade)
-        }
 
         @ParameterizedTest
         @ProvideTestModels
@@ -541,25 +517,18 @@ class DefaultYieldSupplyTransactionRepositoryTest {
                 expected = null,
             ),
             TransactionOutcomeModel(
-                receipt = Result.Success(receipt(isSuccess = true)),
+                receipt = Result.Success(receipt(transactionHash = CLAIM_TX_HASH, isSuccess = true)),
                 expected = YieldSupplyTransactionOutcome.Confirmed,
             ),
             TransactionOutcomeModel(
-                receipt = Result.Success(receipt(isSuccess = false)),
+                receipt = Result.Success(receipt(transactionHash = CLAIM_TX_HASH, isSuccess = false)),
                 expected = YieldSupplyTransactionOutcome.Reverted,
             ),
             TransactionOutcomeModel(
-                receipt = Result.Success(receipt(isSuccess = true)),
+                receipt = Result.Success(receipt(transactionHash = CLAIM_TX_HASH, isSuccess = true)),
                 isReceiptProvider = false,
                 expected = null,
             ),
-        )
-
-        private fun receipt(isSuccess: Boolean) = EthereumTransactionReceipt(
-            transactionHash = CLAIM_TX_HASH,
-            isSuccess = isSuccess,
-            blockNumber = BigInteger.ONE,
-            gasUsed = BigInteger.ONE,
         )
     }
 
@@ -574,6 +543,13 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         val expected: YieldSupplyEnterOutcome?,
         val protocolBalance: BigDecimal? = null,
         val isReceiptProvider: Boolean = true,
+    )
+
+    private fun receipt(transactionHash: String, isSuccess: Boolean) = EthereumTransactionReceipt(
+        transactionHash = transactionHash,
+        isSuccess = isSuccess,
+        blockNumber = BigInteger.ONE,
+        gasUsed = BigInteger.ONE,
     )
 
     private companion object {
