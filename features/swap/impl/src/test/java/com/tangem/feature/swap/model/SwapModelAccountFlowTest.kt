@@ -5,6 +5,9 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
+import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.toUM
@@ -91,6 +94,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.CsvSource
 import java.math.BigDecimal
 import java.util.Locale
@@ -124,7 +128,11 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         // real Left so that branch resolves via createInitialErrorState (which does not touch receiveCardData/
         // sendCardData's fiatSymbolOverride/isSelectionLocked/tokenSymbol, so it doesn't affect these tests).
         coEvery {
-            swapInteractor.getPair(fromSwapCurrencyStatus = any(), toSwapCurrencyStatus = any(), filterProviderTypes = any())
+            swapInteractor.getPair(
+                fromSwapCurrencyStatus = any(),
+                toSwapCurrencyStatus = any(),
+                filterProviderTypes = any()
+            )
         } returns Either.Left(ExpressError.UnknownError)
         coEvery {
             getMinimumTransactionAmountSyncUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
@@ -1135,6 +1143,30 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         model.onDestroy()
     }
 
+    @ParameterizedTest
+    @MethodSource("provideTransferFeeTypes")
+    fun `GIVEN a selected fee WHEN the transfer is sent THEN one Transaction sent with Source Transfer and its fee type`(
+        feeType: AnalyticsParam.FeeType,
+    ) = runTest {
+        // Arrange
+        val model = createTopUpTransferModel(accountFlow = null, feeType = feeType)
+        val events = mutableListOf<AnalyticsEvent>()
+        every { analyticsEventHandler.send(capture(events)) } returns Unit
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        val transactionSent = events.filterIsInstance<Basic.TransactionSent>()
+        assertThat(transactionSent).hasSize(1)
+        assertThat(transactionSent.single().params).containsAtLeast(
+            AnalyticsParam.SOURCE, "Transfer",
+            AnalyticsParam.FEE_TYPE, feeType.value,
+        )
+        model.onDestroy()
+    }
+
     @Test
     fun `GIVEN a prediction top-up with a $10 minimum and a 0_5 USDC rate WHEN the transfer is built THEN the builder gets the limits in USDC`() =
         runTest {
@@ -1296,17 +1328,18 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN a Tangem Pay withdraw WHEN no amount is entered yet THEN the button keeps its default label`() = runTest {
-        // Arrange
+    fun `GIVEN a Tangem Pay withdraw WHEN no amount is entered yet THEN the button keeps its default label`() =
+        runTest {
+            // Arrange
 
-        // Act
-        val model = createModel(accountFlow = AccountFlow.Withdraw)
-        advanceUntilIdle()
+            // Act
+            val model = createModel(accountFlow = AccountFlow.Withdraw)
+            advanceUntilIdle()
 
-        // Assert
-        assertThat(model.uiState.swapButton.title).isNull()
-        model.onDestroy()
-    }
+            // Assert
+            assertThat(model.uiState.swapButton.title).isNull()
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN a prediction withdraw WHEN the destinations request fails THEN an error is shown`() = runTest {
@@ -1559,30 +1592,31 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
-    fun `GIVEN a prediction withdraw WHEN the interactor fails THEN an alert is shown and nothing is tracked`() = runTest {
-        // Arrange
-        stubResolvedPredictionPair(destination = polygonUsdcDestination())
-        stubTransferState(sendingAmount = BigDecimal("5"))
-        stubTransferStateBuilderPassthrough()
-        stubStoredPolymarketAddresses()
-        coEvery { submitPredictionWithdrawalInteractor.prepare(any()) } returns
-            PredictionWithdrawalFailure.AddressUnavailable.left()
-        val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
-        advanceUntilIdle()
-        model.enterAmount("5")
-        advanceUntilIdle()
+    fun `GIVEN a prediction withdraw WHEN the interactor fails THEN an alert is shown and nothing is tracked`() =
+        runTest {
+            // Arrange
+            stubResolvedPredictionPair(destination = polygonUsdcDestination())
+            stubTransferState(sendingAmount = BigDecimal("5"))
+            stubTransferStateBuilderPassthrough()
+            stubStoredPolymarketAddresses()
+            coEvery { submitPredictionWithdrawalInteractor.prepare(any()) } returns
+                PredictionWithdrawalFailure.AddressUnavailable.left()
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+            advanceUntilIdle()
+            model.enterAmount("5")
+            advanceUntilIdle()
 
-        // Act
-        model.uiState.swapButton.onClick()
-        advanceUntilIdle()
+            // Act
+            model.uiState.swapButton.onClick()
+            advanceUntilIdle()
 
-        // Assert
-        coVerify(exactly = 0) { submitPredictionWithdrawalInteractor.confirm(any()) }
-        verify(exactly = 0) { predictionWithdrawalTracker.track(any()) }
-        verify(exactly = 1) { messageSender.send(any()) }
-        verify(exactly = 0) { router.replaceAll(SwapRoute.Success) }
-        model.onDestroy()
-    }
+            // Assert
+            coVerify(exactly = 0) { submitPredictionWithdrawalInteractor.confirm(any()) }
+            verify(exactly = 0) { predictionWithdrawalTracker.track(any()) }
+            verify(exactly = 1) { messageSender.send(any()) }
+            verify(exactly = 0) { router.replaceAll(SwapRoute.Success) }
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN a withdrawal already in flight WHEN confirmed THEN it is tracked, an alert is shown and the screen stays`() =
@@ -1679,7 +1713,12 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 feePaidCurrencyStatus = any(),
                 fee = null,
             )
-        } returns transferState(from = collateral, to = destination, amount = aboveBalance, isInsufficientBalance = true)
+        } returns transferState(
+            from = collateral,
+            to = destination,
+            amount = aboveBalance,
+            isInsufficientBalance = true
+        )
         val model = createModel(
             accountFlow = AccountFlow.PredictionWithdraw,
             dispatchers = deferredDispatchers(),
@@ -1920,7 +1959,10 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         return from
     }
 
-    private fun TestScope.createTopUpTransferModel(accountFlow: AccountFlow?): SwapModel {
+    private fun TestScope.createTopUpTransferModel(
+        accountFlow: AccountFlow?,
+        feeType: AnalyticsParam.FeeType = AnalyticsParam.FeeType.Normal,
+    ): SwapModel {
         val from = swapCurrencyStatus()
         val collateral = swapCurrencyStatus(currency = usdcPolygonToken(), account = Account.Prediction(userWalletId))
         coEvery {
@@ -1944,6 +1986,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         advanceUntilIdle()
         model.feeSelectorRepository.state.value = mockk<FeeSelectorUM.Content>(relaxed = true) {
             every { selectedFeeItem } returns FeeItem.Market(fee = mockk(relaxed = true))
+            every { toAnalyticType() } returns feeType
         }
         return model
     }
@@ -2284,6 +2327,13 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     private companion object {
+        @JvmStatic
+        fun provideTransferFeeTypes() = listOf(
+            AnalyticsParam.FeeType.Normal,
+            AnalyticsParam.FeeType.Custom,
+            AnalyticsParam.FeeType.Fixed,
+        )
+
         const val OWNER_ADDRESS = "0xOwner"
         const val DEPOSIT_WALLET_ADDRESS = "0xDepositWallet"
         const val USDC_CONTRACT_ADDRESS = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
