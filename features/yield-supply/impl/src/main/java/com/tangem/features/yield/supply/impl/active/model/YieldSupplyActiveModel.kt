@@ -43,7 +43,9 @@ import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.core.res.R as CoreResR
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
+import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
+import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
 import com.tangem.features.yield.supply.impl.common.formatter.formatApy
 import com.tangem.features.yield.supply.impl.active.model.transformers.YieldSupplyActiveFeeContentTransformer
 import com.tangem.features.yield.supply.impl.active.model.transformers.YieldSupplyActiveMinAmountTransformer
@@ -79,6 +81,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
     private val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase,
     private val boostStoryPreloader: YieldBoostStoryPreloader,
+    private val yieldSupplyClaimTracker: YieldSupplyClaimTracker,
 ) : Model(), YieldSupplyStopEarningComponent.ModelCallback,
     YieldSupplyApproveComponent.ModelCallback {
 
@@ -94,6 +97,10 @@ internal class YieldSupplyActiveModel @Inject constructor(
             currency = params.cryptoCurrency,
         ),
     )
+
+    /** Set the moment a claim is signed and kept until the user leaves the result sheet behind. */
+    val claimResultFlow: StateFlow<YieldSupplyClaimResultUM?>
+        field = MutableStateFlow<YieldSupplyClaimResultUM?>(null)
 
     val balanceHiddenFlow = MutableStateFlow(false)
     val transactionInProgressFlow: StateFlow<Boolean>
@@ -141,6 +148,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
             ),
         )
         subscribeOnCurrencyStatusUpdates()
+        subscribeOnClaimOutcome()
         loadBoostBlock()
         modelScope.launch(dispatchers.io) { boostStoryPreloader.preload() }
 
@@ -214,6 +222,58 @@ internal class YieldSupplyActiveModel @Inject constructor(
     /** The claim sheet is not driven by [transactionInProgressFlow]; it vetoes its own dismissal while signing. */
     fun onClaimDismiss() {
         slotNavigation.dismiss()
+    }
+
+    /** Replaces the claim sheet with its result; the transaction is followed by the tracker from here on. */
+    fun onClaimSubmitted(result: YieldSupplyClaimResultUM) {
+        claimResultFlow.update { result }
+        slotNavigation.activate(YieldSupplyActiveRoute.ClaimResult)
+    }
+
+    fun onClaimResultDismiss() {
+        slotNavigation.dismiss()
+        claimResultFlow.update { null }
+    }
+
+    fun onGoToTokenClick() {
+        onClaimResultDismiss()
+        appRouter.pop()
+    }
+
+    /**
+     * The result sheet opens over the Yield Mode screen it was started from, so going back to yield is the same as
+     * closing it.
+     */
+    fun onGoToYieldClick() {
+        onClaimResultDismiss()
+    }
+
+    /**
+     * A claim is signed on one screen and settles on another, so the outcome arrives here rather than in the sheet
+     * that sent it. A reverted claim has no screen of its own: the result sheet goes away and the failure is
+     * reported the same way a rejected submission is.
+     */
+    private fun subscribeOnClaimOutcome() {
+        yieldSupplyClaimTracker.outcomes
+            .filter { it.userWalletId == userWalletId && it.cryptoCurrencyId == cryptoCurrency.id }
+            .onEach { claimOutcome ->
+                when (claimOutcome.outcome) {
+                    YieldSupplyTransactionOutcome.Confirmed -> claimResultFlow.update { result ->
+                        result?.copy(
+                            status = YieldSupplyClaimResultUM.Status.Confirmed(
+                                timestamp = Clock.System.now().toEpochMilliseconds(),
+                            ),
+                        )
+                    }
+                    // Only the result sheet is closed, and only while it is the one on screen: the outcome can
+                    // arrive minutes later, with the user in the middle of another sheet entirely. The failure
+                    // itself is reported process-wide, so it reaches the user whichever screen they are on.
+                    YieldSupplyTransactionOutcome.Reverted -> {
+                        if (claimResultFlow.value != null) onClaimResultDismiss()
+                    }
+                }
+            }
+            .launchIn(modelScope)
     }
 
     private fun onApyInfoClick() {
