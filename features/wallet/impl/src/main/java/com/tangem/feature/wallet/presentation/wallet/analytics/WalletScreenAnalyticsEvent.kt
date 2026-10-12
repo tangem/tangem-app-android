@@ -18,11 +18,16 @@ sealed class WalletScreenAnalyticsEvent {
             val isImported: Boolean,
             val referralId: String?,
             val appCurrency: String,
+            private val jointAccountsCounts: JointAccountsCounts? = null,
         ) : MainScreen(
             event = "Screen opened",
             params = buildMap {
                 put("Mobile Wallet", if (hasMobileWallet) "Yes" else "No")
                 if (accountsCount != null) put("Accounts Count", accountsCount.toString())
+                if (jointAccountsCounts != null) {
+                    put("Joint Accounts Count", jointAccountsCounts.active.toString())
+                    put("Pending Joint Accounts Count", jointAccountsCounts.pending.toString())
+                }
                 put("App Theme", theme)
                 val seedPhrase = if (isImported) {
                     "Seed Phrase"
@@ -41,6 +46,9 @@ sealed class WalletScreenAnalyticsEvent {
 
             // Product Type is injected by the card/hot-wallet context params interceptors
             override val otelMetric = OtelMetric.Counter(allowedParams = setOf(AnalyticsParam.PRODUCT_TYPE))
+
+            /** [pending] is a joint account still waiting for its members or its activation */
+            data class JointAccountsCounts(val active: Int, val pending: Int)
         }
 
         data class NoticeFinishActivation(

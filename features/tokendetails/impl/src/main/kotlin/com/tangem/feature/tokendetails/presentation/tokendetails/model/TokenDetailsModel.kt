@@ -20,6 +20,7 @@ import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.JointAccountFakedoorAnalyticsEvent
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
 import com.tangem.core.analytics.models.event.TransferAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
@@ -850,7 +851,8 @@ internal class TokenDetailsModel @Inject constructor(
             ),
         )
 
-        if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
+        val fakedoorAction = JointAccountFakedoorAnalyticsEvent.Action.Sell
+        if (handleUnavailabilityReason(unavailabilityReason, fakedoorAction = fakedoorAction)) {
             return
         }
 
@@ -902,7 +904,8 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onSwapAndSendClick(unavailabilityReason: ScenarioUnavailabilityReason) {
-        if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
+        val fakedoorAction = JointAccountFakedoorAnalyticsEvent.Action.SwapAndSend
+        if (handleUnavailabilityReason(unavailabilityReason, fakedoorAction = fakedoorAction)) {
             return
         }
 
@@ -925,7 +928,8 @@ internal class TokenDetailsModel @Inject constructor(
             ),
         )
 
-        if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
+        val fakedoorAction = JointAccountFakedoorAnalyticsEvent.Action.Swap
+        if (handleUnavailabilityReason(unavailabilityReason, fakedoorAction = fakedoorAction)) {
             return
         }
 
@@ -1293,8 +1297,22 @@ internal class TokenDetailsModel @Inject constructor(
         bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.RegionUnavailable)
     }
 
-    private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
+    private fun handleUnavailabilityReason(
+        unavailabilityReason: ScenarioUnavailabilityReason,
+        fakedoorAction: JointAccountFakedoorAnalyticsEvent.Action? = null,
+    ): Boolean {
         if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
+
+        if (unavailabilityReason == ScenarioUnavailabilityReason.JointAccount && fakedoorAction != null) {
+            analyticsEventsHandler.send(
+                JointAccountFakedoorAnalyticsEvent(
+                    source = JointAccountFakedoorAnalyticsEvent.Source.Transfer,
+                    action = fakedoorAction,
+                    blockchain = cryptoCurrency.network.name,
+                    token = cryptoCurrency.symbol,
+                ),
+            )
+        }
 
         dialogFactory.showError(
             text = unavailabilityReason.getUnavailabilityReasonText(),
