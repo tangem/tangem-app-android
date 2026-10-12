@@ -145,17 +145,21 @@ sealed class PredictionAccountStatusValue {
          * exchange's own settlement token rather than in [depositCurrency].
          */
         val cryptoCurrencyStatus: CryptoCurrencyStatus?
-            get() = depositAddress?.let { address ->
-                CryptoCurrencyStatus(
-                    currency = depositCurrency,
-                    value = buildCollateralStatusValue(
-                        amount = balance,
-                        fiatRate = fiatRate,
-                        depositAddress = address,
-                        source = source,
-                    ),
-                )
-            }
+            get() = depositAddress?.let { address -> depositStatus(currency = depositCurrency, address = address) }
+
+        /**
+         * @param currency a token the bridge accepts besides [depositCurrency]
+         * @param address the bridge address of [currency]'s chain family
+         */
+        fun depositStatus(currency: CryptoCurrency, address: String): CryptoCurrencyStatus = CryptoCurrencyStatus(
+            currency = currency,
+            value = buildCollateralStatusValue(
+                amount = balance,
+                fiatRate = fiatRate,
+                depositAddress = address,
+                source = source,
+            ),
+        )
     }
 
     /** Represents an error state for the prediction account status. */
