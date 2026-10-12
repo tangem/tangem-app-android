@@ -954,6 +954,7 @@
   <string name="initial_wallet_sync_banner_description">Votre wallet est synchronisé et prêt.\nDes tokens sont manquants ?</string>
   <string name="initial_wallet_sync_banner_title">Wallet importé avec succès</string>
   <string name="initial_wallet_sync_restore_progress">Restauration %d%%</string>
+  <string name="introduction_button_buy_tangem">Acheter Tangem</string>
   <string name="introduction_button_create_wallet">Créer un wallet</string>
   <string name="introduction_button_i_have_a_wallet">J\'ai déjà un wallet</string>
   <string name="introduction_create_wallet_hardware_description">Si vous avez déjà un Tangem Wallet</string>

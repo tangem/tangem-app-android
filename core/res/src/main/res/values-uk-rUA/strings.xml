@@ -1026,6 +1026,7 @@
   <string name="initial_wallet_sync_banner_description">Ваш гаманець синхронізовано й готово до використання.\nНе бачите деякі токени?</string>
   <string name="initial_wallet_sync_banner_title">Гаманець успішно імпортовано</string>
   <string name="initial_wallet_sync_restore_progress">Відновлення %d%%</string>
+  <string name="introduction_button_buy_tangem">Купити Tangem</string>
   <string name="introduction_button_create_wallet">Створіть гаманець</string>
   <string name="introduction_button_i_have_a_wallet">У мене є гаманець</string>
   <string name="introduction_create_wallet_hardware_description">Якщо у вас уже є гаманець Tangem</string>

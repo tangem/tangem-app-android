@@ -39,6 +39,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     onExploreProvider: (String) -> Unit = {},
     onAddContact: (() -> Unit)? = null,
     networkTokens: Set<CryptoCurrency.Token> = emptySet(),
+    fiatConversion: FiatConversion = FiatConversion.NONE,
 ) : Converter<TxHistoryInfo, TxHistoryDetailsUM> {
 
     private val menu = buildDetailsMenu(
@@ -58,6 +59,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         isBalanceHidden = isBalanceHidden,
         lookup = lookup,
         networkTokens = networkTokens,
+        fiatConversion = fiatConversion,
     )
 
     private val expressConverter = ExpressTxToDetailsUMConverter(

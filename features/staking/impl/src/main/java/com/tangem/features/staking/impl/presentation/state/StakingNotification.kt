@@ -61,7 +61,14 @@ internal object StakingNotification {
         data class TransactionInProgress(
             val title: TextReference,
             val description: TextReference,
-        ) : Warning(title = title, subtitle = description)
+        ) : Warning(title = title, subtitle = description) {
+            companion object {
+                val Approval = TransactionInProgress(
+                    title = resourceReference(R.string.warning_approval_in_progress_title),
+                    description = resourceReference(R.string.warning_approval_in_progress_message),
+                )
+            }
+        }
 
         data object LowStakedBalance : Warning(
             title = resourceReference(R.string.staking_notification_low_staked_balance_title),

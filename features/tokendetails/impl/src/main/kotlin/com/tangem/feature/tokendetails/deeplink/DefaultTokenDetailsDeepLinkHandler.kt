@@ -253,9 +253,12 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     }
 
     private fun CryptoCurrency.matches(networkId: String?, tokenId: String?, derivationPath: String?): Boolean {
-        val isDefaultDerivation = network.derivationPath is Network.DerivationPath.Card
-        val isCustomDerivation = derivationPath?.equals(network.derivationPath.value) == true
-        return matchesIgnoringDerivation(networkId, tokenId) && (isDefaultDerivation || isCustomDerivation)
+        val isDerivation = if (derivationPath.isNullOrBlank()) {
+            network.derivationPath is Network.DerivationPath.Card
+        } else {
+            derivationPath == network.derivationPath.value
+        }
+        return matchesIgnoringDerivation(networkId, tokenId) && isDerivation
     }
 
     private fun CryptoCurrency.matchesIgnoringDerivation(networkId: String?, tokenId: String?): Boolean {

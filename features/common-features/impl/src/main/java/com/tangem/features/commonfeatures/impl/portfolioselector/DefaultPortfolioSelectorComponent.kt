@@ -17,6 +17,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.impl.portfolioselector.ui.PortfolioSelectorBS
 import com.tangem.features.commonfeatures.impl.portfolioselector.ui.PortfolioSelectorContentV3
+import com.tangem.features.commonfeatures.impl.portfolioselector.ui.PortfolioSelectorModal
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -44,7 +45,12 @@ internal class DefaultPortfolioSelectorComponent @AssistedInject constructor(
     @Composable
     override fun BottomSheet() {
         val state by model.state.collectAsStateWithLifecycle()
-        PortfolioSelectorBS(state = state, onDismiss = ::dismiss, onBack = { params.bsCallback?.onBack() })
+        val onBack: () -> Unit = { params.bsCallback?.onBack() }
+        if (params.settings.isDs3Modal) {
+            PortfolioSelectorModal(state = state, onDismiss = ::dismiss, onBack = onBack)
+        } else {
+            PortfolioSelectorBS(state = state, onDismiss = ::dismiss, onBack = onBack)
+        }
     }
 
     @Composable
