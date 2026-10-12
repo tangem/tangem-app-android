@@ -1,9 +1,12 @@
 package com.tangem.features.collectibles.impl.confirmorder.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -13,6 +16,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.row.TangemRow
@@ -42,8 +46,6 @@ private val PACK_GLOW_RADIUS = 48.dp
 
 @Composable
 internal fun CollectiblesConfirmOrderScreen(state: CollectiblesConfirmOrderUM, modifier: Modifier = Modifier) {
-    val scope = rememberCoroutineScope()
-
     // Kept out of the model: a StateFlow would recompose the screen on every animation frame
     val dip = remember { Animatable(0f) }
     val launchUp = remember { Animatable(0f) }
@@ -52,16 +54,40 @@ internal fun CollectiblesConfirmOrderScreen(state: CollectiblesConfirmOrderUM, m
 
     var footerHeight by remember { mutableIntStateOf(0) }
 
+    // Thrown once the card is known: an earlier throw could not be taken back if the purchase then failed
+    val isPackOpened = (state as? CollectiblesConfirmOrderUM.Content)?.isPackOpened == true
+    LaunchedEffect(isPackOpened) {
+        if (!isPackOpened) return@LaunchedEffect
+
+        // The content exit runs alongside the pack's beats, not after them
+        coroutineScope {
+            launch { exit.animateTo(1f, tween(ConfirmTiming.EXIT_MS, easing = FastOutLinearInEasing)) }
+            dip.animateTo(1f, tween(ConfirmTiming.DIP_MS, easing = FastOutLinearInEasing))
+            launchUp.animateTo(1f, tween(ConfirmTiming.LAUNCH_MS, easing = LinearOutSlowInEasing))
+        }
+    }
+
     TangemTopBarScaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TangemTopNavigation(
                 title = resourceReference(R.string.collectibles_confirm_order_screen_title),
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
-                onBack = state.onBackClick,
                 // Fades in place: dropping it would slide it through the pack
                 modifier = Modifier.graphicsLayer {
                     alpha = PackLaunch.contentAlpha(progress.exit, isDelayed = false)
+                },
+                // The slot keeps its size: without a button the bar collapses to the title's height
+                startButton = {
+                    Box(modifier = Modifier.size(44.dp)) {
+                        AnimatedVisibility(
+                            visible = (state as? CollectiblesConfirmOrderUM.Content)?.isBackVisible != false,
+                            enter = fadeIn(),
+                            exit = fadeOut(),
+                        ) {
+                            TangemButton.Back(onClick = state.onBackClick)
+                        }
+                    }
                 },
             )
         },
@@ -75,19 +101,7 @@ internal fun CollectiblesConfirmOrderScreen(state: CollectiblesConfirmOrderUM, m
                 is CollectiblesConfirmOrderUM.Error -> Unit
                 is CollectiblesConfirmOrderUM.Content -> ConfirmFooter(
                     order = state.order,
-                    onConfirm = {
-                        state.onApproveClick()
-                        scope.launch {
-                            // The content exit runs alongside the pack's beats, not after them
-                            coroutineScope {
-                                launch {
-                                    exit.animateTo(1f, tween(ConfirmTiming.EXIT_MS, easing = FastOutLinearInEasing))
-                                }
-                                dip.animateTo(1f, tween(ConfirmTiming.DIP_MS, easing = FastOutLinearInEasing))
-                                launchUp.animateTo(1f, tween(ConfirmTiming.LAUNCH_MS, easing = LinearOutSlowInEasing))
-                            }
-                        }
-                    },
+                    onConfirm = state.onApproveClick,
                     modifier = Modifier
                         .dropAway(exit = progress.exit, isDelayed = false)
                         .align(Alignment.BottomCenter)

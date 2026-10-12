@@ -2,6 +2,8 @@ package com.tangem.domain.collectibles.models
 
 sealed interface OpenPackStep {
 
+    data object NotStarted : OpenPackStep
+
     data object Generating : OpenPackStep
 
     data object Confirming : OpenPackStep
