@@ -33,6 +33,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -77,6 +78,8 @@ internal open class SwapInteractorImplTestBase {
     protected val validateTransactionUseCase: ValidateTransactionUseCase = mockk(relaxed = true)
     protected val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase =
         mockk(relaxed = true)
+    protected val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase =
+        mockk(relaxed = true)
     protected val getCurrencyCheckUseCase: GetCurrencyCheckUseCase = mockk(relaxed = true)
     protected val getAssetRequirementsUseCase: GetAssetRequirementsUseCase = mockk(relaxed = true)
     protected val amountFormatter: AmountFormatter = mockk(relaxed = true)
@@ -115,6 +118,7 @@ internal open class SwapInteractorImplTestBase {
             currenciesRepository = currenciesRepository,
             validateTransactionUseCase = validateTransactionUseCase,
             createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
+            createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
             getCurrencyCheckUseCase = getCurrencyCheckUseCase,
             getAssetRequirementsUseCase = getAssetRequirementsUseCase,
             amountFormatter = amountFormatter,
