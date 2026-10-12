@@ -30,7 +30,6 @@ import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,9 +62,6 @@ internal class DefaultYieldSupplyRepository(
      * The plain markets say which tokens offer Yield Mode at all; the incentives are an overlay on top of them. The
      * incentives service answers only for the chains and tokens it knows, and [YieldMarketsStore.store] replaces its
      * contents wholesale, so a short payload driving the list would drop Yield Mode from everything it left out.
-     *
-     * The plain call is therefore unconditional and unguarded: its failure aborts the refresh without touching the
-     * store, exactly as it did before incentives existed.
      */
     override suspend fun updateMarkets(): List<YieldMarketToken> = withContext(dispatchers.io) {
         // The service validates the whole list and answers 400 when one chain is off it, so a testnet the SDK still
@@ -100,21 +96,10 @@ internal class DefaultYieldSupplyRepository(
         return merged.values.toList()
     }
 
-    /**
-     * The call is guarded for the one failure an [ApiResponse] cannot carry — a service method that cannot be wired at
-     * all throws out of the interface call. Routing it into an empty overlay keeps [updateMarkets] on the plain
-     * markets instead of aborting the whole refresh over an incentive-only failure.
-     */
     private suspend fun getIncentivisedMarkets(chains: String): List<YieldSupplyMarketTokenDto> {
         if (!isMerklIncentivesEnabled) return emptyList()
 
-        val response = runSuspendCatching { yieldIncentivesApi.getIncentiveMarkets(chainId = chains) }
-            .getOrElse { error ->
-                TangemLogger.e("Incentivised yield markets request failed, using the plain markets", error)
-                return emptyList()
-            }
-
-        return when (response) {
+        return when (val response = yieldIncentivesApi.getIncentiveMarkets(chainId = chains)) {
             is ApiResponse.Success -> response.data.marketDtos
             is ApiResponse.Error -> {
                 // A 400 means the chain is not configured for incentives yet — an expected answer, not a failure.
