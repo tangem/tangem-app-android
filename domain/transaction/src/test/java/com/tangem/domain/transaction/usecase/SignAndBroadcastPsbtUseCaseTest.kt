@@ -1,5 +1,6 @@
 package com.tangem.domain.transaction.usecase
 
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SignInput
@@ -11,6 +12,8 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
+import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -27,6 +30,7 @@ import org.junit.jupiter.api.Test
 internal class SignAndBroadcastPsbtUseCaseTest {
 
     private val walletManagersFacade: WalletManagersFacade = mockk()
+    private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher = mockk()
     private val cardSdkConfigRepository: CardSdkConfigRepository = mockk(relaxed = true)
     private val signer: TransactionSigner = mockk(relaxed = true)
     private val walletManager: WalletManager = mockk()
@@ -34,6 +38,7 @@ internal class SignAndBroadcastPsbtUseCaseTest {
     private val useCase = SignAndBroadcastPsbtUseCase(
         cardSdkConfigRepository = cardSdkConfigRepository,
         walletManagersFacade = walletManagersFacade,
+        singleNetworkStatusFetcher = singleNetworkStatusFetcher,
         getHotTransactionSigner = { signer },
     )
 
@@ -45,11 +50,12 @@ internal class SignAndBroadcastPsbtUseCaseTest {
 
     private val psbt = "psbt-base64"
     private val signInputs = listOf(SignInput(address = "addr", index = 0, sighashTypes = listOf(1)))
+    private val fetcherParams = SingleNetworkStatusFetcher.Params(userWalletId = userWalletId, network = network)
 
     @BeforeEach
     fun setup() {
-        // The use case refreshes the wallet manager (fresh UTXO set) before signing the PSBT.
-        coEvery { walletManagersFacade.update(userWalletId, network, emptySet()) } returns mockk(relaxed = true)
+        // The use case refreshes the network status (fresh UTXO set) before signing the PSBT.
+        coEvery { singleNetworkStatusFetcher(fetcherParams) } returns Unit.right()
     }
 
     @Test
@@ -65,8 +71,21 @@ internal class SignAndBroadcastPsbtUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo("tx-hash".right())
-        coVerify(exactly = 1) { walletManagersFacade.update(userWalletId, network, emptySet()) }
+        coVerify(exactly = 1) { singleNetworkStatusFetcher(fetcherParams) }
         coVerify(exactly = 1) { walletManager.broadcastPsbt("signed-psbt") }
+    }
+
+    @Test
+    fun `GIVEN network status fetch fails WHEN invoke THEN returns error and does not sign`() = runTest {
+        // Arrange
+        coEvery { singleNetworkStatusFetcher(fetcherParams) } returns IllegalStateException("no network").left()
+
+        // Act
+        val actual = useCase(psbtBase64 = psbt, userWallet = userWallet, network = network)
+
+        // Assert
+        assertThat(actual).isEqualTo(SendTransactionError.DataError(message = "no network").left())
+        coVerify(exactly = 0) { walletManagersFacade.getOrCreateWalletManager(any(), any()) }
     }
 
     @Test

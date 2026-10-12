@@ -1,27 +1,19 @@
 [
     {
-        "name": "TWI_1741_TOP_UP_WARNING_ENABLED",
-        "version": "6.3"
-    },
-    {
-        "name": "AND_16115_OTEL_METRICS_ENABLED",
-        "version": "undefined"
+        "name": "TWI_1627_OTEL_METRICS_ENABLED",
+        "version": "6.4"
     },
     {
         "name": "TWI_1640_COLLECTIBLES_PHASE_ONE_ENABLED",
         "version": "undefined"
     },
     {
-        "name": "TWI_1636_SWAP_DEEPLINK_ENABLED",
-        "version": "6.3"
-    },
-    {
         "name": "AND_16359_ONRAMP_THEMED_PAYMENT_METHOD_IMAGES",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "AND_15901_STORIES_CONTAINER_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "NEW_CARD_SCANNING_ENABLED",
@@ -32,11 +24,7 @@
         "version": "undefined"
     },
     {
-        "name": "TWI_1602_STAKING_TRANSACTION_VALIDATION",
-        "version": "6.2"
-    },
-    {
-        "name": "VIRTUAL_ACCOUNTS_ENABLED",
+        "name": "TWI_1525_MONEY_ACCOUNTS_ENABLED",
         "version": "undefined"
     },
     {
@@ -48,44 +36,20 @@
         "version": "undefined"
     },
     {
-        "name": "TWI_1749_XRP_TX_HISTORY_ENABLED",
-        "version": "6.3"
-    },
-    {
         "name": "ADDRESS_SYNC_ENABLED",
         "version": "undefined"
     },
     {
         "name": "AND_15438_BACKEND_AUTHENTICATION_ENABLED",
-        "version": "undefined"
-    },
-    {
-        "name": "AND_16041_VISA_TIERS_PLUS_PLAN",
-        "version": "6.1"
-    },
-    {
-        "name": "TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED",
-        "version": "6.2"
+        "version": "6.4"
     },
     {
         "name": "AND_15767_NEW_TX_HISTORY_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "AND_14829_WARNINGS_REFACTORING_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "TWI_1469_FOR_YOU_ENABLED",
-        "version": "6.3"
-    },
-    {
-        "name": "AND_16080_TRON_DEX_SWAP_ENABLED",
-        "version": "6.2"
-    },
-    {
-        "name": "TWI_1192_TANGEM_PAY_CASHBACK_ENABLED",
-        "version": "6.3.1"
     },
     {
         "name": "AND_16204_POLYMARKET_ENABLED",
@@ -96,32 +60,20 @@
         "version": "6.3.3"
     },
     {
-        "name": "TWI_1684_ACCOUNT_MULTICHAIN_ENABLED",
-        "version": "6.3"
-    },
-    {
         "name": "AND_16357_CHOOSE_TOKEN_PULSE_ANIMATION",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
-        "name": "AND_16358_HIDE_ZERO_BALANCE_SWAP_SOURCE",
-        "version": "6.3"
-    },
-    {
-        "name": "TWI_1259_TRON_GASLESS_ENABLED",
-        "version": "6.3"
+        "name": "TWI_1783_TRON_GASLESS_ACCOUNT_ACTIVATION_ENABLED",
+        "version": "6.4"
     },
     {
         "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE",
         "version": "undefined"
     },
     {
-        "name": "TWI_922_GOOGLE_DRIVE_BACKUP_ENABLED",
-        "version": "6.3"
-    },
-    {
-        "name": "AND_15130_PAY_PIN_BIOMETRY_GATE_ENABLED",
-        "version": "6.2"
+        "name": "TWI_1766_PASSWORD_MANAGER_ENABLED",
+        "version": "6.4"
     },
     {
         "name": "TWI_1524_NEW_FIRMWARE_SUPPORT",
@@ -133,26 +85,42 @@
     },
     {
         "name": "TWI_1608_NEW_SHTORKA_ENABLED",
-        "version": "undefined"
-    },
-    {
-        "name": "TWI_1717_BALANCE_CONTRIBUTIONS",
-        "version": "6.3"
-    },
-    {
-        "name": "AND_16356_ACCOUNT_SWAP_FLOW",
-        "version": "6.3"
+        "version": "6.4"
     },
     {
         "name": "TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "TWI_1477_RWA_AND_CATEGORIES_ENABLED",
         "version": "undefined"
     },
     {
-        "name": "TWI_1356_INTRODUCTION_REDESIGN_ENABLED",
+        "name": "TWI_1747_INTRODUCTION_REDESIGN_ENABLED",
+        "version": "6.4"
+    },
+    {
+        "name": "TWI_1555_SOCIAL_LOGIN_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_16842_TANGEM_PAY_BANK_OFFRAMP_ENABLED",
+        "version": "6.4"
+    },
+    {
+        "name": "TWI_1727_CUSTOM_CARDS_COBRAND_ENABLED",
+        "version": "6.4"
+    },
+    {
+        "name": "AND_17136_GEO_COUNTRY_CACHE_FALLBACK_ENABLED",
+        "version": "6.4"
+    },
+    {
+        "name": "TWI_1771_PAY_RESIDENCY_STEP_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1520_MERKL_INCENTIVES_ENABLED",
         "version": "undefined"
     }
 ]

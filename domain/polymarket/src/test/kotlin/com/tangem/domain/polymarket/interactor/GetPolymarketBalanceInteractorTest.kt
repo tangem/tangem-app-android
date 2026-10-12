@@ -120,6 +120,6 @@ internal class GetPolymarketBalanceInteractorTest {
             userWalletId = USER_WALLET_ID,
         )
         val CREDENTIALS = PolymarketApiCredentials(apiKey = "key", secret = "secret", passphrase = "pass")
-        val BALANCE = PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowance = BigDecimal("1000"))
+        val BALANCE = PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowances = mapOf("0xspender" to BigDecimal("1000")))
     }
 }

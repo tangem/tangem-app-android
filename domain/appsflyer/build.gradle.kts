@@ -4,5 +4,8 @@ plugins {
 }
 
 dependencies {
+    api(projects.domain.wallets.models)
+    api(deps.kotlin.coroutines)
+
     testImplementation(projects.test.core)
 }

@@ -3,7 +3,6 @@ package com.tangem.features.feed.earn.ui.components
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,8 +14,8 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
 import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.row.TangemRow
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -31,12 +30,8 @@ internal fun EarnFilterByTypeBottomSheet(config: TangemBottomSheetConfig) {
         config = config,
         scrollableContent = false,
         title = {
-            TangemTopNavigation(
+            TangemModal.TopNavigation(
                 title = resourceReference(R.string.common_type),
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
-                windowInsets = WindowInsets(0),
-                fadeEnabled = false,
-                onClose = config.onDismissRequest,
             )
         },
         content = { Content(it) },

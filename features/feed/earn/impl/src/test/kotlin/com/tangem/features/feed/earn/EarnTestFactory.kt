@@ -69,7 +69,25 @@ internal fun createEarnCurrency(
     name: String = "Ethereum",
     symbol: String = "ETH",
     isCustom: Boolean = false,
-): CryptoCurrency.Coin {
+): CryptoCurrency.Coin = mockCurrency(currencyId, iconUrl, network, name, symbol, isCustom)
+
+internal fun createEarnTokenCurrency(
+    currencyId: String = "token-tether",
+    iconUrl: String? = "https://icons.tangem.com/usdt.png",
+    network: Network = createNetwork(),
+    name: String = "Tether",
+    symbol: String = "USDT",
+    isCustom: Boolean = false,
+): CryptoCurrency.Token = mockCurrency(currencyId, iconUrl, network, name, symbol, isCustom)
+
+private inline fun <reified T : CryptoCurrency> mockCurrency(
+    currencyId: String,
+    iconUrl: String?,
+    network: Network,
+    name: String,
+    symbol: String,
+    isCustom: Boolean,
+): T {
     val id: CryptoCurrency.ID = mockk {
         every { value } returns currencyId
     }

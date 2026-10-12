@@ -560,6 +560,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     feeAssetType = feeAssetType,
                 ),
                 memoType = Basic.TransactionSent.MemoType.Null,
+                isCustomToken = fromCurrency.isCustom,
+                isCustomFeeToken = feeToken.isCustom,
             ),
         )
     }

@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.charts.MarketChartMini
@@ -21,6 +22,7 @@ import com.tangem.common.ui.markets.tokenselector.tokenGroupRowDecoration
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.tokenrow.Shimmer
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
+import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.features.feed.crypto.ui.state.MarketPulseItemUM
 import kotlinx.collections.immutable.ImmutableList
 
@@ -42,7 +44,7 @@ internal fun LazyListScope.marketTokenItems(
         MarketPulseItem(
             item = item,
             modifier = Modifier
-                .animateItem()
+                .testTag(MarketsTestTags.TOKENS_LIST_ITEM)
                 .padding(horizontal = horizontalPadding)
                 .groupedBackground(enabled = hasGroupedBackground, index = index, lastIndex = items.lastIndex),
         )

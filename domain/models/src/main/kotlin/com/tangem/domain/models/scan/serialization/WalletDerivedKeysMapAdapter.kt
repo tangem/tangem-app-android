@@ -10,7 +10,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 
-class WalletDerivedKeysMapAdapter {
+internal class WalletDerivedKeysMapAdapter {
     @ToJson
     fun toJson(
         writer: JsonWriter,

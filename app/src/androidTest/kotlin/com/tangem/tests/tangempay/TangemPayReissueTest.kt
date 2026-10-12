@@ -9,7 +9,6 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
-import com.tangem.screens.onTokenReceiveWarningBottomSheet
 import com.tangem.screens.tangempay.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
@@ -23,6 +22,7 @@ class TangemPayReissueTest : BaseTestCase() {
     private val eligibilityState = "PaeraCustomer"
     private val balanceScenario = "tangem_pay_balance_update"
     private val balanceInitialState = "InitialBalance"
+    private val balanceBelowIssueFeeState = "BelowIssueFee"
     private val cardReissueScenario = "tangem_pay_card_reissue"
     private val cardReissueStartedState = "Started"
     private val cardReissueFeeErrorState = "FeeError"
@@ -224,10 +224,14 @@ class TangemPayReissueTest : BaseTestCase() {
     @Test
     fun reissueTopUpUnableToCoverFeeAddFundsReceiveTest() {
         val depositNetworkName = "Polygon"
+        val depositTokensLabel = "USDC"
+        val depositAddress = "0x0000000000000000000000000000000000000003"
 
         setupHooks(
             additionalBeforeSection = {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+                // Below-fee balance drives the 'Unable to cover fee' state, and only it carries a payment network.
+                setWireMockScenarioState(balanceScenario, balanceBelowIssueFeeState)
                 setWireMockScenarioState(cardReissueScenario, cardReissueStartedState)
             }
         ).run {
@@ -237,6 +241,9 @@ class TangemPayReissueTest : BaseTestCase() {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
                     onTangemPayReissueSheet { insufficientFundsTitle.assertIsDisplayed() }
                 }
+            }
+            step("Assert 'Replace card' button is disabled") {
+                onTangemPayReissueSheet { confirmButton.assertIsNotEnabled() }
             }
             step("Click on 'Add funds' button") {
                 onTangemPayReissueSheet { addFundsButton.clickWithAssertion() }
@@ -252,13 +259,21 @@ class TangemPayReissueTest : BaseTestCase() {
             step("Click on 'Receive' option") {
                 onTangemPayAddFundsSheet { receiveOption.clickWithAssertion() }
             }
-            step("Assert deposit info for the '$depositNetworkName' network is displayed") {
+            // Receive is multichain: it routes through the network picker even for a single payment network.
+            step("Assert 'Choose network' sheet is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
-                    onTokenReceiveWarningBottomSheet {
-                        bottomSheet.assertIsDisplayed()
-                        networkName(depositNetworkName).assertIsDisplayed()
-                    }
+                    onTangemPayChooseNetworkSheet { title.assertIsDisplayed() }
                 }
+            }
+            step("Click on '$depositNetworkName' network") {
+                onTangemPayChooseNetworkSheet { fastOptionNetwork(depositNetworkName).clickWithAssertion() }
+            }
+            step("Assert the '$depositNetworkName' receive sheet is displayed") {
+                assertTangemPayActivatedNetworkReceiveSheet(
+                    networkName = depositNetworkName,
+                    tokensLabel = depositTokensLabel,
+                    depositAddress = depositAddress,
+                )
             }
         }
     }

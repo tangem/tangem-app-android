@@ -43,6 +43,11 @@ internal fun PolymarketOnboardingScreen(
             onCloseClick = onCloseClick,
             modifier = modifier,
         )
+        is PolymarketOnboardingUM.Reconnect -> ReconnectScreen(
+            state = state,
+            onCloseClick = onCloseClick,
+            modifier = modifier,
+        )
     }
 }
 
@@ -92,8 +97,9 @@ private fun WelcomeScreen(
             )
         },
         overlay = { contentPadding ->
-            PolymarketWelcomeFooter(
+            PolymarketOnboardingFooter(
                 state = state,
+                legalTemplateResId = R.string.prediction_onboarding_legal,
                 contentPadding = contentPadding,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -112,6 +118,45 @@ private fun WelcomeScreen(
         isShown = state.isRegionRestrictionsShown,
         onDismiss = state.onRegionRestrictionsDismiss,
     )
+}
+
+@Composable
+private fun ReconnectScreen(
+    state: PolymarketOnboardingUM.Reconnect,
+    onCloseClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val scrollState = rememberScrollState()
+    var footerHeight by remember { mutableIntStateOf(0) }
+
+    val isTopBarScrimShown by remember(scrollState) { derivedStateOf { scrollState.value > 0 } }
+
+    TangemTopBarScaffold(
+        modifier = modifier,
+        containerColor = TangemTheme.colors3.bg.primary,
+        topBar = {
+            TangemTopNavigation(
+                fadeEnabled = isTopBarScrimShown,
+                endButton = { TangemButton.Close(onClick = onCloseClick) },
+            )
+        },
+        overlay = { contentPadding ->
+            PolymarketOnboardingFooter(
+                state = state,
+                legalTemplateResId = R.string.prediction_onboarding_reconnect_legal,
+                contentPadding = contentPadding,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .onSizeChanged { footerHeight = it.height },
+            )
+        },
+    ) { contentPadding ->
+        PolymarketReconnectContent(
+            scrollState = scrollState,
+            contentPadding = contentPadding,
+            trailingSpace = with(LocalDensity.current) { footerHeight.toDp() } + 54.dp,
+        )
+    }
 }
 
 @Preview(widthDp = 360, showBackground = true)
@@ -141,12 +186,29 @@ private fun PolymarketOnboardingScreenStartingPreview() {
     }
 }
 
+@Preview(widthDp = 360, showBackground = true)
+@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PolymarketOnboardingScreenReconnectPreview() {
+    TangemThemePreviewRedesign {
+        PolymarketOnboardingScreen(state = previewReconnectState(), onCloseClick = {})
+    }
+}
+
 private fun previewState(isInProgress: Boolean) = PolymarketOnboardingUM.Welcome(
     isInProgress = isInProgress,
-    startButtonText = resourceReference(R.string.prediction_onboarding_start_button),
-    onStartClick = {},
+    actionButtonText = resourceReference(R.string.prediction_onboarding_start_button),
+    onActionClick = {},
     onPolymarketTermsClick = {},
     onTangemTermsClick = {},
     isRegionRestrictionsShown = false,
     onRegionRestrictionsDismiss = {},
+)
+
+private fun previewReconnectState() = PolymarketOnboardingUM.Reconnect(
+    isInProgress = false,
+    actionButtonText = resourceReference(R.string.prediction_onboarding_reconnect_button),
+    onActionClick = {},
+    onPolymarketTermsClick = {},
+    onTangemTermsClick = {},
 )

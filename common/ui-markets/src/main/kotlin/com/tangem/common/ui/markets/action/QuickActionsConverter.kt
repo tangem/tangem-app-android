@@ -1,5 +1,6 @@
 package com.tangem.common.ui.markets.action
 
+import com.tangem.common.ui.tokens.rendersActionAsEnabled
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import kotlinx.collections.immutable.ImmutableList
@@ -43,12 +44,22 @@ object QuickActionsConverter {
     /**
      * Unavailability reason for [action] as produced by the domain [actions] list, or
      * [ScenarioUnavailabilityReason.None] when the action is available or has no domain counterpart.
+     * [TokenActionsBSContentUM.Action.SendWithSwap] has no domain counterpart and derives from the swap,
+     * so it inherits the swap's reason.
      */
     fun unavailabilityReason(
         action: TokenActionsBSContentUM.Action,
         actions: List<TokenActionsState.ActionState>,
-    ): ScenarioUnavailabilityReason = actions.firstOrNull { it.toBsAction() == action }?.unavailabilityReason
-        ?: ScenarioUnavailabilityReason.None
+    ): ScenarioUnavailabilityReason {
+        val domainAction = if (action == TokenActionsBSContentUM.Action.SendWithSwap) {
+            TokenActionsBSContentUM.Action.Exchange
+        } else {
+            action
+        }
+
+        return actions.firstOrNull { it.toBsAction() == domainAction }?.unavailabilityReason
+            ?: ScenarioUnavailabilityReason.None
+    }
 
     private fun QuickActionUM.toHandledAction(): TokenActionsBSContentUM.Action = when (this) {
         QuickActionUM.V1.Buy, QuickActionUM.V2.Buy -> TokenActionsBSContentUM.Action.Buy
@@ -84,12 +95,13 @@ object QuickActionsConverter {
                 }
 
         val byBsAction = actions.associateBy { it.toBsAction() }
-        val isExchangeAvailable = byBsAction[TokenActionsBSContentUM.Action.Exchange]
-            ?.unavailabilityReason == ScenarioUnavailabilityReason.None
+        // The row derives from the swap, so it follows the swap's look: shown while the swap looks enabled —
+        // a joint account's tap then explains the reason instead of navigating
+        val exchangeReason = byBsAction[TokenActionsBSContentUM.Action.Exchange]?.unavailabilityReason
         return allowed.mapNotNull { action ->
             when (action) {
                 TokenActionsBSContentUM.Action.SendWithSwap ->
-                    if (isExchangeAvailable) {
+                    if (exchangeReason?.rendersActionAsEnabled() == true) {
                         QuickActionState(QuickActionUM.V2.SwapAndSend, isEnabled = true)
                     } else {
                         null
@@ -97,7 +109,7 @@ object QuickActionsConverter {
                 else -> {
                     val state = byBsAction[action] ?: return@mapNotNull null
                     val um = state.toQuickActionUM() ?: return@mapNotNull null
-                    QuickActionState(um, isEnabled = state.unavailabilityReason == ScenarioUnavailabilityReason.None)
+                    QuickActionState(um, isEnabled = state.unavailabilityReason.rendersActionAsEnabled())
                 }
             }
         }

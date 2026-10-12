@@ -1,7 +1,7 @@
 package com.tangem.data.staking.converters.ethpool
 
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolVaultDTO
-import com.tangem.datasource.local.txhistory.db.entity.staking.P2PEthPoolVaultEntity
+import com.tangem.store.datasource.txhistory.db.entity.staking.P2PEthPoolVaultEntity
 
 /**
  * Converts a raw [P2PEthPoolVaultDTO] into its persisted [P2PEthPoolVaultEntity] representation, unchanged

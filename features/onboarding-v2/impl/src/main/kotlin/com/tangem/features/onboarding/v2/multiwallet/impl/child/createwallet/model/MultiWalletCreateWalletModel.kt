@@ -13,7 +13,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -53,7 +53,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
     private val analyticsHandler: AnalyticsEventHandler,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
     private val walletCardsBackupReporter: WalletCardsBackupReporter,
 ) : Model() {
 
@@ -131,7 +131,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
                     analyticsHandler.send(
                         event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
                             passPhraseState = AnalyticsParam.EmptyFull.Empty,
-                            referralId = appsFlyerStore.get()?.refcode,
+                            referralId = appsFlyerRepository.getConversionData()?.refcode,
                         ),
                     )
 

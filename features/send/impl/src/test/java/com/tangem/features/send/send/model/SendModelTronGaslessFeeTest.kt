@@ -38,9 +38,8 @@ internal class SendModelTronGaslessFeeTest : SendModelTestBase() {
     @BeforeEach
     fun setUpTronGasless() {
         clearMocks(getTronGaslessFeeUseCase, getFeeForGaslessUseCase, answers = false, recordedCalls = true)
-        every { sendFeatureToggles.isTronGaslessEnabled } returns true
         coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
-        coEvery { getTronGaslessFeeUseCase(any(), any()) } returns gaslessFee().right()
+        coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns gaslessFee().right()
         coEvery { getFeeForGaslessUseCase(any(), any(), any(), any()) } returns nativeFee().right()
         stubBalances(sentBalance = BigDecimal("100"))
     }
@@ -74,7 +73,7 @@ internal class SendModelTronGaslessFeeTest : SendModelTestBase() {
 
         // Assert
         assertThat(result.getOrNull()).isEqualTo(gaslessFee())
-        coVerify(exactly = 1) { getTronGaslessFeeUseCase(any(), pickedUsdc) }
+        coVerify(exactly = 1) { getTronGaslessFeeUseCase(any(), any(), pickedUsdc) }
         coVerify(exactly = 0) { getFeeForGaslessUseCase(any(), any(), any(), any()) }
     }
 
@@ -90,7 +89,7 @@ internal class SendModelTronGaslessFeeTest : SendModelTestBase() {
 
         // Assert
         assertThat(result.getOrNull()).isEqualTo(gaslessFee())
-        coVerify(exactly = 1) { getTronGaslessFeeUseCase(any(), sentUsdt) }
+        coVerify(exactly = 1) { getTronGaslessFeeUseCase(any(), any(), sentUsdt) }
         coVerify(exactly = 0) { getFeeForGaslessUseCase(any(), any(), any(), any()) }
     }
 

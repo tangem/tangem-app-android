@@ -74,7 +74,7 @@ class GetAccountCurrencyStatusUseCaseTest {
         @Test
         fun `invokeSync returns None when AccountList does not contain required currency id`() = runTest {
             // Arrange
-            val accountStatus = AccountStatus.CryptoPortfolio(
+            val accountStatus = AccountStatus.Personal(
                 account = Account.Personal.createMainAccount(userWalletId),
                 tokenList = TokenList.Empty,
                 priceChangeLce = lceLoading(),
@@ -103,7 +103,7 @@ class GetAccountCurrencyStatusUseCaseTest {
         @Test
         fun `invokeSync returns Some if network is not null`() = runTest {
             // Arrange
-            val mainAccountStatus = AccountStatus.CryptoPortfolio(
+            val mainAccountStatus = AccountStatus.Personal(
                 account = Account.Personal.createMainAccount(userWalletId),
                 tokenList = TokenList.Empty,
                 priceChangeLce = lceLoading(),
@@ -118,7 +118,7 @@ class GetAccountCurrencyStatusUseCaseTest {
                 cryptoCurrencies = listOf(currency),
             )
             val currencyStatus = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
-            val accountStatus = AccountStatus.CryptoPortfolio(
+            val accountStatus = AccountStatus.Personal(
                 account = account,
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,
@@ -162,7 +162,7 @@ class GetAccountCurrencyStatusUseCaseTest {
                 cryptoCurrencies = listOf(currency),
             )
             val currencyStatus = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
-            val accountStatus = AccountStatus.CryptoPortfolio(
+            val accountStatus = AccountStatus.Personal(
                 account = account,
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,
@@ -216,7 +216,7 @@ class GetAccountCurrencyStatusUseCaseTest {
         @Test
         fun `invoke returns empty flow when AccountList does not contain required currency id`() = runTest {
             // Arrange
-            val accountStatus = AccountStatus.CryptoPortfolio(
+            val accountStatus = AccountStatus.Personal(
                 account = Account.Personal.createMainAccount(userWalletId),
                 tokenList = TokenList.Empty,
                 priceChangeLce = lceLoading(),
@@ -246,7 +246,7 @@ class GetAccountCurrencyStatusUseCaseTest {
         @Test
         fun `invoke returns data if network is not null`() = runTest {
             // Arrange
-            val mainAccountStatus = AccountStatus.CryptoPortfolio(
+            val mainAccountStatus = AccountStatus.Personal(
                 account = Account.Personal.createMainAccount(userWalletId),
                 tokenList = TokenList.Empty,
                 priceChangeLce = lceLoading(),
@@ -261,7 +261,7 @@ class GetAccountCurrencyStatusUseCaseTest {
                 cryptoCurrencies = listOf(currency),
             )
             val currencyStatus = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
-            val accountStatus = AccountStatus.CryptoPortfolio(
+            val accountStatus = AccountStatus.Personal(
                 account = account,
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,
@@ -302,7 +302,7 @@ class GetAccountCurrencyStatusUseCaseTest {
                 cryptoCurrencies = listOf(currency),
             )
             val currencyStatus = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
-            val accountStatus = AccountStatus.CryptoPortfolio(
+            val accountStatus = AccountStatus.Personal(
                 account = account,
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,

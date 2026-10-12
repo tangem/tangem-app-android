@@ -97,19 +97,22 @@ internal class EarnFilterChipsFactoryTest {
             expected = listOf(activeNetworkChip(stringReference("Solana")), inactiveTypeChip),
         ),
         ChipsModel(
-            name = "GIVEN the staking type WHEN chips built THEN the type chip shows its description",
+            name = "GIVEN the staking type WHEN chips built THEN the type chip shows its title",
             filter = createEarnFilter(type = EarnFilterType.STAKING),
             networks = loadedNetworks,
             expected = listOf(
                 inactiveNetworkChip,
-                activeTypeChip(resourceReference(R.string.earn_filter_staking_type_text)),
+                activeTypeChip(resourceReference(R.string.common_staking)),
             ),
         ),
         ChipsModel(
-            name = "GIVEN the yield type WHEN chips built THEN the type chip shows its description",
+            name = "GIVEN the yield type WHEN chips built THEN the type chip shows its title",
             filter = createEarnFilter(type = EarnFilterType.YIELD),
             networks = loadedNetworks,
-            expected = listOf(inactiveNetworkChip, activeTypeChip(resourceReference(R.string.earn_filter_yield_type_text))),
+            expected = listOf(
+                inactiveNetworkChip,
+                activeTypeChip(resourceReference(R.string.markets_sort_by_yield_mode_title)),
+            ),
         ),
     )
 

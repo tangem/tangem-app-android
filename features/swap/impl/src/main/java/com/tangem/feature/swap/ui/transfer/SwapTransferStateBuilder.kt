@@ -15,6 +15,7 @@ import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToI
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -328,8 +329,9 @@ internal class SwapTransferStateBuilder @Inject constructor(
         return when (this) {
             is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(icon)
             is Account.Payment -> AccountIconUM.Payment
-            is Account.Virtual -> AccountIconUM.Virtual
+            is Account.Money -> AccountIconUM.Money
             is Account.Prediction -> AccountIconUM.Prediction
+            is Account.Collectibles -> AccountIconUM.Collectibles
         }
     }
 
@@ -603,6 +605,37 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 onStatusButtonClick = {},
             ),
         )
+    }
+
+    fun createPredictionWithdrawalSentState(
+        uiState: SwapStateHolder,
+        dataState: SwapProcessDataState,
+    ): SwapStateHolder {
+        val toCurrency = requireNotNull(dataState.toSwapCurrencyStatus).currency
+        val sentState = createSuccessState(
+            uiState = uiState,
+            dataState = dataState,
+            fee = null,
+            txUrl = "",
+            timestamp = System.currentTimeMillis(),
+            onExplorerClick = {},
+            onShareClick = {},
+        )
+        val successState = requireNotNull(sentState.successState).copy(
+            title = resourceReference(R.string.prediction_withdraw_status_sent_title),
+            fromTitle = AccountTitleUM.Account(
+                prefixText = resourceReference(R.string.common_from),
+                name = resourceReference(R.string.prediction_account_title),
+                icon = AccountIconUM.Prediction,
+            ),
+            toTitle = AccountTitleUM.Text(
+                combinedReference(
+                    resourceReference(R.string.common_to),
+                    stringReference(" ${toCurrency.symbol} · ${toCurrency.network.name}"),
+                ),
+            ),
+        )
+        return sentState.copy(successState = successState)
     }
 
     private fun formatFeeForSuccess(transferState: SwapState.Transfer, fee: Fee): TextReference {

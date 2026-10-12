@@ -21,6 +21,7 @@ enum class OrderType(val wireValue: String) {
     CARD_FREEZE("CARD_FREEZE"),
     CARD_UNFREEZE("CARD_UNFREEZE"),
     WITHDRAW("WITHDRAW"),
+    BANK_OFFRAMP_RAIN("BANK_OFFRAMP_RAIN"),
     TARIFF_PLAN_TRANSITION("TARIFF_PLAN_TRANSITION"),
     SMART_CONTRACT_ISSUE_RAIN("SMART_CONTRACT_ISSUE_RAIN"),
     UNKNOWN(""),
@@ -31,16 +32,17 @@ enum class OrderType(val wireValue: String) {
 
     companion object {
 
+        val virtualIssueCardTypes = setOf(
+            CARD_ISSUE_VIRTUAL_RAIN,
+            CARD_ISSUE_VIRTUAL_RAIN_KYC,
+            CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+        )
+
         /**
          * All order types that represent issuing a card: the virtual card, its KYC variants, and the
          * plastic one. Used to filter `findOrders` and to restore in-flight issuance.
          */
-        val issueCardTypes = setOf(
-            CARD_ISSUE_VIRTUAL_RAIN,
-            CARD_ISSUE_VIRTUAL_RAIN_KYC,
-            CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
-            CARD_ISSUE_PLASTIC_RAIN,
-        )
+        val issueCardTypes = virtualIssueCardTypes + CARD_ISSUE_PLASTIC_RAIN
 
         fun fromString(value: String?): OrderType {
             if (value.isNullOrBlank()) return UNKNOWN

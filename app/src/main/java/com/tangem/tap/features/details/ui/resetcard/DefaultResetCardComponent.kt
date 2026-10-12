@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
@@ -16,7 +15,6 @@ import dagger.assisted.AssistedInject
 internal class DefaultResetCardComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: ResetCardComponent.Params,
-    private val appRouter: AppRouter,
 ) : ResetCardComponent, AppComponentContext by appComponentContext {
 
     private val model: ResetCardModel = getOrCreateModel(params)
@@ -28,7 +26,7 @@ internal class DefaultResetCardComponent @AssistedInject constructor(
         ResetCardScreen(
             modifier = modifier,
             state = state,
-            onBackClick = { appRouter.pop() },
+            onBackClick = model::onBackClick,
         )
     }
 

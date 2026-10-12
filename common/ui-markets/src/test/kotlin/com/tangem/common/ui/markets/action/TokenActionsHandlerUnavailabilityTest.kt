@@ -51,7 +51,7 @@ internal class TokenActionsHandlerUnavailabilityTest {
         status = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading),
         actions = actions,
         isAccountMode = false,
-        account = mockk<AccountStatus.CryptoPortfolio>(relaxed = true),
+        account = mockk<AccountStatus.Personal>(relaxed = true),
     )
 
     @Test

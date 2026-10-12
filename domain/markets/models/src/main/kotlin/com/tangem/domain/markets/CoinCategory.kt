@@ -26,13 +26,17 @@ data class CoinCategory(
     /**
      * Sector of a [CoinCategory]
      *
-     * @property id          sector id, e.g. `technology`
-     * @property displayName name to show when no localized name is available
-     * @property tokensCount number of coins in the sector
+     * @property id           sector id
+     * @property code         stable machine-readable key, e.g. `technology`
+     * @property displayName  name to show when no localized name is available
+     * @property displayOrder curated position of the sector within its category
+     * @property tokensCount  number of coins in the sector
      */
     data class Sector(
         val id: String,
+        val code: String,
         val displayName: String,
+        val displayOrder: Int,
         val tokensCount: Int,
     )
 }

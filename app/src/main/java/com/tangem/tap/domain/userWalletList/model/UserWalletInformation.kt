@@ -6,7 +6,6 @@ import com.tangem.domain.models.MobileWallet
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.hot.sdk.model.HotWalletId
 
 @JsonClass(generateAdapter = true)
@@ -14,8 +13,6 @@ internal data class UserWalletSensitiveInformation(
     // Cold
     @Json(name = "wallets")
     val wallets: List<CardDTO.Wallet>?,
-    @Json(name = "visaCardActivationStatus")
-    val visaCardActivationStatus: VisaCardActivationStatus? = null,
     // Hot
     @Json(name = "mobileWallets")
     val mobileWallets: List<MobileWallet>? = null,

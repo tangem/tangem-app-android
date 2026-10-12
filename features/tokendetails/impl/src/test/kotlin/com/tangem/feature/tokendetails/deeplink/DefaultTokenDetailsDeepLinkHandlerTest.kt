@@ -20,6 +20,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.usecase.ResolveAndSelectUserWalletUseCase
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
@@ -213,8 +214,66 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         }
     }
 
+    @Test
+    fun `GIVEN joint_tx type WHEN handle deeplink THEN pushed route carries joint operation navigation action`() =
+        runTest {
+            val queryParams = mapOf(
+                WALLET_ID_KEY to "011",
+                NETWORK_ID_KEY to "123",
+                TOKEN_ID_KEY to "321",
+                DERIVATION_PATH_KEY to "777",
+                TRANSACTION_ID_KEY to "000",
+                TYPE_KEY to "joint_tx",
+            )
+            val userWalletId = UserWalletId("011")
+            val expectedCryptoCurrency = mockCryptoCurrency()
+            mockMultiCurrencyWallet(userWalletId)
+            coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId) } returns AccountList.empty(
+                userWalletId = userWalletId,
+                cryptoCurrencies = listOf(expectedCryptoCurrency),
+            )
+            val expectedRoute = AppRoute.CurrencyDetails(
+                userWalletId = userWalletId,
+                currency = expectedCryptoCurrency,
+                navigationAction = NavigationAction.JointOperation(operationId = "000"),
+            )
+
+            createHandler(scope = this, queryParams)
+            advanceUntilIdle()
+            verify { appRouter.push(route = expectedRoute, onComplete = any()) }
+            coVerify(exactly = 0) { tokenDetailsDeepLinkActionTrigger.trigger(any()) }
+        }
+
+    @Test
+    fun `GIVEN non joint_tx type WHEN handle deeplink THEN pushed route carries no navigation action`() = runTest {
+        val queryParams = mapOf(
+            WALLET_ID_KEY to "011",
+            NETWORK_ID_KEY to "123",
+            TOKEN_ID_KEY to "321",
+            DERIVATION_PATH_KEY to "777",
+            TRANSACTION_ID_KEY to "000",
+            TYPE_KEY to "joint_tx_sent",
+        )
+        val userWalletId = UserWalletId("011")
+        val expectedCryptoCurrency = mockCryptoCurrency()
+        mockMultiCurrencyWallet(userWalletId)
+        coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId) } returns AccountList.empty(
+            userWalletId = userWalletId,
+            cryptoCurrencies = listOf(expectedCryptoCurrency),
+        )
+        val expectedRoute = AppRoute.CurrencyDetails(
+            userWalletId = userWalletId,
+            currency = expectedCryptoCurrency,
+            navigationAction = null,
+        )
+
+        createHandler(scope = this, queryParams)
+        advanceUntilIdle()
+        verify { appRouter.push(route = expectedRoute, onComplete = any()) }
+    }
+
     @ParameterizedTest
-    @ValueSource(strings = ["income_transaction", "promo", "unknown"])
+    @ValueSource(strings = ["income_transaction", "promo", "unknown", "joint_tx_sent"])
     fun `GIVEN type WHEN handle deeplink THEN token details deeplink not triggered`(type: String) = runTest {
         val queryParams = mapOf(
             WALLET_ID_KEY to "011",
@@ -579,6 +638,56 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
     }
 
+    @Test
+    fun `GIVEN same token in two accounts WHEN handle deeplink THEN push the one the derivation path names`() =
+        runTest {
+            // Arrange — the main account's copy comes first in the list and must not win over the named derivation.
+            val userWalletId = UserWalletId("011")
+            val mainAccountCurrency = mockCryptoCurrency(derivation = "m/44'/60'/0'/0/0")
+            val namedAccountCurrency = mockCryptoCurrency(derivation = "m/44'/60'/0'/0/7")
+            mockMultiCurrencyWallet(userWalletId)
+            coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId) } returns AccountList.empty(
+                userWalletId = userWalletId,
+                cryptoCurrencies = listOf(mainAccountCurrency, namedAccountCurrency),
+            )
+
+            val expectedRoute = AppRoute.CurrencyDetails(
+                userWalletId = userWalletId,
+                currency = namedAccountCurrency,
+            )
+
+            // Act
+            createHandler(
+                scope = this,
+                defaultQueryParams() + (DERIVATION_PATH_KEY to "m/44'/60'/0'/0/7"),
+            )
+            advanceUntilIdle()
+
+            // Assert
+            verify { appRouter.push(route = expectedRoute, onComplete = any()) }
+        }
+
+    @Test
+    fun `GIVEN deeplink without derivation path WHEN handle deeplink THEN push the card derived currency`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("011")
+        val cryptoCurrency = mockCryptoCurrency()
+        mockMultiCurrencyWallet(userWalletId)
+        coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId) } returns AccountList.empty(
+            userWalletId = userWalletId,
+            cryptoCurrencies = listOf(cryptoCurrency),
+        )
+
+        val expectedRoute = AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = cryptoCurrency)
+
+        // Act
+        createHandler(scope = this, defaultQueryParams() - DERIVATION_PATH_KEY)
+        advanceUntilIdle()
+
+        // Assert
+        verify { appRouter.push(route = expectedRoute, onComplete = any()) }
+    }
+
     private fun defaultQueryParams() = mapOf(
         WALLET_ID_KEY to "011",
         NETWORK_ID_KEY to "123",
@@ -586,14 +695,14 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         DERIVATION_PATH_KEY to "777",
     )
 
-    private fun mockCryptoCurrency() = mockk<CryptoCurrency> {
+    private fun mockCryptoCurrency(derivation: String = "777") = mockk<CryptoCurrency> {
         every { network } returns mockk {
             every { rawId } returns "123"
-            every { derivationPath } returns Network.DerivationPath.Card(value = "777")
+            every { derivationPath } returns Network.DerivationPath.Card(value = derivation)
         }
         every { id } returns CryptoCurrency.ID(
             prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
-            body = CryptoCurrency.ID.Body.NetworkIdWithDerivationPath(rawId = "321", derivationPath = "777"),
+            body = CryptoCurrency.ID.Body.NetworkIdWithDerivationPath(rawId = "321", derivationPath = derivation),
             suffix = CryptoCurrency.ID.Suffix.RawID("321"),
         )
     }

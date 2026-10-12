@@ -9,12 +9,16 @@ internal fun StateUpdater<TangemFadeStory>.build(): TangemFadeStory {
     return TangemFadeStory(
         variant = TangemFade.Variant.Hard,
         position = TangemFade.Position.Top,
+        height = TangemFadeStory.Height.MatchParent,
         isBlur = false,
         onVariantChange = { variant ->
             updateStory { it.copy(variant = variant) }
         },
         onPositionChange = { position ->
             updateStory { it.copy(position = position) }
+        },
+        onHeightChange = { height ->
+            updateStory { it.copy(height = height) }
         },
         onBlurToggle = {
             updateStory { it.copy(isBlur = !it.isBlur) }

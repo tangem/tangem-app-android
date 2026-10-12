@@ -21,6 +21,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.swap.models.SwapCurrencyStatus
@@ -89,6 +90,7 @@ internal open class SwapInteractorImplTestBase {
     protected val cexSwapFeeCalculator: CexSwapFeeCalculator = mockk(relaxed = true)
     protected val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
     protected val yieldModuleAddressProvider: YieldModuleAddressProvider = mockk(relaxed = true)
+    protected val recordTokenTransferFromSwapUseCase: RecordTokenTransferFromSwapUseCase = mockk(relaxed = true)
     protected val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase = mockk(relaxed = true)
     protected val getFeeUseCase: GetFeeUseCase = mockk(relaxed = true)
 
@@ -125,6 +127,7 @@ internal open class SwapInteractorImplTestBase {
             cexSwapFeeCalculator = cexSwapFeeCalculator,
             swapFeatureToggles = swapFeatureToggles,
             yieldModuleAddressProvider = yieldModuleAddressProvider,
+            recordTokenTransferFromSwapUseCase = recordTokenTransferFromSwapUseCase,
             createApprovalTransactionUseCase = createApprovalTransactionUseCase,
             getFeeUseCase = getFeeUseCase,
         )

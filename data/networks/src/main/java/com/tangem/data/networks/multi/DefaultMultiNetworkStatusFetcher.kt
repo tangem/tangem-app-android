@@ -25,6 +25,7 @@ import javax.inject.Inject
  * @property networksStatusesStore      networks statuses store
  * @property cardCryptoCurrencyFactory  card crypto currency factory
  * @property commonNetworkStatusFetcher common network status fetcher
+ * @property dynamicAddressesInitializer dynamic addresses initializer
  * @property dispatchers                dispatchers
  *
 [REDACTED_AUTHOR]

@@ -5,11 +5,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.navigationButtons.DoneButtons
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.core.decompose.context.AppComponentContext
@@ -27,6 +27,7 @@ import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationBlockComponent
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
+import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.send.success.model.SendConfirmSuccessModel
 import com.tangem.features.send.send.success.ui.SendConfirmSuccessContent
@@ -60,13 +61,16 @@ internal class SendConfirmSuccessComponent @AssistedInject constructor(
         onClick = {},
     )
 
+    /** Both ways out of the screen report the close, so the analytics does not depend on which one was tapped */
+    private fun close() {
+        model.onBackClick()
+        router.pop()
+    }
+
     @Composable
     override fun Title() {
         AppBarWithBackButtonAndIcon(
-            onBackClick = {
-                model.onBackClick()
-                router.pop()
-            },
+            onBackClick = ::close,
             backIconRes = R.drawable.ic_close_24,
             backgroundColor = TangemTheme.colors.background.tertiary,
             modifier = Modifier.height(TangemTheme.dimens.size56),
@@ -75,7 +79,7 @@ internal class SendConfirmSuccessComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state by model.uiState.collectAsState()
+        val state by model.uiState.collectAsStateWithLifecycle()
         SendConfirmSuccessContent(
             sendUM = state,
             destinationBlockComponent = destinationBlockComponent,
@@ -84,6 +88,8 @@ internal class SendConfirmSuccessComponent @AssistedInject constructor(
 
     @Composable
     override fun Footer() {
+        val state by model.uiState.collectAsStateWithLifecycle()
+        val isJointOperation = (state.confirmUM as? ConfirmUM.Success)?.signaturesUM != null
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
@@ -106,8 +112,8 @@ internal class SendConfirmSuccessComponent @AssistedInject constructor(
                 )).takeIf { params.txUrl.isNotEmpty() },
             )
             PrimaryButton(
-                text = stringResourceSafe(R.string.common_close),
-                onClick = router::pop,
+                text = stringResourceSafe(if (isJointOperation) R.string.common_done else R.string.common_close),
+                onClick = ::close,
                 modifier = Modifier.fillMaxWidth(),
             )
         }

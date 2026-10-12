@@ -1225,7 +1225,7 @@ internal class StateBuilder(
         val successStates = providersStates.getLastLoadedSuccessStates()
         val availableProvidersStates = providersStates.entries
             .mapNotNull { entry ->
-                val additionalBadge = SwapProviderResolver.resolveBadge(
+                val additionalBadge = SwapProviderResolver.resolveListBadge(
                     states = successStates,
                     provider = entry.key,
                     needApplyFCARestrictions = needApplyFCARestrictions,
@@ -1241,9 +1241,8 @@ internal class StateBuilder(
             .sortedWith(ProviderPercentDiffComparator)
             .toImmutableList()
 
-        val isAnyFCABadge = availableProvidersStates.any {
-            (it as? ProviderState.Content)?.additionalBadge == ProviderState.AdditionalBadge.FCAWarningList
-        }
+        val isAnyFCABadge = needApplyFCARestrictions &&
+            providersStates.keys.any(SwapProviderResolver::isFCARestricted)
         val hasCex = availableProvidersStates.any { state ->
             (state as? ProviderState.Content)?.type == ExchangeProviderType.CEX.providerName ||
                 (state as? ProviderState.Unavailable)?.type == ExchangeProviderType.CEX.providerName
@@ -1288,9 +1287,15 @@ internal class StateBuilder(
                 return if (providerState is ProviderState.Content && tokenInfo != null) {
                     providerState.copy(
                         subtitle = SwapProviderStateBuilder.buildSelectableSubtitle(tokenInfo),
-                        percentLowerThenBest = pricesLowerBest[providerState.id]?.let { percent ->
-                            PercentDifference.Value(percent)
-                        } ?: PercentDifference.Value(0f),
+                        percentLowerThenBest = if (
+                            providerState.additionalBadge == ProviderState.AdditionalBadge.Unavailable
+                        ) {
+                            PercentDifference.Empty
+                        } else {
+                            pricesLowerBest[providerState.id]?.let { percent ->
+                                PercentDifference.Value(percent)
+                            } ?: PercentDifference.Value(0f)
+                        },
                     )
                 } else {
                     providerState
@@ -1418,8 +1423,9 @@ internal class StateBuilder(
         return when (this) {
             is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(icon)
             is Account.Payment -> AccountIconUM.Payment
-            is Account.Virtual -> AccountIconUM.Virtual
+            is Account.Money -> AccountIconUM.Money
             is Account.Prediction -> AccountIconUM.Prediction
+            is Account.Collectibles -> AccountIconUM.Collectibles
         }
     }
 

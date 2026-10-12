@@ -3,7 +3,7 @@ package com.tangem.data.settings
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.edit
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.domain.settings.repositories.AppRatingRepository
 import kotlinx.coroutines.flow.Flow
@@ -12,17 +12,18 @@ import java.util.Calendar
 
 internal class DefaultAppRatingRepository(
     private val appPreferencesStore: AppPreferencesStore,
+    private val storePreferencesKeys: StorePreferencesKeys,
 ) : AppRatingRepository {
 
     override suspend fun setWalletWithFundsFound() {
         appPreferencesStore.edit { mutablePreferences ->
-            val foundDate = mutablePreferences[PreferencesKeys.FUNDS_FOUND_DATE_KEY]
+            val foundDate = mutablePreferences[storePreferencesKeys.fundsFoundDateKey]
             if (foundDate != null && foundDate != FUNDS_FOUND_DATE_UNDEFINED) return@edit
 
-            mutablePreferences[PreferencesKeys.FUNDS_FOUND_DATE_KEY] = Calendar.getInstance().timeInMillis
+            mutablePreferences[storePreferencesKeys.fundsFoundDateKey] = Calendar.getInstance().timeInMillis
 
-            val appLaunchCount = mutablePreferences[PreferencesKeys.APP_LAUNCH_COUNT_KEY] ?: DEFAULT_APP_LAUNCH_COUNT
-            mutablePreferences[PreferencesKeys.SHOW_RATING_DIALOG_AT_LAUNCH_COUNT_KEY] =
+            val appLaunchCount = mutablePreferences[storePreferencesKeys.appLaunchCountKey] ?: DEFAULT_APP_LAUNCH_COUNT
+            mutablePreferences[storePreferencesKeys.showRatingDialogAtLaunchCountKey] =
                 appLaunchCount + FIRST_SHOWING_COUNT
         }
     }
@@ -31,19 +32,19 @@ internal class DefaultAppRatingRepository(
         // TODO: [REDACTED_JIRA]
         return combine(
             flow = appPreferencesStore.get(
-                key = PreferencesKeys.USER_WAS_INTERACT_WITH_RATING_KEY,
+                key = storePreferencesKeys.userWasInteractWithRatingKey,
                 default = false,
             ),
             flow2 = appPreferencesStore.get(
-                key = PreferencesKeys.SHOW_RATING_DIALOG_AT_LAUNCH_COUNT_KEY,
+                key = storePreferencesKeys.showRatingDialogAtLaunchCountKey,
                 default = FIRST_SHOWING_COUNT,
             ),
             flow3 = appPreferencesStore.get(
-                key = PreferencesKeys.APP_LAUNCH_COUNT_KEY,
+                key = storePreferencesKeys.appLaunchCountKey,
                 default = DEFAULT_APP_LAUNCH_COUNT,
             ),
             flow4 = appPreferencesStore.get(
-                key = PreferencesKeys.FUNDS_FOUND_DATE_KEY,
+                key = storePreferencesKeys.fundsFoundDateKey,
                 default = FUNDS_FOUND_DATE_UNDEFINED,
             ),
         ) { isInteracting, ratingShowingCount, appLaunchCount, fundsFoundDate ->
@@ -61,7 +62,7 @@ internal class DefaultAppRatingRepository(
 
     override suspend fun remindLater() {
         appPreferencesStore.edit { mutablePreferences ->
-            mutablePreferences[PreferencesKeys.APP_LAUNCH_COUNT_KEY]?.let {
+            mutablePreferences[storePreferencesKeys.appLaunchCountKey]?.let {
                 mutablePreferences.updateNextShowing(it + DEFER_SHOWING_COUNT)
             }
         }
@@ -74,8 +75,8 @@ internal class DefaultAppRatingRepository(
     }
 
     private fun MutablePreferences.updateNextShowing(at: Int) {
-        this[PreferencesKeys.SHOW_RATING_DIALOG_AT_LAUNCH_COUNT_KEY] = at
-        this[PreferencesKeys.USER_WAS_INTERACT_WITH_RATING_KEY] = true
+        this[storePreferencesKeys.showRatingDialogAtLaunchCountKey] = at
+        this[storePreferencesKeys.userWasInteractWithRatingKey] = true
     }
 
     private companion object {

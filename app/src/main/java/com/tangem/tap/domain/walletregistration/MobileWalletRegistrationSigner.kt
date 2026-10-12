@@ -29,7 +29,10 @@ internal class MobileWalletRegistrationSigner @Inject constructor(
         val salt = ByteArray(SALT_SIZE).also(secureRandom::nextBytes)
         val hash = (nonceBytes + salt).calculateSha256()
 
-        val signature = hotWalletAccessor.signHashes(
+        // Reuse a contextual unlock when the caller established one (the unlock-time catch-up
+        // registration does), so signing the nonce doesn't pop a second auth prompt; the creation path
+        // holds no context and falls back to the ordinary (silent for NoPassword) signing.
+        val signature = hotWalletAccessor.signHashesReusingContextualUnlock(
             hotWalletId = userWallet.hotWalletId,
             dataToSign = listOf(DataToSign(curve = EllipticCurve.Secp256k1, hashes = listOf(hash))),
         ).first().signatures.first()

@@ -3,6 +3,8 @@ package com.tangem.tap.common.analytics.handlers.opentelemetry
 import android.app.Application
 import android.content.ComponentCallbacks2
 import android.content.res.Configuration
+import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -27,6 +29,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.time.Duration
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /**
@@ -35,12 +38,13 @@ import java.util.concurrent.TimeUnit
  * Metrics are recorded with delta temporality and flushed to disk every [EXPORT_INTERVAL_SECONDS]
  * (so batches survive offline periods and process death), then drained to the OTLP endpoint right
  * after each flush. A batch that fails to upload is written back and retried on the next drain.
- * The resource carries only the app coordinates — no user, device or session identifiers, per the
- * app privacy policy.
+ * The resource carries only the app coordinates, the coarse user country and the app language — no
+ * user, device or session identifiers, per the app privacy policy.
  */
 internal class OpenTelemetryMetricsClient(
     application: Application,
     apiKey: String,
+    settingsRepository: SettingsRepository,
     private val scope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
     private val networkExporter: MetricExporter = createOtlpExporter(apiKey),
@@ -54,6 +58,8 @@ internal class OpenTelemetryMetricsClient(
                     .put(SERVICE_NAME_KEY, SERVICE_NAME)
                     .put(SERVICE_VERSION_KEY, BuildConfig.VERSION_NAME)
                     .put(OS_NAME_KEY, OS_NAME)
+                    .put(LANGUAGE_KEY, SupportedLanguages.getCurrentSupportedLanguageCode())
+                    .apply { resolveCountryCode(settingsRepository)?.let { put(COUNTRY_CODE_KEY, it) } }
                     .build(),
             ),
         )
@@ -144,6 +150,8 @@ internal class OpenTelemetryMetricsClient(
         private val SERVICE_NAME_KEY = AttributeKey.stringKey("service.name")
         private val SERVICE_VERSION_KEY = AttributeKey.stringKey("service.version")
         private val OS_NAME_KEY = AttributeKey.stringKey("os.name")
+        private val COUNTRY_CODE_KEY = AttributeKey.stringKey("country_code")
+        private val LANGUAGE_KEY = AttributeKey.stringKey("language")
 
         private fun createOtlpExporter(apiKey: String): MetricExporter {
             return OtlpHttpMetricExporter.builder()
@@ -151,6 +159,13 @@ internal class OpenTelemetryMetricsClient(
                 .addHeader(API_KEY_HEADER, apiKey)
                 .setAggregationTemporalitySelector(AggregationTemporalitySelector.deltaPreferred())
                 .build()
+        }
+
+        // the geo-based country may not be fetched yet at pipeline start, so fall back to the device
+        // locale; a locale region is not always a country (e.g. es-419 -> "419"), so keep ISO alpha-2 only
+        private fun resolveCountryCode(settingsRepository: SettingsRepository): String? {
+            val code = settingsRepository.getUserCountryCodeSync()?.code ?: Locale.getDefault().country
+            return code.lowercase(Locale.ROOT).takeIf { it.length == 2 && it.all { char -> char in 'a'..'z' } }
         }
     }
 }

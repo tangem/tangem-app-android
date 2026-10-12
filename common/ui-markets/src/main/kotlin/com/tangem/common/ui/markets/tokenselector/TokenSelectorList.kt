@@ -6,20 +6,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
+import com.tangem.core.ui.ds2.shtorka.LocalShtorkaSurfaceOpacity
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import kotlinx.collections.immutable.ImmutableList
@@ -100,13 +105,22 @@ fun LazyListScope.tokenSelectorSectionItems(
  * rounds every corner
  */
 @Composable
-fun Modifier.tokenGroupRowDecoration(currentIndex: Int, lastIndex: Int): Modifier = this.roundedShapeItemDecoration(
-    currentIndex = currentIndex,
-    lastIndex = lastIndex,
-    addDefaultPadding = false,
-    radius = TangemTheme.dimens2.x6,
-    backgroundColor = TangemTheme.colors2.surface.level3,
-)
+fun Modifier.tokenGroupRowDecoration(currentIndex: Int, lastIndex: Int): Modifier {
+    val radius = 24.dp
+    val shape = remember(currentIndex, lastIndex, radius) {
+        when {
+            currentIndex == 0 && lastIndex == 0 -> RoundedCornerShape(radius)
+            currentIndex == 0 -> RoundedCornerShape(topStart = radius, topEnd = radius)
+            currentIndex == lastIndex -> RoundedCornerShape(bottomStart = radius, bottomEnd = radius)
+            else -> null
+        }
+    }
+    val color = TangemTheme.colors3.bg.secondary
+    val surfaceOpacity = LocalShtorkaSurfaceOpacity.current
+
+    return (if (shape != null) this.clip(shape) else this)
+        .drawBehind { drawRect(color = color.copy(alpha = color.alpha * surfaceOpacity())) }
+}
 
 @Composable
 private fun WalletHeaderSection(section: TokenSelectorSectionUM.WalletHeader, horizontalPadding: Dp) {

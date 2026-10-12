@@ -103,7 +103,6 @@ internal class SelectNetworksModel @Inject constructor(
             } else {
                 AddressBookEvents.SelectAllNetworksTapped.Action.ClearAll
             },
-            scope = modelScope,
         )
 
         selectedNetworks.value = if (isSelectingAll) allNetworkIds else emptySet()

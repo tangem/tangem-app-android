@@ -7,16 +7,20 @@ import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableState
 import androidx.compose.foundation.gestures.animateToWithDecay
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.Velocity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -29,11 +33,13 @@ import kotlin.math.sign
  *
  * Behavior notes:
  * - On release the target detent is chosen by projecting the fling velocity with a decay curve and
- *   picking the detent closest to the projected stop point — a strong flick can skip intermediate
- *   detents, exactly like the iOS sheet.
+ *   picking the detent closest to the projected stop point, never more than one detent beyond the
+ *   one the finger was released next to — so a flick always lands on the neighbouring detent
+ *   instead of flying past it.
  * - Settling animations are interruptible: touching the shtorka mid-flight grabs it in place.
- * - The state is not saved across process death; the shtorka re-opens at [currentDetent] of the
- *   initial composition.
+ * - The resting detent is saved and restored, so a shtorka that leaves the composition (navigating
+ *   to another screen, a configuration change, process death) comes back at the detent it was left
+ *   at rather than at the initial one.
  *
  * Create via [rememberTangemShtorkaState].
  *
@@ -65,16 +71,35 @@ class TangemShtorkaState internal constructor(
     internal var rawOverdrag: Float by mutableFloatStateOf(0f)
 
     /** Expand progress of the floating-card → edge-to-edge morph, written during layout. */
-    internal var expandProgress: Float = 0f
+    internal var expandProgress: Float by mutableFloatStateOf(0f)
 
     /** 1 at the collapsed detent, 0 at the next one up; drives the capsule corners. */
     internal var collapseProgress: Float = 0f
+
+    /**
+     * Scale the chrome slot renders at, written during layout. Follows the card's width ratio to
+     * its [TangemShtorka.Detent.Full] width, floored at the floating-inset scale so the chrome's
+     * unscaled measure never overhangs the window (haze would truncate its effects there).
+     */
+    internal var chromeScale: Float = 1f
+
+    /** Scale of the content slot — equals [chromeScale] except on the collapse leg, where it freezes. */
+    internal var contentScale: Float = 1f
+
+    /** Size of the content slot in card coordinates, written during layout; freezes on the collapse leg. */
+    internal var contentCardSize: IntSize = IntSize.Zero
+
+    /** 1 at the detent above the collapsed one, 0 at the collapsed detent; fades the content slot. */
+    internal var contentAlpha: Float = 1f
 
     /** Whether a settle animation is running — used to grab the shtorka mid-flight. */
     internal var isSettling: Boolean by mutableStateOf(false)
         private set
 
     private var settleJob: Job? = null
+
+    var skippedDetents: Set<TangemShtorka.Detent> by mutableStateOf(emptySet())
+        private set
 
     /** The detent the shtorka currently rests at (or rested at before an ongoing gesture). */
     val currentDetent: TangemShtorka.Detent
@@ -92,6 +117,18 @@ class TangemShtorkaState internal constructor(
      */
     fun requireOffset(): Float = anchoredDraggableState.requireOffset()
 
+    fun updateSkippedDetents(skippedDetents: Set<TangemShtorka.Detent>) {
+        if (this.skippedDetents == skippedDetents) return
+        this.skippedDetents = skippedDetents
+
+        if (targetDetent in skippedDetents) {
+            val position = anchoredDraggableState.anchors.positionOf(targetDetent)
+            if (position.isNaN()) return
+
+            animateTo(detent = settleableAbove(position) ?: settleableBelow(position) ?: return)
+        }
+    }
+
     /** Animate to [detent], cancelling any ongoing settle. [detent] must be one of [detents]. */
     fun animateTo(detent: TangemShtorka.Detent) {
         require(detent in detents) { "detent must be one of detents" }
@@ -107,7 +144,7 @@ class TangemShtorkaState internal constructor(
 
     /** Consume a direct drag [delta]: move between anchors, spill the remainder into overdrag. */
     internal fun dispatchDrag(delta: Float) {
-        settleJob?.cancel()
+        cancelSettle()
         if (rawOverdrag != 0f) {
             val newRaw = rawOverdrag + delta
             if (newRaw.sign == rawOverdrag.sign) {
@@ -124,23 +161,26 @@ class TangemShtorkaState internal constructor(
 
     /** Consume a nested-scroll [delta] — no overdrag, the inner list shows its own overscroll. */
     internal fun dispatchNestedDrag(delta: Float): Float {
-        settleJob?.cancel()
+        cancelSettle()
         return anchoredDraggableState.dispatchRawDelta(delta)
     }
 
     /**
      * Settle after a gesture: project [velocity] with [ShtorkaProjectionDecay], spring to the
-     * detent nearest to the projected stop and relax the overdrag back to zero.
+     * detent nearest to the projected stop — capped at one detent past the release position — and
+     * relax the overdrag back to zero.
      */
     internal fun startSettle(velocity: Float) {
         launchSettle {
             if (rawOverdrag != 0f) {
                 launch { relaxOverdrag(velocity) }
             }
-            val projected = ShtorkaProjectionDecay.calculateTargetValue(requireOffset(), velocity)
-            val target = anchoredDraggableState.anchors.closestAnchor(projected) ?: return@launchSettle
+            val offset = requireOffset()
+            val projected = ShtorkaProjectionDecay.calculateTargetValue(offset, velocity)
+            val released = settleTargetFor(offset) ?: return@launchSettle
+            val flung = settleTargetFor(projected) ?: released
             anchoredDraggableState.animateToWithDecay(
-                targetValue = target,
+                targetValue = oneDetentFrom(released = released, towards = flung),
                 velocity = velocity,
                 snapAnimationSpec = ShtorkaSettleSpring,
                 decayAnimationSpec = ShtorkaMotionDecay,
@@ -153,6 +193,12 @@ class TangemShtorkaState internal constructor(
      * whole run (children included — the job completes only after e.g. [relaxOverdrag] finishes)
      * and lowers it on completion unless a newer settle has already taken over.
      */
+    private fun cancelSettle() {
+        settleJob?.cancel()
+        settleJob = null
+        isSettling = false
+    }
+
     private fun launchSettle(block: suspend CoroutineScope.() -> Unit) {
         settleJob?.cancel()
         val job = scope.launch(block = block)
@@ -174,6 +220,56 @@ class TangemShtorkaState internal constructor(
         }
     }
 
+    private fun oneDetentFrom(released: TangemShtorka.Detent, towards: TangemShtorka.Detent): TangemShtorka.Detent {
+        if (released == towards) return towards
+
+        val anchors = anchoredDraggableState.anchors
+        val ordered = detents
+            .filter { it !in skippedDetents && !anchors.positionOf(it).isNaN() }
+            .sortedBy { anchors.positionOf(it) }
+        val releasedIndex = ordered.indexOf(released)
+        val towardsIndex = ordered.indexOf(towards)
+        if (releasedIndex < 0 || towardsIndex < 0) return towards
+
+        return ordered[towardsIndex.coerceIn(releasedIndex - 1, releasedIndex + 1)]
+    }
+
+    private fun settleTargetFor(projected: Float): TangemShtorka.Detent? {
+        val anchors = anchoredDraggableState.anchors
+        val closest = anchors.closestAnchor(projected) ?: return null
+        if (closest !in skippedDetents) return closest
+
+        val skippedPosition = anchors.positionOf(closest)
+        val settledPosition = anchors.positionOf(anchoredDraggableState.settledValue)
+        val isExpanding = if (settledPosition.isNaN() || settledPosition == skippedPosition) {
+            projected <= skippedPosition
+        } else {
+            settledPosition > skippedPosition
+        }
+
+        return if (isExpanding) {
+            settleableAbove(skippedPosition) ?: settleableBelow(skippedPosition)
+        } else {
+            settleableBelow(skippedPosition) ?: settleableAbove(skippedPosition)
+        }
+    }
+
+    private fun settleableAbove(position: Float): TangemShtorka.Detent? {
+        val anchors = anchoredDraggableState.anchors
+
+        return detents
+            .filter { it !in skippedDetents && anchors.positionOf(it) <= position }
+            .maxByOrNull { anchors.positionOf(it) }
+    }
+
+    private fun settleableBelow(position: Float): TangemShtorka.Detent? {
+        val anchors = anchoredDraggableState.anchors
+
+        return detents
+            .filter { it !in skippedDetents && anchors.positionOf(it) >= position }
+            .minByOrNull { anchors.positionOf(it) }
+    }
+
     private suspend fun relaxOverdrag(velocity: Float) {
         animate(
             initialValue = rawOverdrag,
@@ -185,20 +281,38 @@ class TangemShtorkaState internal constructor(
 }
 
 /**
- * Create and remember a [TangemShtorkaState].
+ * Create and remember a [TangemShtorkaState], restoring the detent it was last left at.
  *
  * @param detents detents the shtorka can rest at; must be non-empty
- * @param initialDetent the detent the shtorka starts at; must be one of [detents]
+ * @param initialDetent the detent the shtorka starts at when there is nothing to restore; must be
+ *   one of [detents]
  */
 @Composable
 fun rememberTangemShtorkaState(
     detents: List<TangemShtorka.Detent>,
     initialDetent: TangemShtorka.Detent = detents.first(),
+    skippedDetents: Set<TangemShtorka.Detent> = emptySet(),
 ): TangemShtorkaState {
     val scope = rememberCoroutineScope()
-    return remember(detents, scope) {
+    val saver = remember(detents, initialDetent, skippedDetents, scope) {
+        Saver<TangemShtorkaState, Int>(
+            save = { it.detents.indexOf(it.currentDetent) },
+            restore = { index ->
+                TangemShtorkaState(
+                    detents = detents,
+                    initialDetent = detents.getOrNull(index)?.takeIf { it !in skippedDetents } ?: initialDetent,
+                    scope = scope,
+                )
+            },
+        )
+    }
+    val state = rememberSaveable(detents, scope, saver = saver) {
         TangemShtorkaState(detents = detents, initialDetent = initialDetent, scope = scope)
     }
+
+    SideEffect { state.updateSkippedDetents(skippedDetents) }
+
+    return state
 }
 
 /**
@@ -230,16 +344,17 @@ internal fun TangemShtorkaState.shtorkaNestedScrollConnection(): NestedScrollCon
         override suspend fun onPreFling(available: Velocity): Velocity {
             val toFling = available.y
             val minPosition = anchoredDraggableState.anchors.minPosition()
-            return if (toFling < 0 && requireOffset() > minPosition) {
-                startSettle(toFling)
-                available
-            } else {
-                Velocity.Zero
-            }
+            if (toFling == 0f || requireOffset() <= minPosition) return Velocity.Zero
+
+            startSettle(toFling)
+
+            return Velocity(x = 0f, y = toFling)
         }
 
         override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
-            startSettle(available.y)
+            if (!isSettling) {
+                startSettle(available.y)
+            }
             return available
         }
     }
