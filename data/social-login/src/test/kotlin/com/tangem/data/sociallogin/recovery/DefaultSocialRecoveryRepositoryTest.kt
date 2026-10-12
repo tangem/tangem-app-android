@@ -168,7 +168,7 @@ internal class DefaultSocialRecoveryRepositoryTest {
         return listOf(
             ErrorModel(SocialRecoveryError.BindingNotFound, SocialLoginError.BindingNotFound),
             ErrorModel(SocialRecoveryError.BindingConflict, SocialLoginError.BindingConflict),
-            ErrorModel(SocialRecoveryError.NonceExpired, SocialLoginError.SessionExpired),
+            ErrorModel(SocialRecoveryError.NonceExpired, SocialLoginError.ServerError()),
             ErrorModel(SocialRecoveryError.NoActiveSession, SocialLoginError.ServerError()),
             ErrorModel(SocialRecoveryError.DeviceKeyUnavailable, SocialLoginError.ServerError()),
             ErrorModel(SocialRecoveryError.SigningFailed(cause), SocialLoginError.ServerError(cause)),
