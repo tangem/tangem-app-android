@@ -3,6 +3,7 @@ package com.tangem.features.yield.supply.impl.incentives.claim.result
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.essenty.backhandler.BackCallback
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
@@ -20,14 +21,20 @@ internal class YieldSupplyClaimResultComponent(
     private val params: Params,
 ) : ComposableBottomSheetComponent, AppComponentContext by appComponentContext {
 
+    init {
+        // The slot's own back handling would close the slot behind the active screen's back, leaving the result it
+        // owns on record; the result is closed through the screen instead, so both go together.
+        backHandler.register(BackCallback { params.onDismiss() })
+    }
+
     override fun dismiss() {
         params.onDismiss()
     }
 
     /**
      * Drawn full-bleed rather than in a sheet: the design-system status template brings its own background, ambient
-     * light and glow ring, all sized to the screen. It still travels in the active screen's slot, so back and the
-     * claim outcome dismiss it the way they dismiss the sheets beside it.
+     * light and glow ring, all sized to the screen. It still travels in the active screen's slot, so the claim
+     * outcome dismisses it the way it dismisses the sheets beside it.
      */
     @Composable
     override fun BottomSheet() {

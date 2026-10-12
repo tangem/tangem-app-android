@@ -203,11 +203,11 @@ internal class YieldSupplyActiveModel @Inject constructor(
     }
 
     fun onApprove() {
-        slotNavigation.activate(YieldSupplyActiveRoute.Approve)
+        activateSheet(YieldSupplyActiveRoute.Approve)
     }
 
     fun onStopEarning() {
-        slotNavigation.activate(YieldSupplyActiveRoute.Exit)
+        activateSheet(YieldSupplyActiveRoute.Exit)
     }
 
     /** Dismiss that skips the in-transaction guard of [onDismissClick] — the About APY sheet signs nothing. */
@@ -216,7 +216,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     }
 
     fun onClaimRewardsClick() {
-        slotNavigation.activate(YieldSupplyActiveRoute.Claim)
+        activateSheet(YieldSupplyActiveRoute.Claim)
     }
 
     /** The claim sheet is not driven by [transactionInProgressFlow]; it vetoes its own dismissal while signing. */
@@ -228,6 +228,12 @@ internal class YieldSupplyActiveModel @Inject constructor(
     fun onClaimSubmitted(result: YieldSupplyClaimResultUM) {
         claimResultFlow.update { result }
         slotNavigation.activate(YieldSupplyActiveRoute.ClaimResult)
+    }
+
+    /** A sheet over the claim result replaces it, so the result is no longer the one a revert may close. */
+    private fun activateSheet(route: YieldSupplyActiveRoute) {
+        claimResultFlow.update { null }
+        slotNavigation.activate(route)
     }
 
     fun onClaimResultDismiss() {
@@ -278,7 +284,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     private fun onApyInfoClick() {
         val breakdown = uiState.value.apyBreakdown ?: return
-        slotNavigation.activate(
+        activateSheet(
             YieldSupplyActiveRoute.AboutApy(baseApy = breakdown.baseApy, rewardsApr = breakdown.rewardsApr),
         )
     }
