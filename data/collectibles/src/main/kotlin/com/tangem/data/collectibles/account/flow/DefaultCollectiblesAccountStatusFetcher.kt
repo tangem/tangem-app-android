@@ -12,7 +12,6 @@ import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.domain.models.account.isAccountCreated
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -57,7 +56,7 @@ internal class DefaultCollectiblesAccountStatusFetcher @Inject constructor(
             )
         }
 
-        val balance = resolveBalance(userWallet, stored?.balance?.usdcToken)
+        val balance = resolveBalance(userWallet, stored?.balance)
             ?: return markUnrefreshed(userWalletId = userWalletId)
 
         collectiblesAccountStore.storeBalance(userWalletId = userWalletId, balance = balance)
@@ -66,8 +65,8 @@ internal class DefaultCollectiblesAccountStatusFetcher @Inject constructor(
     /** The vault's own amount, which for an empty vault is an honest zero. `null` is a read that did not answer. */
     private suspend fun resolveBalance(
         userWallet: UserWallet,
-        cachedToken: CryptoCurrency.Token?,
-    ): CollectiblesVaultBalance? = gachaVaultRepository.getVaultBalance(userWallet, cachedToken = cachedToken)
+        cached: CollectiblesVaultBalance?,
+    ): CollectiblesVaultBalance? = gachaVaultRepository.getVaultBalance(userWallet, cached = cached)
         .getOrElse { error ->
             logger.e("Failed to read the collectibles vault balance of ${userWallet.walletId}: $error")
             null

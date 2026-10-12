@@ -1,8 +1,11 @@
 package com.tangem.tests.staking
 
 import com.kaspersky.kaspresso.testcases.core.testcontext.TestContext
+import androidx.compose.ui.test.longClick
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
@@ -70,46 +73,59 @@ class StakingTest : BaseTestCase() {
     }
 
     @AllureId("3550")
-    @DisplayName("Staking: validate staking more screens")
+    @DisplayName("Staking: stake more POL with another validator")
     @Test
     fun validateStakingMoreScreensTest() {
         val tokenTitle = "POL (ex-MATIC)"
-        val scenarioName = "staking_eth_pol_balances"
-        val scenarioState = "Staked"
         val stakingAmount = "1"
+        val firstValidator = "Meria"
+        val secondValidator = "Staking4All"
+        val stakedPosition = "1.00"
+        val portfolioScenario = "user_tokens_api"
+        val portfolioState = "HotWalletSvS"
+        val balancesScenario = "moralis_evm_token_balances_api"
+        val balancesState = "PolStakingEthereum"
+        val stakingScenario = "staking_eth_pol_balances"
+        val stakingStakedState = "Staked"
+        val actionsScenario = "staking_eth_pol_actions"
+        val actionsProcessingState = "StakeProcessing"
 
         setupHooks().run {
 
-            step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
-                setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
+            step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
+                setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
+            }
+            step("Set WireMock scenario: '$balancesScenario' to state: '$balancesState'") {
+                setWireMockScenarioState(scenarioName = balancesScenario, state = balancesState)
+            }
+            step("Set WireMock scenario: '$stakingScenario' to state: '$stakingStakedState'") {
+                setWireMockScenarioState(scenarioName = stakingScenario, state = stakingStakedState)
             }
 
-            step("Open 'Main Screen'") {
-                openMainScreen()
-            }
-            step("Synchronize addresses") {
-                synchronizeAddresses()
-            }
-            step("Assert 'Add & Manage' button is displayed") {
-                onMainScreen { addAndManageButton().assertIsDisplayed() }
-            }
-            step("Swipe up") {
-                swipeVertical(SwipeDirection.UP)
+            step("Open 'Main Screen' with existing hot wallet") {
+                openMainScreenWithExistingHotWallet(seedPhrase = SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenTitle'") {
                 openTokenDetailsFromTokenList(tokenTitle)
             }
-            step("Assert 'Token details screen' open") {
-                onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
+            step("Wait until token balance is loaded before entering staking") {
+                waitUntilTokenBalanceIsLoaded()
             }
             step("Click on 'Staking block'") {
-                onTokenDetailsScreen { stakingBlock.clickWithAssertion() }
+                onTokenDetailsScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { stakingBlock.clickWithAssertion() }
+                }
             }
-            step("Check 'Staking details' screen") {
-                checkStakingDetailsScreen(withStaking = true)
+            step("Assert '$firstValidator' position is displayed") {
+                onStakingDetailsScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { activeStakingBlockOfValidator(firstValidator).assertIsDisplayed() }
+                }
             }
             step("Click 'Stake more' button") {
-                onStakingDetailsScreen { stakeMoreButton.performClick() }
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onStakingDetailsScreen { stakeMoreButton.performClick() }
+                    onSendScreen { amountInputTextField.assertIsDisplayed() }
+                }
             }
             step("Check 'Staking' screen") {
                 checkStakingScreen(stakingAmount)
@@ -117,48 +133,110 @@ class StakingTest : BaseTestCase() {
             step("Click on 'Next' button") {
                 onSendScreen { nextButton.performClick() }
             }
-            step("Check 'Staking confirm' screen") {
-                checkStakingConfirmScreen()
+            step("Assert validator '$firstValidator' is selected on 'Staking confirm' screen") {
+                onStakingConfirmScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { validatorBlockWithName(firstValidator).assertIsDisplayed() }
+                }
+            }
+            step("Click on validator block") {
+                onStakingConfirmScreen { validatorBlock.performClick() }
+            }
+            step("Click on validator '$secondValidator'") {
+                onStakingConfirmScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { validatorListItem(secondValidator).performClick() }
+                }
+            }
+            step("Click on 'Continue' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onSendScreen { continueButton.performClick() }
+                    onStakingConfirmScreen { validatorBlock.assertIsDisplayed() }
+                }
+            }
+            step("Assert validator '$secondValidator' is selected on 'Staking confirm' screen") {
+                onStakingConfirmScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { validatorBlockWithName(secondValidator).assertIsDisplayed() }
+                }
+            }
+            step("Hold 'Stake' button to sign and send the transaction") {
+                confirmStakingByHolding()
+            }
+            step("Check 'Staking success' screen") {
+                checkStakingSuccessScreen()
+            }
+            step("Set WireMock scenario: '$actionsScenario' to state: '$actionsProcessingState'") {
+                setWireMockScenarioState(scenarioName = actionsScenario, state = actionsProcessingState)
+            }
+            step("Click on 'Close' button") {
+                onStakingSuccessScreen { closeButton.performClick() }
+            }
+            step("Assert a separate '$secondValidator' position is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG, intervalMs = 5_000) {
+                    var shown = false
+                    onStakingDetailsScreen { shown = activeStakingBlockOfValidator(secondValidator).isDisplayedSafely() }
+                    if (!shown) {
+                        reopenStakingDetails()
+                        throw AssertionError("'$secondValidator' position is still missing")
+                    }
+                }
+            }
+            step("Assert '$secondValidator' position amount is '$stakedPosition'") {
+                onStakingDetailsScreen { activeStakingAmountOfValidator(secondValidator, stakedPosition).assertIsDisplayed() }
+            }
+            step("Assert '$secondValidator' position shows the pending indicator") {
+                onStakingDetailsScreen { activeStakingPendingIconOfValidator(secondValidator).assertIsDisplayed() }
+            }
+            step("Assert '$firstValidator' position amount is still '$stakedPosition'") {
+                onStakingDetailsScreen { activeStakingAmountOfValidator(firstValidator, stakedPosition).assertIsDisplayed() }
+            }
+            step("Assert '$firstValidator' position has no pending indicator") {
+                onStakingDetailsScreen { activeStakingPendingIconOfValidator(firstValidator).assertDoesNotExist() }
             }
         }
     }
 
     @AllureId("3548")
-    @DisplayName("Staking: validate staking screens")
+    @DisplayName("Staking: stake POL with granting the token approval")
     @Test
     fun validateStakingScreensTest() {
         val tokenTitle = "POL (ex-MATIC)"
-        val scenarioName = "staking_eth_pol_balances"
-        val scenarioState = "Started"
         val stakingAmount = "1"
         val stakingApy = "2.84%"
+        val portfolioScenario = "user_tokens_api"
+        val portfolioState = "HotWalletSvS"
+        val balancesScenario = "moralis_evm_token_balances_api"
+        val balancesState = "PolStakingEthereum"
+        val stakingScenario = "staking_eth_pol_balances"
+        val stakingStartedState = "Started"
+        val stakingStakedState = "Staked"
+        val allowanceScenario = "staking_eth_pol_allowance"
+        val allowanceNotApprovedState = "NotApproved"
+        val allowanceApprovedState = "Approved"
 
         setupHooks().run {
 
-            step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
-                setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
+            step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
+                setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
+            }
+            step("Set WireMock scenario: '$balancesScenario' to state: '$balancesState'") {
+                setWireMockScenarioState(scenarioName = balancesScenario, state = balancesState)
+            }
+            step("Set WireMock scenario: '$stakingScenario' to state: '$stakingStartedState'") {
+                setWireMockScenarioState(scenarioName = stakingScenario, state = stakingStartedState)
+            }
+            step("Set WireMock scenario: '$allowanceScenario' to state: '$allowanceNotApprovedState'") {
+                setWireMockScenarioState(scenarioName = allowanceScenario, state = allowanceNotApprovedState)
             }
 
-            step("Open 'Main Screen'") {
-                openMainScreen()
-            }
-            step("Synchronize addresses") {
-                synchronizeAddresses()
-            }
-            step("Assert 'Add & Manage' button is displayed") {
-                onMainScreen { addAndManageButton().assertIsDisplayed() }
-            }
-            step("Swipe up") {
-                swipeVertical(SwipeDirection.UP)
+            step("Open 'Main Screen' with existing hot wallet") {
+                openMainScreenWithExistingHotWallet(seedPhrase = SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenTitle'") {
                 openTokenDetailsFromTokenList(tokenTitle)
             }
-            step("Assert 'Token details screen' open") {
-                onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
-            }
             step("Assert 'Available staking block' is displayed") {
-                onTokenDetailsScreen { availableStakingBlock.assertIsDisplayed() }
+                onTokenDetailsScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { availableStakingBlock.assertIsDisplayed() }
+                }
             }
             step("Assert 'Available staking block' title is displayed") {
                 onTokenDetailsScreen { stakingTitle.assertIsDisplayed() }
@@ -166,14 +244,20 @@ class StakingTest : BaseTestCase() {
             step("Assert 'Available staking block' text is displayed") {
                 onTokenDetailsScreen { availableStakingBlockText(stakingApy).assertIsDisplayed() }
             }
+            step("Wait until token balance is loaded before entering staking") {
+                waitUntilTokenBalanceIsLoaded()
+            }
             step("Click on 'Stake' button") {
                 onTokenDetailsScreen { stakeButton.clickWithAssertion() }
             }
             step("Check 'Staking details' screen") {
                 checkStakingDetailsScreen(withStaking = false)
             }
-            step("Click 'Stake' button") {
-                onStakingDetailsScreen { stakeButton.performClick() }
+            step("Click on 'Stake' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onStakingDetailsScreen { stakeButton.performClick() }
+                    onSendScreen { amountInputTextField.assertIsDisplayed() }
+                }
             }
             step("Check 'Staking' screen") {
                 checkStakingScreen(stakingAmount)
@@ -181,8 +265,82 @@ class StakingTest : BaseTestCase() {
             step("Click on 'Next' button") {
                 onSendScreen { nextButton.performClick() }
             }
-            step("Check 'Staking confirm' screen") {
-                checkStakingConfirmScreen()
+            step("Assert amount block is displayed on 'Staking confirm' screen") {
+                onStakingConfirmScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { amountBlock.assertIsDisplayed() }
+                }
+            }
+            step("Assert validator block is displayed on 'Staking confirm' screen") {
+                onStakingConfirmScreen { validatorBlock.assertIsDisplayed() }
+            }
+            step("Assert network fee block is displayed on 'Staking confirm' screen") {
+                onStakingConfirmScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { networkFeeBlock.assertIsDisplayed() }
+                }
+            }
+            step("Assert 'Give Permission' button is displayed") {
+                onStakingConfirmScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { givePermissionButton.assertIsDisplayed() }
+                }
+            }
+            step("Click on 'Give Permission' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onStakingConfirmScreen { givePermissionButton.performClick() }
+                    onStakingConfirmScreen { approveButton.assertIsDisplayed() }
+                }
+            }
+            step("Hold 'Approve' button to sign the approval") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onStakingConfirmScreen {
+                        if (approveButton.isDisplayedSafely()) {
+                            approveButton.assertIsEnabled()
+                            approveButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+                        }
+                        approveButton.assertIsNotDisplayed()
+                    }
+                }
+            }
+            step("Set WireMock scenario: '$allowanceScenario' to state: '$allowanceApprovedState'") {
+                setWireMockScenarioState(scenarioName = allowanceScenario, state = allowanceApprovedState)
+            }
+            step("Assert 'Stake' button is displayed after the allowance is updated") {
+                onStakingConfirmScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { stakeButton.assertIsDisplayed() }
+                }
+            }
+            step("Assert 'Approval in Progress' notification is not displayed") {
+                onStakingConfirmScreen { approvalInProgressNotification.assertDoesNotExist() }
+            }
+            step("Set WireMock scenario: '$stakingScenario' to state: '$stakingStakedState'") {
+                setWireMockScenarioState(scenarioName = stakingScenario, state = stakingStakedState)
+            }
+            step("Hold 'Stake' button to sign and send the transaction") {
+                confirmStakingByHolding()
+            }
+            step("Check 'Staking success' screen") {
+                checkStakingSuccessScreen()
+            }
+            step("Click on 'Close' button") {
+                onStakingSuccessScreen { closeButton.performClick() }
+            }
+            step("Check 'Staking details' screen after the stake") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG, intervalMs = 5_000) {
+                    var staked = false
+                    onStakingDetailsScreen { staked = yourStakesTitle.isDisplayedSafely() }
+                    if (!staked) {
+                        reopenStakingDetails()
+                        throw AssertionError("'Your stakes' is still missing — the staking balance has not reloaded")
+                    }
+                }
+                checkStakingDetailsAfterInitialStake()
+            }
+            step("Click on 'Back' button to return to 'Token details' screen") {
+                onSendScreen { closeButton.performClick() }
+            }
+            step("Assert staked token amount is displayed in 'Staking' banner") {
+                onTokenDetailsScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { stakingTokenAmount.assertIsDisplayed() }
+                }
             }
         }
     }

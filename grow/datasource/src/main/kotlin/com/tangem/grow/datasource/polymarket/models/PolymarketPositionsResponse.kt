@@ -45,6 +45,11 @@ data class PolymarketOpenPositionDto(
     @Json(name = "eventTitle") val eventTitle: String? = null,
     @Json(name = "status") val status: String? = null,
     @Json(name = "outcomeIndex") val outcomeIndex: Int? = null,
+    @Json(name = "gameId") val gameId: String? = null,
+    @Json(name = "score") val score: String? = null,
+    @Json(name = "period") val period: String? = null,
+    @Json(name = "ended") val isEnded: Boolean? = null,
+    @Json(name = "dataFetchedAt") val dataFetchedAt: String? = null,
 )
 
 @JsonClass(generateAdapter = true)

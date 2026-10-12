@@ -88,7 +88,7 @@ internal class JointAccountToMembersUMConverterTest {
                 resourceReference(CoreUiR.string.joint_account_invite_members_subtitle, wrappedList(1, THREE_SLOTS)),
             )
             assertThat(state.shareSafely).isNotNull()
-            assertThat(state.onActivateClick).isNull()
+            assertThat(state.activateButton).isNull()
             val topBar = state.topBar as JointAccountMembersUM.TopBarUM.Dismissible
             assertThat(topBar.canArchive).isTrue()
         }
@@ -192,7 +192,7 @@ internal class JointAccountToMembersUMConverterTest {
             val state = converter.convert(input)
 
             // Assert
-            assertThat(state.onActivateClick).isNotNull()
+            assertThat(state.activateButton).isNotNull()
         }
 
         @Test
@@ -204,7 +204,7 @@ internal class JointAccountToMembersUMConverterTest {
             )
 
             // Act
-            converter.convert(input).onActivateClick?.invoke()
+            converter.convert(input).activateButton?.onClick?.invoke()
 
             // Assert
             verify(exactly = 1) { onActivateClick(ACCOUNT_ID) }
@@ -222,7 +222,7 @@ internal class JointAccountToMembersUMConverterTest {
             val state = converter.convert(input)
 
             // Assert
-            assertThat(state.onActivateClick).isNull()
+            assertThat(state.activateButton).isNull()
         }
 
         @Test
@@ -275,7 +275,7 @@ internal class JointAccountToMembersUMConverterTest {
             // Assert
             assertThat(state.header).isNull()
             assertThat(state.shareSafely).isNull()
-            assertThat(state.onActivateClick).isNull()
+            assertThat(state.activateButton).isNull()
             val topBar = state.topBar as JointAccountMembersUM.TopBarUM.Titled
             assertThat(topBar.title).isEqualTo(resourceReference(CoreUiR.string.joint_account_members_title))
         }
@@ -391,8 +391,34 @@ internal class JointAccountToMembersUMConverterTest {
         }
     }
 
-    private fun input(account: JointAccount, invites: List<String>, ownAddress: String? = null) =
-        JointAccountToMembersUMConverter.Input(account = account, invites = invites, ownAddress = ownAddress)
+    @Test
+    fun `GIVEN a shared invite WHEN converted THEN only its slot reads Invited`() {
+        // Arrange
+        val account = pendingAccount(members = listOf(creator))
+
+        // Act
+        val state = converter.convert(
+            input(account = account, invites = listOf(INVITE_A, INVITE_B), sharedInvites = setOf(INVITE_B)),
+        )
+
+        // Assert
+        assertThat(state.freeSlots.map { it.status }).containsExactly(
+            resourceReference(CoreUiR.string.joint_account_invite_members_not_invited),
+            resourceReference(CoreUiR.string.joint_account_invite_members_invited),
+        ).inOrder()
+    }
+
+    private fun input(
+        account: JointAccount,
+        invites: List<String>,
+        ownAddress: String? = null,
+        sharedInvites: Set<String> = emptySet(),
+    ) = JointAccountToMembersUMConverter.Input(
+        account = account,
+        invites = invites,
+        sharedInvites = sharedInvites,
+        ownAddress = ownAddress,
+    )
 
     private fun pendingAccount(members: List<JointAccount.Member>) = JointAccount(
         cryptoAccountId = ACCOUNT_ID,

@@ -14,7 +14,6 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -57,7 +56,6 @@ internal class JointAccountActionsFactoryTest {
                 userWallet = userWallet,
                 cryptoCurrencyStatus = status,
                 stakingAvailability = StakingAvailability.Available(option = mockk()),
-                yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
             )
 
             // Assert
@@ -84,7 +82,6 @@ internal class JointAccountActionsFactoryTest {
             userWallet = userWallet,
             cryptoCurrencyStatus = status,
             stakingAvailability = StakingAvailability.Unavailable,
-            yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
         )
 
         // Assert
@@ -106,7 +103,6 @@ internal class JointAccountActionsFactoryTest {
             userWallet = userWallet,
             cryptoCurrencyStatus = status,
             stakingAvailability = StakingAvailability.Unavailable,
-            yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
         )
 
         // Assert
@@ -124,7 +120,6 @@ internal class JointAccountActionsFactoryTest {
             userWallet = userWallet,
             cryptoCurrencyStatus = status,
             stakingAvailability = StakingAvailability.Unavailable,
-            yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
         )
 
         // Assert
@@ -141,7 +136,6 @@ internal class JointAccountActionsFactoryTest {
             userWallet = userWallet,
             cryptoCurrencyStatus = status,
             stakingAvailability = StakingAvailability.TemporaryUnavailable,
-            yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
         )
 
         // Assert
@@ -161,7 +155,6 @@ internal class JointAccountActionsFactoryTest {
             userWallet = userWallet,
             cryptoCurrencyStatus = status,
             stakingAvailability = StakingAvailability.Unavailable,
-            yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
         )
 
         // Assert
@@ -179,7 +172,6 @@ internal class JointAccountActionsFactoryTest {
             userWallet = userWallet,
             cryptoCurrencyStatus = status,
             stakingAvailability = StakingAvailability.Unavailable,
-            yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
         )
 
         // Assert
@@ -187,43 +179,6 @@ internal class JointAccountActionsFactoryTest {
         assertThat(actual.filterIsInstance<ActionState.CopyAddress>()).isEmpty()
         assertThat(actual.filterIsInstance<ActionState.Send>().single().unavailabilityReason)
             .isEqualTo(ScenarioUnavailabilityReason.None)
-    }
-
-    @Test
-    fun `GIVEN yield supply available WHEN create THEN the yield action is held back rather than hidden`() = runTest {
-        // Arrange
-        val status = statusWithAddress(SAFE)
-
-        // Act
-        val actual = factory.create(
-            userWallet = userWallet,
-            cryptoCurrencyStatus = status,
-            stakingAvailability = StakingAvailability.Unavailable,
-            yieldSupplyAvailability = YieldSupplyAvailability.Available(apy = APY),
-        )
-
-        // Assert
-        assertThat(actual.filterIsInstance<ActionState.YieldMode>().single())
-            .isEqualTo(
-                ActionState.YieldMode(unavailabilityReason = ScenarioUnavailabilityReason.JointAccount, apy = APY),
-            )
-    }
-
-    @Test
-    fun `GIVEN yield supply unavailable WHEN create THEN there is no yield action at all`() = runTest {
-        // Arrange
-        val status = statusWithAddress(SAFE)
-
-        // Act
-        val actual = factory.create(
-            userWallet = userWallet,
-            cryptoCurrencyStatus = status,
-            stakingAvailability = StakingAvailability.Unavailable,
-            yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
-        )
-
-        // Assert
-        assertThat(actual.filterIsInstance<ActionState.YieldMode>()).isEmpty()
     }
 
     private fun statusWithAddress(address: String?, isCustom: Boolean = false): CryptoCurrencyStatus {
@@ -245,6 +200,5 @@ internal class JointAccountActionsFactoryTest {
 
     private companion object {
         const val SAFE = "0x5afe000000000000000000000000000000000001"
-        const val APY = "4.2%"
     }
 }
