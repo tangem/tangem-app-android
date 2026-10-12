@@ -5,7 +5,7 @@ import com.tangem.features.collectibles.impl.packopening.video.source.PackReveal
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * The media half of the reveal: the full video, played once, and the short sound for a skip or a fallback.
+ * The media half of the reveal: the full video, played once, and the skip sound for a skip or a fallback.
  * Failures never throw: the animation must not gate the reward.
  */
 internal interface PackRevealVideoPlayer {
@@ -19,8 +19,8 @@ internal interface PackRevealVideoPlayer {
     /** Stops rendering into [surfaceView]. */
     fun detachSurface(surfaceView: SurfaceView)
 
-    /** Downloads and prepares the short sound. */
-    suspend fun preloadSound(url: String?)
+    /** Downloads and prepares the skip sound. */
+    suspend fun preloadSkipSound(url: String?)
 
     /** Downloads and prepares [asset], replacing the previous video until [start]; cancel an unfinished call first. */
     suspend fun preloadVideo(asset: PackRevealAsset?)
@@ -28,10 +28,10 @@ internal interface PackRevealVideoPlayer {
     /** Plays the full video; without a ready one it goes straight to the card. */
     fun start()
 
-    /** Plays the short sound, if it loaded. */
-    fun playShortSound()
+    /** Plays the skip sound, if it loaded. */
+    fun playSkipSound()
 
-    /** Jumps to the burst, mutes the video and plays the short sound; false once the burst has begun. */
+    /** Jumps to the burst, mutes the video and plays the skip sound; false once the burst has begun. */
     fun skipToReveal(): Boolean
 
     /** Releases both players. */
