@@ -56,7 +56,7 @@ internal class CollectiblesConfirmOrderModel @Inject constructor(
 
     val uiState: StateFlow<CollectiblesConfirmOrderUM>
         field = MutableStateFlow<CollectiblesConfirmOrderUM>(
-            CollectiblesConfirmOrderUM.Loading(onBackClick = ::onBackClick),
+            CollectiblesConfirmOrderUM.Loading(onBackClick = ::onBackClick, onCloseClick = ::onCloseClick),
         )
 
     val bottomSheetNavigation = SlotNavigation<CollectiblesConfirmOrderBottomSheetConfig>()
@@ -69,6 +69,7 @@ internal class CollectiblesConfirmOrderModel @Inject constructor(
 
     private val orderConverter = CollectiblesConfirmOrderConverter(
         onBackClick = ::onBackClick,
+        onCloseClick = ::onCloseClick,
         onApproveClick = ::onApproveClick,
     )
 
@@ -83,6 +84,7 @@ internal class CollectiblesConfirmOrderModel @Inject constructor(
                     ifLeft = {
                         uiState.value = CollectiblesConfirmOrderUM.Error(
                             onBackClick = ::onBackClick,
+                            onCloseClick = ::onCloseClick,
                             message = resourceReference(R.string.collectibles_machine_load_error),
                             onReloadClick = ::reloadMachine,
                         )
@@ -196,10 +198,17 @@ internal class CollectiblesConfirmOrderModel @Inject constructor(
         bottomSheetNavigation.dismiss()
     }
 
-    /** Hidden and ignored while a purchase runs: leaving would cancel it, and a paid pack with it. */
     private fun onBackClick() {
-        if (openPackJob?.isActive == true) return
+        if (isPurchaseRunning()) return
 
         router.pop()
     }
+
+    private fun onCloseClick() {
+        if (isPurchaseRunning()) return
+
+        router.popTo(CollectiblesRoute.Main(params.userWalletId))
+    }
+
+    private fun isPurchaseRunning(): Boolean = openPackJob?.isActive == true
 }
