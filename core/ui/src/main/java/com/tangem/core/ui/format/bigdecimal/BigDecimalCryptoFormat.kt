@@ -226,23 +226,42 @@ fun BigDecimalCryptoFormat.uncapped() = BigDecimalFormat { value ->
 
 /**
  * Format for displaying crypto amounts with a fixed number of decimals.
+ *
+ * [roundingMode] is worth setting to [RoundingMode.DOWN] for an amount the user is about to receive, so the figure
+ * is never larger than what arrives. With [canBeLower], an amount too small for [maxDecimals] keeps its lower-bound
+ * sign — "<0.00000001 WMON" — rather than reading as the plain zero a user would take for "nothing".
  */
-fun BigDecimalCryptoFormat.anyDecimals(maxDecimals: Int = decimals, minDecimals: Int = decimals) =
-    BigDecimalFormat { value ->
-        val formatter = NumberFormat.getCurrencyInstance(locale).apply {
-            currency = usdCurrency
-            maximumFractionDigits = maxDecimals
-            minimumFractionDigits = minDecimals
-            isGroupingUsed = true
-            roundingMode = RoundingMode.HALF_UP
-        }
+fun BigDecimalCryptoFormat.anyDecimals(
+    maxDecimals: Int = decimals,
+    minDecimals: Int = decimals,
+    roundingMode: RoundingMode = RoundingMode.HALF_UP,
+    canBeLower: Boolean = false,
+) = BigDecimalFormat { value ->
+    val formatter = NumberFormat.getCurrencyInstance(locale).apply {
+        currency = usdCurrency
+        maximumFractionDigits = maxDecimals
+        minimumFractionDigits = minDecimals
+        isGroupingUsed = true
+        this.roundingMode = roundingMode
+    }
 
+    val smallest = BigDecimal.ONE.movePointLeft(maxDecimals)
+
+    if (canBeLower && value > BigDecimal.ZERO && value < smallest) {
+        CAN_BE_LOWER_SIGN + formatter.format(smallest)
+            .replaceFiatSymbolWithCrypto(
+                fiatCurrencySymbol = usdCurrency.getSymbol(locale),
+                cryptoCurrencySymbol = symbol,
+                addStartSpace = true,
+            )
+    } else {
         formatter.format(value)
             .replaceFiatSymbolWithCrypto(
                 fiatCurrencySymbol = usdCurrency.getSymbol(locale),
                 cryptoCurrencySymbol = symbol,
             )
     }
+}
 
 /**
  * Format for displaying fees.
