@@ -18,6 +18,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.incentives.YieldClaimCalldata
 import com.tangem.domain.yield.supply.usecase.BuildYieldClaimTransactionUseCase
 import com.tangem.domain.yield.supply.usecase.GetFreshYieldClaimCalldataUseCase
@@ -225,6 +226,7 @@ internal class YieldSupplyClaimModel @Inject constructor(
             chainId = context.chainId,
             userAddress = context.userAddress,
             transactionHash = transactionHash,
+            origin = YieldSupplyClaimOrigin.ClaimSheet,
         )
         params.onSubmitted(
             YieldSupplyClaimResultUM(

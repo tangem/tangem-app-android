@@ -5,6 +5,7 @@ import com.tangem.domain.models.normalizeEvmAddress
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOutcome
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -52,12 +53,14 @@ class YieldSupplyClaimTracker(
     }
 
     /** Starts following [transactionHash]; a claim already being followed for the same module is left alone. */
+    @Suppress("LongParameterList")
     fun track(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency.Token,
         chainId: Int,
         userAddress: String,
         transactionHash: String,
+        origin: YieldSupplyClaimOrigin,
     ) {
         val key = trackedKey(chainId = chainId, userAddress = userAddress)
         var isAdded = false
@@ -86,6 +89,7 @@ class YieldSupplyClaimTracker(
                         chainId = chainId,
                         userAddress = userAddress,
                         outcome = outcome,
+                        origin = origin,
                     ),
                 )
             } finally {
