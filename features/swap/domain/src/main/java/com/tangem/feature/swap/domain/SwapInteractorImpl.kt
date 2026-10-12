@@ -35,6 +35,7 @@ import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawExchangeState
+import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.swap.models.SwapCurrencyStatus
@@ -117,6 +118,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private val cexSwapFeeCalculator: CexSwapFeeCalculator,
     private val swapFeatureToggles: SwapFeatureToggles,
     private val yieldModuleAddressProvider: YieldModuleAddressProvider,
+    private val recordTokenTransferFromSwapUseCase: RecordTokenTransferFromSwapUseCase,
 ) : SwapInteractor {
 
     private val getSelectedAppCurrencyUseCase by lazy(LazyThreadSafetyMode.NONE) {
@@ -874,7 +876,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val fromCurrency = fromSwapCurrencyStatus.currency
 
         // Non-null only on the TRON path, where `txData` is a serialized transaction to unpack.
-        val tronPayload = if (isTron(fromCurrency.network.rawId) && swapFeatureToggles.isTronDexSwapEnabled) {
+        val tronPayload = if (isTron(fromCurrency.network.rawId)) {
             dexTransaction.tronSwapPayload() ?: return SwapTransactionState.Error.UnknownError
         } else {
             null
@@ -1463,6 +1465,15 @@ internal class SwapInteractorImpl @Inject constructor(
                     averageDuration = averageDuration,
                 ),
             ),
+        )
+
+        recordTokenTransferFromSwapUseCase(
+            fromUserWalletId = fromSwapCurrencyStatus.userWalletId,
+            fromAccount = fromSwapCurrencyStatus.account,
+            fromCurrency = fromSwapCurrencyStatus.currency,
+            toUserWalletId = toSwapCurrencyStatus.userWalletId,
+            toAccount = toSwapCurrencyStatus.account,
+            toCurrency = toSwapCurrencyStatus.currency,
         )
     }
 

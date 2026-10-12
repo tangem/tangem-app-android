@@ -6,7 +6,10 @@ import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
+import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.logging.BlockchainSDKLogger
+import com.tangem.blockchain.nft.models.NFTAsset
+import com.tangem.blockchain.nft.models.NFTCollection
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.DefaultBlockchainSDKFactory
@@ -22,18 +25,15 @@ import com.tangem.blockchainsdk.providers.DevBlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.ProdBlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.dev.BlockchainProvidersResponseSerializer
 import com.tangem.blockchainsdk.providers.models.ProviderModel
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.local.datastore.RuntimeStateStore
-import com.tangem.datasource.asset.loader.AssetLoader
+import com.tangem.core.local.assets.AssetLoader
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.build
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
-import com.tangem.store.datasource.api.TangemTech
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.core.remote.config.TangemGatewayApiConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.libs.blockchain_sdk.BuildConfig
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -64,7 +64,7 @@ internal object BlockchainSDKFactoryModule {
     fun provideBlockchainProvidersApi(factory: RetrofitFactory): BlockchainProvidersApi {
         return factory.build(
             RetrofitApiSpec(
-                apiConfigId = TangemTech.ID,
+                apiConfigId = TangemGatewayApiConfig.TANGEM_TECH_ID,
                 shouldApplyTimeoutAnnotations = true,
                 shouldUseSessionAuth = false,
             ),
@@ -73,27 +73,42 @@ internal object BlockchainSDKFactoryModule {
 
     @Provides
     @IntoSet
-    fun provideProviderModelMoshiConfigurer(): NetworkMoshiConfigurer {
+    fun provideBlockchainSdkMoshiConfigurer(): NetworkMoshiConfigurer {
         return NetworkMoshiConfigurer { builder ->
-            builder.add(
-                PolymorphicJsonAdapterFactory.of(ProviderModel::class.java, "type")
-                    .withSubtype(ProviderModel.Public::class.java, "public")
-                    .withSubtype(ProviderModel.Private::class.java, "private")
-                    .withDefaultValue(ProviderModel.UnsupportedType),
-            )
+            builder
+                .add(
+                    PolymorphicJsonAdapterFactory.of(ProviderModel::class.java, "type")
+                        .withSubtype(ProviderModel.Public::class.java, "public")
+                        .withSubtype(ProviderModel.Private::class.java, "private")
+                        .withDefaultValue(ProviderModel.UnsupportedType),
+                )
+                .add(
+                    PolymorphicJsonAdapterFactory.of(NFTCollection.Identifier::class.java, "bc")
+                        .withSubtype(NFTCollection.Identifier.EVM::class.java, "evm")
+                        .withSubtype(NFTCollection.Identifier.TON::class.java, "ton")
+                        .withSubtype(NFTCollection.Identifier.Solana::class.java, "sol")
+                        .withDefaultValue(NFTCollection.Identifier.Unknown),
+                )
+                .add(
+                    PolymorphicJsonAdapterFactory.of(NFTAsset.Identifier::class.java, "bc")
+                        .withSubtype(NFTAsset.Identifier.EVM::class.java, "evm")
+                        .withSubtype(NFTAsset.Identifier.TON::class.java, "ton")
+                        .withSubtype(NFTAsset.Identifier.Solana::class.java, "sol")
+                        .withDefaultValue(NFTAsset.Identifier.Unknown),
+                )
         }
     }
 
     @Provides
     @Singleton
     fun provideBlockchainSDKFactory(
-        environmentConfig: EnvironmentConfig,
+        blockchainSdkConfig: BlockchainSdkConfig,
         blockchainProvidersTypesManager: BlockchainProvidersTypesManager,
         walletManagerFactoryCreator: WalletManagerFactoryCreator,
         dispatchers: CoroutineDispatcherProvider,
     ): BlockchainSDKFactory {
         return DefaultBlockchainSDKFactory(
-            blockchainSdkConfig = environmentConfig.blockchainSdkConfig,
+            blockchainSdkConfig = blockchainSdkConfig,
             blockchainProvidersTypesManager = blockchainProvidersTypesManager,
             walletManagerFactoryCreator = walletManagerFactoryCreator,
             dispatchers = dispatchers,
@@ -138,7 +153,6 @@ internal object BlockchainSDKFactoryModule {
         tangemTechApi: TangemTechApi,
         appPreferencesStore: AppPreferencesStore,
         blockchainSDKLogger: BlockchainSDKLogger,
-        featureTogglesManager: FeatureTogglesManager,
     ): WalletManagerFactoryCreator {
         return WalletManagerFactoryCreator(
             accountCreator = DefaultAccountCreator(tangemTechApi),
@@ -146,9 +160,6 @@ internal object BlockchainSDKFactoryModule {
             blockchainSDKLogger = blockchainSDKLogger,
             featureToggleValues = WalletManagerFactoryCreator.FeatureToggleValues(
                 isYieldModeSwapEnabled = true,
-                isXrpTxHistoryEnabled = featureTogglesManager.isFeatureEnabled(
-                    FeatureToggles.TWI_1749_XRP_TX_HISTORY_ENABLED,
-                ),
             ),
         )
     }

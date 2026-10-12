@@ -10,18 +10,28 @@ import com.tangem.grow.datasource.gasless.models.tron.TronSubmitResponse
 import com.tangem.grow.datasource.gasless.models.tron.TronTokensResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
 import java.util.concurrent.TimeUnit
+
+private const val USER_WALLET_ID_HEADER = "userWalletId"
 
 interface TronGaslessApi {
 
     @GET("api/v1/tron/tokens")
     suspend fun getSupportedTokens(): ApiResponse<GaslessServiceResponse<TronTokensResponse>>
 
+    /** [userWalletId] is what the service counts its per-wallet account activation limit on. */
     @POST("api/v1/tron/transaction/estimate")
-    suspend fun estimate(@Body body: TronEstimateRequestBody): ApiResponse<GaslessServiceResponse<TronEstimateResponse>>
+    suspend fun estimate(
+        @Header(USER_WALLET_ID_HEADER) userWalletId: String,
+        @Body body: TronEstimateRequestBody,
+    ): ApiResponse<GaslessServiceResponse<TronEstimateResponse>>
 
     @ReadTimeout(duration = 120, unit = TimeUnit.SECONDS)
     @POST("api/v1/tron/transaction/submit")
-    suspend fun submit(@Body body: TronSubmitRequestBody): ApiResponse<GaslessServiceResponse<TronSubmitResponse>>
+    suspend fun submit(
+        @Header(USER_WALLET_ID_HEADER) userWalletId: String,
+        @Body body: TronSubmitRequestBody,
+    ): ApiResponse<GaslessServiceResponse<TronSubmitResponse>>
 }

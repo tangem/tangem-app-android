@@ -186,6 +186,7 @@ internal class PolymarketSearchContentTransformerTest {
         markets = listOf(
             PolymarketMarket(
                 id = "market-1",
+                conditionId = null,
                 eventId = id,
                 title = "Market question",
                 slug = "market-slug",
@@ -195,6 +196,7 @@ internal class PolymarketSearchContentTransformerTest {
                 imageUrl = null,
                 status = PolymarketStatus.ACTIVE,
                 isNegRisk = false,
+                isAcceptingOrders = true,
                 startDate = null,
                 endDate = null,
                 startDateIso = null,

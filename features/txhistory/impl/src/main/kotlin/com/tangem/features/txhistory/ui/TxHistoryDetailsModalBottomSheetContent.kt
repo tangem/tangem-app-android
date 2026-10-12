@@ -21,6 +21,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.cosign.CosignRequestRowUM
+import com.tangem.common.ui.cosign.SignatureProgressUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -28,6 +30,7 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.core.ui.components.transactions.state.TxIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.plus
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.styledStringReference
@@ -38,6 +41,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.core.ui.res.generated.icons.ic_globe_24
+import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_20
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import kotlinx.collections.immutable.persistentListOf
 
@@ -51,13 +55,15 @@ import kotlinx.collections.immutable.persistentListOf
  * @param state Sheet state. `null` keeps the sheet hidden (the modal renders its empty placeholder).
  * @param onDismiss Invoked on close / dismiss request.
  * @param ratingContent Optional provider-rating (CSAT) card, rendered between the exchange block and the info rows
- *  of the two-asset body. `null` hides the card (non-swap txs).
+ *  of the two-asset body. It receives the modifier carrying its place in the layout and is expected to apply it only
+ *  to what it draws, so a card that has nothing left to show (an already-rated deal) leaves no gap behind. `null`
+ *  hides the card outright (non-swap txs).
  */
 @Composable
 internal fun TxHistoryDetailsModalBottomSheetContent(
     state: TxHistoryDetailsUM?,
     onDismiss: () -> Unit,
-    ratingContent: (@Composable () -> Unit)? = null,
+    ratingContent: (@Composable (Modifier) -> Unit)? = null,
 ) {
     TangemModalBottomSheet<TxHistoryDetailsUM>(
         containerColor = TangemTheme.colors3.bg.secondary,
@@ -87,6 +93,15 @@ private fun TxHistoryDetailsModalBottomSheetContentPreview() {
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = UI_MODE_NIGHT_YES)
 @Composable
+private fun TxHistoryDetailsModalBottomSheetContentCosignSignedPreview() {
+    TangemThemePreviewRedesign {
+        TxHistoryDetailsModalBottomSheetContent(state = previewCosignSigned(), onDismiss = {})
+    }
+}
+
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = UI_MODE_NIGHT_YES)
+@Composable
 private fun TxHistoryDetailsModalBottomSheetContentTwoAssetsPreview() {
     TangemThemePreviewRedesign {
         TxHistoryDetailsModalBottomSheetContent(state = previewTwoAssets(), onDismiss = {})
@@ -110,20 +125,7 @@ private fun TxHistoryDetailsModalBottomSheetContentUnratedPreview() {
         TxHistoryDetailsModalBottomSheetContent(
             state = previewTwoAssets(),
             onDismiss = {},
-            ratingContent = { PreviewRatingCard(selectedRating = null) },
-        )
-    }
-}
-
-@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
-@Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = UI_MODE_NIGHT_YES)
-@Composable
-private fun TxHistoryDetailsModalBottomSheetContentAlreadyRatedPreview() {
-    TangemThemePreviewRedesign {
-        TxHistoryDetailsModalBottomSheetContent(
-            state = previewTwoAssets(),
-            onDismiss = {},
-            ratingContent = { PreviewRatingCard(selectedRating = 4) },
+            ratingContent = { modifier -> PreviewRatingCard(modifier = modifier) },
         )
     }
 }
@@ -134,9 +136,9 @@ private fun TxHistoryDetailsModalBottomSheetContentAlreadyRatedPreview() {
  */
 @Composable
 @Suppress("MagicNumber")
-private fun PreviewRatingCard(selectedRating: Int?) {
+private fun PreviewRatingCard(modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(TangemTheme.colors3.bg.tertiary)
@@ -153,16 +155,11 @@ private fun PreviewRatingCard(selectedRating: Int?) {
             modifier = Modifier.padding(vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            repeat(5) { index ->
-                val isFilled = selectedRating != null && index < selectedRating
+            repeat(5) {
                 Icon(
                     painter = painterResource(R.drawable.ic_rating_star_24),
                     contentDescription = null,
-                    tint = if (isFilled) {
-                        TangemTheme.colors3.icon.accent.orange
-                    } else {
-                        TangemTheme.colors3.icon.tertiary
-                    },
+                    tint = TangemTheme.colors3.icon.tertiary,
                     modifier = Modifier.size(32.dp),
                 )
             }
@@ -195,7 +192,7 @@ private fun previewSingleAsset() = TxHistoryDetailsUM.SingleAsset(
     ),
     counterparty = TxHistoryDetailsUM.CounterpartyUM(
         label = stringReference("Recipient"),
-        title = stringReference("33Bd321fS...ga21412B"),
+        title = TxHistoryDetailsUM.CounterpartyTitle.Address("0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359"),
         avatar = TxHistoryDetailsUM.CounterpartyAvatar.Address(
             rawAddress = "0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359",
         ),
@@ -209,6 +206,29 @@ private fun previewSingleAsset() = TxHistoryDetailsUM.SingleAsset(
         ),
     ),
 )
+
+/** Joint-account transaction I already signed: disabled "Signed" CTA, `Signatures 2 of 5`. */
+private fun previewCosignSigned(): TxHistoryDetailsUM.SingleAsset {
+    val base = previewSingleAsset()
+    return base.copy(
+        header = base.header.copy(
+            subtitle = stringReference("Pending"),
+            subtitleStyle = TxHistoryDetailsUM.HeaderUM.SubtitleStyle.Warning,
+        ),
+        cosign = CosignRequestRowUM(
+            title = stringReference("Signatures 2 of 5"),
+            progress = SignatureProgressUM(collected = 2, total = 5),
+            onInfoClick = {},
+        ),
+        cosignAction = TxHistoryDetailsUM.CosignActionUM(
+            buttonText = stringReference("Sign"),
+            caption = stringReference("Sends automatically after 3 of 5 sign"),
+            isEnabled = true,
+            onClick = {},
+            iconEnd = TangemIconUM.Icon(Icons.ic_logo_tangem_20),
+        ),
+    )
+}
 
 /** Failed swap exercising the two-asset body: both legs, the error status banner, provider link row and the CTA. */
 private fun previewTwoAssets() = TxHistoryDetailsUM.TwoAssets(

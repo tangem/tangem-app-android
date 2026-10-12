@@ -12,7 +12,6 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.shorted
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
-import com.tangem.utils.annotations.RemoveWithToggle
 import java.math.BigDecimal
 
 @Immutable
@@ -39,19 +38,21 @@ sealed class NotificationUM(val config: NotificationConfig) {
             subtitle = resourceReference(R.string.send_notification_exceed_balance_text),
         )
 
+        /**
+         * The Tron account is not activated and holds less than [minimumAmount] of the token, the floor below
+         * which the gasless service refuses to sponsor the activation.
+         */
+        data class TronActivationNotEnoughFunds(val minimumAmount: String, val tokenSymbol: String) : Error(
+            title = resourceReference(R.string.common_insufficient_balance),
+            subtitle = resourceReference(
+                R.string.gasless_tron_activation_min_balance_description,
+                wrappedList("$minimumAmount $tokenSymbol"),
+            ),
+        )
+
         data object InvalidAmount : Error(
             title = resourceReference(R.string.send_notification_invalid_amount_title),
             subtitle = resourceReference(R.string.send_notification_invalid_amount_text),
-        )
-
-        @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
-        data class DestinationBackupError(val onContactSupport: () -> Unit) : Error(
-            title = resourceReference(R.string.warning_backup_error_add_funds_title),
-            subtitle = resourceReference(R.string.warning_backup_error_add_funds_message),
-            buttonState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.common_contact_support),
-                onClick = onContactSupport,
-            ),
         )
 
         data class MinimumAmountError(val amount: String) : Error(

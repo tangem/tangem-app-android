@@ -65,6 +65,7 @@ internal sealed class EarnAnalyticsEvent(
 internal enum class EarnSource(val value: String) {
     BEST_OPPORTUNITIES_SOURCE("Best Opportunity"),
     MOSTLY_USED_SOURCE("Mostly Used"),
+    SEARCH_SOURCE("Search"),
 }
 internal enum class FilterNetworkAnalytic(val value: String) {
     ALL_NETWORKS("All Networks"),

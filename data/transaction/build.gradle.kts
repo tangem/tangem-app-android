@@ -17,6 +17,7 @@ dependencies {
 
     // region Other libraries
     implementation(deps.androidx.core.ktx)
+    api(deps.moshi)
     // endregion
 
     // region Tangem SDKs
@@ -29,8 +30,7 @@ dependencies {
     // endregion
 
     // region Core
-    api(projects.core.configToggles)
-    api(projects.core.datasource)
+    implementation(projects.store.datasource)
     api(projects.core.utils)
     // endregion
 

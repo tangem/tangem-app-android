@@ -27,6 +27,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.error.mapToGaslessSendError
 import com.tangem.domain.transaction.models.Eip7702Authorization
 import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessFeePlan
@@ -42,7 +43,6 @@ class CreateAndSendGaslessTransactionUseCase(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val getHotWalletSigner: (UserWallet.Hot) -> TransactionSigner,
-    private val isGaslessV2Enabled: Boolean,
 ) {
 
     suspend operator fun invoke(
@@ -58,7 +58,7 @@ class CreateAndSendGaslessTransactionUseCase(
                 signAndSendTransactionOnBackend(context, signedData, uncompiledTxData)
             },
             catch = {
-                raise(SendTransactionError.DataError(it.message))
+                raise(it.mapToGaslessSendError())
             },
         )
     }
@@ -162,13 +162,13 @@ class CreateAndSendGaslessTransactionUseCase(
                 gaslessTransaction = payload.data,
                 chainId = context.chainId,
                 verifyingContract = transactionData.sourceAddress,
-                includeGasLimit = isGaslessV2Enabled,
+                includeGasLimit = true,
             )
             is GaslessPayload.Batch -> Eip712TypedDataBuilder.buildBatch(
                 gaslessBatch = payload.data,
                 chainId = context.chainId,
                 verifyingContract = transactionData.sourceAddress,
-                includeGasLimit = isGaslessV2Enabled,
+                includeGasLimit = true,
             )
         }
 
@@ -333,7 +333,7 @@ class CreateAndSendGaslessTransactionUseCase(
     private suspend fun getEIP7702DataForGasless(
         gaslessDataProvider: EthereumGaslessDataProvider,
     ): EIP7702AuthorizationData {
-        return when (val dataResult = gaslessDataProvider.prepareEIP7702AuthorizationData(isV2 = isGaslessV2Enabled)) {
+        return when (val dataResult = gaslessDataProvider.prepareEIP7702AuthorizationData(isV2 = true)) {
             is Result.Failure -> throw dataResult.error
             is Result.Success -> dataResult.data
         }

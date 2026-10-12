@@ -13,6 +13,7 @@ android {
 dependencies {
     /** Api */
     api(projects.features.commonFeatures.api)
+    implementation(projects.features.jointAccount.api)
     api(projects.features.tokenRecieve.api)
     api(projects.features.wallet.api)
 
@@ -22,7 +23,6 @@ dependencies {
     api(projects.core.ui)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.configToggles)
     implementation(projects.core.pagination)
 
     /** Domain */
@@ -32,6 +32,7 @@ dependencies {
     api(projects.domain.balanceHiding)
     api(projects.domain.manageTokens)
     api(projects.domain.markets)
+    implementation(projects.domain.jointAccount)
     api(projects.domain.markets.models)
     api(projects.domain.models)
     api(projects.domain.transaction)
@@ -39,6 +40,7 @@ dependencies {
     implementation(projects.domain.account)
     implementation(projects.domain.card)
     implementation(projects.domain.core)
+    implementation(projects.domain.settings)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.yieldSupply.models)

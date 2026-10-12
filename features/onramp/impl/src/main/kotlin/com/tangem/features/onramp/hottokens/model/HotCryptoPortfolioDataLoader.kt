@@ -7,8 +7,11 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -28,7 +31,7 @@ internal class HotCryptoPortfolioDataLoader @Inject constructor(
     private val accountListSupplier: SingleAccountStatusListSupplier,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
-
+    private val getJointAccountSupportedNetworksUseCase: GetJointAccountSupportedNetworksUseCase,
 ) {
 
     fun loadPortfolioData(userWalletId: UserWalletId): Flow<HotCryptoPortfolioData> = combine(
@@ -43,7 +46,10 @@ internal class HotCryptoPortfolioDataLoader @Inject constructor(
             .invokeSync(userWalletId, hotCryptoCurrencies)
             .getOrNull()
             .orEmpty()
-        val accountsWithHotCrypto = walletAccounts.accountStatuses.filterCryptoPortfolio().map { accountStatus ->
+        val portfolioStatuses = walletAccounts.accountStatuses.filterCryptoPortfolio().filter { status ->
+            status !is AccountStatus.Joint || status.value is JointAccountStatusValue.Active
+        }
+        val accountsWithHotCrypto = portfolioStatuses.map { accountStatus ->
             val addedHotCrypto = mapOfAddedCurrencies[accountStatus.account].orEmpty()
             HotCryptoPortfolioData.Account(
                 account = accountStatus,
@@ -59,15 +65,26 @@ internal class HotCryptoPortfolioDataLoader @Inject constructor(
                 statusList = walletAccounts,
                 accounts = accountsWithHotCrypto,
             ),
+            jointSupportedNetworkIds = getJointAccountSupportedNetworksUseCase().mapTo(hashSetOf()) { it.value },
         )
     }
 }
 
+/**
+ * @property jointSupportedNetworkIds the networks a joint account exists in: a joint account is offered for a
+ * hot token only when the token lives in one of them
+ */
 internal data class HotCryptoPortfolioData(
     val allHotCrypto: List<HotCryptoCurrency>,
     val wallet: Wallet,
     val appCurrency: AppCurrency,
+    val jointSupportedNetworkIds: Set<String>,
 ) {
+
+    /** The accounts [currency] can be added to */
+    fun accountsFor(currency: CryptoCurrency): List<Account> = wallet.accounts.filter { account ->
+        account.account !is AccountStatus.Joint || currency.network.rawId in jointSupportedNetworkIds
+    }
 
     data class Wallet(
         val userWallet: UserWallet,

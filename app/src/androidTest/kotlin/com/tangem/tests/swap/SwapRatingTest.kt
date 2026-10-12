@@ -1,7 +1,6 @@
 package com.tangem.tests.swap
 
 import com.tangem.common.BaseTestCase
-import com.tangem.core.res.R as CommonR
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
@@ -11,15 +10,17 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.confirmSwapByHolding
 import com.tangem.scenarios.openSwapAmountScreen
+import com.tangem.scenarios.pullToRefreshTokenDetails
 import com.tangem.screens.onRatingScreen
 import com.tangem.screens.onSwapSuccessScreen
 import com.tangem.screens.onSwapTokenScreen
-import com.tangem.screens.onTokenDetailsScreen
+import com.tangem.screens.onTxHistoryScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Test
+import com.tangem.core.ui.R as CoreUiR
 
 @HiltAndroidTest
 class SwapRatingTest : BaseTestCase() {
@@ -27,18 +28,22 @@ class SwapRatingTest : BaseTestCase() {
     private val tokenName = "USDC"
     private val receiveTokenName = "Polygon"
     private val inputAmount = "50"
-    private val providerName = "Changelly"
     private val userTokensState = "PolygonUSDCHotWallet"
     private val quotesState = "PolygonUSDC"
     private val assetsScenarioName = "express_api_assets"
     private val assetsExchangeEnabledState = "BitcoinExchangeEnabled"
     private val exchangeStatusScenario = "exchange_status_provider"
     private val changellyStatusState = "Changelly"
+    // The stars are offered only for a rateable (final) deal, so the deal is finished before its status is
+    // opened; auto-disposal of a finished deal only happens once the sheet is closed, so the row stays.
+    private val changellyFinishedState = "Finished"
     private val nativeBalanceScenario = "polygon_coin_balance"
     private val zeroBalanceState = "ZeroBalance"
     // Stories auto-advance forever, which keeps Compose non-idle and flakes everything after them.
     private val storiesScenario = "stories_first_time_swap_v2"
     private val storiesErrorState = "Error"
+    private val historyScenario = "exchange_history"
+    private val historyFinishedState = "SwapFinished"
     private val rating = 5
     private val feedbackComment = "Great swap experience"
 
@@ -46,7 +51,7 @@ class SwapRatingTest : BaseTestCase() {
     @DisplayName("Swap: rate the swap experience with stars and feedback and see the rating in the status")
     @Test
     fun checkRateSwapExperienceTest() {
-        val expressStatusItemTitle = getResourceString(CommonR.string.express_exchange_by, providerName)
+        val swapHistoryTitle = getResourceString(CoreUiR.string.common_swapped)
 
         setupHooks(
             additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
@@ -97,13 +102,21 @@ class SwapRatingTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onSwapSuccessScreen { closeButton.performClick() }
             }
-            step("Assert 'Express status' item with title '$expressStatusItemTitle' is displayed") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).assertIsDisplayed() }
+            step("Switch WireMock scenario '$exchangeStatusScenario' to '$changellyFinishedState'") {
+                setWireMockScenarioState(scenarioName = exchangeStatusScenario, state = changellyFinishedState)
+            }
+            step("Switch WireMock scenario '$historyScenario' to '$historyFinishedState'") {
+                setWireMockScenarioState(scenarioName = historyScenario, state = historyFinishedState)
+            }
+            // The history only re-reads on a refresh, so pull it until the finished swap row lands.
+            step("Assert '$swapHistoryTitle' transaction is displayed in the history") {
+                awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+                    pullToRefreshTokenDetails()
+                    onTxHistoryScreen { transactionItem(swapHistoryTitle).assertIsDisplayed() }
                 }
             }
-            step("Open the exchange status details") {
-                onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).clickWithAssertion() }
+            step("Open the transaction details") {
+                onTxHistoryScreen { transactionItem(swapHistoryTitle).clickWithAssertion() }
             }
             step("Assert the rating block is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {

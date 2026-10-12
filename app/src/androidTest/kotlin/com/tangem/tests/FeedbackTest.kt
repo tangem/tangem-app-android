@@ -12,13 +12,13 @@ import com.tangem.domain.card.ScanFailsRequester
 import com.tangem.domain.models.scan.ProductType
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.checkFailedTransactionDialog
 import com.tangem.scenarios.checkScanWarningDialog
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.ThirdPartyAppPageObject
 import com.tangem.screens.onContactSupportTypeBottomSheet
-import com.tangem.screens.onCreateWalletStartScreen
 import com.tangem.screens.onDetailsScreen
 import com.tangem.screens.onFailedTransactionDialog
 import com.tangem.screens.onMainScreen
@@ -26,7 +26,7 @@ import com.tangem.screens.onScanWarningDialog
 import com.tangem.screens.onSendAddressScreen
 import com.tangem.screens.onSendConfirmScreen
 import com.tangem.screens.onSendScreen
-import com.tangem.screens.onStoriesScreen
+import com.tangem.screens.onIntroductionScreen
 import com.tangem.screens.onTokenDetailsScreen
 import com.tangem.screens.onMainScreenTopBar
 import com.tangem.screens.onTransferBottomSheet
@@ -99,7 +99,7 @@ class FeedbackTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Click on 'Transfer' button") {
                 onTokenDetailsScreen { transferButton.clickWithAssertion() }
@@ -177,11 +177,11 @@ class FeedbackTest : BaseTestCase() {
             step("Set scanning error") {
                 MockProvider.setEmulateError(TangemSdkError.TagLost())
             }
-            step("Click on 'Get started' button") {
-                onStoriesScreen { getStartedButton.clickWithAssertion() }
+            step("Click on 'I have a wallet' button") {
+                onIntroductionScreen { iHaveWalletButton.clickWithAssertion() }
             }
-            step("Click on 'Scan card or ring' button") {
-                onCreateWalletStartScreen { scanCardOrRingButton.clickWithAssertion() }
+            step("Click on 'Tangem Card or Ring' option") {
+                onIntroductionScreen { cardOrRingOption.clickWithAssertion() }
             }
             step("Force show 'Scan warning' dialog"){
                 runOnUiThread {

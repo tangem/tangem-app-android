@@ -62,7 +62,7 @@ internal class NetworkStatusFactoryTest {
             setOf(ethereum, createToken(Blockchain.Ethereum, id = "token", contractAddress = "0xTokenAddress"))
         }
 
-        val txInfo = TxInfo(
+        val txInfo = TxInfo.Single(
             txHash = "erroribus",
             timestampInMillis = 2771,
             isOutgoing = false,

@@ -8,7 +8,7 @@ import com.squareup.moshi.ToJson
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 
-class ScanResponseDerivedKeysMapAdapter {
+internal class ScanResponseDerivedKeysMapAdapter {
     @ToJson
     fun toJson(
         writer: JsonWriter,

@@ -15,24 +15,24 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
-import com.tangem.domain.virtualaccount.model.VirtualAccountEligibility
-import com.tangem.domain.virtualaccount.usecase.GetVirtualAccountEligibilityUseCase
+import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.domain.moneyaccount.model.MoneyAccountEligibility
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
 import io.mockk.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -60,8 +60,9 @@ internal abstract class DetailsModelTestBase {
     protected val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase = mockk()
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     protected val tangemPayEligibilityManager: TangemPayEligibilityManager = mockk()
-    protected val getVirtualAccountEligibilityUseCase: GetVirtualAccountEligibilityUseCase = mockk()
-    protected val virtualAccountFeatureToggles: VirtualAccountFeatureToggles = mockk()
+    protected val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
+    protected val getMoneyAccountEligibilityUseCase: GetMoneyAccountEligibilityUseCase = mockk()
+    protected val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
 
     // Captured from itemsBuilder.buildAll(...) so the feature buttons can be driven.
     protected val wcSlot = slot<Boolean>()
@@ -82,8 +83,10 @@ internal abstract class DetailsModelTestBase {
         every { appInfoProvider.appVersion } returns "1.2.3"
         every { appInfoProvider.appVersionCode } returns 456
         coEvery { tangemPayEligibilityManager.getEligibleWallets(any(), any()) } returns emptyList()
-        coEvery { getVirtualAccountEligibilityUseCase(any()) } returns VirtualAccountEligibility.NotAvailable
-        every { virtualAccountFeatureToggles.isVirtualAccountsEnabled } returns true
+        coEvery { tangemPayEligibilityManager.getCompatibleWalletsIds(any()) } returns emptyList()
+        every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
+        coEvery { getMoneyAccountEligibilityUseCase(any()) } returns MoneyAccountEligibility.NotAvailable
+        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
 
         every {
             itemsBuilder.buildAll(
@@ -120,8 +123,9 @@ internal abstract class DetailsModelTestBase {
         generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
         analyticsEventHandler = analyticsEventHandler,
         tangemPayEligibilityManager = tangemPayEligibilityManager,
-        getVirtualAccountEligibilityUseCase = getVirtualAccountEligibilityUseCase,
-        virtualAccountFeatureToggles = virtualAccountFeatureToggles,
+        tangemPayFeatureToggles = tangemPayFeatureToggles,
+        getMoneyAccountEligibilityUseCase = getMoneyAccountEligibilityUseCase,
+        moneyAccountFeatureToggles = moneyAccountFeatureToggles,
     )
 
     protected fun stubBuildAllReturns(list: ImmutableList<DetailsItemUM>) {
@@ -145,16 +149,5 @@ internal abstract class DetailsModelTestBase {
             every { walletId } returns id
             every { scanResponse } returns scan
         }
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
     }
 }

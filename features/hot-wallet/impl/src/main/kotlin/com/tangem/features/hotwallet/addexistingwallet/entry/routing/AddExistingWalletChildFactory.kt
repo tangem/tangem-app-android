@@ -63,7 +63,8 @@ internal class AddExistingWalletChildFactory @Inject constructor(
                 context = childContext,
                 params = PushNotificationsParams(
                     modelCallbacks = model.pushNotificationsCallbacks,
-                    source = AppRoute.PushNotification.Source.Onboarding,
+                    source = AppRoute.PushNotification.Source.FirstSignIn,
+                    isBackHandledByHost = true,
                 ),
             )
             is AddExistingWalletRoute.SetupFinished -> MobileWalletSetupFinishedComponent(

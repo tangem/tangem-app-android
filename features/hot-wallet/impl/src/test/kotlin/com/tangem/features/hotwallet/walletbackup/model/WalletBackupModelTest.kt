@@ -22,6 +22,7 @@ import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
@@ -34,14 +35,15 @@ import com.tangem.features.hotwallet.WalletBackupComponent
 import com.tangem.features.hotwallet.walletbackup.entity.BackupStatus
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.hot.sdk.model.UnlockHotWallet
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import dagger.Lazy
 import io.mockk.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -65,6 +67,9 @@ internal class WalletBackupModelTest {
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase = mockk(relaxed = true)
     private val clearHotWalletContextualUnlockUseCase: ClearHotWalletContextualUnlockUseCase = mockk(relaxed = true)
     private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase = mockk {
+        every { flow(any()) } returns flowOf(false)
+    }
     private val paramsContainer: ParamsContainer = mockk()
 
     private val walletId = UserWalletId("011")
@@ -126,6 +131,77 @@ internal class WalletBackupModelTest {
             Assertions.assertEquals(false, state.isBackedUp)
             Assertions.assertEquals(BackupStatus.ComingSoon, state.googleDriveStatus)
         }
+
+    @Test
+    fun `GIVEN social backup WHEN model created THEN the google drive option is hidden`() = runTest {
+        // Arrange — a social-login wallet already keeps its seed in the cloud under its own key (FR-10)
+        every { getUserWalletUseCase.invokeFlow(walletId) } returns flowOf(hotWalletNotBackedUp.right())
+        every { isSocialBackupCompletedUseCase.flow(walletId) } returns flowOf(true)
+
+        // Act
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Assert
+        Assertions.assertEquals(false, model.uiState.value.isGoogleDriveOptionShown)
+    }
+
+    @Test
+    fun `GIVEN social status not read yet WHEN model created THEN the google drive option is hidden`() = runTest {
+        // Arrange
+        every { isSocialBackupCompletedUseCase.flow(walletId) } returns emptyFlow()
+
+        // Act
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Assert
+        Assertions.assertEquals(false, model.uiState.value.isGoogleDriveOptionShown)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN social backup AND toggle on WHEN screen opened and resumed THEN the cloud is not looked up`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+            every { isSocialBackupCompletedUseCase.flow(walletId) } returns flowOf(true)
+
+            // Act
+            val model = createModel(this)
+            advanceUntilIdle()
+            model.onScreenResumed()
+            model.onScreenResumed()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { cloudBackupRepository.findBackups(any(), any()) }
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    WalletSettingsAnalyticEvents.BackupScreenOpened(isBackedUp = false, cloudBackupState = null),
+                )
+            }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN social backup dropped WHEN it clears THEN the google drive option comes back`() = runTest {
+        // Arrange
+        every { getUserWalletUseCase.invokeFlow(walletId) } returns flowOf(hotWalletNotBackedUp.right())
+        val isSocialBackup = MutableStateFlow(true)
+        every { isSocialBackupCompletedUseCase.flow(walletId) } returns isSocialBackup
+
+        val model = createModel(this)
+        advanceUntilIdle()
+        Assertions.assertEquals(false, model.uiState.value.isGoogleDriveOptionShown)
+
+        // Act
+        isSocialBackup.value = false
+        advanceUntilIdle()
+
+        // Assert
+        Assertions.assertEquals(true, model.uiState.value.isGoogleDriveOptionShown)
+    }
 
     @Test
     fun `GIVEN toggle off WHEN model created THEN google drive is ComingSoon AND clickable AND not refreshed`() =
@@ -749,6 +825,7 @@ internal class WalletBackupModelTest {
 
     private fun backup(fileId: String = "file-1", walletId: String? = "011") = CloudBackupInfo(
         fileId = fileId,
+        backupName = "wallet",
         walletName = "wallet",
         createdAtMillis = 0L,
         walletId = walletId,
@@ -772,17 +849,7 @@ internal class WalletBackupModelTest {
             setCloudBackupStateUseCase = lazySetStateUseCase,
             clearHotWalletContextualUnlockUseCase = clearHotWalletContextualUnlockUseCase,
             hotWalletFeatureToggles = hotWalletFeatureToggles,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
+            isSocialBackupCompletedUseCase = isSocialBackupCompletedUseCase,
         )
     }
 

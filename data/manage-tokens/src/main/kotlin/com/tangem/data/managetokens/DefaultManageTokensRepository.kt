@@ -10,23 +10,27 @@ import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
+import com.tangem.data.managetokens.utils.AccountDerivation
 import com.tangem.data.managetokens.utils.ManagedCryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.orDefault
-import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
+import com.tangem.data.managetokens.testnet.TestnetTokensStorage
 import com.tangem.domain.card.common.TapWorkarounds.isTestCard
 import com.tangem.domain.card.common.extensions.*
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.jointaccount.derivation.toNetworkDerivationPath
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.managetokens.model.*
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.pagination.BatchFetchResult
@@ -190,15 +194,14 @@ internal class DefaultManageTokensRepository(
             userWallet != null &&
             query == null
 
-        val accountIndex = accountDTO?.derivationIndex?.let(DerivationIndex::invoke)?.getOrNull()
-            ?: return emptyList()
+        val accountDerivation = accountDTO?.toAccountDerivation() ?: return emptyList()
 
         val items = if (isCreateWithCustom) {
             managedCryptoCurrencyFactory.createWithCustomTokens(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
                 userWallet = userWallet,
-                accountIndex = accountIndex,
+                accountDerivation = accountDerivation,
                 allowedNetworkIds = params.allowedNetworkIds,
             )
         } else {
@@ -206,7 +209,7 @@ internal class DefaultManageTokensRepository(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
                 userWallet = userWallet,
-                accountIndex = accountIndex,
+                accountDerivation = accountDerivation,
                 allowedNetworkIds = params.allowedNetworkIds,
             )
         }
@@ -241,7 +244,7 @@ internal class DefaultManageTokensRepository(
             )
         }
 
-        val accountIndex = accountDTO?.derivationIndex?.let(DerivationIndex::invoke)?.getOrNull()
+        val accountDerivation = accountDTO?.toAccountDerivation()
             ?: return BatchFetchResult.Success(
                 data = emptyList(),
                 empty = true,
@@ -261,7 +264,7 @@ internal class DefaultManageTokensRepository(
             },
             tokensResponse = tokensResponse,
             userWallet = userWallet,
-            accountIndex = accountIndex,
+            accountDerivation = accountDerivation,
             allowedNetworkIds = params.allowedNetworkIds,
         )
 
@@ -270,6 +273,16 @@ internal class DefaultManageTokensRepository(
             empty = items.isEmpty(),
             last = true,
         )
+    }
+
+    private fun WalletAccountDTO.toAccountDerivation(): AccountDerivation? {
+        return when (type) {
+            WalletAccountDTO.Type.JOINT -> OwnerKeyIndex(derivationIndex).getOrNull()
+                ?.toNetworkDerivationPath()
+                ?.let(AccountDerivation::Joint)
+            WalletAccountDTO.Type.CRYPTO, null -> DerivationIndex(derivationIndex).getOrNull()
+                ?.let(AccountDerivation::Personal)
+        }
     }
 
     private fun getSupportedBlockchains(userWallet: UserWallet?): List<Blockchain> {

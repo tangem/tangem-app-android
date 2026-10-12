@@ -291,13 +291,7 @@ internal class AccountCreateEditModel @Inject constructor(
                 .onLeft { cause ->
                     val error = AccountFeatureError.CreateAccount.UnableToGetDerivationIndex(cause)
 
-                    logError(
-                        error = error,
-                        params = mapOf(
-                            "userWalletId" to userWalletId.stringValue,
-                            "cause" to cause.toString(),
-                        ),
-                    )
+                    logError(error = error, params = mapOf("cause" to cause.toString()))
 
                     messageSender.showErrorDialog(universalError = error, onDismiss = router::pop)
 

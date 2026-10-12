@@ -15,6 +15,8 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencies
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.model.PredictionCollateral
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
@@ -25,9 +27,10 @@ import com.tangem.domain.tokens.FetchingSource
 import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
-import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.test.core.assertEither
 import com.tangem.test.core.assertEitherRight
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -55,14 +58,18 @@ internal class WalletBalanceFetcherTest {
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher = mockk()
     private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
-    private val virtualAccountStatusFetcher: VirtualAccountStatusFetcher = mockk()
+    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
     private val stakingIdFactory: StakingIdFactory = mockk()
-    private val virtualAccountsFeatureToggles: VirtualAccountFeatureToggles = mockk {
-        every { isVirtualAccountsEnabled } returns false
+    private val moneyAccountsFeatureToggles: MoneyAccountFeatureToggles = mockk {
+        every { isMoneyAccountsEnabled } returns false
     }
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher = mockk()
     private val polymarketFeatureToggles: PolymarketFeatureToggles = mockk {
         every { isPolymarketEnabled } returns false
+    }
+    private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
+    private val collectiblesFeatureToggles: CollectiblesFeatureToggles = mockk {
+        every { isCollectiblesEnabled } returns false
     }
 
     private val fetcher = WalletBalanceFetcher(
@@ -75,11 +82,13 @@ internal class WalletBalanceFetcherTest {
         multiQuoteStatusFetcher = multiQuoteStatusFetcher,
         multiStakingBalanceFetcher = multiStakingBalanceFetcher,
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
-        virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+        moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
+        collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         stakingIdFactory = stakingIdFactory,
-        virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+        moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         polymarketFeatureToggles = polymarketFeatureToggles,
+        collectiblesFeatureToggles = collectiblesFeatureToggles,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -96,8 +105,9 @@ internal class WalletBalanceFetcherTest {
             multiStakingBalanceFetcher,
             // PER_CLASS: a fetcher left out here carries its calls into the next test
             paymentAccountStatusFetcher,
-            virtualAccountStatusFetcher,
+            moneyAccountStatusFetcher,
             predictionAccountStatusFetcher,
+            collectiblesAccountStatusFetcher,
         )
         mockkStatic(UserWalletsListRepository::getSyncStrict)
     }
@@ -907,7 +917,12 @@ internal class WalletBalanceFetcherTest {
         // Assert
         assertEither(actual, Unit.right())
         coVerify(exactly = 1) {
-            predictionAccountStatusFetcher(params = PredictionAccountStatusFetcher.Params(userWalletId))
+            predictionAccountStatusFetcher(
+                params = PredictionAccountStatusFetcher.Params(
+                    userWalletId = userWalletId,
+                    mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
+                ),
+            )
         }
     }
 
@@ -984,8 +999,81 @@ internal class WalletBalanceFetcherTest {
         coVerify(exactly = 1) { multiNetworkStatusFetcher(params = any()) }
     }
 
+    @Test
+    fun `GIVEN collectibles source and the feature enabled WHEN fetch THEN the vault status is fetched`() = runTest {
+        // Arrange
+        arrangeCollectiblesFetch()
+        coEvery { collectiblesAccountStatusFetcher(params = any()) } returns Unit.right()
+
+        // Act
+        val actual = createFetcher(isCollectiblesEnabled = true).invoke(WalletBalanceFetcher.Params(userWalletId))
+
+        // Assert
+        assertEither(actual, Unit.right())
+        coVerify(exactly = 1) {
+            collectiblesAccountStatusFetcher(params = CollectiblesAccountStatusFetcher.Params(userWalletId))
+        }
+    }
+
+    @Test
+    fun `GIVEN collectibles source and the feature disabled WHEN fetch THEN the vault status is not fetched`() =
+        runTest {
+            // Arrange
+            arrangeCollectiblesFetch()
+
+            // Act
+            val actual = createFetcher(isCollectiblesEnabled = false).invoke(WalletBalanceFetcher.Params(userWalletId))
+
+            // Assert
+            assertEither(actual, Unit.right())
+            coVerify(inverse = true) { collectiblesAccountStatusFetcher(params = any()) }
+        }
+
+    /**
+     * The vault is priced from the app's USDC quote, and a cached amount needs that rate as much as a freshly
+     * read one — so the quote is read here, beside the status, and not by the status refresh itself.
+     */
+    @Test
+    fun `GIVEN collectibles source and the feature enabled WHEN fetch THEN the USDC quote is fetched`() = runTest {
+        // Arrange
+        arrangeCollectiblesFetch()
+        coEvery { collectiblesAccountStatusFetcher(params = any()) } returns Unit.right()
+
+        // Act
+        val actual = createFetcher(isCollectiblesEnabled = true).invoke(WalletBalanceFetcher.Params(userWalletId))
+
+        // Assert
+        assertEither(actual, Unit.right())
+        coVerify(exactly = 1) {
+            multiQuoteStatusFetcher(
+                params = MultiQuoteStatusFetcher.Params(
+                    currenciesIds = setOf(CollectiblesVaultCurrencies.USDC_RAW_ID),
+                    appCurrencyId = null,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN the collectibles status fails WHEN fetch THEN the whole wallet fetch still succeeds`() = runTest {
+        // Arrange
+        arrangeCollectiblesFetch()
+        coEvery { collectiblesAccountStatusFetcher(params = any()) } returns IllegalStateException("Error").left()
+
+        // Act
+        val actual = createFetcher(isCollectiblesEnabled = true).invoke(WalletBalanceFetcher.Params(userWalletId))
+
+        // Assert
+        assertEither(actual, Unit.right())
+        coVerify(exactly = 1) { multiNetworkStatusFetcher(params = any()) }
+    }
+
+    private fun arrangePredictionFetch() = arrangeSpecialAccountFetch(source = WalletFetchingSource.Prediction)
+
+    private fun arrangeCollectiblesFetch() = arrangeSpecialAccountFetch(source = WalletFetchingSource.Collectibles)
+
     /** The succeeding network fetch is deliberate: without a balance source the result is `Right` regardless. */
-    private fun arrangePredictionFetch() {
+    private fun arrangeSpecialAccountFetch(source: WalletFetchingSource) {
         val cardTypesResolver = mockk<CardTypesResolver> {
             every { isMultiwalletAllowed() } returns true
         }
@@ -996,7 +1084,7 @@ internal class WalletBalanceFetcherTest {
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
         every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
             WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK)),
-            WalletFetchingSource.Prediction,
+            source,
         )
         coEvery {
             multiNetworkStatusFetcher(
@@ -1009,7 +1097,10 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiQuoteStatusFetcher(params = any()) } returns Unit.right()
     }
 
-    private fun createFetcher(isPolymarketEnabled: Boolean): WalletBalanceFetcher = WalletBalanceFetcher(
+    private fun createFetcher(
+        isPolymarketEnabled: Boolean = false,
+        isCollectiblesEnabled: Boolean = false,
+    ): WalletBalanceFetcher = WalletBalanceFetcher(
         userWalletsListRepository = userWalletsListRepository,
         expressServiceFetcher = expressServiceFetcher,
         multiWalletBalanceFetcher = multiWalletBalanceFetcher,
@@ -1019,12 +1110,16 @@ internal class WalletBalanceFetcherTest {
         multiQuoteStatusFetcher = multiQuoteStatusFetcher,
         multiStakingBalanceFetcher = multiStakingBalanceFetcher,
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
-        virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+        moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
+        collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         stakingIdFactory = stakingIdFactory,
-        virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+        moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         polymarketFeatureToggles = mockk {
             every { this@mockk.isPolymarketEnabled } returns isPolymarketEnabled
+        },
+        collectiblesFeatureToggles = mockk {
+            every { this@mockk.isCollectiblesEnabled } returns isCollectiblesEnabled
         },
         dispatchers = TestingCoroutineDispatcherProvider(),
     )

@@ -15,7 +15,8 @@ import com.tangem.utils.converter.Converter
  * Converts a [TxHistoryInfo] row to a [TxHistoryDetailsUM] for the in-app transaction details card, dispatching to the
  * per-shape converters: an [OnChainTx.BSDK] renders as [TxHistoryDetailsUM.SingleAsset] (see
  * [OnChainTxToDetailsUMConverter]) while an [ExpressTx] (swap / onramp) renders as [TxHistoryDetailsUM.TwoAssets] (see
- * [ExpressTxToDetailsUMConverter]). The header overflow menu is built once here and shared by both.
+ * [ExpressTxToDetailsUMConverter]). The header overflow menu is built once here and shared by both; each shape then
+ * prepends its own "Copy address" row for the counterparty it resolved.
  */
 internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     currency: CryptoCurrency,
@@ -35,7 +36,10 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         walletInfoById = emptyMap(),
     ),
     targetsByAddress: Map<String, StakingTarget> = emptyMap(),
-    onOpenValidator: (String) -> Unit = {},
+    onExploreProvider: (String) -> Unit = {},
+    onAddContact: (() -> Unit)? = null,
+    networkTokens: Set<CryptoCurrency.Token> = emptySet(),
+    fiatConversion: FiatConversion = FiatConversion.NONE,
 ) : Converter<TxHistoryInfo, TxHistoryDetailsUM> {
 
     private val menu = buildDetailsMenu(
@@ -43,6 +47,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         shareText = shareText,
         onShare = onShare,
         onExplore = onExplore,
+        onAddContact = onAddContact,
     )
 
     private val onChainConverter = OnChainTxToDetailsUMConverter(
@@ -50,13 +55,17 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         onCopyAddress = onCopyAddress,
         menu = menu,
         targetsByAddress = targetsByAddress,
-        onOpenValidator = onOpenValidator,
+        onExploreProvider = onExploreProvider,
         isBalanceHidden = isBalanceHidden,
         lookup = lookup,
+        networkTokens = networkTokens,
+        fiatConversion = fiatConversion,
     )
 
     private val expressConverter = ExpressTxToDetailsUMConverter(
+        currency = currency,
         onGoToProvider = onGoToProvider,
+        onCopyAddress = onCopyAddress,
         lookup = lookup,
         menu = menu,
         refundCurrency = refundCurrency,

@@ -18,6 +18,8 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.features.addressbook.AddressBookComponent
+import com.tangem.features.addressbook.analytics.AddressBookEvents
+import com.tangem.features.addressbook.analytics.toAnalyticsSource
 import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
 import com.tangem.features.addressbook.route.AddressBookRoute
 import dagger.assisted.Assisted
@@ -39,8 +41,9 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
         // Drop any results left over from a previous session before the (possibly preloaded) stack starts collecting.
         resultHolder.clear()
         selectNetworksResultHolder.clear()
-        if (params.addressBookOpenMode is AddressBookOpenMode.WithContactCreation) {
-            analyticsSender.sendAddContactTapped(fromSendSuccess = true, scope = componentScope)
+        val creationMode = params.addressBookOpenMode as? AddressBookOpenMode.WithContactCreation
+        if (creationMode != null) {
+            analyticsSender.sendAddContactTapped(source = creationMode.source.toAnalyticsSource())
         }
     }
 
@@ -51,7 +54,7 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
         }
 
         override fun onAddContactClick() {
-            analyticsSender.sendAddContactTapped(fromSendSuccess = false, scope = componentScope)
+            analyticsSender.sendAddContactTapped(source = AddressBookEvents.AddContactTapped.Source.Settings)
             navigation.pushNew(AddressBookRoute.EditContact())
         }
 
@@ -140,6 +143,7 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
                 predefinedAddress = mode.address,
                 predefinedNetworkId = mode.networkId,
                 predefinedMemo = mode.memo,
+                creationSource = mode.source,
             ),
         )
     }

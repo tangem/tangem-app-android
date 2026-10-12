@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.mutablePreferencesOf
 import arrow.core.None
 import arrow.core.Some
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.lib.auth.api.AuthApi
@@ -19,10 +20,14 @@ import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.DeviceRegistrationError
+import com.tangem.lib.auth.session.SessionTokenRefresher
+import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
+import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
+import dagger.Lazy
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -33,6 +38,7 @@ import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Instant
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -48,6 +54,8 @@ class DefaultDeviceRegistrarTest {
     private val appInfoProvider: AppInfoProvider = mockk(relaxed = true)
     private val signedRequestPayload = SignedRequestPayload(appInfoProvider)
     private val attestationProvider: AttestationProvider = mockk()
+    private val sessionTokenRefresher: SessionTokenRefresher = mockk()
+    private val walletRegistrar: WalletRegistrar = mockk(relaxed = true)
     private val errorConverter = AuthErrorConverter()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
@@ -62,13 +70,21 @@ class DefaultDeviceRegistrarTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider)
+        clearMocks(
+            authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider, sessionTokenRefresher,
+            walletRegistrar,
+        )
+        // the store answers with the set that ends up in effect
+        coEvery { store.save(any()) } answers { firstArg() }
         preferencesDataStore.reset()
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
         }
         coEvery { attestationProvider.getAttestationToken(any()) } returns null
+        // register() ensures a session on every successful outcome; the no-op-when-present logic lives
+        // in the refresher and is covered by DefaultSessionTokenRefresherTest.
+        coEvery { sessionTokenRefresher.ensureSession() } returns sessionTokens().right()
         registrar = DefaultDeviceRegistrar(
             authApi = authApi,
             store = store,
@@ -78,9 +94,20 @@ class DefaultDeviceRegistrarTest {
             attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
+            nonceRequestTracker = { _, request -> request() },
+            sessionTokenRefresher = Lazy { sessionTokenRefresher },
+            walletRegistrar = walletRegistrar,
             dispatchers = dispatchers,
         )
     }
+
+    private fun sessionTokens() = SessionTokens(
+        accessToken = "access",
+        accessTokenExpiresAt = Instant.DISTANT_FUTURE,
+        refreshToken = "refresh",
+        refreshTokenExpiresAt = Instant.DISTANT_FUTURE,
+        walletIds = emptyList(),
+    )
 
     @AfterEach
     fun teardown() = unmockkAll()
@@ -95,19 +122,58 @@ class DefaultDeviceRegistrarTest {
         coVerify { authApi.requestDeviceNonce(any()) }
         coVerify { authApi.registerDevice(any<RegisterApiRequest>()) }
         coVerify { store.save(any()) }
+        coVerify { sessionTokenRefresher.ensureSession() }
         assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
     }
 
     @Test
-    fun `register short-circuits without network when the flag is already set`() = runTest {
+    fun `register short-circuits the register call when the flag is set but still ensures a session`() = runTest {
         preferencesDataStore.edit { it[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY] = true }
 
         val result = registrar.register()
 
+        // No /register (flag short-circuits), but a session is ensured unconditionally — this recovers
+        // a device left registered-but-sessionless by a prior 409.
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 0) { authApi.requestDeviceNonce(any()) }
         coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
         coVerify(exactly = 0) { store.save(any()) }
+        coVerify(exactly = 1) { sessionTokenRefresher.ensureSession() }
+    }
+
+    @Test
+    fun `register ensures a session after a 409 that issues no tokens`() = runTest {
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
+        coEvery { authApi.requestDeviceNonce(any()) } returns ApiResponse.Success(
+            data = NonceApiResponse(cipheredNonce = "abc", expiresAt = "2024-01-01T00:00:00Z"),
+        )
+        coEvery { nonceDecryptor.decryptNonce("abc") } returns "decrypted"
+        coEvery { deviceKeyManager.signDer(any()) } returns ByteArray(64)
+        @Suppress("UNCHECKED_CAST")
+        coEvery { authApi.registerDevice(any<RegisterApiRequest>()) } returns ApiResponse.Error(
+            cause = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.CONFLICT,
+                message = "device already registered",
+                errorBody = null,
+            ),
+        ) as ApiResponse<TokenApiResponse>
+
+        val result = registrar.register()
+
+        // 409 marks the device registered, then a session is ensured (no tokens came back in the 409).
+        assertThat(result.isRight()).isTrue()
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
+        coVerify(exactly = 1) { sessionTokenRefresher.ensureSession() }
+    }
+
+    @Test
+    fun `register does not ensure a session when registration fails`() = runTest {
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns None
+
+        val result = registrar.register()
+
+        assertThat(result.leftOrNull()).isEqualTo(DeviceRegistrationError.DeviceKeyUnavailable)
+        coVerify(exactly = 0) { sessionTokenRefresher.ensureSession() }
     }
 
     @Test
@@ -288,6 +354,35 @@ class DefaultDeviceRegistrarTest {
         coVerify { authApi.registerDevice(any<RegisterApiRequest>()) }
         coVerify { store.save(any()) }
         assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
+    }
+
+    @Test
+    fun `reregister clears local wallet registrations so previously bound wallets re-register`() = runTest {
+        // Arrange — the backend lost the device record, so its wallet bindings are gone too.
+        preferencesDataStore.edit { it[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY] = true }
+        stubHappyPath()
+
+        // Act
+        val result = registrar.reregister()
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        coVerify(exactly = 1) { walletRegistrar.clearRegistrations() }
+    }
+
+    @Test
+    fun `reregister fails without touching the device flag when clearing wallet registrations fails`() = runTest {
+        // Arrange
+        preferencesDataStore.edit { it[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY] = true }
+        coEvery { walletRegistrar.clearRegistrations() } throws IllegalStateException("DataStore I/O")
+
+        // Act
+        val result = registrar.reregister()
+
+        // Assert — bail before resetting the flag / re-registering, so recovery is retried.
+        assertThat(result.leftOrNull()).isInstanceOf(DeviceRegistrationError.PersistenceFailed::class.java)
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
+        coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
     }
 
     @Test

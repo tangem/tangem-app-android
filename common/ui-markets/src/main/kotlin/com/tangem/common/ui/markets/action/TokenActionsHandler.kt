@@ -5,6 +5,7 @@ import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.common.ui.markets.R
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
+import com.tangem.common.ui.tokens.getUnavailabilityReasonTitle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
@@ -55,7 +56,7 @@ class TokenActionsHandler @AssistedInject constructor(
         cryptoCurrencyData: CryptoCurrencyData,
         context: TokenActionsContext = TokenActionsContext.Markets,
     ) {
-        if (handleUnavailabilityReason(action, cryptoCurrencyData)) return
+        if (handleUnavailabilityReason(action, cryptoCurrencyData, context)) return
 
         warnAboutBackupErrorOrProceed(action, cryptoCurrencyData.userWallet) {
             proceed(action, cryptoCurrencyData, context)
@@ -112,14 +113,29 @@ class TokenActionsHandler @AssistedInject constructor(
         }
     }
 
+    /**
+     * Exchange tapped in a [TokenActionsContext] whose [TokenActionsContext.swapPosition] is TO (Add-funds
+     * flows) means "fund this token", not "swap out of it" — a joint account's own
+     * [ScenarioUnavailabilityReason.JointAccount] hold-back doesn't apply there. Every other reason, and every
+     * other context, still gates.
+     */
     private fun handleUnavailabilityReason(
         action: TokenActionsBSContentUM.Action,
         cryptoCurrencyData: CryptoCurrencyData,
+        context: TokenActionsContext,
     ): Boolean {
         val reason = QuickActionsConverter.unavailabilityReason(action, cryptoCurrencyData.actions)
-        if (reason == ScenarioUnavailabilityReason.None) return false
+        val isJointAddFundsSwap = action == TokenActionsBSContentUM.Action.Exchange &&
+            reason == ScenarioUnavailabilityReason.JointAccount &&
+            context.swapPosition == AppRoute.Swap.CurrencyPosition.TO
+        if (reason == ScenarioUnavailabilityReason.None || isJointAddFundsSwap) return false
 
-        uiMessageSender.send(DialogMessage(message = reason.getUnavailabilityReasonText()))
+        uiMessageSender.send(
+            DialogMessage(
+                message = reason.getUnavailabilityReasonText(),
+                title = reason.getUnavailabilityReasonTitle(),
+            ),
+        )
         return true
     }
 
