@@ -9,6 +9,7 @@ import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.features.hotwallet.impl.R
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
@@ -340,6 +341,41 @@ internal class ForgetWalletModelTest {
             )
         }
         verify(exactly = 0) { analyticsEventHandler.send(ofType<WalletSettingsAnalyticEvents.WalletDeleted>()) }
+    }
+
+    @Test
+    fun `GIVEN social deletion WHEN delete clicked THEN the social login texts are shown`() = runTest {
+        // Arrange
+        val model = createModel(this, deleteCloudBackup = false, deleteSocialRecovery = true)
+        val sentMessages = mutableListOf<UiMessage>()
+        every { uiMessageSender.send(capture(sentMessages)) } just Runs
+
+        // Act
+        model.uiState.value.onForgetWalletClick()
+
+        // Assert
+        assertThat(model.uiState.value.checkboxText)
+            .isEqualTo(resourceReference(R.string.social_wallet_delete_attention_acknowledge))
+        assertThat(sentMessages.filterIsInstance<DialogMessage>().single().message).isEqualTo(
+            resourceReference(R.string.social_wallet_delete_confirmation_title, wrappedList("Google")),
+        )
+    }
+
+    @Test
+    fun `GIVEN plain forget WHEN forget clicked THEN the forget wallet texts are shown`() = runTest {
+        // Arrange
+        val model = createModel(this, deleteCloudBackup = false)
+        val sentMessages = mutableListOf<UiMessage>()
+        every { uiMessageSender.send(capture(sentMessages)) } just Runs
+
+        // Act
+        model.uiState.value.onForgetWalletClick()
+
+        // Assert
+        assertThat(model.uiState.value.checkboxText)
+            .isEqualTo(resourceReference(R.string.hw_remove_wallet_warning_access))
+        assertThat(sentMessages.filterIsInstance<DialogMessage>().single().message)
+            .isEqualTo(resourceReference(R.string.hw_remove_wallet_confirmation_title))
     }
 
     private fun TestScope.confirmForget(

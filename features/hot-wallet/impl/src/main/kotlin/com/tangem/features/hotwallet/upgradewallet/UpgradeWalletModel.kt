@@ -90,7 +90,7 @@ internal class UpgradeWalletModel @Inject constructor(
         analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareUpgradeScreenOpened())
         modelScope.launch {
             if (isSocialBackupCompletedUseCase(params.userWalletId)) {
-                uiState.update { it.copy(isCloudBackupRemovalShown = true) }
+                uiState.update { it.copy(isSocialLoginWallet = true) }
             }
         }
     }

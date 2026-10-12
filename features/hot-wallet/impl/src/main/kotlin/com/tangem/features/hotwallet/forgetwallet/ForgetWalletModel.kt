@@ -1,6 +1,7 @@
 package com.tangem.features.hotwallet.forgetwallet
 
 import arrow.core.getOrElse
+import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -64,9 +65,17 @@ internal class ForgetWalletModel @Inject constructor(
             ForgetWalletUM(
                 onBackClick = ::onBackClick,
                 description = if (isSocialDeletion) {
-                    resourceReference(R.string.social_wallet_delete_attention_description, wrappedList(PROVIDER_NAME))
+                    resourceReference(
+                        id = R.string.social_wallet_delete_attention_description,
+                        formatArgs = wrappedList(SocialLoginProvider.Google.displayName),
+                    )
                 } else {
                     resourceReference(R.string.hw_remove_wallet_attention_description)
+                },
+                checkboxText = if (isSocialDeletion) {
+                    resourceReference(R.string.social_wallet_delete_attention_acknowledge)
+                } else {
+                    resourceReference(R.string.hw_remove_wallet_warning_access)
                 },
                 buttonText = if (isSocialDeletion) {
                     resourceReference(R.string.social_wallet_settings_delete_wallet)
@@ -109,7 +118,14 @@ internal class ForgetWalletModel @Inject constructor(
         uiMessageSender.send(
             DialogMessage(
                 title = resourceReference(R.string.common_attention),
-                message = resourceReference(R.string.hw_remove_wallet_confirmation_title),
+                message = if (isSocialDeletion) {
+                    resourceReference(
+                        id = R.string.social_wallet_delete_confirmation_title,
+                        formatArgs = wrappedList(SocialLoginProvider.Google.displayName),
+                    )
+                } else {
+                    resourceReference(R.string.hw_remove_wallet_confirmation_title)
+                },
                 firstActionBuilder = {
                     EventMessageAction(
                         title = resourceReference(
@@ -250,5 +266,3 @@ internal class ForgetWalletModel @Inject constructor(
         }
     }
 }
-
-private const val PROVIDER_NAME = "Google"
