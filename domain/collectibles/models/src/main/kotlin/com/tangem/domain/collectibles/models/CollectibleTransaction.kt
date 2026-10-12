@@ -57,8 +57,16 @@ enum class CollectibleTxStatus {
     REFUNDED,
     PAUSED,
 
-    /** A value this app does not know yet; treated as still in progress. */
+    /** A value this app does not know yet; not waited on, the opening tells what it means. */
     UNKNOWN,
+    ;
+
+    /** The payment is not settled yet, so the status is still worth polling. */
+    val isPaymentInProgress: Boolean
+        get() = this == CREATED ||
+            this == WAITING_TX_HASH ||
+            this == PURCHASE_TX_HASH ||
+            this == WAITING_FOR_PAYMENT
 }
 
 /**
