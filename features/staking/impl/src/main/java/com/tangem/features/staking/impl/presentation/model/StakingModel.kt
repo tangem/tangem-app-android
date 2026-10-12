@@ -21,8 +21,6 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -160,7 +158,6 @@ internal class StakingModel @Inject constructor(
     private val innerRouter: InnerStakingRouter,
     private val messageSender: UiMessageSender,
     private val appRouter: AppRouter,
-    private val featureTogglesManager: FeatureTogglesManager,
 ) : Model(), StakingClickIntents {
 
     val uiState: StateFlow<StakingUiState> = stateController.uiState
@@ -248,6 +245,7 @@ internal class StakingModel @Inject constructor(
 
     private var isInitialInfoAnalyticSent: Boolean = false
     private var isBalanceUpdatedAfterStart: Boolean = false
+    private var isApprovalInProgress: Boolean = false
 
     private val balanceUpdater by lazy(LazyThreadSafetyMode.NONE) {
         stakingBalanceUpdater.create(
@@ -297,12 +295,14 @@ internal class StakingModel @Inject constructor(
             stakingAnalyticSender.sendTransactionApprovalAnalytics(
                 cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: return,
             )
+            isApprovalInProgress = true
             stateController.update(SetApprovalInProgressTransformer)
             awaitForAllowance()
         }
 
         override fun onApproveFailed() {
             approvalSlotNavigation.dismiss()
+            isApprovalInProgress = false
             stateController.update(
                 SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus = cryptoCurrencyStatus),
             )
@@ -338,11 +338,7 @@ internal class StakingModel @Inject constructor(
 
     fun onMarketingBannerDeeplink(deeplink: String): Boolean {
         val marketing = resolveMarketingDeeplink(deeplink)
-        if (marketing == MarketingDeeplink.SWAP &&
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1636_SWAP_DEEPLINK_ENABLED)
-        ) {
-            return false
-        }
+        if (marketing == MarketingDeeplink.SWAP) return false
         val route = marketing.toContextualRoute(
             userWalletId = params.userWalletId,
             currency = params.cryptoCurrency,
@@ -473,6 +469,7 @@ internal class StakingModel @Inject constructor(
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = fee,
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
+                            isApprovalInProgress = isApprovalInProgress,
                         ),
                     )
                     updateNotifications()
@@ -602,9 +599,6 @@ internal class StakingModel @Inject constructor(
             val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
             when (confirmationState?.innerState) {
                 InnerConfirmationStakingState.ASSENT -> {
-                    val isApprovalInProgress = confirmationState.notifications.any {
-                        it is StakingNotification.Warning.TransactionInProgress
-                    }
                     if (!isApprovalInProgress) {
                         stakingStateRouter.onPrevClick()
                         stateController.update(
@@ -934,6 +928,7 @@ internal class StakingModel @Inject constructor(
                     currencyWarning = currencyWarning,
                     currencyCheck = currencyStatus,
                     isSubtractAvailable = isAmountSubtractAvailable,
+                    isApprovalInProgress = isApprovalInProgress,
                     feeError = if (hasRentWarning) null else feeError,
                     stakingError = if (hasRentWarning) null else stakingError,
                     integration = integration,
@@ -1017,6 +1012,7 @@ internal class StakingModel @Inject constructor(
                     val amount = (value.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
                         ?: error("No amount provided")
                     if (allowance >= amount) {
+                        isApprovalInProgress = false
                         stateController.update(SetUpdatedAllowanceTransformer(allowance))
                         getFee()
                         allowanceTaskScheduler.cancelTask()
@@ -1260,11 +1256,20 @@ internal class StakingModel @Inject constructor(
         )
             .conflate()
             .distinctUntilChanged()
-            .filter { value.currentStep == StakingStep.InitialInfo || isTopHeatupCase() }
             .onEach { (maybeAccount, maybeStatus) ->
-                isAccountsModeEnabled = isAccountsModeEnabledUseCase.invokeSync()
-                account = maybeAccount
-                onDataLoaded(maybeStatus)
+                when {
+                    value.currentStep == StakingStep.InitialInfo || isTopHeatupCase() -> {
+                        isAccountsModeEnabled = isAccountsModeEnabledUseCase.invokeSync()
+                        account = maybeAccount
+                        onDataLoaded(maybeStatus)
+                    }
+                    // The balance refresh started on InitialInfo may complete after the user has already
+                    // reached Confirmation; its ACTUAL sources are what unlock the primary button
+                    isAssentState() -> {
+                        cryptoCurrencyStatus = maybeStatus
+                        updateNotifications()
+                    }
+                }
             }
             .flowOn(dispatchers.main)
             .launchIn(modelScope)

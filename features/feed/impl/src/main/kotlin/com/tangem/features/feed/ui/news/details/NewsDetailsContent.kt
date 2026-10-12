@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.ds.TangemPagerIndicator
 import com.tangem.core.ui.ds.TangemPagerIndicatorColors
+import com.tangem.core.ui.extensions.dropWhenNoRoom
 import com.tangem.core.ui.res.*
 import com.tangem.features.feed.ui.news.details.components.ArticleDetail
 import com.tangem.features.feed.ui.news.details.components.NewsDetailsPlaceholder
@@ -24,6 +25,8 @@ import com.tangem.features.feed.ui.news.details.state.NewsDetailsUM
 import dev.chrisbanes.haze.rememberHazeState
 
 private const val PAGER_BG_ALPHA = .1f
+
+private val PagerIndicatorMinRoom = 8.dp
 
 @Composable
 internal fun NewsDetailsContent(state: NewsDetailsUM, contentPadding: PaddingValues, modifier: Modifier = Modifier) {
@@ -104,16 +107,23 @@ private fun Content(contentPadding: PaddingValues, state: NewsDetailsUM, backgro
                     )
                 }
                 if (state.articles.size > 1) {
-                    TangemPagerIndicator(
-                        pagerState = pagerState,
+                    Box(
                         modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .windowInsetsPadding(WindowInsets.navigationBars),
-                        colors = TangemPagerIndicatorColors.copy(
-                            overlay = TangemTheme.colors3.bg.opaque.secondary.copy(PAGER_BG_ALPHA),
-                        ),
-                        hazeState = localHaze,
-                    )
+                            .fillMaxSize()
+                            .padding(top = contentPadding.calculateTopPadding()),
+                    ) {
+                        TangemPagerIndicator(
+                            pagerState = pagerState,
+                            modifier = Modifier
+                                .dropWhenNoRoom(minRoom = PagerIndicatorMinRoom)
+                                .align(Alignment.BottomCenter)
+                                .windowInsetsPadding(WindowInsets.navigationBars),
+                            colors = TangemPagerIndicatorColors.copy(
+                                overlay = TangemTheme.colors3.bg.opaque.secondary.copy(PAGER_BG_ALPHA),
+                            ),
+                            hazeState = localHaze,
+                        )
+                    }
                 }
             }
         }

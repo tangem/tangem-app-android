@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.common
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,11 +32,12 @@ internal fun PolymarketLegalLine(
     onPolymarketTermsClick: () -> Unit,
     onTangemTermsClick: () -> Unit,
     modifier: Modifier = Modifier,
+    @StringRes templateResId: Int = R.string.prediction_onboarding_legal,
 ) {
     val linkStyle = SpanStyle(color = TangemTheme.colors3.text.primary)
     val polymarketTitle = stringResourceSafe(R.string.prediction_onboarding_legal_polymarket_terms)
     val tangemTitle = stringResourceSafe(R.string.prediction_onboarding_legal_tangem_terms)
-    val fullText = stringResourceSafe(R.string.prediction_onboarding_legal, polymarketTitle, tangemTitle)
+    val fullText = stringResourceSafe(templateResId, polymarketTitle, tangemTitle)
 
     val links = listOf(
         Triple(fullText.indexOf(polymarketTitle), polymarketTitle, onPolymarketTermsClick),

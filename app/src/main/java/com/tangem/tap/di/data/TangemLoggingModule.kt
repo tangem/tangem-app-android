@@ -31,7 +31,5 @@ internal object TangemLoggingModule {
 
     @Provides
     @Singleton
-    fun provideBlockchainSDKLogger(appLogsStore: AppLogsStore): BlockchainSDKLogger {
-        return TangemBlockchainSDKLogger(appLogsStore)
-    }
+    fun provideBlockchainSDKLogger(): BlockchainSDKLogger = TangemBlockchainSDKLogger()
 }

@@ -17,7 +17,6 @@ import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManag
 import com.tangem.features.feed.components.feed.DefaultFeedComponent.FeedParams
 import com.tangem.features.feed.model.feed.state.FeedStateController
 import com.tangem.features.feed.ui.feed.state.ForYouBannerUM
-import com.tangem.features.foryou.ForYouFeatureToggles
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
@@ -71,10 +70,9 @@ internal class FeedComponentModelTest {
      * Builds a [FeedComponentModel] wired into the given [TestScope], using a real
      * [FeedStateController] so we can read the initialised state directly.
      *
-     * All deps unrelated to [ForYouFeatureToggles] are relaxed or stubbed with empty flows so
-     * the model's background coroutines don't throw.
+     * Deps are relaxed or stubbed with empty flows so the model's background coroutines don't throw.
      */
-    private fun TestScope.createModel(forYouFeatureToggles: ForYouFeatureToggles): FeedComponentModel {
+    private fun TestScope.createModel(): FeedComponentModel {
         val testDispatcher = StandardTestDispatcher(testScheduler)
         val dispatchers = TestingCoroutineDispatcherProvider(
             main = testDispatcher,
@@ -100,7 +98,6 @@ internal class FeedComponentModelTest {
             getTopEarnTokensUseCase = getTopEarnTokensUseCase,
             appRouter = appRouter,
             addToPortfolioManagerFactory = addToPortfolioManagerFactory,
-            forYouFeatureToggles = forYouFeatureToggles,
             getTopFiveMarketTokenUseCase = getTopFiveMarketTokenUseCase,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             paramsContainer = paramsContainer,
@@ -112,12 +109,9 @@ internal class FeedComponentModelTest {
     inner class `initialState forYouBannerUM` {
 
         @Test
-        fun `GIVEN isForYouEnabled is true WHEN model initialises THEN forYouBannerUM is Content`() = runTest {
-            // Arrange
-            val toggles = mockk<ForYouFeatureToggles> { every { isForYouEnabled } returns true }
-
+        fun `GIVEN feed model WHEN model initialises THEN forYouBannerUM is Content`() = runTest {
             // Act
-            val model = createModel(forYouFeatureToggles = toggles)
+            val model = createModel()
             advanceUntilIdle()
 
             // Assert
@@ -127,27 +121,9 @@ internal class FeedComponentModelTest {
         }
 
         @Test
-        fun `GIVEN isForYouEnabled is false WHEN model initialises THEN forYouBannerUM is Empty`() = runTest {
-            // Arrange
-            val toggles = mockk<ForYouFeatureToggles> { every { isForYouEnabled } returns false }
-
+        fun `GIVEN initialised model WHEN Content banner clicked THEN openForYou invoked`() = runTest {
             // Act
-            val model = createModel(forYouFeatureToggles = toggles)
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(model.state.value.forYouBannerUM).isEqualTo(ForYouBannerUM.Empty)
-
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN isForYouEnabled is true WHEN Content banner clicked THEN openForYou invoked`() = runTest {
-            // Arrange
-            val toggles = mockk<ForYouFeatureToggles> { every { isForYouEnabled } returns true }
-
-            // Act
-            val model = createModel(forYouFeatureToggles = toggles)
+            val model = createModel()
             advanceUntilIdle()
             val banner = model.state.value.forYouBannerUM
             (banner as? ForYouBannerUM.Content)?.onClick?.invoke()

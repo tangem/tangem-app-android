@@ -3,6 +3,7 @@ package com.tangem.screens.tangempay
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.res.R as CoreResR
+import com.tangem.core.ui.test.StatusScreenTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
@@ -39,12 +40,12 @@ class TangemPayChangePinPageObject(semanticsProvider: SemanticsNodeInteractionsP
     }
 
     val successTitle: KNode = child {
-        hasTestTag(TangemPayTestTags.PIN_SUCCESS_TITLE)
+        hasTestTag(StatusScreenTestTags.TITLE)
         useUnmergedTree = true
     }
 
     val successDescription: KNode = child {
-        hasTestTag(TangemPayTestTags.PIN_SUCCESS_DESCRIPTION)
+        hasTestTag(StatusScreenTestTags.DESCRIPTION)
         useUnmergedTree = true
     }
 

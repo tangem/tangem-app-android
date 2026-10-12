@@ -310,7 +310,6 @@ internal object TangemPayTxHistoryDetailsConverter :
         transaction = item,
         cashback = cashbackDetails,
         loadState = cashbackLoadState,
-        isCashbackEnabled = isCashbackEnabled,
         onRefreshClick = onCashbackRefreshClick,
     )
 
@@ -327,7 +326,6 @@ internal object TangemPayTxHistoryDetailsConverter :
         val transactionLoadState: TransactionLoadState,
         val cashbackDetails: TangemPayTxHistoryItem.Cashback?,
         val cashbackLoadState: TransactionLoadState,
-        val isCashbackEnabled: Boolean,
         val onExplorerClick: (String?) -> Unit,
         val onDisputeClick: () -> Unit,
         val onCardRefreshClick: () -> Unit,

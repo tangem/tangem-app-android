@@ -24,6 +24,7 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.account.AccountUnderlyingCurrencies
 import com.tangem.feature.swap.model.InitialCurrenciesResolver
 import com.tangem.features.swap.SwapComponent.Params.CurrencyPosition
+import com.tangem.test.mock.MockAccounts
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -1309,9 +1310,146 @@ internal class DefaultInitialCurrenciesResolverTest {
             assertThat(to?.status).isSameInstanceAs(toInAccount1Status)
         }
 
+    @Test
+    fun `GIVEN an exact id match in another account WHEN invoke THEN it wins over the FROM account instance`() =
+        runTest {
+            // Arrange
+            val fromId = mockCurrencyId("ethereum", "0xDAI")
+            val initialFrom = mockCryptoCurrency(id = fromId)
+            val accountFrom = mockCryptoCurrency(id = fromId)
+
+            // The caller passes the very instance held by account 2; account 1 only holds the same token.
+            val exactToId = mockCurrencyId("ethereum", "0xUSDT")
+            val explicitTo = mockCryptoCurrency(id = exactToId)
+            val toInAccount2 = mockCryptoCurrency(id = exactToId)
+            val toInAccount1 = mockCryptoCurrency(id = mockCurrencyId("ethereum", "0xUSDT"))
+
+            val fromStatus = createCurrencyStatus(accountFrom, fiatAmount = BigDecimal("100"))
+            val toInAccount1Status = createCurrencyStatus(toInAccount1, fiatAmount = BigDecimal("10"))
+            val toInAccount2Status = createCurrencyStatus(toInAccount2, fiatAmount = BigDecimal("20"))
+
+            setupSupplier(
+                listOf(
+                    createCryptoPortfolioAccountStatus(
+                        currencies = listOf(fromStatus, toInAccount1Status),
+                        derivationIndexValue = 0,
+                    ),
+                    createCryptoPortfolioAccountStatus(
+                        currencies = listOf(toInAccount2Status),
+                        derivationIndexValue = 1,
+                    ),
+                ),
+            )
+            setupAvailability(linkedMapOf(accountFrom to true, toInAccount1 to true))
+            setupAvailability(linkedMapOf(toInAccount2 to true))
+
+            // Act
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = initialFrom,
+                swapCurrencyPosition = CurrencyPosition.FROM,
+                accountFlow = null,
+                initialToCryptoCurrency = explicitTo,
+            )
+
+            // Assert
+            assertThat(from?.status).isSameInstanceAs(fromStatus)
+            assertThat(to?.status).isSameInstanceAs(toInAccount2Status)
+        }
+
+    @Test
+    fun `GIVEN the same token as FROM in another account WHEN its exact id is passed THEN it becomes TO`() = runTest {
+        // Arrange
+        val fromId = mockCurrencyId("ethereum", "0xUSDT")
+        val toId = mockCurrencyId("ethereum", "0xUSDT")
+        val initialFrom = mockCryptoCurrency(id = fromId)
+        val accountFrom = mockCryptoCurrency(id = fromId)
+        val toInAccount2 = mockCryptoCurrency(id = toId)
+        val explicitTo = mockCryptoCurrency(id = toId)
+
+        val fromStatus = createCurrencyStatus(accountFrom, fiatAmount = BigDecimal("100"))
+        val toStatus = createCurrencyStatus(toInAccount2, fiatAmount = BigDecimal("50"))
+
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(currencies = listOf(fromStatus), derivationIndexValue = 0),
+                createCryptoPortfolioAccountStatus(currencies = listOf(toStatus), derivationIndexValue = 1),
+            ),
+        )
+        setupAvailability(linkedMapOf(accountFrom to true))
+        setupAvailability(linkedMapOf(toInAccount2 to true))
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = initialFrom,
+            swapCurrencyPosition = CurrencyPosition.FROM,
+            accountFlow = null,
+            initialToCryptoCurrency = explicitTo,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(fromStatus)
+        assertThat(to?.status).isSameInstanceAs(toStatus)
+    }
+
+    @Test
+    fun `GIVEN no exact id match WHEN invoke THEN the soft comparison still resolves TO`() = runTest {
+        // Arrange
+        val fromId = mockCurrencyId("ethereum", "0xDAI")
+        val initialFrom = mockCryptoCurrency(id = fromId)
+        val accountFrom = mockCryptoCurrency(id = fromId)
+        val accountTo = mockCryptoCurrency(id = mockCurrencyId("ethereum", "0xUSDT"))
+        val explicitTo = mockCryptoCurrency(id = mockCurrencyId("ethereum", "0xUSDT"))
+
+        val fromStatus = createCurrencyStatus(accountFrom, fiatAmount = BigDecimal("100"))
+        val toStatus = createCurrencyStatus(accountTo, fiatAmount = BigDecimal("50"))
+        setupSupplier(listOf(createCryptoPortfolioAccountStatus(listOf(fromStatus, toStatus))))
+        setupAvailability(linkedMapOf(accountFrom to true, accountTo to true))
+
+        // Act
+        val (_, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = initialFrom,
+            swapCurrencyPosition = CurrencyPosition.FROM,
+            accountFlow = null,
+            initialToCryptoCurrency = explicitTo,
+        )
+
+        // Assert
+        assertThat(to?.status).isSameInstanceAs(toStatus)
+    }
+
+    @Test
+    fun `GIVEN the explicit TO id is the FROM slot itself WHEN invoke THEN TO stays null`() = runTest {
+        // Arrange - the caller passes back the very instance that ends up in FROM, so an exact id match would
+        // resolve TO to the FROM slot and offer a swap of a token into itself.
+        val fromId = mockCurrencyId("ethereum", "0xUSDT")
+        val initialFrom = mockCryptoCurrency(id = fromId)
+        val accountFrom = mockCryptoCurrency(id = fromId)
+        val explicitTo = mockCryptoCurrency(id = fromId)
+
+        val fromStatus = createCurrencyStatus(accountFrom, fiatAmount = BigDecimal("100"))
+        setupSupplier(listOf(createCryptoPortfolioAccountStatus(listOf(fromStatus))))
+        setupAvailability(linkedMapOf(accountFrom to true))
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = initialFrom,
+            swapCurrencyPosition = CurrencyPosition.FROM,
+            accountFlow = null,
+            initialToCryptoCurrency = explicitTo,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(fromStatus)
+        assertThat(to).isNull()
+    }
+
     // endregion
 
-    // region account top-up FROM auto-fill priority ([REDACTED_TASK_KEY])
+    // region account top-up FROM auto-fill priority
 
     @Test
     fun `GIVEN topup and wallet holds account currency funded WHEN resolve THEN that token is FROM`() = runTest {
@@ -1337,7 +1475,6 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = null,
             swapCurrencyPosition = CurrencyPosition.ANY,
             accountFlow = AccountFlow.TopUp,
-            isAccountFlowEnabled = true,
         )
 
         // Prefers the account's own currency (becomes a transfer), not the richer BTC.
@@ -1373,7 +1510,6 @@ internal class DefaultInitialCurrenciesResolverTest {
                 initialCryptoCurrency = null,
                 swapCurrencyPosition = CurrencyPosition.ANY,
                 accountFlow = AccountFlow.TopUp,
-                isAccountFlowEnabled = true,
             )
 
             assertThat(from?.status).isSameInstanceAs(btcStatus)
@@ -1409,7 +1545,6 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = null,
             swapCurrencyPosition = CurrencyPosition.ANY,
             accountFlow = AccountFlow.TopUp,
-            isAccountFlowEnabled = true,
         )
 
         // Assert
@@ -1458,7 +1593,6 @@ internal class DefaultInitialCurrenciesResolverTest {
                 initialCryptoCurrency = null,
                 swapCurrencyPosition = CurrencyPosition.ANY,
                 accountFlow = AccountFlow.TopUp,
-                isAccountFlowEnabled = true,
             )
 
             // Assert
@@ -1494,7 +1628,6 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = null,
             swapCurrencyPosition = CurrencyPosition.ANY,
             accountFlow = AccountFlow.TopUp,
-            isAccountFlowEnabled = true,
         )
 
         // Assert
@@ -1527,41 +1660,10 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = null,
             swapCurrencyPosition = CurrencyPosition.ANY,
             accountFlow = AccountFlow.TopUp,
-            isAccountFlowEnabled = true,
         )
 
         // Assert
         assertThat(from?.status).isSameInstanceAs(usdcPolygonStatus)
-    }
-
-    @Test
-    fun `GIVEN toggle off WHEN topup resolve THEN priority is not applied`() = runTest {
-        val usdcPolygonId = mockCurrencyId(rawNetworkId = "polygon", contractAddress = "0xUSDC")
-        val usdcPolygonInWallet = mockCryptoCurrency(id = usdcPolygonId)
-        val usdcPolygonInAccount = mockCryptoCurrency(
-            id = mockCurrencyId(rawNetworkId = "polygon", contractAddress = "0xUSDC"),
-        )
-        val btc = mockCryptoCurrency()
-
-        val usdcPolygonStatus = createCurrencyStatus(usdcPolygonInWallet, fiatAmount = BigDecimal("5"))
-        val btcStatus = createCurrencyStatus(btc, fiatAmount = BigDecimal("1000"))
-        val accountStatus = createCryptoPortfolioAccountStatus(listOf(usdcPolygonStatus, btcStatus))
-        setupSupplier(listOf(accountStatus))
-        setupAvailability(linkedMapOf(usdcPolygonInWallet to true, btc to true))
-
-        val accountUnderlyingStatus = createCurrencyStatus(usdcPolygonInAccount, fiatAmount = BigDecimal.ZERO)
-        coEvery { accountUnderlyingCurrencies.get(userWalletId) } returns listOf(accountUnderlyingStatus)
-
-        val (from, _) = resolver.invoke(
-            userWalletId,
-            initialCryptoCurrency = null,
-            swapCurrencyPosition = CurrencyPosition.ANY,
-            accountFlow = AccountFlow.TopUp,
-            isAccountFlowEnabled = false,
-        )
-
-        // Gate off → falls back to plain most-funded selection (BTC), ignoring the account currency.
-        assertThat(from?.status).isSameInstanceAs(btcStatus)
     }
 
     @Test
@@ -1587,7 +1689,6 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = null,
             swapCurrencyPosition = CurrencyPosition.ANY,
             accountFlow = AccountFlow.Withdraw,
-            isAccountFlowEnabled = true,
         )
 
         // AccountFlow.Withdraw is not TopUp → priority does not apply, plain most-funded selection wins.
@@ -1622,7 +1723,6 @@ internal class DefaultInitialCurrenciesResolverTest {
                 initialCryptoCurrency = legacyCurrency,
                 swapCurrencyPosition = CurrencyPosition.TO,
                 accountFlow = AccountFlow.TopUp,
-                isAccountFlowEnabled = true,
             )
 
             // Assert
@@ -1648,7 +1748,6 @@ internal class DefaultInitialCurrenciesResolverTest {
                 initialCryptoCurrency = legacyCurrency,
                 swapCurrencyPosition = CurrencyPosition.FROM,
                 accountFlow = AccountFlow.Withdraw,
-                isAccountFlowEnabled = true,
             )
 
             // Assert
@@ -1696,7 +1795,6 @@ internal class DefaultInitialCurrenciesResolverTest {
         initialCryptoCurrency = initialCryptoCurrency,
         swapCurrencyPosition = CurrencyPosition.FROM,
         accountFlow = AccountFlow.Withdraw,
-        isAccountFlowEnabled = true,
     )
 
     @Test
@@ -1713,52 +1811,6 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = legacyCurrency,
             swapCurrencyPosition = CurrencyPosition.FROM,
             accountFlow = AccountFlow.Withdraw,
-            isAccountFlowEnabled = true,
-        )
-
-        // Assert
-        assertThat(from?.status).isSameInstanceAs(legacyStatus)
-    }
-
-    @Test
-    fun `GIVEN toggle off WHEN withdraw resolve THEN the account legacy currency is still resolvable`() = runTest {
-        // Arrange — multichain data is present, but the account flow is off: the legacy currency the entry
-        // point passes is not one of the issued networks, exactly as on a real multichain account.
-        val legacyCurrency = mockCryptoCurrency()
-        val legacyStatus = createCurrencyStatus(legacyCurrency, fiatAmount = BigDecimal("10"))
-        val issuedStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("50"))
-        setupSupplier(listOf(createPaymentAccountStatus(legacyStatus, listOf(issuedStatus))))
-        setupAvailabilityForAnyCurrency()
-
-        // Act
-        val (from, _) = resolver.invoke(
-            userWalletId,
-            initialCryptoCurrency = legacyCurrency,
-            swapCurrencyPosition = CurrencyPosition.FROM,
-            accountFlow = AccountFlow.Withdraw,
-            isAccountFlowEnabled = false,
-        )
-
-        // Assert
-        assertThat(from?.status).isSameInstanceAs(legacyStatus)
-    }
-
-    @Test
-    fun `GIVEN toggle off WHEN withdraw resolve THEN the currency the entry point passed stays FROM`() = runTest {
-        // Arrange
-        val legacyCurrency = mockCryptoCurrency()
-        val legacyStatus = createCurrencyStatus(legacyCurrency, fiatAmount = BigDecimal.ZERO)
-        val richerStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("50"))
-        setupSupplier(listOf(createPaymentAccountStatus(legacyStatus, listOf(legacyStatus, richerStatus))))
-        setupAvailabilityForAnyCurrency()
-
-        // Act
-        val (from, _) = resolver.invoke(
-            userWalletId,
-            initialCryptoCurrency = legacyCurrency,
-            swapCurrencyPosition = CurrencyPosition.FROM,
-            accountFlow = AccountFlow.Withdraw,
-            isAccountFlowEnabled = false,
         )
 
         // Assert
@@ -1773,14 +1825,250 @@ internal class DefaultInitialCurrenciesResolverTest {
     }
 
     private fun createPaymentAccountStatus(
-        legacyStatus: CryptoCurrencyStatus,
-        issuedNetworkStatuses: List<CryptoCurrencyStatus> = listOf(legacyStatus),
+        primaryStatus: CryptoCurrencyStatus,
+        issuedNetworkStatuses: List<CryptoCurrencyStatus> = listOf(primaryStatus),
     ): AccountStatus.Payment {
         val statusValue = mockk<PaymentAccountStatusValue.Loaded>(relaxed = true) {
             every { cryptoCurrencyStatuses } returns issuedNetworkStatuses
-            every { cryptoCurrencyStatus } returns legacyStatus
         }
         return AccountStatus.Payment(account = Account.Payment(userWalletId), value = statusValue)
+    }
+
+    @Test
+    fun `GIVEN the prediction collateral WHEN it is the initial currency THEN it lands as TO with a portfolio FROM`() =
+        runTest {
+            // Arrange
+            val walletCurrency = mockCryptoCurrency()
+            val walletStatus = createCurrencyStatus(walletCurrency, fiatAmount = BigDecimal("100"))
+            val collateral = mockCryptoCurrency()
+            val collateralStatus = createCurrencyStatus(collateral, fiatAmount = BigDecimal.ZERO)
+            setupSupplier(
+                listOf(
+                    createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                    createPredictionAccountStatus(collateralStatus),
+                ),
+            )
+            setupAvailability(linkedMapOf(walletCurrency to true))
+            setupAvailability(linkedMapOf(collateral to true))
+
+            // Act
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = collateral,
+                swapCurrencyPosition = CurrencyPosition.TO,
+                accountFlow = null,
+            )
+
+            // Assert
+            assertThat(to?.status).isSameInstanceAs(collateralStatus)
+            assertThat(from?.status).isSameInstanceAs(walletStatus)
+        }
+
+    @Test
+    fun `GIVEN no account flow WHEN the collateral is asked for as FROM THEN it still lands as TO`() = runTest {
+        // Arrange
+        val walletCurrency = mockCryptoCurrency()
+        val walletStatus = createCurrencyStatus(walletCurrency, fiatAmount = BigDecimal("100"))
+        val collateral = mockCryptoCurrency()
+        val collateralStatus = createCurrencyStatus(collateral, fiatAmount = BigDecimal("50"))
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                createPredictionAccountStatus(collateralStatus),
+            ),
+        )
+        setupAvailability(linkedMapOf(walletCurrency to true))
+        setupAvailability(linkedMapOf(collateral to true))
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = collateral,
+            swapCurrencyPosition = CurrencyPosition.FROM,
+            accountFlow = null,
+        )
+
+        // Assert
+        assertThat(to?.status).isSameInstanceAs(collateralStatus)
+        assertThat(from?.status).isSameInstanceAs(walletStatus)
+    }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN the collateral is asked for as FROM THEN it lands as FROM`() = runTest {
+        // Arrange
+        val walletStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("100"))
+        val collateral = mockCryptoCurrency()
+        val collateralStatus = createCurrencyStatus(collateral, fiatAmount = BigDecimal("50"))
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                createPredictionAccountStatus(collateralStatus),
+            ),
+        )
+        setupAvailabilityForAnyCurrency()
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = collateral,
+            swapCurrencyPosition = CurrencyPosition.FROM,
+            accountFlow = AccountFlow.PredictionWithdraw,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(collateralStatus)
+        assertThat(to).isNull()
+    }
+
+    @Test
+    fun `GIVEN a prediction withdraw and a payment account WHEN resolved THEN FROM is the collateral, not the payment token`() =
+        runTest {
+            // Arrange
+            val paymentTokenStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("500"))
+            val collateral = mockCryptoCurrency()
+            val collateralStatus = createCurrencyStatus(collateral, fiatAmount = BigDecimal("50"))
+            setupSupplier(
+                listOf(
+                    createPaymentAccountStatus(paymentTokenStatus),
+                    createPredictionAccountStatus(collateralStatus),
+                ),
+            )
+            setupAvailabilityForAnyCurrency()
+
+            // Act
+            val (from, _) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = collateral,
+                swapCurrencyPosition = CurrencyPosition.FROM,
+                accountFlow = AccountFlow.PredictionWithdraw,
+            )
+
+            // Assert
+            assertThat(from?.status).isSameInstanceAs(collateralStatus)
+        }
+
+    @Test
+    fun `GIVEN a prediction account without a confirmed address WHEN the collateral is asked for THEN nothing resolves`() =
+        runTest {
+            // Arrange
+            val walletCurrency = mockCryptoCurrency()
+            val walletStatus = createCurrencyStatus(walletCurrency, fiatAmount = BigDecimal("100"))
+            val collateral = mockCryptoCurrency()
+            setupSupplier(
+                listOf(
+                    createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                    createPredictionAccountStatus(collateralStatus = null),
+                ),
+            )
+            setupAvailability(linkedMapOf(walletCurrency to true))
+            coEvery { rampStateManager.availableForSwap(userWalletId, emptyList()) } returns emptyMap()
+
+            // Act
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = collateral,
+                swapCurrencyPosition = CurrencyPosition.TO,
+                accountFlow = null,
+            )
+
+            // Assert
+            assertThat(from).isNull()
+            assertThat(to).isNull()
+        }
+
+    @Test
+    fun `GIVEN a joint token WHEN it is the initial currency THEN it lands as TO with a portfolio FROM`() = runTest {
+        // Arrange
+        val walletCurrency = mockCryptoCurrency()
+        val walletStatus = createCurrencyStatus(walletCurrency, fiatAmount = BigDecimal("100"))
+        val jointCurrency = mockCryptoCurrency()
+        val jointStatus = createCurrencyStatus(jointCurrency, fiatAmount = BigDecimal("50"))
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                createJointAccountStatus(listOf(jointStatus)),
+            ),
+        )
+        setupAvailability(linkedMapOf(walletCurrency to true))
+        setupAvailability(linkedMapOf(jointCurrency to true))
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = jointCurrency,
+            swapCurrencyPosition = CurrencyPosition.TO,
+            accountFlow = null,
+        )
+
+        // Assert
+        assertThat(to?.status).isSameInstanceAs(jointStatus)
+        assertThat(from?.status).isSameInstanceAs(walletStatus)
+    }
+
+    @Test
+    fun `GIVEN a joint token WHEN asked for as FROM THEN it still lands as TO`() = runTest {
+        // Arrange
+        val walletCurrency = mockCryptoCurrency()
+        val walletStatus = createCurrencyStatus(walletCurrency, fiatAmount = BigDecimal("100"))
+        val jointCurrency = mockCryptoCurrency()
+        val jointStatus = createCurrencyStatus(jointCurrency, fiatAmount = BigDecimal("50"))
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                createJointAccountStatus(listOf(jointStatus)),
+            ),
+        )
+        setupAvailability(linkedMapOf(walletCurrency to true))
+        setupAvailability(linkedMapOf(jointCurrency to true))
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = jointCurrency,
+            swapCurrencyPosition = CurrencyPosition.FROM,
+            accountFlow = null,
+        )
+
+        // Assert
+        assertThat(to?.status).isSameInstanceAs(jointStatus)
+        assertThat(from?.status).isSameInstanceAs(walletStatus)
+    }
+
+    @Test
+    fun `GIVEN a joint token with higher balance than any wallet token WHEN no initial currency THEN it is never auto-picked as FROM`() =
+        runTest {
+            // Arrange
+            val walletCurrency = mockCryptoCurrency()
+            val walletStatus = createCurrencyStatus(walletCurrency, fiatAmount = BigDecimal("1"))
+            val jointCurrency = mockCryptoCurrency()
+            val jointStatus = createCurrencyStatus(jointCurrency, fiatAmount = BigDecimal("1000"))
+            setupSupplier(
+                listOf(
+                    createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                    createJointAccountStatus(listOf(jointStatus)),
+                ),
+            )
+            setupAvailability(linkedMapOf(walletCurrency to true))
+            setupAvailability(linkedMapOf(jointCurrency to true))
+
+            // Act
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = null,
+                swapCurrencyPosition = CurrencyPosition.ANY,
+                accountFlow = null,
+            )
+
+            // Assert
+            assertThat(from?.status).isSameInstanceAs(walletStatus)
+            assertThat(to).isNull()
+        }
+
+    private fun createPredictionAccountStatus(collateralStatus: CryptoCurrencyStatus?): AccountStatus.Prediction {
+        val statusValue = mockk<PredictionAccountStatusValue.Active>(relaxed = true) {
+            every { cryptoCurrencyStatus } returns collateralStatus
+        }
+        return AccountStatus.Prediction(account = Account.Prediction(userWalletId), value = statusValue)
     }
 
     private fun mockCryptoCurrency(
@@ -1813,8 +2101,28 @@ internal class DefaultInitialCurrenciesResolverTest {
         currencies: List<CryptoCurrencyStatus>,
     ): AccountStatus.CryptoPortfolio {
         val account = Account.Personal.createMainAccount(userWalletId = userWalletId)
-        return AccountStatus.CryptoPortfolio(
+        return AccountStatus.Personal(
             account = account,
+            tokenList = TokenList.Ungrouped(
+                totalFiatBalance = TotalFiatBalance.Loaded(
+                    amount = BigDecimal.ZERO,
+                    source = StatusSource.ACTUAL,
+                ),
+                sortedBy = TokensSortType.NONE,
+                currencies = currencies,
+            ),
+            priceChangeLce = Lce.Content(PriceChange(value = BigDecimal.ZERO, source = StatusSource.ACTUAL)),
+        )
+    }
+
+    private fun createJointAccountStatus(currencies: List<CryptoCurrencyStatus>): AccountStatus.Joint {
+        return AccountStatus.Joint(
+            account = MockAccounts.createJointAccount(userWalletId = userWalletId),
+            value = JointAccountStatusValue.Active(
+                source = StatusSource.ACTUAL,
+                totalMembers = 2,
+                safeAddress = "0x5afe000000000000000000000000000000000002",
+            ),
             tokenList = TokenList.Ungrouped(
                 totalFiatBalance = TotalFiatBalance.Loaded(
                     amount = BigDecimal.ZERO,
@@ -1851,7 +2159,7 @@ internal class DefaultInitialCurrenciesResolverTest {
             icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
             derivationIndex = derivationIndex,
         )
-        return AccountStatus.CryptoPortfolio(
+        return AccountStatus.Personal(
             account = account,
             tokenList = TokenList.Ungrouped(
                 totalFiatBalance = TotalFiatBalance.Loaded(

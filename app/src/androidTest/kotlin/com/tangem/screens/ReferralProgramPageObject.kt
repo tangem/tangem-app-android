@@ -5,6 +5,7 @@ import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.ReferralProgramScreenTestTags
 import com.tangem.core.ui.test.TopAppBarTestTags
+import com.tangem.core.ui.test.WalletConnectBottomSheetTestTags
 import com.tangem.wallet.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
@@ -76,6 +77,12 @@ class ReferralProgramPageObject(semanticsProvider: SemanticsNodeInteractionsProv
 
     val participateButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
+        useUnmergedTree = true
+    }
+
+    /** The account row on the referral screen; tap to open the rewards-account picker. */
+    val rewardsAccountRow: KNode = child {
+        hasTestTag(WalletConnectBottomSheetTestTags.WALLET_NAME)
         useUnmergedTree = true
     }
 

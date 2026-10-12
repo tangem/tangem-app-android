@@ -1,28 +1,20 @@
 package com.tangem.tests.tangempay
 
-import android.app.Activity
-import android.app.Instrumentation.ActivityResult
-import android.content.Intent
-import androidx.test.espresso.intent.Intents.intended
-import androidx.test.espresso.intent.Intents.intending
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasData
 import androidx.test.platform.app.InstrumentationRegistry
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
+import com.tangem.common.extensions.assertVisibility
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
 import com.tangem.common.utils.assertClipboardTextEquals
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.scenarios.*
 import com.tangem.screens.tangempay.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.hamcrest.CoreMatchers.allOf
 import org.junit.Ignore
 import org.junit.Test
 
@@ -218,40 +210,11 @@ class TangemPayTest : BaseTestCase() {
         }
     }
 
-    @AllureId("9592")
-    @DisplayName("Tangem Pay: Terms and fees opens the tariffs document")
-    @Test
-    fun termsAndFeesOpensTariffsFromMoreActionsMenuTest() {
-        val eligibilityState = "PaeraCustomer"
-
-        setupHooks(
-            additionalBeforeSection = {
-                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
-            }
-        ).run {
-            step("Open Tangem Pay") { openTangemPay() }
-            step("Click on 'More actions' button") {
-                onTangemPayMainScreen { moreActionsButton.clickWithAssertion() }
-            }
-            step("Stub external browser so the tariffs document is not actually opened") {
-                intending(hasAction(Intent.ACTION_VIEW))
-                    .respondWith(ActivityResult(Activity.RESULT_OK, null))
-            }
-            step("Click on 'Terms and fees' menu item") {
-                onTangemPayMainScreen { termsAndFeesMenuItem.clickWithAssertion() }
-            }
-            step("Assert the tariffs document is opened in an external browser") {
-                intended(allOf(hasAction(Intent.ACTION_VIEW), hasData(TangemPayConstants.TERMS_AND_LIMITS_LINK)))
-            }
-        }
-    }
-
-    // iOS-only: Android has no 'Service temporarily unavailable' sheet and no empty-depositAddress guard in Add funds.
     @Ignore("[REDACTED_JIRA]")
     @AllureId("9557")
-    @DisplayName("Tangem Pay: service unavailable error when customer has no deposit address")
+    @DisplayName("Tangem Pay: without a deposit address Add funds is disabled and Withdraw shows the service error")
     @Test
-    fun addFundsShowsServiceUnavailableErrorWhenNoDepositAddressTest() {
+    fun noDepositAddressDisablesAddFundsAndWithdrawShowsServiceErrorTest() {
         val depositAddressScenario = "tangem_pay_deposit_address"
         val noDepositAddressState = "NoDepositAddress"
         val eligibilityState = "PaeraCustomer"
@@ -263,21 +226,29 @@ class TangemPayTest : BaseTestCase() {
             }
         ).run {
             step("Open Tangem Pay") { openTangemPay() }
-            step("Click on 'Add funds' button") {
-                onTangemPayMainScreen { topUpButton.clickWithAssertion() }
+            step("Assert 'Add funds' button is disabled") {
+                flakySafely { onTangemPayMainScreen { addFundsButtonControl.assertIsNotEnabled() } }
+            }
+            step("Click on 'Withdraw' button") {
+                onTangemPayMainScreen { withdrawButton.clickWithAssertion() }
             }
             step("Assert 'Service temporarily unavailable' sheet is displayed") {
-                onTangemPayServiceUnavailableSheet {
-                    title.assertIsDisplayed()
-                    description.assertIsDisplayed()
-                    gotItButton.assertIsDisplayed()
+                flakySafely {
+                    onTangemPayServiceUnavailableSheet {
+                        title.assertIsDisplayed()
+                        description.assertIsDisplayed()
+                        gotItButton.assertIsDisplayed()
+                    }
                 }
             }
             step("Click on 'Got it' button") {
                 onTangemPayServiceUnavailableSheet { gotItButton.clickWithAssertion() }
             }
             step("Assert 'Service temporarily unavailable' sheet is not displayed") {
-                onTangemPayServiceUnavailableSheet { title.assertDoesNotExist() }
+                flakySafely { onTangemPayServiceUnavailableSheet { title.assertVisibility(shouldBeDisplayed = false) } }
+            }
+            step("Assert payment account balance is displayed") {
+                onTangemPayMainScreen { balance.assertIsDisplayed() }
             }
         }
     }

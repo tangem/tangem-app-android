@@ -15,10 +15,7 @@ class GetCompletedBackupsUseCase @Inject constructor(
     private val cloudBackupRepository: CloudBackupRepository,
 ) {
 
-    suspend operator fun invoke(wallet: UserWallet): Set<AnalyticsParam.BackupType> = when {
-        !cloudBackupRepository.isCloudBackupEnabled -> emptySet()
-        else -> completedBackups(wallet)
-    }
+    suspend operator fun invoke(wallet: UserWallet): Set<AnalyticsParam.BackupType> = completedBackups(wallet)
 
     private suspend fun completedBackups(wallet: UserWallet): Set<AnalyticsParam.BackupType> = when (wallet) {
         is UserWallet.Cold -> emptySet()

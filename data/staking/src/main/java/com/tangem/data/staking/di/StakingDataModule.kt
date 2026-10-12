@@ -17,13 +17,14 @@ import com.tangem.grow.datasource.stakekit.models.response.model.error.StakeKitE
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.token.P2PEthPoolRegionBlockedStore
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
+import com.tangem.data.staking.store.P2PEthPoolRegionBlockedStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
-import com.tangem.datasource.local.token.P2PVaultLimitsStore
+import com.tangem.data.staking.store.P2PVaultLimitsStore
 import com.tangem.datasource.local.token.StakingActionsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
-import com.tangem.datasource.local.txhistory.db.dao.P2PEthPoolVaultDao
-import com.tangem.datasource.local.txhistory.db.dao.StakingValidatorDao
+import com.tangem.store.datasource.txhistory.db.dao.P2PEthPoolVaultDao
+import com.tangem.store.datasource.txhistory.db.dao.StakingValidatorDao
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.repositories.*
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
@@ -117,11 +118,13 @@ internal object StakingDataModule {
     fun provideStakingTransactionHashRepository(
         stakeKitApi: StakeKitApi,
         appPreferencesStore: AppPreferencesStore,
+        growPreferencesKeys: GrowPreferencesKeys,
         dispatchers: CoroutineDispatcherProvider,
     ): StakeKitTransactionHashRepository {
         return DefaultStakeKitTransactionHashRepository(
             stakeKitApi = stakeKitApi,
             appPreferencesStore = appPreferencesStore,
+            growPreferencesKeys = growPreferencesKeys,
             dispatchers = dispatchers,
         )
     }

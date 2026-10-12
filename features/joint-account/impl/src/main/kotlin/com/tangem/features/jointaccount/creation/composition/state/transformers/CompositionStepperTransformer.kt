@@ -1,8 +1,8 @@
 package com.tangem.features.jointaccount.creation.composition.state.transformers
 
 import com.tangem.features.jointaccount.creation.composition.ui.state.JointAccountCompositionUM
-import com.tangem.features.jointaccount.creation.composition.ui.state.JointAccountCompositionUM.Companion.MAX_MEMBERS
-import com.tangem.features.jointaccount.creation.composition.ui.state.JointAccountCompositionUM.Companion.MIN_MEMBERS
+import com.tangem.domain.jointaccount.model.JointAccountConfig.Companion.MAX_MEMBERS_COUNT
+import com.tangem.domain.jointaccount.model.JointAccountConfig.Companion.MIN_MEMBERS_COUNT
 import com.tangem.features.jointaccount.creation.composition.ui.state.JointAccountCompositionUM.Companion.MIN_REQUIRED_TO_SIGN
 import com.tangem.utils.transformer.Transformer
 
@@ -19,8 +19,8 @@ internal abstract class CompositionStepperTransformer : Transformer<JointAccount
         return prevState.copy(
             totalMembers = prevState.totalMembers.copy(
                 value = newTotal,
-                isDecrementEnabled = newTotal > MIN_MEMBERS,
-                isIncrementEnabled = newTotal < MAX_MEMBERS,
+                isDecrementEnabled = newTotal > MIN_MEMBERS_COUNT,
+                isIncrementEnabled = newTotal < MAX_MEMBERS_COUNT,
             ),
             requiredToSign = prevState.requiredToSign.copy(
                 value = newRequired,

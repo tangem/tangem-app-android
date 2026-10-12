@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.entry.impl.routing
 
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.managetokens.component.OnboardingManageTokensComponent
@@ -9,6 +10,8 @@ import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletCo
 import com.tangem.features.onboarding.v2.note.api.OnboardingNoteComponent
 import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent
 import com.tangem.features.onboarding.v2.visa.api.OnboardingVisaComponent
+import com.tangem.features.pushnotifications.api.PushNotificationsComponent
+import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -20,6 +23,7 @@ internal class OnboardingChildFactory @Inject constructor(
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
     private val onboardingNoteComponentFactory: OnboardingNoteComponent.Factory,
     private val onboardingTwinComponentFactory: OnboardingTwinComponent.Factory,
+    private val pushNotificationsComponentFactory: PushNotificationsComponent.Factory,
 ) {
 
     fun createChild(
@@ -86,7 +90,18 @@ internal class OnboardingChildFactory @Inject constructor(
                     modelCallbacks = route.modelCallbacks,
                 ),
             )
+            is OnboardingRoute.PushNotifications -> createPushNotifications(route, childContext)
             is OnboardingRoute.None -> Unit
         }
     }
+
+    private fun createPushNotifications(route: OnboardingRoute.PushNotifications, childContext: AppComponentContext) =
+        pushNotificationsComponentFactory.create(
+            context = childContext,
+            params = PushNotificationsParams(
+                modelCallbacks = route.modelCallbacks,
+                source = AppRoute.PushNotification.Source.ColdCreation,
+                isBackHandledByHost = true,
+            ),
+        )
 }

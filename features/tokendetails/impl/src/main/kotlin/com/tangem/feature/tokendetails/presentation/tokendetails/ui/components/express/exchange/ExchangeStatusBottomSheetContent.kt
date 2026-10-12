@@ -31,6 +31,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus.Companion.isFailed
+import com.tangem.common.ui.notifications.MessageBanner
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeStatusState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
@@ -85,7 +86,7 @@ internal fun ExchangeStatusBottomSheetContent(state: ExchangeUM, extraContent: (
         }
         ExpressStatusBlock(state = state.toExpressStatusUM())
         if (state.notification != null) {
-            Notification(state = state.notification, activeStatus = state.activeStatus)
+            Notification(state = state.notification)
         }
         ExpressHideButton(
             isTerminal = state.activeStatus?.isTerminal == true,
@@ -125,7 +126,7 @@ private fun ExchangeStatusState.toExpressStatusItemUM(): ExpressStatusItemUM = E
 )
 
 @Composable
-private fun Notification(state: ExchangeStatusNotification, activeStatus: ExchangeStatus?) {
+private fun Notification(state: ExchangeStatusNotification) {
     AnimatedContent(
         targetState = state,
         modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
@@ -134,15 +135,7 @@ private fun Notification(state: ExchangeStatusNotification, activeStatus: Exchan
     ) { notification ->
         when (notification) {
             is ExchangeStatusNotification.CommonNotification -> {
-                com.tangem.core.ui.components.notifications.Notification(
-                    config = notification.config,
-                    iconTint = when {
-                        activeStatus == ExchangeStatus.Verifying -> TangemTheme.colors.icon.attention
-                        activeStatus.isFailed() -> TangemTheme.colors.icon.warning
-                        else -> null
-                    },
-                    containerColor = TangemTheme.colors.background.action,
-                )
+                MessageBanner(messageUM = notification.messageUM)
             }
             is ExchangeStatusNotification.TokenRefunded -> {
                 CurrencyNotification(

@@ -8,6 +8,7 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.core.error.UniversalError
+import com.tangem.data.pay.util.OrderStatusConverter
 import com.tangem.data.pay.util.RainCryptoUtil
 import com.tangem.data.pay.util.TangemPayErrorConverter
 import com.tangem.data.visa.config.VisaLibLoader
@@ -19,7 +20,6 @@ import com.tangem.spend.datasource.pay.models.request.FreezeUnfreezeCardRequest
 import com.tangem.spend.datasource.pay.models.request.UpdateCardRequest
 import com.tangem.spend.datasource.pay.models.request.SetPinRequest
 import com.tangem.spend.datasource.pay.models.response.FreezeUnfreezeCardResponse
-import com.tangem.spend.datasource.pay.models.response.OrderResponse.Result.Status
 import com.tangem.spend.datasource.pay.store.TangemPayCardFrozenStateStore
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.account.CardDisplayName
@@ -309,12 +309,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
 
         TangemPayOrderInfo(
             orderId = result.id,
-            orderStatus = when (result.status) {
-                Status.NEW -> OrderStatus.NEW
-                Status.PROCESSING -> OrderStatus.PROCESSING
-                Status.COMPLETED -> OrderStatus.COMPLETED
-                Status.CANCELED -> OrderStatus.CANCELED
-            },
+            orderStatus = OrderStatusConverter.convert(result.status),
             orderStep = OrderStep.fromString(result.step),
             orderType = OrderType.fromString(result.type ?: result.data.type),
             productInstanceId = result.data.productInstanceId,

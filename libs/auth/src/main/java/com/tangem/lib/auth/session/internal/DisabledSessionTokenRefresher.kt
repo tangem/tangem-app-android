@@ -13,4 +13,8 @@ internal object DisabledSessionTokenRefresher : SessionTokenRefresher {
     override suspend fun refresh(): Either<SessionRefreshError, SessionTokens> {
         return SessionRefreshError.Disabled.left()
     }
+
+    override suspend fun ensureSession(): Either<SessionRefreshError, SessionTokens> {
+        return SessionRefreshError.Disabled.left()
+    }
 }

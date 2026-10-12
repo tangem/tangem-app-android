@@ -19,6 +19,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -28,6 +29,9 @@ import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.loader.TangemLoader
+import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
@@ -40,6 +44,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_chevron_down_16
 import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -48,6 +53,73 @@ import com.tangem.features.jointaccount.join.invitepreview.ui.state.JointAccount
 
 @Composable
 internal fun JointAccountInvitePreviewScreen(state: JointAccountInvitePreviewUM, modifier: Modifier = Modifier) {
+    when (state) {
+        is JointAccountInvitePreviewUM.InvalidLink ->
+            JointAccountInviteInvalidLinkScreen(state = state, modifier = modifier)
+        is JointAccountInvitePreviewUM.Loading ->
+            JointAccountInvitePreviewScaffold(onCloseClick = state.onCloseClick, modifier = modifier) {
+                LoadingBody()
+            }
+        is JointAccountInvitePreviewUM.Failed ->
+            JointAccountInvitePreviewScaffold(onCloseClick = state.onCloseClick, modifier = modifier) {
+                FailedBody(onRetryClick = state.onRetryClick)
+            }
+        is JointAccountInvitePreviewUM.Content -> ContentScreen(state = state, modifier = modifier)
+    }
+}
+
+@Composable
+private fun JointAccountInvitePreviewScaffold(
+    onCloseClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    body: @Composable () -> Unit,
+) {
+    TangemTopBarScaffold(
+        modifier = modifier,
+        containerColor = TangemTheme.colors3.bg.primary,
+        topBar = {
+            TangemTopNavigation(endButton = { TangemButton.Close(onClick = onCloseClick) })
+        },
+    ) { contentPadding ->
+        Box(
+            modifier = Modifier.padding(top = contentPadding.calculateTopPadding()).fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            body()
+        }
+    }
+}
+
+@Composable
+private fun LoadingBody(modifier: Modifier = Modifier) {
+    TangemLoader(modifier = modifier, size = TangemLoaderSize.X32)
+}
+
+@Composable
+private fun FailedBody(onRetryClick: () -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        TangemButton(
+            variant = TangemButton.Variant.Primary,
+            size = TangemButton.Size.X10,
+            iconStart = TangemIconUM.Icon(imageVector = Icons.ic_arrow_refresh_20),
+            onClick = onRetryClick,
+        )
+
+        Text(
+            text = stringResourceSafe(R.string.joint_account_join_load_failed),
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.secondary,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun ContentScreen(state: JointAccountInvitePreviewUM.Content, modifier: Modifier = Modifier) {
     TangemTopBarScaffold(
         modifier = modifier,
         containerColor = TangemTheme.colors3.bg.primary,
@@ -132,7 +204,7 @@ private fun AccountHeroIcon(icon: AccountIconUM.CryptoPortfolio, accountName: St
 }
 
 @Composable
-private fun InviteInfo(state: JointAccountInvitePreviewUM, modifier: Modifier = Modifier) {
+private fun InviteInfo(state: JointAccountInvitePreviewUM.Content, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -172,7 +244,7 @@ private fun titleText(accountName: String): AnnotatedString {
 }
 
 @Composable
-private fun explanationText(state: JointAccountInvitePreviewUM): AnnotatedString {
+private fun explanationText(state: JointAccountInvitePreviewUM.Content): AnnotatedString {
     val highlightedPart = stringResourceSafe(
         R.string.joint_account_join_subtitle_value,
         state.requiredToSign.toString(),
@@ -198,7 +270,7 @@ private fun explanationText(state: JointAccountInvitePreviewUM): AnnotatedString
 }
 
 @Composable
-private fun Rows(state: JointAccountInvitePreviewUM, modifier: Modifier = Modifier) {
+private fun Rows(state: JointAccountInvitePreviewUM.Content, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -228,7 +300,11 @@ private fun CreatorRow(creatorName: String, hasDivider: Boolean, onInfoClick: ()
         },
         valueSlot = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                TangemRowText(text = stringReference(value = creatorName), role = TangemRowTextRole.Value)
+                TangemRowText(
+                    modifier = Modifier.weight(weight = 1f, fill = false),
+                    text = stringReference(value = creatorName),
+                    role = TangemRowTextRole.Value,
+                )
 
                 Icon(
                     modifier = Modifier.size(20.dp),
@@ -242,7 +318,7 @@ private fun CreatorRow(creatorName: String, hasDivider: Boolean, onInfoClick: ()
 }
 
 @Composable
-private fun WalletRow(wallet: JointAccountInvitePreviewUM.WalletUM) {
+private fun WalletRow(wallet: JointAccountInvitePreviewUM.Content.WalletUM) {
     TangemRow(
         onClick = wallet.onClick,
         verticalAlignment = TangemRowVerticalAlignment.Center,
@@ -296,17 +372,37 @@ private fun Preview_JointAccountInvitePreviewScreen(
     }
 }
 
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_JointAccountInvitePreviewScreen_Failed() {
+    TangemThemePreviewRedesign {
+        JointAccountInvitePreviewScreen(
+            state = JointAccountInvitePreviewUM.Failed(onRetryClick = {}, onCloseClick = {}),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_JointAccountInvitePreviewScreen_InvalidLink() {
+    TangemThemePreviewRedesign {
+        JointAccountInvitePreviewScreen(state = JointAccountInvitePreviewUM.InvalidLink(onGotItClick = {}))
+    }
+}
+
 private class JointAccountInvitePreviewStateProvider : CollectionPreviewParameterProvider<JointAccountInvitePreviewUM>(
     collection = listOf(
         createPreviewState(
-            wallet = JointAccountInvitePreviewUM.WalletUM(name = "My wallet", onClick = {}),
+            wallet = JointAccountInvitePreviewUM.Content.WalletUM(name = "My wallet", onClick = {}),
         ),
         createPreviewState(wallet = null),
     ),
 )
 
-private fun createPreviewState(wallet: JointAccountInvitePreviewUM.WalletUM?): JointAccountInvitePreviewUM {
-    return JointAccountInvitePreviewUM(
+private fun createPreviewState(wallet: JointAccountInvitePreviewUM.Content.WalletUM?): JointAccountInvitePreviewUM {
+    return JointAccountInvitePreviewUM.Content(
         accountName = "Family savings",
         accountIcon = AccountIconUM.CryptoPortfolio(
             value = CryptoPortfolioIcon.Icon.Safe,
@@ -315,6 +411,7 @@ private fun createPreviewState(wallet: JointAccountInvitePreviewUM.WalletUM?): J
         requiredToSign = 2,
         totalMembers = 5,
         creatorName = "Igor Sinyak",
+        creatorAddress = "0xBef7B368aac4e6752A9cE0xBef7B36A9cE",
         wallet = wallet,
         confirmation = null,
         onCreatorInfoClick = {},

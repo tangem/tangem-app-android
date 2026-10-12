@@ -8,6 +8,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.pay.model.IssueAdditionalCardError
 import com.tangem.domain.pay.usecase.IssueAdditionalCardUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
@@ -63,14 +64,12 @@ internal class TangemPayIssueAdditionalCardModel @Inject constructor(
         }
     }
 
-    private fun handleIssueError(error: VisaApiError) {
-        when (error) {
-            VisaApiError.CardIssueInsufficientBalance,
-            -> uiState.update { it.copy(isBalanceInsufficient = true) }
-            else -> {
-                uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
-                onDismiss()
-            }
+    private fun handleIssueError(error: IssueAdditionalCardError) {
+        if (error is IssueAdditionalCardError.Other && error.cause == VisaApiError.CardIssueInsufficientBalance) {
+            uiState.update { it.copy(isBalanceInsufficient = true) }
+        } else {
+            uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
+            onDismiss()
         }
     }
 

@@ -1,6 +1,5 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
@@ -11,6 +10,7 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
@@ -23,11 +23,12 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
 import com.tangem.domain.tokens.repository.YieldSupplyWarningsViewedRepository
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
-import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -49,9 +50,7 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideTokensFeatureToggles(featureTogglesManager: FeatureTogglesManager): TokensFeatureToggles {
-        return DefaultTokensFeatureToggles(featureTogglesManager = featureTogglesManager)
-    }
+    fun provideTokensFeatureToggles(): TokensFeatureToggles = DefaultTokensFeatureToggles()
 
     @Provides
     @Singleton
@@ -166,10 +165,12 @@ internal object TokensDomainModule {
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
-        virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
+        moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
-        virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
+        collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
+        moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
         polymarketFeatureToggles: PolymarketFeatureToggles,
+        collectiblesFeatureToggles: CollectiblesFeatureToggles,
         stakingIdFactory: StakingIdFactory,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletBalanceFetcher {
@@ -183,10 +184,12 @@ internal object TokensDomainModule {
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             multiStakingBalanceFetcher = multiStakingBalanceFetcher,
             paymentAccountStatusFetcher = paymentAccountStatusFetcher,
-            virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+            moneyAccountStatusFetcher = moneyAccountStatusFetcher,
             predictionAccountStatusFetcher = predictionAccountStatusFetcher,
-            virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+            collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
+            moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
             polymarketFeatureToggles = polymarketFeatureToggles,
+            collectiblesFeatureToggles = collectiblesFeatureToggles,
             stakingIdFactory = stakingIdFactory,
             dispatchers = dispatchers,
         )

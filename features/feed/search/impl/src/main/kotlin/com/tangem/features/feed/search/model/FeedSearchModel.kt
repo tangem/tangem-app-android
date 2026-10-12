@@ -4,13 +4,6 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
-import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.feed.search.model.RecentFeedSearchItem
-import com.tangem.domain.feed.search.usecase.ClearFeedSearchHistoryUseCase
-import com.tangem.domain.feed.search.usecase.GetRecentFeedSearchItemsUseCase
 import com.tangem.domain.feed.search.usecase.GetRecentFeedSearchQueriesUseCase
 import com.tangem.domain.feed.search.usecase.RemoveFeedSearchQueryUseCase
 import com.tangem.domain.feed.search.usecase.SaveFeedSearchQueryUseCase
@@ -18,7 +11,7 @@ import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.search.FeedSearchBarController
 import com.tangem.features.feed.search.model.analytics.FeedSearchAnalyticsEvent
 import com.tangem.features.feed.search.ui.state.FeedSearchUM
-import com.tangem.features.feed.search.ui.state.RecentUM
+import com.tangem.features.feed.search.ui.state.RecentQueryUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
@@ -42,13 +35,9 @@ internal class FeedSearchModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val searchBarController: FeedSearchBarController,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val router: Router,
     private val removeFeedSearchQueryUseCase: RemoveFeedSearchQueryUseCase,
-    private val clearFeedSearchHistoryUseCase: ClearFeedSearchHistoryUseCase,
     private val saveFeedSearchQueryUseCase: SaveFeedSearchQueryUseCase,
-    getRecentFeedSearchItemsUseCase: GetRecentFeedSearchItemsUseCase,
     getRecentFeedSearchQueriesUseCase: GetRecentFeedSearchQueriesUseCase,
-    getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<FeedRoute.Search>()
@@ -64,22 +53,14 @@ internal class FeedSearchModel @Inject constructor(
             initialValue = searchBarController.state.value.query,
         )
 
-    private val appCurrency = getSelectedAppCurrencyUseCase.invokeOrDefault()
-        .stateIn(
-            scope = modelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = AppCurrency.Default,
-        )
-
     val uiState: StateFlow<FeedSearchUM> = combine(
         flow = query,
-        flow2 = getRecentFeedSearchItemsUseCase(),
-        flow3 = getRecentFeedSearchQueriesUseCase(),
-    ) { query, items, queries ->
+        flow2 = getRecentFeedSearchQueriesUseCase(),
+    ) { query, queries ->
         FeedSearchUM(
             source = params.source,
             query = query,
-            recent = toRecentUM(items = items, queries = queries),
+            recentQueries = queries.take(DISPLAYED_QUERIES_COUNT).map(::toQueryUM).toImmutableList(),
         )
     }.stateIn(
         scope = modelScope,
@@ -102,26 +83,7 @@ internal class FeedSearchModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun toRecentUM(items: List<RecentFeedSearchItem>, queries: List<String>): RecentUM? {
-        if (items.isEmpty() && queries.isEmpty()) return null
-
-        return RecentUM(
-            items = items.map(::toItemUM).toImmutableList(),
-            queries = queries.take(DISPLAYED_QUERIES_COUNT).map(::toQueryUM).toImmutableList(),
-            onClearClick = ::onClearClick,
-        )
-    }
-
-    private fun toItemUM(item: RecentFeedSearchItem): RecentUM.ItemUM = when (item) {
-        is RecentFeedSearchItem.MarketToken -> RecentUM.ItemUM(
-            id = item.id,
-            title = item.token.name,
-            icon = TangemTokenIcon.UiState.Token(TangemTokenIcon.State(url = item.token.imageUrl)),
-            onClick = { openMarketToken(item) },
-        )
-    }
-
-    private fun toQueryUM(query: String): RecentUM.QueryUM = RecentUM.QueryUM(
+    private fun toQueryUM(query: String): RecentQueryUM = RecentQueryUM(
         text = query,
         onClick = { onQueryClick(query) },
         onRemoveClick = { modelScope.launch { removeFeedSearchQueryUseCase(query) } },
@@ -130,26 +92,6 @@ internal class FeedSearchModel @Inject constructor(
     private fun onQueryClick(query: String) {
         analyticsEventHandler.send(FeedSearchAnalyticsEvent.HintClicked(query))
         searchBarController.onQueryChange(query)
-    }
-
-    private fun onClearClick() {
-        analyticsEventHandler.send(FeedSearchAnalyticsEvent.ButtonClearHistoryClick())
-        modelScope.launch { clearFeedSearchHistoryUseCase() }
-    }
-
-    private fun openMarketToken(item: RecentFeedSearchItem.MarketToken) {
-        analyticsEventHandler.send(FeedSearchAnalyticsEvent.RecentItemClicked(item.token.symbol))
-        router.push(
-            route = FeedRoute.MarketsTokenDetails(
-                token = item.token,
-                appCurrency = appCurrency.value,
-                shouldShowPortfolio = true,
-                analyticsParams = FeedRoute.MarketsTokenDetails.AnalyticsParams(
-                    blockchain = null,
-                    source = params.source,
-                ),
-            ),
-        )
     }
 
     private companion object {

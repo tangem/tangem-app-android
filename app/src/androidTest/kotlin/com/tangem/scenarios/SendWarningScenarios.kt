@@ -1,6 +1,7 @@
 package com.tangem.scenarios
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.assertVisibility
 import com.tangem.screens.onSendConfirmScreen
 import io.qameta.allure.kotlin.Allure.step
@@ -72,7 +73,9 @@ fun BaseTestCase.checkSendWarning(
         }
     else
         step("Assert 'Send' button is enabled") {
-            awaitSuccess {
+            // The button only enables once the fee has settled, and for the reserve-warning networks
+            // (XRP, Stellar) that fee is re-fetched per recipient and regularly outlasts 20 s on CI.
+            awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
                 onSendConfirmScreen {
                     sendButton.assertIsEnabled()
                 }

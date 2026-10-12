@@ -19,11 +19,11 @@ sealed class WalletFetchingSource {
     data object TangemPay : WalletFetchingSource()
 
     /**
-     * Virtual account fetching source.
+     * Money account fetching source.
      * Handled separately from standard balance sources via
-     * [com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher].
+     * [com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher].
      */
-    data object VirtualAccount : WalletFetchingSource()
+    data object Money : WalletFetchingSource()
 
     /**
      * Prediction account fetching source.
@@ -31,6 +31,13 @@ sealed class WalletFetchingSource {
      * [com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher].
      */
     data object Prediction : WalletFetchingSource()
+
+    /**
+     * Collectibles account fetching source.
+     * Handled separately from standard balance sources via
+     * [com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher].
+     */
+    data object Collectibles : WalletFetchingSource()
 
     /**
      * Standard balance fetching sources (NETWORK, QUOTE, STAKING).

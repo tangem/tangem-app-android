@@ -58,6 +58,7 @@ import com.tangem.core.ui.components.sheetscaffold.*
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingTopBar
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
+import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.ds2.shtorka.TangemShtorka
 import com.tangem.core.ui.ds2.shtorka.TangemShtorkaState
 import com.tangem.core.ui.ds2.shtorka.rememberTangemShtorkaState
@@ -82,12 +83,14 @@ import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import com.tangem.features.jointaccount.main.JointAccountMainUM
 import com.tangem.features.feed.v2.FeedV2Component
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockComponent
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM
-import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
-import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
+import com.tangem.features.moneyaccount.main.component.MoneyAccountMainBlockComponent
+import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toImmutableMap
@@ -96,24 +99,22 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-private const val MARKET_HINT_THRESHOLD = 0.5f
-
-// collapsedFraction below this is treated as "fully expanded" (user is at the very top of the list)
-private const val FULLY_EXPANDED_THRESHOLD = 0.01f
-
 @OptIn(ExperimentalDecomposeApi::class)
 @Suppress("LongParameterList")
 @Composable
 internal fun WalletScreen(
     state: WalletScreenState,
     tangemPayComponent: TangemPayMainBlockComponent,
-    virtualAccountComponent: VirtualAccountMainBlockComponent,
+    moneyAccountComponent: MoneyAccountMainBlockComponent,
     polymarketComponent: PolymarketWalletBlockComponent,
+    collectiblesComponent: CollectiblesWalletBlockComponent,
     jointAccountComponent: JointAccountMainBlockComponent,
     modifier: Modifier = Modifier,
     isNewShtorkaEnabled: Boolean = false,
+    isShtorkaBlurEnabled: () -> Boolean = { true },
+    isShtorkaPartialExpansionSupported: Boolean = false,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
-    shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    shtorkaHeaderContent: @Composable (sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit) -> Unit,
     shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     bottomSheetHeaderHeightProvider: () -> Dp,
@@ -160,11 +161,14 @@ internal fun WalletScreen(
         walletsPagerState = walletsPagerState,
         tangemPayComponent = tangemPayComponent,
         promoBannersBlockComponent = promoBannersBlockComponent,
-        virtualAccountComponent = virtualAccountComponent,
+        moneyAccountComponent = moneyAccountComponent,
         polymarketComponent = polymarketComponent,
+        collectiblesComponent = collectiblesComponent,
         jointAccountComponent = jointAccountComponent,
         behavior = behavior,
         isNewShtorkaEnabled = isNewShtorkaEnabled,
+        isShtorkaBlurEnabled = isShtorkaBlurEnabled,
+        isShtorkaPartialExpansionSupported = isShtorkaPartialExpansionSupported,
         shtorkaHeaderContent = shtorkaHeaderContent,
         shtorkaContent = shtorkaContent,
         legacyBottomSheetContent = legacyBottomSheetContent,
@@ -193,17 +197,20 @@ private fun WalletContent(
     state: WalletScreenState,
     walletsPagerState: PagerState,
     tangemPayComponent: TangemPayMainBlockComponent,
-    virtualAccountComponent: VirtualAccountMainBlockComponent,
+    moneyAccountComponent: MoneyAccountMainBlockComponent,
     polymarketComponent: PolymarketWalletBlockComponent,
+    collectiblesComponent: CollectiblesWalletBlockComponent,
     jointAccountComponent: JointAccountMainBlockComponent,
     behavior: TangemCollapsingAppBarBehavior,
     listStates: ImmutableMap<Int, LazyListState>,
     modifier: Modifier = Modifier,
     isNewShtorkaEnabled: Boolean = false,
+    isShtorkaBlurEnabled: () -> Boolean = { true },
+    isShtorkaPartialExpansionSupported: Boolean = false,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
-    shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    shtorkaHeaderContent: @Composable (sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit) -> Unit,
     shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
 ) {
@@ -219,6 +226,8 @@ private fun WalletContent(
         modifier = modifier,
         state = state,
         isNewShtorkaEnabled = isNewShtorkaEnabled,
+        isShtorkaBlurEnabled = isShtorkaBlurEnabled,
+        isShtorkaPartialExpansionSupported = isShtorkaPartialExpansionSupported,
         shtorkaHeaderContent = shtorkaHeaderContent,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
@@ -322,10 +331,12 @@ private fun WalletContent(
                         }
                     }
 
+                    // A collapsedFraction this small means the user is at the very top of the list
+                    @Suppress("MagicNumber")
                     LaunchedEffect(listState) {
                         snapshotFlow { listState.layoutInfo.totalItemsCount }
                             .collectLatest {
-                                if (behavior.state.collapsedFraction < FULLY_EXPANDED_THRESHOLD &&
+                                if (behavior.state.collapsedFraction < 0.01f &&
                                     listState.firstVisibleItemIndex != 0
                                 ) {
                                     listState.scrollToItem(index = 0)
@@ -333,9 +344,10 @@ private fun WalletContent(
                             }
                     }
 
+                    @Suppress("MagicNumber")
                     val isShowMarketsHint by remember {
                         derivedStateOf {
-                            behavior.state.collapsedFraction > MARKET_HINT_THRESHOLD &&
+                            behavior.state.collapsedFraction > 0.5f &&
                                 listState.layoutInfo.totalItemsCount > 0 &&
                                 !listState.canScrollBackward && !listState.canScrollForward ||
                                 listState.canScrollBackward && !listState.canScrollForward
@@ -389,8 +401,9 @@ private fun WalletContent(
                                         tangemPayComponent = tangemPayComponent,
                                         promoBannersBlockComponent = promoBannersBlockComponent,
                                         walletId = currentWalletId,
-                                        virtualAccountComponent = virtualAccountComponent,
+                                        moneyAccountComponent = moneyAccountComponent,
                                         polymarketComponent = polymarketComponent,
+                                        collectiblesComponent = collectiblesComponent,
                                         jointAccountComponent = jointAccountComponent,
                                         onOrganizeButtonBoundsChange = remember(currentWalletIndex) {
                                             { bounds ->
@@ -450,10 +463,12 @@ private fun WalletContent(
 private fun BaseScaffoldWithMarkets(
     state: WalletScreenState,
     isNewShtorkaEnabled: Boolean,
+    isShtorkaPartialExpansionSupported: Boolean,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     modifier: Modifier = Modifier,
-    shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    isShtorkaBlurEnabled: () -> Boolean = { true },
+    shtorkaHeaderContent: @Composable (sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit) -> Unit,
     appBarContent: @Composable () -> Unit,
     shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
@@ -462,6 +477,8 @@ private fun BaseScaffoldWithMarkets(
     if (isNewShtorkaEnabled) {
         ShtorkaScaffoldWithMarkets(
             state = state,
+            isBlurEnabled = isShtorkaBlurEnabled,
+            isPartialExpansionSupported = isShtorkaPartialExpansionSupported,
             shtorkaHeaderContent = shtorkaHeaderContent,
             onBottomSheetStateChange = onBottomSheetStateChange,
             appBarContent = appBarContent,
@@ -600,13 +617,17 @@ private val ShtorkaSemiOpenDetent = TangemShtorka.Detent.Height(
 
 private val ShtorkaDetents = listOf(ShtorkaCollapsedDetent, ShtorkaSemiOpenDetent, TangemShtorka.Detent.Full)
 
+private val SkippedWithoutPartialExpansion = setOf(ShtorkaSemiOpenDetent)
+
 @Suppress("LongParameterList", "LongMethod")
 @Composable
 private fun ShtorkaScaffoldWithMarkets(
     state: WalletScreenState,
+    isPartialExpansionSupported: Boolean,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     modifier: Modifier = Modifier,
-    shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    isBlurEnabled: () -> Boolean = { true },
+    shtorkaHeaderContent: @Composable (sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit) -> Unit,
     appBarContent: @Composable () -> Unit,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     content: @Composable (PaddingValues, WalletSheetHandle) -> Unit,
@@ -617,6 +638,7 @@ private fun ShtorkaScaffoldWithMarkets(
     val shtorkaState = rememberTangemShtorkaState(
         detents = ShtorkaDetents,
         initialDetent = ShtorkaCollapsedDetent,
+        skippedDetents = if (isPartialExpansionSupported) emptySet() else SkippedWithoutPartialExpansion,
     )
     val sheetHandle = remember(shtorkaState) { ShtorkaWalletSheetHandle(shtorkaState) }
     val isExpanded = sheetHandle.isExpanded
@@ -656,6 +678,15 @@ private fun ShtorkaScaffoldWithMarkets(
         val onExpandSheet = remember(shtorkaState) {
             { shtorkaState.animateTo(TangemShtorka.Detent.Full) }
         }
+        val sheetExpansion = remember(shtorkaState) {
+            derivedStateOf {
+                when (shtorkaState.targetDetent) {
+                    ShtorkaCollapsedDetent -> ShtorkaExpansion.PILL
+                    TangemShtorka.Detent.Full -> ShtorkaExpansion.FULL
+                    else -> ShtorkaExpansion.PARTIAL
+                }
+            }
+        }
 
         Box(modifier = modifier.fillMaxSize()) {
             content(contentPadding, sheetHandle)
@@ -669,6 +700,7 @@ private fun ShtorkaScaffoldWithMarkets(
 
             TangemShtorka(
                 state = shtorkaState,
+                isMaterial = isBlurEnabled(),
                 color = backgroundColor,
                 // hasFocus, not isFocused: the focused node is the search field somewhere below,
                 // this modifier only sees it as a descendant
@@ -678,8 +710,8 @@ private fun ShtorkaScaffoldWithMarkets(
                 // The header draws its own small drag tip with the search bar centered around it
                 showDragHandle = false,
                 header = {
-                    ShtorkaSheetHeader {
-                        shtorkaHeaderContent(onExpandSheet)
+                    ShtorkaSheetHeader(expansion = sheetExpansion) {
+                        shtorkaHeaderContent(sheetExpansion, onExpandSheet)
                     }
                 },
             ) {
@@ -917,9 +949,9 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
                 ) {
                 }
             },
-            virtualAccountComponent = object : VirtualAccountMainBlockComponent {
-                override fun LazyListScope.virtualAccountMainContent(
-                    state: VirtualAccountMainUM,
+            moneyAccountComponent = object : MoneyAccountMainBlockComponent {
+                override fun LazyListScope.moneyAccountMainContent(
+                    state: MoneyAccountMainUM,
                     isBalanceHidden: Boolean,
                     modifier: Modifier,
                 ) {
@@ -928,6 +960,14 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
             polymarketComponent = object : PolymarketWalletBlockComponent {
                 override fun LazyListScope.polymarketWalletBlockContent(
                     state: PolymarketWalletBlockUM,
+                    isBalanceHidden: Boolean,
+                    modifier: Modifier,
+                ) {
+                }
+            },
+            collectiblesComponent = object : CollectiblesWalletBlockComponent {
+                override fun LazyListScope.collectiblesWalletBlockContent(
+                    state: CollectiblesWalletBlockUM,
                     isBalanceHidden: Boolean,
                     modifier: Modifier,
                 ) {
@@ -942,7 +982,7 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
                 ) {
                 }
             },
-            shtorkaHeaderContent = {},
+            shtorkaHeaderContent = { _, _ -> },
             shtorkaContent = {},
             legacyBottomSheetContent = {
                 Text("Markets Content")

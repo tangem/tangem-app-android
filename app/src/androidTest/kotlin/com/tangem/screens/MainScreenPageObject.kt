@@ -132,6 +132,16 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         error("Token '$tokenName' is not displayed on the current wallet page")
     }
 
+    fun clickDisplayedGetTangemPayBannerLearnMoreButton() {
+        val matcher = withTestTag(BaseButtonTestTags.BUTTON) and
+            hasAnyDescendant(withText(getResourceString(CoreResR.string.common_learn_more)))
+        val nodes = semanticsProvider.onAllNodes(matcher, useUnmergedTree = true)
+        for (i in 0 until nodes.fetchSemanticsNodes().size) {
+            if (runCatching { nodes[i].assertIsDisplayed(); nodes[i].performClick() }.isSuccess) return
+        }
+        throw AssertionError("'Get Tangem Pay' banner is not displayed on the current wallet page")
+    }
+
     /**
      * Switches to the previous/next wallet in the pager. A horizontal swipe is a silent no-op unless
      * the collapsing balance header is fully expanded and pinned to the top, so we retry: swipe, and
@@ -276,6 +286,23 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         hasTestTag(NotificationTestTags.TITLE)
         hasText(getResourceString(CoreResR.string.tangempay_onboarding_banner_title))
         useUnmergedTree = true
+    }
+
+    // The banner's buttons carry no tag of their own, and no matcher binds one to its own banner, so the
+    // CTA is told apart by its label — sound while no other Main banner offers a 'Learn more'.
+    val getTangemPayBannerLearnMoreButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.common_learn_more)))
+        useUnmergedTree = true
+    }
+
+    val promoBannerButton: KNode = child {
+        hasText(getResourceString(CoreResR.string.wallet_promo_banner_button_title))
+        hasClickAction()
+    }
+
+    val promoBannerTitle: KNode = child {
+        hasText(getResourceString(CoreResR.string.wallet_promo_banner_title))
     }
 
     val devCardNotificationIcon: KNode = child {
@@ -516,9 +543,33 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
+    /**
+     * Tap target that raises the markets sheet. The legacy sheet exposes its grabber; the DS3
+     * shtorka (TWI_1608) drags instead of clicking, so it tags the transparent overlay over the
+     * collapsed search bar. Both builds ship until the toggle is retired — match either.
+     */
     val marketsSheetDragHandle: KNode = child {
-        hasTestTag(MainScreenTestTags.MARKETS_SHEET_DRAG_HANDLE)
+        addSemanticsMatcher(
+            withTestTag(MainScreenTestTags.MARKETS_SHEET_DRAG_HANDLE) or
+                withTestTag(MainScreenTestTags.MARKETS_SHEET_EXPAND_AREA),
+        )
         useUnmergedTree = true
+    }
+
+    /**
+     * The 'NFT collections' row on Main, shown once NFT is enabled in wallet settings. Gated on the click
+     * action: the row is also composed while the collections are still loading, and taps are dropped there.
+     */
+    val nftBlock: KNode = lazyList.child {
+        hasTestTag(MainScreenTestTags.NFT_BLOCK)
+        hasClickAction()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToNFTBlock() {
+        collapseHeader()
+        semanticsProvider.onNode(withTestTag(MainScreenTestTags.SCREEN_CONTAINER))
+            .performScrollToNode(withTestTag(MainScreenTestTags.NFT_BLOCK))
     }
 
     fun tokenNetworkGroupTitle(tokenNetwork: String): KNode {

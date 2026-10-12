@@ -22,7 +22,6 @@ import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeExtraInfo
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
@@ -87,7 +86,6 @@ internal class FeeSelectorLogicTest {
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk(relaxed = true)
     private val getAvailableFeeTokensUseCase: GetAvailableFeeTokensUseCase = mockk(relaxed = true)
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk(relaxed = true)
-    private val sendFeatureToggles: SendFeatureToggles = mockk(relaxed = true)
 
     private val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee> = mockk()
     private val onLoadFeeExtended: suspend (CryptoCurrencyStatus?) -> Either<GetFeeError, TransactionFeeExtended> =
@@ -290,6 +288,34 @@ internal class FeeSelectorLogicTest {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class TronActivationRefusal {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN tron activation refused WHEN load fee THEN surface refusal without basic fallback`(
+            refusal: GetFeeError,
+        ) = runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            coEvery { onLoadFeeExtended(any()) } returns refusal.left()
+
+            // Act
+            val sut = buildModel(gaslessEnabled = true)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { onLoadFee() }
+            assertThat(sut.uiState.value).isEqualTo(FeeSelectorUM.Error(refusal))
+        }
+
+        private fun provideTestModels() = listOf(
+            GetFeeError.GaslessError.TronActivationNotEnoughFunds(minimumAmount = BigDecimal(5), tokenSymbol = "USDT"),
+            GetFeeError.GaslessError.TronActivationRateLimited(isPerWallet = true),
+            GetFeeError.GaslessError.TronActivationRateLimited(isPerWallet = false),
+        )
+    }
+
+    @Nested
     inner class CheckLoadFee {
 
         @Test
@@ -454,7 +480,6 @@ internal class FeeSelectorLogicTest {
     /** A Tron token transfer. */
     private fun TestScope.buildTronModel(isTronGaslessSupported: Boolean = false): FeeSelectorLogic {
         every { isGaslessFeeSupportedForNetwork(any()) } returns false
-        every { sendFeatureToggles.isTronGaslessEnabled } returns true
         val params = FeeSelectorParams.FeeSelectorBlockParams(
             state = FeeSelectorUM.Loading,
             userWalletId = testUserWalletId,
@@ -485,7 +510,6 @@ internal class FeeSelectorLogicTest {
         getUserWalletUseCase = getUserWalletUseCase,
         getAvailableFeeTokensUseCase = getAvailableFeeTokensUseCase,
         isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
-        sendFeatureToggles = sendFeatureToggles,
     )
 
     private fun contentState(

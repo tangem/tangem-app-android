@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
@@ -44,7 +45,9 @@ import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import dev.chrisbanes.haze.rememberHazeState
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 
 /**
  * Design-system v2 shtorka: a persistent, non-modal bottom sheet
@@ -78,6 +81,8 @@ import kotlinx.coroutines.flow.drop
  *   clear of the bottom inset (navigation bar), and [TangemShtorka.Detent.Full] stops below the
  *   top inset (status bar). Pass [WindowInsets.Companion.systemBars] (default) for edge-to-edge
  *   screens or zero insets if the parent already applies padding
+ * @param maxWidth widest the card is laid out; it is centered in the parent once the parent is
+ *   wider. Pass [Dp.Unspecified] to let the card span the full parent width
  * @param showDragHandle whether the grabber pill is shown at the top of the card
  * @param dragHandleContentDescription accessibility label announced by TalkBack for the grabber
  * @param header optional pinned overlay at the top of the card (below the grabber), typically a
@@ -94,6 +99,7 @@ fun TangemShtorka(
     color: Color = TangemTheme.colors3.bg.primary,
     isSwipeEnabled: Boolean = true,
     windowInsets: WindowInsets = WindowInsets.systemBars,
+    maxWidth: Dp = TangemShtorka.MaxWidth,
     showDragHandle: Boolean = true,
     dragHandleContentDescription: String? = null,
     header: (@Composable ColumnScope.() -> Unit)? = null,
@@ -106,17 +112,19 @@ fun TangemShtorka(
         )
     }
     val nestedScrollConnection = remember(state) { state.shtorkaNestedScrollConnection() }
-
-    val haptic = LocalHapticFeedback.current
-    LaunchedEffect(state) {
-        snapshotFlow { state.currentDetent }
-            .drop(1)
-            .collect { haptic.performHapticFeedback(HapticFeedbackType.SegmentTick) }
+    val surfaceOpacity: () -> Float = remember(state, isMaterial) {
+        if (isMaterial) {
+            { state.expandProgress }
+        } else {
+            OpaqueShtorkaSurface
+        }
     }
+
+    DetentHaptics(state = state)
 
     TangemSurface(
         modifier = modifier
-            .shtorkaLayout(state = state, windowInsets = windowInsets)
+            .shtorkaLayout(state = state, windowInsets = windowInsets, maxWidth = maxWidth)
             .graphicsLayer {
                 translationY = rubberBandOffset(raw = state.rawOverdrag, limit = ShtorkaOverdragLimit.toPx())
             }
@@ -131,6 +139,7 @@ fun TangemShtorka(
             },
         color = color,
         isMaterial = isMaterial,
+        isMaterialBorderEnabled = false,
         materialStyle = materialStyle,
         shape = shape,
     ) {
@@ -144,21 +153,24 @@ fun TangemShtorka(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .shtorkaContentScale(state)
                     .conditionalCompose(isMaterial) {
                         // The glass fades into an opaque surface as the card approaches full.
                         drawBehind { drawRect(color = color.copy(alpha = state.expandProgress)) }
                     }
                     .hazeSourceTangem(state = contentHazeState),
             ) {
-                content()
+                CompositionLocalProvider(LocalShtorkaSurfaceOpacity provides surfaceOpacity) {
+                    content()
+                }
             }
             CompositionLocalProvider(LocalHazeState provides contentHazeState) {
-                Column(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter)) {
-                    if (showDragHandle) {
-                        DragHandle(contentDescription = dragHandleContentDescription)
-                    }
-                    header?.invoke(this)
-                }
+                ShtorkaChrome(
+                    state = state,
+                    showDragHandle = showDragHandle,
+                    dragHandleContentDescription = dragHandleContentDescription,
+                    header = header,
+                )
             }
         }
     }
@@ -166,6 +178,13 @@ fun TangemShtorka(
 
 /** Public namespace of the shtorka component. */
 object TangemShtorka {
+
+    /**
+     * Default cap on the card's width, matching the Material bottom-sheet cap. Keeps the card a
+     * readable column on tablets and unfolded foldables instead of a window-wide sheet.
+     */
+    @Suppress("MagicNumber")
+    val MaxWidth: Dp = 640.dp
 
     /**
      * A position the shtorka can rest at, expressed as the visible height of the card. The card
@@ -176,7 +195,7 @@ object TangemShtorka {
     @Immutable
     sealed interface Detent {
 
-        /** Fixed visible card height, e.g. exactly a header. Coerced to the parent height at most. */
+        /** Fixed visible card height in content coordinates, coerced to the parent height at most. */
         data class Height(val value: Dp) : Detent
 
         /** Visible card height as a fraction (`0..1`) of the parent height. */
@@ -188,6 +207,39 @@ object TangemShtorka {
 
         /** The entire parent height; the card is edge-to-edge at this detent. */
         data object Full : Detent
+    }
+}
+
+/** Pinned overlay at the top of the card: the grabber and the caller's [header], scaled with the card. */
+@Composable
+private fun BoxScope.ShtorkaChrome(
+    state: TangemShtorkaState,
+    showDragHandle: Boolean,
+    dragHandleContentDescription: String?,
+    header: (@Composable ColumnScope.() -> Unit)?,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shtorkaChromeScale(state)
+            .align(Alignment.TopCenter),
+    ) {
+        if (showDragHandle) {
+            DragHandle(contentDescription = dragHandleContentDescription)
+        }
+        header?.invoke(this)
+    }
+}
+
+@Composable
+private fun DetentHaptics(state: TangemShtorkaState) {
+    val haptic = LocalHapticFeedback.current
+    LaunchedEffect(state) {
+        snapshotFlow { state.currentDetent }
+            .filter { it !in state.skippedDetents }
+            .distinctUntilChanged()
+            .drop(1)
+            .collect { haptic.performHapticFeedback(HapticFeedbackType.SegmentTick) }
     }
 }
 

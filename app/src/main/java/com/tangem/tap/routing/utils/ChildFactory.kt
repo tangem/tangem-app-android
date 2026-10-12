@@ -1,7 +1,6 @@
 package com.tangem.tap.routing.utils
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.QrScanningComponent
@@ -26,9 +25,9 @@ import com.tangem.features.introduction.IntroductionFeatureToggles
 import com.tangem.features.jointaccount.creation.JointAccountCreationComponent
 import com.tangem.features.jointaccount.join.JointAccountJoinComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
-import com.tangem.features.jointaccount.supportednetworks.JointSupportedNetworksComponent
 import com.tangem.features.collectibles.api.CollectiblesEntryComponent
 import com.tangem.features.kyc.KycComponent
+import com.tangem.features.tangempay.eligibility.TangemPayEligibilityComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensMode
@@ -47,11 +46,12 @@ import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.survey.SurveyComponent
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.components.TangemPayCampaignComponent
 import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
 import com.tangem.features.tokendetails.TokenDetailsComponent
-import com.tangem.features.virtualaccount.onboarding.component.VirtualAccountOnboardingComponent
+import com.tangem.features.moneyaccount.onboarding.component.MoneyAccountOnboardingComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
 import com.tangem.features.polymarket.api.PolymarketComponent
@@ -63,6 +63,7 @@ import com.tangem.tap.features.details.ui.cardsettings.coderecovery.api.AccessCo
 import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
+import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent as RedesignedWalletConnectComponent
@@ -127,12 +128,13 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayDetailsContainerComponentFactory: TangemPayDetailsContainerComponent.Factory,
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
-    private val virtualAccountOnboardingComponentFactory: VirtualAccountOnboardingComponent.Factory,
+    private val tangemPayCampaignComponentFactory: TangemPayCampaignComponent.Factory,
+    private val moneyAccountOnboardingComponentFactory: MoneyAccountOnboardingComponent.Factory,
     private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
     private val jointAccountJoinComponentFactory: JointAccountJoinComponent.Factory,
     private val jointAccountMembersComponentFactory: JointAccountMembersComponent.Factory,
-    private val jointSupportedNetworksComponentFactory: JointSupportedNetworksComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
+    private val tangemPayEligibilityComponentFactory: TangemPayEligibilityComponent.Factory,
     private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val polymarketComponentFactory: PolymarketComponent.Factory,
@@ -371,17 +373,17 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.Home -> {
-                // An NFC launch stays on the legacy screen, which is the only one that auto-starts the card
-                // scan. Routing it to the redesign would consume the tag and do nothing.
-                val isRedesign = introductionFeatureToggles.isIntroductionRedesignEnabled &&
-                    route.launchMode != InitScreenLaunchMode.WithCardScan
-                if (isRedesign) {
+                if (introductionFeatureToggles.isIntroductionRedesignEnabled) {
                     createComponentChild(
                         context = context,
-                        params = IntroductionComponent.Params(route.launchMode),
+                        params = IntroductionComponent.Params(
+                            launchMode = route.launchMode,
+                            entryReason = route.entryReason,
+                        ),
                         componentFactory = introductionComponentFactory,
                     )
                 } else {
+                    @RemoveWithToggle("TWI_1747_INTRODUCTION_REDESIGN_ENABLED")
                     createComponentChild(
                         context = context,
                         params = HomeComponent.Params(route.launchMode),
@@ -443,7 +445,10 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.Collectibles -> {
                 createComponentChild(
                     context = context,
-                    params = Unit,
+                    params = CollectiblesEntryComponent.Params(
+                        userWalletId = route.userWalletId,
+                        startRoute = route.startRoute,
+                    ),
                     componentFactory = collectiblesEntryComponentFactory,
                 )
             }
@@ -597,7 +602,10 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.AddExistingWallet -> {
                 createComponentChild(
                     context = context,
-                    params = AddExistingWalletComponent.Params(mode = route.mode),
+                    params = AddExistingWalletComponent.Params(
+                        mode = route.mode,
+                        shouldSendOnboardingStarted = route.shouldSendOnboardingStarted,
+                    ),
                     componentFactory = addExistingWalletComponentFactory,
                 )
             }
@@ -705,17 +713,9 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = JointAccountMembersComponent.Params(
                         userWalletId = route.userWalletId,
-                        mode = JointAccountMembersComponent.Mode.Invite,
-                        isCreator = true,
+                        cryptoAccountId = route.cryptoAccountId,
                     ),
                     componentFactory = jointAccountMembersComponentFactory,
-                )
-            }
-            is AppRoute.JointSupportedNetworks -> {
-                createComponentChild(
-                    context = context,
-                    params = Unit,
-                    componentFactory = jointSupportedNetworksComponentFactory,
                 )
             }
             is AppRoute.EditAccount -> {
@@ -782,21 +782,28 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = tangemPayWalletOnboardingComponentFactory,
                 )
             }
-            is AppRoute.VirtualAccountOnboarding -> {
+            is AppRoute.TangemPayCampaign -> {
+                createComponentChild(
+                    context = context,
+                    params = TangemPayCampaignComponent.Params(campaignKey = route.campaignKey),
+                    componentFactory = tangemPayCampaignComponentFactory,
+                )
+            }
+            is AppRoute.MoneyAccountOnboarding -> {
                 createComponentChild(
                     context = context,
                     params = when (val mode = route.mode) {
-                        is AppRoute.VirtualAccountOnboarding.Mode.Deeplink ->
-                            VirtualAccountOnboardingComponent.Params.Deeplink(
+                        is AppRoute.MoneyAccountOnboarding.Mode.Deeplink ->
+                            MoneyAccountOnboardingComponent.Params.Deeplink(
                                 userWalletId = mode.userWalletId,
                                 deeplink = mode.deeplink,
                             )
-                        is AppRoute.VirtualAccountOnboarding.Mode.FromMain ->
-                            VirtualAccountOnboardingComponent.Params.FromMain(userWalletId = mode.userWalletId)
-                        is AppRoute.VirtualAccountOnboarding.Mode.FromDetailsScreen ->
-                            VirtualAccountOnboardingComponent.Params.FromDetailsScreen(userWalletId = mode.userWalletId)
+                        is AppRoute.MoneyAccountOnboarding.Mode.FromMain ->
+                            MoneyAccountOnboardingComponent.Params.FromMain(userWalletId = mode.userWalletId)
+                        is AppRoute.MoneyAccountOnboarding.Mode.FromDetailsScreen ->
+                            MoneyAccountOnboardingComponent.Params.FromDetailsScreen(userWalletId = mode.userWalletId)
                     },
-                    componentFactory = virtualAccountOnboardingComponentFactory,
+                    componentFactory = moneyAccountOnboardingComponentFactory,
                 )
             }
             is AppRoute.Kyc -> {
@@ -804,6 +811,16 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = KycComponent.Params(route.userWalletId),
                     componentFactory = kycComponentFactory,
+                )
+            }
+            is AppRoute.TangemPayEligibility -> {
+                createComponentChild(
+                    context = context,
+                    params = TangemPayEligibilityComponent.Params(
+                        product = route.product,
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = tangemPayEligibilityComponentFactory,
                 )
             }
             is AppRoute.Survey -> {

@@ -39,6 +39,7 @@ internal class CommonNetworkStatusFetcher @Inject constructor(
      * @param userWalletId      user wallet id
      * @param network           network
      * @param networkCurrencies network currencies
+     * @param xpub              XPUB to restore dynamic addresses mode
      */
     suspend fun fetch(
         userWalletId: UserWalletId,
@@ -54,13 +55,24 @@ internal class CommonNetworkStatusFetcher @Inject constructor(
         }
 
         return Either.catchOn(dispatchers.default) {
+            // A pending joint account has no Safe yet, so no wallet manager: there is nothing to read and no error
+            // to store. Building the manager can fail, so the lookup stays inside the catch
+            if (network.derivationPath is Network.DerivationPath.Joint &&
+                walletManagersFacade.getOrCreateWalletManager(userWalletId = userWalletId, network = network) == null
+            ) {
+                TangemLogger.i(
+                    "Skipping fetch for $userWalletId [${network.id}]: the joint account has no Safe address yet",
+                )
+                return@catchOn
+            }
+
+            val extraTokens = networkCurrencies.filterIsInstance<CryptoCurrency.Token>().toSet()
+
             val result = withContext(dispatchers.io) {
                 walletManagersFacade.update(
                     userWalletId = userWalletId,
                     network = network,
-                    extraTokens = networkCurrencies
-                        .filterIsInstance<CryptoCurrency.Token>()
-                        .toSet(),
+                    extraTokens = extraTokens,
                     xpub = xpub,
                 )
             }

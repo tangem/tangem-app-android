@@ -3,7 +3,7 @@ package com.tangem.data.pay.converter
 import com.tangem.data.pay.util.tangemPayImageOrNull
 import com.tangem.domain.models.pay.TangemPayImage
 import arrow.core.getOrElse
-import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
+import com.tangem.spend.datasource.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -127,6 +127,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 },
                 error = null,
                 virtualAccount = null,
+                isBankOfframpAvailable = null,
                 tariffPlan = null,
             )
             is PaymentAccountStatusValueDM.UnderReview -> PaymentAccountStatusValue.UnderReview(

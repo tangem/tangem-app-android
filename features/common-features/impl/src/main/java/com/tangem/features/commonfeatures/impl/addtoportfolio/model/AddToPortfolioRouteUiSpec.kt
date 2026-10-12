@@ -32,7 +32,9 @@ internal fun AddToPortfolioRoutes.uiSpec(): AddToPortfolioRouteUiSpec = when (th
         footer = AddToPortfolioFooterKind.Cancel,
     )
     AddToPortfolioRoutes.PortfolioSelector -> AddToPortfolioRouteUiSpec(
-        title = resourceReference(R.string.common_add_token),
+        // fallback only: the sheet header takes this route's title from the selector component, which
+        // switches between "Choose account" and "Choose wallet"
+        title = resourceReference(R.string.common_choose_account),
         isScrollable = false,
         shouldApplyHorizontalPadding = true,
         footer = AddToPortfolioFooterKind.Cancel,

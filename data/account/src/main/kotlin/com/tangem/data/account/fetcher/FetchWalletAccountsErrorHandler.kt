@@ -9,7 +9,7 @@ import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
-import com.tangem.datasource.api.common.response.ETAG_HEADER
+import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse

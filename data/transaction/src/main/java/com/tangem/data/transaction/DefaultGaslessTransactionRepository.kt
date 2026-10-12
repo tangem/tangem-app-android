@@ -7,16 +7,16 @@ import com.tangem.data.transaction.convertes.GaslessBatchTransactionRequestBuild
 import com.tangem.data.transaction.convertes.GaslessSignedTransactionResultConverter
 import com.tangem.data.transaction.convertes.GaslessTransactionRequestBuilder
 import com.tangem.data.transaction.convertes.GaslessTxDataToGaslessRequestConverter
-import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
-import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.GaslessTransactionRepository
+import com.tangem.domain.transaction.error.GaslessServiceException
 import com.tangem.domain.transaction.models.Eip7702Authorization
 import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessSignedTransactionResult
 import com.tangem.domain.transaction.models.GaslessTransactionData
+import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
+import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -30,7 +30,6 @@ import java.math.BigInteger
 class DefaultGaslessTransactionRepository(
     private val gaslessTxServiceApi: GaslessTxServiceApi,
     private val gaslessTxServiceApiV2: GaslessTxServiceApiV2,
-    private val isGaslessV2Enabled: Boolean,
     private val coroutineDispatcherProvider: CoroutineDispatcherProvider,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
 ) : GaslessTransactionRepository {
@@ -39,7 +38,7 @@ class DefaultGaslessTransactionRepository(
     private val receiverAddressMutex = Mutex()
     private var feeReceiverAddress: String? = null
 
-    private val requestConverter = GaslessTxDataToGaslessRequestConverter(shouldIncludeGasLimit = isGaslessV2Enabled)
+    private val requestConverter = GaslessTxDataToGaslessRequestConverter(shouldIncludeGasLimit = true)
     private val gaslessTransactionRequestBuilder = GaslessTransactionRequestBuilder(requestConverter)
     private val gaslessBatchTransactionRequestBuilder = GaslessBatchTransactionRequestBuilder(requestConverter)
     private val signedTransactionResultConverter = GaslessSignedTransactionResultConverter()
@@ -51,7 +50,7 @@ class DefaultGaslessTransactionRepository(
                 return@withContext storedTokens
             }
 
-            val supportedTokensData = gaslessTxServiceApi.getSupportedTokens().getOrThrow()
+            val supportedTokensData = gaslessTxServiceApi.getSupportedTokens().getOrThrowGaslessError()
             if (supportedTokensData.isSuccess) {
                 val networkBlockchain = network.toBlockchain()
                 val supportedTokens = supportedTokensData.result.tokens
@@ -78,7 +77,7 @@ class DefaultGaslessTransactionRepository(
                 }
                 return@withContext supportedTokens
             } else {
-                error("Gasless service returned unsuccessful response")
+                throw unsuccessfulResponseError()
             }
         }
     }
@@ -90,12 +89,12 @@ class DefaultGaslessTransactionRepository(
                 if (feeReceiver != null) {
                     return@withContext feeReceiver
                 }
-                val response = gaslessTxServiceApi.getFeeRecipient().getOrThrow()
+                val response = gaslessTxServiceApi.getFeeRecipient().getOrThrowGaslessError()
                 if (response.isSuccess) {
                     feeReceiverAddress = response.result.address
                     response.result.address
                 } else {
-                    error("Gasless service returned unsuccessful response")
+                    throw unsuccessfulResponseError()
                 }
             }
         }
@@ -117,14 +116,10 @@ class DefaultGaslessTransactionRepository(
             eip7702Auth = eip7702Auth,
         )
 
-        val response = if (isGaslessV2Enabled) {
-            gaslessTxServiceApiV2.signGaslessTransaction(transactionRequest)
-        } else {
-            gaslessTxServiceApi.signGaslessTransaction(transactionRequest)
-        }.getOrThrow()
+        val response = gaslessTxServiceApiV2.signGaslessTransaction(transactionRequest).getOrThrowGaslessError()
 
         if (!response.isSuccess) {
-            error("Gasless service returned unsuccessful response")
+            throw unsuccessfulResponseError()
         }
 
         // Convert DTO to domain model
@@ -147,14 +142,19 @@ class DefaultGaslessTransactionRepository(
             eip7702Auth = eip7702Auth,
         )
 
-        val response = gaslessTxServiceApiV2.signGaslessBatchTransaction(transactionRequest).getOrThrow()
+        val response = gaslessTxServiceApiV2.signGaslessBatchTransaction(transactionRequest).getOrThrowGaslessError()
 
         if (!response.isSuccess) {
-            error("Gasless service returned unsuccessful response")
+            throw unsuccessfulResponseError()
         }
 
         signedTransactionResultConverter.convert(response.result)
     }
+
+    private fun unsuccessfulResponseError() = GaslessServiceException(
+        httpCode = null,
+        message = "Gasless service returned unsuccessful response",
+    )
 
     override fun getBaseGasForTransaction(): BigInteger {
         return BASE_GAS_FOR_TRANSACTION
@@ -170,7 +170,7 @@ class DefaultGaslessTransactionRepository(
         val backendAddress = runSuspendCatching { getTokenFeeReceiverAddress() }
             .onFailure { TangemLogger.e("Failed to load gasless fee recipient; serving hardcoded addresses", it) }
             .getOrNull()
-        return KNOWN_FEE_COLLECTION_ADDRESSES + setOfNotNull(backendAddress)
+        return KNOWN_FEE_COLLECTION_ADDRESSES + TRON_GASLESS_FEE_RECIPIENT + setOfNotNull(backendAddress)
     }
 
     private companion object {
@@ -180,6 +180,10 @@ class DefaultGaslessTransactionRepository(
         val KNOWN_FEE_COLLECTION_ADDRESSES = setOf(
             "0xFc719364BcCdc92D055d8C3164eF1ab4f5A9182c",
             "0xAf722F46145fbb106379d506ED3a5B96f110c8E5",
+        )
+
+        val TRON_GASLESS_FEE_RECIPIENT = setOf(
+            "TSWsmaEDgWaE2VsP9tCBGh5GbBRbrdHSuZ",
         )
     }
 }

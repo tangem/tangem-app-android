@@ -13,12 +13,9 @@ internal class UpdateDisplayNameTransformer(
     override fun transform(prevState: JointAccountDisplayNameUM): JointAccountDisplayNameUM {
         if (name.length > DisplayNameValidator.MAX_LENGTH) return prevState
 
-        val hasForbiddenChars = validator.hasForbiddenChars(name)
-
         return prevState.copy(
             name = name,
-            isError = hasForbiddenChars,
-            isButtonEnabled = name.isNotBlank() && !hasForbiddenChars,
+            isButtonEnabled = validator.isValid(name),
         )
     }
 }

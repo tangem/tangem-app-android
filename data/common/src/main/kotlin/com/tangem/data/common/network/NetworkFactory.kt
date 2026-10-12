@@ -8,6 +8,7 @@ import com.tangem.blockchainsdk.utils.getSupportedTransactionExtras
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.card.common.extensions.canHandleToken
+import com.tangem.domain.jointaccount.derivation.isJointAccountReservedPath
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -175,18 +176,20 @@ class NetworkFactory @Inject constructor(
 
         val defaultDerivationPath = getDefaultDerivationPath(blockchain, cardDerivationStyleProvider, accountIndex)
 
-        return if (extraDerivationPath.isNullOrBlank()) {
-            if (defaultDerivationPath.isNullOrBlank()) {
+        if (extraDerivationPath.isNullOrBlank()) {
+            return if (defaultDerivationPath.isNullOrBlank()) {
                 Network.DerivationPath.None
             } else {
                 Network.DerivationPath.Card(defaultDerivationPath)
             }
-        } else {
-            if (extraDerivationPath == defaultDerivationPath) {
-                Network.DerivationPath.Card(defaultDerivationPath)
-            } else {
-                Network.DerivationPath.Custom(extraDerivationPath)
-            }
+        }
+
+        val isJointOwnerPath = isJointAccountReservedPath(rawPath = extraDerivationPath)
+
+        return when {
+            extraDerivationPath == defaultDerivationPath -> Network.DerivationPath.Card(defaultDerivationPath)
+            isJointOwnerPath -> Network.DerivationPath.Joint(extraDerivationPath)
+            else -> Network.DerivationPath.Custom(extraDerivationPath)
         }
     }
 

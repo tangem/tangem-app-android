@@ -7,23 +7,23 @@ import com.tangem.domain.models.wallet.UserWalletId
 /**
  * Full-screen joint-account members component, shown as a modal over the wallet screen.
  *
- * The same component renders both the creator's working invite view and the reference view opened
- * from account settings — see [Params.mode] and [Params.isCreator].
+ * The wallet row, account settings and the push-notification deep link all push the same route;
+ * the screen renders whatever the account's current data says — see `MembersScreenPhase` for how
+ * [com.tangem.domain.jointaccount.model.JointAccount.Status] and "does this device hold the
+ * account's invites" (only the creating device ever does) drive the title, progress line,
+ * share-safely banner, archive menu and activation CTA.
  */
 interface JointAccountMembersComponent : ComposableContentComponent {
 
     /**
      * @property userWalletId wallet the joint account belongs to.
-     * @property mode         [Mode.Invite] for the working invite view, [Mode.Reference] for the settings view.
-
+     * @property cryptoAccountId backend id of the joint account's own row in the wallet's accounts. `null` only
+     * in navigation state saved before the field existed: the screen falls back to the wallet's first joint account.
      */
     data class Params(
         val userWalletId: UserWalletId,
-        val mode: Mode,
-        val isCreator: Boolean,
+        val cryptoAccountId: String?,
     )
-
-    enum class Mode { Invite, Reference }
 
     interface Factory : ComponentFactory<Params, JointAccountMembersComponent>
 }

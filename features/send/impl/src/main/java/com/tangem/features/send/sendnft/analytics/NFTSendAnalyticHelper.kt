@@ -40,6 +40,8 @@ internal class NFTSendAnalyticHelper @Inject constructor(
                     feeAssetType = AnalyticsParam.FeeAssetType.Coin,
                 ),
                 memoType = getSendTransactionMemoType(destinationUM?.memoTextField),
+                isCustomToken = false,
+                isCustomFeeToken = cryptoCurrency.isCustom,
             ),
         )
     }

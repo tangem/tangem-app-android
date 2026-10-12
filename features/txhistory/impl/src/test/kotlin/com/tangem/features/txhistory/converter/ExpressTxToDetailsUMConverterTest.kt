@@ -3,6 +3,7 @@ package com.tangem.features.txhistory.converter
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -15,8 +16,15 @@ import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
+import com.tangem.features.txhistory.model.TestContacts
+import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.MockAccounts
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
+import kotlin.time.Duration.Companion.minutes
 
 internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() {
 
@@ -118,7 +126,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN expired express swap WHEN convert THEN grey clock terminal banner`() {
+    fun `GIVEN expired express swap WHEN convert THEN red clock terminal banner`() {
         // Act
         val banner = converter.convert(expressSwap(status = ExpressExchangeStatus.Expired)).statusBanner
 
@@ -164,8 +172,36 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
+    fun `GIVEN paused express onramp WHEN convert THEN warning status banner with paused subtitle`() {
+        // Act
+        val banner = converter.convert(expressOnramp(status = ExpressOnrampStatus.Paused)).statusBanner
+
+        // Assert
+        assertThat(banner).isEqualTo(
+            TxHistoryDetailsUM.StatusBannerUM(
+                style = TxHistoryDetailsUM.StatusBannerUM.Style.Warning,
+                title = resourceReference(R.string.tx_history_onramp_status_paused),
+                subtitle = resourceReference(R.string.tx_history_transaction_paused_notification_title),
+                isLoading = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN paused express onramp WHEN convert THEN header alerts in amber`() {
+        // Act
+        val paused = converter.convert(expressOnramp(status = ExpressOnrampStatus.Paused)).header
+        val inFlight = converter.convert(expressOnramp(status = ExpressOnrampStatus.Sending)).header
+
+        // Assert — both bucket as in flight, but only the paused one needs the user to act.
+        assertThat(paused.status).isEqualTo(Status.Unconfirmed)
+        assertThat(paused.statusStyle).isEqualTo(TxHistoryDetailsUM.HeaderUM.StatusStyle.Warning)
+        assertThat(inFlight.statusStyle).isEqualTo(TxHistoryDetailsUM.HeaderUM.StatusStyle.Default)
+    }
+
+    @Test
     fun `GIVEN unknown express onramp WHEN convert THEN no status banner`() {
-        // Act — the terminal client fallback carries nothing to show; the plaque is hidden (same as the swap variant).
+        // Act — an unparsed status says nothing about the stage; the plaque is hidden (same as the swap variant).
         val banner = converter.convert(expressOnramp(status = ExpressOnrampStatus.Unknown)).statusBanner
 
         // Assert
@@ -173,7 +209,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN expired express onramp WHEN convert THEN grey clock terminal banner`() {
+    fun `GIVEN expired express onramp WHEN convert THEN red clock terminal banner`() {
         // Act
         val banner = converter.convert(expressOnramp(status = ExpressOnrampStatus.Expired)).statusBanner
 
@@ -276,7 +312,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN finished express onramp WHEN convert THEN paid fiat and topped-up crypto are both unsigned`() {
+    fun `GIVEN finished express onramp WHEN convert THEN paid fiat is unsigned and topped-up crypto carries plus`() {
         // Act
         val result = converter.convert(expressOnramp(status = ExpressOnrampStatus.Finished))
 
@@ -291,9 +327,9 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(result.from?.amount?.resolveString()).doesNotContain("-")
         assertThat(result.from?.amount?.resolveString()).doesNotContain("+")
         assertThat(result.from?.amount?.resolveString()).doesNotContain("~")
-        // Topped-up crypto leg has an icon but no sign — an onramp buy never shows `+`/`−`.
+        // Topped-up crypto leg has an icon and a `+` — the bought funds landed on the balance.
         assertThat(result.to?.currencyIcon).isNotNull()
-        assertThat(result.to?.amount?.resolveString()).doesNotContain("+")
+        assertThat(result.to?.amount?.resolveString()).startsWith("+ ")
         assertThat(result.to?.amount?.resolveString()).doesNotContain("-")
         assertThat(result.to?.amount?.resolveString()).doesNotContain("~")
         assertThat(result.to?.isFaded).isFalse()
@@ -323,6 +359,17 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert — the paid fiat stands as spent; only the never-received crypto leg is struck through.
         assertThat(result.from?.isFaded).isFalse()
         assertThat(result.to?.isFaded).isTrue()
+    }
+
+    @Test
+    fun `GIVEN express onramp of an unparsed status WHEN convert THEN crypto leg reads as in flight`() {
+        // Act
+        val result = converter.convert(expressOnramp(status = ExpressOnrampStatus.Unknown))
+
+        // Assert — an unparsed status says nothing about the stage, so the top-up must not read as failed.
+        assertThat(result.to?.amount?.resolveString()).startsWith("~ ")
+        assertThat(result.to?.isFaded).isFalse()
+        assertThat(result.header.status).isEqualTo(Status.Unconfirmed)
     }
 
     @Test
@@ -594,6 +641,29 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
+    fun `GIVEN paused express onramp with url WHEN convert THEN go-to-provider button opening the url`() {
+        // Act — the provider put the deal on hold, so the user has to resolve it on their side.
+        val result = converter.convert(
+            expressOnramp(status = ExpressOnrampStatus.Paused, externalTxUrl = EXTERNAL_URL),
+        )
+
+        // Assert
+        val button = result.providerButton
+        assertThat(button?.text).isEqualTo(resourceReference(R.string.common_go_to_provider))
+        button?.onClick?.invoke()
+        assertThat(openedUrls).containsExactly(EXTERNAL_URL)
+    }
+
+    @Test
+    fun `GIVEN paused express onramp without url WHEN convert THEN no provider button`() {
+        // Act — nowhere to send the user, so the CTA is dropped and only the amber plaque remains.
+        val result = converter.convert(expressOnramp(status = ExpressOnrampStatus.Paused, externalTxUrl = null))
+
+        // Assert
+        assertThat(result.providerButton).isNull()
+    }
+
+    @Test
     fun `GIVEN failed express swap without url WHEN convert THEN no provider button`() {
         // Act — the provider supplies no link (e.g. DEX), so there is nowhere to send the user.
         val result = converter.convert(expressSwap(status = ExpressExchangeStatus.Failed, externalTxUrl = null))
@@ -612,6 +682,115 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(result.providerButton).isNull()
     }
+
+    // endregion
+
+    // region Long transaction time
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class LongRunningSwap {
+
+        @Test
+        fun `GIVEN exchanging swap older than 15 minutes WHEN convert THEN long-transaction-time banner`() {
+            // Act
+            val banner = stuckConverter().convert(expressSwap(status = ExpressExchangeStatus.Exchanging)).statusBanner
+
+            // Assert
+            assertThat(banner).isEqualTo(
+                TxHistoryDetailsUM.StatusBannerUM(
+                    style = TxHistoryDetailsUM.StatusBannerUM.Style.Warning,
+                    title = resourceReference(R.string.express_exchange_notification_long_transaction_time_title),
+                    subtitle = resourceReference(R.string.express_exchange_notification_long_transaction_time_text),
+                    isLoading = false,
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN exchanging swap exactly 15 minutes old WHEN convert THEN ordinary stage banner`() {
+            // Arrange
+            val converter = expressConverter(nowMillis = TIMESTAMP + LONG_RUNNING_THRESHOLD_MILLIS)
+
+            // Act
+            val banner = converter.convert(expressSwap(status = ExpressExchangeStatus.Exchanging)).statusBanner
+
+            // Assert
+            assertThat(banner?.title).isEqualTo(resourceReference(R.string.express_exchange_status_exchanging_active))
+        }
+
+        @Test
+        fun `GIVEN stuck swap with url WHEN convert THEN go-to-provider button opening the url`() {
+            // Act — the stage alone would render no CTA; being stuck adds the way out.
+            val result = stuckConverter().convert(
+                expressSwap(status = ExpressExchangeStatus.Exchanging, externalTxUrl = EXTERNAL_URL),
+            )
+
+            // Assert
+            val button = result.providerButton
+            assertThat(button?.text).isEqualTo(resourceReference(R.string.common_go_to_provider))
+            button?.onClick?.invoke()
+            assertThat(openedUrls).containsExactly(EXTERNAL_URL)
+        }
+
+        @Test
+        fun `GIVEN stuck swap without url WHEN convert THEN banner stays and no provider button`() {
+            // Act — a DEX deal has nowhere to send the user, but the warning still has to be shown.
+            val result = stuckConverter().convert(
+                expressSwap(status = ExpressExchangeStatus.Exchanging, externalTxUrl = null),
+            )
+
+            // Assert
+            assertThat(result.statusBanner?.title)
+                .isEqualTo(resourceReference(R.string.express_exchange_notification_long_transaction_time_title))
+            assertThat(result.providerButton).isNull()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun statusMatrix(model: LongRunningModel) {
+            // Act
+            val banner = stuckConverter()
+                .convert(expressSwap(status = model.status, payinHash = model.payinHash))
+                .statusBanner
+
+            // Assert
+            val isLongRunningBanner = banner?.title ==
+                resourceReference(R.string.express_exchange_notification_long_transaction_time_title)
+            assertThat(isLongRunningBanner).isEqualTo(model.isLongRunning)
+        }
+
+        private fun provideTestModels() = listOf(
+            LongRunningModel(ExpressExchangeStatus.Confirming, isLongRunning = true),
+            LongRunningModel(ExpressExchangeStatus.Exchanging, isLongRunning = true),
+            LongRunningModel(ExpressExchangeStatus.Sending, isLongRunning = true),
+            // The pay-in stages wait on the user until their own transfer is on chain.
+            LongRunningModel(ExpressExchangeStatus.Waiting, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.WaitingTxHash, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.ExchangeTxSent, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Waiting, payinHash = PAYIN_HASH, isLongRunning = true),
+            LongRunningModel(ExpressExchangeStatus.WaitingTxHash, payinHash = PAYIN_HASH, isLongRunning = true),
+            LongRunningModel(ExpressExchangeStatus.ExchangeTxSent, payinHash = PAYIN_HASH, isLongRunning = true),
+            LongRunningModel(ExpressExchangeStatus.Preview, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Created, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Verifying, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Paused, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Finished, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Failed, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.TxFailed, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Refunded, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Expired, payinHash = PAYIN_HASH, isLongRunning = false),
+            LongRunningModel(ExpressExchangeStatus.Unknown, payinHash = PAYIN_HASH, isLongRunning = false),
+        )
+
+        private fun stuckConverter() = expressConverter(nowMillis = TIMESTAMP + LONG_RUNNING_THRESHOLD_MILLIS + 1)
+    }
+
+    internal data class LongRunningModel(
+        val status: ExpressExchangeStatus,
+        val payinHash: String? = null,
+        val isLongRunning: Boolean,
+    )
 
     // endregion
 
@@ -796,5 +975,34 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat((owner as TxHistoryDetailsUM.AssetOwnerUM.Address).rawAddress).isEqualTo(FROM_ADDRESS)
     }
 
+    @Test
+    fun `GIVEN send-and-swap to a saved contact WHEN convert THEN to leg is named after the contact`() {
+        // Arrange — the payout address is in the viewed wallet's address book.
+        val swap = expressSwap(status = ExpressExchangeStatus.Finished, payoutAddress = EXTERNAL_ADDRESS)
+        val lookup = lookupOf(
+            contacts = listOf(
+                TestContacts.create(
+                    name = "Binance",
+                    address = EXTERNAL_ADDRESS,
+                    walletId = MockAccounts.userWalletId,
+                    networkId = bitcoin.network.id.rawId,
+                ),
+            ),
+        )
+
+        // Act
+        val result = expressConverter(lookup = lookup).convert(swap)
+
+        // Assert
+        val owner = requireNotNull(result.to?.owner)
+        assertThat(owner).isInstanceOf(TxHistoryDetailsUM.AssetOwnerUM.Contact::class.java)
+        assertThat(owner.name).isEqualTo(stringReference("Binance"))
+    }
+
     // endregion
+
+    private companion object {
+        const val PAYIN_HASH = "0xpayinhash"
+        val LONG_RUNNING_THRESHOLD_MILLIS = 15.minutes.inWholeMilliseconds
+    }
 }

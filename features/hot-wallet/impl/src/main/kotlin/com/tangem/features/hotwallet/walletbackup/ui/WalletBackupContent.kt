@@ -89,22 +89,24 @@ internal fun WalletBackupContent(state: WalletBackupUM, modifier: Modifier = Mod
                 enabled = true,
                 backgroundColor = TangemTheme.colors3.bg.secondary,
             )
-            OptionBlock(
-                modifier = Modifier
-                    .padding(top = 8.dp),
-                title = stringResourceSafe(R.string.hw_backup_google_drive_title),
-                description = stringResourceSafe(
-                    R.string.hw_cloud_backup_cell_description,
-                    stringResourceSafe(R.string.hw_cloud_backup_service_name),
-                ),
-                badge = {
-                    state.googleDriveOption?.let { Label(it) }
-                },
-                trailingContent = googleDriveTrailingContent(state.googleDriveStatus),
-                onClick = state.onGoogleDriveClick,
-                enabled = state.isGoogleDriveEnabled,
-                backgroundColor = TangemTheme.colors3.bg.secondary,
-            )
+            if (state.isGoogleDriveOptionShown) {
+                OptionBlock(
+                    modifier = Modifier
+                        .padding(top = 8.dp),
+                    title = stringResourceSafe(R.string.hw_backup_google_drive_title),
+                    description = stringResourceSafe(
+                        R.string.hw_cloud_backup_cell_description,
+                        stringResourceSafe(R.string.hw_cloud_backup_service_name),
+                    ),
+                    badge = {
+                        state.googleDriveOption?.let { Label(it) }
+                    },
+                    trailingContent = googleDriveTrailingContent(state.googleDriveStatus),
+                    onClick = state.onGoogleDriveClick,
+                    enabled = state.isGoogleDriveEnabled,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp + contentPadding.calculateBottomPadding()))
         }
     }

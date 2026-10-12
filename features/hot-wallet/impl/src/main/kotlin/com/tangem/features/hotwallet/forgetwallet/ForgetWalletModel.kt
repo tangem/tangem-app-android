@@ -125,7 +125,7 @@ internal class ForgetWalletModel @Inject constructor(
             if (hasUserWallets) {
                 router.popTo(AppRoute.Details::class)
             } else {
-                router.replaceAll(AppRoute.Home())
+                router.replaceAll(AppRoute.Home(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten))
             }
         }
     }

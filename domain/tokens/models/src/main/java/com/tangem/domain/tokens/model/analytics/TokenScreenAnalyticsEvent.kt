@@ -13,8 +13,6 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.VALUE
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 
-private const val WALLET_ID = "Wallet Id"
-
 /**
 [REDACTED_AUTHOR]
  */
@@ -59,7 +57,6 @@ sealed class TokenScreenAnalyticsEvent(
         source: ExploreActionSource,
         blockchain: String? = null,
         type: String? = null,
-        walletId: String? = null,
     ) : TokenScreenAnalyticsEvent(
         event = "Button - Explore",
         params = buildMap {
@@ -67,7 +64,6 @@ sealed class TokenScreenAnalyticsEvent(
             put(SOURCE, source.value)
             blockchain?.let { put(BLOCKCHAIN, it) }
             type?.let { put(TYPE, it) }
-            walletId?.let { put(WALLET_ID, it) }
         },
     ) {
         enum class ExploreActionSource(val value: String) {
@@ -200,7 +196,6 @@ sealed class TokenScreenAnalyticsEvent(
     )
 
     class ButtonCopyAddress(
-        walletId: String,
         token: String,
         blockchain: String,
         type: String,
@@ -208,7 +203,6 @@ sealed class TokenScreenAnalyticsEvent(
     ) : TokenScreenAnalyticsEvent(
         event = "Button - Copy Address",
         params = mapOf(
-            WALLET_ID to walletId,
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchain,
             TYPE to type,
@@ -221,7 +215,6 @@ sealed class TokenScreenAnalyticsEvent(
     }
 
     class ButtonShare(
-        walletId: String,
         token: String,
         blockchain: String,
         type: String,
@@ -229,7 +222,6 @@ sealed class TokenScreenAnalyticsEvent(
     ) : TokenScreenAnalyticsEvent(
         event = "Button - Share",
         params = mapOf(
-            WALLET_ID to walletId,
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchain,
             TYPE to type,
@@ -309,6 +301,7 @@ sealed class TokenScreenAnalyticsEvent(
                 -> UNAVAILABLE
                 is ScenarioUnavailabilityReason.YieldSupplyApprovalRequired -> APPROVAL_REQUIRED
                 ScenarioUnavailabilityReason.UnassociatedAsset -> ASSET_REQUIREMENT
+                ScenarioUnavailabilityReason.JointAccount -> UNAVAILABLE
                 ScenarioUnavailabilityReason.TrustlineRequired -> TRUSTLINE_REQUIREMENT
                 is ScenarioUnavailabilityReason.EmptyBalance -> EMPTY
                 is ScenarioUnavailabilityReason.PendingTransaction -> PENDING

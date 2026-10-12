@@ -47,7 +47,6 @@ internal class UpdateButtonIconTransformerTest {
     private fun createState(buttonIconRes: Int?): JointAccountDisplayNameUM {
         return JointAccountDisplayNameUM(
             name = "Ivan Zolo",
-            isError = false,
             buttonText = buttonText,
             buttonIconRes = buttonIconRes,
             isButtonEnabled = true,

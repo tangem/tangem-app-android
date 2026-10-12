@@ -11,12 +11,15 @@ import com.tangem.domain.account.status.utils.createUngrouped
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.error.TokenListSortingError
+import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -195,21 +198,48 @@ class ToggleTokenListGroupingUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
     }
 
-    private fun createAccountStatusList(tokenList: TokenList, groupType: TokensGroupType): AccountStatusList {
-        val accountStatus = AccountStatus.CryptoPortfolio(
-            account = Account.Personal.createMainAccount(userWalletId),
-            tokenList = tokenList,
+    @Test
+    fun `GIVEN empty joint account listed first WHEN toggle THEN group type follows the personal list`() = runTest {
+        // Arrange
+        val statuses = listOf(createStatus(currency = cryptoCurrencyFactory.ethereum, fiatAmount = BigDecimal.ONE))
+        val jointStatus = AccountStatus.Joint(
+            account = MockAccounts.createJointAccount(userWalletId = userWalletId),
+            value = JointAccountStatusValue.Pending(source = StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 2),
+            tokenList = TokenList.Empty,
             priceChangeLce = Unit.lceError(),
         )
+        val accountStatusList = createAccountStatusList(createUngrouped(statuses), TokensGroupType.NONE).let {
+            it.copy(accountStatuses = listOf(jointStatus) + it.accountStatuses, totalAccounts = 2)
+        }
 
+        // Act
+        val actual = useCase(accountStatusList)
+
+        // Assert
+        val expected = accountStatusList.copy(
+            accountStatuses = listOf(jointStatus, createPersonalStatus(createGroupedByNetwork(statuses))),
+            groupType = TokensGroupType.NETWORK,
+        ).right()
+        Truth.assertThat(actual).isEqualTo(expected)
+    }
+
+    private fun createAccountStatusList(tokenList: TokenList, groupType: TokensGroupType): AccountStatusList {
         return AccountStatusList(
             userWalletId = userWalletId,
-            accountStatuses = listOf(accountStatus),
+            accountStatuses = listOf(createPersonalStatus(tokenList)),
             totalAccounts = 1,
             totalArchivedAccounts = 0,
             totalFiatBalance = tokenList.totalFiatBalance,
             sortType = tokenList.sortedBy,
             groupType = groupType,
+        )
+    }
+
+    private fun createPersonalStatus(tokenList: TokenList): AccountStatus.Personal {
+        return AccountStatus.Personal(
+            account = Account.Personal.createMainAccount(userWalletId),
+            tokenList = tokenList,
+            priceChangeLce = Unit.lceError(),
         )
     }
 }

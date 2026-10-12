@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
@@ -32,6 +33,8 @@ internal data class MarketsTokenDetailsUM(
     val onShouldShowPriceSubtitleChange: (Boolean) -> Unit,
     val relatedNews: RelatedNews,
     val onShareClick: () -> Unit,
+    /** Region restriction notice; `null` when the asset is tradable where the user is. */
+    val regionRestriction: TangemMessageBanner.State? = null,
     val isAddToPortfolioButtonVisible: Boolean,
     val isAddToPortfolioButtonEnabled: Boolean,
     val onAddToPortfolioClick: () -> Unit,

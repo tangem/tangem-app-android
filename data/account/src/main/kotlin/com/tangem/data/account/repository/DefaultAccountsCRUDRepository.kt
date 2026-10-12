@@ -20,7 +20,7 @@ import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.currency.UserTokensSaver
-import com.tangem.datasource.api.common.response.ETAG_HEADER
+import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.utils.getSyncOrNull
@@ -159,14 +159,9 @@ internal class DefaultAccountsCRUDRepository(
     override suspend fun saveAccount(account: Account.CryptoPortfolio) {
         val store = getAccountsResponseStore(userWalletId = account.userWalletId)
 
-        val newAccountDTO = when (account) {
-            is Account.Personal -> convertersContainer
-                .createCryptoPortfolioConverter(userWalletId = account.userWalletId)
-                .convertBack(value = account)
-            is Account.Joint -> convertersContainer
-                .createJointAccountConverter(userWalletId = account.userWalletId)
-                .convertBack(value = account)
-        }
+        val newAccountDTO = convertersContainer
+            .createCryptoPortfolioConverter(userWalletId = account.userWalletId)
+            .convertBack(value = account)
 
         store.updateData { response ->
             response ?: return@updateData response

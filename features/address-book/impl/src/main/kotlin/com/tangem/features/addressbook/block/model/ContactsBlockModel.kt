@@ -65,12 +65,12 @@ internal class ContactsBlockModel @Inject constructor(
     private fun reportWidgetShownIfNeeded(isVisible: Boolean) {
         if (isVisible && !isWidgetShownReported) {
             isWidgetShownReported = true
-            analyticsSender.sendSendFlowWidgetShown(scope = modelScope)
+            analyticsSender.sendSendFlowWidgetShown()
         }
     }
 
     private fun onContactClick(contact: MatchedContact) {
-        analyticsSender.sendContactSelectedInSend(contactId = contact.contactId, scope = modelScope)
+        analyticsSender.sendContactSelectedInSend(contactId = contact.contactId)
         params.onContactClick(contact)
     }
 }

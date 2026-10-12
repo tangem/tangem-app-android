@@ -2,8 +2,8 @@ package com.tangem.datasource.local.converter
 
 import com.tangem.grow.datasource.express.models.response.ExchangeItemResponse
 import com.tangem.grow.datasource.onramp.models.response.OnrampItemResponse
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressExchangeEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressOnrampEntity
 
 /**
  * Maps API history items into their persisted [androidx.room.Entity] representations.

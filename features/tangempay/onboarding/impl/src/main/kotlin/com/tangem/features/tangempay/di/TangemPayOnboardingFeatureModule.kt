@@ -1,6 +1,8 @@
 package com.tangem.features.tangempay.di
 
+import com.tangem.features.tangempay.campaign.DefaultTangemPayCampaignComponent
 import com.tangem.features.tangempay.components.DefaultTangemPayOnboardingComponent
+import com.tangem.features.tangempay.components.TangemPayCampaignComponent
 import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.hotwallet.DefaultTangemPayHotWalletOnboardingComponent
@@ -20,4 +22,7 @@ internal interface TangemPayOnboardingFeatureModule {
     fun bindHotWalletOnboardingFactory(
         impl: DefaultTangemPayHotWalletOnboardingComponent.Factory,
     ): TangemPayHotWalletOnboardingComponent.Factory
+
+    @Binds
+    fun bindCampaignFactory(impl: DefaultTangemPayCampaignComponent.Factory): TangemPayCampaignComponent.Factory
 }

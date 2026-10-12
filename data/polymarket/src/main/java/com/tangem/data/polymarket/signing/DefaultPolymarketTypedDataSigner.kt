@@ -12,6 +12,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.data.polymarket.builder.PolymarketErc7739SignatureBuilder
 import com.tangem.data.polymarket.builder.PolymarketTypedDataBuilder
 import com.tangem.data.polymarket.derivation.PolymarketAddressFactory
 import com.tangem.data.polymarket.secp256k1SeedKey
@@ -25,13 +26,18 @@ import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.derivation.POLYMARKET_OWNER_DERIVATION_PATH
+import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketOnboardingSignatures
 import com.tangem.domain.polymarket.model.PolymarketSigningError
+import com.tangem.domain.polymarket.model.PredictionOrder
+import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import com.tangem.domain.polymarket.signing.PolymarketApprovalsPayload
 import com.tangem.domain.polymarket.signing.PolymarketClobAuthData
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
+import com.tangem.domain.polymarket.signing.PredictionOrderPayload
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import java.math.BigInteger
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -72,6 +78,47 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
         }
         .getOrElse { it.toSigningError().left() }
 
+    override suspend fun signOrder(
+        userWalletId: UserWalletId,
+        payload: PredictionOrderPayload,
+    ): Either<PolymarketSigningError, PredictionSignedOrder> = Either
+        .catchOn(dispatchers.io) {
+            val context = signingContext(userWalletId).getOrElse { return@catchOn it.left() }
+            val order = payload.toOrder()
+            val digest = PolymarketErc7739SignatureBuilder.digest(
+                order = order,
+                isNegRisk = payload.draft.isNegRisk,
+                depositWalletAddress = order.maker,
+            )
+
+            val signatures = sign(context, listOf(digest)).getOrElse { return@catchOn it.left() }
+            val inner = formatter.format(signatures[0], digest, context.publicKey)
+
+            PredictionSignedOrder(
+                order = order,
+                signature = PolymarketErc7739SignatureBuilder.wrap(
+                    innerSignature = inner,
+                    order = order,
+                    isNegRisk = payload.draft.isNegRisk,
+                ),
+            ).right()
+        }
+        .getOrElse { it.toSigningError().left() }
+
+    private fun PredictionOrderPayload.toOrder(): PredictionOrder = PredictionOrder(
+        salt = salt,
+        maker = depositWalletAddress,
+        signer = depositWalletAddress,
+        tokenId = BigInteger(draft.tokenId),
+        makerAmount = draft.makerAmount,
+        takerAmount = draft.takerAmount,
+        side = draft.side,
+        signatureType = PolymarketContracts.SIGNATURE_TYPE_DEPOSIT_WALLET,
+        timestampMillis = timestampMillis,
+        metadata = ZERO_WORD,
+        builder = draft.builderCode,
+    )
+
     override suspend fun signClobAuth(
         userWalletId: UserWalletId,
         clobAuth: PolymarketClobAuthData,
@@ -79,6 +126,27 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
         .catchOn(dispatchers.io) {
             val context = signingContext(userWalletId).getOrElse { return@catchOn it.left() }
             val digest = clobDigest(context, clobAuth)
+            val signatures = sign(context, listOf(digest)).getOrElse { return@catchOn it.left() }
+
+            formatter.format(signatures[0], digest, context.publicKey).right()
+        }
+        .getOrElse { it.toSigningError().left() }
+
+    override suspend fun signRelayedBatch(
+        userWalletId: UserWalletId,
+        payload: PolymarketApprovalsPayload,
+    ): Either<PolymarketSigningError, String> = Either
+        .catchOn(dispatchers.io) {
+            val context = signingContext(userWalletId).getOrElse { return@catchOn it.left() }
+            val digest = EthereumUtils.makeTypedDataHash(
+                PolymarketTypedDataBuilder.buildApprovalsBatch(
+                    depositWallet = payload.depositWalletAddress,
+                    nonce = payload.nonce,
+                    deadline = payload.deadline,
+                    calls = payload.calls,
+                ),
+            )
+
             val signatures = sign(context, listOf(digest)).getOrElse { return@catchOn it.left() }
 
             formatter.format(signatures[0], digest, context.publicKey).right()
@@ -154,5 +222,7 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
 
     private companion object {
         val ownerPath = DerivationPath(POLYMARKET_OWNER_DERIVATION_PATH)
+
+        const val ZERO_WORD = "0x0000000000000000000000000000000000000000000000000000000000000000"
     }
 }

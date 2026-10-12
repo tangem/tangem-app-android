@@ -187,7 +187,7 @@ class AccountCryptoCurrencyStatusOperationsTest {
                 currencies = currencyStatuses,
             )
         }
-        val accountStatus = AccountStatus.CryptoPortfolio(
+        val accountStatus = AccountStatus.Personal(
             account = account,
             tokenList = tokenList,
             priceChangeLce = lceLoading(),

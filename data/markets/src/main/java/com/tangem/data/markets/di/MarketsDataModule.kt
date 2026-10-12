@@ -2,16 +2,16 @@ package com.tangem.data.markets.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.common.quote.QuotesFetcher
-import com.tangem.data.markets.DefaultCoinIndicatorsRepository
+import com.tangem.data.markets.DefaultMarketIndicatorsRepository
 import com.tangem.data.markets.DefaultMarketsTokenRepository
-import com.tangem.store.datasource.markets.TangemTechMarketsApi
-import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.markets.repositories.CoinIndicatorsRepository
+import com.tangem.domain.markets.repositories.MarketIndicatorsRepository
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
+import com.tangem.store.datasource.markets.TangemTechMarketsApi
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -43,7 +43,6 @@ internal object MarketsDataModule {
             analyticsEventHandler = analyticsEventHandler,
             cacheRegistry = cacheRegistry,
             tokenExchangesStore = RuntimeStateStore(defaultValue = emptyList()),
-            coinCategoriesStore = RuntimeStateStore(defaultValue = emptyList()),
             excludedBlockchains = excludedBlockchains,
             networkFactory = networkFactory,
         )
@@ -54,8 +53,8 @@ internal object MarketsDataModule {
     fun provideCoinIndicatorsRepository(
         marketsApi: TangemTechMarketsApi,
         dispatchers: CoroutineDispatcherProvider,
-    ): CoinIndicatorsRepository {
-        return DefaultCoinIndicatorsRepository(
+    ): MarketIndicatorsRepository {
+        return DefaultMarketIndicatorsRepository(
             marketsApi = marketsApi,
             store = RuntimeStateStore(defaultValue = emptyMap()),
             dispatchers = dispatchers,

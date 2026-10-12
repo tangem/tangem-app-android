@@ -16,6 +16,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetContractAddressUseCa
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
 import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyApproveComponent
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

@@ -2,6 +2,7 @@ package com.tangem.features.send.send.model
 
 import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -9,10 +10,10 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.isTronActivationRefusal
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
-import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -24,7 +25,6 @@ import javax.inject.Inject
 internal class TronDefaultFeeLoader @Inject constructor(
     private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
-    private val sendFeatureToggles: SendFeatureToggles,
 ) {
 
     private var isPinnedToNative = false
@@ -33,8 +33,7 @@ internal class TronDefaultFeeLoader @Inject constructor(
         userWalletId: UserWalletId,
         network: Network,
         feeToken: CryptoCurrency.Token,
-    ): Boolean =
-        sendFeatureToggles.isTronGaslessEnabled && isTronGaslessSupportedUseCase(userWalletId, network, feeToken)
+    ): Boolean = isTronGaslessSupportedUseCase(userWalletId, network, feeToken)
 
     suspend fun load(
         userWalletId: UserWalletId,
@@ -52,22 +51,23 @@ internal class TronDefaultFeeLoader @Inject constructor(
         }
 
         return loadGaslessFee(
-            token = sentToken,
+            quoteGaslessFee = { getTronGaslessFeeUseCase(userWalletId, transactionData, sentToken) },
             sentStatus = sentStatus,
             nativeStatus = nativeStatus,
-            transactionData = transactionData,
             loadNativeFee = loadNativeFee,
         )
     }
 
     private suspend fun loadGaslessFee(
-        token: CryptoCurrency.Token,
+        quoteGaslessFee: suspend () -> Either<GetFeeError, TransactionFeeExtended>,
         sentStatus: CryptoCurrencyStatus,
         nativeStatus: CryptoCurrencyStatus,
-        transactionData: TransactionData,
         loadNativeFee: suspend () -> Either<GetFeeError, TransactionFeeExtended>,
     ): Either<GetFeeError, TransactionFeeExtended> {
-        val gaslessFee = getTronGaslessFeeUseCase(transactionData, token).getOrElse { error ->
+        val gaslessFee = quoteGaslessFee().getOrElse { error ->
+            // An account that must be activated first cannot pay a native fee either — falling back
+            // would replace an actionable message with an unpayable TRX fee.
+            if (error.isTronActivationRefusal()) return error.left()
             TangemLogger.i("Tron gasless quote unavailable ($error), falling back to the native fee")
             return loadNativeFee().onRight { pinToNativeIfPayable(nativeStatus, it) }
         }

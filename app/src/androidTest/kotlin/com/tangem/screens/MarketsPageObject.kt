@@ -2,6 +2,7 @@ package com.tangem.screens
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.MARKETS_MAIN_NETWORK_SUFFIX
@@ -32,11 +33,6 @@ class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         useUnmergedTree = true
     }
 
-    val searchThroughMarketPlaceholder: KNode = child {
-        hasText(getResourceString(R.string.markets_search_title_placeholder))
-        useUnmergedTree = true
-    }
-
     val tokenDetailsContent: KNode = child {
         hasTestTag(MarketsTestTags.TOKEN_DETAILS_CONTENT)
         useUnmergedTree = true
@@ -57,8 +53,12 @@ class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         useUnmergedTree = true
     }
 
-    val seeAllButton: KNode = child {
-        hasText(getResourceString(com.tangem.core.ui.R.string.common_see_all))
+    /**
+     * Search field of the markets sheet. The DS3 field carries no test tag — it is identified by the
+     * placeholder it exposes as its content description.
+     */
+    val searchField: KNode = child {
+        hasContentDescription(getResourceString(R.string.markets_search_title_placeholder))
         useUnmergedTree = true
     }
 

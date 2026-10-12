@@ -30,9 +30,12 @@ internal class JointAccountConfigStateController @Inject constructor() {
         colors = CryptoPortfolioIcon.Color.entries.toImmutableList(),
         icons = CryptoPortfolioIcon.Icon.entries.toImmutableList(),
         wallet = null,
-        // The name starts empty and is required, so the button unlocks with the first valid input
+        // The screen seeds the field with this placeholder's resolved text on first composition, so this is
+        // momentary in practice — see NameCard in JointAccountConfigScreen
         isContinueEnabled = false,
-        onNameChange = {},
+        isValuePasted = false,
+        onValuePastedTriggerDismiss = {},
+        onNameChange = { _, _ -> },
         onColorClick = {},
         onIconClick = {},
         onContinueClick = {},
@@ -40,7 +43,7 @@ internal class JointAccountConfigStateController @Inject constructor() {
     )
 
     private companion object {
-        val DEFAULT_ICON = CryptoPortfolioIcon.Icon.Family
+        val DEFAULT_ICON = CryptoPortfolioIcon.Icon.entries.first()
         val DEFAULT_COLOR = CryptoPortfolioIcon.Color.Azure
     }
 }

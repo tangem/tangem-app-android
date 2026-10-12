@@ -11,6 +11,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
 import com.tangem.features.tangempay.model.TangemPayOnboardingModel
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.features.tangempay.ui.TandemPayOnboardingScreen
@@ -21,6 +22,7 @@ import dagger.assisted.AssistedInject
 internal class DefaultTangemPayOnboardingComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: TangemPayOnboardingComponent.Params,
+    private val walletSelectorComponentFactory: TangemPayWalletSelectorComponent.Factory,
 ) : TangemPayOnboardingComponent, AppComponentContext by appComponentContext {
 
     private val model: TangemPayOnboardingModel = getOrCreateModel(params)
@@ -46,8 +48,8 @@ internal class DefaultTangemPayOnboardingComponent @AssistedInject constructor(
     ): ComposableBottomSheetComponent {
         val context = childByContext(componentContext)
         return when (navigation) {
-            is TangemPayOnboardingNavigation.WalletSelector -> TangemPayWalletSelectorComponent(
-                appComponentContext = context,
+            is TangemPayOnboardingNavigation.WalletSelector -> walletSelectorComponentFactory.create(
+                context = context,
                 params = TangemPayWalletSelectorComponent.Params(listener = model, walletsIds = navigation.walletsIds),
             )
         }

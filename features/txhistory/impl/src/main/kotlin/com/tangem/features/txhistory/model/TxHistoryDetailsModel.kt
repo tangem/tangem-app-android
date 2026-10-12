@@ -1,22 +1,30 @@
 package com.tangem.features.txhistory.model
 
+import android.content.Context
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
+import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressAsset
@@ -34,20 +42,22 @@ import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.model.idToCopy
+import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.rating.RatingComponent
 import com.tangem.features.txhistory.analytics.TxHistoryAnalyticsEvent
-import com.tangem.features.txhistory.analytics.analyticsTitle
 import com.tangem.features.txhistory.analytics.toAnalyticsStatus
 import com.tangem.features.txhistory.analytics.toAnalyticsType
 import com.tangem.features.txhistory.component.TxHistoryDetailsComponent
 import com.tangem.features.txhistory.converter.ExpressTxToShareTextConverter
+import com.tangem.features.txhistory.converter.FiatConversion
 import com.tangem.features.txhistory.converter.TxHistoryInfoToTxHistoryDetailsUMConverter
 import com.tangem.features.txhistory.converter.fiatCode
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -56,6 +66,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
@@ -72,6 +83,7 @@ import javax.inject.Inject
 @ModelScoped
 @Suppress("LongParameterList")
 internal class TxHistoryDetailsModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     override val dispatchers: CoroutineDispatcherProvider,
     private val clipboardManager: ClipboardManager,
     private val uiMessageSender: UiMessageSender,
@@ -83,6 +95,10 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val balanceHidingSettings: GetBalanceHidingSettingsUseCase,
+    private val router: Router,
+    isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
+    getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
+    getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -143,23 +159,65 @@ internal class TxHistoryDetailsModel @Inject constructor(
         }
     }
 
+    private val networkTokensFlow: Flow<Set<CryptoCurrency.Token>> = flow {
+        emit(getCachedTokenInfoUseCase(params.userWalletId, params.currency.network.rawId))
+    }
+        .onStart { emit(emptySet()) }
+        .flowOn(dispatchers.io)
+
+    /**
+     * Rate of the viewed currency and the app currency it is quoted in, for the fiat line under the details amount.
+     * Both sources can keep the card waiting — a currency the account list has not yielded yet never emits a status
+     * at all — so the pair starts at [FiatConversion.NONE]: the card renders at once and the fiat line appears with
+     * the rate.
+     */
+    private val fiatConversionFlow: Flow<FiatConversion> = combine(
+        flow = getAccountCurrencyStatusUseCase(userWalletId = params.userWalletId, currency = params.currency)
+            .map { it.status.value.fiatRate },
+        flow2 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
+    ) { rate, appCurrency -> FiatConversion(rate = rate, appCurrency = appCurrency) }
+        .onStart { emit(FiatConversion.NONE) }
+        .distinctUntilChanged()
+        .flowOn(dispatchers.io)
+
+    /**
+     * The owner/contact lookup, whether saving a contact is possible at all (an address book stored by a newer build
+     * cannot be written to, so "Add contact" must not be offered), the wallet's cached tokens and the fiat
+     * conversion. Combined here rather than in the [uiState] `combine` below, which is already at the five-source
+     * overload.
+     */
+    private val detailsInputs: Flow<DetailsInputs> =
+        combine(
+            flow = ownerLookupProducer(params.userWalletId),
+            flow2 = isAddressBookCompatibleUseCase(params.userWalletId),
+            flow3 = networkTokensFlow,
+            flow4 = fiatConversionFlow,
+        ) { lookup, isCompatible, tokens, fiatConversion ->
+            DetailsInputs(
+                lookup = lookup,
+                isAddressBookCompatible = isCompatible,
+                networkTokens = tokens,
+                fiatConversion = fiatConversion,
+            )
+        }
+
     val uiState: StateFlow<TxHistoryDetailsUM?> = combine(
         flow = txHistoryInfo,
-        flow2 = ownerLookupProducer(),
+        flow2 = detailsInputs,
         flow3 = targetsByAddress,
         flow4 = refundCurrency,
         flow5 = balanceHidingSettings.isBalanceHidden(),
-    ) { txInfo, lookup, stakingTargets, refundToken, isBalanceHidden ->
+    ) { txInfo, inputs, stakingTargets, refundToken, isBalanceHidden ->
+        val lookup = inputs.lookup
         // Each header-menu row drops with the data behind it: no explorer hash (an express op with no on-chain leg
         // yet, or a blank on-chain hash) drops "Explore"; only an express deal can describe itself as text, so an
         // on-chain row has no "Share"; a blank id drops "Transaction ID".
         val explorerHash = txInfo.explorerHash?.ifBlank { null }
         val idToCopy = txInfo.idToCopy.ifBlank { null }
         val shareText = (txInfo as? ExpressTx)?.let(shareTextConverter::convert)
-        if (!isScreenOpenedAnalyticsSent) {
-            isScreenOpenedAnalyticsSent = true
-            sendScreenOpenedAnalytics(txInfo)
-        }
+        val contactCandidate = txInfo
+            .contactCandidate(currency = params.currency, lookup = lookup)
+            .takeIf { inputs.isAddressBookCompatible }
         TxHistoryInfoToTxHistoryDetailsUMConverter(
             currency = params.currency,
             onCopyAddress = { address -> onCopyAddress(address, txInfo) },
@@ -174,11 +232,32 @@ internal class TxHistoryDetailsModel @Inject constructor(
             lookup = lookup,
             targetsByAddress = stakingTargets,
             isBalanceHidden = isBalanceHidden,
-            onOpenValidator = urlOpener::openUrl,
-        ).convert(txInfo)
+            onExploreProvider = urlOpener::openUrl,
+            onAddContact = contactCandidate?.let { candidate -> { openContactCreation(candidate) } },
+            networkTokens = inputs.networkTokens,
+            fiatConversion = inputs.fiatConversion,
+        ).convert(txInfo).also { um ->
+            if (!isScreenOpenedAnalyticsSent) {
+                isScreenOpenedAnalyticsSent = true
+                sendScreenOpenedAnalytics(txInfo = txInfo, title = um.header.title)
+            }
+        }
     }
         .flowOn(dispatchers.default)
         .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = null)
+
+    /** Opens the contact editor prefilled with the counterparty address and its network. */
+    private fun openContactCreation(candidate: ContactCandidate) {
+        router.push(
+            AppRoute.AddressBook(
+                AddressBookOpenMode.WithContactCreation(
+                    address = candidate.address,
+                    networkId = candidate.networkId.value,
+                    source = AddressBookOpenMode.ContactCreationSource.TransactionDetails,
+                ),
+            ),
+        )
+    }
 
     /**
      * Activates the rating slot for an express swap. The rating key is the provider-side deal id when present, the
@@ -228,7 +307,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private fun onCopyAddress(address: String, txInfo: TxHistoryInfo) {
         analyticsEventHandler.send(
             TokenScreenAnalyticsEvent.ButtonCopyAddress(
-                walletId = params.userWalletId.stringValue,
                 token = params.currency.symbol,
                 blockchain = params.currency.network.name,
                 type = txInfo.toAnalyticsType(),
@@ -248,7 +326,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private fun onCopyTxId(id: String, txInfo: TxHistoryInfo) {
         analyticsEventHandler.send(
             TxHistoryAnalyticsEvent.ButtonCopyTransactionId(
-                walletId = params.userWalletId.stringValue,
                 token = params.currency.symbol,
                 blockchain = params.currency.network.name,
                 type = txInfo.toAnalyticsType(),
@@ -267,7 +344,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private fun onShare(text: String, txInfo: TxHistoryInfo) {
         analyticsEventHandler.send(
             TokenScreenAnalyticsEvent.ButtonShare(
-                walletId = params.userWalletId.stringValue,
                 token = params.currency.symbol,
                 blockchain = params.currency.network.name,
                 type = txInfo.toAnalyticsType(),
@@ -285,7 +361,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
                 source = TokenScreenAnalyticsEvent.ButtonExplore.ExploreActionSource.TransactionDetail,
                 blockchain = params.currency.network.name,
                 type = txInfo.toAnalyticsType(),
-                walletId = params.userWalletId.stringValue,
             ),
         )
         getExplorerTransactionUrlUseCase(txHash = txHash, currency = params.currency).fold(
@@ -320,17 +395,14 @@ internal class TxHistoryDetailsModel @Inject constructor(
      * "Onramp Status Opened" (restored — see `TokenExchangeAnalyticsEvent`/`TokenOnrampAnalyticsEvent`, previously sent
      * only from the legacy `tokendetails` bottom sheet that the new detail screen replaces).
      */
-    private fun sendScreenOpenedAnalytics(txInfo: TxHistoryInfo) {
-        val type = txInfo.toAnalyticsType()
-        val status = txInfo.toAnalyticsStatus()
+    private fun sendScreenOpenedAnalytics(txInfo: TxHistoryInfo, title: TextReference) {
         analyticsEventHandler.send(
             TxHistoryAnalyticsEvent.TransactionDetailScreenOpened(
-                walletId = params.userWalletId.stringValue,
                 token = params.currency.symbol,
                 blockchain = params.currency.network.name,
-                type = type,
-                status = status,
-                title = analyticsTitle(type = type, status = status),
+                type = txInfo.toAnalyticsType(),
+                status = txInfo.toAnalyticsStatus(),
+                title = title.resolveReference(context.resources),
             ),
         )
         when (txInfo) {
@@ -380,6 +452,14 @@ internal class TxHistoryDetailsModel @Inject constructor(
             .getOrNull()
     }
 }
+
+/** The per-wallet sources the details converter needs, combined apart from the already five-wide `uiState` combine. */
+private data class DetailsInputs(
+    val lookup: TxHistoryLookupContext,
+    val isAddressBookCompatible: Boolean,
+    val networkTokens: Set<CryptoCurrency.Token>,
+    val fiatConversion: FiatConversion,
+)
 
 /** Identity of the rating slot: re-activation is needed only when one of these deal fields changes. */
 private data class RatingKey(

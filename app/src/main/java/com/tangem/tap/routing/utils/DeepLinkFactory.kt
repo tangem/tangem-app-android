@@ -8,6 +8,7 @@ import com.tangem.common.uri.ExternalUrlValidator
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.DiscoverDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.EarnDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsTokenDetailDeepLinkHandler
@@ -15,6 +16,8 @@ import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHand
 import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
+import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
+import com.tangem.features.jointaccount.deeplink.JointAccountInviteDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
@@ -25,7 +28,7 @@ import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
 import com.tangem.features.swap.deeplink.SwapDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayAccountDeepLinkHandler
-import com.tangem.features.virtualaccount.onboarding.deeplink.OnboardVirtualAccountsDeepLinkHandler
+import com.tangem.features.moneyaccount.onboarding.deeplink.OnboardMoneyAccountDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.PromoDeeplinkHandler
@@ -62,7 +65,7 @@ internal class DeepLinkFactory @Inject constructor(
     private val swapDeepLink: SwapDeepLinkHandler.Factory,
     private val promoDeepLink: PromoDeeplinkHandler.Factory,
     private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory,
-    private val onboardVirtualAccountsDeepLink: OnboardVirtualAccountsDeepLinkHandler.Factory,
+    private val onboardMoneyAccountDeepLink: OnboardMoneyAccountDeepLinkHandler.Factory,
     private val marketsTokenExchangesDeepLink: MarketsTokenExchangesDeepLinkHandler.Factory,
     private val tangemPayMainDeepLink: TangemPayMainDeepLinkHandler.Factory,
     private val tangemPayAccountDeepLink: TangemPayAccountDeepLinkHandler.Factory,
@@ -70,8 +73,11 @@ internal class DeepLinkFactory @Inject constructor(
     private val newsDeepLink: NewsDeepLinkHandler.Factory,
     private val earnDeepLink: EarnDeepLinkHandler.Factory,
     private val yieldDeepLink: YieldDeepLinkHandler.Factory,
+    private val discoverDeepLink: DiscoverDeepLinkHandler.Factory,
     private val surveyDeepLink: SurveyDeepLinkHandler.Factory,
     private val promoCampaignsDeepLink: CampaignsDeepLinkHandler.Factory,
+    private val jointAccountDeepLink: JointAccountDeepLinkHandler.Factory,
+    private val jointAccountInviteDeepLink: JointAccountInviteDeepLinkHandler.Factory,
     private val urlOpener: UrlOpener,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
@@ -209,6 +215,10 @@ internal class DeepLinkFactory @Inject constructor(
                 }
                 true
             }
+            path.matchesPathSegment("/joint-account/join") -> {
+                jointAccountInviteDeepLink.create(coroutineScope, deeplinkUri)
+                true
+            }
             else -> false
         }
     }
@@ -249,14 +259,20 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.WalletConnect.host -> walletConnectDeepLink.create(deeplinkUri)
             DeepLinkRoute.Promo.host -> promoDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.OnboardVisa.host -> onboardVisaDeepLink.create(deeplinkUri)
-            DeepLinkRoute.OnboardVirtualAccounts.host -> onboardVirtualAccountsDeepLink.create(deeplinkUri)
+            DeepLinkRoute.OnboardMoneyAccount.host -> onboardMoneyAccountDeepLink.create(deeplinkUri)
             DeepLinkRoute.News.host -> newsDeepLink.create(queryParams)
             DeepLinkRoute.Earn.host -> earnDeepLink.create(queryParams)
             DeepLinkRoute.Yield.host -> yieldDeepLink.create(coroutineScope, queryParams)
+            DeepLinkRoute.Discover.host -> discoverDeepLink.create(queryParams)
             DeepLinkRoute.PayAppMain.host -> tangemPayMainDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.PayAccount.host -> tangemPayAccountDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.Survey.host -> surveyDeepLink.create(queryParams)
             DeepLinkRoute.Campaigns.host -> promoCampaignsDeepLink.create(queryParams)
+            DeepLinkRoute.JointAccount.host -> jointAccountDeepLink.create(
+                coroutineScope = coroutineScope,
+                queryParams = queryParams,
+                isFromOnNewIntent = isFromOnNewIntent,
+            )
             else -> {
                 TangemLogger.i(
                     """

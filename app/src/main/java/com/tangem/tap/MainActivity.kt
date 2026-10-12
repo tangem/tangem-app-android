@@ -64,6 +64,7 @@ import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.analytics.events.Push
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
+import com.tangem.tap.domain.walletregistration.withBackupColdWalletRegistration
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.routing.component.RoutingComponent
@@ -284,7 +285,13 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         cardSdkOwner.register(activity = this)
         tangemSdkManager = injectedTangemSdkManager
 
-        backupServiceHolder.createAndSetService(cardSdkConfigRepository.sdk, this)
+        backupServiceHolder.createAndSetService(
+            tangemSdk = cardSdkConfigRepository.sdk,
+            activity = this,
+            primaryCardRunnableDecorator = { primaryCard, finalization ->
+                tangemSdkManager.withBackupColdWalletRegistration(primaryCard, finalization)
+            },
+        )
         backupService = requireNotNull(backupServiceHolder.backupService.get()) // will be deleted eventually
 
         lockUserWalletsTimer = LockUserWalletsTimer(

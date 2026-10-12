@@ -8,18 +8,23 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -27,8 +32,8 @@ import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds2.modal.LocalTangemModalHost
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TangemModalHost
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.modal.rememberTangemModalHostState
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tester.presentation.storybook.entity.TangemModalStory
@@ -72,16 +77,12 @@ private fun StoryModal(state: TangemModalStory) {
             onDismissRequest = { state.onShownChange(false) },
             content = TangemModalStoryContent,
         ),
-        isExpanded = state.isExpanded,
         scrollableContent = state.isContentScrollable,
         presentation = state.presentation,
         title = {
-            TangemTopNavigation(
+            TangemModal.TopNavigation(
                 title = stringReference("Title"),
                 subtitle = stringReference("Subtitle"),
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
-                windowInsets = WindowInsets(0.dp),
-                fadeEnabled = false,
                 onBack = {},
                 onClose = { state.onShownChange(false) },
             )
@@ -89,6 +90,9 @@ private fun StoryModal(state: TangemModalStory) {
     ) {
         Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
             ShowModalButton(label = "Show stacked modal", onClick = { state.onStackedShownChange(true) })
+        }
+        if (state.isInputVisible) {
+            StoryTextField()
         }
         val rowCount = if (state.isTallContent) 40 else 4
         repeat(times = rowCount) { index ->
@@ -112,12 +116,8 @@ private fun StackedStoryModal(state: TangemModalStory) {
         ),
         presentation = state.presentation,
         title = {
-            TangemTopNavigation(
+            TangemModal.TopNavigation(
                 title = stringReference("Stacked"),
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
-                windowInsets = WindowInsets(0.dp),
-                fadeEnabled = false,
-                onBack = null,
                 onClose = { state.onStackedShownChange(false) },
             )
         },
@@ -144,14 +144,31 @@ private fun Controls(state: TangemModalStory, modifier: Modifier = Modifier) {
     ) {
         ShowModalButton(label = "Show modal", onClick = { state.onShownChange(true) })
         PresentationSelector(selected = state.presentation, onSelect = state.onPresentationChange)
-        ToggleRow(label = "isExpanded", checked = state.isExpanded, onToggle = state.onExpandedToggle)
         ToggleRow(
             label = "scrollable content",
             checked = state.isContentScrollable,
             onToggle = state.onContentScrollableToggle,
         )
         ToggleRow(label = "tall content", checked = state.isTallContent, onToggle = state.onTallContentToggle)
+        ToggleRow(label = "text field", checked = state.isInputVisible, onToggle = state.onInputToggle)
     }
+}
+
+@Composable
+private fun StoryTextField() {
+    var value by remember { mutableStateOf("") }
+    BasicTextField(
+        value = value,
+        onValueChange = { value = it },
+        textStyle = TangemTheme.typography3.body.medium.copy(color = TangemTheme.colors3.text.primary),
+        cursorBrush = SolidColor(TangemTheme.colors3.text.accent.blue),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(TangemTheme.colors3.bg.secondary)
+            .padding(12.dp),
+    )
 }
 
 @Composable

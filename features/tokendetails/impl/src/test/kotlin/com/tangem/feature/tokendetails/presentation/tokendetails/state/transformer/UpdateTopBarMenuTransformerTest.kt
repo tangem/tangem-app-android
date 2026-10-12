@@ -4,6 +4,9 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_eye_cross_24
+import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
@@ -44,7 +47,7 @@ class UpdateTopBarMenuTransformerTest {
     }
 
     @Test
-    fun `GIVEN cold wallet AND single wallet with token WHEN transform THEN menu is empty`() {
+    fun `GIVEN cold wallet AND single wallet with token WHEN transform THEN Explore is the only item`() {
         // GIVEN
         every { cardTypesResolver.isSingleWalletWithToken() } returns true
         val transformer = createTransformer(
@@ -57,11 +60,15 @@ class UpdateTopBarMenuTransformerTest {
         val result = transformer.transform(initialState())
 
         // THEN
-        assertThat(result.topAppBarUM.menuItems).isEmpty()
+        assertThat(result.topAppBarUM.menuItems).hasSize(1)
+
+        result.topAppBarUM.menuItems.single().onClick()
+        verify(exactly = 1) { clickIntents.onExploreClick() }
+        verify(exactly = 0) { clickIntents.onHideClick() }
     }
 
     @Test
-    fun `GIVEN cold wallet AND multi-wallet WHEN transform THEN Hide item is the only one`() {
+    fun `GIVEN cold wallet AND multi-wallet WHEN transform THEN Explore and Hide items are shown`() {
         // GIVEN
         every { cardTypesResolver.isSingleWalletWithToken() } returns false
         val transformer = createTransformer(
@@ -74,15 +81,19 @@ class UpdateTopBarMenuTransformerTest {
         val result = transformer.transform(initialState())
 
         // THEN
-        assertThat(result.topAppBarUM.menuItems).hasSize(1)
+        assertThat(result.topAppBarUM.menuItems).hasSize(2)
 
-        result.topAppBarUM.menuItems.single().onClick()
+        assertThat(result.topAppBarUM.menuItems.first().icon).isEqualTo(Icons.ic_globe_24)
+        assertThat(result.topAppBarUM.menuItems.last().icon).isEqualTo(Icons.ic_eye_cross_24)
+        assertThat(result.topAppBarUM.menuItems.last().isDestructive).isTrue()
+
+        result.topAppBarUM.menuItems.last().onClick()
         verify(exactly = 1) { clickIntents.onHideClick() }
         verify(exactly = 0) { clickIntents.onGenerateExtendedKey() }
     }
 
     @Test
-    fun `GIVEN hot wallet WHEN transform THEN Hide item is shown regardless of single-wallet flag`() {
+    fun `GIVEN hot wallet WHEN transform THEN Explore and Hide items are shown regardless of single-wallet flag`() {
         // GIVEN — flag is read only for cold wallets, so no stub needed for hotWallet
         val transformer = createTransformer(
             userWallet = hotWallet,
@@ -94,7 +105,7 @@ class UpdateTopBarMenuTransformerTest {
         val result = transformer.transform(initialState())
 
         // THEN
-        assertThat(result.topAppBarUM.menuItems).hasSize(1)
+        assertThat(result.topAppBarUM.menuItems).hasSize(2)
     }
 
     @Test
@@ -110,8 +121,8 @@ class UpdateTopBarMenuTransformerTest {
         // WHEN
         val result = transformer.transform(initialState())
 
-        // THEN — Generate xPub first, Hide token second
-        assertThat(result.topAppBarUM.menuItems).hasSize(2)
+        // THEN — Generate xPub, Explore, Hide token
+        assertThat(result.topAppBarUM.menuItems).hasSize(3)
     }
 
     @Test
@@ -128,7 +139,7 @@ class UpdateTopBarMenuTransformerTest {
         val result = transformer.transform(initialState())
 
         // THEN
-        assertThat(result.topAppBarUM.menuItems).hasSize(1)
+        assertThat(result.topAppBarUM.menuItems).hasSize(2)
     }
 
     @Test
@@ -145,7 +156,7 @@ class UpdateTopBarMenuTransformerTest {
         val result = transformer.transform(initialState())
 
         // THEN
-        assertThat(result.topAppBarUM.menuItems).hasSize(1)
+        assertThat(result.topAppBarUM.menuItems).hasSize(2)
     }
 
     @Test
@@ -170,7 +181,7 @@ class UpdateTopBarMenuTransformerTest {
     }
 
     @Test
-    fun `GIVEN dynamic addresses available WHEN transform THEN dynamic addresses item is shown first`() {
+    fun `GIVEN dynamic addresses available WHEN transform THEN dynamic addresses item precedes Explore`() {
         // GIVEN
         every { cardTypesResolver.isSingleWalletWithToken() } returns false
         val transformer = createTransformer(
@@ -183,8 +194,8 @@ class UpdateTopBarMenuTransformerTest {
         // WHEN
         val result = transformer.transform(initialState())
 
-        // THEN — Dynamic addresses item first, Hide token second
-        assertThat(result.topAppBarUM.menuItems).hasSize(2)
+        // THEN — Dynamic addresses, Explore, Hide token (Explore sits last before the destructive row)
+        assertThat(result.topAppBarUM.menuItems).hasSize(3)
 
         result.topAppBarUM.menuItems.first().onClick()
         verify(exactly = 1) { clickIntents.onDynamicAddressesClick() }
@@ -204,10 +215,10 @@ class UpdateTopBarMenuTransformerTest {
         // WHEN
         val result = transformer.transform(initialState())
 
-        // THEN — only Hide token
-        assertThat(result.topAppBarUM.menuItems).hasSize(1)
+        // THEN — only Explore and Hide token
+        assertThat(result.topAppBarUM.menuItems).hasSize(2)
 
-        result.topAppBarUM.menuItems.single().onClick()
+        result.topAppBarUM.menuItems.forEach { it.onClick() }
         verify(exactly = 0) { clickIntents.onDynamicAddressesClick() }
     }
 
@@ -227,9 +238,33 @@ class UpdateTopBarMenuTransformerTest {
         result.topAppBarUM.menuItems.forEach { it.onClick() }
 
         // THEN
+        verify(exactly = 1) { clickIntents.onExploreClick() }
         verify(exactly = 1) { clickIntents.onDynamicAddressesClick() }
         verify(exactly = 1) { clickIntents.onGenerateExtendedKey() }
         verify(exactly = 1) { clickIntents.onHideClick() }
+    }
+
+    @Test
+    fun `GIVEN single wallet with token WHEN transform THEN Explore is the only item`() {
+        // GIVEN
+        every { cardTypesResolver.isSingleWalletWithToken() } returns true
+        val transformer = createTransformer(
+            userWallet = coldWallet,
+            hasDerivations = true,
+            isXPubSupported = true,
+            isDynamicAddressesAvailable = true,
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        assertThat(result.topAppBarUM.menuItems).hasSize(1)
+
+        result.topAppBarUM.menuItems.single().onClick()
+        verify(exactly = 1) { clickIntents.onExploreClick() }
+        verify(exactly = 0) { clickIntents.onGenerateExtendedKey() }
+        verify(exactly = 0) { clickIntents.onDynamicAddressesClick() }
     }
 
     private fun createTransformer(

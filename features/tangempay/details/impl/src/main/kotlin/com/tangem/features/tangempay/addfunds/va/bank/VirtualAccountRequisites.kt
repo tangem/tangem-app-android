@@ -3,7 +3,7 @@ package com.tangem.features.tangempay.addfunds.va.bank
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.features.tangempay.details.impl.R
-import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent.RequisitesRow
+import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsBottomSheetComponent.RequisitesRow
 
 /**
  * MVP0 placeholder for the daily deposit limit shown by the reused VA requisites bottom sheet.
@@ -14,7 +14,7 @@ internal const val VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER = "$10,000"
 
 /**
  * Maps VA on-ramp [BankCredentials] to the requisites rows consumed by the reused
- * `VirtualAccountAddFundsBottomSheetComponent` (mirrors `VirtualAccountMainModel.buildRequisites`).
+ * `MoneyAccountAddFundsBottomSheetComponent` (mirrors `MoneyAccountMainModel.buildRequisites`).
  */
 internal fun BankCredentials.toRequisitesRows(): List<RequisitesRow> = listOf(
     RequisitesRow(

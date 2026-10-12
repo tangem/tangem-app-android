@@ -4,6 +4,7 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.*
@@ -75,7 +76,7 @@ class AppCurrencyTest : BaseTestCase() {
                 }
             }
             step("Click on token '$token'") {
-                onMainScreen { tokenWithTitleAndAddress(token).clickWithAssertion() }
+                openTokenDetailsFromTokenList(token)
             }
             step("Assert token fiat balance contains '$targetSymbol'") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {

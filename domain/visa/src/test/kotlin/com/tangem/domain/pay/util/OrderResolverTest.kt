@@ -101,6 +101,36 @@ internal class OrderResolverTest {
         assertThat(result?.id).isEqualTo("1")
     }
 
+    @Test
+    fun `GIVEN active virtual orders of different types WHEN selectActiveByTypes THEN latest virtual one is picked`() {
+        // Arrange
+        val orders = listOf(
+            order(id = "kyc", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.NEW, updatedAt = "2026-01-01"),
+            order(id = "rain", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN, status = OrderStatus.PROCESSING, updatedAt = "2026-01-03"),
+            order(id = "done", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2, status = OrderStatus.COMPLETED, updatedAt = "2026-01-05"),
+        )
+
+        // Act
+        val result = OrderResolver.selectActiveByTypes(orders = orders, types = OrderType.virtualIssueCardTypes)
+
+        // Assert
+        assertThat(result?.id).isEqualTo("rain")
+    }
+
+    @Test
+    fun `GIVEN only an active plastic order WHEN selectActiveByTypes with virtual types THEN null`() {
+        // Arrange
+        val orders = listOf(
+            order(id = "plastic", type = OrderType.CARD_ISSUE_PLASTIC_RAIN, status = OrderStatus.PROCESSING, updatedAt = "2026-01-01"),
+        )
+
+        // Act
+        val result = OrderResolver.selectActiveByTypes(orders = orders, types = OrderType.virtualIssueCardTypes)
+
+        // Assert
+        assertThat(result).isNull()
+    }
+
     private fun order(
         id: String,
         type: OrderType,

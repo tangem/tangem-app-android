@@ -1,6 +1,7 @@
 package com.tangem.tap
 
 import android.app.Application
+import android.os.Build
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy
 import android.os.StrictMode.VmPolicy
@@ -9,9 +10,11 @@ import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import com.tangem.blockchain.common.ExceptionHandler
-import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.event.TechAnalyticsEvent
+import com.tangem.core.ui.components.background.northernlights.NorthernLightsCrashGuard
+import com.tangem.core.ui.components.background.northernlights.NorthernLightsCrashGuardPreferences
 import com.tangem.core.analytics.filter.AppsFlyerEventFilter
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
@@ -70,9 +73,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
     private val oneTimeEventFilter: OneTimeEventFilter
         get() = entryPoint.getOneTimeEventFilter()
-
-    private val moshiJsonConverter: MoshiJsonConverter
-        get() = entryPoint.getMoshiJsonConverter()
 
     private val tangemLoggingInitializer: TangemLoggingInitializer
         get() = entryPoint.getTangemLoggingInitializer()
@@ -157,6 +157,10 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
      */
     fun preInit() {
         tangemLoggingInitializer.initAppLogging()
+        NorthernLightsCrashGuard.init(
+            store = NorthernLightsCrashGuardPreferences(context = this),
+            appVersion = BuildConfig.VERSION_CODE,
+        )
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
     }
 
@@ -195,6 +199,8 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
         initAnalytics(application = this, environmentConfig = environmentConfig)
 
+        reportShaderCrashIfDetected()
+
         initOpenTelemetry()
 
         abTestsManager.init()
@@ -214,15 +220,24 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         )
     }
 
-    override fun newImageLoader(): ImageLoader {
-        return createCoilImageLoader(
-            context = this,
-            logEnabled = LogConfig.imageLoader,
-        )
-    }
+    override fun newImageLoader(): ImageLoader = createCoilImageLoader(context = this)
 
     private fun loadNativeLibraries() {
         System.loadLibrary("TrustWalletCore")
+    }
+
+    private fun reportShaderCrashIfDetected() {
+        if (!NorthernLightsCrashGuard.hasDetectedCrash) return
+
+        Analytics.send(
+            TechAnalyticsEvent.ShaderCrashDetected(
+                model = Build.MODEL,
+                manufacturer = Build.MANUFACTURER,
+                hardware = Build.HARDWARE,
+                androidVersion = Build.VERSION.SDK_INT.toString(),
+                crashCount = NorthernLightsCrashGuard.crashCount.toString(),
+            ),
+        )
     }
 
     private fun initAnalytics(application: Application, environmentConfig: EnvironmentConfig) {
@@ -242,7 +257,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
             config = environmentConfig,
             isDebug = BuildConfig.DEBUG,
             logConfig = LogConfig.analyticsHandlers,
-            jsonConverter = moshiJsonConverter,
         )
 
         Analytics.addParamsInterceptor(interceptor = sendTransactionSignerInfoInterceptor)

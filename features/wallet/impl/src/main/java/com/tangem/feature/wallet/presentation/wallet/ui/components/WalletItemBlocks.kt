@@ -16,12 +16,14 @@ import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockComponent
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM
-import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
-import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
+import com.tangem.features.moneyaccount.main.component.MoneyAccountMainBlockComponent
+import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 
 internal const val ORGANIZE_TOKENS_BUTTON_ITEM_KEY = "OrganizeTokensButton"
 
@@ -103,13 +105,24 @@ internal fun LazyListScope.polymarketWalletBlock(
     }
 }
 
-internal fun LazyListScope.virtualAccount(
-    virtualAccountComponent: VirtualAccountMainBlockComponent,
-    virtualAccountUM: VirtualAccountMainUM,
+internal fun LazyListScope.collectiblesWalletBlock(
+    collectiblesComponent: CollectiblesWalletBlockComponent,
+    collectiblesUM: CollectiblesWalletBlockUM,
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    with(virtualAccountComponent) {
-        virtualAccountMainContent(modifier = modifier, state = virtualAccountUM, isBalanceHidden = isBalanceHidden)
+    with(collectiblesComponent) {
+        collectiblesWalletBlockContent(modifier = modifier, state = collectiblesUM, isBalanceHidden = isBalanceHidden)
+    }
+}
+
+internal fun LazyListScope.moneyAccount(
+    moneyAccountComponent: MoneyAccountMainBlockComponent,
+    moneyAccountUM: MoneyAccountMainUM,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    with(moneyAccountComponent) {
+        moneyAccountMainContent(modifier = modifier, state = moneyAccountUM, isBalanceHidden = isBalanceHidden)
     }
 }

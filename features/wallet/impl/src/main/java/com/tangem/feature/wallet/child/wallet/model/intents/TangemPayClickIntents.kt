@@ -30,6 +30,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayHideOnboardingStateTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayRefreshShowProgressTransformer
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -72,6 +73,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : BaseWalletClickIntents(), TangemPayIntents {
 
     override suspend fun onPullToRefresh() {
@@ -209,13 +211,17 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     }
 
     override fun onOnboardingBannerClick(userWalletId: UserWalletId) {
-        modelScope.launch {
-            analyticsEventHandler.send(TangemPayAnalyticsEvents.MainVisaPermanentBannerClicked())
-            val isEligible = tangemPayEligibilityManager.getTangemPayAvailability(TangemPayEntryPoint.BANNER)
-            if (isEligible) {
-                router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain)
-            } else {
-                stateHolder.update(transformer = TangemPayHideOnboardingStateTransformer(userWalletId))
+        analyticsEventHandler.send(TangemPayAnalyticsEvents.MainVisaPermanentBannerClicked())
+        if (tangemPayFeatureToggles.isResidencyStepEnabled) {
+            router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain)
+        } else {
+            modelScope.launch {
+                val isEligible = tangemPayEligibilityManager.getTangemPayAvailability(TangemPayEntryPoint.BANNER)
+                if (isEligible) {
+                    router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain)
+                } else {
+                    stateHolder.update(transformer = TangemPayHideOnboardingStateTransformer(userWalletId))
+                }
             }
         }
     }

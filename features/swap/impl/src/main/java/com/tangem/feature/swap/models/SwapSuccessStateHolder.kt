@@ -12,6 +12,7 @@ data class SwapSuccessStateHolder(
     val rate: TextReference,
     val shouldShowStatusButton: Boolean,
     val isTransferMode: Boolean,
+    val title: TextReference? = null,
     val providerName: TextReference,
     val providerType: TextReference,
     val providerIcon: String,

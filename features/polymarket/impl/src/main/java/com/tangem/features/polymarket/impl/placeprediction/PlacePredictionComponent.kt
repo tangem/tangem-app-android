@@ -5,23 +5,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.fade
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.essenty.lifecycle.doOnStart
-import com.arkivanov.essenty.lifecycle.doOnStop
+import com.arkivanov.essenty.backhandler.BackCallback
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
-import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.features.polymarket.impl.placeprediction.amount.PlacePredictionAmountComponent
-import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionModel
+import com.tangem.features.polymarket.impl.placeprediction.slippage.PlacePredictionSlippageComponent
 import com.tangem.features.polymarket.impl.placeprediction.status.PlacePredictionStatusComponent
 import com.tangem.features.polymarket.impl.placeprediction.summary.PlacePredictionSummaryComponent
 
@@ -37,14 +37,12 @@ internal class PlacePredictionComponent(
         popCallback = { onChildBack() },
     )
 
-    private val model: PlacePredictionModel = getOrCreateModel(params = params, router = innerRouter)
-
     private val childStack = childStack(
         key = "placePredictionStack",
         source = stackNavigation,
         serializer = null,
         initialConfiguration = PlacePredictionRoute.Amount,
-        handleBackButton = true,
+        handleBackButton = false,
         childFactory = { configuration, factoryContext ->
             getChildComponent(
                 configuration = configuration,
@@ -54,8 +52,7 @@ internal class PlacePredictionComponent(
     )
 
     init {
-        lifecycle.doOnStart(isOneTime = false, block = model::onScreenShown)
-        lifecycle.doOnStop(isOneTime = false, block = model::onScreenHidden)
+        backHandler.register(BackCallback { onChildBack() })
     }
 
     @Composable
@@ -65,7 +62,9 @@ internal class PlacePredictionComponent(
         Children(
             stack = stackValue,
             modifier = modifier,
-            animation = stackAnimation { slide() },
+            animation = stackAnimation { child ->
+                if (child.configuration is PlacePredictionRoute.Status) fade() else slide()
+            },
         ) { child ->
             child.instance.Content(Modifier.fillMaxSize())
         }
@@ -75,12 +74,16 @@ internal class PlacePredictionComponent(
         configuration: PlacePredictionRoute,
         factoryContext: AppComponentContext,
     ): ComposableContentComponent = when (configuration) {
-        is PlacePredictionRoute.Amount -> PlacePredictionAmountComponent(factoryContext, model)
-        is PlacePredictionRoute.Summary -> PlacePredictionSummaryComponent(factoryContext, model)
-        is PlacePredictionRoute.Status -> PlacePredictionStatusComponent(factoryContext, model)
+        is PlacePredictionRoute.Amount -> PlacePredictionAmountComponent(factoryContext, params)
+        is PlacePredictionRoute.Slippage -> PlacePredictionSlippageComponent(factoryContext, configuration)
+        is PlacePredictionRoute.Summary -> PlacePredictionSummaryComponent(factoryContext, configuration.order)
+        is PlacePredictionRoute.Status -> PlacePredictionStatusComponent(factoryContext, configuration)
     }
 
     private fun onChildBack() {
+        val summary = childStack.value.active.instance as? PlacePredictionSummaryComponent
+        if (summary?.isSubmitting() == true) return
+
         if (childStack.value.backStack.isEmpty()) {
             router.pop()
         } else {
@@ -88,11 +91,32 @@ internal class PlacePredictionComponent(
         }
     }
 
-    data class Params(
-        val userWalletId: UserWalletId,
-        val eventId: String,
-        val marketId: String,
-        val assetId: String,
-        val side: PredictionOrderSide,
-    )
+    sealed interface Params {
+
+        val userWalletId: UserWalletId
+        val marketId: String
+        val assetId: String
+        val side: PredictionOrderSide
+
+        data class Buy(
+            override val userWalletId: UserWalletId,
+            val eventId: String,
+            override val marketId: String,
+            override val assetId: String,
+        ) : Params {
+
+            override val side: PredictionOrderSide = PredictionOrderSide.BUY
+        }
+
+        data class Sell(
+            override val userWalletId: UserWalletId,
+            val positionId: PolymarketPositionId,
+            override val marketId: String,
+        ) : Params {
+
+            override val assetId: String = positionId.assetId
+
+            override val side: PredictionOrderSide = PredictionOrderSide.SELL
+        }
+    }
 }

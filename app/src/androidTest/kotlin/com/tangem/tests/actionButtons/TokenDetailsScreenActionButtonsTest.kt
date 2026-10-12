@@ -9,6 +9,7 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.checkQrCodeBottomSheetScenario
 import com.tangem.scenarios.goToQrCodeBottomSheet
 import com.tangem.scenarios.openMainScreen
@@ -277,7 +278,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             }
             step("Click on token with name: '$emptyTokenTitle'") {
                 waitForIdle()
-                onMainScreen { tokenWithTitleAndAddress(emptyTokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(emptyTokenTitle)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -292,7 +293,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
                 onMainScreen { screenContainer.assertIsDisplayed() }
             }
             step("Click on token with name: '$fundedTokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(fundedTokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(fundedTokenTitle)
             }
             step("Assert 'Transfer' button is displayed for the funded token") {
                 onTokenDetailsScreen { transferButton.assertIsDisplayed() }
@@ -345,7 +346,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -453,7 +454,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }

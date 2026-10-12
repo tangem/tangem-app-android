@@ -4,10 +4,10 @@ import com.tangem.data.common.converter.ExpressProviderConverter
 import com.tangem.data.txhistory.repository.converter.ExpressOnrampConverter
 import com.tangem.data.txhistory.repository.converter.ExpressSwapConverter
 import com.tangem.data.txhistory.repository.converter.OnrampCurrencyConverter
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressProviderEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.OnrampCurrencyEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressExchangeEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressOnrampEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressProviderEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.OnrampCurrencyEntity
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.model.ExpressTx
 import javax.inject.Inject
@@ -43,9 +43,9 @@ internal class ExpressTxByIdFactory @Inject constructor(
                     entity = exchange,
                     provider = exchange.providerId.expressProvider(),
                     isOutgoing = outgoingAddresses.any { it.equals(exchange.fromAddress, ignoreCase = true) },
-                    fromCurrency = currencies[exchange.from.toAssetId()],
-                    toCurrency = currencies[exchange.to.toAssetId()],
-                    refundCurrency = exchange.toRefundAssetId()?.let { currencies[it] },
+                    fromCurrency = currencies[exchange.fromLegKey()],
+                    toCurrency = currencies[exchange.toLegKey()],
+                    refundCurrency = exchange.refundLegKey()?.let { currencies[it] },
                 )
                 swapConverter.convert(input)
             }
@@ -60,7 +60,7 @@ internal class ExpressTxByIdFactory @Inject constructor(
                 val input = ExpressOnrampConverter.Input(
                     entity = onramp,
                     provider = onramp.providerId.expressProvider(),
-                    toCurrency = currencies[onramp.to.toAssetId()],
+                    toCurrency = currencies[onramp.toLegKey()],
                     fiatCurrency = onramp.fromCurrencyCode.onrampFiatCurrency(),
                 )
                 onrampConverter.convert(input)

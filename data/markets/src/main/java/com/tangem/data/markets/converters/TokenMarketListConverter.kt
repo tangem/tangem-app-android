@@ -44,6 +44,7 @@ internal object TokenMarketListConverter : Converter<TokenMarketListResponse, To
                 tokenCharts = TokenMarket.Charts(h24 = null, week = null, month = null),
                 yieldRate = stakingRate ?: token.maxYieldApy?.movePointLeft(2),
                 updateTimestamp = value.timestamp,
+                isRestrictedForCountry = token.isRestrictedForCountry == true,
                 networks = token.networks?.map { network ->
                     TokenMarket.Network(
                         networkId = network.networkId,

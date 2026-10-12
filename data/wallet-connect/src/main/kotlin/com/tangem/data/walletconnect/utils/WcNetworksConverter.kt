@@ -12,7 +12,6 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -126,7 +125,7 @@ internal class WcNetworksConverter @Inject constructor(
         return singleAccountStatusListSupplier.getSyncOrNull(
             SingleAccountStatusListProducer.Params(accountId.userWalletId),
         )?.accountStatuses
-            ?.filterCryptoPortfolio()
+            ?.filterIsInstance<AccountStatus.Personal>()
             ?.find { it.account.accountId == accountId }
     }
 

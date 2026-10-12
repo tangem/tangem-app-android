@@ -4,7 +4,6 @@ import arrow.core.Either
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -36,18 +35,20 @@ data class AccountStatusList(
     val groupType: TokensGroupType,
 ) {
 
-    val mainAccount: AccountStatus.CryptoPortfolio
+    /** A joint account is never the main one — the main account is always the wallet's own */
+    val mainAccount: AccountStatus.Personal
         get() = accountStatuses
-            .filterCryptoPortfolio()
-            .first { accountStatus ->
-                when (accountStatus) {
-                    is AccountStatus.CryptoPortfolio ->
-                        (accountStatus.account as? Account.Personal)?.isMainAccount == true
-                }
-            }
+            .filterIsInstance<AccountStatus.Personal>()
+            .first { accountStatus -> accountStatus.account.isMainAccount }
 
     fun flattenCurrencies(): List<CryptoCurrencyStatus> = accountStatuses
         .filterCryptoPortfolio()
+        .map { accountStatus -> accountStatus.flattenCurrencies() }
+        .flatten()
+
+    /** Currencies of the wallet's own accounts only — for the flows that spend from the wallet's keys */
+    fun flattenPersonalCurrencies(): List<CryptoCurrencyStatus> = accountStatuses
+        .filterIsInstance<AccountStatus.Personal>()
         .map { accountStatus -> accountStatus.flattenCurrencies() }
         .flatten()
 
@@ -66,10 +67,12 @@ data class AccountStatusList(
 
 fun AccountStatusList.hasMultiCurrencyAccount(): Boolean = accountStatuses.any { status ->
     when (status) {
-        is AccountStatus.CryptoPortfolio -> status.tokenList.flattenCurrencies().size > 1
-        is AccountStatus.Payment -> false
-        is AccountStatus.Virtual -> false
-        is AccountStatus.Prediction -> false
+        is AccountStatus.Personal -> status.tokenList.flattenCurrencies().size > 1
+        // The token list of a joint account stays empty until it is active; its currencies are known all along
         is AccountStatus.Joint -> status.account.cryptoCurrencies.size > 1
+        is AccountStatus.Payment -> false
+        is AccountStatus.Money -> false
+        is AccountStatus.Prediction -> false
+        is AccountStatus.Collectibles -> false
     }
 }

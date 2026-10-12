@@ -3,9 +3,12 @@ package com.tangem.scenarios
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_WALLET_CREATION
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
+import com.tangem.core.res.R as CommonR
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.screens.*
@@ -25,11 +28,11 @@ fun BaseTestCase.scanCard(
         productType != null -> MockProvider.setMocks(productType)
         else -> MockProvider.setMocks(ProductType.Wallet)
     }
-    step("Click on 'Get started' button") {
-        onStoriesScreen { getStartedButton.clickWithAssertion() }
+    step("Click on 'I have a wallet' button") {
+        onIntroductionScreen { iHaveWalletButton.clickWithAssertion() }
     }
-    step("Click on 'Scan card or ring' button") {
-        onCreateWalletStartScreen { scanCardOrRingButton.clickWithAssertion() }
+    step("Click on 'Tangem Card or Ring' option") {
+        onIntroductionScreen { cardOrRingOption.clickWithAssertion() }
     }
     if (isTwinsCard) {
         step("Click on 'Continue' button") {
@@ -70,28 +73,41 @@ fun BaseTestCase.openTokenDetails(tokenName: String) {
         synchronizeAddresses()
     }
     step("Click on token with name: '$tokenName'") {
-        onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+        openTokenDetailsFromTokenList(tokenName)
+    }
+}
+
+/** Creates a brand-new mobile (hot) wallet from the Welcome screen and lands on Main. */
+fun BaseTestCase.openMainScreenWithNewHotWallet() {
+    step("Click on 'Create wallet' button") {
+        onIntroductionScreen { createWalletButton.clickWithAssertion() }
+    }
+    // The sheet row creates the wallet on the spot ([REDACTED_TASK_KEY]), so there is no separate create step any more.
+    step("Click on 'Create seed phrase wallet' option") {
+        onIntroductionScreen { createSeedPhraseWalletOption.clickWithAssertion() }
+    }
+    step("Assert 'Main' screen is displayed") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_WALLET_CREATION) {
+            onMainScreen { screenContainer.assertIsDisplayed() }
+        }
+    }
+    step("Dismiss Market Tooltip by clicking close button") {
+        onMarketsTooltipScreen { closeButton.clickWithAssertion() }
     }
 }
 
 @OptIn(ExperimentalTestApi::class)
 fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessCode: String = "") {
-    step("Click on 'Get started' button") {
-        onStoriesScreen { getStartedButton.clickWithAssertion() }
+    step("Click on 'I have a wallet' button") {
+        onIntroductionScreen { iHaveWalletButton.clickWithAssertion() }
     }
-    step("Click on 'Start with Mobile Wallet' button") {
-        onCreateWalletStartScreen { startWithMobileWalletButton.performClick() }
+    step("Click on 'Import existing wallet' option") {
+        onIntroductionScreen { importWalletOption.clickWithAssertion() }
     }
-    step("Click on 'Import existing wallet' button") {
-        onCreateMobileWalletScreen { importExistingWalletButton.performClick() }
-    }
-    step("Choose 'Import recovery phrase' when the import-options sheet is shown") {
-        waitForIdle()
-        onCreateMobileWalletScreen {
-            if (useRecoveryPhraseButton.isDisplayedSafely()) {
-                useRecoveryPhraseButton.performClick()
-            }
-        }
+    // Only the cloud backup button is toggle-gated, so this one is always there — wait, never skip.
+    step("Click on 'Use recovery phrase' button") {
+        awaitSuccess { onIntroductionScreen { useRecoveryPhraseButton.assertIsDisplayed() } }
+        onIntroductionScreen { useRecoveryPhraseButton.performClick() }
     }
     step("Click on 'Phrase text field'") {
         waitForIdle()
@@ -131,7 +147,14 @@ fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessC
             }
         }
         step("Dismiss biometry prompt if shown") {
-            waitForIdle()
+            // The sheet is optional, so wait for it or for the Finish screen that replaces it — deciding
+            // before either has rendered leaves the sheet up. Wallet creation runs in between and on a
+            // cold launch outlasts the ordinary timeout.
+            composeTestRule.waitUntilAtLeastOneExists(
+                matcher = hasText(getResourceString(CoreUiR.string.save_user_wallet_agreement_dont_allow))
+                    or hasText(getResourceString(CommonR.string.common_finish)),
+                timeoutMillis = WAIT_UNTIL_TIMEOUT_WALLET_CREATION,
+            )
             onBiometryDialog {
                 if (dontAllowButton.isDisplayedSafely()) {
                     dontAllowButton.performClick()
@@ -147,6 +170,7 @@ fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessC
         }
     }
     step("Click on 'Finish' button") {
+        awaitSuccess { onImportWalletScreen { finishButton.assertExists() } }
         onImportWalletScreen {
             finishButton.assertIsEnabled()
             finishButton.performClick()
@@ -177,15 +201,26 @@ fun BaseTestCase.synchronizeAddresses(
         }
         balance != null -> {
             step("Assert wallet balance != '$DASH_SIGN'") {
-                onMainScreen { totalBalanceText.assert(!hasText(DASH_SIGN)) }
+                awaitBalanceLoaded()
             }
             step("Assert wallet balance = '$balance'") {
-                onMainScreen { totalBalanceText.assertTextContains(balance) }
+                awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT) {
+                    onMainScreen { totalBalanceText.assertTextContains(balance) }
+                }
             }
         }
         else -> step("Assert wallet balance != '$DASH_SIGN'") {
-            onMainScreen { totalBalanceText.assert(!hasText(DASH_SIGN)) }
+            awaitBalanceLoaded()
         }
+    }
+}
+
+/**
+ * The balance settles only once every network status lands — 7–10+ s on CI, past the flakySafely default.
+ */
+private fun BaseTestCase.awaitBalanceLoaded() {
+    awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT) {
+        onMainScreen { totalBalanceText.assert(!hasText(DASH_SIGN)) }
     }
 }
 

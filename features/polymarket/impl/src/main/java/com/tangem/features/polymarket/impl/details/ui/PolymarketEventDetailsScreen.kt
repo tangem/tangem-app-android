@@ -35,6 +35,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
+import com.tangem.core.ui.components.marketprice.PriceChangeState
+import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -309,7 +311,7 @@ private fun previewContent(): PolymarketEventDetailsUM.Content {
         title = stringReference("Who will win FIFA World Cup 2026 in the USA?"),
         iconUrl = null,
         totalVolume = stringReference("\$6.3M"),
-        change24h = stringReference("2.08%"),
+        change24h = PriceChangeState.Content(valueInPercent = "2.08%", type = PriceChangeType.UP),
         subcategories = persistentListOf(
             PolymarketSubcategoryTabUM(id = "lines", label = "Game lines", isSelected = true, onClick = {}),
             PolymarketSubcategoryTabUM(id = "score", label = "Exact score", isSelected = false, onClick = {}),
@@ -345,8 +347,18 @@ private fun previewMarket(id: String, title: String, volume: String, withOutcome
         iconUrl = null,
         outcomes = if (withOutcomes) {
             persistentListOf(
-                PolymarketDetailsOutcomeUM(assetId = "yes", title = stringReference("Yes • 25¢"), onClick = {}),
-                PolymarketDetailsOutcomeUM(assetId = "no", title = stringReference("No • 74¢"), onClick = {}),
+                PolymarketDetailsOutcomeUM(
+                    assetId = "yes",
+                    title = stringReference("Yes"),
+                    price = stringReference("25¢"),
+                    onClick = {},
+                ),
+                PolymarketDetailsOutcomeUM(
+                    assetId = "no",
+                    title = stringReference("No"),
+                    price = stringReference("74¢"),
+                    onClick = {},
+                ),
             )
         } else {
             persistentListOf()

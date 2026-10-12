@@ -3,7 +3,7 @@ package com.tangem.tap.di.domain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.markets.*
-import com.tangem.domain.markets.repositories.CoinIndicatorsRepository
+import com.tangem.domain.markets.repositories.MarketIndicatorsRepository
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import dagger.Module
@@ -92,17 +92,39 @@ object MarketsDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetMarketCategoriesUseCase(marketsTokenRepository: MarketsTokenRepository): GetMarketCategoriesUseCase {
+        return GetMarketCategoriesUseCase(marketsTokenRepository = marketsTokenRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetMarketCategoryListFlowUseCase(
+        marketsTokenRepository: MarketsTokenRepository,
+    ): GetMarketCategoryListFlowUseCase {
+        return GetMarketCategoryListFlowUseCase(marketsTokenRepository = marketsTokenRepository)
+    }
+
+    @Provides
+    @Singleton
     fun provideFetchCoinIndicatorsUseCase(
-        coinIndicatorsRepository: CoinIndicatorsRepository,
+        marketIndicatorsRepository: MarketIndicatorsRepository,
     ): FetchCoinIndicatorsUseCase {
-        return FetchCoinIndicatorsUseCase(coinIndicatorsRepository = coinIndicatorsRepository)
+        return FetchCoinIndicatorsUseCase(marketIndicatorsRepository = marketIndicatorsRepository)
     }
 
     @Provides
     @Singleton
     fun provideGetCoinIndicatorsUpdatesUseCase(
-        coinIndicatorsRepository: CoinIndicatorsRepository,
+        marketIndicatorsRepository: MarketIndicatorsRepository,
     ): GetCoinIndicatorsUpdatesUseCase {
-        return GetCoinIndicatorsUpdatesUseCase(coinIndicatorsRepository = coinIndicatorsRepository)
+        return GetCoinIndicatorsUpdatesUseCase(marketIndicatorsRepository = marketIndicatorsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetMarketIndicatorsUseCase(
+        marketIndicatorsRepository: MarketIndicatorsRepository,
+    ): GetMarketIndicatorsUseCase {
+        return GetMarketIndicatorsUseCase(marketIndicatorsRepository = marketIndicatorsRepository)
     }
 }

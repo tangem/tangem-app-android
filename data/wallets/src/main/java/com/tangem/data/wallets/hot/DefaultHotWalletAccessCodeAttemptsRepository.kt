@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.SystemClock
 import android.provider.Settings
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Attempts
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Companion.ATTEMPTS_BEFORE_DELETION
@@ -22,10 +22,11 @@ import javax.inject.Inject
 class DefaultHotWalletAccessCodeAttemptsRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val appPreferencesStore: AppPreferencesStore,
+    private val storePreferencesKeys: StorePreferencesKeys,
 ) : HotWalletAccessCodeAttemptsRepository {
 
     override suspend fun incrementAttempts(id: HotWalletAccessCodeAttemptsRepository.AttemptId) {
-        val attemptsKey = PreferencesKeys.getHotWalletUnlockAttemptsKey(id.attemptIdKey())
+        val attemptsKey = storePreferencesKeys.getHotWalletUnlockAttemptsKey(id.attemptIdKey())
 
         appPreferencesStore.editData { preferences ->
             val currentAttempts = preferences[attemptsKey] ?: 0
@@ -33,11 +34,11 @@ class DefaultHotWalletAccessCodeAttemptsRepository @Inject constructor(
 
             preferences[attemptsKey] = newAttempts
             val currentBootCount = currentBootCount()
-            preferences[PreferencesKeys.getHotWalletUnlockBootKey(id.attemptIdKey())] = currentBootCount
+            preferences[storePreferencesKeys.getHotWalletUnlockBootKey(id.attemptIdKey())] = currentBootCount
 
             if (newAttempts >= MAX_FAST_FORWARD_ATTEMPTS) {
                 val currentDeadline = SystemClock.elapsedRealtime() + COOLDOWN_SECONDS * 1000
-                preferences[PreferencesKeys.getHotWalletUnlockDeadlineKey(id.attemptIdKey())] = currentDeadline
+                preferences[storePreferencesKeys.getHotWalletUnlockDeadlineKey(id.attemptIdKey())] = currentDeadline
             }
         }
     }
@@ -49,19 +50,19 @@ class DefaultHotWalletAccessCodeAttemptsRepository @Inject constructor(
         )
 
         appPreferencesStore.editData { data ->
-            data.remove(PreferencesKeys.getHotWalletUnlockAttemptsKey(authAttemptId.attemptIdKey()))
-            data.remove(PreferencesKeys.getHotWalletUnlockBootKey(authAttemptId.attemptIdKey()))
-            data.remove(PreferencesKeys.getHotWalletUnlockDeadlineKey(authAttemptId.attemptIdKey()))
+            data.remove(storePreferencesKeys.getHotWalletUnlockAttemptsKey(authAttemptId.attemptIdKey()))
+            data.remove(storePreferencesKeys.getHotWalletUnlockBootKey(authAttemptId.attemptIdKey()))
+            data.remove(storePreferencesKeys.getHotWalletUnlockDeadlineKey(authAttemptId.attemptIdKey()))
         }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getAttempts(id: HotWalletAccessCodeAttemptsRepository.AttemptId): Flow<Attempts> {
-        val flow = appPreferencesStore.data.map {
+        val flow = appPreferencesStore.data.map { preferences ->
             AttemptsPersistentData(
-                attempts = it[PreferencesKeys.getHotWalletUnlockAttemptsKey(id.attemptIdKey())] ?: 0,
-                bootCount = it[PreferencesKeys.getHotWalletUnlockBootKey(id.attemptIdKey())] ?: 0,
-                deadline = it[PreferencesKeys.getHotWalletUnlockDeadlineKey(id.attemptIdKey())] ?: 0L,
+                attempts = preferences[storePreferencesKeys.getHotWalletUnlockAttemptsKey(id.attemptIdKey())] ?: 0,
+                bootCount = preferences[storePreferencesKeys.getHotWalletUnlockBootKey(id.attemptIdKey())] ?: 0,
+                deadline = preferences[storePreferencesKeys.getHotWalletUnlockDeadlineKey(id.attemptIdKey())] ?: 0L,
             )
         }.distinctUntilChanged()
 
@@ -77,9 +78,9 @@ class DefaultHotWalletAccessCodeAttemptsRepository @Inject constructor(
 
     override suspend fun getAttemptsSync(id: HotWalletAccessCodeAttemptsRepository.AttemptId): Attempts {
         val prefs = appPreferencesStore.data.first()
-        val count = prefs[PreferencesKeys.getHotWalletUnlockAttemptsKey(id.attemptIdKey())] ?: 0
-        val boot = prefs[PreferencesKeys.getHotWalletUnlockBootKey(id.attemptIdKey())] ?: 0
-        val deadline = prefs[PreferencesKeys.getHotWalletUnlockDeadlineKey(id.attemptIdKey())] ?: 0L
+        val count = prefs[storePreferencesKeys.getHotWalletUnlockAttemptsKey(id.attemptIdKey())] ?: 0
+        val boot = prefs[storePreferencesKeys.getHotWalletUnlockBootKey(id.attemptIdKey())] ?: 0
+        val deadline = prefs[storePreferencesKeys.getHotWalletUnlockDeadlineKey(id.attemptIdKey())] ?: 0L
         return toState(id, count, deadline, boot)
     }
 

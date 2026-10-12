@@ -136,8 +136,8 @@ sealed class PaymentAccountStatusValue {
      * @property balance The balance details, or `null` when the account exists but its balance is
      *                   unavailable — `customer/me` delivered no fiat balance and no cached one was found.
      * @property cryptoCurrency The crypto currency held by the deactivated account.
-     * @property networks The blockchain networks attached to the account, each tagged by its issuance
-     *                    status ([PaymentNetworkStatus]).
+     * @property networks Multichain: the blockchain networks attached to the account, each tagged by its
+     *                    issuance status ([PaymentNetworkStatus]). Empty when the backend attached none.
      * @property fiatRate Exchange rate of [cryptoCurrency] to the account's fiat currency,
      *                    or `null` if the quote is not yet available. When `null`,
      *                    [totalFiatBalance] resolves to [TotalFiatBalance.Failed].
@@ -155,6 +155,10 @@ sealed class PaymentAccountStatusValue {
         val error: Error?,
     ) : PaymentAccountStatusValue() {
 
+        /**
+         * Multichain: statuses of every [PaymentNetworkStatus.Available] network flattened together.
+         * Statuses are built per-network by the data layer. Empty when no `Available` network is attached.
+         */
         val cryptoCurrencyStatuses: List<CryptoCurrencyStatus>
             get() = networks.filterIsInstance<PaymentNetworkStatus.Available>()
                 .flatMap { it.cryptoCurrencyStatuses }
@@ -188,6 +192,9 @@ sealed class PaymentAccountStatusValue {
      * @property virtualAccount Virtual Account (Visa on-ramp) availability — VA MVP0 (TWI-1638), or `null`
      *                          when not applicable (feature toggle off / wallet not eligible).
      *                          Transient: not persisted in the local cache.
+     * @property isBankOfframpAvailable Whether the customer has the `BANK_OFFRAMP` eligibility channel, or `null`
+     *                                   while it is unknown — the status came from the cache, or the channel
+     *                                   lookup failed. Transient: not persisted in the local cache.
      * @property tariffPlan Current tariff plan with subscription data (Tiers).
      *                      Transient: not persisted in the local cache.
      */
@@ -203,9 +210,14 @@ sealed class PaymentAccountStatusValue {
         val fiatRate: SerializedBigDecimal?,
         val error: Error?,
         val virtualAccount: VirtualAccountOnramp?,
+        val isBankOfframpAvailable: Boolean?,
         val tariffPlan: TangemPayTariffPlanState?,
     ) : PaymentAccountStatusValue() {
 
+        /**
+         * Multichain: statuses of every [PaymentNetworkStatus.Available] network flattened together.
+         * Statuses are built per-network by the data layer. Empty when no `Available` network is attached.
+         */
         val cryptoCurrencyStatuses: List<CryptoCurrencyStatus>
             get() = networks.filterIsInstance<PaymentNetworkStatus.Available>()
                 .flatMap { it.cryptoCurrencyStatuses }
@@ -305,6 +317,28 @@ val PaymentAccountStatusValue.tariffPlan: TangemPayCustomerTariffPlan?
 fun PaymentAccountStatusValue.hasAccountData(): Boolean = this is PaymentAccountStatusValue.Loaded ||
     this is PaymentAccountStatusValue.Deactivated ||
     this is PaymentAccountStatusValue.Error.CardIssueFailed && balance != null
+
+/**
+ * Whether the customer has a payment (spending) account at all, whatever shape it is in. Deactivated,
+ * failed and still-being-issued accounts all count as existing — only [PaymentAccountStatusValue.Empty]
+
+ * known account never briefly reads as absent while its status refreshes.
+ */
+val PaymentAccountStatusValue.isCreated: Boolean
+    get() = when (this) {
+        is PaymentAccountStatusValue.Empty,
+        is PaymentAccountStatusValue.NotCreated,
+        -> false
+        is PaymentAccountStatusValue.Error,
+        is PaymentAccountStatusValue.IssuingCard,
+        is PaymentAccountStatusValue.AwaitingPlanSelection,
+        is PaymentAccountStatusValue.Inactive,
+        is PaymentAccountStatusValue.Loaded,
+        is PaymentAccountStatusValue.Loading,
+        is PaymentAccountStatusValue.UnderReview,
+        is PaymentAccountStatusValue.Deactivated,
+        -> true
+    }
 
 /** Balances of an account-bearing status, or `null` when the status has none (or they are unavailable). */
 val PaymentAccountStatusValue.balanceOrNull: PaymentAccountStatusValue.Balance?

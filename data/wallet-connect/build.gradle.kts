@@ -3,6 +3,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.ksp)
+    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
@@ -19,6 +20,8 @@ dependencies {
     // region Other libraries
     api(deps.arrow.core)
     api(deps.moshi)
+    implementation(deps.androidx.datastore.base)
+    implementation(deps.androidx.datastore.core)
     ksp(deps.moshi.kotlin.codegen)
     implementation(deps.jodatime)
     implementation(deps.okio)
@@ -39,14 +42,15 @@ dependencies {
     // endregion
 
     // region DI
-    implementation(deps.hilt.core)
+    implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
     // endregion
 
     // region Project - Core
     api(projects.core.analytics)
     api(projects.core.configToggles)
-    api(projects.core.datasource)
+    implementation(projects.core.local)
+    implementation(projects.core.remote)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
     // endregion
@@ -60,6 +64,7 @@ dependencies {
     api(projects.domain.account.status)
     api(projects.domain.blockaid)
     api(projects.domain.common)
+    api(projects.domain.networks)
     api(projects.domain.transaction)
     api(projects.domain.walletConnect)
     api(projects.domain.walletConnect.models)
@@ -82,6 +87,7 @@ dependencies {
     // endregion
 
     // region Tests
+    testRuntimeOnly(deps.orgJson)
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
     // endregion

@@ -5,7 +5,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -20,7 +19,6 @@ internal class SingleWalletSubscriber @AssistedInject constructor(
     override val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     override val stateController: WalletStateController,
     override val clickIntents: WalletClickIntents,
-    override val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : BasicAccountListSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<Unit> = combine(

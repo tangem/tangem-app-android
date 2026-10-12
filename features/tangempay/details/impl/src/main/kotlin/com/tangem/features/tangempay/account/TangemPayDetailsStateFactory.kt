@@ -6,8 +6,6 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayTariffPlanState
@@ -36,17 +34,10 @@ internal class TangemPayDetailsStateFactory(
     private val onBack: () -> Unit,
     private val onOpenMenu: () -> Unit,
     private val intents: TangemPayDetailIntents,
-    private val isTiersPlusPlanEnabled: Boolean,
-    private val isMultichainEnabled: Boolean,
 ) {
-    private val notificationFactory = TangemPayDetailsNotificationFactory(
-        intents = intents,
-        isTiersPlusPlanEnabled = isTiersPlusPlanEnabled,
-    )
+    private val notificationFactory = TangemPayDetailsNotificationFactory(intents = intents)
 
-    private val subtitle = resourceReference(
-        if (isMultichainEnabled) R.string.tangempay_multinetwork else R.string.tangempay_usdc_on_polygon_network,
-    )
+    private val subtitle = resourceReference(R.string.tangempay_multinetwork)
 
     fun getLoadingState(): TangemPayDetailsUM {
         return TangemPayDetailsUM(
@@ -69,8 +60,7 @@ internal class TangemPayDetailsStateFactory(
                 ),
             ),
             isBalanceHidden = false,
-            errorNotificationConfig = null,
-            statusBannerState = null,
+            messageBanner = null,
             cashbackBlockState = null,
         )
     }
@@ -83,11 +73,11 @@ internal class TangemPayDetailsStateFactory(
         val areActionButtonsEnabled = isFresh && hasUnfrozenCard
         val balance = status.balance
         val hasWithdrawableBalance = status.hasWithdrawableAmount
-        val canAddFunds = status.canAddFunds()
+        val canAddFunds = status.canAddFunds
         val errorNotification = notificationFactory.createErrorConfig(status.error)
         val tiersNotification = notificationFactory.createTiersConfig(status.tariffPlan)
         val tiersNotificationType = status.tariffPlan?.let { plan ->
-            TangemPayTiersBannerType.fromPlan(isTiersPlusPlanEnabled, plan)
+            TangemPayTiersBannerType.fromPlan(plan)
         }
         val issueCardNotificationType = status.cards.resolveProgressBanner().takeIf { type ->
             tiersNotificationType != TangemPayTiersBannerType.TopUpForTierUpgrade ||
@@ -131,8 +121,7 @@ internal class TangemPayDetailsStateFactory(
                 isWithdrawEnabled = areActionButtonsEnabled && hasWithdrawableBalance,
             ),
             isBalanceHidden = false,
-            errorNotificationConfig = errorNotification ?: tiersNotification,
-            statusBannerState = null,
+            messageBanner = (errorNotification ?: tiersNotification)?.let(::MessageBannerUM),
             cashbackBlockState = null,
         )
     }
@@ -206,12 +195,11 @@ internal class TangemPayDetailsStateFactory(
                 fiatBalance = fiatBalance,
                 cardsBlockState = null,
                 isMuted = status.source != StatusSource.ACTUAL,
-                isAddFundsEnabled = status.canAddFunds(),
+                isAddFundsEnabled = status.canAddFunds,
                 isWithdrawEnabled = hasWithdrawableBalance,
             ),
             isBalanceHidden = false,
-            errorNotificationConfig = null,
-            statusBannerState = MessageBannerUM(state = accountDeactivatedBanner),
+            messageBanner = MessageBannerUM(state = accountDeactivatedBanner),
             cashbackBlockState = null,
         )
     }
@@ -256,8 +244,7 @@ internal class TangemPayDetailsStateFactory(
                 isBalanceFlickering = false,
             ),
             isBalanceHidden = false,
-            errorNotificationConfig = notification,
-            statusBannerState = null,
+            messageBanner = notification?.let(::MessageBannerUM),
             cashbackBlockState = null,
         )
     }
@@ -281,7 +268,7 @@ internal class TangemPayDetailsStateFactory(
             ),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Content(
                 actionButtons = getActionButtonsConfig(
-                    isAddFundsEnabled = status.canAddFunds(),
+                    isAddFundsEnabled = status.canAddFunds,
                     isWithdrawEnabled = false,
                 ),
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
@@ -295,8 +282,7 @@ internal class TangemPayDetailsStateFactory(
                 isBalanceFlickering = false,
             ),
             isBalanceHidden = false,
-            errorNotificationConfig = null,
-            statusBannerState = MessageBannerUM(
+            messageBanner = MessageBannerUM(
                 state = notificationFactory.createCardIssueFailedBannerState(),
                 onClose = intents::onCardIssueFailedBannerDismissed,
             ).takeUnless { isBannerDismissed },
@@ -338,7 +324,7 @@ internal class TangemPayDetailsStateFactory(
 
     private fun getTopBarMenuItems(tariffPlan: TangemPayTariffPlanState?): ImmutableList<TangemPayDropDownItemUM> {
         return buildList {
-            if (isTiersPlusPlanEnabled && tariffPlan != null) {
+            if (tariffPlan != null) {
                 val isPlanChanging = tariffPlan.isPlanTransitioningState
                 add(
                     TangemPayDropDownItemUM(
@@ -360,28 +346,6 @@ internal class TangemPayDetailsStateFactory(
                     ),
                 )
             }
-            if (isTiersPlusPlanEnabled && tariffPlan != null && !tariffPlan.tariff.plan.isBasicTier) {
-                add(
-                    TangemPayDropDownItemUM(
-                        title = resourceReference(R.string.tangempay_visa_benefits),
-                        onClick = intents::onClickVisaBenefits,
-                        icon = TangemIconUM.Icon(
-                            iconRes = CoreUiR.drawable.ic_heart_20,
-                            tintReference = { TangemTheme.colors3.icon.primary },
-                        ),
-                    ),
-                )
-            }
-            add(
-                TangemPayDropDownItemUM(
-                    title = resourceReference(R.string.tangem_pay_terms_limits),
-                    onClick = intents::onClickTermsAndLimits,
-                    icon = TangemIconUM.Icon(
-                        imageVector = Icons.ic_document_20,
-                        tintReference = { TangemTheme.colors3.icon.primary },
-                    ),
-                ),
-            )
             add(
                 TangemPayDropDownItemUM(
                     title = resourceReference(R.string.tangempay_pay_support),

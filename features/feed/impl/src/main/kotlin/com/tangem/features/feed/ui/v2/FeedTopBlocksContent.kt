@@ -1,206 +1,130 @@
 package com.tangem.features.feed.ui.v2
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.ds2.glowring.TangemGlowRing
-import com.tangem.core.ui.ds2.surface.TangemSurface
-import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalMaterialShadowEnabled
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.feed.impl.R
+import com.tangem.features.feed.components.v2.blocks.FeedBlock
 import com.tangem.features.feed.v2.FeedV2Component
+import kotlinx.collections.immutable.ImmutableList
 
 private val BlockGap = 8.dp
+private val RowHorizontalPadding = 16.dp
 
 // Derived from the api-declared row height so the semi-open detent matches the layout exactly.
 private val LargeBlockHeight = FeedV2Component.TopBlocksHeight
 private val SmallBlockHeight = (LargeBlockHeight - BlockGap) / 2
 private val SmallBlockWidth = 120.dp
-private val LargeBlockWidth = 200.dp
-private val BlockCornerRadius = 20.dp
-private val BlockShape = RoundedCornerShape(size = BlockCornerRadius)
+
+/** How many small blocks share a column before the next one starts a new one. */
+private const val SMALL_BLOCKS_PER_COLUMN = 2
 
 /**
- * Placeholder top-blocks row: the For you / Add account shortcut column followed by large promo
- * cards. Layout matches the target design; real block content arrives with the block plug-ins.
+ * Top-blocks row: the contributed [blocks] in the order they were given, each drawing itself.
  *
- * @param onForYouClick opens the For You screen on the feed stack
+ * Small blocks stack into columns of [SMALL_BLOCKS_PER_COLUMN]; large ones stand alone. A lone large
+ * card stretches across whatever the rest leaves free, since there is nothing to scroll to; from two
+ * on they take their fixed width and the row scrolls.
  */
 @Composable
-internal fun FeedTopBlocksContent(onForYouClick: () -> Unit, modifier: Modifier = Modifier) {
-    // the blocks lie on the already-elevated shtorka, where another material shadow reads as grime
-    CompositionLocalProvider(LocalMaterialShadowEnabled provides false) {
+internal fun FeedTopBlocksContent(
+    blocks: ImmutableList<FeedBlock>,
+    onBlocksOnScreenChange: (Set<String>) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val columns = remember(blocks) { blocks.toColumns() }
+    val listState = rememberLazyListState()
+
+    BlocksOnScreenTracker(listState = listState, onBlocksOnScreenChange = onBlocksOnScreenChange)
+
+    BoxWithConstraints(modifier = modifier) {
+        val largeBlockWidth = rememberLargeBlockWidth(columns = columns, rowWidth = maxWidth)
+
         LazyRow(
-            modifier = modifier,
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            state = listState,
+            contentPadding = PaddingValues(horizontal = RowHorizontalPadding),
             horizontalArrangement = Arrangement.spacedBy(space = BlockGap),
         ) {
-            item(key = "shortcuts") {
-                Column(verticalArrangement = Arrangement.spacedBy(space = BlockGap)) {
-                    ForYouBlock(onClick = onForYouClick)
-                    AddAccountBlock()
+            columns.forEach { column ->
+                item(key = column.first().key) {
+                    Column(verticalArrangement = Arrangement.spacedBy(space = BlockGap)) {
+                        column.forEach { block ->
+                            block.Content(modifier = block.sizeModifier(largeBlockWidth = largeBlockWidth))
+                        }
+                    }
                 }
             }
-            item(key = "promo_pay") {
-                LargeBlockPlaceholder(title = "Tangem Pay")
-            }
-            item(key = "promo_yield") {
-                LargeBlockPlaceholder(title = "Yield")
-            }
-        }
-    }
-}
-
-/** For you shortcut: a small block with the DS3 magic [TangemGlowRing] running along its border. */
-@Composable
-private fun ForYouBlock(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(modifier = modifier.size(width = SmallBlockWidth, height = SmallBlockHeight)) {
-        SmallBlock(
-            title = stringResourceSafe(R.string.for_you_title),
-            onClick = onClick,
-            modifier = Modifier.matchParentSize(),
-            icon = { PortfolioDonutIcon() },
-        )
-        // the ring is an inner glow clipped to its bounds, so it goes OVER the card — inside the
-        // ring's content slot the card's material fill would paint the whole glow over
-        TangemGlowRing(
-            modifier = Modifier.matchParentSize(),
-            cornerRadius = BlockCornerRadius,
-        )
-    }
-}
-
-@Composable
-private fun AddAccountBlock(modifier: Modifier = Modifier) {
-    SmallBlock(
-        title = "Add account",
-        // TODO: [TWI-1608] add-account flow
-        onClick = {},
-        modifier = modifier.size(width = SmallBlockWidth, height = SmallBlockHeight),
-        icon = { AddAccountIcon() },
-    )
-}
-
-/** Small shortcut block: icon at the top start, title at the bottom start. */
-@Composable
-private fun SmallBlock(
-    title: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    icon: @Composable () -> Unit,
-) {
-    TangemSurface(
-        modifier = modifier,
-        isMaterial = true,
-        shape = BlockShape,
-        onClick = onClick,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(all = 12.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
-        ) {
-            icon()
-            Text(
-                text = title,
-                style = TangemTheme.typography3.subheading.medium,
-                color = TangemTheme.colors3.text.primary,
-                maxLines = 1,
-            )
-        }
-    }
-}
-
-/** Placeholder portfolio-allocation donut, segments in the DS3 accent colors. */
-@Suppress("MagicNumber")
-@Composable
-private fun PortfolioDonutIcon(modifier: Modifier = Modifier) {
-    val accent = TangemTheme.colors3.icon.accent
-    val segments = listOf(
-        accent.blue to 150f,
-        accent.red to 40f,
-        accent.green to 40f,
-        accent.orange to 40f,
-    )
-
-    Canvas(modifier = modifier.size(size = 28.dp)) {
-        val strokeWidth = 5.dp.toPx()
-        val inset = strokeWidth / 2
-        val arcSize = Size(width = size.width - strokeWidth, height = size.height - strokeWidth)
-        val gap = 18f
-        var startAngle = -90f
-
-        segments.forEach { (color, sweep) ->
-            drawArc(
-                color = color,
-                startAngle = startAngle,
-                sweepAngle = sweep,
-                useCenter = false,
-                topLeft = Offset(x = inset, y = inset),
-                size = arcSize,
-                style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
-            )
-            startAngle += sweep + gap
         }
     }
 }
 
 @Composable
-private fun AddAccountIcon(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(size = 28.dp)
-            .clip(shape = CircleShape)
-            .background(color = TangemTheme.colors3.bg.accent.blue),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_plus_24),
-            contentDescription = null,
-            tint = TangemTheme.colors3.icon.staticLight,
-            modifier = Modifier.size(size = 20.dp),
-        )
-    }
-}
-
-@Composable
-private fun LargeBlockPlaceholder(title: String, modifier: Modifier = Modifier) {
-    TangemSurface(
-        modifier = modifier.size(width = LargeBlockWidth, height = LargeBlockHeight),
-        isMaterial = true,
-        shape = BlockShape,
-        onClick = {},
-    ) {
-        Box(modifier = Modifier.padding(all = 12.dp), contentAlignment = Alignment.Center) {
-            Text(
-                text = title,
-                style = TangemTheme.typography3.subheading.medium,
-                color = TangemTheme.colors3.text.primary,
-            )
+private fun BlocksOnScreenTracker(listState: LazyListState, onBlocksOnScreenChange: (Set<String>) -> Unit) {
+    val keysOnScreen by remember(listState) {
+        derivedStateOf {
+            listState.layoutInfo.visibleItemsInfo.mapNotNullTo(destination = mutableSetOf()) { it.key as? String }
         }
     }
+    val onChange by rememberUpdatedState(onBlocksOnScreenChange)
+
+    LaunchedEffect(keysOnScreen) { onChange(keysOnScreen) }
+
+    DisposableEffect(listState) { onDispose { onChange(emptySet()) } }
+}
+
+/**
+ * A single large card has the row to itself once the small ones have taken their column, so it fills
+ * the rest instead of leaving a gap no one can scroll into.
+ */
+@Composable
+private fun rememberLargeBlockWidth(columns: List<List<FeedBlock>>, rowWidth: Dp): Dp = remember(columns, rowWidth) {
+    val largeColumns = columns.count { column -> column.first().size == FeedBlock.Size.Large }
+    if (largeColumns != 1) return@remember 186.dp
+
+    val smallColumns = columns.size - largeColumns
+    val takenBySmall = (SmallBlockWidth + BlockGap) * smallColumns
+    rowWidth - RowHorizontalPadding * 2 - takenBySmall
+}
+
+private fun FeedBlock.sizeModifier(largeBlockWidth: Dp): Modifier = when (size) {
+    FeedBlock.Size.Small -> Modifier.size(width = SmallBlockWidth, height = SmallBlockHeight)
+    FeedBlock.Size.Large -> Modifier.size(width = largeBlockWidth, height = LargeBlockHeight)
+}
+
+/** Runs of small blocks become columns; a large block always gets a column of its own. */
+private fun List<FeedBlock>.toColumns(): List<List<FeedBlock>> = buildList {
+    val pendingSmall = mutableListOf<FeedBlock>()
+
+    fun flushSmall() {
+        if (pendingSmall.isNotEmpty()) {
+            add(pendingSmall.toList())
+            pendingSmall.clear()
+        }
+    }
+
+    this@toColumns.forEach { block ->
+        if (block.size == FeedBlock.Size.Large) {
+            flushSmall()
+            add(listOf(block))
+        } else {
+            pendingSmall.add(block)
+            if (pendingSmall.size == SMALL_BLOCKS_PER_COLUMN) flushSmall()
+        }
+    }
+
+    flushSmall()
 }

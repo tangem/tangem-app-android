@@ -1,8 +1,8 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
+import com.tangem.common.ui.tokens.rendersActionAsEnabled
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
@@ -18,7 +18,7 @@ internal class UpdateActionButtonsTransformer(
             ?: return prevState
 
         val prev = prevState.balanceBlockUM
-        val isSwapEnabled = swapAction.unavailabilityReason == ScenarioUnavailabilityReason.None
+        val isSwapEnabled = swapAction.unavailabilityReason.rendersActionAsEnabled()
 
         val updated = prev.swapButton.copy(
             isEnabled = isSwapEnabled,

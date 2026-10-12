@@ -18,7 +18,6 @@ dependencies {
 
     /** Core modules */
     api(projects.core.analytics)
-    api(projects.core.datasource)
     api(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.ui)
@@ -28,11 +27,13 @@ dependencies {
 
     /** Domain */
     api(projects.domain.assetsdiscovery)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.card)
     api(projects.domain.common)
     api(projects.domain.feedback)
     api(projects.domain.hotWallet)
     api(projects.domain.settings)
+    api(projects.domain.socialLogin)
     api(projects.domain.wallets)
     implementation(projects.domain.cloudBackup)
     implementation(projects.domain.feedback.models)
@@ -87,8 +88,5 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Test */
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
-    testImplementation(deps.test.coroutine)
+    testImplementation(projects.test.core)
 }

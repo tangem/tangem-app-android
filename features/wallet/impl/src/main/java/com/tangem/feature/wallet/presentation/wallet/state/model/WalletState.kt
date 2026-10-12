@@ -10,9 +10,10 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.holder.LockedTx
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.LockedWalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.WalletStateHolder
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
-import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
+import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 
@@ -27,8 +28,9 @@ internal sealed interface WalletState : WalletStateHolder {
         abstract val nftState: WalletNFTItemUM
         abstract val type: WalletType
         abstract val tangemPayMainUM: TangemPayMainUM
-        abstract val virtualAccountMainUM: VirtualAccountMainUM
+        abstract val moneyAccountMainUM: MoneyAccountMainUM
         abstract val polymarketWalletBlockUM: PolymarketWalletBlockUM
+        abstract val collectiblesWalletBlockUM: CollectiblesWalletBlockUM
         abstract val assetsDiscoveryProgressUM: AssetsDiscoveryProgressUM
 
         data class Content(
@@ -41,8 +43,9 @@ internal sealed interface WalletState : WalletStateHolder {
             override val nftState: WalletNFTItemUM,
             override val type: WalletType,
             override val tangemPayMainUM: TangemPayMainUM,
-            override val virtualAccountMainUM: VirtualAccountMainUM = VirtualAccountMainUM.Empty,
+            override val moneyAccountMainUM: MoneyAccountMainUM = MoneyAccountMainUM.Empty,
             override val polymarketWalletBlockUM: PolymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden,
+            override val collectiblesWalletBlockUM: CollectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden,
             override val assetsDiscoveryProgressUM: AssetsDiscoveryProgressUM = AssetsDiscoveryProgressUM.Idle,
         ) : MultiCurrency()
 
@@ -63,8 +66,9 @@ internal sealed interface WalletState : WalletStateHolder {
             override val tokensListState = WalletTokensListState.ContentState.Locked
             override val nftState: WalletNFTItemUM = WalletNFTItemUM.Hidden
             override val tangemPayMainUM: TangemPayMainUM = TangemPayMainUM.Empty
-            override val virtualAccountMainUM: VirtualAccountMainUM = VirtualAccountMainUM.Empty
+            override val moneyAccountMainUM: MoneyAccountMainUM = MoneyAccountMainUM.Empty
             override val polymarketWalletBlockUM: PolymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden
+            override val collectiblesWalletBlockUM: CollectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden
             override val assetsDiscoveryProgressUM: AssetsDiscoveryProgressUM = AssetsDiscoveryProgressUM.Idle
         }
     }

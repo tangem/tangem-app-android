@@ -8,6 +8,8 @@ import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonGroup
+import com.tangem.core.ui.ds2.button.TangemButtonStack
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
@@ -16,6 +18,7 @@ import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
@@ -211,6 +214,76 @@ internal data class TangemButtonStory(
     }
 }
 
+internal data class TangemFooterStory(
+    val actions: Actions,
+    val fadeVariant: TangemFade.Variant,
+    val hasExtraTop: Boolean,
+    val isFadeEnabled: Boolean,
+    val isBlurEnabled: Boolean,
+    val isInModal: Boolean,
+    val onActionsChange: (Actions) -> Unit,
+    val onFadeVariantChange: (TangemFade.Variant) -> Unit,
+    val onExtraTopToggle: () -> Unit,
+    val onFadeToggle: () -> Unit,
+    val onBlurToggle: () -> Unit,
+    val onInModalToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** Which actions block the footer hosts — the configurations from the design. */
+    enum class Actions(val label: String) {
+        ButtonGroupVertical("2 buttons"),
+        ButtonGroupHorizontal("2 in a row"),
+        SingleButton("1 button"),
+        StartEnd("start + end"),
+        Search("search"),
+    }
+}
+
+internal data class TangemButtonStackStory(
+    val variant: TangemButtonStack.Variant,
+    val entryCount: Int,
+    val entryKind: EntryKind,
+    val background: Background,
+    val isBlurEnabled: Boolean,
+    val onVariantChange: (TangemButtonStack.Variant) -> Unit,
+    val onEntryCountChange: (Int) -> Unit,
+    val onEntryKindChange: (EntryKind) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+    val onBlurToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** What each entry of the stack renders — the presets from the design. */
+    enum class EntryKind(val label: String) {
+        Icon("icon"),
+        Label("label"),
+        IconLabel("icon + label"),
+    }
+
+    /** Backdrop the stack is rendered on top of, to verify the material fill. */
+    enum class Background(val label: String) {
+        Rainbow("rainbow"),
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+        BgBrand("bg.brand"),
+        BgInverse("bg.inverse"),
+    }
+}
+
+internal data class TangemButtonGroupStory(
+    val orientation: TangemButtonGroup.Orientation,
+    val buttonCount: Int,
+    val size: TangemButton.Size,
+    val isFillWidth: Boolean,
+    val isLongLabel: Boolean,
+    val hasIcon: Boolean,
+    val onOrientationChange: (TangemButtonGroup.Orientation) -> Unit,
+    val onButtonCountChange: (Int) -> Unit,
+    val onSizeChange: (TangemButton.Size) -> Unit,
+    val onFillWidthToggle: () -> Unit,
+    val onLongLabelToggle: () -> Unit,
+    val onIconToggle: () -> Unit,
+) : DsStoryBookPage
+
 @Suppress("BooleanPropertyNaming")
 internal data class TangemRowStory(
     val contentLead: TangemRowContentLead,
@@ -254,11 +327,20 @@ internal data class TangemRowStory(
 internal data class TangemFadeStory(
     val variant: TangemFade.Variant,
     val position: TangemFade.Position,
+    val height: Height,
     val isBlur: Boolean,
     val onVariantChange: (TangemFade.Variant) -> Unit,
     val onPositionChange: (TangemFade.Position) -> Unit,
+    val onHeightChange: (Height) -> Unit,
     val onBlurToggle: () -> Unit,
-) : DsStoryBookPage
+) : DsStoryBookPage {
+
+    /** Fade height inside the preview box — the full backdrop or half of it, anchored to [position]. */
+    enum class Height(val label: String) {
+        MatchParent("match parent"),
+        Half("1/2"),
+    }
+}
 
 @Suppress("BooleanPropertyNaming")
 internal data class TangemTopNavigationStory(
@@ -547,15 +629,15 @@ internal data class TangemFilterGroupStory(
 internal data class TangemModalStory(
     val isShown: Boolean,
     val isStackedShown: Boolean,
-    val isExpanded: Boolean,
     val isContentScrollable: Boolean,
     val isTallContent: Boolean,
+    val isInputVisible: Boolean,
     val presentation: TangemModal.Presentation,
     val onShownChange: (Boolean) -> Unit,
     val onStackedShownChange: (Boolean) -> Unit,
-    val onExpandedToggle: () -> Unit,
     val onContentScrollableToggle: () -> Unit,
     val onTallContentToggle: () -> Unit,
+    val onInputToggle: () -> Unit,
     val onPresentationChange: (TangemModal.Presentation) -> Unit,
 ) : DsStoryBookPage
 
@@ -645,3 +727,22 @@ internal data class TangemTabNavigationStory(
         Dark("dark"),
     }
 }
+
+internal data class TangemStatusScreenStory(
+    val variant: TangemStatusScreen.Variant,
+    val hasDescription: Boolean,
+    val hasAsset: Boolean,
+    val hasExtraBottom: Boolean,
+    val hasDetails: Boolean,
+    val hasFooter: Boolean,
+    val isFullscreen: Boolean,
+    val replayKey: Int,
+    val onVariantChange: (TangemStatusScreen.Variant) -> Unit,
+    val onDescriptionToggle: () -> Unit,
+    val onAssetToggle: () -> Unit,
+    val onExtraBottomToggle: () -> Unit,
+    val onDetailsToggle: () -> Unit,
+    val onFooterToggle: () -> Unit,
+    val onFullscreenToggle: () -> Unit,
+    val onReplayClick: () -> Unit,
+) : DsStoryBookPage

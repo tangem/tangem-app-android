@@ -105,6 +105,18 @@ class ArchivedAccountConverterTest {
                     IllegalStateException("Total networks should not be null"),
                 ),
             ),
+            TestModel(
+                value = createDTO(type = WalletAccountDTO.Type.JOINT),
+                expected = Result.success(createDomain().copy(type = ArchivedAccount.Type.JOINT)),
+            ),
+            TestModel(
+                value = createDTO(type = WalletAccountDTO.Type.CRYPTO),
+                expected = Result.success(createDomain().copy(type = ArchivedAccount.Type.CRYPTO)),
+            ),
+            TestModel(
+                value = createDTO(type = null),
+                expected = Result.success(createDomain().copy(type = ArchivedAccount.Type.CRYPTO)),
+            ),
         )
     }
 
@@ -114,6 +126,7 @@ class ArchivedAccountConverterTest {
         icon: String = "Letter",
         iconColor: String = "Azure",
         derivationIndex: Int = 0,
+        type: WalletAccountDTO.Type? = null,
         totalTokens: Int? = 1,
         totalNetworks: Int? = 1,
     ): WalletAccountDTO {
@@ -123,6 +136,7 @@ class ArchivedAccountConverterTest {
             derivationIndex = derivationIndex,
             icon = icon,
             iconColor = iconColor,
+            type = type,
             tokens = null,
             totalTokens = totalTokens,
             totalNetworks = totalNetworks,
@@ -140,6 +154,7 @@ class ArchivedAccountConverterTest {
             ),
             tokensCount = 1,
             networksCount = 1,
+            type = ArchivedAccount.Type.CRYPTO,
         )
     }
 

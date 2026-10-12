@@ -11,6 +11,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.data.polymarket.builder.PolymarketErc7739SignatureBuilder
 import com.tangem.data.polymarket.builder.PolymarketTypedDataBuilder
 import com.tangem.data.polymarket.derivation.PolymarketAddressFactory
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
@@ -21,11 +22,15 @@ import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.derivation.POLYMARKET_OWNER_DERIVATION_PATH
+import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import com.tangem.domain.polymarket.model.PolymarketOnboardingSignatures
 import com.tangem.domain.polymarket.model.PolymarketSigningError
+import com.tangem.domain.polymarket.model.PredictionOrderDraft
+import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.signing.PolymarketApprovalsPayload
 import com.tangem.domain.polymarket.signing.PolymarketClobAuthData
+import com.tangem.domain.polymarket.signing.PredictionOrderPayload
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.test.core.ProvideTestModels
@@ -43,11 +48,13 @@ import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.web3j.crypto.ECKeyPair
 import org.web3j.crypto.Sign
+import java.math.BigDecimal
 import java.math.BigInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -360,6 +367,161 @@ internal class DefaultPolymarketTypedDataSignerTest {
         coVerify(exactly = 0) { cardSdkConfigRepository.getCommonSigner(any(), any(), any()) }
     }
 
+    @Nested
+    inner class SignOrder {
+
+        @Test
+        fun `GIVEN an order payload WHEN signOrder THEN the owner key signs the nested ERC-7739 digest`() = runTest {
+            // Arrange
+            arrangeSigning()
+            val hashes = slot<List<ByteArray>>()
+            coEvery { transactionSigner.sign(capture(hashes), any()) } answers {
+                CompletionResult.Success(hashes.captured.map { sign(it) })
+            }
+
+            // Act
+            val result = signer.signOrder(userWalletId, orderPayload())
+
+            // Assert
+            val expectedDigest = PolymarketErc7739SignatureBuilder.digest(
+                order = result.getOrNull()!!.order,
+                isNegRisk = false,
+                depositWalletAddress = DEPOSIT_WALLET,
+            )
+            assertThat(hashes.captured).hasSize(1)
+            assertThat(hashes.captured.single()).isEqualTo(expectedDigest)
+        }
+
+        @Test
+        fun `GIVEN an order payload WHEN signOrder THEN both parties are the deposit wallet`() = runTest {
+            // Arrange
+            arrangeSigning()
+            stubSuccessfulSigning()
+
+            // Act
+            val result = signer.signOrder(userWalletId, orderPayload())
+
+            // Assert
+            val order = result.getOrNull()!!.order
+            assertThat(order.maker).isEqualTo(DEPOSIT_WALLET)
+            assertThat(order.signer).isEqualTo(DEPOSIT_WALLET)
+            assertThat(order.signer).isNotEqualTo(PolymarketAddressFactory().createAddress(ownerKey))
+            assertThat(order.signatureType).isEqualTo(PolymarketContracts.SIGNATURE_TYPE_DEPOSIT_WALLET)
+        }
+
+        @Test
+        fun `GIVEN an order payload WHEN signOrder THEN the signature is the wrapped one and not the bare inner`() =
+            runTest {
+                // Arrange
+                arrangeSigning()
+                val hashes = slot<List<ByteArray>>()
+                val publicKey = slot<Wallet.PublicKey>()
+                coEvery { transactionSigner.sign(capture(hashes), capture(publicKey)) } answers {
+                    CompletionResult.Success(hashes.captured.map { sign(it) })
+                }
+
+                // Act
+                val result = signer.signOrder(userWalletId, orderPayload())
+
+                // Assert
+                val digest = hashes.captured.single()
+                val inner = PolymarketSignatureFormatter().format(sign(digest), digest, publicKey.captured)
+                val expected = PolymarketErc7739SignatureBuilder.wrap(
+                    innerSignature = inner,
+                    order = result.getOrNull()!!.order,
+                    isNegRisk = false,
+                )
+                assertThat(result.getOrNull()!!.signature).isEqualTo(expected)
+                assertThat(result.getOrNull()!!.signature).isNotEqualTo(inner)
+            }
+
+        @Test
+        fun `GIVEN a millisecond timestamp WHEN signOrder THEN the order carries it without rescaling`() = runTest {
+            // Arrange
+            arrangeSigning()
+            stubSuccessfulSigning()
+
+            // Act
+            val result = signer.signOrder(userWalletId, orderPayload())
+
+            // Assert
+            assertThat(result.getOrNull()!!.order.timestampMillis).isEqualTo(TIMESTAMP_MILLIS)
+        }
+
+        @Test
+        fun `GIVEN the quote's legs WHEN signOrder THEN they are signed verbatim`() = runTest {
+            // Arrange
+            arrangeSigning()
+            stubSuccessfulSigning()
+
+            // Act
+            val result = signer.signOrder(userWalletId, orderPayload())
+
+            // Assert
+            val order = result.getOrNull()!!.order
+            assertThat(order.makerAmount).isEqualTo(BigInteger("72000000"))
+            assertThat(order.takerAmount).isEqualTo(BigInteger("97959180"))
+            assertThat(order.side).isEqualTo(PredictionOrderSide.BUY)
+        }
+
+        @Test
+        fun `GIVEN the user cancels WHEN signOrder THEN the cancellation is not reported as a failure`() = runTest {
+            // Arrange
+            arrangeSigning()
+            coEvery { transactionSigner.sign(any<List<ByteArray>>(), any()) } returns
+                CompletionResult.Failure(TangemSdkError.UserCancelled())
+
+            // Act
+            val result = signer.signOrder(userWalletId, orderPayload())
+
+            // Assert
+            assertThat(result).isEqualTo(PolymarketSigningError.UserCancelled.left())
+        }
+
+        @Test
+        fun `GIVEN owner key not derived WHEN signOrder THEN nothing is signed`() = runTest {
+            // Arrange
+            every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
+            stubDerivedKey(present = false)
+
+            // Act
+            val result = signer.signOrder(userWalletId, orderPayload())
+
+            // Assert
+            assertThat(result).isEqualTo(PolymarketSigningError.NotDerived.left())
+            coVerify(exactly = 0) { transactionSigner.sign(any<List<ByteArray>>(), any()) }
+        }
+
+        private fun arrangeSigning() {
+            every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
+            stubDerivedKey()
+            stubColdSigner()
+        }
+
+        private fun stubSuccessfulSigning() {
+            val hashes = slot<List<ByteArray>>()
+            coEvery { transactionSigner.sign(capture(hashes), any()) } answers {
+                CompletionResult.Success(hashes.captured.map { sign(it) })
+            }
+        }
+
+        private fun orderPayload(): PredictionOrderPayload = PredictionOrderPayload(
+            draft = PredictionOrderDraft(
+                tokenId = "1116017998421700000000000000000000000000000000000000000000000000047",
+                isNegRisk = false,
+                side = PredictionOrderSide.BUY,
+                makerAmount = BigInteger("72000000"),
+                takerAmount = BigInteger("97959180"),
+                takerAmountQuantum = BigInteger.ONE,
+                worstCasePrice = BigDecimal("0.735"),
+                builderCode = "0x00000000000000000000000000000000000000000000000000000000000000aa",
+            ),
+            depositWalletAddress = DEPOSIT_WALLET,
+            salt = 1_234_567_890L,
+            timestampMillis = TIMESTAMP_MILLIS,
+        )
+    }
+
     private fun provideTestModels() = listOf(
         SigningFailureModel(TangemSdkError.UserCancelled(), PolymarketSigningError.UserCancelled),
         SigningFailureModel(TangemSdkError.WalletNotFound(), PolymarketSigningError.MissingWallet),
@@ -368,6 +530,8 @@ internal class DefaultPolymarketTypedDataSignerTest {
 
     private companion object {
         const val CHAIN_CODE_SIZE = 32
+        const val TIMESTAMP_MILLIS = 1_787_300_000_000L
+        const val DEPOSIT_WALLET = "0x5A057dc6394196fBa51D84457DA3FB8FA241Fc20"
         val OWNER_PRIVATE_KEY: BigInteger = BigInteger.ONE
     }
 }

@@ -34,7 +34,6 @@ import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.features.swap.deeplink.SwapDeepLinkHandler
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -51,10 +50,7 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Handles the `tangem://swap` deep link.
  *
- * Toggle OFF ([SwapFeatureToggles.isSwapDeeplinkEnabled]) preserves the v1 behavior: a bare
- * [AppRoute.Swap] is opened for the currently selected wallet, ignoring all query params.
- *
- * Toggle ON resolves a target wallet from the AI-MCP / broadcast wallet id params (see
+ * Resolves a target wallet from the AI-MCP / broadcast wallet id params (see
  * [resolveTargetWalletId]), switching the selected wallet if needed, then resolves concrete
  * FROM/TO tokens from the wallet's accounts (or leaves them null to let the model degrade — see
  * [resolveToken]), gates inconsistent inputs to a bare Main route, applies `from_amount` only for a
@@ -77,7 +73,6 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val rampStateManager: RampStateManager,
     private val swapInteractor: SwapInteractor,
-    private val swapFeatureToggles: SwapFeatureToggles,
 ) : SwapDeepLinkHandler {
 
     init {
@@ -87,26 +82,10 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
     private fun handleDeepLink() {
         val selectedResult = getSelectedWalletSyncUseCase()
 
-        if (!swapFeatureToggles.isSwapDeeplinkEnabled) {
-            navigateToSelectedWalletOrReturn(selectedResult)
-            return
-        }
-
         scope.launch {
             val targetWalletId = resolveTargetWalletId(selectedResult) ?: return@launch
             resolveTokensAndNavigate(targetWalletId)
         }
-    }
-
-    private fun navigateToSelectedWalletOrReturn(selectedResult: Either<GetUserWalletError, UserWallet>) {
-        val selectedWalletId = selectedResult.fold(
-            ifLeft = { error ->
-                TangemLogger.e("Error on getting user wallet: $error")
-                null
-            },
-            ifRight = { wallet -> wallet.walletId },
-        ) ?: return
-        navigateToSwap(selectedWalletId)
     }
 
     /**
@@ -341,7 +320,7 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
         val userWallet = getUserWalletUseCase(walletId).getOrNull() ?: return emptyList()
         val accountList = singleAccountStatusListSupplier.getSyncOrNull(walletId) ?: return emptyList()
         val portfolioStatuses = accountList.accountStatuses
-            .filterIsInstance<AccountStatus.CryptoPortfolio>()
+            .filterIsInstance<AccountStatus.Personal>()
             .map { portfolio -> portfolio.account to portfolio.flattenCurrencies() }
         val allCurrencies = portfolioStatuses.flatMap { (_, statuses) -> statuses.map { it.currency } }
         val availability = rampStateManager.availableForSwap(walletId, allCurrencies)

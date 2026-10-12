@@ -65,6 +65,8 @@ internal class SelectColorTransformerTest {
             icons = CryptoPortfolioIcon.Icon.entries.toImmutableList(),
             wallet = wallet,
             isContinueEnabled = true,
+            isValuePasted = false,
+            onValuePastedTriggerDismiss = {},
             onNameChange = onNameChange,
             onColorClick = onColorClick,
             onIconClick = onIconClick,
@@ -79,7 +81,7 @@ internal class SelectColorTransformerTest {
         // Shared instances so states built before and after a transform compare equal
         val namePlaceholder = stringReference(value = "Joint account")
         val wallet = JointAccountConfigUM.WalletUM(name = "My wallet", onClick = {})
-        val onNameChange: (String) -> Unit = {}
+        val onNameChange: (String, Boolean) -> Unit = { _, _ -> }
         val onColorClick: (CryptoPortfolioIcon.Color) -> Unit = {}
         val onIconClick: (CryptoPortfolioIcon.Icon) -> Unit = {}
         val onContinueClick: () -> Unit = {}

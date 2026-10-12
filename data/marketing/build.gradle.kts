@@ -22,8 +22,10 @@ dependencies {
     implementation(projects.domain.marketing)
     implementation(projects.domain.marketing.models)
 
-    implementation(projects.core.datasource)
+    implementation(projects.store.datasource)
+    implementation(projects.core.local)
     implementation(projects.core.utils)
+    runtimeOnly(deps.room.runtime)
 
     testImplementation(projects.test.core)
     api(deps.moshi)

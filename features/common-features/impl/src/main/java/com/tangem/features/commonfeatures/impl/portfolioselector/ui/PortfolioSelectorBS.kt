@@ -2,6 +2,7 @@ package com.tangem.features.commonfeatures.impl.portfolioselector.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -21,6 +22,10 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.footer.TangemFooter
+import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -56,36 +61,28 @@ internal fun PortfolioSelectorBS(
             val bottomInset = LocalTangemBottomSheetContentBottomInset.current
             val listBottomPadding = PaddingValues(bottom = bottomInset.coerceAtLeast(16.dp))
 
-            if (state.isSelectorV3Enabled) {
-                val contentScrollable = LocalBottomSheetContentScrollable.current
-                val lazyListState = rememberLazyListState()
+            val contentScrollable = LocalBottomSheetContentScrollable.current
+            val lazyListState = rememberLazyListState()
 
-                if (contentScrollable != null) {
-                    val isScrollable by remember {
-                        derivedStateOf { lazyListState.canScrollForward || lazyListState.canScrollBackward }
-                    }
-
-                    LaunchedEffect(isScrollable) {
-                        contentScrollable.value = isScrollable
-                    }
+            if (contentScrollable != null) {
+                val isScrollable by remember {
+                    derivedStateOf { lazyListState.canScrollForward || lazyListState.canScrollBackward }
                 }
 
-                PortfolioSelectorContentV3(
-                    state = state,
-                    modifier = modifier.padding(horizontal = 16.dp),
-                    lazyListState = lazyListState,
-                    contentPadding = listBottomPadding,
-                )
-            } else {
-                PortfolioSelectorContentV2(
-                    state = state,
-                    modifier = modifier.padding(horizontal = 16.dp),
-                    contentPadding = listBottomPadding,
-                )
+                LaunchedEffect(isScrollable) {
+                    contentScrollable.value = isScrollable
+                }
             }
+
+            PortfolioSelectorContentV3(
+                state = state,
+                modifier = modifier.padding(horizontal = 16.dp),
+                lazyListState = lazyListState,
+                contentPadding = listBottomPadding,
+            )
         },
         footer = {
-            if (state.isSelectorV3Enabled && state.button != null) {
+            if (state.button != null) {
                 SecondaryButton(
                     text = state.button.text.resolveReference(),
                     onClick = state.button.onClick,
@@ -94,6 +91,52 @@ internal fun PortfolioSelectorBS(
                         .fillMaxWidth()
                         .padding(16.dp),
                 )
+            }
+        },
+    )
+}
+
+@Composable
+internal fun PortfolioSelectorModal(
+    state: PortfolioSelectorUM,
+    onDismiss: () -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    TangemModal<TangemBottomSheetConfigContent.Empty>(
+        config = TangemBottomSheetConfig(
+            isShown = true,
+            onDismissRequest = onDismiss,
+            content = TangemBottomSheetConfigContent.Empty,
+        ),
+        onBack = onBack,
+        title = {
+            TangemModal.TopNavigation(title = state.title, onClose = onDismiss)
+        },
+        content = {
+            PortfolioSelectorColumnContent(
+                state = state,
+                modifier = modifier
+                    .padding(top = 16.dp, bottom = if (state.button == null) 24.dp else 0.dp)
+                    .padding(horizontal = 16.dp),
+            )
+
+            if (state.button != null) {
+                TangemFooter(
+                    windowInsets = WindowInsets(0),
+                    fadeEnabled = false,
+                    blurBackground = false,
+                    modifier = Modifier.padding(bottom = 24.dp),
+                ) {
+                    TangemButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        variant = TangemButton.Variant.Secondary,
+                        size = TangemButton.Size.X12,
+                        text = state.button.text,
+                        isEnabled = state.button.isEnabled,
+                        onClick = state.button.onClick,
+                    )
+                }
             }
         },
     )
@@ -122,6 +165,19 @@ private fun PreviewV2(@PreviewParameter(PortfolioSelectorPreviewStateProvider::c
             state = params,
             onDismiss = {},
             modifier = Modifier,
+            onBack = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewModal(@PreviewParameter(PortfolioSelectorPreviewStateProvider::class) params: PortfolioSelectorUM) {
+    TangemThemePreviewRedesign {
+        PortfolioSelectorModal(
+            state = params,
+            onDismiss = {},
             onBack = {},
         )
     }

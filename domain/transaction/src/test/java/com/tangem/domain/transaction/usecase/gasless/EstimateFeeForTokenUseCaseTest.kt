@@ -109,7 +109,7 @@ internal class EstimateFeeForTokenUseCaseTest {
         } returns Either.Right(plan)
 
         // Act
-        val result = createUseCase(isYieldWithdrawEnabled = true).invoke(
+        val result = createUseCase().invoke(
             userWallet = userWallet,
             feeTokenCurrencyStatus = feeTokenStatus,
             sendingTokenCurrencyStatus = feeTokenStatus,
@@ -134,7 +134,7 @@ internal class EstimateFeeForTokenUseCaseTest {
         } returns Either.Left(GetFeeError.GaslessError.NotEnoughFunds)
 
         // Act — swapping the whole balance leaves nothing to pay the fee with
-        val result = createUseCase(isYieldWithdrawEnabled = true).invoke(
+        val result = createUseCase().invoke(
             userWallet = userWallet,
             feeTokenCurrencyStatus = feeTokenStatus,
             sendingTokenCurrencyStatus = feeTokenStatus,
@@ -159,7 +159,7 @@ internal class EstimateFeeForTokenUseCaseTest {
         } returns Either.Left(GetFeeError.GaslessError.YieldBalanceUnavailable)
 
         // Act
-        val result = createUseCase(isYieldWithdrawEnabled = true).invoke(
+        val result = createUseCase().invoke(
             userWallet = userWallet,
             feeTokenCurrencyStatus = feeTokenStatus,
             sendingTokenCurrencyStatus = feeTokenStatus,
@@ -184,7 +184,7 @@ internal class EstimateFeeForTokenUseCaseTest {
         } returns Either.Left(GetFeeError.GaslessError.ModuleUpdateUnavailable)
 
         // Act
-        val result = createUseCase(isYieldWithdrawEnabled = true).invoke(
+        val result = createUseCase().invoke(
             userWallet = userWallet,
             feeTokenCurrencyStatus = feeTokenStatus,
             sendingTokenCurrencyStatus = feeTokenStatus,
@@ -204,7 +204,7 @@ internal class EstimateFeeForTokenUseCaseTest {
         } returns Result.Success(BigInteger("60000"))
 
         // Act
-        val result = createUseCase(isYieldWithdrawEnabled = true).invoke(
+        val result = createUseCase().invoke(
             userWallet = userWallet,
             feeTokenCurrencyStatus = feeTokenStatus,
             sendingTokenCurrencyStatus = feeTokenStatus,
@@ -221,7 +221,7 @@ internal class EstimateFeeForTokenUseCaseTest {
 
     // region Fixtures
 
-    private fun createUseCase(isYieldWithdrawEnabled: Boolean) = EstimateFeeForTokenUseCase(
+    private fun createUseCase() = EstimateFeeForTokenUseCase(
         gaslessTransactionRepository = gaslessTransactionRepository,
         gaslessYieldRepository = gaslessYieldRepository,
         walletManagersFacade = walletManagersFacade,
@@ -229,13 +229,12 @@ internal class EstimateFeeForTokenUseCaseTest {
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         currencyChecksRepository = currencyChecksRepository,
         resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
-        isYieldWithdrawEnabled = isYieldWithdrawEnabled,
     )
 
     private fun accountStatusList() = AccountStatusList(
         userWalletId = userWalletId,
         accountStatuses = listOf(
-            AccountStatus.CryptoPortfolio(
+            AccountStatus.Personal(
                 account = Account.Personal.createMainAccount(userWalletId),
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,

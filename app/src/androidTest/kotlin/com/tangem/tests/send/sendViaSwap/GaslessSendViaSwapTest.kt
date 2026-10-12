@@ -1,7 +1,6 @@
 package com.tangem.tests.send.sendViaSwap
 
 import com.tangem.common.BaseTestCase
-import com.tangem.core.res.R
 import com.tangem.common.constants.TestConstants.BITCOIN_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.PROVIDERS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
@@ -9,6 +8,7 @@ import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -30,7 +30,6 @@ class GaslessSendViaSwapTest : BaseTestCase() {
     private val nativeTokenName = "Polygon"
     private val swapTokenName = "Bitcoin"
     private val mainNetwork = "MAIN"
-    private val providerName = "Changelly"
     private val tokenAmount = "1"
     private val hotWalletTokensState = "PolygonUSDCHotWallet"
     private val quotesState = "PolygonUSDC"
@@ -162,7 +161,7 @@ class GaslessSendViaSwapTest : BaseTestCase() {
     fun checkSendViaSwapFinalScreenAndSendTest() {
         val exchangeStatusScenario = "exchange_status_provider"
         val changellyStatusState = "Changelly"
-        val expressStatusItemTitle = getResourceString(R.string.express_exchange_by, providerName)
+        val swapHistoryTitle = getResourceString(CoreUiR.string.common_swapping)
 
         setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$hotWalletTokensState'") {
@@ -226,9 +225,11 @@ class GaslessSendViaSwapTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onSendSuccessScreen { closeButton.performClick() }
             }
-            step("Assert 'Express status' item with title '$expressStatusItemTitle' is displayed") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).assertIsDisplayed() }
+            // The history only re-reads on a refresh, so pull it until the swap row lands.
+            step("Assert '$swapHistoryTitle' transaction is displayed in the history") {
+                awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+                    pullToRefreshTokenDetails()
+                    onTxHistoryScreen { transactionItem(swapHistoryTitle).assertIsDisplayed() }
                 }
             }
         }

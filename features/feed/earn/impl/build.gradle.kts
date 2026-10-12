@@ -17,10 +17,16 @@ dependencies {
     implementation(projects.features.commonFeatures.api)
 
     /* Project - Domain */
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.common)
     implementation(projects.domain.earn)
     implementation(projects.domain.models)
     implementation(projects.domain.markets.models)
+    implementation(projects.domain.search)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets)
 
     /* Project - Core */
     implementation(projects.core.analytics)
@@ -34,6 +40,7 @@ dependencies {
     /* Project - Common */
     implementation(projects.common.routing)
     implementation(projects.common.ui)
+    implementation(projects.common.uiMarkets)
 
     /* Project - Libs */
     implementation(projects.libs.blockchainSdk)
@@ -62,4 +69,5 @@ dependencies {
 
     /** Tests */
     testImplementation(projects.test.core)
+    testImplementation(projects.common.test)
 }

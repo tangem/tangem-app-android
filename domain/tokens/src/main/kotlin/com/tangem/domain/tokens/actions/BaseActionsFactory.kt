@@ -198,6 +198,44 @@ internal open class BaseActionsFactory(
         }
     }
 
+    protected fun createSwapAction(
+        userWallet: UserWallet,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        shouldShowSwapStories: Boolean,
+    ): ActionState.Swap {
+        val cryptoCurrency = cryptoCurrencyStatus.currency
+        val isMultiCurrency = userWallet is UserWallet.Cold && userWallet.isMultiCurrency ||
+            userWallet is UserWallet.Hot
+
+        if (!isMultiCurrency) {
+            return ActionState.Swap(
+                unavailabilityReason = ScenarioUnavailabilityReason.SingleWallet,
+                shouldShowBadge = false,
+            )
+        }
+
+        return when {
+            cryptoCurrency.isCustom -> {
+                ActionState.Swap(
+                    unavailabilityReason = ScenarioUnavailabilityReason.CustomToken(cryptoCurrency.name),
+                    shouldShowBadge = false,
+                )
+            }
+            cryptoCurrencyStatus.value is CryptoCurrencyStatus.NoQuote -> {
+                ActionState.Swap(
+                    unavailabilityReason = ScenarioUnavailabilityReason.TokenNoQuotes(cryptoCurrency.name),
+                    shouldShowBadge = false,
+                )
+            }
+            else -> {
+                ActionState.Swap(
+                    unavailabilityReason = ScenarioUnavailabilityReason.None,
+                    shouldShowBadge = shouldShowSwapStories,
+                )
+            }
+        }
+    }
+
     protected fun ActionAvailabilityBuilder.addYieldSupplyAction(yieldSupplyAvailability: YieldSupplyAvailability) {
         if (yieldSupplyAvailability is YieldSupplyAvailability.Available) {
             ActionState.YieldMode(

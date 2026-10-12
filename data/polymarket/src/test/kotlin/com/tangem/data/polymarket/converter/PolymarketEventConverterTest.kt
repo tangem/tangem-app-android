@@ -1,9 +1,9 @@
 package com.tangem.data.polymarket.converter
 
 import com.google.common.truth.Truth
-import com.tangem.datasource.api.polymarket.models.PolymarketEventDto
-import com.tangem.datasource.api.polymarket.models.PolymarketMarketDto
-import com.tangem.datasource.api.polymarket.models.PolymarketOutcomeDto
+import com.tangem.grow.datasource.polymarket.models.PolymarketEventDto
+import com.tangem.grow.datasource.polymarket.models.PolymarketMarketDto
+import com.tangem.grow.datasource.polymarket.models.PolymarketOutcomeDto
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
@@ -62,6 +62,7 @@ internal class PolymarketEventConverterTest {
                 markets = listOf(
                     PolymarketMarket(
                         id = "market-id",
+                        conditionId = "0xcondition",
                         eventId = "event-id",
                         title = "Market question",
                         slug = "market-slug",
@@ -71,6 +72,7 @@ internal class PolymarketEventConverterTest {
                         imageUrl = "https://cdn.tangem.com/market-image.png",
                         status = PolymarketStatus.ACTIVE,
                         isNegRisk = true,
+                        isAcceptingOrders = true,
                         startDate = "2026-06-11T16:00:00Z",
                         endDate = "2026-07-19T20:00:00Z",
                         startDateIso = "2026-06-11",
@@ -114,6 +116,64 @@ internal class PolymarketEventConverterTest {
             Truth.assertThat(actual.volume24h).isNull()
             Truth.assertThat(actual.liquidity).isNull()
             Truth.assertThat(actual.markets).isEmpty()
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ConvertAcceptingOrders {
+
+        @Test
+        fun `GIVEN a market that takes no orders WHEN convert THEN the flag survives`() {
+            // Arrange
+            val dto = createEventDto(markets = listOf(createMarketDto(isAcceptingOrders = false)))
+
+            // Act
+            val actual = converter.convert(value = dto)
+
+            // Assert
+            Truth.assertThat(actual.markets.first().isAcceptingOrders).isFalse()
+        }
+
+        @Test
+        fun `GIVEN the flag is absent WHEN convert THEN the market stays open`() {
+            // Arrange
+            val dto = createEventDto(markets = listOf(createMarketDto(isAcceptingOrders = null)))
+
+            // Act
+            val actual = converter.convert(value = dto)
+
+            // Assert
+            Truth.assertThat(actual.markets.first().isAcceptingOrders).isTrue()
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ConvertConditionId {
+
+        @Test
+        fun `GIVEN the market carries a condition id WHEN convert THEN it is kept`() {
+            // Arrange
+            val dto = createEventDto(markets = listOf(createMarketDto(conditionId = "0xabc")))
+
+            // Act
+            val actual = converter.convert(value = dto)
+
+            // Assert
+            Truth.assertThat(actual.markets.first().conditionId).isEqualTo("0xabc")
+        }
+
+        @Test
+        fun `GIVEN the condition id is absent WHEN convert THEN the market has none`() {
+            // Arrange
+            val dto = createEventDto(markets = listOf(createMarketDto(conditionId = null)))
+
+            // Act
+            val actual = converter.convert(value = dto)
+
+            // Assert
+            Truth.assertThat(actual.markets.first().conditionId).isNull()
         }
     }
 
@@ -230,9 +290,14 @@ internal class PolymarketEventConverterTest {
         markets = markets,
     )
 
-    private fun createMarketDto(outcomes: List<PolymarketOutcomeDto> = emptyList()): PolymarketMarketDto =
+    private fun createMarketDto(
+        outcomes: List<PolymarketOutcomeDto> = emptyList(),
+        isAcceptingOrders: Boolean? = true,
+        conditionId: String? = "0xcondition",
+    ): PolymarketMarketDto =
         PolymarketMarketDto(
             id = "market-id",
+            conditionId = conditionId,
             eventId = "event-id",
             question = "Market question",
             slug = "market-slug",
@@ -242,6 +307,7 @@ internal class PolymarketEventConverterTest {
             image = "https://cdn.tangem.com/market-image.png",
             status = "active",
             isNegRisk = true,
+            isAcceptingOrders = isAcceptingOrders,
             startDate = "2026-06-11T16:00:00Z",
             endDate = "2026-07-19T20:00:00Z",
             startDateIso = "2026-06-11",

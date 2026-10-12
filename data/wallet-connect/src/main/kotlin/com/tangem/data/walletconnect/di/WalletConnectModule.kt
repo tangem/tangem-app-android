@@ -1,0 +1,55 @@
+package com.tangem.data.walletconnect.di
+
+import android.content.Context
+import androidx.datastore.dataStoreFile
+import com.squareup.moshi.Moshi
+import com.tangem.core.remote.moshi.NetworkMoshi
+import com.tangem.data.walletconnect.store.DefaultWalletConnectStore
+import com.tangem.data.walletconnect.store.WalletConnectStore
+import com.tangem.datasource.utils.AppDataStoreFactory
+import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.setTypes
+import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.domain.walletconnect.model.WcPendingApprovalSessionDTO
+import com.tangem.domain.walletconnect.model.WcSessionDTO
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+internal object WalletConnectModule {
+
+    @Provides
+    @Singleton
+    fun provideWalletConnectStore(
+        @NetworkMoshi moshi: Moshi,
+        @ApplicationContext context: Context,
+        scope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
+    ): WalletConnectStore {
+        return DefaultWalletConnectStore(
+            persistenceStore = dataStoreFactory.create(
+                serializer = MoshiDataStoreSerializer(
+                    moshi = moshi,
+                    types = setTypes<WcSessionDTO>(),
+                    defaultValue = emptySet(),
+                ),
+                produceFile = { context.dataStoreFile(fileName = "wallet_connect_sessions") },
+                scope = scope,
+            ),
+            pendingApprovalSessionsStore = dataStoreFactory.create(
+                serializer = MoshiDataStoreSerializer(
+                    moshi = moshi,
+                    types = setTypes<WcPendingApprovalSessionDTO>(),
+                    defaultValue = emptySet(),
+                ),
+                produceFile = { context.dataStoreFile(fileName = "wallet_connect_pending_approval_sessions") },
+                scope = scope,
+            ),
+        )
+    }
+}

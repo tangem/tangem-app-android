@@ -2,6 +2,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.model
 
 import arrow.core.right
 import com.tangem.common.card.Card
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.common.card.FirmwareVersion as SdkFirmwareVersion
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.converter.ArtworkUMConverter
@@ -31,10 +32,8 @@ import com.tangem.operations.attestation.ArtworkSize
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.test.core.TestAppCoroutineScope
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -500,17 +499,6 @@ internal class OnboardingMultiWalletModelTest {
             appScope = TestAppCoroutineScope(testScope),
             deleteWalletCloudBackupUseCase = deleteWalletCloudBackupUseCase,
             hotWalletFeatureToggles = hotWalletFeatureToggles,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 }

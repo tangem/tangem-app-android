@@ -196,7 +196,7 @@ class CryptoCurrencyStatusOperationsTest {
                 userWalletId = userWalletId,
                 cryptoCurrencies = listOf(currency),
             )
-            val accountStatus = AccountStatus.CryptoPortfolio(
+            val accountStatus = AccountStatus.Personal(
                 account = account,
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,
@@ -227,7 +227,7 @@ class CryptoCurrencyStatusOperationsTest {
                 userWalletId = userWalletId,
                 cryptoCurrencies = listOf(currency),
             )
-            val accountStatus = AccountStatus.CryptoPortfolio(
+            val accountStatus = AccountStatus.Personal(
                 account = account,
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,
@@ -249,7 +249,7 @@ class CryptoCurrencyStatusOperationsTest {
                 userWalletId = userWalletId,
                 cryptoCurrencies = emptyList(),
             )
-            val accountStatus = AccountStatus.CryptoPortfolio(
+            val accountStatus = AccountStatus.Personal(
                 account = account,
                 tokenList = TokenList.Empty,
                 priceChangeLce = lceLoading(),
@@ -271,7 +271,7 @@ class CryptoCurrencyStatusOperationsTest {
                 userWalletId = userWalletId,
                 cryptoCurrencies = currencies,
             )
-            val accountStatus = AccountStatus.CryptoPortfolio(
+            val accountStatus = AccountStatus.Personal(
                 account = account,
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,
@@ -527,7 +527,7 @@ class CryptoCurrencyStatusOperationsTest {
                 currencies = currencyStatuses,
             )
         }
-        val accountStatus = AccountStatus.CryptoPortfolio(
+        val accountStatus = AccountStatus.Personal(
             account = account,
             tokenList = tokenList,
             priceChangeLce = lceLoading(),

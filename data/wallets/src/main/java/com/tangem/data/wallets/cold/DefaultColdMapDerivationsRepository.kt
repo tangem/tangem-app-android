@@ -74,12 +74,21 @@ internal class DefaultColdMapDerivationsRepository @Inject constructor(
         return@withContext derivePublicKeys(userWallet = userWallet, derivations = derivations).first
     }
 
+    override suspend fun findMissingDerivations(
+        userWallet: UserWallet.Cold,
+        currencies: List<CryptoCurrency>,
+    ): Map<ByteArrayKey, List<DerivationPath>> {
+        if (!userWallet.scanResponse.card.settings.isHDWalletAllowed) return emptyMap()
+
+        return MissedDerivationsFinder(userWallet, isDynamicAddressesEnabled = true).find(currencies)
+    }
+
     override suspend fun derivePublicKeys(
         userWallet: UserWallet.Cold,
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
     ): Pair<UserWallet.Cold, Map<ByteArrayKey, ExtendedPublicKeysMap>> = withContext(dispatchers.io) {
         // todo replace it in task [REDACTED_JIRA]
-        val preflightReadFilter = UserWalletIdPreflightReadFilter(userWallet.walletId)
+        val preflightReadFilter = UserWalletIdPreflightReadFilter(userWallet)
         val result = tangemSdkManager.derivePublicKeys(
             cardId = null,
             derivations = derivations,

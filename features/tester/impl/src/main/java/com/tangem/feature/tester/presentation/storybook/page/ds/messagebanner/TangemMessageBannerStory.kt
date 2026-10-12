@@ -157,7 +157,7 @@ private fun ProtectedByRow() {
     ) {
         Text(
             text = "Protected by Tangem Security",
-            style = TangemTheme.typography3.body.medium,
+            style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.primary,
         )
         Icon(

@@ -31,7 +31,7 @@ val Icons.ic_control_circle_20_filled: ImageVector
             addPath(
                 fill = SolidColor(Color.Black),
                 pathFillType = PathFillType.NonZero,
-                pathData = addPathNodes("M10.25 2C14.8063 2 18.5 5.69365 18.5 10.25C18.5 14.8063 14.8063 18.5 10.25 18.5C5.69365 18.5 2 14.8063 2 10.25C2 5.69365 5.69365 2 10.25 2Z"),
+                pathData = addPathNodes("M10 2C14.4183 2 18 5.58172 18 10C18 14.4183 14.4183 18 10 18C5.58172 18 2 14.4183 2 10C2 5.58172 5.58172 2 10 2Z"),
             )
         }.build()
         return _ic_control_circle_20_filled!!

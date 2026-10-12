@@ -1,7 +1,6 @@
 package com.tangem.tests.send.sendViaSwap
 
 import com.tangem.common.BaseTestCase
-import com.tangem.core.res.R
 import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.POLYGON_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
@@ -9,10 +8,13 @@ import com.tangem.common.constants.TestConstants.SOLANA_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.XRP_ACTIVATED_RECIPIENT_ADDRESS
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.core.res.R
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.*
 import com.tangem.screens.*
@@ -257,6 +259,12 @@ class SendViaSwapTest : BaseTestCase() {
             step("Type '$inputAmount' in text field") {
                 onSendScreen { amountInputTextField.performTextInput(inputAmount) }
             }
+            // The typed amount reaches the model asynchronously — leaving the screen first drops it.
+            step("Assert amount '$inputAmount' is displayed before leaving the screen") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onSendScreen { amountInputTextField.assertTextContains(inputAmount) }
+                }
+            }
             step("Click on 'Swap to another token' button") {
                 onSendScreen { swapToAnotherTokenButton.performClick() }
             }
@@ -383,8 +391,7 @@ class SendViaSwapTest : BaseTestCase() {
         val swapTokenName = "Ethereum"
         val main = "MAIN"
         val inputAmount = "0.001"
-        val providerName = "SimpleSwap"
-        val expressStatusItemTitle = getResourceString(R.string.express_exchange_by, providerName)
+        val swapHistoryTitle = getResourceString(CoreUiR.string.common_swapping)
         val bitcoinBalanceScenarioName = "bitcoin_utxo"
         val bitcoinBalanceScenarioState = "BalanceHotWalletSvS"
         val assetsScenarioName = "express_api_assets"
@@ -415,7 +422,7 @@ class SendViaSwapTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Select token to Send via Swap") {
                 selectTokenToSendViaSwap(swapTokenName = swapTokenName, networkName = swapTokenName, networkType = main)
@@ -462,9 +469,11 @@ class SendViaSwapTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onSendSuccessScreen { closeButton.performClick() }
             }
-            step("Assert 'Express status' item is displayed with title: '$expressStatusItemTitle'") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).assertIsDisplayed() }
+            // The history only re-reads on a refresh, so pull it until the swap row lands.
+            step("Assert '$swapHistoryTitle' transaction is displayed in the history") {
+                awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+                    pullToRefreshTokenDetails()
+                    onTxHistoryScreen { transactionItem(swapHistoryTitle).assertIsDisplayed() }
                 }
             }
         }
@@ -483,8 +492,7 @@ class SendViaSwapTest : BaseTestCase() {
         val hotWalletScenarioState = "USDTHotWalletSvS"
         val ethNetworkBalanceScenarioName = "eth_network_balance"
         val ethNetworkBalanceScenarioState = "Started"
-        val providerName = "Changelly"
-        val expressStatusItemTitle = getResourceString(R.string.express_exchange_by, providerName)
+        val swapHistoryTitle = getResourceString(CoreUiR.string.common_swapping)
 
         setupHooks().run {
 
@@ -505,7 +513,7 @@ class SendViaSwapTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Select token to Send via Swap") {
                 selectTokenToSendViaSwap(swapTokenName = swapTokenName, networkName = networkName)
@@ -543,9 +551,11 @@ class SendViaSwapTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onSendSuccessScreen { closeButton.performClick() }
             }
-            step("Assert 'Express status' item is displayed with title: '$expressStatusItemTitle'") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).assertIsDisplayed() }
+            // The history only re-reads on a refresh, so pull it until the swap row lands.
+            step("Assert '$swapHistoryTitle' transaction is displayed in the history") {
+                awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+                    pullToRefreshTokenDetails()
+                    onTxHistoryScreen { transactionItem(swapHistoryTitle).assertIsDisplayed() }
                 }
             }
         }
@@ -559,8 +569,7 @@ class SendViaSwapTest : BaseTestCase() {
         val swapTokenName = "Ethereum"
         val main = "MAIN"
         val inputAmount = "0.001"
-        val providerName = "Changelly"
-        val expressStatusItemTitle = getResourceString(R.string.express_exchange_by, providerName)
+        val swapHistoryTitle = getResourceString(CoreUiR.string.common_swapping)
         val hotWalletScenarioState = "XRPHotWalletSvS"
         val xrpExchangeQuoteScenarioName = "xrp_exchange_quote"
         val xrpExchangeDataScenarioName = "xrp_exchange_data"
@@ -584,7 +593,7 @@ class SendViaSwapTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Select token to Send via Swap") {
                 selectTokenToSendViaSwap(swapTokenName = swapTokenName, networkName = swapTokenName, networkType = main)
@@ -619,9 +628,11 @@ class SendViaSwapTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onSendSuccessScreen { closeButton.performClick() }
             }
-            step("Assert 'Express status' item is displayed with title: '$expressStatusItemTitle'") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).assertIsDisplayed() }
+            // The history only re-reads on a refresh, so pull it until the swap row lands.
+            step("Assert '$swapHistoryTitle' transaction is displayed in the history") {
+                awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+                    pullToRefreshTokenDetails()
+                    onTxHistoryScreen { transactionItem(swapHistoryTitle).assertIsDisplayed() }
                 }
             }
         }
@@ -674,7 +685,7 @@ class SendViaSwapTest : BaseTestCase() {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenName)
             }
             step("Click on 'Transfer' button") {
                 onTokenDetailsScreen { transferButton.clickWithAssertion() }

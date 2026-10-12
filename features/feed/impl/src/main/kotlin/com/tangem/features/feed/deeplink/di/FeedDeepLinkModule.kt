@@ -1,9 +1,11 @@
 package com.tangem.features.feed.deeplink.di
 
+import com.tangem.features.feed.deeplink.DefaultDiscoverDeepLinkHandler
 import com.tangem.features.feed.deeplink.DefaultEarnDeepLinkHandler
 import com.tangem.features.feed.deeplink.DefaultNewsDeepLinkHandler
 import com.tangem.features.feed.deeplink.DefaultNewsDetailsDeepLinkHandler
 import com.tangem.features.feed.deeplink.DefaultYieldDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.DiscoverDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.EarnDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
@@ -35,4 +37,10 @@ internal interface FeedDeepLinkModule {
     @Binds
     @Singleton
     fun bindYieldDeepLinkHandlerFactory(impl: DefaultYieldDeepLinkHandler.Factory): YieldDeepLinkHandler.Factory
+
+    @Binds
+    @Singleton
+    fun bindDiscoverDeepLinkHandlerFactory(
+        impl: DefaultDiscoverDeepLinkHandler.Factory,
+    ): DiscoverDeepLinkHandler.Factory
 }

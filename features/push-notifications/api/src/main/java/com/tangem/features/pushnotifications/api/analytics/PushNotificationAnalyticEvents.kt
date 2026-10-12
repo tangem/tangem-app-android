@@ -37,11 +37,13 @@ sealed class PushNotificationAnalyticEvents(
 
     data class PermissionStatus(
         val isAllowed: Boolean,
+        val source: AnalyticsParam.ScreensSources? = null,
     ) : PushNotificationAnalyticEvents(
         event = "Permission Status",
-        params = mapOf(
-            AnalyticsParam.STATE to if (isAllowed) "Allow" else "Cancel",
-        ),
+        params = buildMap {
+            put(AnalyticsParam.STATE, if (isAllowed) "Allow" else "Cancel")
+            source?.let { put(AnalyticsParam.SOURCE, it.value) }
+        },
     )
 
     data class NotificationOpened(

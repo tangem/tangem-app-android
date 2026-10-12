@@ -421,10 +421,7 @@ internal class BigDecimalFiatFormatTest {
 
     @ParameterizedTest
     @MethodSource("provideTestCasesForOptionalDecimals")
-    fun `GIVEN amount WHEN format with optionalDecimals THEN correct answer`(
-        amount: String,
-        answer: String,
-    ) {
+    fun `GIVEN amount WHEN format with optionalDecimals THEN correct answer`(amount: String, answer: String,) {
         val testValue = BigDecimal(amount)
 
         val formatted = testValue.format {

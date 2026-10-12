@@ -4,7 +4,7 @@ import com.tangem.data.onramp.converters.TransactionConverter
 import com.tangem.data.onramp.models.OnrampTerminalTransactionDTO
 import com.tangem.data.onramp.models.OnrampTransactionDTO
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSet
 import com.tangem.datasource.local.preferences.utils.getObjectSetSync
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit
 
 internal class DefaultOnrampTransactionRepository(
     private val appPreferencesStore: AppPreferencesStore,
+    private val growPreferencesKeys: GrowPreferencesKeys,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : OnrampTransactionRepository {
 
@@ -31,7 +32,7 @@ internal class DefaultOnrampTransactionRepository(
         withContext(dispatchers.io) {
             appPreferencesStore.editData { mutablePreferences ->
                 val stored = mutablePreferences.getObjectSet<OnrampTransactionDTO>(
-                    PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY,
+                    growPreferencesKeys.onrampTransactionsStatusesKey,
                 )?.map(transactionConverter::convert) ?: mutableSetOf()
 
                 val updated = stored.toMutableSet()
@@ -40,7 +41,7 @@ internal class DefaultOnrampTransactionRepository(
                     .toSet()
 
                 mutablePreferences.setObjectSet<OnrampTransactionDTO>(
-                    key = PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY,
+                    key = growPreferencesKeys.onrampTransactionsStatusesKey,
                     value = updated,
                 )
             }
@@ -49,14 +50,14 @@ internal class DefaultOnrampTransactionRepository(
 
     override fun getAllTransactions(): Flow<List<OnrampTransaction>> {
         return appPreferencesStore
-            .getObjectSet<OnrampTransactionDTO>(PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY)
+            .getObjectSet<OnrampTransactionDTO>(growPreferencesKeys.onrampTransactionsStatusesKey)
             .onStart { cleanupExpiredTerminalTransactions() }
             .map { transactions -> transactions.map(transactionConverter::convert) }
     }
 
     override suspend fun getTransactionById(txId: String): OnrampTransaction? = withContext(dispatchers.io) {
         val stored = appPreferencesStore.getObjectSetSync<OnrampTransactionDTO>(
-            PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY,
+            growPreferencesKeys.onrampTransactionsStatusesKey,
         ).map(transactionConverter::convert)
 
         stored.firstOrNull { it.txId == txId }
@@ -66,7 +67,7 @@ internal class DefaultOnrampTransactionRepository(
         userWalletId: UserWalletId,
         cryptoCurrencyId: CryptoCurrency.ID,
     ): Flow<List<OnrampTransaction>> = appPreferencesStore
-        .getObjectSet<OnrampTransactionDTO>(PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY)
+        .getObjectSet<OnrampTransactionDTO>(growPreferencesKeys.onrampTransactionsStatusesKey)
         .onStart { cleanupExpiredTerminalTransactions() }
         .map { transactions ->
             transactions.filter {
@@ -93,13 +94,13 @@ internal class DefaultOnrampTransactionRepository(
             appPreferencesStore.editData { mutablePreferences ->
                 runCatching {
                     val stored = mutablePreferences.getObjectSet<OnrampTransactionDTO>(
-                        PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY,
+                        growPreferencesKeys.onrampTransactionsStatusesKey,
                     )?.toMutableSet()
 
                     stored?.removeIf { it.txId == txId }
 
                     mutablePreferences.setObjectSet<OnrampTransactionDTO>(
-                        key = PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY,
+                        key = growPreferencesKeys.onrampTransactionsStatusesKey,
                         value = stored.orEmpty(),
                     )
                 }
@@ -109,7 +110,7 @@ internal class DefaultOnrampTransactionRepository(
 
     override suspend fun isHandledTransaction(txId: String): Boolean = withContext(dispatchers.io) {
         val terminated = appPreferencesStore.getObjectSetSync<OnrampTerminalTransactionDTO>(
-            PreferencesKeys.ONRAMP_HANDLED_TRANSACTIONS_KEY,
+            growPreferencesKeys.onrampHandledTransactionsKey,
         )
 
         terminated.any { it.txId == txId }
@@ -120,7 +121,7 @@ internal class DefaultOnrampTransactionRepository(
             appPreferencesStore.editData { mutablePreferences ->
                 runCatching {
                     val archived = mutablePreferences.getObjectSet<OnrampTerminalTransactionDTO>(
-                        PreferencesKeys.ONRAMP_HANDLED_TRANSACTIONS_KEY,
+                        growPreferencesKeys.onrampHandledTransactionsKey,
                     ).orEmpty().toMutableSet()
 
                     val record = OnrampTerminalTransactionDTO(
@@ -131,7 +132,7 @@ internal class DefaultOnrampTransactionRepository(
                     archived.add(record)
 
                     mutablePreferences.setObjectSet(
-                        key = PreferencesKeys.ONRAMP_HANDLED_TRANSACTIONS_KEY,
+                        key = growPreferencesKeys.onrampHandledTransactionsKey,
                         value = archived,
                     )
                 }
@@ -144,7 +145,7 @@ internal class DefaultOnrampTransactionRepository(
             appPreferencesStore.editData { mutablePreferences ->
                 runCatching {
                     val archived = mutablePreferences.getObjectSet<OnrampTerminalTransactionDTO>(
-                        PreferencesKeys.ONRAMP_HANDLED_TRANSACTIONS_KEY,
+                        growPreferencesKeys.onrampHandledTransactionsKey,
                     )?.toMutableSet() ?: return@editData
 
                     val oneWeekAgo = System.currentTimeMillis() -
@@ -154,7 +155,7 @@ internal class DefaultOnrampTransactionRepository(
 
                     if (cleaned.size != archived.size) {
                         mutablePreferences.setObjectSet(
-                            key = PreferencesKeys.ONRAMP_HANDLED_TRANSACTIONS_KEY,
+                            key = growPreferencesKeys.onrampHandledTransactionsKey,
                             value = cleaned,
                         )
                     }

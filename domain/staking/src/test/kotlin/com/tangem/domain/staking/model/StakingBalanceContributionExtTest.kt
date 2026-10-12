@@ -24,9 +24,9 @@ import java.math.BigDecimal
 /**
  * Tests [stakingBalanceData] — the single accessor every staking-breakdown reader goes through.
  *
- * It is the gate between the two architectures: `contributions` first, legacy typed field as the fallback, which is
- * what lets a call site stay ignorant of `TWI_1717_BALANCE_CONTRIBUTIONS`. Both directions are asserted here, plus
- * the parity between them, because a wrong answer here silently empties a staking block rather than failing.
+ * It resolves `contributions` first and falls back to the legacy typed field, which is what lets a call site stay
+ * ignorant of where the balance came from. Both directions are asserted here, plus the parity between them,
+ * because a wrong answer here silently empties a staking block rather than failing.
  *
  * **Both** halves narrow to [StakingBalance.Data]: `Empty` and `Error` are `BalanceContribution`s in their own right,
  * so an un-narrowed lookup on either side could hand a caller a variant with no breakdown to show. The two models

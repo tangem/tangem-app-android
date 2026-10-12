@@ -29,16 +29,17 @@ import com.tangem.common.ui.R
 import com.tangem.common.ui.account.AccountIconPreviewData
 import com.tangem.common.ui.account.AccountRowLegacy
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
+import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.accounts.AccountDetailsScreenTestTags
 import com.tangem.features.account.details.entity.AccountDetailsUM
 
@@ -46,41 +47,50 @@ private const val NETWORKS_INFO_LINK_TAG = "networks_info_more_info"
 
 @Composable
 internal fun AccountDetailsContent(state: AccountDetailsUM, modifier: Modifier = Modifier) {
-    Column(
+    TangemTopBarScaffold(
         modifier = modifier
-            .background(color = TangemTheme.colors3.bg.primary)
-            .fillMaxSize()
             .imePadding()
-            .systemBarsPadding()
             .testTag(AccountDetailsScreenTestTags.ACCOUNT_DETAILS_CONTAINER),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        AppBarWithBackButton(
-            onBackClick = state.onCloseClick,
-            modifier = Modifier.height(TangemTheme.dimens.size56),
-        )
-
+        containerColor = TangemTheme.colors3.bg.primary,
+        topBar = {
+            TangemTopNavigation(
+                title = state.title,
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                onBack = state.onCloseClick,
+            )
+        },
+    ) { contentPadding ->
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = TangemTheme.dimens.spacing16)
-                .weight(1f),
-
+                .padding(
+                    top = contentPadding.calculateTopPadding(),
+                    bottom = contentPadding.calculateBottomPadding(),
+                    start = 16.dp,
+                    end = 16.dp,
+                ),
         ) {
-            Text(
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
-                text = stringResourceSafe(R.string.account_details_title),
-                style = TangemTheme.typography3.heading.medium,
-                color = TangemTheme.colors3.text.primary,
-            )
             AccountRow(state)
+            if (state.isPendingActivation) {
+                SpacerH(16.dp)
+                Text(
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                    text = stringResourceSafe(R.string.account_details_joint_pending_description),
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.tertiary,
+                )
+            }
             if (state.members != null || state.isManageTokensAvailable) {
+                SpacerH(16.dp)
                 AccountActionsBlock(state)
             }
-            state.networksInfo?.let { NetworksInfoText(it) }
+            state.networksInfo?.let { networksInfoUM ->
+                SpacerH(8.dp)
+                NetworksInfoText(networksInfoUM)
+            }
             when (state.archiveMode) {
                 is AccountDetailsUM.ArchiveMode.Available -> {
+                    SpacerH(16.dp)
                     Column {
                         ArchiveAccountRow(state.archiveMode)
                         SpacerH(8.dp)
@@ -280,7 +290,7 @@ private fun AccountRow(state: AccountDetailsUM) {
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun WcConnectionsContentPreview(@PreviewParameter(PreviewStateProvider::class) params: AccountDetailsUM) {
-    TangemThemePreview {
+    TangemThemePreviewRedesign {
         AccountDetailsContent(state = params)
     }
 }
@@ -296,6 +306,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountD
         val accountName = "Main"
         val portfolioIcon = AccountIconPreviewData.randomAccountIcon()
         val first = AccountDetailsUM(
+            title = resourceReference(R.string.account_details_title),
             onCloseClick = {},
             onAccountEditClick = {},
             onManageTokensClick = {},
@@ -310,6 +321,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountD
         add(first.copy(isManageTokensAvailable = false))
         add(
             first.copy(
+                title = resourceReference(R.string.common_joint_account),
                 onAccountEditClick = null,
                 members = AccountDetailsUM.MembersRowUM(
                     title = stringReference("Members"),
@@ -321,6 +333,13 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountD
                     linkText = stringReference("More info"),
                     onLinkClick = {},
                 ),
+            ),
+        )
+        add(
+            first.copy(
+                onAccountEditClick = null,
+                isManageTokensAvailable = false,
+                isPendingActivation = true,
             ),
         )
     },

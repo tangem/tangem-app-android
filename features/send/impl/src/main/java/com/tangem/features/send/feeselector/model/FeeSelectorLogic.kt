@@ -15,13 +15,13 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.isTronActivationRefusal
 import com.tangem.domain.transaction.models.AvailableFeeTokens
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.NonceInserted
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
@@ -71,7 +71,6 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getAvailableFeeTokensUseCase: GetAvailableFeeTokensUseCase,
     isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
-    sendFeatureToggles: SendFeatureToggles,
 ) : FeeSelectorIntents {
 
     private var appCurrency: AppCurrency = AppCurrency.Default
@@ -83,7 +82,6 @@ internal class FeeSelectorLogic @AssistedInject constructor(
         (
             isGaslessFeeSupportedForNetwork(params.feeCryptoCurrencyStatus.currency.network) ||
                 params.isTronGaslessSupported &&
-                sendFeatureToggles.isTronGaslessEnabled &&
                 BlockchainUtils.isTron(params.cryptoCurrencyStatus.currency.network.rawId)
             )
 
@@ -281,6 +279,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             ifLeft = { error ->
                 when {
                     error is GetFeeError.GaslessError.NotEnoughFunds -> error.left()
+                    error.isTronActivationRefusal() -> error.left()
                     // Only the automatic choice may fall back to the basic fee. Overriding a token the
                     // user picked explicitly would move the fee to the network coin behind their back,
                     // and the speed-only selector it leaves behind offers no way back to the token.

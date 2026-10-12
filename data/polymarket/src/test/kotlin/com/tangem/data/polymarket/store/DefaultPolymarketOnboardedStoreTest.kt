@@ -3,6 +3,7 @@ package com.tangem.data.polymarket.store
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.datastore.MockStateDataStore
+import app.cash.turbine.test
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -10,19 +11,19 @@ import org.junit.jupiter.api.Test
 internal class DefaultPolymarketOnboardedStoreTest {
 
     @Test
-    fun `GIVEN nothing recorded WHEN isOnboarded THEN false`() = runTest {
+    fun `GIVEN nothing recorded WHEN isOnboardedSync THEN false`() = runTest {
         // Arrange
         val store = createStore()
 
         // Act
-        val actual = store.isOnboarded(WALLET_A)
+        val actual = store.isOnboardedSync(WALLET_A)
 
         // Assert
         assertThat(actual).isFalse()
     }
 
     @Test
-    fun `GIVEN a wallet is marked WHEN isOnboarded THEN true for it alone`() = runTest {
+    fun `GIVEN a wallet is marked WHEN isOnboardedSync THEN true for it alone`() = runTest {
         // Arrange
         val store = createStore()
 
@@ -30,8 +31,8 @@ internal class DefaultPolymarketOnboardedStoreTest {
         store.markOnboarded(WALLET_A)
 
         // Assert
-        assertThat(store.isOnboarded(WALLET_A)).isTrue()
-        assertThat(store.isOnboarded(WALLET_B)).isFalse()
+        assertThat(store.isOnboardedSync(WALLET_A)).isTrue()
+        assertThat(store.isOnboardedSync(WALLET_B)).isFalse()
     }
 
     @Test
@@ -59,8 +60,52 @@ internal class DefaultPolymarketOnboardedStoreTest {
         store.clear(WALLET_A)
 
         // Assert
-        assertThat(store.isOnboarded(WALLET_A)).isFalse()
-        assertThat(store.isOnboarded(WALLET_B)).isTrue()
+        assertThat(store.isOnboardedSync(WALLET_A)).isFalse()
+        assertThat(store.isOnboardedSync(WALLET_B)).isTrue()
+    }
+
+    @Test
+    fun `GIVEN nothing recorded WHEN isOnboarded THEN emits false`() = runTest {
+        // Arrange
+        val store = createStore()
+
+        // Act
+        val actual = store.isOnboarded(WALLET_A).first()
+
+        // Assert
+        assertThat(actual).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a collector WHEN the wallet is marked and cleared THEN it re-emits both times`() = runTest {
+        // Arrange
+        val store = createStore()
+
+        // Act & Assert
+        store.isOnboarded(WALLET_A).test {
+            assertThat(awaitItem()).isFalse()
+
+            store.markOnboarded(WALLET_A)
+            assertThat(awaitItem()).isTrue()
+
+            store.clear(WALLET_A)
+            assertThat(awaitItem()).isFalse()
+        }
+    }
+
+    @Test
+    fun `GIVEN a collector WHEN another wallet is marked THEN it does not re-emit`() = runTest {
+        // Arrange
+        val store = createStore()
+
+        // Act & Assert
+        store.isOnboarded(WALLET_A).test {
+            assertThat(awaitItem()).isFalse()
+
+            store.markOnboarded(WALLET_B)
+
+            expectNoEvents()
+        }
     }
 
     private fun createStore() = DefaultPolymarketOnboardedStore(

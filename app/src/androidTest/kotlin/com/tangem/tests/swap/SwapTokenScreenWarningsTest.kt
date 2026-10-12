@@ -1,9 +1,9 @@
 package com.tangem.tests.swap
 
+import com.tangem.core.res.R
 import com.tangem.grow.datasource.config.Express
 
 import com.tangem.common.BaseTestCase
-import com.tangem.core.res.R
 import com.tangem.common.annotations.ApiEnv
 import com.tangem.common.annotations.ApiEnvConfig
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
@@ -12,6 +12,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.*
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.SwapEntryPoint
 import com.tangem.scenarios.chackUnableToCoverFeeNotification
 import com.tangem.scenarios.checkSwapWarning
@@ -49,7 +50,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
@@ -113,7 +114,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
@@ -186,7 +187,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
@@ -270,7 +271,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
@@ -514,7 +515,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
@@ -578,7 +579,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
@@ -642,7 +643,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
@@ -706,7 +707,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+                openTokenDetailsFromTokenList(tokenTitle)
             }
             step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }

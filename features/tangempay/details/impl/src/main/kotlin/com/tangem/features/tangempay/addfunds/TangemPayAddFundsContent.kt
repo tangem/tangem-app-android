@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
@@ -30,6 +31,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_card_20
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_20
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
@@ -50,6 +52,7 @@ internal fun TangemPayAddFundsContent(state: TangemPayAddFundsUM) {
                 type = TangemTopBarType.BottomSheet,
                 endContent = {
                     TangemButton(
+                        modifier = Modifier.testTag(TangemPayTestTags.ADD_FUNDS_CLOSE_BUTTON),
                         iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_close_24),
                         onClick = state.dismiss,
                         size = TangemButton.Size.X11,
@@ -84,6 +87,7 @@ private fun TangemPayTopUpItem(state: TangemPayAddFundsItemUM, modifier: Modifie
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = state.onClick)
+            .testTag(TangemPayTestTags.ADD_FUNDS_OPTION)
             .padding(vertical = TangemTheme.dimens2.x3),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
     ) {

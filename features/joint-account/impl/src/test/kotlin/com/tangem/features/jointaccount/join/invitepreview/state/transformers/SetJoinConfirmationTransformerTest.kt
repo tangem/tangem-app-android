@@ -39,8 +39,8 @@ internal class SetJoinConfirmationTransformerTest {
         assertThat(actual).isEqualTo(shownState.copy(confirmation = null))
     }
 
-    private fun createState(confirmation: JointAccountJoinConfirmationUM?): JointAccountInvitePreviewUM {
-        return JointAccountInvitePreviewUM(
+    private fun createState(confirmation: JointAccountJoinConfirmationUM?): JointAccountInvitePreviewUM.Content {
+        return JointAccountInvitePreviewUM.Content(
             accountName = "Family savings",
             accountIcon = AccountIconUM.CryptoPortfolio(
                 value = CryptoPortfolioIcon.Icon.Family,
@@ -49,6 +49,7 @@ internal class SetJoinConfirmationTransformerTest {
             requiredToSign = 2,
             totalMembers = 5,
             creatorName = "Igor Sinyak",
+            creatorAddress = "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf",
             wallet = null,
             confirmation = confirmation,
             onCreatorInfoClick = {},

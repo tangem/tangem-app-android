@@ -259,9 +259,15 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
         onConstructError: (StakingError) -> Unit,
     ): List<StakingTransaction> {
         val validatorState = state.validatorState as? StakingStates.ValidatorState.Data
-            ?: error("No validator provided")
+            ?: run {
+                onConstructError(StakingError.DomainError("No validator provided"))
+                return emptyList()
+            }
         val fee = (confirmationState.feeState as? FeeState.Content)?.fee
-            ?: error("No fee provided")
+            ?: run {
+                onConstructError(StakingError.DomainError("No fee provided"))
+                return emptyList()
+            }
         val defaultAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
             ?: run {
                 TangemLogger.e("StakeKitTransactionSender: no available address to construct transactions")
@@ -269,7 +275,10 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
                 return emptyList()
             }
         val amountState = state.amountState as? AmountState.Data
-            ?: error("No amount provided")
+            ?: run {
+                onConstructError(StakingError.DomainError("No amount provided"))
+                return emptyList()
+            }
 
         val validatorAddress = validatorState.chosenTarget.address
         val amount = getAmount(amountState, fee, confirmationState.reduceAmountBy)

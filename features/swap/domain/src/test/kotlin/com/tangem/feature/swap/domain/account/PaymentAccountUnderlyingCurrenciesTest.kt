@@ -1,10 +1,9 @@
 package com.tangem.feature.swap.domain.account
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
-import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -52,8 +51,5 @@ internal class PaymentAccountUnderlyingCurrenciesTest {
         assertThat(result).isEmpty()
     }
 
-    private fun paymentCurrencyStatus() = requireNotNull(
-        (MockAccounts.createPaymentAccountStatus(userWalletId = walletId).value as PaymentAccountStatusValue.Loaded)
-            .cryptoCurrencyStatus,
-    )
+    private fun paymentCurrencyStatus(): CryptoCurrencyStatus = mockk()
 }

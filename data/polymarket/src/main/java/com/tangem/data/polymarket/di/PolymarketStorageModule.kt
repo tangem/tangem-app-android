@@ -7,13 +7,18 @@ import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.cleaner.PolymarketUserWalletDataCleaner
 import com.tangem.data.polymarket.store.DefaultPolymarketCredentialsStore
+import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
 import com.tangem.data.polymarket.store.DefaultPolymarketOnboardedStore
+import com.tangem.data.polymarket.store.DefaultPredictionWithdrawalStore
 import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
+import com.tangem.data.polymarket.entity.PredictionWithdrawalRecordDTO
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
+import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -58,8 +63,12 @@ internal object PolymarketStorageModule {
         @ApplicationContext context: Context,
         scope: AppCoroutineScope,
         dataStoreFactory: AppDataStoreFactory,
+        collateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
     ): PredictionAccountStatusStore {
         return PredictionAccountStatusStore(
+            dtoConverter = PredictionAccountStatusValueDTOConverter(
+                collateralCurrencyFactory = collateralCurrencyFactory,
+            ),
             runtimeStore = RuntimeSharedStore(),
             persistenceDataStore = dataStoreFactory.create(
                 serializer = KotlinxDataStoreSerializer(
@@ -93,6 +102,30 @@ internal object PolymarketStorageModule {
                 produceFile = { context.dataStoreFile(fileName = "polymarket_onboarded_wallets") },
                 scope = scope,
             ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePredictionWithdrawalStore(
+        @ApplicationContext context: Context,
+        scope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
+    ): PredictionWithdrawalStore {
+        return DefaultPredictionWithdrawalStore(
+            runtimeStore = RuntimeSharedStore(),
+            persistenceDataStore = dataStoreFactory.create(
+                serializer = KotlinxDataStoreSerializer(
+                    defaultValue = emptyMap(),
+                    serializer = MapSerializer(
+                        keySerializer = String.serializer(),
+                        valueSerializer = PredictionWithdrawalRecordDTO.serializer(),
+                    ),
+                ),
+                produceFile = { context.dataStoreFile(fileName = "prediction_withdrawals") },
+                scope = scope,
+            ),
+            scope = scope,
         )
     }
 

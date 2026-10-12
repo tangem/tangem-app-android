@@ -28,10 +28,6 @@ import javax.inject.Inject
  * items that belong to this currency, and resolving the per-network "is the stake already inside the network
  * balance?" rule.
  *
- * The same narrowing still exists in `CryptoCurrencyStatusFactory` for the toggle-off path. That duplication is
- * deliberate: the legacy copy stays frozen and is deleted whole when the toggle goes away, while this one is the
- * long-term home (and moves into the staking module in a later phase).
- *
  * [REDACTED_TODO_COMMENT]
  */
 internal class StakingContributionProvider @Inject constructor(

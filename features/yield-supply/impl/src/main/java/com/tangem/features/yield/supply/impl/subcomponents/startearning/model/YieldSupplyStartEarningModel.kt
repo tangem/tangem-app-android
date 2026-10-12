@@ -11,7 +11,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
@@ -70,7 +70,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyGetCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase,
     private val yieldSupplyRepository: YieldSupplyRepository,
     private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
@@ -285,7 +285,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             YieldSupplyAnalytics.FundsEarned(
                 blockchain = cryptoCurrency.network.name,
                 token = cryptoCurrency.symbol,
-                referralId = appsFlyerStore.get()?.refcode,
+                referralId = appsFlyerRepository.getConversionData()?.refcode,
             ),
         )
         yieldSupplyFeeUM.transactionDataList.forEach {
@@ -293,6 +293,8 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 Basic.TransactionSent(
                     sentFrom = event,
                     memoType = Basic.TransactionSent.MemoType.Null,
+                    isCustomToken = cryptoCurrency.isCustom,
+                    isCustomFeeToken = feeCurrency.isCustom,
                 ),
             )
         }

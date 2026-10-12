@@ -37,7 +37,11 @@ sealed class WalletScreenAnalyticsEvent {
                 }
                 putAll(getReferralParams(referralId))
             },
-        ), AppsFlyerIncludedEvent
+        ), AppsFlyerIncludedEvent, OtelIncludedEvent {
+
+            // Product Type is injected by the card/hot-wallet context params interceptors
+            override val otelMetric = OtelMetric.Counter(allowedParams = setOf(AnalyticsParam.PRODUCT_TYPE))
+        }
 
         data class NoticeFinishActivation(
             private val activationState: ActivationState,

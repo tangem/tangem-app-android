@@ -4,7 +4,7 @@ import com.tangem.data.stories.converters.StoryContentResponseConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
@@ -20,6 +20,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 internal class DefaultStoriesRepository(
     private val tangemApi: TangemTechApi,
     private val appPreferencesStore: AppPreferencesStore,
+    private val growPreferencesKeys: GrowPreferencesKeys,
     private val promoStoriesStore: StoriesStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : StoriesRepository {
@@ -54,16 +55,16 @@ internal class DefaultStoriesRepository(
     }
 
     override fun isReadyToShowStories(storyId: String): Flow<Boolean> {
-        return appPreferencesStore.get(PreferencesKeys.getShouldShowStoriesKey(storyId), true)
+        return appPreferencesStore.get(growPreferencesKeys.getShouldShowStoriesKey(storyId), true)
     }
 
     override suspend fun isReadyToShowStoriesSync(storyId: String): Boolean {
-        return appPreferencesStore.getSyncOrDefault(PreferencesKeys.getShouldShowStoriesKey(storyId), true)
+        return appPreferencesStore.getSyncOrDefault(growPreferencesKeys.getShouldShowStoriesKey(storyId), true)
     }
 
     override suspend fun setNeverToShowStories(storyId: String) {
         appPreferencesStore.store(
-            key = PreferencesKeys.getShouldShowStoriesKey(storyId),
+            key = growPreferencesKeys.getShouldShowStoriesKey(storyId),
             value = false,
         )
     }

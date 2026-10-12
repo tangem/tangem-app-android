@@ -8,21 +8,19 @@ import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.Timeouts
 import com.tangem.core.remote.build
 import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.TangemGatewayApiConfig
 import com.tangem.core.remote.header.CardAuthHeaderProvider
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
-import com.tangem.grow.datasource.config.Express
-import com.tangem.grow.datasource.config.GaslessTxService
-import com.tangem.grow.datasource.config.GrowEnvironmentConfig
-import com.tangem.grow.datasource.config.MoonPay
-import com.tangem.grow.datasource.config.P2PEthPool
-import com.tangem.grow.datasource.config.StakeKit
-import com.tangem.grow.datasource.config.YieldSupply
+import com.tangem.grow.datasource.collectibles.CollectiblesApi
+import com.tangem.grow.datasource.collectibles.CollectiblesAuthProvider
+import com.tangem.grow.datasource.collectibles.models.response.model.DefaultCollectiblesAuthProvider
+import com.tangem.grow.datasource.config.*
 import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
-import com.tangem.grow.datasource.yield.YieldSupplyApi
+import com.tangem.grow.datasource.express.DefaultExpressAuthProvider
 import com.tangem.grow.datasource.express.ExpressAuthProvider
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
@@ -30,8 +28,16 @@ import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
 import com.tangem.grow.datasource.gasless.TronGaslessApi
 import com.tangem.grow.datasource.moonpay.MoonPayApi
 import com.tangem.grow.datasource.onramp.OnrampApi
+import com.tangem.grow.datasource.polymarket.PolymarketApi
+import com.tangem.grow.datasource.polymarket.bridge.PolymarketBridgeApi
+import com.tangem.grow.datasource.polymarket.clob.PolymarketClobApi
+import com.tangem.grow.datasource.polymarket.data.PolymarketDataApi
+import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
+import com.tangem.grow.datasource.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.grow.datasource.stakekit.StakeKitApi
 import com.tangem.grow.datasource.stakekit.addStakeKitEnumFallbackAdapters
+import com.tangem.grow.datasource.yield.YieldIncentivesApi
+import com.tangem.grow.datasource.yield.YieldSupplyApi
 import com.tangem.grow.datasource.yield.local.DefaultYieldMarketsStore
 import com.tangem.grow.datasource.yield.local.YieldMarketsStore
 import com.tangem.grow.datasource.yield.models.YieldSupplyMarketTokenDto
@@ -47,6 +53,7 @@ import dagger.multibindings.IntoSet
 import dagger.multibindings.StringKey
 import javax.inject.Singleton
 
+@Suppress("TooManyFunctions", "LargeClass")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object GrowDatasourceModule {
@@ -54,6 +61,18 @@ internal object GrowDatasourceModule {
     private const val TIMEOUT_60_SECONDS = 60L
     private const val TIMEOUT_90_SECONDS = 90L
     private const val TIMEOUT_120_SECONDS = 120L
+
+    @Provides
+    @Singleton
+    fun provideExpressAuthProvider(): ExpressAuthProvider {
+        return DefaultExpressAuthProvider()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCollectiblesAuthProvider(): CollectiblesAuthProvider {
+        return DefaultCollectiblesAuthProvider()
+    }
 
     @Provides
     @IntoMap
@@ -222,6 +241,18 @@ internal object GrowDatasourceModule {
 
     @Provides
     @Singleton
+    fun provideYieldIncentivesApi(factory: RetrofitFactory): YieldIncentivesApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = YieldSupply.ID,
+                shouldApplyTimeoutAnnotations = true,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideYieldMarketsStore(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
@@ -262,6 +293,140 @@ internal object GrowDatasourceModule {
                     readTimeoutSeconds = TIMEOUT_90_SECONDS,
                     writeTimeoutSeconds = TIMEOUT_90_SECONDS,
                 ),
+            ),
+        )
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(PolymarketWeb.KEY)
+    fun providePolymarketWebConfig(): ApiConfig {
+        return PolymarketWeb()
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(PolymarketData.KEY)
+    fun providePolymarketDataConfig(): ApiConfig {
+        return PolymarketData()
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(PolymarketRelayer.KEY)
+    fun providePolymarketRelayerConfig(): ApiConfig {
+        return PolymarketRelayer()
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(PolymarketClob.KEY)
+    fun providePolymarketClobConfig(): ApiConfig {
+        return PolymarketClob()
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(PolymarketBridge.KEY)
+    fun providePolymarketBridgeConfig(): ApiConfig {
+        return PolymarketBridge()
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketBridgeApi(factory: RetrofitFactory): PolymarketBridgeApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = PolymarketBridge.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketApi(factory: RetrofitFactory): PolymarketApi {
+        // Polymarket BFF Discovery lives on the main Tangem gateway — reuse the TangemTech config.
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = TangemGatewayApiConfig.TANGEM_TECH_ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketGeoApi(factory: RetrofitFactory): PolymarketGeoApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = PolymarketWeb.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketDataApi(factory: RetrofitFactory): PolymarketDataApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = PolymarketData.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketRelayerApi(factory: RetrofitFactory): PolymarketRelayerApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = PolymarketRelayer.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketClobApi(factory: RetrofitFactory): PolymarketClobApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = PolymarketClob.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+                shouldSaveLogs = false,
+            ),
+        )
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(Collectibles.KEY)
+    fun provideCollectiblesConfig(
+        collectiblesAuthProvider: CollectiblesAuthProvider,
+        appInfoProvider: AppInfoProvider,
+    ): ApiConfig {
+        return Collectibles(
+            collectiblesAuthProvider = collectiblesAuthProvider,
+            appInfoProvider = appInfoProvider,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideCollectiblesApi(factory: RetrofitFactory): CollectiblesApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = Collectibles.ID,
+                shouldApplyTimeoutAnnotations = true,
+                shouldUseSessionAuth = true,
             ),
         )
     }

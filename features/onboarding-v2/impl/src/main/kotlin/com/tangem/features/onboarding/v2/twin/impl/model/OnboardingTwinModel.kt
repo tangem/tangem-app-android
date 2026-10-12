@@ -18,8 +18,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
-import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.card.common.TwinCardNumber
 import com.tangem.domain.card.common.getTwinCardNumber
 import com.tangem.domain.card.repository.CardRepository
@@ -37,6 +36,7 @@ import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent
 import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent.Params.Mode
 import com.tangem.features.onboarding.v2.twin.impl.DefaultOnboardingTwinComponent
+import com.tangem.features.onboarding.v2.twin.impl.issuers.IssuersConfigStorage
 import com.tangem.features.onboarding.v2.twin.impl.ui.TwinWalletArtworkUM
 import com.tangem.features.onboarding.v2.twin.impl.ui.state.OnboardingTwinUM
 import com.tangem.sdk.api.TangemSdkManager
@@ -66,7 +66,7 @@ internal class OnboardingTwinModel @Inject constructor(
     private val cardRepository: CardRepository,
     private val uiMessageSender: UiMessageSender,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingTwinComponent.Params>()
@@ -178,7 +178,7 @@ internal class OnboardingTwinModel @Inject constructor(
                     analyticsEventHandler.send(
                         event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
                             passPhraseState = AnalyticsParam.EmptyFull.Empty,
-                            referralId = appsFlyerStore.get()?.refcode,
+                            referralId = appsFlyerRepository.getConversionData()?.refcode,
                         ),
                     )
 

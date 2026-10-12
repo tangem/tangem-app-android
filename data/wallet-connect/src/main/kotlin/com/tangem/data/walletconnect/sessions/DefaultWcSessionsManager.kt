@@ -10,7 +10,7 @@ import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
-import com.tangem.datasource.local.walletconnect.WalletConnectStore
+import com.tangem.data.walletconnect.store.WalletConnectStore
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.models.account.Account

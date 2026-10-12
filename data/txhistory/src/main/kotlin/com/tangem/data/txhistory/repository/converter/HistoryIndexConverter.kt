@@ -1,8 +1,8 @@
 package com.tangem.data.txhistory.repository.converter
 
-import com.tangem.datasource.local.txhistory.db.entity.HistoryIndexEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
+import com.tangem.store.datasource.txhistory.db.entity.HistoryIndexEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressExchangeEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressOnrampEntity
 import org.joda.time.DateTime
 
 /**

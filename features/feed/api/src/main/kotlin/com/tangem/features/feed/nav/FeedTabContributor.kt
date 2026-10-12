@@ -1,5 +1,6 @@
 package com.tangem.features.feed.nav
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +17,16 @@ value class FeedTabId(val value: String) {
     }
 }
 
+/** Amplitude `Section` value of this tab — deliberately not [FeedTabId.value], which is a backend id. */
+val FeedTabId.analyticsSection: String
+    get() = when (this) {
+        FeedTabId.Crypto -> "Crypto"
+        FeedTabId.RealAssets -> "Assets"
+        FeedTabId.Earn -> "Earn"
+        FeedTabId.Predictions -> "Predictions"
+        else -> value
+    }
+
 /**
  * One tab of the feed home. Features contribute implementations into the feed's tab set with
  * `@Binds/@Provides @IntoSet`; the host builds the tab row and the pager from the set.
@@ -29,6 +40,8 @@ interface FeedTabContributor {
     val id: FeedTabId
 
     val title: TextReference
+
+    val icon: ImageVector
 
     /**
      * Read once, synchronously, for the initial page set — repo feature toggles are sync vals.
@@ -62,4 +75,6 @@ interface FeedTabContributor {
      * @param query the search bar's current text, shared by every tab of the search screen
      */
     fun createSearchTab(context: AppComponentContext, query: StateFlow<String>): FeedTabComponent? = null
+
+    fun createEmptySearchPage(context: AppComponentContext): FeedEmptySearchComponent? = null
 }

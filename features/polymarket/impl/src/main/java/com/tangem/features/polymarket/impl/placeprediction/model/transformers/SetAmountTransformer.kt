@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.placeprediction.model.transformers
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.isBelowMinAmount
 import com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate
 import com.tangem.utils.transformer.Transformer
 
@@ -11,9 +12,7 @@ internal class SetAmountTransformer(private val value: String) : Transformer<Pla
 
     override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
         val newState = prevState.copy(amountValue = value)
-
-        return newState.copy(
-            quote = if (newState.enteredAmount() == null) QuoteUM.Empty else QuoteUM.Loading,
-        ).recomputeGate()
+        val isQuotable = newState.enteredAmount() != null && !newState.isBelowMinAmount()
+        return newState.copy(quote = if (isQuotable) QuoteUM.Loading else QuoteUM.Empty).recomputeGate()
     }
 }

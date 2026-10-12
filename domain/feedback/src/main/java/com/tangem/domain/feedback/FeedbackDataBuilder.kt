@@ -36,6 +36,10 @@ internal class FeedbackDataBuilder {
             "Mobile Wallet is backed up (cloud)",
             walletMetaInfo.isHotWalletCloudBackedUp?.toString(),
         )
+        builder.appendKeyValue(
+            "Mobile Wallet is backed up (social)",
+            walletMetaInfo.isHotWalletSocialBackedUp?.toString(),
+        )
         builder.appendKeyValue("Card ID", walletMetaInfo.cardId)
         builder.appendKeyValue("Firmware version", walletMetaInfo.firmwareVersion)
         builder.appendKeyValue("Linked cards count", walletMetaInfo.cardsCount)

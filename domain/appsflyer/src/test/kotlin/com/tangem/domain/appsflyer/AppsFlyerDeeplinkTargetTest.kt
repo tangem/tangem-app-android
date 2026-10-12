@@ -28,6 +28,23 @@ internal class AppsFlyerDeeplinkTargetTest {
             expected = AppsFlyerDeeplinkTarget.Known(AppsFlyerDeeplink.TangemPayMobileOnboarding),
         ),
         FromModel(
+            deepLinkValue = "tpay_for_oxford",
+            expected = AppsFlyerDeeplinkTarget.TangemPayCampaign(key = "tpay_for_oxford"),
+        ),
+        FromModel(
+            deepLinkValue = "tpay_for_a",
+            expected = AppsFlyerDeeplinkTarget.TangemPayCampaign(key = "tpay_for_a"),
+        ),
+        FromModel(
+            deepLinkValue = "tpay_for_OXFORD-2026_summer",
+            expected = AppsFlyerDeeplinkTarget.TangemPayCampaign(key = "tpay_for_OXFORD-2026_summer"),
+        ),
+        FromModel(deepLinkValue = "tpay_for_", expected = null),
+        FromModel(deepLinkValue = "tpay_for_   ", expected = null),
+        FromModel(deepLinkValue = "TPAY_FOR_oxford", expected = null),
+        FromModel(deepLinkValue = "tpay_foroxford", expected = null),
+        FromModel(deepLinkValue = " tpay_for_oxford", expected = null),
+        FromModel(
             deepLinkValue = "tangem://main",
             expected = AppsFlyerDeeplinkTarget.Direct(uri = "tangem://main"),
         ),

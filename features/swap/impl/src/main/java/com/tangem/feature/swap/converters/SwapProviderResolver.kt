@@ -12,8 +12,9 @@ import java.math.RoundingMode
 
 /**
  * Pure provider-level decisions for the swap UI:
- *  - [findBest] — which provider is the "best" among the loaded quotes, and
- *  - [resolveBadge] — which [ProviderState.AdditionalBadge] a provider row should show.
+ *  - [findBest] — which provider is the "best" among the loaded quotes,
+ *  - [preferAvailable] — which quotes are eligible for those decisions at all, and
+ *  - [resolveBadge] / [resolveListBadge] — which [ProviderState.AdditionalBadge] a provider row should show.
  */
 internal object SwapProviderResolver {
 
@@ -28,21 +29,35 @@ internal object SwapProviderResolver {
     /**
      * Picks the best provider among [states].
      *
-     * When at least one DEX/DEX_BRIDGE provider is present, the best-rated DEX provider wins; otherwise
-     * the overall best-rated provider is returned (the best CEX when no DEX is available). "Best rated" =
-     * lowest from/to fiat ratio (most output per unit of input). Returns null when [states] is empty.
+     * Region-restricted quotes are left out of the ranking (see [preferAvailable]). When at least one
+     * DEX/DEX_BRIDGE provider is present, the best-rated DEX provider wins; otherwise the overall
+     * best-rated provider is returned (the best CEX when no DEX is available). "Best rated" = lowest
+     * from/to fiat ratio (most output per unit of input). Returns null when [states] is empty.
      */
     fun findBest(states: Map<SwapProvider, SwapState.QuotesLoadedState>): SwapProvider? {
-        val dexStates = states.filterKeys { it.type.isDex() }
+        val availableStates = preferAvailable(states)
+        val dexStates = availableStates.filterKeys { it.type.isDex() }
         return if (dexStates.isNotEmpty()) {
             findBestRated(dexStates)
         } else {
-            findBestRated(states)
+            findBestRated(availableStates)
         }
     }
 
     /**
-     * Resolves the badge for a single provider row.
+     * Quotes the user can actually swap through: a region-restricted quote is displayable but not
+     * executable, so it wins neither the best-rate ranking nor the automatic provider selection. When
+     * every quote is restricted the full set stands in, so a provider is still picked instead of
+     * leaving the form without one.
+     */
+    fun <T : SwapState> preferAvailable(states: Map<SwapProvider, T>): Map<SwapProvider, T> {
+        return states
+            .filterValues { state -> (state as? SwapState.QuotesLoadedState)?.isRestricted != true }
+            .ifEmpty { states }
+    }
+
+    /**
+     * Resolves the badge for the provider block on the swap form.
      *
      * Priority: FCA restriction → permission required → recommended → best rate → none. A best-rate
      * badge is shown only when more than one provider is considered, FCA restrictions are not applied,
@@ -75,13 +90,41 @@ internal object SwapProviderResolver {
             priceImpact != null && !priceImpact.shouldShowWarning()
 
         return when {
-            needApplyFCARestrictions && provider.isFCARestricted() -> AdditionalBadge.FCAWarningList
+            needApplyFCARestrictions && isFCARestricted(provider) -> AdditionalBadge.FCAWarningList
             permissionState is PermissionDataState.PermissionRequired -> AdditionalBadge.PermissionRequired
             provider.isRecommended -> AdditionalBadge.Recommended
             isBestRateBadgeAllowed -> resolveBestRateBadge(states, provider)
             else -> AdditionalBadge.Empty
         }
     }
+
+    /**
+     * Resolves the badge for a provider row in the picker, where the user chooses between providers.
+     *
+     * Same as [resolveBadge], except a region-restricted quote reports that it cannot be traded instead
+     * of carrying a badge that invites the user into it. The form block keeps [resolveBadge]: it
+     * describes the provider already selected, not a choice between them.
+     */
+    fun resolveListBadge(
+        states: Map<SwapProvider, SwapState.QuotesLoadedState>,
+        provider: SwapProvider,
+        needApplyFCARestrictions: Boolean,
+        state: SwapState? = null,
+    ): AdditionalBadge {
+        if ((state as? SwapState.QuotesLoadedState)?.isRestricted == true) {
+            return AdditionalBadge.Unavailable
+        }
+
+        return resolveBadge(
+            states = states,
+            provider = provider,
+            needApplyFCARestrictions = needApplyFCARestrictions,
+            state = state,
+        )
+    }
+
+    /** Whether [provider] is on the FCA warning list, regardless of which badge its row ends up with. */
+    fun isFCARestricted(provider: SwapProvider): Boolean = provider.providerId in FCA_RESTRICTED_PROVIDER_IDS
 
     /**
      * Picks the best-rate badge for [provider] once it has passed the eligibility gate in [resolveBadge].
@@ -91,12 +134,13 @@ internal object SwapProviderResolver {
         states: Map<SwapProvider, SwapState.QuotesLoadedState>,
         provider: SwapProvider,
     ): AdditionalBadge {
-        val overallBest = findBestRated(states)
+        val availableStates = preferAvailable(states)
+        val overallBest = findBestRated(availableStates)
         val isOverallBest = provider.providerId == overallBest?.providerId
 
-        val dexStates = states.filterKeys { it.type.isDex() }
+        val dexStates = availableStates.filterKeys { it.type.isDex() }
         val hasDex = dexStates.isNotEmpty()
-        val hasCex = states.keys.any { !it.type.isDex() }
+        val hasCex = availableStates.keys.any { !it.type.isDex() }
         val bestDex = findBestRated(dexStates)
         val isBestDex = bestDex != null && provider.providerId == bestDex.providerId
         // Both types present and a CEX is the overall best (i.e. overall best != best DEX).
@@ -113,8 +157,6 @@ internal object SwapProviderResolver {
     private fun findBestRated(states: Map<SwapProvider, SwapState.QuotesLoadedState>): SwapProvider? {
         return states.minByOrNull { entry -> entry.value.rateRatio() }?.key
     }
-
-    private fun SwapProvider.isFCARestricted(): Boolean = providerId in FCA_RESTRICTED_PROVIDER_IDS
 
     private fun SwapState.QuotesLoadedState.rateRatio(): BigDecimal {
         val fromAmountFiat = fromTokenInfo.amountFiat

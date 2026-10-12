@@ -95,7 +95,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any())
         } returns listOf("signedComp", "signedOrig")
         coEvery {
-            tronGaslessTransactionRepository.submit("q_1", "signedComp", "signedOrig")
+            tronGaslessTransactionRepository.submit(userWallet.walletId, "q_1", "signedComp", "signedOrig")
         } returns TronGaslessSubmitResult(compensationTxHash = "hComp", originalTxHash = "hOrig", status = "BROADCAST")
     }
 
@@ -125,7 +125,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
                     signer = any(),
                 )
             }
-            coVerify { tronGaslessTransactionRepository.submit("q_1", "signedComp", "signedOrig") }
+            coVerify { tronGaslessTransactionRepository.submit(userWallet.walletId, "q_1", "signedComp", "signedOrig") }
         }
 
     @Test
@@ -205,7 +205,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             val refreshedQuote = quote.copy(quoteId = "q_2", quotedAmountRaw = BigInteger("47250000"))
             coEvery { tronGaslessTransactionRepository.estimate(any()) } returns refreshedQuote
             coEvery {
-                tronGaslessTransactionRepository.submit("q_2", "signedComp", "signedOrig")
+                tronGaslessTransactionRepository.submit(userWallet.walletId, "q_2", "signedComp", "signedOrig")
             } returns TronGaslessSubmitResult(
                 compensationTxHash = "hComp",
                 originalTxHash = "hOrig2",
@@ -220,6 +220,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             coVerify(exactly = 1) {
                 tronGaslessTransactionRepository.estimate(
                     TronGaslessEstimateParams(
+                        userWalletId = userWallet.walletId,
                         fromAddress = "TFrom",
                         toAddress = "TTo",
                         tokenContract = usdtContract,
@@ -228,7 +229,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
                     ),
                 )
             }
-            coVerify { tronGaslessTransactionRepository.submit("q_2", "signedComp", "signedOrig") }
+            coVerify { tronGaslessTransactionRepository.submit(userWallet.walletId, "q_2", "signedComp", "signedOrig") }
         }
 
     @Test
@@ -256,7 +257,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
     fun `GIVEN backend reports partial failure WHEN invoke THEN error`() = runTest {
         // Arrange
         coEvery {
-            tronGaslessTransactionRepository.submit("q_1", "signedComp", "signedOrig")
+            tronGaslessTransactionRepository.submit(userWallet.walletId, "q_1", "signedComp", "signedOrig")
         } returns TronGaslessSubmitResult(compensationTxHash = "hComp", originalTxHash = "hOrig", status = "PARTIAL_FAILED")
 
         // Act

@@ -27,7 +27,6 @@ dependencies {
 
     // region Core modules
     implementation(projects.core.analytics.models)
-    implementation(projects.core.datasource)
     implementation(projects.core.utils)
     // endregion
 }

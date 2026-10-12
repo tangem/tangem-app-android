@@ -35,7 +35,7 @@ internal class DefaultPolymarketDepositWalletDeriver @Inject constructor() : Pol
      */
     private fun paddedOwner(ownerAddress: String): ByteArray = ownerAddress.hexBytes().leftPad(WORD_SIZE)
 
-    private fun String.hexBytes(): ByteArray = removePrefix(HEX_PREFIX).hexToBytes()
+    private fun String.hexBytes(): ByteArray = removePrefix(PolymarketContracts.HEX_PREFIX).hexToBytes()
 
     private fun ByteArray.leftPad(size: Int): ByteArray =
         if (this.size >= size) this else ByteArray(size - this.size) + this
@@ -49,7 +49,7 @@ internal class DefaultPolymarketDepositWalletDeriver @Inject constructor() : Pol
     private fun ByteArray.toErc55Address(): String {
         val lower = toHexString().lowercase()
         val hash = lower.toByteArray().toKeccak().toHexString().lowercase()
-        val out = StringBuilder(HEX_PREFIX)
+        val out = StringBuilder(PolymarketContracts.HEX_PREFIX)
         lower.forEachIndexed { i, c ->
             val shouldUppercase = c in 'a'..'f' && Character.digit(hash[i], HEX_RADIX) >= CHECKSUM_THRESHOLD
             out.append(if (shouldUppercase) c.uppercaseChar() else c)
@@ -62,7 +62,6 @@ internal class DefaultPolymarketDepositWalletDeriver @Inject constructor() : Pol
         const val ADDRESS_SIZE = 20
         const val CHECKSUM_THRESHOLD = 8
         const val HEX_RADIX = 16
-        const val HEX_PREFIX = "0x"
 
         val CREATE2_FF = byteArrayOf(0xff.toByte())
     }

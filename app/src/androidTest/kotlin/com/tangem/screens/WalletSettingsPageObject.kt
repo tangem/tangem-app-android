@@ -3,7 +3,8 @@ package com.tangem.screens
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
-import com.tangem.core.ui.test.TopAppBarTestTags
+import com.tangem.core.ui.test.SwitchTestTags
+import com.tangem.core.ui.test.TopNavigationTestTags
 import com.tangem.core.ui.test.WalletSettingsScreenTestTags
 import com.tangem.wallet.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -20,8 +21,10 @@ class WalletSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         hasTestTag(WalletSettingsScreenTestTags.SCREEN_CONTAINER)
     }
 
+    // DS3 toolbar ([REDACTED_TASK_KEY]): the screen moved to TangemTopNavigation, so the back button is no longer
+    // the TopAppBar close icon.
     val topAppBarBackButton: KNode = child {
-        hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
+        hasTestTag(TopNavigationTestTags.BACK_BUTTON)
     }
 
     private val walletSettingsItem: KNode = child {
@@ -47,6 +50,8 @@ class WalletSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
 
     @OptIn(ExperimentalTestApi::class)
     fun scrollToForgetWallet() = scrollToText(getResourceString(R.string.settings_forget_wallet))
+
+    fun scrollToNFT() = scrollToText(getResourceString(R.string.details_nft_title))
 
     @OptIn(ExperimentalTestApi::class)
     fun scrollToRenameButton() = scrollableContainer {
@@ -89,6 +94,12 @@ class WalletSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
 
     val openArchivedAccountsButton: KNode = walletSettingsItem.child {
         hasText(getResourceString(R.string.account_archived_accounts))
+    }
+
+    val nftSwitch: KNode = walletSettingsItem.child {
+        hasTestTag(SwitchTestTags.SWITCH)
+        hasAnySibling(withText(getResourceString(R.string.details_nft_title)))
+        useUnmergedTree = true
     }
 
     fun accountItem(accountName: String): KNode = walletSettingsItem.child {

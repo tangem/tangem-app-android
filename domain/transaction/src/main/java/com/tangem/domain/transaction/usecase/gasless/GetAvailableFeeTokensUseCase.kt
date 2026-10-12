@@ -23,7 +23,6 @@ class GetAvailableFeeTokensUseCase(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
-    private val isYieldWithdrawEnabled: Boolean,
 ) {
 
     /**
@@ -51,7 +50,7 @@ class GetAvailableFeeTokensUseCase(
                     val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
                         ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
 
-                    val userCurrenciesStatuses = accountStatusList.flattenCurrencies()
+                    val userCurrenciesStatuses = accountStatusList.flattenPersonalCurrencies()
 
                     val nativeCurrencyStatus = accountStatusList.getCoinStatus(network).getOrElse {
                         raiseIllegalStateError("No native currency found: ${network.id}")
@@ -122,7 +121,7 @@ class GetAvailableFeeTokensUseCase(
             }.toSet()
         return userCurrenciesStatuses
             .asSequence()
-            .filter { isEligibleFeeToken(it, isYieldWithdrawEnabled) }
+            .filter { isEligibleFeeToken(it) }
             .filter { it.currency.network.id == network.id }
             .filter { currencyStatus ->
                 val token = currencyStatus.currency
@@ -135,6 +134,10 @@ class GetAvailableFeeTokensUseCase(
      * The Tron gasless backend compensates the fee out of the sent token, so [sentCurrencyStatus] is the
      * only token that can pay. Sponsorability is decided by [isTronGaslessSupportedUseCase] — the one the
      * quote path uses — so the offered list and the quote cannot disagree.
+     *
+     * When the service sponsors account activation, a non-activated account still gets the token offered:
+     * the quote path refuses it with a fee-row error when the balance is below the activation minimum,
+     * which tells the user what to do, whereas dropping the token silently leaves only TRX they do not have.
      */
     private suspend fun getTronGaslessTokens(
         userWallet: UserWallet,
@@ -161,9 +164,9 @@ class GetAvailableFeeTokensUseCase(
 
     internal companion object {
 
-        internal fun isEligibleFeeToken(status: CryptoCurrencyStatus, isYieldWithdrawEnabled: Boolean): Boolean {
+        internal fun isEligibleFeeToken(status: CryptoCurrencyStatus): Boolean {
             val yieldSupplyStatus = status.value.yieldSupplyStatus ?: return true
-            return isYieldWithdrawEnabled && yieldSupplyStatus.isActive
+            return yieldSupplyStatus.isActive
         }
 
         private fun hasSpendableBalance(status: CryptoCurrencyStatus): Boolean {

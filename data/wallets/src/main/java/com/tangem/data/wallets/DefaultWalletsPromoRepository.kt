@@ -6,7 +6,7 @@ import com.squareup.moshi.JsonClass
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.BindWalletsByReferralCodeBody
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
@@ -22,7 +22,7 @@ internal class DefaultWalletsPromoRepository(
     private val tangemTechApi: TangemTechApi,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
 ) : WalletsPromoRepository {
 
     override suspend fun bindRefcodeWithWallets(conversionData: AppsFlyerConversionData) = withContext(dispatchers.io) {
@@ -52,7 +52,7 @@ internal class DefaultWalletsPromoRepository(
     }
 
     override suspend fun getReferralCodeIfExists(): String? {
-        return appsFlyerStore.get()?.refcode
+        return appsFlyerRepository.getConversionData()?.refcode
     }
 
     private suspend fun getSavedBindingData(): ReferralWalletsBindingData? {

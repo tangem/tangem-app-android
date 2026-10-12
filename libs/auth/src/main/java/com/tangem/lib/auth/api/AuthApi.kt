@@ -1,16 +1,24 @@
 package com.tangem.lib.auth.api
 
 import com.tangem.lib.auth.api.models.request.AuthApiRequest
+import com.tangem.lib.auth.api.models.request.McpDeviceVerificationConsent
 import com.tangem.lib.auth.api.models.request.NonceApiRequest
 import com.tangem.lib.auth.api.models.request.RefreshApiRequest
 import com.tangem.lib.auth.api.models.request.RegisterApiRequest
 import com.tangem.lib.auth.api.models.request.WalletRegistrationRequest
 import com.tangem.lib.auth.api.models.request.WalletUnregisterRequest
+import com.tangem.lib.auth.api.models.response.McpDeviceVerificationResponse
+import com.tangem.lib.auth.api.models.response.McpDeviceVerificationResult
+import com.tangem.lib.auth.api.models.response.McpSessionResponse
 import com.tangem.lib.auth.api.models.response.NonceApiResponse
 import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import retrofit2.http.Body
+import retrofit2.http.DELETE
+import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
+import retrofit2.http.Query
 
 /**
  * Tangem Auth Service API (JWT session tokens / DPoP interceptor / refresh rotation)
@@ -85,4 +93,49 @@ interface AuthApi {
     @POST("api/authentication/v1/mobile/wallet/unregister")
     @RequiresSessionAuth
     suspend fun unregisterWallet(@Body request: WalletUnregisterRequest): ApiResponse<TokenApiResponse>
+
+    /**
+     * Returns who is asking for access behind [userCode].
+     *
+     * Its `state`, `client_id` and `scope` have to be echoed back by [approveMcpDeviceVerification] —
+     * the app never picks them itself.
+     */
+    @GET("api/authentication/v1/mcp/device_verification")
+    @RequiresSessionAuth
+    suspend fun getMcpDeviceVerification(
+        @Query("user_code") userCode: String,
+    ): ApiResponse<McpDeviceVerificationResponse>
+
+    /**
+     * Approves the device verification the agent started, granting it the scope it asked for.
+     *
+     * @param userCode the code the agent displayed, as scanned by the user.
+     * @param state from the matching [getMcpDeviceVerification] response.
+     */
+    @POST("api/authentication/v1/mcp/device_verification")
+    @RequiresSessionAuth
+    suspend fun approveMcpDeviceVerification(
+        @Query("user_code") userCode: String,
+        @Query("state") state: String,
+        @Body consent: McpDeviceVerificationConsent,
+    ): ApiResponse<McpDeviceVerificationResult>
+
+    /**
+     * List MCP sessions.
+     *
+     * Returns the OAuth authorizations issued to MCP clients (Claude Code, MCP Inspector, etc.) for
+     * the authenticated principal.
+     */
+    @GET("api/authentication/v1/mcp/sessions")
+    @RequiresSessionAuth
+    suspend fun getMcpSessions(): ApiResponse<List<McpSessionResponse>>
+
+    /**
+     * Revoke an MCP session.
+     *
+     * Deletes the authorization [sessionId], revoking the client's access and refresh tokens.
+     */
+    @DELETE("api/authentication/v1/mcp/sessions/{id}")
+    @RequiresSessionAuth
+    suspend fun revokeMcpSession(@Path("id") sessionId: String): ApiResponse<Unit>
 }

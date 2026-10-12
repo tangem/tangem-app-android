@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -32,6 +33,7 @@ import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNFTItemUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNFTItemUM.Content.CollectionPreview
 import kotlinx.collections.immutable.ImmutableList
@@ -42,6 +44,7 @@ internal fun WalletNFTItem2(state: WalletNFTItemUM, modifier: Modifier = Modifie
     val nftModifier = modifier
         .clip(RoundedCornerShape(18.dp))
         .background(TangemTheme.colors3.bg.secondary)
+        .testTag(MainScreenTestTags.NFT_BLOCK)
     when (state) {
         is WalletNFTItemUM.Hidden -> Unit
         is WalletNFTItemUM.Empty -> WalletNFTItemEmpty(

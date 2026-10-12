@@ -3,6 +3,7 @@ package com.tangem.core.ui.components.transactions
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -23,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.testTag
@@ -37,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.account.PaymentAccountIcon
+import com.tangem.core.ui.components.atoms.text.EllipsisText
+import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
@@ -50,9 +55,12 @@ import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
+import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.tokenrow.TokenRowPendingDots
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -62,6 +70,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_card_20
+import com.tangem.core.ui.res.generated.icons.ic_clock_12
 import com.tangem.core.ui.res.generated.icons.ic_cross_20
 import com.tangem.core.ui.test.TransactionHistoryItemTestTags
 
@@ -98,18 +107,16 @@ private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boole
                 vertical = 12.dp,
             ),
         ) {
-            StatusCircle(
+            StatusIcon(
                 icon = state.icon,
                 status = state.status,
-                modifier = Modifier
-                    .layoutId(TangemRowLayoutId.HEAD)
-                    .padding(end = 12.dp)
-                    .size(40.dp)
-                    .testTag(TransactionHistoryItemTestTags.STATUS_PREFIX + state.status.testTagSuffix),
+                isPendingSignature = state.isPendingSignature,
+                modifier = Modifier.layoutId(TangemRowLayoutId.HEAD).padding(end = 12.dp),
             )
-            TitleText(
+            TitleRow(
                 title = state.title,
                 status = state.status,
+                isPendingSignature = state.isPendingSignature,
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.START_TOP)
                     .testTag(TransactionHistoryItemTestTags.TITLE),
@@ -126,6 +133,7 @@ private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boole
                     amount = amount,
                     status = state.status,
                     isBalanceHidden = isBalanceHidden,
+                    isPendingSignature = state.isPendingSignature,
                     modifier = Modifier
                         .layoutId(TangemRowLayoutId.END_TOP)
                         .testTag(TransactionHistoryItemTestTags.AMOUNT),
@@ -178,6 +186,40 @@ private fun WarningLine(warning: TextReference, modifier: Modifier = Modifier) {
 // region Status circle
 
 @Composable
+private fun StatusIcon(icon: TxIcon, status: Status, isPendingSignature: Boolean, modifier: Modifier = Modifier) {
+    Box(modifier = modifier.size(40.dp)) {
+        StatusCircle(
+            icon = icon,
+            status = status,
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag(TransactionHistoryItemTestTags.STATUS_PREFIX + status.testTagSuffix),
+        )
+        if (isPendingSignature) {
+            PendingSignatureBadge(modifier = Modifier.align(Alignment.BottomEnd))
+        }
+    }
+}
+
+@Composable
+private fun PendingSignatureBadge(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(16.dp)
+            .border(width = 2.dp, color = TangemTheme.colors3.bg.primary, shape = CircleShape)
+            .background(color = TangemTheme.colors3.bg.status.warningSubtle, shape = CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.ic_clock_12,
+            contentDescription = null,
+            tint = TangemTheme.colors3.icon.status.warning,
+            modifier = Modifier.size(12.dp),
+        )
+    }
+}
+
+@Composable
 private fun StatusCircle(icon: TxIcon, status: Status, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
@@ -198,7 +240,7 @@ private fun StatusCircle(icon: TxIcon, status: Status, modifier: Modifier = Modi
 
 private val Status.backgroundColor: Color
     @Composable get() = when (this) {
-        is Status.Confirmed -> TangemTheme.colors3.bg.opaque.secondary
+        is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.bg.opaque.secondary
         is Status.Unconfirmed -> TangemTheme.colors3.bg.status.infoSubtle
         is Status.Failed -> TangemTheme.colors3.bg.status.errorSubtle
     }
@@ -206,6 +248,7 @@ private val Status.backgroundColor: Color
 private val Status.iconTint: Color
     @Composable get() = when (this) {
         is Status.Confirmed -> TangemTheme.colors3.icon.primary
+        is Status.PendingSignature -> TangemTheme.colors3.icon.secondary
         is Status.Unconfirmed -> TangemTheme.colors3.icon.brand
         is Status.Failed -> TangemTheme.colors3.icon.status.error
     }
@@ -213,6 +256,7 @@ private val Status.iconTint: Color
 private val Status.testTagSuffix: String
     get() = when (this) {
         is Status.Confirmed -> "CONFIRMED"
+        is Status.PendingSignature -> "PENDING_SIGNATURE"
         is Status.Unconfirmed -> "UNCONFIRMED"
         is Status.Failed -> "FAILED"
     }
@@ -220,6 +264,33 @@ private val Status.testTagSuffix: String
 // endregion
 
 // region Title / Subtitle
+
+@Composable
+private fun TitleRow(
+    title: TextReference,
+    status: Status,
+    isPendingSignature: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier,
+    ) {
+        TitleText(title = title, status = status, modifier = Modifier.weight(weight = 1f, fill = false))
+        if (status is Status.Unconfirmed) {
+            TokenRowPendingDots(color = status.titleColor)
+        }
+        if (isPendingSignature) {
+            TangemBadge(
+                text = resourceReference(R.string.transaction_history_pending),
+                variant = TangemBadge.Variant.Tinted,
+                status = TangemBadge.Status.Warning,
+                size = TangemBadge.Size.X4,
+            )
+        }
+    }
+}
 
 @Composable
 private fun TitleText(title: TextReference, status: Status, modifier: Modifier = Modifier) {
@@ -235,7 +306,7 @@ private fun TitleText(title: TextReference, status: Status, modifier: Modifier =
 
 private val Status.titleColor: Color
     @Composable get() = when (this) {
-        is Status.Confirmed -> TangemTheme.colors3.text.primary
+        is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.text.primary
         is Status.Unconfirmed -> TangemTheme.colors3.text.brand
         is Status.Failed -> TangemTheme.colors3.text.status.error
     }
@@ -261,10 +332,11 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
             status = status,
             modifier = modifier,
         )
-        is ContentSubtitle.ExternalAddress -> InlineImageSubtitle(
-            template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.briefAddress),
+        is ContentSubtitle.ExternalAddress -> InlineAddressSubtitle(
+            template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.rawAddress),
+            address = subtitle.rawAddress,
             color = secondary,
-            afterIconColor = if (isFailed) secondary else primary,
+            addressColor = if (isFailed) secondary else primary,
             textStyle = TangemTheme.typography3.caption.medium,
             modifier = modifier,
         ) {
@@ -275,36 +347,7 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
                     .clip(CircleShape),
             )
         }
-        is ContentSubtitle.OwnAccount -> InlineImageSubtitle(
-            template = stringResourceSafe(
-                subtitle.direction.templateResId(),
-                subtitle.accountName.resolveReference(),
-            ),
-            color = secondary,
-            afterIconColor = if (isFailed) secondary else primary,
-            textStyle = TangemTheme.typography3.caption.medium,
-            modifier = modifier,
-        ) {
-            val backgroundColor = if (isFailed) {
-                TangemTheme.colors3.bg.disabled
-            } else {
-                subtitle.iconBackgroundColor
-            }
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(backgroundColor),
-            ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = subtitle.iconResId),
-                    contentDescription = null,
-                    tint = TangemTheme.colors3.icon.staticDark,
-                    modifier = Modifier.size(10.dp),
-                )
-            }
-        }
+        is ContentSubtitle.OwnAccount -> OwnAccountSubtitle(subtitle = subtitle, status = status, modifier = modifier)
         is ContentSubtitle.OwnPaymentAccount -> InlineImageSubtitle(
             template = stringResourceSafe(
                 subtitle.direction.templateResId(),
@@ -318,7 +361,9 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
             PaymentAccountIcon(size = AccountIconSize.ExtraSmall)
         }
         is ContentSubtitle.OwnWallet -> OwnWalletSubtitle(subtitle = subtitle, modifier = modifier)
+        is ContentSubtitle.Contact -> ContactSubtitle(subtitle = subtitle, status = status, modifier = modifier)
         is ContentSubtitle.Asset -> AssetSubtitle(subtitle = subtitle, status = status, modifier = modifier)
+        is ContentSubtitle.FeeFor -> FeeForSubtitle(subtitle = subtitle, status = status, modifier = modifier)
         is ContentSubtitle.Provider -> ProviderSubtitle(subtitle = subtitle, status = status, modifier = modifier)
     }
 }
@@ -328,8 +373,8 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
  * portfolio, the "in {owner}" tail. The whole phrasing (direction prefix, the "… in …" connector and word order) lives
  * in string resources: the owner tail (`token_details_toolbar_title_token_in_account` / `…_in_wallet`) is nested into
  * the direction template as its argument, yielding one localized string with two `%image%` markers. Both icons are
- * inline placeholders in a single ellipsizable [Text]; account / payment put the icon before the name, wallet the name
- * before the device icon — as the resources already encode.
+ * inline placeholders in a single ellipsizable [Text]; account / payment / contact put the icon before the name, wallet
+ * the name before the device icon — as the resources already encode.
  */
 @Composable
 private fun AssetSubtitle(subtitle: ContentSubtitle.Asset, status: Status, modifier: Modifier = Modifier) {
@@ -343,6 +388,7 @@ private fun AssetSubtitle(subtitle: ContentSubtitle.Asset, status: Status, modif
         is ContentSubtitle.AssetOwner.Account -> owner.name.resolveReference()
         is ContentSubtitle.AssetOwner.PaymentAccount -> owner.name.resolveReference()
         is ContentSubtitle.AssetOwner.Wallet -> owner.name
+        is ContentSubtitle.AssetOwner.Contact -> owner.name
         null -> null
     }
     // The owner tail is nested into the direction template as its %1$s, so the whole "to:/from: … in …" phrasing and
@@ -389,6 +435,45 @@ private fun AssetSubtitle(subtitle: ContentSubtitle.Asset, status: Status, modif
     )
 }
 
+/**
+ * Fee-only counterparty subtitle: "Send {tokenIcon} {SYMBOL}". Only the ticker is highlighted — the "Send" literal
+ * belongs to the template a translator controls, so its wording and word order stay localizable.
+ */
+@Composable
+private fun FeeForSubtitle(subtitle: ContentSubtitle.FeeFor, status: Status, modifier: Modifier = Modifier) {
+    val secondary = TangemTheme.colors3.text.secondary
+    val template = stringResourceSafe(R.string.transaction_history_fee_sending_asset, subtitle.symbol)
+    val icon = subtitle.icon
+
+    InlineImagesText(
+        // An asset with no avatar drops the marker with it: a kept marker still lays out its placeholder, leaving a
+        // blank gap before the ticker.
+        template = if (icon == null) template.withoutInlineImage() else template,
+        icons = if (icon == null) {
+            emptyList()
+        } else {
+            listOf {
+                CurrencyIcon(
+                    state = icon,
+                    shouldDisplayNetwork = false,
+                    withFixedSize = false,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        },
+        color = secondary,
+        highlights = listOf(subtitle.symbol),
+        highlightColor = if (status is Status.Failed) secondary else TangemTheme.colors3.text.primary,
+        textStyle = TangemTheme.typography3.caption.medium,
+        modifier = modifier,
+    )
+}
+
+/** Drops the inline-image marker together with the space the template puts next to it. */
+private fun String.withoutInlineImage(): String = replace("$INLINE_IMAGE_PLACEHOLDER ", "")
+    .replace(" $INLINE_IMAGE_PLACEHOLDER", "")
+    .replace(INLINE_IMAGE_PLACEHOLDER, "")
+
 @Composable
 private fun ProviderSubtitle(subtitle: ContentSubtitle.Provider, status: Status, modifier: Modifier = Modifier) {
     InlineImageSubtitle(
@@ -416,31 +501,20 @@ private fun ProviderSubtitle(subtitle: ContentSubtitle.Provider, status: Status,
 @Composable
 private fun AssetOwnerIcon(owner: ContentSubtitle.AssetOwner?, isFailed: Boolean) {
     when (owner) {
-        is ContentSubtitle.AssetOwner.Account -> {
-            val backgroundColor = if (isFailed) {
-                TangemTheme.colors3.bg.disabled
-            } else {
-                owner.iconBackgroundColor
-            }
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(backgroundColor),
-            ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = owner.iconResId),
-                    contentDescription = null,
-                    tint = TangemTheme.colors3.icon.staticDark,
-                    modifier = Modifier.size(10.dp),
-                )
-            }
-        }
+        is ContentSubtitle.AssetOwner.Account -> PortfolioAvatar(
+            avatar = owner.avatar,
+            shape = ACCOUNT_AVATAR_SHAPE,
+            isFailed = isFailed,
+        )
         is ContentSubtitle.AssetOwner.PaymentAccount -> PaymentAccountIcon(size = AccountIconSize.ExtraSmall)
         is ContentSubtitle.AssetOwner.Wallet -> TangemDeviceIcon(
             state = owner.deviceIconUM,
             modifier = Modifier.fillMaxSize(),
+        )
+        is ContentSubtitle.AssetOwner.Contact -> PortfolioAvatar(
+            avatar = owner.avatar,
+            shape = CircleShape,
+            isFailed = isFailed,
         )
         null -> Unit
     }
@@ -449,28 +523,121 @@ private fun AssetOwnerIcon(owner: ContentSubtitle.AssetOwner?, isFailed: Boolean
 @Composable
 private fun PlainAddressText(subtitle: ContentSubtitle.PlainAddress, status: Status, modifier: Modifier = Modifier) {
     val full = subtitle.text.resolveReference()
-    val highlightColor = if (status is Status.Failed) {
-        TangemTheme.colors3.text.secondary
-    } else {
-        TangemTheme.colors3.text.primary
+    val secondary = TangemTheme.colors3.text.secondary
+    val addressColor = if (status is Status.Failed) secondary else TangemTheme.colors3.text.primary
+    val textStyle = TangemTheme.typography3.caption.medium
+    val addressStart = full.lastIndexOf(subtitle.address)
+    if (addressStart < 0) {
+        Text(
+            text = full,
+            color = secondary,
+            style = textStyle,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = modifier,
+        )
+        return
     }
-    val text = remember(full, subtitle.highlight, highlightColor) {
-        buildAnnotatedString {
-            append(full)
-            val start = full.lastIndexOf(subtitle.highlight)
-            if (start >= 0) {
-                addStyle(SpanStyle(color = highlightColor), start, start + subtitle.highlight.length)
-            }
+    // Split rather than span-styled, so the address alone shrinks to the width the surrounding literals leave it.
+    val prefix = full.take(addressStart).trim()
+    val suffix = full.drop(addressStart + subtitle.address.length).trim()
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (prefix.isNotEmpty()) {
+            Text(text = prefix, color = secondary, style = textStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        Box(
+            modifier = Modifier
+                .weight(weight = 1f, fill = false)
+                .widthIn(max = HISTORY_ROW_ADDRESS_MAX_WIDTH),
+        ) {
+            EllipsisText(
+                text = subtitle.address,
+                color = addressColor,
+                style = textStyle,
+                ellipsis = TextEllipsis.Middle,
+            )
+        }
+        if (suffix.isNotEmpty()) {
+            Text(text = suffix, color = secondary, style = textStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
-    Text(
-        text = text,
+}
+
+/**
+ * Own-account counterparty subtitle: "to/from: {avatar} {account name}", with the avatar drawn as a 16dp rounded
+ * square — the shape accounts carry everywhere else in the app, unlike the circle of a contact.
+ */
+@Composable
+private fun OwnAccountSubtitle(subtitle: ContentSubtitle.OwnAccount, status: Status, modifier: Modifier = Modifier) {
+    val isFailed = status is Status.Failed
+    InlineImageSubtitle(
+        template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.accountName.resolveReference()),
         color = TangemTheme.colors3.text.secondary,
-        style = TangemTheme.typography3.caption.medium,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        afterIconColor = if (isFailed) TangemTheme.colors3.text.secondary else TangemTheme.colors3.text.primary,
+        textStyle = TangemTheme.typography3.caption.medium,
         modifier = modifier,
-    )
+    ) {
+        PortfolioAvatar(avatar = subtitle.avatar, shape = ACCOUNT_AVATAR_SHAPE, isFailed = isFailed)
+    }
+}
+
+/**
+ * Address-book counterparty subtitle: "to: {avatar} {contact name}", with the avatar drawn as a 16dp circle — the shape
+ * contacts carry everywhere else in the app, unlike the rounded square of an own account.
+ */
+@Composable
+private fun ContactSubtitle(subtitle: ContentSubtitle.Contact, status: Status, modifier: Modifier = Modifier) {
+    val isFailed = status is Status.Failed
+    InlineImageSubtitle(
+        template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.contactName),
+        color = TangemTheme.colors3.text.secondary,
+        afterIconColor = if (isFailed) TangemTheme.colors3.text.secondary else TangemTheme.colors3.text.primary,
+        textStyle = TangemTheme.typography3.caption.medium,
+        modifier = modifier,
+    ) {
+        PortfolioAvatar(avatar = subtitle.avatar, shape = CircleShape, isFailed = isFailed)
+    }
+}
+
+/**
+ * The inline portfolio avatar every counterparty subtitle that names an account or a contact draws: the monogram of a
+ * `Letter` icon, the picked drawable otherwise, over the icon's own color. Only [shape] tells the two callers apart —
+ * a circle for a contact, [ACCOUNT_AVATAR_SHAPE] for an account — and a failed row greys the fill out.
+ *
+ * A [Monogram][ContentSubtitle.PortfolioAvatar.Monogram] resolves its letter here rather than in the converter: an
+ * account name may be a string resource, so its first character depends on the composition's locale.
+ */
+@Composable
+private fun PortfolioAvatar(avatar: ContentSubtitle.PortfolioAvatar, shape: Shape, isFailed: Boolean) {
+    val avatarColor = when (avatar) {
+        is ContentSubtitle.PortfolioAvatar.Monogram -> avatar.color
+        is ContentSubtitle.PortfolioAvatar.Resource -> avatar.color
+    }
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(shape)
+            .background(if (isFailed) TangemTheme.colors3.bg.disabled else avatarColor),
+    ) {
+        when (avatar) {
+            is ContentSubtitle.PortfolioAvatar.Monogram -> Text(
+                text = avatar.name.resolveReference().take(n = 1).uppercase(),
+                color = TangemTheme.colors3.text.staticDark.primary,
+                style = TangemTheme.typography2.captionMedium11,
+            )
+            is ContentSubtitle.PortfolioAvatar.Resource -> Icon(
+                imageVector = ImageVector.vectorResource(id = avatar.resId),
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.staticDark,
+                modifier = Modifier.size(10.dp),
+            )
+        }
+    }
 }
 
 /**
@@ -512,7 +679,7 @@ private fun OwnWalletSubtitle(subtitle: ContentSubtitle.OwnWallet, modifier: Mod
     }
 }
 
-private fun ContentSubtitle.Direction.templateResId(): Int = when (this) {
+internal fun ContentSubtitle.Direction.templateResId(): Int = when (this) {
     ContentSubtitle.Direction.TO -> R.string.transaction_history_to_inline_address
     ContentSubtitle.Direction.FROM -> R.string.transaction_history_from_inline_address
 }
@@ -527,16 +694,23 @@ private fun ContentSubtitle.Direction.plainTemplateResId(): Int = when (this) {
 // region Amount
 
 @Composable
-private fun AmountText(amount: String, status: Status, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
+private fun AmountText(
+    amount: String,
+    status: Status,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+    isPendingSignature: Boolean = false,
+) {
     val display = if (status is Status.Failed) amount.stripLeadingSign() else amount
     Text(
         text = display.orMaskWithStars(isBalanceHidden),
-        color = if (status is Status.Confirmed) {
+        color = if (status is Status.Confirmed && !isPendingSignature) {
             TangemTheme.colors3.text.primary
         } else {
             TangemTheme.colors3.text.secondary
         },
-        textDecoration = if (status is Status.Failed) TextDecoration.LineThrough else null,
+        // Nothing to strike through once the amount is stars — the line would cross the mask, not a number.
+        textDecoration = if (status is Status.Failed && !isBalanceHidden) TextDecoration.LineThrough else null,
         style = TangemTheme.typography3.body.medium,
         maxLines = 1,
         modifier = modifier,
@@ -573,6 +747,7 @@ private fun previewContent(
     subtitle: String,
     amount: String,
     currencySymbol: String = "USDT",
+    isPendingSignature: Boolean = false,
 ): TransactionItemUM.Content = TransactionItemUM.Content(
     txHash = txHash,
     amount = amount,
@@ -585,6 +760,7 @@ private fun previewContent(
     title = stringReference(title),
     subtitle = ContentSubtitle.Plain(stringReference(subtitle)),
     timestamp = 0L,
+    isPendingSignature = isPendingSignature,
 )
 
 @Composable
@@ -671,6 +847,82 @@ private fun Preview_TransactionItem_Send() {
                     title = "Sending failed",
                     subtitle = "to: 33BdfS...ga2B",
                     amount = "350.31",
+                ),
+            ),
+        )
+    }
+}
+
+@Suppress("MagicNumber")
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_TransactionItem_Send_Contact() {
+    TangemThemePreviewRedesign {
+        PreviewColumn(
+            items = listOf(
+                TransactionItemUM.Content(
+                    txHash = "snd-contact",
+                    amount = "-350.31",
+                    currencySymbol = "USDT",
+                    time = "",
+                    status = Status.Confirmed,
+                    direction = Direction.OUTGOING,
+                    onClick = {},
+                    icon = TxIcon.Vector(Icons.ic_arrow_up_20),
+                    title = stringReference("Sent"),
+                    subtitle = ContentSubtitle.Contact(
+                        direction = ContentSubtitle.Direction.TO,
+                        contactName = "Binance",
+                        avatar = ContentSubtitle.PortfolioAvatar.Monogram(
+                            name = stringReference("Binance"),
+                            color = Color(0xFF007FFF),
+                        ),
+                    ),
+                    timestamp = 0L,
+                ),
+                TransactionItemUM.Content(
+                    txHash = "snd-contact-icon",
+                    amount = "-350.31",
+                    currencySymbol = "USDT",
+                    time = "",
+                    status = Status.Failed,
+                    direction = Direction.OUTGOING,
+                    onClick = {},
+                    icon = TxIcon.Vector(Icons.ic_cross_20),
+                    title = stringReference("Sending failed"),
+                    subtitle = ContentSubtitle.Contact(
+                        direction = ContentSubtitle.Direction.TO,
+                        contactName = "Mom",
+                        avatar = ContentSubtitle.PortfolioAvatar.Resource(
+                            resId = R.drawable.ic_user_24,
+                            color = Color(0xFF32CB77),
+                        ),
+                    ),
+                    timestamp = 0L,
+                ),
+            ),
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_TransactionItem_PendingSignature() {
+    TangemThemePreviewRedesign {
+        PreviewColumn(
+            items = listOf(
+                previewContent(
+                    txHash = "snd-pending",
+                    icon = TxIcon.Vector(Icons.ic_arrow_up_20),
+                    direction = Direction.OUTGOING,
+                    status = Status.PendingSignature,
+                    title = "Send",
+                    subtitle = "to: 33BdfS...ga2B",
+                    amount = "-0.3212",
+                    currencySymbol = "ETH",
+                    isPendingSignature = true,
                 ),
             ),
         )
@@ -861,8 +1113,10 @@ private fun Preview_TransactionItem_Express_Owner() {
                         icon = tokenIcon,
                         owner = ContentSubtitle.AssetOwner.Account(
                             name = stringReference("Family"),
-                            iconResId = R.drawable.ic_wallet_24,
-                            iconBackgroundColor = Color(0xFF0099FF),
+                            avatar = ContentSubtitle.PortfolioAvatar.Monogram(
+                                name = stringReference("Family"),
+                                color = Color(0xFF0099FF),
+                            ),
                         ),
                     ),
                     timestamp = 0L,
@@ -895,3 +1149,6 @@ private fun Preview_TransactionItem_Express_Owner() {
 }
 
 // endregion
+
+/** Accounts carry a rounded square wherever their avatar is drawn; only a contact's avatar is a circle. */
+private val ACCOUNT_AVATAR_SHAPE = RoundedCornerShape(size = 4.dp)

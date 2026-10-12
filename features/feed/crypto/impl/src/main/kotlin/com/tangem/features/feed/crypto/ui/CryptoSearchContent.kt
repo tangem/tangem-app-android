@@ -24,6 +24,8 @@ import com.tangem.features.feed.crypto.impl.R
 import com.tangem.features.feed.crypto.ui.state.CryptoSearchUM
 import com.tangem.features.feed.crypto.ui.state.MarketSearchUM
 import com.tangem.features.feed.crypto.ui.state.PortfolioSearchUM
+import com.tangem.features.feed.ui.FeedSearchNoResults
+import com.tangem.features.feed.ui.FeedSearchSectionHeader
 
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 10
 private const val MARKET_SHIMMER_COUNT = 10
@@ -49,8 +51,8 @@ internal fun CryptoSearchContent(
     // legacy behaviour: a new query is a different result set, so start reading it from the top. Keyed
     // on the query and not on the market state, which deliberately stays Content while the query is
     // refined and so would never re-trigger this
-    LaunchedEffect(state.query) {
-        listState.scrollToItem(0)
+    LaunchedEffect(state.query, hasPortfolio) {
+        listState.requestScrollToItem(0)
     }
 
     LazyColumn(
@@ -65,7 +67,7 @@ internal fun CryptoSearchContent(
     ) {
         if (state.portfolio is PortfolioSearchUM.Content) {
             item(key = "portfolioHeader") {
-                SearchSectionHeader(title = stringResourceSafe(R.string.markets_common_my_portfolio))
+                FeedSearchSectionHeader(title = stringResourceSafe(R.string.markets_common_my_portfolio))
             }
             // the list is already inset to the card width, so the wallet name needs no inset of its own
             tokenSelectorSectionItems(state.portfolio.sections, walletHeaderHorizontalPadding = 0.dp)
@@ -95,7 +97,7 @@ internal fun CryptoSearchContent(
 private fun LazyListScope.marketSectionItems(market: MarketSearchUM, hasPortfolioSection: Boolean) {
     if (market is MarketSearchUM.NotFound) {
         item(key = "marketNotFound") {
-            NoResults(shouldFillParent = !hasPortfolioSection)
+            FeedSearchNoResults(shouldFillParent = !hasPortfolioSection)
         }
         return
     }
@@ -104,7 +106,7 @@ private fun LazyListScope.marketSectionItems(market: MarketSearchUM, hasPortfoli
         item(key = "sectionSpacer") { SpacerH(24.dp) }
     }
     item(key = "marketHeader") {
-        SearchSectionHeader(title = stringResourceSafe(R.string.markets_common_title))
+        FeedSearchSectionHeader(title = stringResourceSafe(R.string.markets_common_title))
     }
 
     when (market) {
@@ -135,19 +137,6 @@ private fun LazyListScope.marketSectionItems(market: MarketSearchUM, hasPortfoli
 }
 
 @Composable
-private fun SearchSectionHeader(title: String, modifier: Modifier = Modifier) {
-    Text(
-        text = title,
-        style = TangemTheme.typography3.heading.small,
-        color = TangemTheme.colors3.text.primary,
-        maxLines = 1,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
-    )
-}
-
-@Composable
 private fun ShowTokensUnderMarketCapLimit(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
@@ -169,17 +158,4 @@ private fun ShowTokensUnderMarketCapLimit(onClick: () -> Unit, modifier: Modifie
             size = TangemButton.Size.X8,
         )
     }
-}
-
-@Composable
-private fun NoResults(shouldFillParent: Boolean, modifier: Modifier = Modifier) {
-    Text(
-        text = stringResourceSafe(R.string.common_no_results),
-        style = TangemTheme.typography3.body.medium,
-        color = TangemTheme.colors3.text.secondary,
-        textAlign = TextAlign.Center,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = if (shouldFillParent) 64.dp else 24.dp),
-    )
 }

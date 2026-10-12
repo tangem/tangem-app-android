@@ -7,10 +7,8 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 internal class GetCompletedBackupsUseCaseTest {
@@ -18,11 +16,6 @@ internal class GetCompletedBackupsUseCaseTest {
     private val cloudBackupRepository: CloudBackupRepository = mockk()
 
     private val useCase = GetCompletedBackupsUseCase(cloudBackupRepository)
-
-    @BeforeEach
-    fun setUp() {
-        every { cloudBackupRepository.isCloudBackupEnabled } returns true
-    }
 
     @Test
     fun `GIVEN hot wallet with both backups WHEN invoke THEN both types reported`() = runTest {
@@ -71,19 +64,6 @@ internal class GetCompletedBackupsUseCaseTest {
 
         // Assert
         assertThat(actual).isEmpty()
-    }
-
-    @Test
-    fun `GIVEN cloud backup disabled WHEN invoke THEN nothing reported AND cloud is not queried`() = runTest {
-        // Arrange
-        every { cloudBackupRepository.isCloudBackupEnabled } returns false
-
-        // Act
-        val actual = useCase(hotWallet(backedUp = true))
-
-        // Assert
-        assertThat(actual).isEmpty()
-        coVerify(exactly = 0) { cloudBackupRepository.isBackedUp(any()) }
     }
 
     @Test

@@ -30,6 +30,7 @@ class CardContextInterceptor(
         return when (event) {
             is IntroductionProcess.ButtonScanCard,
             is IntroductionProcess.ButtonScanCardLegacy,
+            is IntroductionProcess.ButtonImportExistingWallet,
             is SignIn.ScreenOpened,
             is SignIn.ButtonAddWallet,
             is Basic.CardWasScanned,

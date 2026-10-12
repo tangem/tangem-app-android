@@ -24,12 +24,14 @@ import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.common.tariffPlan
 import com.tangem.features.tangempay.common.userWalletId
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.eligibility.TangemPayCountrySelectorComponent
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
+import com.tangem.features.tangempay.withdraw.hub.TangemPayWithdrawHubComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
-import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
+import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsBottomSheetComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -41,9 +43,10 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     private val tangemPayCardPageFactory: TangemPayCardPageComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
-    private val virtualAccountAddFundsComponentFactory: VirtualAccountAddFundsBottomSheetComponent.Factory,
+    private val moneyAccountAddFundsComponentFactory: MoneyAccountAddFundsBottomSheetComponent.Factory,
     private val cashbackComponentFactory: TangemPayCashbackComponent.Factory,
     private val orderCardComponentFactory: TangemPayOrderCardComponent.Factory,
+    private val countrySelectorComponentFactory: TangemPayCountrySelectorComponent.Factory,
 ) : AppComponentContext by appComponentContext, TangemPayDetailsContainerComponent {
 
     private val stackNavigation = StackNavigation<TangemPayAccountDetailsInnerRoute>()
@@ -106,7 +109,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             params = params,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
             promoBannersBlockComponentFactory = promoBannersBlockComponentFactory,
-            virtualAccountAddFundsComponentFactory = virtualAccountAddFundsComponentFactory,
+            moneyAccountAddFundsComponentFactory = moneyAccountAddFundsComponentFactory,
         )
         is TangemPayAccountDetailsInnerRoute.CardDetails -> tangemPayCardPageFactory.create(
             context = childByContext(componentContext = componentContext, router = innerRouter),
@@ -155,6 +158,13 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
                 intent = config.intent,
                 onAddFundsRequested = ::openAddFundsOnAccountDetails,
             ),
+        )
+        TangemPayAccountDetailsInnerRoute.WithdrawHub -> TangemPayWithdrawHubComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayWithdrawHubComponent.Params(
+                userWalletId = params.initialStatus.userWalletId,
+            ),
+            countrySelectorFactory = countrySelectorComponentFactory,
         )
     }
 

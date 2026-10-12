@@ -9,15 +9,15 @@ import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
+import com.tangem.domain.appsflyer.usecase.ClearReferralInstallUseCase
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.scan.serialization.*
-import com.tangem.domain.visa.model.VisaActivationRemoteState
-import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
 import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.hot.sdk.TangemHotSdk
@@ -54,15 +54,17 @@ internal object UserWalletsListRepositoryModule {
         dispatchers: CoroutineDispatcherProvider,
         passwordRequester: HotWalletPasswordRequester,
         appPreferencesStore: AppPreferencesStore,
+        storePreferencesKeys: StorePreferencesKeys,
         hotWalletAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
         tangemHotSdk: TangemHotSdk,
         trackingContextProxy: TrackingContextProxy,
         analyticsEventHandler: AnalyticsEventHandler,
         hotWalletRepository: HotWalletRepository,
-        clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
+        clearReferralInstallUseCase: ClearReferralInstallUseCase,
         userWalletSelectedHandler: Lazy<UserWalletSelectedHandler>,
         isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
         getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
+        walletRegistrationTrigger: Lazy<WalletRegistrationTrigger>,
     ): UserWalletsListRepository {
         val moshi = buildMoshi()
         val secureStorage = buildSecureStorage(applicationContext = applicationContext)
@@ -107,32 +109,31 @@ internal object UserWalletsListRepositoryModule {
             userWalletEncryptionKeysRepository = userWalletEncryptionKeysRepository,
             tangemSdkManagerProvider = Provider { tangemSdkManager },
             appPreferencesStore = appPreferencesStore,
+            storePreferencesKeys = storePreferencesKeys,
             savePersistentInformation = ProviderSuspend { true }, // Always save persistent information for now
             hotWalletAccessCodeAttemptsRepository = hotWalletAccessCodeAttemptsRepository,
             tangemHotSdk = tangemHotSdk,
             trackingContextProxy = trackingContextProxy,
             analyticsEventHandler = analyticsEventHandler,
             hotWalletRepository = hotWalletRepository,
-            clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
+            clearReferralInstallUseCase = clearReferralInstallUseCase,
             userWalletSelectedHandler = userWalletSelectedHandler,
             isWalletBackedUpUseCase = isWalletBackedUpUseCase,
             getCompletedBackupsUseCase = getCompletedBackupsUseCase,
+            walletRegistrationTrigger = walletRegistrationTrigger,
         )
     }
 
+    // Do NOT replace this with the shared @SdkMoshi. That instance pulls in getTangemSdkAdapters(), which
+    // hex-encodes ByteArrays and lowercases enum names. This Moshi persists wallet info to secure storage in
+    // the reflection format (byte arrays as int lists, exact enum names), so switching would make every
+    // existing user's stored wallet list unreadable after an update.
     private fun buildMoshi(): Moshi {
         return Moshi.Builder()
-            .add(WalletDerivedKeysMapAdapter())
-            .add(ScanResponseDerivedKeysMapAdapter())
-            .add(ByteArrayKeyAdapter())
-            .add(ExtendedPublicKeysMapAdapter())
-            .add(CardBackupStatusAdapter())
-            .add(DerivationPathAdapterWithMigration())
+            .addScanResponseAdapters()
             .add(TangemSdkAdapter.DateAdapter())
             .add(TangemSdkAdapter.DerivationNodeAdapter())
             .add(TangemSdkAdapter.FirmwareVersionAdapter()) // For PrimaryCard model
-            .add(VisaActivationRemoteState.jsonAdapter)
-            .add(VisaCardActivationStatus.jsonAdapter)
             .addLast(KotlinJsonAdapterFactory())
             .build()
     }

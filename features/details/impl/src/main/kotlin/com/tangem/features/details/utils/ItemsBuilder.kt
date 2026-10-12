@@ -16,7 +16,7 @@ import kotlinx.collections.immutable.toPersistentList
 import javax.inject.Inject
 
 private const val TANGEM_PAY_ITEM_ID = "get_tangem_pay"
-private const val VIRTUAL_ACCOUNT_ITEM_ID = "get_virtual_account"
+private const val MONEY_ACCOUNT_ITEM_ID = "get_money_account"
 
 @ModelScoped
 internal class ItemsBuilder @Inject constructor(
@@ -71,13 +71,13 @@ internal class ItemsBuilder @Inject constructor(
         }.toImmutableList()
     }
 
-    fun addVirtualAccountItem(items: ImmutableList<DetailsItemUM>, onClick: () -> Unit): ImmutableList<DetailsItemUM> {
+    fun addMoneyAccountItem(items: ImmutableList<DetailsItemUM>, onClick: () -> Unit): ImmutableList<DetailsItemUM> {
         return items.map { block ->
             if (block.id == "shop" && block is DetailsItemUM.Basic) {
                 val newItems = block
                     .items
                     .toMutableList()
-                    .apply { add(getVirtualAccountItem(onClick = onClick)) }
+                    .apply { add(getMoneyAccountItem(onClick = onClick)) }
                 block.copy(items = newItems.toImmutableList())
             } else {
                 block
@@ -85,10 +85,10 @@ internal class ItemsBuilder @Inject constructor(
         }.toImmutableList()
     }
 
-    fun removeVirtualAccountItem(items: ImmutableList<DetailsItemUM>): ImmutableList<DetailsItemUM> {
+    fun removeMoneyAccountItem(items: ImmutableList<DetailsItemUM>): ImmutableList<DetailsItemUM> {
         return items.map { block ->
-            if (block is DetailsItemUM.Basic && block.items.any { it.id == VIRTUAL_ACCOUNT_ITEM_ID }) {
-                block.copy(items = block.items.filter { it.id != VIRTUAL_ACCOUNT_ITEM_ID }.toImmutableList())
+            if (block is DetailsItemUM.Basic && block.items.any { it.id == MONEY_ACCOUNT_ITEM_ID }) {
+                block.copy(items = block.items.filter { it.id != MONEY_ACCOUNT_ITEM_ID }.toImmutableList())
             } else {
                 block
             }
@@ -184,8 +184,8 @@ internal class ItemsBuilder @Inject constructor(
         ),
     )
 
-    private fun getVirtualAccountItem(onClick: () -> Unit): DetailsItemUM.Basic.Item = DetailsItemUM.Basic.Item(
-        id = VIRTUAL_ACCOUNT_ITEM_ID,
+    private fun getMoneyAccountItem(onClick: () -> Unit): DetailsItemUM.Basic.Item = DetailsItemUM.Basic.Item(
+        id = MONEY_ACCOUNT_ITEM_ID,
         block = BlockUM(
             text = resourceReference(R.string.virtual_account_title),
             iconRes = R.drawable.ic_tangem_pay_24,

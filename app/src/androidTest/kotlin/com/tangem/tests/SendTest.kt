@@ -1,11 +1,10 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
-import com.tangem.screens.onMainScreen
 import com.tangem.screens.onTokenDetailsScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
@@ -41,7 +40,7 @@ class SendTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Click on token with name: $currencyName") {
-                onMainScreen { tokenWithTitleAndAddress(currencyName).clickWithAssertion() }
+                openTokenDetailsFromTokenList(currencyName)
             }
             step("Assert 'Insufficient $feeCurrencyName to cover network fee' notification icon is displayed") {
                 onTokenDetailsScreen { networkFeeNotificationIcon(feeCurrencyName).assertIsDisplayed() }

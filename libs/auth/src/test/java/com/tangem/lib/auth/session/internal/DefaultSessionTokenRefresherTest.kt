@@ -62,6 +62,8 @@ class DefaultSessionTokenRefresherTest {
     @BeforeEach
     fun setup() {
         clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider, deviceRegistrar)
+        // the store answers with the set that ends up in effect
+        coEvery { store.save(any()) } answers { firstArg() }
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
@@ -75,6 +77,7 @@ class DefaultSessionTokenRefresherTest {
             signedRequestPayload = signedRequestPayload,
             attestationProvider = attestationProvider,
             errorConverter = errorConverter,
+            nonceRequestTracker = { _, request -> request() },
             deviceRegistrar = Lazy { deviceRegistrar },
             clock = fixedClock,
             dispatchers = dispatchers,
@@ -113,6 +116,35 @@ class DefaultSessionTokenRefresherTest {
         assertThat(tokens.walletIds).containsExactly("w1", "w2")
         coVerify { store.save(tokens) }
         coVerify(exactly = 0) { authApi.authenticate(any()) }
+    }
+
+    @Test
+    fun `refresh returns the tokens the store kept, not the ones it was given`() = runTest {
+        val stored = SessionTokens(
+            accessToken = "old-access",
+            accessTokenExpiresAt = fixedClock.now().plus(60),
+            refreshToken = "rt-1",
+            refreshTokenExpiresAt = fixedClock.now().plus(3600),
+            walletIds = listOf("w1"),
+        )
+        coEvery { store.get() } returns Some(stored)
+        coEvery { authApi.refresh(RefreshApiRequest("rt-1")) } returns ApiResponse.Success(
+            data = TokenApiResponse(
+                accessToken = "lost-the-race",
+                accessTokenExpiresAt = "2024-01-01T00:00:00Z",
+                refreshToken = "rt-2",
+                refreshTokenExpiresAt = "2024-02-01T00:00:00Z",
+                walletIds = listOf("w1"),
+            ),
+        )
+        // another rotation won; the store keeps its own set and reports it back
+        val winner = stored.copy(accessToken = "won-the-race", refreshToken = "rt-3")
+        coEvery { store.save(any()) } returns winner
+
+        val result = refresher.refresh()
+
+        // the authenticator retries the original request with this, so a superseded token here 401s again
+        assertThat(result.getOrNull()).isEqualTo(winner)
     }
 
     @Test
@@ -429,6 +461,103 @@ class DefaultSessionTokenRefresherTest {
 
         assertThat(result.leftOrNull()).isInstanceOf(SessionRefreshError.Api::class.java)
         coVerify(exactly = 0) { deviceRegistrar.reregister() }
+    }
+
+    @Test
+    fun `ensureSession joins an in-flight refresh instead of returning the still-valid cached token`() = runTest {
+        // The cached token is still locally valid, but a refresh (e.g. triggered by a server-side 401)
+        // is already in flight. ensureSession must join it, not hand back the about-to-be-rejected token.
+        val stored = SessionTokens(
+            accessToken = "old-access",
+            accessTokenExpiresAt = fixedClock.now().plus(60),
+            refreshToken = "rt-1",
+            refreshTokenExpiresAt = fixedClock.now().plus(3600),
+            walletIds = listOf("w1"),
+        )
+        coEvery { store.get() } returns Some(stored)
+
+        val networkGate = CompletableDeferred<Unit>()
+        coEvery { authApi.refresh(RefreshApiRequest("rt-1")) } coAnswers {
+            networkGate.await()
+            ApiResponse.Success(
+                data = TokenApiResponse(
+                    accessToken = "new-access",
+                    accessTokenExpiresAt = "2024-01-01T00:00:00Z",
+                    refreshToken = "rt-2",
+                    refreshTokenExpiresAt = "2024-02-01T00:00:00Z",
+                    walletIds = listOf("w1"),
+                ),
+            )
+        }
+
+        // Owner starts the refresh and suspends on the gate; the concurrent ensureSession joins it.
+        val owner = async(start = CoroutineStart.UNDISPATCHED) { refresher.refresh() }
+        val ensured = async(start = CoroutineStart.UNDISPATCHED) { refresher.ensureSession() }
+
+        networkGate.complete(Unit)
+
+        val ownerResult = owner.await()
+        val ensuredResult = ensured.await()
+
+        assertThat(ensuredResult.getOrNull()?.accessToken).isEqualTo("new-access")
+        assertThat(ensuredResult).isEqualTo(ownerResult)
+        coVerify(exactly = 1) { authApi.refresh(any()) }
+    }
+
+    @Test
+    fun `ensureSession returns the stored session without refreshing when one exists`() = runTest {
+        val stored = SessionTokens(
+            accessToken = "stored-access",
+            accessTokenExpiresAt = fixedClock.now().plus(60),
+            refreshToken = "stored-rt",
+            refreshTokenExpiresAt = fixedClock.now().plus(3600),
+            walletIds = listOf("w1"),
+        )
+        coEvery { store.get() } returns Some(stored)
+
+        val result = refresher.ensureSession()
+
+        assertThat(result.getOrNull()).isEqualTo(stored)
+        coVerify(exactly = 0) { authApi.refresh(any()) }
+        coVerify(exactly = 0) { authApi.authenticate(any<AuthApiRequest>()) }
+    }
+
+    @Test
+    fun `ensureSession authenticates when no session is stored`() = runTest {
+        coEvery { store.get() } returns None
+        stubAuthenticateHappyPath()
+
+        val result = refresher.ensureSession()
+
+        assertThat(result.getOrNull()?.accessToken).isEqualTo("post-auth-access")
+        coVerify(exactly = 1) { authApi.authenticate(any<AuthApiRequest>()) }
+    }
+
+    @Test
+    fun `ensureSession refreshes when the stored access token has expired`() = runTest {
+        val expired = SessionTokens(
+            accessToken = "old-access",
+            accessTokenExpiresAt = Instant.fromEpochSeconds(1_699_999_000), // before fixedClock.now()
+            refreshToken = "rt-1",
+            refreshTokenExpiresAt = fixedClock.now().plus(3600),
+            walletIds = listOf("w1"),
+        )
+        coEvery { store.get() } returns Some(expired)
+        coEvery { authApi.refresh(RefreshApiRequest("rt-1")) } returns ApiResponse.Success(
+            data = TokenApiResponse(
+                accessToken = "new-access",
+                accessTokenExpiresAt = "2024-01-01T00:00:00Z",
+                refreshToken = "rt-2",
+                refreshTokenExpiresAt = "2024-02-01T00:00:00Z",
+                walletIds = listOf("w1"),
+            ),
+        )
+
+        val result = refresher.ensureSession()
+
+        // Stale access token must not be returned as-is — refresh rotates it via the refresh token.
+        assertThat(result.getOrNull()?.accessToken).isEqualTo("new-access")
+        coVerify(exactly = 1) { authApi.refresh(any()) }
     }
 
     private fun stubAuthenticateHappyPath() {

@@ -7,31 +7,38 @@ import arrow.core.right
 import com.tangem.core.error.UniversalError
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.managers.ApiConfigsManager
+import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.TangemPayOnrampFee
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 /**
- * In MOCK env only skips the local-storage / NFC-signing enrollment steps (order ids, initial data). The
+ * In MOCK env only skips the NFC-signing enrollment steps (order ids, initial credentials). The
  * customer-facing state — whether a wallet has Tangem Pay ([hasTangemPayInWallet]), KYC status, ACTIVE /
  * INACTIVE, balances ([getCustomerInfo]) — is driven by the WireMock test scenario (authenticated with the
  * synthetic tokens from [com.tangem.data.pay.store.MockAwareTangemPayStorage]) rather than hardcoded:
  *  - [hasTangemPayInWallet] delegates to the real repo, so the "existing customer" gate follows the
  *    checkCustomerWalletId mock (the `tangem_pay_eligibility` scenario: `Started` → 404/NotFound →
  *    no Payment account, `PaeraCustomer` → 200 → Payment account);
- *  - [getCustomerInfo] delegates to the real repo (WireMock), so KYC / customer-state scenarios take effect.
+ *  - [getCustomerInfo] delegates to the real repo (WireMock), so KYC / customer-state scenarios take effect;
+ *  - [validateDeeplink] delegates to the real repo, so the `tangem_pay_deeplink_validate` scenario decides
+ *    VALID / INVALID.
  */
 @Singleton
 internal class MockAwareOnboardingRepository @Inject constructor(
     private val real: DefaultOnboardingRepository,
     private val apiConfigsManager: ApiConfigsManager,
+    private val tangemPayStorage: TangemPayStorage,
 ) : OnboardingRepository {
 
     private val mockOrderIds: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
@@ -42,10 +49,7 @@ internal class MockAwareOnboardingRepository @Inject constructor(
             .getEnvironmentConfig(TangemPay.Bff.ID)
             .environment == ApiEnvironment.MOCK
 
-    override suspend fun validateDeeplink(link: String): Either<UniversalError, Boolean> {
-        if (isMockMode) return true.right()
-        return real.validateDeeplink(link)
-    }
+    override suspend fun validateDeeplink(link: String): Either<UniversalError, Boolean> = real.validateDeeplink(link)
 
     override suspend fun isTangemPayInitialDataProduced(userWalletId: UserWalletId): Boolean {
         if (isMockMode) return true
@@ -53,7 +57,13 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     }
 
     override suspend fun produceInitialData(userWalletId: UserWalletId) {
-        if (isMockMode) return
+        if (isMockMode) {
+            // Credentials come from MockAwareTangemPayStorage, but the "this wallet is a Paera customer" flag
+            // is the real thing the enrollment writes — without it the wallet keeps the cached 404 answer and
+            // no Payment account ever appears after accepting the offer.
+            tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, isPaeraCustomer = true)
+            return
+        }
         real.produceInitialData(userWalletId)
     }
 
@@ -73,12 +83,22 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         userWalletId: UserWalletId,
     ): Either<VisaApiError, List<TangemPayOnrampFee>> = real.getOnrampFees(userWalletId)
 
-    override suspend fun createOrder(userWalletId: UserWalletId): Either<VisaApiError, String> {
+    override suspend fun createOrder(
+        userWalletId: UserWalletId,
+        deeplinkValue: String?,
+        specificationName: String,
+        type: OrderType,
+    ): Either<VisaApiError, String> {
         if (isMockMode) {
             mockOrderIds.add(userWalletId)
             return MOCK_ORDER_ID.right()
         }
-        return real.createOrder(userWalletId)
+        return real.createOrder(
+            userWalletId = userWalletId,
+            deeplinkValue = deeplinkValue,
+            specificationName = specificationName,
+            type = type,
+        )
     }
 
     override suspend fun clearOrderId(userWalletId: UserWalletId) {
@@ -137,7 +157,7 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     override suspend fun checkCustomerEligibility(): List<TangemPayEligibilityType> =
         real.checkCustomerEligibility()
 
-    override suspend fun getCustomerEligibility(): List<TangemPayEligibilityType> =
+    override suspend fun getCustomerEligibility(): List<TangemPayEligibilityType>? =
         real.getCustomerEligibility()
 
     override suspend fun fetchCustomerEligibility(
@@ -147,9 +167,9 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     override fun getSavedCustomerInfo(userWalletId: UserWalletId): CustomerInfo? =
         real.getSavedCustomerInfo(userWalletId)
 
-    override suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean {
-        if (isMockMode) return false
-        return real.getHideMainOnboardingBanner(userWalletId)
+    override fun isMainOnboardingBannerHidden(userWalletId: UserWalletId): Flow<Boolean> {
+        if (isMockMode) return flowOf(false)
+        return real.isMainOnboardingBannerHidden(userWalletId)
     }
 
     override suspend fun setHideMainOnboardingBanner(userWalletId: UserWalletId) {
@@ -157,15 +177,20 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         real.setHideMainOnboardingBanner(userWalletId)
     }
 
-    override suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit> {
-        if (isMockMode) return Unit.right()
-        return real.disableTangemPay(userWalletId)
-    }
+    // Not short-circuited in MOCK env: the account removal is only observable through what this call does —
+    // the pay-enabled request against WireMock, clearing the wallet's Tangem Pay data and storing the empty
+    // payment-account status that hides the block. The synthetic order ids are part of that data, so they go
+    // with it — otherwise a later refresh would keep replaying the removed account's enrollment.
+    override suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit> =
+        real.disableTangemPay(userWalletId).onRight {
+            mockOrderIds.remove(userWalletId)
+            mockVaOrderIds.remove(userWalletId)
+        }
 
-    override suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean {
-        if (isMockMode) return false
-        return real.isTangemPayDeactivated(userWalletId)
-    }
+    // Follows the flag the customer-state mock writes (FORMER / all product instances DEACTIVATED), so a
+    // removed account stays hidden across a restart instead of reappearing.
+    override suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean =
+        real.isTangemPayDeactivated(userWalletId)
 
     private companion object {
         const val MOCK_ORDER_ID = "mock-order-id"

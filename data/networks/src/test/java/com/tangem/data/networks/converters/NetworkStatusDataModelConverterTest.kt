@@ -3,8 +3,8 @@ package com.tangem.data.networks.converters
 import com.google.common.truth.Truth
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.datasource.local.network.entity.NetworkStatusDM
-import com.tangem.datasource.local.network.entity.NetworkStatusDM.*
+import com.tangem.data.networks.entity.NetworkStatusDM
+import com.tangem.data.networks.entity.NetworkStatusDM.*
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency.ID
 import com.tangem.domain.models.currency.CryptoCurrency.ID.Body

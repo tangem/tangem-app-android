@@ -41,7 +41,8 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.datasource)
+    implementation(projects.core.local)
+    implementation(projects.store.datasource)
     implementation(projects.core.decompose)
     implementation(projects.common.ui)
     implementation(projects.features.rating.api)
@@ -59,6 +60,7 @@ dependencies {
     implementation(projects.domain.demo)
     implementation(projects.domain.dynamicAddresses)
     implementation(projects.domain.dynamicAddresses.models)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.marketing.models)
     implementation(projects.domain.models)
     implementation(projects.domain.notifications.models)
@@ -82,13 +84,13 @@ dependencies {
     implementation(projects.features.swap.domain)
 
     /** Feature Apis */
-    implementation(projects.features.send.api)
     implementation(projects.features.tokendetails.api)
     implementation(projects.features.wallet.api)
     implementation(projects.features.markets.api)
     implementation(projects.features.marketing.api)
     implementation(projects.features.pushNotifications.api)
     implementation(projects.features.txhistory.api)
+    implementation(projects.features.jointAccount.api)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.yieldSupply.api)
     implementation(projects.features.commonFeatures.api)
@@ -115,5 +117,4 @@ dependencies {
     api(projects.domain.common)
     api(projects.domain.visa)
     api(projects.domain.walletManager)
-    api(projects.features.swap.api)
 }

@@ -39,6 +39,7 @@ import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -137,9 +138,14 @@ private fun ConfigCard(modifier: Modifier = Modifier, content: @Composable Colum
 @Composable
 private fun NameCard(state: JointAccountConfigUM, modifier: Modifier = Modifier) {
     val focusRequester = remember { FocusRequester() }
+    val defaultName = state.namePlaceholder.resolveReference()
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
+        // Seeds the field with the placeholder text so Continue is enabled without typing; skipped once a
+        // draft (own input or a restored one) already has a value. isValuePasted = true moves the cursor to
+        // the end of the seeded text instead of leaving it at the start.
+        if (state.name.isEmpty()) state.onNameChange(defaultName, true)
     }
     ConfigCard(modifier = modifier) {
         Box(
@@ -176,7 +182,9 @@ private fun NameCard(state: JointAccountConfigUM, modifier: Modifier = Modifier)
                 placeholder = state.namePlaceholder,
                 value = state.name,
                 singleLine = true,
-                onValueChange = state.onNameChange,
+                onValueChange = { state.onNameChange(it, false) },
+                isValuePasted = state.isValuePasted,
+                onValuePastedTriggerDismiss = state.onValuePastedTriggerDismiss,
             )
         }
     }
@@ -243,7 +251,7 @@ private fun Footer(isEnabled: Boolean, onContinueClick: () -> Unit, modifier: Mo
 private fun accountDisplayName(state: JointAccountConfigUM) = if (state.name.isBlank()) {
     state.namePlaceholder
 } else {
-    stringReference(value = state.name)
+    stringReference(value = state.name.trim())
 }
 
 @Preview(showBackground = true, heightDp = 874)
@@ -278,7 +286,9 @@ private fun createPreviewState(wallet: JointAccountConfigUM.WalletUM?): JointAcc
     icons = CryptoPortfolioIcon.Icon.entries.toImmutableList(),
     wallet = wallet,
     isContinueEnabled = true,
-    onNameChange = {},
+    isValuePasted = false,
+    onValuePastedTriggerDismiss = {},
+    onNameChange = { _, _ -> },
     onColorClick = {},
     onIconClick = {},
     onContinueClick = {},

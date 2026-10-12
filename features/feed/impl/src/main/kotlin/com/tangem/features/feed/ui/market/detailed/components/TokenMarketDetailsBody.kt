@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onFirstVisible
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.UnableToLoadData
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.components.items.DescriptionItem
 import com.tangem.core.ui.components.items.DescriptionPlaceholder
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -25,13 +26,31 @@ internal fun LazyListScope.tokenMarketDetailsBody(
     relatedNews: RelatedNews,
     marketingBanner: @Composable (Modifier) -> Unit,
     tokenSummaryBlock: @Composable ((Modifier) -> Unit)?,
+    regionRestriction: TangemMessageBanner.State? = null,
 ) {
+    if (regionRestriction != null) {
+        regionRestrictionItem(regionRestriction)
+    }
+
     tokenMarketDetailsBodyBlock(
         state = state,
         relatedNews = relatedNews,
         marketingBanner = marketingBanner,
         tokenSummaryBlock = tokenSummaryBlock,
     )
+}
+
+/** Placed before the body so the notice is up regardless of whether the body is still loading. */
+private fun LazyListScope.regionRestrictionItem(state: TangemMessageBanner.State) {
+    item(key = "region_restriction") {
+        TangemMessageBanner(
+            state = state,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 32.dp)
+                .fillMaxWidth(),
+        )
+    }
 }
 
 private fun LazyListScope.marketingBannerItem(marketingBanner: @Composable (Modifier) -> Unit) {

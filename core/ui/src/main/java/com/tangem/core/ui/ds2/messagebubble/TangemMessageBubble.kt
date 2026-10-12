@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
@@ -48,6 +49,8 @@ import com.tangem.core.ui.res.generated.icons.ic_info_16
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=6327-22326)
  *
  * @param text Bubble message, rendered in caption/medium typography.
+ * @param maxLines Line limit of the message; unlimited by default.
+ * @param overflow How the message is cut once it runs past [maxLines].
  * @param modifier Modifier applied to the bubble. The bubble hugs its content in both dimensions.
  * @param variant Visual appearance — background, text and tip colors.
  * @param showTip Whether the tail on top of the bubble is drawn. `false` shows only the pill.
@@ -68,6 +71,8 @@ fun TangemMessageBubble(
     onClick: (() -> Unit)? = null,
     onClose: (() -> Unit)? = null,
     closeContentDescription: String? = null,
+    maxLines: Int = Int.MAX_VALUE,
+    overflow: TextOverflow = TextOverflow.Clip,
 ) {
     val tokens = variant.tokens()
     val shape = if (showTip) MessageBubbleShape else RoundedCornerShape(12.dp)
@@ -100,6 +105,8 @@ fun TangemMessageBubble(
             text = text.resolveAnnotatedReference(),
             style = TangemTheme.typography3.caption.medium,
             color = tokens.content,
+            maxLines = maxLines,
+            overflow = overflow,
         )
         if (onClose != null) {
             CloseButton(

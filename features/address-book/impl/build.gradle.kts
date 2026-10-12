@@ -63,7 +63,6 @@ dependencies {
     /** Utils */
     implementation(projects.libs.blockchainSdk)
     implementation(tangemDeps.blockchain)
-    implementation(tangemDeps.card.core)
 
     /** Tests */
     testImplementation(projects.test.core)

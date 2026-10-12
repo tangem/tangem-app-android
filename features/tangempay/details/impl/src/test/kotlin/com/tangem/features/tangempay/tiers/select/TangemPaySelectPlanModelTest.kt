@@ -97,12 +97,12 @@ internal class TangemPaySelectPlanModelTest {
     }
 
     @Test
-    fun `GIVEN point body link WHEN onPointLinkClick THEN url is opened in app`() {
+    fun `GIVEN markdown link WHEN onLinkClick THEN url is opened in app`() {
         // GIVEN
         val model = createModel()
 
         // WHEN
-        model.state.value.onPointLinkClick("https://tangem.com/visa-benefits")
+        model.state.value.onLinkClick("https://tangem.com/visa-benefits")
 
         // THEN
         verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/visa-benefits") }

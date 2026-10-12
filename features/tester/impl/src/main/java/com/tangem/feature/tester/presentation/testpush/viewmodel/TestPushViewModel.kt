@@ -1,18 +1,8 @@
 package com.tangem.feature.tester.presentation.testpush.viewmodel
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Context.NOTIFICATION_SERVICE
-import android.content.Intent
-import android.os.Build
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tangem.core.ui.R
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.markets.TokenListBatchingContext
@@ -22,6 +12,7 @@ import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.feature.tester.presentation.testpush.entity.TestPushClickIntents
 import com.tangem.feature.tester.presentation.testpush.entity.TestPushMenuConfigUM
 import com.tangem.feature.tester.presentation.testpush.entity.TestPushUM
+import com.tangem.feature.tester.presentation.testpush.utils.TestPushPayloadParser
 import com.tangem.feature.tester.presentation.testpush.viewmodel.transformers.*
 import com.tangem.feature.tester.presentation.testpush.viewmodel.transformers.markettokens.TestPushMarketTokenBottomSheetTransformer
 import com.tangem.feature.tester.presentation.testpush.viewmodel.transformers.markettokens.TestPushMarketTokenClickBottomSheetTransformer
@@ -30,11 +21,10 @@ import com.tangem.pagination.BatchAction
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
-import com.tangem.utils.notifications.NotificationIdGenerator
 import com.tangem.utils.notifications.PushNotificationsTokenProvider
+import com.tangem.features.tester.api.TestPushEmitter
 import com.tangem.utils.transformer.update
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.*
@@ -44,7 +34,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class TestPushViewModel @Inject constructor(
     private val pushNotificationsTokenProvider: PushNotificationsTokenProvider,
-    @ApplicationContext private val applicationContext: Context,
+    private val testPushEmitter: TestPushEmitter,
     private val dispatchers: CoroutineDispatcherProvider,
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
 ) : ViewModel(), TestPushClickIntents {
@@ -52,6 +42,8 @@ internal class TestPushViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(
         TestPushUM(
             fcmToken = "",
+            payload = TextFieldValue(""),
+            payloadError = null,
             title = TextFieldValue(""),
             message = TextFieldValue(""),
             data = emptyList(),
@@ -82,6 +74,10 @@ internal class TestPushViewModel @Inject constructor(
 
     fun setupNavigation(router: InnerTesterRouter) {
         this.router = router
+    }
+
+    override fun onPayloadChange(value: TextFieldValue) {
+        _uiState.update(TestPushChangePayloadTransformer(value))
     }
 
     override fun onTitleChange(value: TextFieldValue) {
@@ -122,52 +118,37 @@ internal class TestPushViewModel @Inject constructor(
     }
 
     override fun onSendPush() {
-        val value = uiState.value
-
-        val channelId = "Test Tangem Channel"
-
-        val notificationId = NotificationIdGenerator.next()
-
-        val intent = Intent(applicationContext, Class.forName("com.tangem.tap.MainActivity")).apply {
-            value.data.forEach { (key, value) ->
-                putExtra(key.text, value.text)
-            }
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        val state = uiState.value
+        val rawPayload = state.payload.text.trim()
+        if (rawPayload.isEmpty()) {
+            testPushEmitter.emit(state.toFormPayload().withDisplayFallback(state))
+        } else {
+            TestPushPayloadParser.parse(rawPayload)
+                .onLeft { _uiState.update(TestPushPayloadErrorTransformer(it)) }
+                .onRight { testPushEmitter.emit(it.withDisplayFallback(state)) }
         }
-        val pendingIntent = PendingIntent.getActivity(
-            /* context = */ applicationContext,
-            /* requestCode = */ notificationId,
-            /* intent = */ intent,
-            /* flags = */ PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
+    }
 
-        val notificationBuilder =
-            NotificationCompat.Builder(applicationContext, channelId)
-                .setSmallIcon(com.tangem.feature.tester.impl.R.drawable.ic_tangem_24)
-                .setContentTitle(value.title.text)
-                .setContentText(value.message.text)
-                .setAutoCancel(true)
-                .setContentIntent(pendingIntent)
+    private fun Map<String, String>.withDisplayFallback(state: TestPushUM): Map<String, String> {
+        val isDisplayable = keys.any { it.startsWith(TestPushPayloadParser.NOTIFICATION_KEY_PREFIX) } ||
+            !get(TITLE_KEY).isNullOrBlank() ||
+            !get(BODY_KEY).isNullOrBlank()
 
-        val notificationManager =
-            applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        if (isDisplayable) return this
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationChannel = NotificationChannel(
-                channelId,
-                ContextCompat.getString(
-                    applicationContext,
-                    R.string.common_tangem_wallet,
-                ),
-                NotificationManager.IMPORTANCE_HIGH,
-            )
-            notificationManager.createNotificationChannel(notificationChannel)
+        return buildMap {
+            putAll(this@withDisplayFallback)
+            put(TITLE_KEY, state.title.text.ifBlank { FALLBACK_TITLE })
+            state.message.text.takeIf(String::isNotBlank)?.let { put(BODY_KEY, it) }
         }
+    }
 
-        notificationManager.notify(
-            /* id = */ notificationId,
-            /* notification = */ notificationBuilder.build(),
-        )
+    private fun TestPushUM.toFormPayload(): Map<String, String> = buildMap {
+        title.text.takeIf(String::isNotBlank)?.let { put(TITLE_KEY, it) }
+        message.text.takeIf(String::isNotBlank)?.let { put(BODY_KEY, it) }
+        data.forEach { (key, value) ->
+            if (key.text.isNotBlank()) put(key.text, value.text)
+        }
     }
 
     private fun dismissBottomSheet() {
@@ -238,5 +219,11 @@ internal class TestPushViewModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    private companion object {
+        const val TITLE_KEY = "title"
+        const val BODY_KEY = "body"
+        const val FALLBACK_TITLE = "Test push"
     }
 }

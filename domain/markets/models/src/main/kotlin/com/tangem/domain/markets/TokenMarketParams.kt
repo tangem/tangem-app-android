@@ -11,6 +11,11 @@ data class TokenMarketParams(
     val symbol: String,
     val tokenQuotes: Quotes,
     val imageUrl: String?,
+    /**
+     * The token is blocked in the user's region. Travels with the route instead of being refetched: the
+     * token details endpoint does not carry the flag, only the list does.
+     */
+    val isRestrictedForCountry: Boolean = false,
 ) {
 
     @Serializable
@@ -27,6 +32,7 @@ fun TokenMarket.toSerializableParam(): TokenMarketParams {
         id = id,
         name = name,
         symbol = symbol,
+        isRestrictedForCountry = isRestrictedForCountry,
         tokenQuotes = TokenMarketParams.Quotes(
             currentPrice = tokenQuotesShort.currentPrice,
             h24Percent = tokenQuotesShort.h24ChangePercent,

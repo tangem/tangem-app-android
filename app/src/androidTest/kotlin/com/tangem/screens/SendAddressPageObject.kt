@@ -90,6 +90,13 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
+    /** A suggestion row from the 'Accounts' block, matched by the account label rendered next to its address. */
+    fun suggestedAccountItem(accountName: String): KNode = child {
+        hasTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_ITEM)
+        hasAnyDescendant(withText(accountName))
+        useUnmergedTree = true
+    }
+
     fun recentAddressItem(
         recipientAddress: String,
         isMyWallet: Boolean = false,

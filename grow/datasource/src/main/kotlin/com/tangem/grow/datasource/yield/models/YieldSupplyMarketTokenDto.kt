@@ -15,4 +15,7 @@ data class YieldSupplyMarketTokenDto(
     @Json(name = "chainId") val chainId: Int? = null,
     @Json(name = "maxFeeNative") val maxFeeNative: BigDecimal? = null,
     @Json(name = "maxFeeUSD") val maxFeeUSD: BigDecimal? = null,
+    @Json(name = "hasActiveCampaign") val hasActiveCampaign: Boolean? = null,
+    @Json(name = "rewardsApr") val rewardsApr: BigDecimal? = null,
+    @Json(name = "totalApyEst") val totalApyEst: BigDecimal? = null,
 )

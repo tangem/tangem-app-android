@@ -38,6 +38,26 @@ fun AppRouter.pushIfAbsent(
 }
 
 /**
+ * Pops back to [route], but only when it is in the [stack] and covered by other routes.
+ *
+ * Popping to the route the app already stands on, or to one the stack does not hold yet, changes nothing
+ * and is reported by Decompose as a failed navigation, which surfaces a generic error snackbar. Both are
+ * normal for a re-entrant entry point such as a deeplink: the destination may already be open, or — on a
+ * cold start — not reached yet, in which case the app arrives there on its own.
+ *
+ * ***Must be removed after Decompose migration.***
+ *
+ * @param route The route to pop back to.
+ */
+fun AppRouter.popToIfCovered(route: AppRoute) {
+    val currentStack = stack
+
+    if (currentStack.lastOrNull() == route || !currentStack.contains(route)) return
+
+    popTo(route)
+}
+
+/**
  * Opens [route] in place of the current one: pops the current route and pushes [route] on top.
  *
  * If an equal [route] is already in the [stack], pops back to it instead of pushing a second copy.

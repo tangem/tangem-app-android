@@ -20,6 +20,7 @@ dependencies {
     api(deps.androidx.fragment)
     implementation(deps.androidx.datastore)
     implementation(deps.moshi)
+    kapt(deps.moshi.kotlin.codegen)
     // endregion
 
     // region Tangem SDK
@@ -35,7 +36,8 @@ dependencies {
     // endregion
 
     // region Core modules
-    api(projects.core.datasource)
+    implementation(projects.core.local)
+    implementation(projects.store.datasource)
     implementation(projects.core.utils)
     // endregion
 

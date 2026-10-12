@@ -125,7 +125,6 @@ internal class TangemPayCardActivationModel @Inject constructor(
     }
 
     private suspend fun onSubmitFailed(error: VisaApiError) {
-        setSubmitFinished()
         when (error) {
             VisaApiError.CardActivationInvalidCardData -> showInlineError(
                 message = resourceReference(R.string.tangempay_card_activation_error),
@@ -159,6 +158,7 @@ internal class TangemPayCardActivationModel @Inject constructor(
     }
 
     private fun showRejectionSheet(title: TextReference, onClose: () -> Unit = {}) {
+        setSubmitFinished()
         uiMessageSender.send(
             TangemPayMessagesFactory.createSubmitRejectedMessage(title = title, onCloseClick = onClose),
         )
@@ -167,11 +167,13 @@ internal class TangemPayCardActivationModel @Inject constructor(
     private fun showInlineError(message: TextReference) {
         analytics.send(TangemPayAnalyticsEvents.Plastic.Last4DigitsValidationErrorShowed())
         uiState.update { current ->
-            current.copy(lastDigits = "", hint = message, isHintError = true)
+            current.copy(isLoading = false, lastDigits = "", hint = message, isHintError = true)
         }
     }
 
     private fun setSubmitFinished() {
-        uiState.update { current -> current.copy(isLoading = false) }
+        uiState.update { current ->
+            current.copy(isLoading = false, hint = resourceReference(R.string.tangempay_card_activation_description))
+        }
     }
 }

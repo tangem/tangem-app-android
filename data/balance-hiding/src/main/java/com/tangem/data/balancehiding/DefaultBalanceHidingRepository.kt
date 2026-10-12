@@ -1,7 +1,7 @@
 package com.tangem.data.balancehiding
 
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.storeObject
@@ -14,24 +14,25 @@ import javax.inject.Singleton
 @Singleton
 internal class DefaultBalanceHidingRepository @Inject constructor(
     private val appPreferencesStore: AppPreferencesStore,
+    private val storePreferencesKeys: StorePreferencesKeys,
 ) : BalanceHidingRepository {
 
     override var isUpdateEnabled: Boolean = true
 
     override fun getBalanceHidingSettingsFlow(): Flow<BalanceHidingSettings> {
         return appPreferencesStore.getObject(
-            key = PreferencesKeys.BALANCE_HIDING_SETTINGS_KEY,
+            key = storePreferencesKeys.balanceHidingSettingsKey,
             default = DEFAULT_HIDING_SETTINGS,
         )
     }
 
     override suspend fun storeBalanceHidingSettings(isBalanceHidden: BalanceHidingSettings) {
-        appPreferencesStore.storeObject(key = PreferencesKeys.BALANCE_HIDING_SETTINGS_KEY, value = isBalanceHidden)
+        appPreferencesStore.storeObject(key = storePreferencesKeys.balanceHidingSettingsKey, value = isBalanceHidden)
     }
 
     override suspend fun getBalanceHidingSettings(): BalanceHidingSettings {
         return appPreferencesStore.getObjectSyncOrDefault(
-            key = PreferencesKeys.BALANCE_HIDING_SETTINGS_KEY,
+            key = storePreferencesKeys.balanceHidingSettingsKey,
             default = DEFAULT_HIDING_SETTINGS,
         )
     }

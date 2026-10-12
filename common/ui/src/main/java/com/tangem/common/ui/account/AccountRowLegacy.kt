@@ -14,6 +14,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -38,6 +40,7 @@ import com.tangem.core.ui.test.accounts.AccountRowTestTags
  * @param icon The account icon definition, displayed using [AccountIcon].
  * @param isReverse If `true`, the [subtitle] is displayed above the [title].
  * Otherwise, the [title] is displayed above the [subtitle].
+ * @param titleBadge Optional badge shown next to the [title] (e.g. a "Joint" tag).
  */
 @Deprecated(
     message = "Legacy DS1 account row (icon + title/subtitle only). Use the DS3 AccountRow once the " +
@@ -50,6 +53,7 @@ fun AccountRowLegacy(
     icon: AccountIconUM.CryptoPortfolio,
     modifier: Modifier = Modifier,
     isReverse: Boolean = false,
+    titleBadge: TangemBadgeUM? = null,
 ) {
     Row(
         modifier = modifier,
@@ -67,9 +71,9 @@ fun AccountRowLegacy(
         ) {
             if (isReverse) {
                 Subtitle(subtitle)
-                Title(title)
+                Title(title, titleBadge)
             } else {
-                Title(title)
+                Title(title, titleBadge)
                 Subtitle(subtitle)
             }
         }
@@ -77,15 +81,33 @@ fun AccountRowLegacy(
 }
 
 @Composable
-private fun Title(title: TextReference) {
-    Text(
-        modifier = Modifier.testTag(AccountRowTestTags.TITLE),
-        text = title.resolveReference(),
-        style = TangemTheme.typography.subtitle2,
-        color = TangemTheme.colors.text.primary1,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-    )
+private fun Title(title: TextReference, badge: TangemBadgeUM?) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+    ) {
+        Text(
+            modifier = Modifier
+                .weight(weight = 1f, fill = false)
+                .testTag(AccountRowTestTags.TITLE),
+            text = title.resolveReference(),
+            style = TangemTheme.typography.subtitle2,
+            color = TangemTheme.colors.text.primary1,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (badge != null) {
+            TangemBadge(
+                text = badge.text,
+                variant = badge.variant,
+                status = badge.status,
+                size = badge.size,
+                iconStart = badge.iconStart,
+                iconEnd = badge.iconEnd,
+                contentDescription = badge.contentDescription,
+            )
+        }
+    }
 }
 
 @Composable
@@ -122,5 +144,11 @@ private fun Sample() {
     ) {
         AccountRowLegacy(title = name, subtitle = info, icon = icon())
         AccountRowLegacy(title = name, subtitle = subtitle, icon = icon(), isReverse = true)
+        AccountRowLegacy(
+            title = stringReference("Family savings"),
+            subtitle = info,
+            icon = icon(),
+            titleBadge = TangemBadgeUM(text = resourceReference(R.string.common_joint), size = TangemBadge.Size.X4),
+        )
     }
 }

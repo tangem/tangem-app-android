@@ -37,12 +37,18 @@ interface PortfolioSelectorComponent : ComposableBottomSheetComponent, Composabl
     )
 
     /**
-     * @param isWalletSelectionOnly when `true`, the selector always shows a flat wallet list and ignores the global
-     * accounts mode (no account grouping).
+     * @property isWalletSelectionOnly when `true`, the selector always shows a flat wallet list and ignores the
+     * global accounts mode (no account grouping).
+     * @property isJointAccountsIncluded whether active joint accounts are offered next to the wallet's own ones; a joint
+     * account holds funds in a Safe, so only the flows that can work with it (adding tokens) opt in
+     * @property isDs3Modal shows the bottom sheet as the translucent DS3 modal. Its content is not lazy, so opt in
+     * only where the list stays short
      */
     data class Settings(
         val isWalletSelectionOnly: Boolean = false,
         val isMultiChoice: Boolean = false,
+        val isJointAccountsIncluded: Boolean = false,
+        val isDs3Modal: Boolean = false,
     )
 
     interface BottomSheetCallback {

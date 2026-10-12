@@ -74,6 +74,17 @@ class TangemSheetState(
         get() = anchoredDraggableState.currentValue
 
     /**
+     * The value the sheet has settled at.
+     *
+     * Unlike [currentValue] — which flips to the closest anchor as soon as a drag passes the
+     * halfway point between two anchors — this only changes once a drag or an animation has landed
+     * on an anchor. Use it to react to the sheet *reaching* a state (e.g. dismissing a modal that
+     * was swiped away) rather than to the finger passing a threshold.
+     */
+    val settledValue: TangemSheetValue
+        get() = anchoredDraggableState.settledValue
+
+    /**
      * The target value of the bottom sheet state.
      *
      * If a swipe is in progress, this is the value that the sheet would animate to if the swipe

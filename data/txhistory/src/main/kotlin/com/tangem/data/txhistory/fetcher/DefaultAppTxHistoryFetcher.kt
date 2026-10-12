@@ -5,6 +5,7 @@ import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.cancelS
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.defaultLaunchIn
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.receiveTrigger
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.retryThreeTimes
+import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -13,18 +14,22 @@ import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
 import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.domain.txhistory.fetcher.WalletTxHistoryFetcher
+import com.tangem.domain.txhistory.repository.TokenInfoRepository
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.flow.*
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 internal class DefaultAppTxHistoryFetcher @Inject constructor(
     private val utils: TxHistoryFetcherUtils,
     private val expressRepository: ExpressRepository,
     private val onrampRepository: OnrampRepository,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val walletTxHistoryFetcherFactory: DefaultWalletTxHistoryFetcher.Factory,
+    private val multiAccountListSupplier: MultiAccountListSupplier,
+    private val tokenInfoRepository: TokenInfoRepository,
 ) : AppTxHistoryFetcher, TxHistoryFetcherUtils by utils {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -48,6 +53,8 @@ internal class DefaultAppTxHistoryFetcher @Inject constructor(
         val walletsFlow: StateFlow<Map<UserWalletId, UserWallet>> = getWalletsUseCase
             .invokeAsMap(isOnlyMultiCurrency = true, filterLocked = true)
             .stateIn(this)
+
+        saveTokensMetaInfo()
 
         walletsFlow.value.keys.createForNewWallets()
         walletsFlow.value.values.firstOrNull()?.let { wallet ->
@@ -74,6 +81,14 @@ internal class DefaultAppTxHistoryFetcher @Inject constructor(
                 }
             }
             .collect {}
+    }
+
+    private fun ProducerScope<Unit>.saveTokensMetaInfo() {
+        multiAccountListSupplier.invoke()
+            .map { list -> list.flatMap { it.flattenCurrencies() } }
+            .distinctUntilChanged()
+            .onEach { currencies -> tokenInfoRepository.save(currencies) }
+            .launchIn(this)
     }
 
     private fun ProducerScope<*>.loadExpressProviders(wallet: UserWallet) {

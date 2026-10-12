@@ -2,16 +2,24 @@ package com.tangem.domain.polymarket
 
 import com.tangem.domain.models.currency.CryptoCurrency
 
-/**
- * The collateral is a contract of the exchange's own, not a token of the wallet's portfolio, so it is described
- * here rather than looked up among the currencies a user holds.
- */
 interface PolymarketCollateralCurrencyFactory {
 
+    /**
+     * @return the exchange's settlement token, in which the trading balance is denominated and every order is
+     *  paid; never the token a user sends to top the account up
+     */
     fun create(): CryptoCurrency.Token
 
+    /**
+     * @return the token a deposit is made in — native USDC on Polygon, which the bridge accepts and every swap
+     *  provider routes
+     */
+    fun createDepositTarget(): CryptoCurrency.Token
+
     companion object {
-        const val TOKEN_NAME = "USDC"
-        const val TOKEN_SYMBOL = "USDC"
+        const val COLLATERAL_NAME = "Polymarket USD"
+        const val COLLATERAL_SYMBOL = "pUSD"
+        const val DEPOSIT_NAME = "USDC"
+        const val DEPOSIT_SYMBOL = "USDC"
     }
 }
