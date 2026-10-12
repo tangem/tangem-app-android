@@ -86,6 +86,7 @@ internal class GetYieldRewardsSummaryUseCaseTest {
             destination = YieldRewardDestination.Unsupported,
         )
         val pending = reward(symbol = "USDC", pending = "500")
+        val drained = reward(symbol = "WBTC")
         val unsupportedPending = reward(
             symbol = "stkGHO",
             pending = "700",
@@ -101,6 +102,8 @@ internal class GetYieldRewardsSummaryUseCaseTest {
                     moduleAddress = MODULE_ADDRESS,
                     claimable = listOf(weth),
                     pending = listOf(pending),
+                    unsupported = listOf(unsupported),
+                    supportedRewardTokens = setOf("0xweth", "0xusdc"),
                     totalNetUsd = BigDecimal("1.00"),
                 ),
             ),
@@ -112,6 +115,8 @@ internal class GetYieldRewardsSummaryUseCaseTest {
                     moduleAddress = MODULE_ADDRESS,
                     claimable = listOf(weth, aave),
                     pending = emptyList(),
+                    unsupported = emptyList(),
+                    supportedRewardTokens = setOf("0xweth", "0xaave"),
                     totalNetUsd = BigDecimal("1.30"),
                 ),
             ),
@@ -123,6 +128,21 @@ internal class GetYieldRewardsSummaryUseCaseTest {
                     moduleAddress = MODULE_ADDRESS,
                     claimable = listOf(aave),
                     pending = listOf(pending),
+                    unsupported = emptyList(),
+                    supportedRewardTokens = setOf("0xaave", "0xusdc"),
+                    totalNetUsd = BigDecimal("0.30"),
+                ),
+            ),
+            SummaryModel(
+                moduleAddress = MODULE_ADDRESS,
+                isClaimRecommended = false,
+                rewards = listOf(aave, unsupported),
+                expected = YieldRewardsSummary.Deferred(
+                    moduleAddress = MODULE_ADDRESS,
+                    claimable = listOf(aave),
+                    pending = emptyList(),
+                    unsupported = listOf(unsupported),
+                    supportedRewardTokens = setOf("0xaave"),
                     totalNetUsd = BigDecimal("0.30"),
                 ),
             ),
@@ -134,6 +154,8 @@ internal class GetYieldRewardsSummaryUseCaseTest {
                     moduleAddress = MODULE_ADDRESS,
                     claimable = listOf(weth, aave),
                     pending = emptyList(),
+                    unsupported = emptyList(),
+                    supportedRewardTokens = setOf("0xweth", "0xaave"),
                     totalNetUsd = BigDecimal("1.30"),
                 ),
             ),
@@ -151,6 +173,8 @@ internal class GetYieldRewardsSummaryUseCaseTest {
                     moduleAddress = MODULE_ADDRESS,
                     claimable = listOf(weth),
                     pending = listOf(pending),
+                    unsupported = listOf(unsupportedPending),
+                    supportedRewardTokens = setOf("0xweth", "0xusdc"),
                     totalNetUsd = BigDecimal("1.00"),
                 ),
             ),
@@ -165,6 +189,19 @@ internal class GetYieldRewardsSummaryUseCaseTest {
                 isClaimRecommended = true,
                 rewards = listOf(unsupported),
                 expected = YieldRewardsSummary.None,
+            ),
+            SummaryModel(
+                moduleAddress = MODULE_ADDRESS,
+                isClaimRecommended = true,
+                rewards = listOf(weth, drained),
+                expected = YieldRewardsSummary.Claimable(
+                    moduleAddress = MODULE_ADDRESS,
+                    claimable = listOf(weth),
+                    pending = emptyList(),
+                    unsupported = emptyList(),
+                    supportedRewardTokens = setOf("0xweth", "0xwbtc"),
+                    totalNetUsd = BigDecimal("1.00"),
+                ),
             ),
             SummaryModel(
                 moduleAddress = MODULE_ADDRESS,
@@ -215,7 +252,7 @@ internal class GetYieldRewardsSummaryUseCaseTest {
     )
 
     private companion object {
-        const val CHAIN_ID = 1
+        const val CHAIN_ID = MockYieldSupply.CHAIN_ID
         const val USER_ADDRESS = "0xuser"
         const val MODULE_ADDRESS = "0xmodule"
     }
