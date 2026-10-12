@@ -4,7 +4,6 @@ import android.util.Base64
 import arrow.core.Either
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.data.mcp.converter.toDomain
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
@@ -28,7 +27,6 @@ private const val TAG = "MCP"
 
 internal class DefaultMcpRepository @Inject constructor(
     private val mcpApi: McpApi,
-    private val userWalletsListRepository: UserWalletsListRepository,
     private val appScope: AppCoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : McpRepository {
@@ -92,27 +90,10 @@ internal class DefaultMcpRepository @Inject constructor(
         appScope.launch(dispatchers.io) {
             mcpApi.getSessions().toEither().fold(
                 ifLeft = { TangemLogger.withTag(TAG).e("Failed to load the agent sessions", it) },
-                ifRight = { sessions.value = it.toDomainWithStubbedFields() },
+                ifRight = { sessions.value = it.map(McpSessionResponse::toDomain) },
             )
         }
             .saveIn(loadJobHolder)
-    }
-
-    /**
-     * The service scopes the session list by the access token, so its response carries neither the
-     * wallet the authorization was granted for nor its creation time. Both are stubbed here — spread
-     * over the wallets, timed to now — so the screen can be built against the final model. Delete
-
-     */
-    private suspend fun List<McpSessionResponse>.toDomainWithStubbedFields(): List<McpSession> {
-        val wallets = userWalletsListRepository.userWalletsSync().ifEmpty { return emptyList() }
-
-        return mapIndexed { index, session ->
-            session.toDomain(
-                walletId = wallets[index % wallets.size].walletId,
-                createdAtMillis = System.currentTimeMillis(),
-            )
-        }
     }
 
     /** The auth service addresses wallets by the Base64 form of the id, the same one wallet registration uses. */
