@@ -7,9 +7,10 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
-import com.tangem.test.core.ProvideTestModels
+import com.tangem.domain.collectibles.models.OpenPackStep
 import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM.ButtonUM
 import com.tangem.features.collectibles.impl.createMachine
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.collectibles.MockCollectibles
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -94,22 +95,40 @@ internal class CollectiblesConfirmOrderConverterTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN a vault balance and a confirm state WHEN convert THEN the button reflects them`(model: ButtonModel) {
+    fun `GIVEN a vault balance and an open pack step WHEN convert THEN the button reflects them`(model: ButtonModel) {
         // Arrange
         val machine = createMachine(price = BigDecimal("50"), feeAmount = BigDecimal("1"))
 
         // Act
         val actual = convert(
-            input(machine = machine, usdcBalance = model.usdcBalance, isConfirming = model.isConfirming),
+            input(
+                machine = machine,
+                usdcBalance = model.usdcBalance,
+                step = model.step,
+            ),
         )
 
         // Assert
         assertThat(actual.button).isEqualTo(model.expected)
     }
 
+    @Test
+    fun `GIVEN a purchase in progress WHEN convert THEN back is hidden until it fails`() {
+        // Arrange
+        val machine = createMachine()
+
+        // Act
+        val visibility = listOf(OpenPackStep.NotStarted, OpenPackStep.Generating, OpenPackStep.Opening, FAILED_BEFORE_PAYMENT).map {
+            converter.convert(input(machine = machine, step = it)).isBackVisible
+        }
+
+        // Assert
+        assertThat(visibility).containsExactly(true, false, false, true).inOrder()
+    }
+
     internal data class ButtonModel(
         val usdcBalance: BigDecimal,
-        val isConfirming: Boolean = false,
+        val step: OpenPackStep = OpenPackStep.NotStarted,
         val expected: ButtonUM,
     )
 
@@ -118,8 +137,11 @@ internal class CollectiblesConfirmOrderConverterTest {
         ButtonModel(usdcBalance = BigDecimal("51"), expected = APPROVE),
         ButtonModel(usdcBalance = BigDecimal("50.99"), expected = NOT_ENOUGH_FUNDS),
         ButtonModel(usdcBalance = BigDecimal.ZERO, expected = NOT_ENOUGH_FUNDS),
-        ButtonModel(usdcBalance = BigDecimal("100"), isConfirming = true, expected = OPENING),
-        ButtonModel(usdcBalance = BigDecimal.ZERO, isConfirming = true, expected = OPENING),
+        ButtonModel(usdcBalance = BigDecimal("100"), step = OpenPackStep.Generating, expected = GENERATING),
+        ButtonModel(usdcBalance = BigDecimal("100"), step = OpenPackStep.Confirming, expected = CONFIRMING),
+        ButtonModel(usdcBalance = BigDecimal.ZERO, step = OpenPackStep.Opening, expected = OPENING),
+        ButtonModel(usdcBalance = BigDecimal("100"), step = FAILED_BEFORE_PAYMENT, expected = APPROVE),
+        ButtonModel(usdcBalance = BigDecimal.ZERO, step = FAILED_BEFORE_PAYMENT, expected = NOT_ENOUGH_FUNDS),
     )
 
     private val converter = CollectiblesConfirmOrderConverter(onBackClick = {}, onApproveClick = {})
@@ -129,11 +151,11 @@ internal class CollectiblesConfirmOrderConverterTest {
     private fun input(
         machine: CollectibleGachaMachine,
         usdcBalance: BigDecimal = BigDecimal("1000"),
-        isConfirming: Boolean = false,
+        step: OpenPackStep = OpenPackStep.NotStarted,
     ) = CollectiblesConfirmOrderConverter.Input(
         machine = machine,
         vaultBalance = MockCollectibles.vaultBalance(amount = usdcBalance),
-        isConfirming = isConfirming,
+        step = step,
     )
 
     private fun usdc(amount: String) = BigDecimal(amount).format { crypto(cryptoCurrency = MockCollectibles.usdc) }
@@ -148,6 +170,19 @@ internal class CollectiblesConfirmOrderConverterTest {
             textRef = resourceReference(R.string.collectibles_confirm_order_not_enough_funds_button),
             isEnabled = false,
         )
-        val OPENING = ButtonUM(textRef = stringReference("Opening pack…"), isEnabled = false)
+        val GENERATING = ButtonUM(
+            textRef = resourceReference(R.string.collectibles_confirm_order_generating_pack_button),
+            isEnabled = false,
+        )
+        val CONFIRMING = ButtonUM(
+            textRef = resourceReference(R.string.collectibles_confirm_order_confirming_transaction_button),
+            isEnabled = false,
+        )
+        val OPENING = ButtonUM(
+            textRef = resourceReference(R.string.collectibles_confirm_order_opening_pack_button),
+            isEnabled = false,
+        )
+
+        val FAILED_BEFORE_PAYMENT = OpenPackStep.Failed.PurchaseFailed
     }
 }
