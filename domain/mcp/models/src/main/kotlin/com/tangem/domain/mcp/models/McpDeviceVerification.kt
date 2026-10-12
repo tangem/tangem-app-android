@@ -10,7 +10,7 @@ data class McpDeviceVerification(
     val clientId: String,
     val clientOrigin: String?,
     val clientName: String?,
-    val isClientNameVerified: Boolean?,
+    val clientIconUrl: String?,
     val scope: String,
     val state: String,
     val userCode: String,
