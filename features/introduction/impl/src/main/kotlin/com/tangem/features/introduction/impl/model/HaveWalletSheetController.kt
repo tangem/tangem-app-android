@@ -82,6 +82,7 @@ internal class HaveWalletSheetController(
                 ),
                 isEnabled = !isSigningInSocially(),
                 isLoading = isSigningInSocially(),
+                isLoaderSpaceReserved = true,
                 onClick = { onSocialLoginOptionClick(provider) },
             )
         },
@@ -231,7 +232,10 @@ internal class HaveWalletSheetController(
         }
     }
 
-    private fun onCloseClick() = dismissByViewer(IntroductionProcess.SheetDismissed.DismissReason.CloseButton)
+    private fun onCloseClick() {
+        if (isSigningInSocially()) return
+        dismissByViewer(IntroductionProcess.SheetDismissed.DismissReason.CloseButton)
+    }
 
     private fun onDismissRequest() {
         if (isSigningInSocially()) return

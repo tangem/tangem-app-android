@@ -25,12 +25,13 @@ fun TangemButton.Back(modifier: Modifier = Modifier, onClick: () -> Unit) {
 
 @Composable
 @NonRestartableComposable
-fun TangemButton.Close(modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun TangemButton.Close(modifier: Modifier = Modifier, isEnabled: Boolean = true, onClick: () -> Unit) {
     TangemButton(
         modifier = modifier,
         variant = TangemButton.Variant.Material,
         size = TangemButton.Size.X11,
         iconStart = TangemIconUM.Icon(Icons.ic_cross_20),
+        isEnabled = isEnabled,
         onClick = onClick,
     )
 }
