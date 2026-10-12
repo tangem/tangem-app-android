@@ -1,6 +1,7 @@
 package com.tangem.domain.polymarket
 
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.polymarket.model.PolymarketDepositAsset
 
 interface PolymarketCollateralCurrencyFactory {
 
@@ -14,7 +15,10 @@ interface PolymarketCollateralCurrencyFactory {
      * @return the token a deposit is made in — native USDC on Polygon, which the bridge accepts and every swap
      *  provider routes
      */
-    fun createDepositTarget(): CryptoCurrency.Token
+    fun createDepositTarget(): CryptoCurrency.Token = createDepositTarget(PolymarketDepositAsset.POLYGON_USDC)
+
+    /** @return [asset] as a token on its own chain, which the bridge credits like [createDepositTarget] */
+    fun createDepositTarget(asset: PolymarketDepositAsset): CryptoCurrency.Token
 
     companion object {
         const val COLLATERAL_NAME = "Polymarket USD"
