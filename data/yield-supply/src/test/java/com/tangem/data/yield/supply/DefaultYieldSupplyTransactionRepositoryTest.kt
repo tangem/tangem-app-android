@@ -25,6 +25,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.models.YieldSupplyEnterOutcome
+import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -491,6 +492,83 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetTransactionOutcome {
+
+        private val receiptWalletManager = mockk<WalletManager>(
+            relaxed = true,
+            moreInterfaces = arrayOf(TransactionReceiptProvider::class),
+        )
+        private val outcomeWalletManagersFacade: WalletManagersFacade = mockk()
+        private val outcomeRepository = DefaultYieldSupplyTransactionRepository(
+            walletManagersFacade = outcomeWalletManagersFacade,
+            dispatchers = TestingCoroutineDispatcherProvider(),
+        )
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(receiptWalletManager, outcomeWalletManagersFacade)
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN receipt WHEN getTransactionOutcome THEN maps outcome`(model: TransactionOutcomeModel) = runTest {
+            // Arrange
+            val resolvedWalletManager = if (model.isReceiptProvider) receiptWalletManager else walletManager
+            coEvery {
+                outcomeWalletManagersFacade.getOrCreateWalletManager(any(), any(), any())
+            } returns resolvedWalletManager
+            coEvery {
+                (receiptWalletManager as TransactionReceiptProvider).getTransactionReceipt(CLAIM_TX_HASH)
+            } returns model.receipt
+
+            // Act
+            val actual = outcomeRepository.getTransactionOutcome(
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrency,
+                transactionHash = CLAIM_TX_HASH,
+            )
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            TransactionOutcomeModel(receipt = Result.Success(null), expected = null),
+            TransactionOutcomeModel(
+                receipt = Result.Failure(BlockchainSdkError.CustomError("rpc down")),
+                expected = null,
+            ),
+            TransactionOutcomeModel(
+                receipt = Result.Success(receipt(isSuccess = true)),
+                expected = YieldSupplyTransactionOutcome.Confirmed,
+            ),
+            TransactionOutcomeModel(
+                receipt = Result.Success(receipt(isSuccess = false)),
+                expected = YieldSupplyTransactionOutcome.Reverted,
+            ),
+            TransactionOutcomeModel(
+                receipt = Result.Success(receipt(isSuccess = true)),
+                isReceiptProvider = false,
+                expected = null,
+            ),
+        )
+
+        private fun receipt(isSuccess: Boolean) = EthereumTransactionReceipt(
+            transactionHash = CLAIM_TX_HASH,
+            isSuccess = isSuccess,
+            blockNumber = BigInteger.ONE,
+            gasUsed = BigInteger.ONE,
+        )
+    }
+
+    data class TransactionOutcomeModel(
+        val receipt: Result<EthereumTransactionReceipt?>,
+        val expected: YieldSupplyTransactionOutcome?,
+        val isReceiptProvider: Boolean = true,
+    )
+
     data class OutcomeModel(
         val receipt: Result<EthereumTransactionReceipt?>,
         val expected: YieldSupplyEnterOutcome?,
@@ -500,6 +578,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
     private companion object {
         const val ENTER_TX_HASH = "0xenter"
+        const val CLAIM_TX_HASH = "0xclaim"
         const val MODULE_ADDRESS = "0x2222222222222222222222222222222222222222"
     }
 }
