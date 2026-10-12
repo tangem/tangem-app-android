@@ -18,6 +18,8 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.utils.parseBigDecimal
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.lce.Lce
@@ -75,6 +77,7 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooserBlock
 import com.tangem.features.commonfeatures.api.choosetoken.PaymentAccountTokens
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.utils.extensions.orZero
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
@@ -882,7 +885,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         coEvery {
             swapTransferInteractor.updateTransfer(any(), any(), any(), any(), any())
         } answers {
-            transferState(collateral, destination, BigDecimal(arg<String>(2).ifEmpty { "0" }), false)
+            transferState(collateral, destination, arg<String>(2).parseBigDecimalOrNull().orZero(), false)
         }
         val model = createModel(
             accountFlow = AccountFlow.PredictionWithdraw,
@@ -915,9 +918,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         val maxCard = model.uiState.sendCardData as SwapCardState.SwapCardData
         assertThat(maxCard.amountCurrencyOverride).isEqualTo(AppCurrency.Default)
         assertThat(requireNotNull(maxCard.amountField).cryptoAmount.value).isEqualTo(maxAmount)
-        assertThat(requireNotNull(maxCard.amountField).value).isEqualTo("9.876543")
+        assertThat(requireNotNull(maxCard.amountField).value).isEqualTo(maxAmount.parseBigDecimal(decimals = 6))
         coVerify {
-            swapTransferInteractor.updateTransfer(collateral, destination, "9.876543", any(), any())
+            swapTransferInteractor.updateTransfer(collateral, destination, maxAmount.parseBigDecimal(decimals = 6), any(), any())
         }
         model.onDestroy()
     }
