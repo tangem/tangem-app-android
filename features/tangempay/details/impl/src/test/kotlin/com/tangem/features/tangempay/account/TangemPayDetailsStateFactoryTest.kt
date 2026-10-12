@@ -214,6 +214,7 @@ internal class TangemPayDetailsStateFactoryTest {
     fun `GIVEN networks WHEN getLoadedState THEN add funds gated by an available network`(case: AddFundsCase) {
         // Arrange
         val status = loadedStatus(
+            statusBalance = balance(availableBalance = BigDecimal.TEN),
             statusNetworks = case.networks.map { isAvailable ->
                 if (isAvailable) availableNetwork else notIssuedNetwork
             },
@@ -224,6 +225,42 @@ internal class TangemPayDetailsStateFactoryTest {
 
         // Assert
         assertThat(state.addFundsButton.isEnabled).isEqualTo(case.expectedAddFundsEnabled)
+        assertThat(state.withdrawButton.isEnabled).isTrue()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideWithdrawSourceCases")
+    fun `GIVEN deposit address presence WHEN getLoadedState THEN withdraw follows the matching balance`(
+        case: WithdrawSourceCase,
+    ) {
+        // Arrange
+        val status = loadedStatus(
+            availableForWithdrawal = case.availableForWithdrawal,
+            statusBalance = balance(availableBalance = case.fiatBalance),
+            statusNetworks = listOf(if (case.hasDepositAddress) availableNetwork else notIssuedNetwork),
+        )
+
+        // Act
+        val state = factory.getLoadedState(status)
+
+        // Assert
+        assertThat(state.withdrawButton.isEnabled).isEqualTo(case.expectedWithdrawEnabled)
+    }
+
+    @Test
+    fun `GIVEN deactivated without a deposit address WHEN getDeactivatedState THEN only withdraw enabled`() {
+        // Arrange
+        val status = deactivatedStatus(
+            availableForWithdrawal = BigDecimal.ZERO,
+            statusBalance = balance(availableBalance = BigDecimal.TEN),
+            statusNetworks = emptyList(),
+        )
+
+        // Act
+        val state = factory.getDeactivatedState(status)
+
+        // Assert
+        assertThat(state.addFundsButton.isEnabled).isFalse()
         assertThat(state.withdrawButton.isEnabled).isTrue()
     }
 
@@ -631,9 +668,9 @@ internal class TangemPayDetailsStateFactoryTest {
         networks = statusNetworks,
     )
 
-    private fun balance() = PaymentAccountStatusValue.Balance(
+    private fun balance(availableBalance: BigDecimal = BigDecimal.ZERO) = PaymentAccountStatusValue.Balance(
         fiatBalance = PaymentAccountStatusValue.FiatBalance(
-            availableBalance = BigDecimal.ZERO,
+            availableBalance = availableBalance,
             currency = "USD",
         ),
     )
@@ -654,6 +691,16 @@ internal class TangemPayDetailsStateFactoryTest {
         val name: String,
         val networks: List<Boolean>,
         val expectedAddFundsEnabled: Boolean,
+    ) {
+        override fun toString(): String = name
+    }
+
+    internal data class WithdrawSourceCase(
+        val name: String,
+        val hasDepositAddress: Boolean,
+        val availableForWithdrawal: BigDecimal,
+        val fiatBalance: BigDecimal,
+        val expectedWithdrawEnabled: Boolean,
     ) {
         override fun toString(): String = name
     }
@@ -694,6 +741,45 @@ internal class TangemPayDetailsStateFactoryTest {
                 name = "single issued network -> enabled",
                 networks = listOf(true),
                 expectedAddFundsEnabled = true,
+            ),
+        )
+
+        @JvmStatic
+        fun provideWithdrawSourceCases() = listOf(
+            WithdrawSourceCase(
+                name = "deposit address, withdrawable amount -> enabled",
+                hasDepositAddress = true,
+                availableForWithdrawal = BigDecimal.TEN,
+                fiatBalance = BigDecimal.TEN,
+                expectedWithdrawEnabled = true,
+            ),
+            WithdrawSourceCase(
+                name = "deposit address, nothing withdrawable despite fiat balance -> disabled",
+                hasDepositAddress = true,
+                availableForWithdrawal = BigDecimal.ZERO,
+                fiatBalance = BigDecimal.TEN,
+                expectedWithdrawEnabled = false,
+            ),
+            WithdrawSourceCase(
+                name = "no deposit address, positive fiat balance -> enabled",
+                hasDepositAddress = false,
+                availableForWithdrawal = BigDecimal.ZERO,
+                fiatBalance = BigDecimal.TEN,
+                expectedWithdrawEnabled = true,
+            ),
+            WithdrawSourceCase(
+                name = "no deposit address, zero fiat balance -> disabled",
+                hasDepositAddress = false,
+                availableForWithdrawal = BigDecimal.ZERO,
+                fiatBalance = BigDecimal.ZERO,
+                expectedWithdrawEnabled = false,
+            ),
+            WithdrawSourceCase(
+                name = "no deposit address, negative fiat balance -> disabled",
+                hasDepositAddress = false,
+                availableForWithdrawal = BigDecimal.ZERO,
+                fiatBalance = BigDecimal("-1"),
+                expectedWithdrawEnabled = false,
             ),
         )
 
