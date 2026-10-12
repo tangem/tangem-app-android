@@ -136,7 +136,7 @@ internal abstract class SwapModelTestBase {
     protected val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase = mockk(relaxed = true)
     protected val recordTokenTransferFromSwapUseCase: RecordTokenTransferFromSwapUseCase = mockk(relaxed = true)
     protected val getPredictionTopUpMinimumUseCase: GetPredictionTopUpMinimumUseCase = mockk {
-        coEvery { this@mockk(any()) } returns null
+        coEvery { this@mockk(any(), any()) } returns null
     }
     protected val backupErrorWarningSender: BackupErrorWarningSender = mockk {
         every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
