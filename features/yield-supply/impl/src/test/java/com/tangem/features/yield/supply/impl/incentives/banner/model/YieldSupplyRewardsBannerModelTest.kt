@@ -62,12 +62,8 @@ internal class YieldSupplyRewardsBannerModelTest {
     fun `GIVEN recommended rewards WHEN model created THEN banner shows them with the claim CTA inert`() = runTest {
         // Arrange
         coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
-            YieldRewardsSummary.Claimable(
-                moduleAddress = MODULE_ADDRESS,
+            MockYieldSupply.claimableSummary(
                 claimable = listOf(reward(claimable = "1000")),
-                pending = emptyList(),
-                unsupported = emptyList(),
-                supportedRewardTokens = emptySet(),
                 totalNetUsd = BigDecimal("30.00"),
             ).right()
 
@@ -91,12 +87,8 @@ internal class YieldSupplyRewardsBannerModelTest {
     fun `GIVEN rewards below threshold WHEN model created THEN claim is disabled`() = runTest {
         // Arrange
         coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
-            YieldRewardsSummary.Deferred(
-                moduleAddress = MODULE_ADDRESS,
+            MockYieldSupply.deferredSummary(
                 claimable = listOf(reward(claimable = "1000")),
-                pending = emptyList(),
-                unsupported = emptyList(),
-                supportedRewardTokens = emptySet(),
                 totalNetUsd = BigDecimal("0.30"),
             ).right()
 
@@ -242,12 +234,8 @@ internal class YieldSupplyRewardsBannerModelTest {
         // Arrange
         every { marketFlowUseCase(any()) } returns flowOf(null, market(hasCampaign = true))
         coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
-            YieldRewardsSummary.Claimable(
-                moduleAddress = MODULE_ADDRESS,
+            MockYieldSupply.claimableSummary(
                 claimable = listOf(reward(claimable = "1000")),
-                pending = emptyList(),
-                unsupported = emptyList(),
-                supportedRewardTokens = emptySet(),
                 totalNetUsd = BigDecimal("30.00"),
             ).right()
 
@@ -267,12 +255,8 @@ internal class YieldSupplyRewardsBannerModelTest {
         every { marketFlowUseCase(any()) } returns
             flowOf(market(hasCampaign = true), market(hasCampaign = false))
         coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
-            YieldRewardsSummary.Claimable(
-                moduleAddress = MODULE_ADDRESS,
+            MockYieldSupply.claimableSummary(
                 claimable = listOf(reward(claimable = "1000")),
-                pending = emptyList(),
-                unsupported = emptyList(),
-                supportedRewardTokens = emptySet(),
                 totalNetUsd = BigDecimal("30.00"),
             ).right()
 
@@ -345,6 +329,5 @@ internal class YieldSupplyRewardsBannerModelTest {
         const val CHAIN_ID = 1
         const val TOKEN_ADDRESS = "0xToken"
         const val USER_ADDRESS = "0xUser"
-        const val MODULE_ADDRESS = "0xModule"
     }
 }
