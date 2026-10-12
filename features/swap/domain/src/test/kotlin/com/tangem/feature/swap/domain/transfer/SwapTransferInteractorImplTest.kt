@@ -1535,6 +1535,32 @@ internal class SwapTransferInteractorImplTest {
     }
 
     @Test
+    fun `GIVEN EVM tokens with the same contract in another case WHEN shouldTransferInsteadOfSwap THEN return true`() {
+        // Arrange
+        val checksummed = buildToken(networkRawId = ETHEREUM, contractAddress = USDT_CONTRACT)
+        val lowerCased = buildToken(networkRawId = ETHEREUM, contractAddress = USDT_CONTRACT.lowercase())
+
+        // Act
+        val result = sut.shouldTransferInsteadOfSwap(fromSwapCurrency = checksummed, toSwapCurrency = lowerCased)
+
+        // Assert
+        assertThat(result).isTrue()
+    }
+
+    @Test
+    fun `GIVEN Solana tokens whose mints differ only in case WHEN shouldTransferInsteadOfSwap THEN return false`() {
+        // Arrange
+        val mint = buildToken(networkRawId = SOLANA, contractAddress = SOLANA_USDC_MINT)
+        val lowerCasedMint = buildToken(networkRawId = SOLANA, contractAddress = SOLANA_USDC_MINT.lowercase())
+
+        // Act
+        val result = sut.shouldTransferInsteadOfSwap(fromSwapCurrency = mint, toSwapCurrency = lowerCasedMint)
+
+        // Assert
+        assertThat(result).isFalse()
+    }
+
+    @Test
     fun `GIVEN tokens with same network but different contract WHEN shouldTransferInsteadOfSwap THEN return false`() {
         val result = sut.shouldTransferInsteadOfSwap(
             fromSwapCurrency = buildToken(networkRawId = ETHEREUM, contractAddress = USDT_CONTRACT),
@@ -1745,6 +1771,8 @@ internal class SwapTransferInteractorImplTest {
         const val ETHEREUM = "ethereum"
         const val POLYGON = "polygon"
         const val USDT_CONTRACT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+        const val SOLANA = "solana"
+        const val SOLANA_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
         const val USDC_CONTRACT = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
         const val DESTINATION_ADDRESS = "0xdEaDBeEf00000000000000000000000000000001"
         const val CONTRACT_ADDRESS = "0xCONTRACT00000000000000000000000000000001"
