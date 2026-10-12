@@ -62,6 +62,7 @@ internal class DefaultTronGaslessTransactionRepository(
         TronGaslessQuote(
             quoteId = res.quoteId,
             quotedAmountRaw = params.amount,
+            quotedToAddress = params.toAddress,
             feeRecipient = res.feeRecipient,
             compensationToken = res.compensationToken,
             compensationAmountRaw = BigInteger(res.compensationAmountRaw),
