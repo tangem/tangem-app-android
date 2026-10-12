@@ -212,12 +212,14 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
 
         uiMessageSender.send(
             SnackbarMessage(
-                when (outcome) {
+                message = when (outcome) {
                     is SocialLoginOutcome.WalletCreated ->
                         resourceReference(CoreResR.string.social_login_toast_wallet_created)
                     is SocialLoginOutcome.WalletRestored ->
                         resourceReference(CoreResR.string.social_login_toast_wallet_added)
                 },
+                startIconId = CoreUiR.drawable.ic_success_20,
+                isIconTinted = false,
             ),
         )
         router.replaceAll(AppRoute.Wallet)
