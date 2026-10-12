@@ -66,6 +66,8 @@ internal class YieldSupplyRewardsBannerModelTest {
                 moduleAddress = MODULE_ADDRESS,
                 claimable = listOf(reward(claimable = "1000")),
                 pending = emptyList(),
+                unsupported = emptyList(),
+                supportedRewardTokens = emptySet(),
                 totalNetUsd = BigDecimal("30.00"),
             ).right()
 
@@ -93,6 +95,8 @@ internal class YieldSupplyRewardsBannerModelTest {
                 moduleAddress = MODULE_ADDRESS,
                 claimable = listOf(reward(claimable = "1000")),
                 pending = emptyList(),
+                unsupported = emptyList(),
+                supportedRewardTokens = emptySet(),
                 totalNetUsd = BigDecimal("0.30"),
             ).right()
 
@@ -242,6 +246,8 @@ internal class YieldSupplyRewardsBannerModelTest {
                 moduleAddress = MODULE_ADDRESS,
                 claimable = listOf(reward(claimable = "1000")),
                 pending = emptyList(),
+                unsupported = emptyList(),
+                supportedRewardTokens = emptySet(),
                 totalNetUsd = BigDecimal("30.00"),
             ).right()
 
@@ -265,6 +271,8 @@ internal class YieldSupplyRewardsBannerModelTest {
                 moduleAddress = MODULE_ADDRESS,
                 claimable = listOf(reward(claimable = "1000")),
                 pending = emptyList(),
+                unsupported = emptyList(),
+                supportedRewardTokens = emptySet(),
                 totalNetUsd = BigDecimal("30.00"),
             ).right()
 
