@@ -124,7 +124,8 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
     }
 
     private fun isTangemPayPushNotificationPayload(payload: Map<String, String>): Boolean {
-        return payload.containsKey(CUSTOMER_WALLET_ID_KEY) && payload[TYPE_KEY] in TangemPayPushNotificationType.all
+        return payload.containsKey(CUSTOMER_WALLET_ID_KEY) &&
+            payload[TYPE_KEY]?.let(TangemPayPushNotificationType::fromValue) != null
     }
 
     private fun buildTangemPayNotificationDeeplink(payload: Map<String, String>): String? {

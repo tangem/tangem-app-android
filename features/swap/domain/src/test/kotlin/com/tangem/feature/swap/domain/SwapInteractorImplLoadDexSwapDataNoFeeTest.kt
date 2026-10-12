@@ -265,6 +265,47 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
 
     // endregion
 
+    // region MCP intent
+
+    @Test
+    fun `GIVEN intent WHEN findBestQuote with DEX provider THEN exchange data is requested for the intent`() = runTest {
+        // Arrange
+        val dexProvider = stubDexQuoteAndExchangeData()
+
+        // Act
+        invokeFindBestQuote(dexProvider, intentId = INTENT_ID)
+
+        // Assert
+        verifyExchangeDataRequestedForIntent(INTENT_ID)
+    }
+
+    @Test
+    fun `GIVEN no intent WHEN findBestQuote with DEX provider THEN exchange data is requested without an intent`() =
+        runTest {
+            // Arrange
+            val dexProvider = stubDexQuoteAndExchangeData()
+
+            // Act
+            invokeFindBestQuote(dexProvider)
+
+            // Assert
+            verifyExchangeDataRequestedForIntent(null)
+        }
+
+    private fun verifyExchangeDataRequestedForIntent(intentId: String?) {
+        coVerify(exactly = 1) {
+            repository.getExchangeData(
+                userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                toContractAddress = any(), fromAddress = any(), toNetwork = any(),
+                fromAmount = any(), fromDecimals = any(), toDecimals = any(),
+                providerId = any(), rateType = any(), toAddress = any(),
+                expressOperationType = any(), refundAddress = any(), intentId = intentId,
+            )
+        }
+    }
+
+    // endregion
+
     private fun stubAllowance(info: AllowanceInfo) {
         coEvery {
             getAllowanceInfoUseCase.invoke(
@@ -316,7 +357,7 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
                 toContractAddress = any(), fromAddress = any(), toNetwork = any(),
                 fromAmount = any(), fromDecimals = any(), toDecimals = any(),
                 providerId = dexProvider.providerId, rateType = any(), toAddress = any(),
-                expressOperationType = any(), refundAddress = any(),
+                expressOperationType = any(), refundAddress = any(), intentId = any(),
             )
         } returns swapDataModel.right()
         return dexProvider
@@ -325,6 +366,7 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
     private suspend fun invokeFindBestQuote(
         dexProvider: com.tangem.feature.swap.domain.models.domain.SwapProvider,
         yieldSupplyActive: Boolean = false,
+        intentId: String? = null,
     ) = sut.findBestQuote(
         fromSwapCurrencyStatus = buildSwapCurrencyStatus(
             networkRawId = ethNetwork,
@@ -337,11 +379,13 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
         providers = listOf(dexProvider),
         amountToSwap = "1.0",
         reduceBalanceBy = BigDecimal.ZERO,
+        intentId = intentId,
     )
 
     private companion object {
         const val SPENDER = "0xSpender"
         const val YIELD_PROXY = "0xYieldProxy"
         const val WALLET_ADDRESS = "0xTestAddress"
+        const val INTENT_ID = "intent-id"
     }
 }

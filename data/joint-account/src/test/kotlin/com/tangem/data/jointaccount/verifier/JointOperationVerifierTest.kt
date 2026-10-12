@@ -10,6 +10,7 @@ import com.tangem.domain.jointaccount.model.JointOperationSignError.Verification
 import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.data.jointaccount.safe.DefaultJointTransferPayloadCodec
 import com.tangem.data.jointaccount.safe.DefaultSafeAddressCalculator
+import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
 import com.tangem.domain.jointaccount.safe.SafeSingleton
@@ -19,6 +20,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import java.math.BigDecimal
 import java.math.BigInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -99,6 +101,55 @@ internal class JointOperationVerifierTest {
         assertThat(actual).isEqualTo(
             VerificationFailed(reason = VerificationFailed.Reason.REFUND_MISMATCH).left(),
         )
+    }
+
+    @Test
+    fun `GIVEN refund in the smart gas token it was priced in WHEN verify THEN the signature is allowed`() = runTest {
+        // Act
+        val actual = verifier.verify(
+            jointAccount = jointAccount(),
+            ownerAddress = ALICE,
+            operation = operation(safeTx = nativeSafeTx().copy(gasToken = TOKEN, gasPrice = BigInteger("120"))),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(gasToken = USDC_GAS_TOKEN),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+    }
+
+    @Test
+    fun `GIVEN token gas price above the ceiling in that token WHEN verify THEN the refund is refused`() = runTest {
+        // Act
+        val actual = verifier.verify(
+            jointAccount = jointAccount(),
+            ownerAddress = ALICE,
+            operation = operation(safeTx = nativeSafeTx().copy(gasToken = TOKEN, gasPrice = BigInteger("1201"))),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(gasToken = USDC_GAS_TOKEN),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(VerificationFailed(reason = VerificationFailed.Reason.REFUND_MISMATCH).left())
+    }
+
+    /** 30 gwei at 0.25 USDC per coin is 0.0075 base units per gas: ×20 is 0.15, rounded up to 1, not 20 */
+    @Test
+    fun `GIVEN a sub-unit token gas price WHEN verify THEN the ceiling is rounded once after scaling`() = runTest {
+        // Arrange
+        val cheapGasToken = USDC_GAS_TOKEN.copy(nativeToTokenRate = BigDecimal("0.25"))
+
+        // Act
+        val actual = verifier.verify(
+            jointAccount = jointAccount(),
+            ownerAddress = ALICE,
+            operation = operation(safeTx = nativeSafeTx().copy(gasToken = TOKEN, gasPrice = BigInteger.valueOf(2))),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(gasToken = cheapGasToken),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(VerificationFailed(reason = VerificationFailed.Reason.REFUND_MISMATCH).left())
     }
 
     @Test
@@ -250,7 +301,7 @@ internal class JointOperationVerifierTest {
             expectedReason = VerificationFailed.Reason.REFUND_MISMATCH,
         ),
         NegativeModel(
-            name = "the refund would be paid in a token instead of the native coin",
+            name = "the refund would be paid in a token the operation was not priced in",
             jointAccount = jointAccount(),
             safeTx = nativeSafeTx().copy(gasToken = TOKEN),
             displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
@@ -312,6 +363,14 @@ internal class JointOperationVerifierTest {
         /** The fixtures carry ×2 of this, the cap creation applies */
         val NETWORK_GAS_PRICE: BigInteger = BigInteger("30000000000")
 
+        /** 2 000 USDC per coin: 30 gwei of the network is 60 USDC base units per gas */
+        val USDC_GAS_TOKEN = SafeGasToken.Token(
+            address = TOKEN,
+            decimals = 6,
+            coinDecimals = 18,
+            nativeToTokenRate = BigDecimal("2000"),
+        )
+
         val COMPUTED_SAFE: String = DefaultSafeAddressCalculator()
             .compute(owners = listOf(ALICE, BOB), threshold = 2, singleton = SafeSingleton.SAFE_L2)
             .getOrNull()!!
@@ -333,9 +392,11 @@ internal class JointOperationVerifierTest {
         fun refundBounds(
             refundReceiver: String = FEE_RECIPIENT,
             networkGasPrice: BigInteger = NETWORK_GAS_PRICE,
+            gasToken: SafeGasToken = SafeGasToken.Coin,
         ) = JointOperationVerifier.RefundBounds(
             refundReceiver = refundReceiver,
             networkGasPrice = networkGasPrice,
+            gasToken = gasToken,
         )
 
         fun operation(safeTx: SafeTx): JointOperation = JointOperation(

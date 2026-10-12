@@ -24,8 +24,7 @@ internal class BankOfframpOrderRequestConverterTest {
     fun `GIVEN saved recipient WHEN convert THEN only the bank account id sent`() {
         // Act
         val actual = BankOfframpOrderRequestConverter.convert(
-            request = orderRequest(recipient = BankOfframpRecipient.Saved(bankAccountId = "acc-1")),
-            idempotencyKey = KEY,
+            orderRequest(recipient = BankOfframpRecipient.Saved(bankAccountId = "acc-1")),
         )
 
         // Assert
@@ -37,7 +36,6 @@ internal class BankOfframpOrderRequestConverterTest {
                     tokenContractAddress = TOKEN_ADDRESS,
                     bankAccountId = "acc-1",
                 ),
-                idempotencyKey = KEY,
             ).right(),
         )
     }
@@ -46,8 +44,7 @@ internal class BankOfframpOrderRequestConverterTest {
     fun `GIVEN new individual recipient WHEN convert THEN the full details sent with the selected rail`() {
         // Act
         val actual = BankOfframpOrderRequestConverter.convert(
-            request = orderRequest(recipient = BankOfframpRecipient.New(details = details())),
-            idempotencyKey = KEY,
+            orderRequest(recipient = BankOfframpRecipient.New(details = details())),
         )
 
         // Assert
@@ -90,7 +87,6 @@ internal class BankOfframpOrderRequestConverterTest {
                         ),
                     ),
                 ),
-                idempotencyKey = KEY,
             ).right(),
         )
     }
@@ -99,12 +95,11 @@ internal class BankOfframpOrderRequestConverterTest {
     fun `GIVEN business recipient WHEN convert THEN business beneficiary sent without personal names`() {
         // Act
         val actual = BankOfframpOrderRequestConverter.convert(
-            request = orderRequest(
+            orderRequest(
                 recipient = BankOfframpRecipient.New(
                     details = details(beneficiary = Beneficiary.Business(name = "Tangem AG")),
                 ),
             ),
-            idempotencyKey = KEY,
         )
 
         // Assert
@@ -118,11 +113,10 @@ internal class BankOfframpOrderRequestConverterTest {
     fun `GIVEN the recipient rail differs from the route WHEN convert THEN the route rail sent`() {
         // Act
         val actual = BankOfframpOrderRequestConverter.convert(
-            request = orderRequest(
+            orderRequest(
                 rail = BankRail.ACH,
                 recipient = BankOfframpRecipient.New(details = details(rail = BankRail.WIRE)),
             ),
-            idempotencyKey = KEY,
         )
 
         // Assert
@@ -134,8 +128,7 @@ internal class BankOfframpOrderRequestConverterTest {
     fun `GIVEN a new recipient missing a required field WHEN convert THEN validation error`(model: IncompleteModel) {
         // Act
         val actual = BankOfframpOrderRequestConverter.convert(
-            request = orderRequest(recipient = BankOfframpRecipient.New(details = model.details)),
-            idempotencyKey = KEY,
+            orderRequest(recipient = BankOfframpRecipient.New(details = model.details)),
         )
 
         // Assert
@@ -160,6 +153,7 @@ internal class BankOfframpOrderRequestConverterTest {
         amountInCents = 10_000L,
         chainId = 137L,
         tokenContractAddress = TOKEN_ADDRESS,
+        tokenDecimals = 6,
         rail = rail,
         recipient = recipient,
     )
@@ -190,7 +184,6 @@ internal class BankOfframpOrderRequestConverterTest {
     )
 
     private companion object {
-        const val KEY = "idempotency-key"
         const val TOKEN_ADDRESS = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
     }
 }

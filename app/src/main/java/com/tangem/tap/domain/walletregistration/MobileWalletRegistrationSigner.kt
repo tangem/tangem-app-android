@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.UnmarshalHelper
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.toDecompressedPublicKey
+import com.tangem.data.sociallogin.recovery.HotWalletSignerFactory
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.hot.sdk.model.DataToSign
@@ -19,9 +20,9 @@ import javax.inject.Inject
  */
 internal class MobileWalletRegistrationSigner @Inject constructor(
     private val hotWalletAccessor: HotWalletAccessor,
-) {
+) : HotWalletSignerFactory {
 
-    fun signerFor(userWallet: UserWallet.Hot): WalletSigner = WalletSigner { nonceBytes ->
+    override fun signerFor(userWallet: UserWallet.Hot): WalletSigner = WalletSigner { nonceBytes ->
         val wallet = userWallet.wallets
             ?.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
             ?: error("No secp256k1 wallet available for hot wallet ${userWallet.walletId}")

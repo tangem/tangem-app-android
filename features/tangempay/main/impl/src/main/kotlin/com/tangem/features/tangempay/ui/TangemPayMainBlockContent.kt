@@ -59,6 +59,12 @@ internal fun TangemPayMainBlockContent(
             modifier = modifier,
             onClick = state.onClick,
         )
+        is TangemPayMainUM.ActionRequired -> TangemPayStateRow(
+            subtitle = resourceReference(R.string.tangempay_action_required_title),
+            modifier = modifier,
+            isSubtitleWarning = true,
+            onClick = state.onClick,
+        )
         is TangemPayMainUM.IssuingCard -> TangemPayStateRow(
             subtitle = resourceReference(R.string.tangempay_issuing_your_card),
             modifier = modifier,
@@ -143,6 +149,7 @@ private fun TangemPayStateRow(
     onClick: (() -> Unit)? = null,
     showError: Boolean = false,
     isEnabled: Boolean = true,
+    isSubtitleWarning: Boolean = false,
 ) {
     TangemRowContainer(
         modifier = modifier
@@ -174,10 +181,10 @@ private fun TangemPayStateRow(
         )
         Text(
             text = subtitle.resolveReference(),
-            color = if (isEnabled) {
-                TangemTheme.colors2.text.neutral.secondary
-            } else {
-                TangemTheme.colors2.text.status.disabled
+            color = when {
+                !isEnabled -> TangemTheme.colors2.text.status.disabled
+                isSubtitleWarning -> TangemTheme.colors3.text.status.warning
+                else -> TangemTheme.colors2.text.neutral.secondary
             },
             style = TangemTheme.typography2.captionSemibold12,
             modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
@@ -310,6 +317,7 @@ private class TangemPayMainBlockContentPreviewParameterProvider : CollectionPrev
         TangemPayMainUM.ExposedDevice,
         TangemPayMainUM.FailedToIssue(onClick = {}),
         TangemPayMainUM.UnderReview(subtitle = resourceReference(R.string.tangempay_kyc_in_progress), onClick = {}),
+        TangemPayMainUM.ActionRequired(onClick = {}),
         TangemPayMainUM.SelectPlan(onClick = {}),
         TangemPayMainUM.IssuingCard(onClick = {}),
         TangemPayMainUM.Content(

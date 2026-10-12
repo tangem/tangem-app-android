@@ -104,7 +104,6 @@ internal abstract class YieldSupplyActionModelTestBase {
             fiatAmount = BigDecimal.TEN,
             fiatRate = BigDecimal.ONE,
             priceChange = BigDecimal.ZERO,
-            stakingBalance = null,
             yieldSupplyStatus = YieldSupplyStatus(
                 isActive = true,
                 isInitialized = true,

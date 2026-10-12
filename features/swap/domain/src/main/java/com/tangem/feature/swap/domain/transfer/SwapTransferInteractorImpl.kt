@@ -15,6 +15,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -40,6 +41,7 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -58,6 +60,7 @@ class SwapTransferInteractorImpl @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase,
+    private val getFeeForTokenUseCase: GetFeeForTokenUseCase,
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
@@ -83,7 +86,9 @@ class SwapTransferInteractorImpl @Inject constructor(
         val toToken = toSwapCurrencyStatus.currency
         val appCurrency = getSelectedAppCurrencyUseCase.unwrap()
         val isBalanceHidden = getBalanceHidingSettingsUseCase.isBalanceHidden().first()
-        val isAccountsMode = isAccountsModeEnabledUseCase.invokeSync()
+        val isAccountsMode = isAccountsModeEnabledUseCase.invokeSync() ||
+            fromSwapCurrencyStatus.account is Account.Prediction ||
+            toSwapCurrencyStatus.account is Account.Prediction
         val fromTokenAmountValue = fromTokenAmount.parseBigDecimalOrNull() ?: return createEmptyAmountState(appCurrency)
         val fromTokenAmountFiat = fromSwapCurrencyStatus.status.value.fiatRate.orZero() * fromTokenAmountValue
         val fromTokenBalance = fromSwapCurrencyStatus.status.value.amount.orZero()
@@ -374,18 +379,27 @@ class SwapTransferInteractorImpl @Inject constructor(
             network = currency.network,
         ).getOrNull() ?: return feeDataError("Failed to build transfer transaction")
 
+        val selectedCurrency = selectedToken?.currency
+        // A token pick needs a fee quoted in that token; relabelling the native fee would show the
+        // native amount priced at the token rate and skip the fee coverage.
+        if (selectedCurrency is CryptoCurrency.Token) {
+            return getFeeForTokenUseCase(
+                userWallet = userWallet,
+                token = selectedCurrency,
+                transactionData = transactionData,
+                // A yield-supply send zeroes the amount inside TransactionData; the fee plan needs the real one.
+                sentAmount = fromTokenAmount,
+            )
+        }
+
         return getFeeForGaslessUseCase(
             userWallet = userWallet,
             network = currency.network,
             transactionData = transactionData,
-            // A yield-supply send zeroes the amount inside TransactionData; the fee plan needs the real one.
             sentAmount = fromTokenAmount,
         ).map { transactionFeeExtended ->
-            selectedToken ?: return@map transactionFeeExtended
-            val selectedTokenId = selectedToken.currency.id
-            transactionFeeExtended.copy(
-                feeTokenId = selectedTokenId,
-            )
+            selectedCurrency ?: return@map transactionFeeExtended
+            transactionFeeExtended.copy(feeTokenId = selectedCurrency.id)
         }
     }
 

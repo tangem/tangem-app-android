@@ -49,7 +49,6 @@ internal class AddStakingNotificationsTransformerTest {
             currency = mockk(relaxed = true),
             value = mockk(relaxed = true) {
                 every { sources } returns CryptoCurrencyStatus.Sources()
-                every { stakingBalance } returns null
                 every { contributions } returns emptyList()
             },
         )

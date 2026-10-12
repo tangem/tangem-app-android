@@ -5,6 +5,7 @@ object FeeSelectorBlockTestTags {
     const val ICON = "FEE_SELECTOR_ICON"
     const val TITLE = "FEE_SELECTOR_TITLE"
     const val FEE_AMOUNT = "FEE_SELECTOR_FEE_AMOUNT"
+    const val FEE_LOADING = "FEE_SELECTOR_FEE_LOADING"
     const val TOOLTIP_ICON = "FEE_SELECTOR_TOOLTIP_ICON"
     const val SELECT_FEE_ICON = "FEE_SELECTOR_SELECT_FEE_ICON"
 }

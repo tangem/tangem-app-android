@@ -32,6 +32,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import java.math.BigDecimal
 
 /**
@@ -307,6 +309,72 @@ internal class StateBuilderSwapButtonTest {
 
             assertThat(result.swapButton.isEnabled).isTrue()
         }
+    }
+
+    @Nested
+    @DisplayName("Prediction top-up limits")
+    inner class `Prediction top-up limits` {
+
+        @ParameterizedTest
+        @CsvSource("1, 100", "0.1, 0.5")
+        fun `GIVEN receive amount outside prediction limits WHEN createQuotesLoadedState THEN swap button disabled`(
+            minimum: String,
+            maximum: String,
+        ) {
+            // Arrange
+            val sut = stateBuilderWithLimits(minimum = minimum, maximum = maximum)
+
+            // Act
+            val result = sut.createPurchasableQuotesLoadedState()
+
+            // Assert
+            assertThat(result.swapButton.isEnabled).isFalse()
+        }
+
+        @Test
+        fun `GIVEN receive amount within prediction limits WHEN createQuotesLoadedState THEN swap button enabled`() {
+            // Arrange
+            val sut = stateBuilderWithLimits(minimum = "0.1", maximum = "100")
+
+            // Act
+            val result = sut.createPurchasableQuotesLoadedState()
+
+            // Assert
+            assertThat(result.swapButton.isEnabled).isTrue()
+        }
+
+        private fun stateBuilderWithLimits(minimum: String, maximum: String) = StateBuilder(
+            actions = actions,
+            isBalanceHiddenProvider = isBalanceHiddenProvider,
+            appCurrencyProvider = appCurrencyProvider,
+            isAccountsModeProvider = isAccountsModeProvider,
+            isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+            appRouter = appRouter,
+            isChooseTokenPulseEnabled = false,
+            predictionTopUpLimitsProvider = Provider {
+                PredictionTopUpLimits(
+                    minimum = BigDecimal(minimum),
+                    minimumText = "$$minimum",
+                    maximum = BigDecimal(maximum),
+                    maximumText = "$$maximum",
+                )
+            },
+        )
+
+        private fun StateBuilder.createPurchasableQuotesLoadedState() = createQuotesLoadedState(
+            uiStateHolder = buildInputtableHolder(),
+            quoteModel = buildQuotesLoadedStateFor(
+                account = Account.Personal.createMainAccount(userWalletId),
+                hasOutgoingTransaction = false,
+                permissionState = PermissionDataState.Empty,
+            ),
+            feeCryptoCurrencyStatus = null,
+            swapProvider = buildProvider(ExchangeProviderType.CEX),
+            additionalBadge = ProviderState.AdditionalBadge.Empty,
+            swapFee = buildSwapFee(),
+            feeError = null,
+            isHighNetworkFee = false,
+        )
     }
 
     // -------------------------------------------------------------------------

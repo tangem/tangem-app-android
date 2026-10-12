@@ -1,6 +1,7 @@
 package com.tangem.data.polymarket.di
 
 import com.tangem.data.polymarket.DefaultPolymarketBridgeRepository
+import com.tangem.data.polymarket.DefaultPolymarketActivityRepository
 import com.tangem.data.polymarket.DefaultPolymarketRepository
 import com.tangem.data.polymarket.DefaultPolymarketPositionsRepository
 import com.tangem.data.polymarket.DefaultPolymarketRedeemRepository
@@ -11,10 +12,13 @@ import com.tangem.data.polymarket.derivation.DefaultPolymarketDepositWalletDeriv
 import com.tangem.data.polymarket.derivation.DefaultPolymarketEoaDeriver
 import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusFetcher
 import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusProducer
+import com.tangem.data.polymarket.flow.DefaultPredictionPositionsValueFetcher
+import com.tangem.data.polymarket.flow.DefaultPredictionPositionsValueProducer
 import com.tangem.data.polymarket.store.DefaultPolymarketBridgeAssetsStore
 import com.tangem.data.polymarket.store.DefaultPredictionDepositAddressWriter
 import com.tangem.data.polymarket.store.DefaultPredictionDepositRequisitesStore
 import com.tangem.domain.polymarket.PolymarketBridgeAssetsStore
+import com.tangem.domain.polymarket.PolymarketActivityRepository
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketRedeemRepository
@@ -30,6 +34,9 @@ import com.tangem.domain.polymarket.flow.DefaultPredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusProducer
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
+import com.tangem.domain.polymarket.flow.PredictionPositionsValueFetcher
+import com.tangem.domain.polymarket.flow.PredictionPositionsValueProducer
+import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionWithdrawalTracker
@@ -49,6 +56,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface PolymarketDataModule {
+
+    @Binds
+    @Singleton
+    fun bindPolymarketActivityRepository(impl: DefaultPolymarketActivityRepository): PolymarketActivityRepository
 
     @Binds
     @Singleton
@@ -92,6 +103,18 @@ internal interface PolymarketDataModule {
 
     @Binds
     @Singleton
+    fun bindPredictionPositionsValueFetcher(
+        impl: DefaultPredictionPositionsValueFetcher,
+    ): PredictionPositionsValueFetcher
+
+    @Binds
+    @Singleton
+    fun bindPredictionPositionsValueProducerFactory(
+        impl: DefaultPredictionPositionsValueProducer.Factory,
+    ): PredictionPositionsValueProducer.Factory
+
+    @Binds
+    @Singleton
     fun bindPredictionDepositRequisitesStore(
         impl: DefaultPredictionDepositRequisitesStore,
     ): PredictionDepositRequisitesStore
@@ -127,17 +150,30 @@ internal interface PolymarketDataModule {
 
         @Provides
         @Singleton
+        fun providePredictionPositionsValueSupplier(
+            factory: PredictionPositionsValueProducer.Factory,
+        ): PredictionPositionsValueSupplier {
+            return object : PredictionPositionsValueSupplier(
+                factory = factory,
+                keyCreator = { params -> "prediction_positions_value_${params.userWalletId.stringValue}" },
+            ) {}
+        }
+
+        @Provides
+        @Singleton
         fun providePredictionBalancePollingConfig(): PredictionBalancePollingConfig = PredictionBalancePollingConfig()
 
         @Provides
         @Singleton
         fun providePredictionBalancePoller(
-            fetcher: PredictionAccountStatusFetcher,
+            statusFetcher: PredictionAccountStatusFetcher,
+            positionsValueFetcher: PredictionPositionsValueFetcher,
             fundingWindow: PredictionFundingWindow,
             config: PredictionBalancePollingConfig,
             appScope: AppCoroutineScope,
         ): PredictionBalancePoller = PredictionBalancePoller(
-            fetcher = fetcher,
+            statusFetcher = statusFetcher,
+            positionsValueFetcher = positionsValueFetcher,
             fundingWindow = fundingWindow,
             config = config,
             appScope = appScope,

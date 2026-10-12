@@ -44,6 +44,30 @@ internal class ValidateDerivationPathUseCaseTest {
     }
 
     @Test
+    fun `GIVEN path under the money account node WHEN invoke THEN reserved error`() {
+        // Act
+        val depositPath = useCase("m/44'/60'/999998'/0/0")
+        val anotherTail = useCase("m/44'/60'/999998'/1/3")
+
+        // Assert
+        assertThat(depositPath.leftOrNull())
+            .isEqualTo(DerivationPathValidationException.ReservedForMoneyAccount)
+        assertThat(anotherTail.leftOrNull())
+            .isEqualTo(DerivationPathValidationException.ReservedForMoneyAccount)
+    }
+
+    @Test
+    fun `GIVEN non-hardened or non-account 999998 WHEN invoke THEN path is allowed`() {
+        // Act
+        val nonHardened = useCase("m/44'/60'/999998/0/0")
+        val asFinalIndex = useCase("m/44'/60'/0'/0/999998")
+
+        // Assert
+        assertThat(nonHardened.isRight()).isTrue()
+        assertThat(asFinalIndex.isRight()).isTrue()
+    }
+
+    @Test
     fun `GIVEN unparseable path WHEN invoke THEN invalid error, not reserved`() {
         // Arrange
         io.mockk.every { repository.createDerivationPath("m/44'/60'/888888'/oops") }

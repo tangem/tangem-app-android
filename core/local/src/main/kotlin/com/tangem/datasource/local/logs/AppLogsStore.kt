@@ -12,8 +12,12 @@ interface AppLogsStore {
     /** The current log file, or `null` if it does not exist yet. */
     fun getFile(): File?
 
-    /** A zipped copy of the current log file, or `null` if there is nothing to zip. */
-    suspend fun getZipFile(): File?
+    /**
+     * A zipped copy of the current log file, or `null` if there is nothing to zip.
+     *
+     * @param infoLogs when not `null`, added to the archive as a separate text file alongside the log file.
+     */
+    suspend fun getZipFile(infoLogs: String? = null): File?
 
     /**
      * Append a log [message] under [tag].

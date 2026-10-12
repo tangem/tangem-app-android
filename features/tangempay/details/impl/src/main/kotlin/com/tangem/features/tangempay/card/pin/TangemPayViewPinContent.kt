@@ -31,6 +31,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.security.SensitiveContentEffect
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 
@@ -59,6 +60,7 @@ internal fun TangemPayViewPinContent(state: TangemPayViewPinUM) {
             )
         },
         content = {
+            SensitiveContentEffect()
             AnimatedContent(
                 targetState = state,
                 contentKey = { um -> um::class.java },

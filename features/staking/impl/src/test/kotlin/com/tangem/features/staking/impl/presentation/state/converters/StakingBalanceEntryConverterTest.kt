@@ -38,7 +38,6 @@ internal class StakingBalanceEntryConverterTest {
             currency = mockk(relaxed = true),
             value = mockk(relaxed = true) {
                 every { this@mockk.fiatRate } returns null
-                every { this@mockk.stakingBalance } returns null
                 every { this@mockk.contributions } returns emptyList()
             },
         ),
