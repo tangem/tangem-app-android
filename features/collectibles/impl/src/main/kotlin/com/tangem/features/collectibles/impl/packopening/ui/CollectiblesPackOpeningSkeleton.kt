@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.confirmorder.ui
+package com.tangem.features.collectibles.impl.packopening.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
@@ -17,7 +17,7 @@ private const val PRICE_ROWS = 3
 
 /** Mirrors [ConfirmOrderContent]: the pack in the same frame and the price rows above the footer. */
 @Composable
-internal fun CollectiblesConfirmOrderSkeleton(footerHeight: Int, modifier: Modifier = Modifier) {
+internal fun CollectiblesPackOpeningSkeleton(footerHeight: Int, modifier: Modifier = Modifier) {
     ProvideTangemShimmer {
         BoxWithConstraints(modifier = modifier.fillMaxSize()) {
             val density = LocalDensity.current
@@ -44,7 +44,7 @@ internal fun CollectiblesConfirmOrderSkeleton(footerHeight: Int, modifier: Modif
 }
 
 @Composable
-internal fun CollectiblesConfirmOrderFooterSkeleton(modifier: Modifier = Modifier) {
+internal fun CollectiblesPackOpeningFooterSkeleton(modifier: Modifier = Modifier) {
     ProvideTangemShimmer {
         TangemFooter(modifier = modifier) {
             TangemShimmer(

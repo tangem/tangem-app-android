@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.confirmorder.model.converter
+package com.tangem.features.collectibles.impl.packopening.model.converter
 
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
@@ -12,23 +12,23 @@ import com.tangem.domain.collectibles.account.covers
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.OpenPackStep
 import com.tangem.domain.models.account.CollectiblesVaultBalance
-import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM
-import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM.ButtonUM
-import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM.OrderUM
-import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM.PriceRowUM
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.ButtonUM
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.OrderUM
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.PriceRowUM
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
 /** The backend sends no total, so it is summed from the price and the fee. */
-internal class CollectiblesConfirmOrderConverter(
+internal class CollectiblesPackOpeningConverter(
     private val onBackClick: () -> Unit,
     private val onCloseClick: () -> Unit,
     private val onApproveClick: () -> Unit,
-) : Converter<CollectiblesConfirmOrderConverter.Input, CollectiblesConfirmOrderUM.Content> {
+) : Converter<CollectiblesPackOpeningConverter.Input, CollectiblesPackOpeningUM.Content> {
 
-    override fun convert(value: Input): CollectiblesConfirmOrderUM.Content {
-        return CollectiblesConfirmOrderUM.Content(
+    override fun convert(value: Input): CollectiblesPackOpeningUM.Content {
+        return CollectiblesPackOpeningUM.Content(
             onBackClick = onBackClick,
             onCloseClick = onCloseClick,
             order = createOrder(value),

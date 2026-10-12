@@ -1,31 +1,31 @@
-package com.tangem.features.collectibles.impl.confirmorder.ui.preview
+package com.tangem.features.collectibles.impl.packopening.ui.preview
 
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
 import kotlinx.collections.immutable.persistentListOf
 
-internal object CollectiblesConfirmOrderPreviewData {
+internal object CollectiblesPackOpeningPreviewData {
 
-    val content = CollectiblesConfirmOrderUM.Content(
+    val content = CollectiblesPackOpeningUM.Content(
         onBackClick = {},
         onCloseClick = {},
-        order = CollectiblesConfirmOrderUM.OrderUM(
+        order = CollectiblesPackOpeningUM.OrderUM(
             rows = persistentListOf(
-                CollectiblesConfirmOrderUM.PriceRowUM(labelRef = stringReference("Elite pack x1"), value = "$50"),
-                CollectiblesConfirmOrderUM.PriceRowUM(
+                CollectiblesPackOpeningUM.PriceRowUM(labelRef = stringReference("Elite pack x1"), value = "$50"),
+                CollectiblesPackOpeningUM.PriceRowUM(
                     labelRef = resourceReference(R.string.collectibles_confirm_order_platform_fee),
                     value = "$1",
                 ),
-                CollectiblesConfirmOrderUM.PriceRowUM(
+                CollectiblesPackOpeningUM.PriceRowUM(
                     labelRef = resourceReference(R.string.collectibles_confirm_order_total),
                     value = "51 USDC",
                     isEmphasised = true,
                     hasDivider = false,
                 ),
             ),
-            button = CollectiblesConfirmOrderUM.ButtonUM(
+            button = CollectiblesPackOpeningUM.ButtonUM(
                 textRef = resourceReference(R.string.collectibles_confirm_order_approve_button),
                 isEnabled = true,
             ),
@@ -37,16 +37,16 @@ internal object CollectiblesConfirmOrderPreviewData {
 
     val notEnoughFunds = content.copy(
         order = content.order.copy(
-            button = CollectiblesConfirmOrderUM.ButtonUM(
+            button = CollectiblesPackOpeningUM.ButtonUM(
                 textRef = resourceReference(R.string.collectibles_confirm_order_not_enough_funds_button),
                 isEnabled = false,
             ),
         ),
     )
 
-    val loading = CollectiblesConfirmOrderUM.Loading(onBackClick = {}, onCloseClick = {})
+    val loading = CollectiblesPackOpeningUM.Loading(onBackClick = {}, onCloseClick = {})
 
-    val error = CollectiblesConfirmOrderUM.Error(
+    val error = CollectiblesPackOpeningUM.Error(
         onBackClick = {},
         onCloseClick = {},
         message = stringReference("Failed to load the pack.\nTap to reload"),

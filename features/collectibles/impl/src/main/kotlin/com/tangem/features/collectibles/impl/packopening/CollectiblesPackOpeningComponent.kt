@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.confirmorder
+package com.tangem.features.collectibles.impl.packopening
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -14,20 +14,20 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.collectibles.impl.confirmorder.model.CollectiblesConfirmOrderModel
-import com.tangem.features.collectibles.impl.confirmorder.sheet.CollectiblesConfirmOrderSheetComponent
-import com.tangem.features.collectibles.impl.confirmorder.ui.CollectiblesConfirmOrderScreen
+import com.tangem.features.collectibles.impl.packopening.model.CollectiblesPackOpeningModel
+import com.tangem.features.collectibles.impl.packopening.sheet.CollectiblesConfirmOrderSheetComponent
+import com.tangem.features.collectibles.impl.packopening.ui.CollectiblesPackOpeningScreen
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
 /** Order, reveal video and card share one route: a route boundary would cut the pack's throw in half. */
-internal class CollectiblesConfirmOrderComponent @AssistedInject constructor(
+internal class CollectiblesPackOpeningComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted params: Params,
 ) : ComposableContentComponent, AppComponentContext by context {
 
-    private val model: CollectiblesConfirmOrderModel = getOrCreateModel(params = params)
+    private val model: CollectiblesPackOpeningModel = getOrCreateModel(params = params)
 
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
@@ -47,7 +47,7 @@ internal class CollectiblesConfirmOrderComponent @AssistedInject constructor(
         val state by model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
-        CollectiblesConfirmOrderScreen(state = state, modifier = modifier)
+        CollectiblesPackOpeningScreen(state = state, modifier = modifier)
 
         bottomSheet.child?.instance?.BottomSheet()
     }
@@ -71,6 +71,6 @@ internal class CollectiblesConfirmOrderComponent @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(context: AppComponentContext, params: Params): CollectiblesConfirmOrderComponent
+        fun create(context: AppComponentContext, params: Params): CollectiblesPackOpeningComponent
     }
 }

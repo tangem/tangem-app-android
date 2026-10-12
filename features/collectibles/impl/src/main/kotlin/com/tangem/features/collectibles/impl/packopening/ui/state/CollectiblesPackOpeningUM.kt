@@ -1,11 +1,11 @@
-package com.tangem.features.collectibles.impl.confirmorder.ui.state
+package com.tangem.features.collectibles.impl.packopening.ui.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
-internal sealed interface CollectiblesConfirmOrderUM {
+internal sealed interface CollectiblesPackOpeningUM {
 
     val onBackClick: () -> Unit
     val onCloseClick: () -> Unit
@@ -13,7 +13,7 @@ internal sealed interface CollectiblesConfirmOrderUM {
     data class Loading(
         override val onBackClick: () -> Unit,
         override val onCloseClick: () -> Unit,
-    ) : CollectiblesConfirmOrderUM
+    ) : CollectiblesPackOpeningUM
 
     /** @property isReloading a retry is in flight; the error stays with a spinner in its button */
     data class Error(
@@ -22,7 +22,7 @@ internal sealed interface CollectiblesConfirmOrderUM {
         val message: TextReference,
         val onReloadClick: () -> Unit,
         val isReloading: Boolean = false,
-    ) : CollectiblesConfirmOrderUM
+    ) : CollectiblesPackOpeningUM
 
     /**
      * @property isPackOpened the card is known, so the pack is thrown
@@ -35,7 +35,7 @@ internal sealed interface CollectiblesConfirmOrderUM {
         val onApproveClick: () -> Unit,
         val isPackOpened: Boolean,
         val isNavigationVisible: Boolean,
-    ) : CollectiblesConfirmOrderUM
+    ) : CollectiblesPackOpeningUM
 
     /** @property packImageUrl null renders the placeholder */
     data class OrderUM(
