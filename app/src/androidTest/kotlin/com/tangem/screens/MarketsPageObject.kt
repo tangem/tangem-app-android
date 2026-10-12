@@ -13,8 +13,13 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasAnyDescendant as withAnyDescendant
+import androidx.compose.ui.test.hasClickAction as withClickAction
 import androidx.compose.ui.test.hasText as withText
 import com.tangem.core.res.R as CoreResR
+
+private val tangemPayBannerMatcher = withClickAction() and
+    withAnyDescendant(withText(getResourceString(CoreResR.string.feed_promo_tangem_pay_title)))
 
 class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<MarketsPageObject>(semanticsProvider = semanticsProvider) {
@@ -22,6 +27,23 @@ class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     val addAccountBanner: KNode = child {
         hasClickAction()
         hasAnyDescendant(withText(getResourceString(CoreResR.string.account_form_title_create)))
+        useUnmergedTree = true
+    }
+
+    val tangemPayBanner: KNode = child {
+        addSemanticsMatcher(tangemPayBannerMatcher)
+        useUnmergedTree = true
+    }
+
+    val tangemPayBannerTitle: KNode = child {
+        hasText(getResourceString(CoreResR.string.feed_promo_tangem_pay_title))
+        hasAnyAncestor(tangemPayBannerMatcher)
+        useUnmergedTree = true
+    }
+
+    val tangemPayBannerDescription: KNode = child {
+        hasText(getResourceString(CoreResR.string.feed_promo_tangem_pay_description))
+        hasAnyAncestor(tangemPayBannerMatcher)
         useUnmergedTree = true
     }
 
