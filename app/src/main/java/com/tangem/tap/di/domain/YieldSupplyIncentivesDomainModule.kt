@@ -5,6 +5,7 @@ import com.tangem.domain.yield.supply.YieldSupplyErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository
 import com.tangem.domain.yield.supply.usecase.*
+import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -66,5 +67,27 @@ internal object YieldSupplyIncentivesDomainModule {
         return GetYieldRewardsSummaryUseCase(
             yieldIncentivesRepository = yieldIncentivesRepository,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyClaimTracker(
+        yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
+        yieldIncentivesRepository: YieldIncentivesRepository,
+        appScope: AppCoroutineScope,
+    ): YieldSupplyClaimTracker {
+        return YieldSupplyClaimTracker(
+            yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
+            yieldIncentivesRepository = yieldIncentivesRepository,
+            coroutineScope = appScope,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideRefreshYieldIncentivesUseCase(
+        yieldIncentivesRepository: YieldIncentivesRepository,
+    ): RefreshYieldIncentivesUseCase {
+        return RefreshYieldIncentivesUseCase(yieldIncentivesRepository)
     }
 }
