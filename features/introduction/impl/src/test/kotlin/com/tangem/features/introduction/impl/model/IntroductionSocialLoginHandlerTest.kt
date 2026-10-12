@@ -327,11 +327,11 @@ internal class IntroductionSocialLoginHandlerTest {
             .isEqualTo(resourceReference(CoreResR.string.social_login_error_backup_not_saved))
     }
 
-    @Test
-    fun `GIVEN the backup was abandoned WHEN signIn THEN nothing else is shown`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideSilentErrors")
+    fun `GIVEN the viewer backed out WHEN signIn THEN no error is shown`(error: SocialLoginError) = runTest {
         // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns
-            SocialLoginError.BackupAbandoned.left()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns error.left()
 
         // Act
         handler.signIn(PROVIDER, SOURCE, host)
@@ -357,10 +357,16 @@ internal class IntroductionSocialLoginHandlerTest {
             .isEqualTo(resourceReference(CoreResR.string.user_wallet_list_error_wallet_already_saved))
     }
 
+    private fun provideSilentErrors() = listOf(
+        SocialLoginError.SignInCanceled,
+        SocialLoginError.ConsentDeclined,
+        SocialLoginError.BackupAbandoned,
+    )
+
     data class FailureModel(val error: SocialLoginError, val isSupportDialog: Boolean)
 
     private fun provideTestModels() = listOf(
-        FailureModel(error = SocialLoginError.SignInCanceled, isSupportDialog = false),
+        FailureModel(error = SocialLoginError.SignInFailed(), isSupportDialog = false),
         FailureModel(error = SocialLoginError.NetworkError, isSupportDialog = false),
         FailureModel(error = SocialLoginError.SessionExpired, isSupportDialog = false),
         FailureModel(error = SocialLoginError.ServerError(), isSupportDialog = false),
