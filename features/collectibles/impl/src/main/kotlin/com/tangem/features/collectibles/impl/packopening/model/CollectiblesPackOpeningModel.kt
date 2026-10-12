@@ -1,5 +1,6 @@
 package com.tangem.features.collectibles.impl.packopening.model
 
+import coil.request.Disposable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
@@ -8,6 +9,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -27,21 +29,35 @@ import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.packopening.CollectiblesConfirmOrderBottomSheetConfig
 import com.tangem.features.collectibles.impl.packopening.CollectiblesPackOpeningComponent
+import com.tangem.features.collectibles.impl.packopening.PackOpeningConst
 import com.tangem.features.collectibles.impl.packopening.model.converter.CollectiblesPackOpeningConverter
 import com.tangem.features.collectibles.impl.packopening.model.converter.CollectiblesRewardCardConverter
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.Stage
+import com.tangem.features.collectibles.impl.packopening.video.PackRevealVideoPlayer
+import com.tangem.features.collectibles.impl.packopening.video.PackRevealVideoPlayer.VideoLoadState
+import com.tangem.features.collectibles.impl.packopening.video.source.PackRevealAsset
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @Suppress("LongParameterList")
 @ModelScoped
@@ -53,6 +69,8 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val messageSender: UiMessageSender,
     private val router: Router,
+    private val imagePreloader: ImagePreloader,
+    playerFactory: PackRevealVideoPlayer.Factory,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -73,6 +91,18 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
 
     private val reveal = MutableStateFlow(RevealState())
 
+    private val isDarkTheme = MutableStateFlow<Boolean?>(null)
+
+    private val player = playerFactory.create(
+        listener = object : PackRevealVideoPlayer.Listener {
+            override fun onCardRevealReached() = onCardReveal()
+
+            override fun onError(error: Throwable) {
+                TangemLogger.e("Pack reveal video failed", error)
+            }
+        },
+    )
+
     private val orderConverter = CollectiblesPackOpeningConverter(
         onBackClick = ::onBackClick,
         onCloseClick = ::onCloseClick,
@@ -82,11 +112,23 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
             onKeepCardClick = ::onKeepCardClick,
             onSellBackClick = ::onSellBackClick,
             onPackAnimationFinished = ::onPackAnimationFinished,
+            onRevealTap = ::onRevealTap,
+            onSurfaceAttached = player::attachSurface,
+            onSurfaceDetached = player::detachSurface,
         ),
     )
 
     init {
         loadMachine()
+    }
+
+    override fun onDestroy() {
+        player.release()
+        super.onDestroy()
+    }
+
+    fun onThemeChanged(isDarkTheme: Boolean) {
+        this.isDarkTheme.value = isDarkTheme
     }
 
     private fun loadMachine(skipCache: Boolean = false) {
@@ -101,7 +143,10 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
                             onReloadClick = ::reloadMachine,
                         )
                     },
-                    ifRight = { machine -> observeBalance(machine) },
+                    ifRight = { machine ->
+                        preloadReveal(machine.revealAssets)
+                        observeBalance(machine)
+                    },
                 )
         }
     }
@@ -135,9 +180,25 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
                 reveal = content.reveal.copy(
                     card = reveal.pack?.let(CollectiblesRewardCardConverter::convert),
                     stage = reveal.stage,
+                    isFullReveal = reveal.isFullReveal,
+                    isSkipped = reveal.isSkipped,
                 ),
             )
         }.collect { content -> uiState.value = content }
+    }
+
+    private fun preloadReveal(assets: CollectibleGachaMachine.RevealAssets?) {
+        modelScope.launch { player.preloadSkipSound(assets?.skipAudioUrl) }
+        modelScope.launch {
+            combine(isDarkTheme.filterNotNull(), reveal.map { it.stage == Stage.Order }, ::Pair)
+                .distinctUntilChanged()
+                .collectLatest { (isDark, isOrder) ->
+                    if (!isOrder) return@collectLatest
+
+                    val videoUrl = if (isDark) assets?.darkVideoUrl else assets?.lightVideoUrl
+                    player.preloadVideo(videoUrl?.let { PackRevealAsset(videoUrl = it) })
+                }
+        }
     }
 
     private fun onApproveClick() {
@@ -168,8 +229,15 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
         }
     }
 
-    private fun launchPack(pack: OpenedCollectiblePack) {
-        reveal.update { it.copy(stage = Stage.Launching, pack = pack) }
+    private suspend fun launchPack(pack: OpenedCollectiblePack) {
+        val cardImages = preloadCardImages(pack)
+        val isFull = awaitVideo() == VideoLoadState.Ready
+
+        cardImages.await()
+
+        if (isFull) player.start()
+
+        reveal.update { it.copy(stage = Stage.Launching, isFullReveal = isFull, pack = pack) }
     }
 
     private fun hasEnoughFunds(): Boolean {
@@ -219,8 +287,36 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
         bottomSheetNavigation.dismiss()
     }
 
+    /** Completes once both faces are in the image cache, or at the timeout; failed loads count as done. */
+    private fun preloadCardImages(pack: OpenedCollectiblePack): Deferred<Unit> {
+        val loads: List<Disposable> = listOfNotNull(pack.imageFrontUrl, pack.imageBackUrl).map(imagePreloader::preload)
+
+        return modelScope.async {
+            withTimeoutOrNull(PackOpeningConst.CARD_IMAGES_TIMEOUT_MS.milliseconds) {
+                loads.forEach { load -> load.job.await() }
+            }
+        }
+    }
+
+    private suspend fun awaitVideo(): VideoLoadState? =
+        withTimeoutOrNull(PackOpeningConst.VIDEO_READY_TIMEOUT_MS.milliseconds) {
+            player.videoLoadState.firstOrNull { it != VideoLoadState.Loading }
+        }
+
     private fun onPackAnimationFinished() {
-        reveal.update { it.copy(stage = Stage.Reward) }
+        val state = reveal.updateAndGet {
+            it.copy(stage = if (it.isFullReveal && !it.isCardRevealReached) Stage.Reveal else Stage.Reward)
+        }
+        if (!state.isFullReveal) player.playSkipSound()
+    }
+
+    private fun onCardReveal() = reveal.update { state ->
+        if (state.stage == Stage.Reveal) state.copy(stage = Stage.Reward) else state.copy(isCardRevealReached = true)
+    }
+
+    private fun onRevealTap() {
+        if (reveal.value.stage != Stage.Reveal) return
+        if (player.skipToReveal()) reveal.update { it.copy(isSkipped = true) }
     }
 
     @Suppress("EmptyFunctionBlock")
@@ -234,24 +330,28 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
     }
 
     private fun onBackClick() {
-        if (isPurchaseRunning()) return
+        if (isOpeningRunning()) return
 
         router.pop()
     }
 
     private fun onCloseClick() {
-        if (isPurchaseRunning()) return
+        if (isOpeningRunning()) return
 
         router.popTo(CollectiblesRoute.Main(params.userWalletId))
     }
 
-    private fun isPurchaseRunning(): Boolean = when (openPackStep.value) {
+    private fun isOpeningRunning(): Boolean = when (openPackStep.value) {
         OpenPackStep.Generating, OpenPackStep.Confirming, OpenPackStep.Opening -> true
+        is OpenPackStep.Opened -> reveal.value.stage != Stage.Reward
         else -> false
     }
 
     private data class RevealState(
         val stage: Stage = Stage.Order,
+        val isFullReveal: Boolean = true,
+        val isCardRevealReached: Boolean = false,
+        val isSkipped: Boolean = false,
         val pack: OpenedCollectiblePack? = null,
     )
 }
