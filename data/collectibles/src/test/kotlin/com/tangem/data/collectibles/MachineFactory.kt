@@ -63,7 +63,7 @@ internal object MachineFactory {
         revealAssets = CollectibleGachaMachine.RevealAssets(
             lightVideoUrl = "light video url",
             darkVideoUrl = "dark video url",
-            shortAudioUrl = "skip audio url",
+            skipAudioUrl = "skip audio url",
         ),
     )
 
