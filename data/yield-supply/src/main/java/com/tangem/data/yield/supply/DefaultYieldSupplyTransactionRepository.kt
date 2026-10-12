@@ -307,7 +307,7 @@ internal class DefaultYieldSupplyTransactionRepository(
         transactionHash: String,
     ): YieldSupplyTransactionOutcome? = withContext(dispatchers.io) {
         runSuspendCatching {
-            val mined = mine(userWalletId, cryptoCurrency, transactionHash) ?: return@runSuspendCatching null
+            val mined = findReceipt(userWalletId, cryptoCurrency, transactionHash) ?: return@runSuspendCatching null
 
             if (mined.receipt.isSuccess) {
                 YieldSupplyTransactionOutcome.Confirmed
@@ -323,7 +323,7 @@ internal class DefaultYieldSupplyTransactionRepository(
         transactionHash: String,
     ): YieldSupplyEnterOutcome? = withContext(dispatchers.io) {
         runSuspendCatching {
-            val mined = mine(userWalletId, cryptoCurrency, transactionHash) ?: return@runSuspendCatching null
+            val mined = findReceipt(userWalletId, cryptoCurrency, transactionHash) ?: return@runSuspendCatching null
 
             when {
                 mined.receipt.isSuccess -> YieldSupplyEnterOutcome.Deposited
@@ -338,7 +338,7 @@ internal class DefaultYieldSupplyTransactionRepository(
      * @return null while [transactionHash] has not been mined, or while the node cannot say — the two are
      * indistinguishable here, and both mean the outcome is not knowable yet.
      */
-    private suspend fun mine(
+    private suspend fun findReceipt(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency.Token,
         transactionHash: String,
