@@ -49,6 +49,7 @@ internal class AddStakingNotificationsTransformer(
     private val stakingError: StakingError?,
     private val currencyCheck: CryptoCurrencyCheck,
     private val isSubtractAvailable: Boolean,
+    private val isApprovalInProgress: Boolean,
     private val integration: StakingIntegration,
 ) : Transformer<StakingUiState> {
 
@@ -155,6 +156,7 @@ internal class AddStakingNotificationsTransformer(
             feeValue = feeValue,
         )
         addStakingErrorNotifications(stakingError = stakingError, onReload = prevState.clickIntents::getFee)
+        if (isApprovalInProgress) add(StakingNotification.Warning.TransactionInProgress.Approval)
         addTransactionValidationNotifications(confirmationState.transactionVerdict)
         addWarningNotifications(
             prevState = prevState,

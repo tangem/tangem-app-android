@@ -754,8 +754,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
                 // Assert
                 coVerify(exactly = 1) { onboardingRepository.clearOrderId(userWalletId) }
-                assertThat(storedStatuses.map { it.value }.last())
-                    .isEqualTo(PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL))
+                assertThat(storedStatuses.lastLoaded().cards).isEmpty()
             }
 
         @Test
@@ -1315,26 +1314,29 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             }
 
         @Test
-        fun `GIVEN enrolled account without cards and active order WHEN invoke THEN stores IssuingCard`() = runTest {
-            // Arrange
-            val customerInfo = buildCustomerInfo(
-                productInstances = emptyList(),
-                cards = emptyList(),
-                tariffPlan = customerTariffPlan,
-            )
-            stubHappyPath(customerInfo)
-            coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
-                listOf(activeOrder(id = "order_1", type = OrderType.TARIFF_PLAN_TRANSITION)),
-            )
-            val storedStatuses = captureStoredStatuses()
+        fun `GIVEN enrolled account without cards and active order WHEN invoke THEN stores Loaded without cards`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(
+                    productInstances = emptyList(),
+                    cards = emptyList(),
+                    tariffPlan = customerTariffPlan,
+                )
+                stubHappyPath(customerInfo)
+                coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
+                    listOf(activeOrder(id = "order_1", type = OrderType.TARIFF_PLAN_TRANSITION)),
+                )
+                coEvery {
+                    getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
+                } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
+                val storedStatuses = captureStoredStatuses()
 
-            // Act
-            fetcher.invoke(params)
+                // Act
+                fetcher.invoke(params)
 
-            // Assert
-            assertThat(storedStatuses.last().value)
-                .isInstanceOf(PaymentAccountStatusValue.IssuingCard::class.java)
-        }
+                // Assert
+                assertThat(storedStatuses.lastLoaded().cards).isEmpty()
+            }
     }
 
     @Nested
@@ -1735,7 +1737,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             }
 
         @Test
-        fun `GIVEN payment account only and no instances WHEN invoke THEN keeps issuing instead of plan selection`() =
+        fun `GIVEN payment account only and no instances WHEN invoke THEN stores Loaded instead of plan selection`() =
             runTest {
                 // Arrange
                 val customerInfo = buildCustomerInfo(
@@ -1755,8 +1757,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 fetcher.invoke(params)
 
                 // Assert — an enrolled customer is never pushed into the plan-selection onboarding
-                assertThat(storedStatuses.last().value)
-                    .isInstanceOf(PaymentAccountStatusValue.IssuingCard::class.java)
+                assertThat(storedStatuses.lastLoaded().cards).isEmpty()
             }
 
         @Test
