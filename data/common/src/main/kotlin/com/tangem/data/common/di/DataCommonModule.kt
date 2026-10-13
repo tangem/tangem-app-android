@@ -82,6 +82,7 @@ internal object DataCommonModule {
         jointAccountFeatureToggles: JointAccountFeatureToggles,
         walletAccountsSync: WalletAccountsSync,
         walletAccountsSaver: Lazy<WalletAccountsSaver>,
+        walletAccountsFetcher: Lazy<WalletAccountsFetcher>,
     ): UserTokensSaver {
         return UserTokensSaver(
             tangemTechApi = tangemTechApi,
@@ -96,6 +97,7 @@ internal object DataCommonModule {
             jointAccountFeatureToggles = jointAccountFeatureToggles,
             walletAccountsSync = walletAccountsSync,
             walletAccountsSaver = walletAccountsSaver,
+            walletAccountsFetcher = walletAccountsFetcher,
         )
     }
 

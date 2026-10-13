@@ -1,5 +1,6 @@
 package com.tangem.data.common.currency
 
+import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.account.WalletAccountsSync
 import com.tangem.data.common.api.safeApiCall
@@ -11,6 +12,7 @@ import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWallet
@@ -35,6 +37,7 @@ class UserTokensSaver(
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
     private val walletAccountsSync: WalletAccountsSync,
     private val walletAccountsSaver: Lazy<WalletAccountsSaver>,
+    private val walletAccountsFetcher: Lazy<WalletAccountsFetcher>,
 ) {
 
     suspend fun push(
@@ -118,6 +121,7 @@ class UserTokensSaver(
     private suspend fun saveTokensWithETag(
         userWalletId: UserWalletId,
         response: UserTokensResponse,
+        shouldRefreshETag: Boolean = true,
     ): ApiResponse<Unit> {
         val apiResponse = tangemTechApi.saveTokens(
             userId = userWalletId.stringValue,
@@ -125,7 +129,7 @@ class UserTokensSaver(
             eTag = getETagOrNull(userWalletId = userWalletId),
         )
 
-        if (apiResponse is ApiResponse.Success) {
+        if (shouldRefreshETag && apiResponse is ApiResponse.Success) {
             refreshETag(userWalletId = userWalletId, apiResponse = apiResponse)
         }
 
@@ -156,10 +160,16 @@ class UserTokensSaver(
                     tokens = response.tokens + remoteTokens.filterNot { it in pushedTokens },
                 )
 
-                saveTokensWithETag(userWalletId = userWalletId, response = merged).bind()
+                val pushResponse = saveTokensWithETag(
+                    userWalletId = userWalletId,
+                    response = merged,
+                    shouldRefreshETag = false,
+                )
+                pushResponse.bind()
 
-                // The stored ETag is now the merged list's, so the copy must be that list too
+                // The copy goes first: the merged list's ETag next to the old copy is the mismatch this avoids
                 storeMerged(userWalletId = userWalletId, fresh = fresh, merged = merged)
+                refreshETag(userWalletId = userWalletId, apiResponse = pushResponse)
                 walletAccountsSync.markInSync(userWalletId)
             },
             onError = { error ->
@@ -266,9 +276,12 @@ class UserTokensSaver(
         return Retryer(attempt = 3) { iteration ->
             var isSuccess = true
 
+            // An edit saved since the failure is newer than the captured list
+            val latestResponse = walletAccountsFetcher.get().getSaved(userWalletId)?.toUserTokensResponse() ?: response
+
             push(
                 userWalletId = userWalletId,
-                response = response,
+                response = latestResponse,
                 onFailSend = {
                     TangemLogger.e(
                         "Retryer: Failed to push updated tokens on attempt ${iteration + 1} for $userWalletId",
