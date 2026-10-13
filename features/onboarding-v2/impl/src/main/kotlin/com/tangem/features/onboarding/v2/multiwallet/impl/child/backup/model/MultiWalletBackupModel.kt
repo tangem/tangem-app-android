@@ -67,7 +67,7 @@ internal class MultiWalletBackupModel @Inject constructor(
     private val scanResponse
         get() = params.multiWalletState.value.currentScanResponse
     private val backupService
-        get() = backupServiceHolder.backupService.get()!!
+        get() = backupServiceHolder.backupService
 
     private val state = MutableStateFlow(BackupState())
 
