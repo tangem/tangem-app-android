@@ -50,6 +50,7 @@ data class PolymarketOpenPositionDto(
     @Json(name = "period") val period: String? = null,
     @Json(name = "ended") val isEnded: Boolean? = null,
     @Json(name = "dataFetchedAt") val dataFetchedAt: String? = null,
+    @Json(name = "version") val version: String? = null,
 )
 
 @JsonClass(generateAdapter = true)
