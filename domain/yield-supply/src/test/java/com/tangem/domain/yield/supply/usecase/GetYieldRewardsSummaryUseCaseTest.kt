@@ -55,6 +55,24 @@ internal class GetYieldRewardsSummaryUseCaseTest {
     }
 
     @Test
+    fun `GIVEN chain unknown to the SDK WHEN summarised THEN nothing is admitted`() = runTest {
+        // Arrange
+        coEvery {
+            repository.getIncentives(chainId = UNKNOWN_CHAIN_ID, userAddress = USER_ADDRESS)
+        } returns incentives(
+            moduleAddress = MODULE_ADDRESS,
+            isClaimRecommended = true,
+            rewards = listOf(reward(symbol = "WETH", claimable = "1000", netUsd = "1.00")),
+        ).copy(chainId = UNKNOWN_CHAIN_ID).right()
+
+        // Act
+        val actual = useCase(chainId = UNKNOWN_CHAIN_ID, userAddress = USER_ADDRESS)
+
+        // Assert
+        assertThat(actual.getOrNull()).isEqualTo(YieldRewardsSummary.None)
+    }
+
+    @Test
     fun `GIVEN incentives unavailable WHEN summarised THEN error propagated`() = runTest {
         // Arrange
         coEvery {
@@ -297,6 +315,7 @@ internal class GetYieldRewardsSummaryUseCaseTest {
             "stkGHO" to "0x0000000000000000000000000000000000000006",
         )
         const val CHAIN_ID = MockYieldSupply.CHAIN_ID
+        const val UNKNOWN_CHAIN_ID = -1
         const val USER_ADDRESS = "0xuser"
         const val MODULE_ADDRESS = "0xmodule"
     }
