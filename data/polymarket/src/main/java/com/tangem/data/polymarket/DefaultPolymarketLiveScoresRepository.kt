@@ -23,7 +23,9 @@ internal class DefaultPolymarketLiveScoresRepository @Inject constructor(
             val lastScores = mutableMapOf<String, PolymarketLiveScore>()
             sportsSocket.results().collect { result ->
                 feedGameIdsBySocketId[result.gameId]?.forEach { feedGameId ->
-                    val score = PolymarketLiveScoreConverter.convert(value = result, gameId = feedGameId)
+                    val score = PolymarketLiveScoreConverter.convert(
+                        value = PolymarketLiveScoreConverter.Input(result = result, feedGameId = feedGameId),
+                    )
                     if (lastScores.put(feedGameId, score) != score) emit(score)
                 }
             }
