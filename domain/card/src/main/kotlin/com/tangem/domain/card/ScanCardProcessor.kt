@@ -1,31 +1,8 @@
 package com.tangem.domain.card
 
-import com.tangem.common.CompletionResult
-import com.tangem.common.core.TangemError
-import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.card.models.ScanConfig
-import com.tangem.domain.models.scan.ScanResponse
 
 interface ScanCardProcessor {
 
-    suspend fun scan(
-        cardId: String? = null,
-        allowsRequestAccessCodeFromRepository: Boolean = false,
-        analyticsSource: AnalyticsParam.ScreensSources,
-        shouldCheckIsAlreadyActivated: Boolean,
-    ): CompletionResult<ScanResponse>
-
-    suspend fun scan(
-        analyticsSource: AnalyticsParam.ScreensSources,
-        shouldCheckIsAlreadyActivated: Boolean,
-        cardId: String? = null,
-        onProgressStateChange: suspend (showProgress: Boolean) -> Unit = {},
-        onWalletNotCreated: suspend () -> Unit = {},
-        onCancel: suspend () -> Unit = {},
-        onFailure: suspend (error: TangemError) -> Unit = {},
-        onSuccess: suspend (scanResponse: ScanResponse) -> Unit = {},
-    )
-
-    /** Scans a card with the given [config] and reports the outcome to [ScanConfig.callback] */
     suspend fun scan(config: ScanConfig)
 }
