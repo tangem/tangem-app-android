@@ -477,7 +477,6 @@ internal class CollectiblesConfirmOrderModelTest {
             imageBackUrl = null,
             rarity = null,
             gradingCompany = null,
-            grade = null,
             gradingId = "123",
             year = null,
             set = null,
