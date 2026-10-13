@@ -1,7 +1,6 @@
 package com.tangem.sdk.api
 
 import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import arrow.core.Either
 import com.tangem.Message
 import com.tangem.common.CompletionResult
@@ -144,9 +143,6 @@ interface TangemSdkManager {
     @Suppress("MagicNumber")
     fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?)
 
-    @Deprecated("com.tangem.sdk.api.TangemSdkManager shouldn't returns a string from resources")
-    fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String
-
     fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy)
 
     // region Twin-specific
@@ -155,19 +151,14 @@ interface TangemSdkManager {
         secondCardPublicKey: ByteArray,
         issuerKeyPair: KeyPair,
         cardId: String,
-        initialMessage: Message,
     ): CompletionResult<ScanResponse>
 
-    suspend fun createFirstTwinWallet(cardId: String, initialMessage: Message): CompletionResult<CreateWalletResponse>
+    suspend fun createFirstTwinWallet(cardId: String): CompletionResult<CreateWalletResponse>
 
-    @Suppress("LongParameterList")
     suspend fun createSecondTwinWallet(
         firstPublicKey: String,
         firstCardId: String,
         issuerKeys: KeyPair,
-        preparingMessage: Message,
-        creatingWalletMessage: Message,
-        initialMessage: Message,
     ): CompletionResult<CreateWalletResponse>
 
     fun changeProductType(isRing: Boolean)
