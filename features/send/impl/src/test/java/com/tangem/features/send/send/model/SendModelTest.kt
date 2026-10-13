@@ -233,7 +233,7 @@ internal class SendModelTest : SendModelTestBase() {
 
             // Assert
             assertThat(result).isEqualTo(tokenFee.right())
-            coVerify(exactly = 0) { getFeeForGaslessUseCase(any(), any(), any(), any(), any()) }
+            coVerify(exactly = 0) { getFeeForGaslessUseCase(any(), any(), any(), any(), any(), any()) }
         }
 
         @Test
@@ -248,7 +248,7 @@ internal class SendModelTest : SendModelTestBase() {
                 model.loadFeeExtended(maybeToken = null)
 
                 // Assert
-                coVerify(exactly = 2) { getFeeForGaslessUseCase(any(), any(), any(), any(), any()) }
+                coVerify(exactly = 2) { getFeeForGaslessUseCase(any(), any(), any(), any(), any(), any()) }
                 coVerify(exactly = 0) { getFeeUseCase(any(), any(), any()) }
             }
 
@@ -263,7 +263,7 @@ internal class SendModelTest : SendModelTestBase() {
             model.loadFeeExtended(maybeToken = null)
 
             // Assert
-            coVerify(exactly = 1) { getFeeForGaslessUseCase(any(), any(), any(), any(), any()) }
+            coVerify(exactly = 1) { getFeeForGaslessUseCase(any(), any(), any(), any(), any(), any()) }
             coVerify(exactly = 1) { getFeeUseCase(any(), any(), any()) }
         }
 
@@ -275,8 +275,8 @@ internal class SendModelTest : SendModelTestBase() {
         }
 
         private fun givenDefaultFee(isNativeFeePreferred: Boolean) {
-            coEvery { getFeeForGaslessUseCase(any(), any(), any(), any(), any()) } answers {
-                if (isNativeFeePreferred) arg<() -> Unit>(4).invoke()
+            coEvery { getFeeForGaslessUseCase(any(), any(), any(), any(), any(), any()) } answers {
+                if (isNativeFeePreferred) arg<() -> Unit>(5).invoke()
                 defaultFee.right()
             }
         }

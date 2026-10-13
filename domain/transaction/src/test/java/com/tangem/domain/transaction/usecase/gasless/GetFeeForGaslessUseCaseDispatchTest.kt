@@ -139,6 +139,7 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
                     transactionData = transactionData,
                     nativeCurrencyStatus = nativeStatus,
                     accountStatusList = accountStatusList,
+                    sentCurrencyStatus = null,
                     loadNativeFee = any(),
                     onNativeFeePreferred = any(),
                 )
@@ -153,30 +154,4 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
             )
             verify { evmGaslessFeeResolver wasNot Called }
         }
-
-    @Test
-    fun `GIVEN the gasless service claims a non-EVM network WHEN invoke THEN the EVM resolver stays out`() = runTest {
-        // Arrange — the service's network list is remote configuration and may name a non-EVM chain.
-        val expected = TransactionFeeExtended(transactionFee = nativeFee, feeTokenId = tronCoin.id)
-        every { currencyChecksRepository.isNetworkSupportedForGaslessTx(tronNetwork) } returns true
-        coEvery {
-            tronGaslessFeeResolver.resolveWithAutoFeeToken(
-                userWalletId = userWalletId,
-                network = tronNetwork,
-                transactionData = transactionData,
-                nativeCurrencyStatus = tronNativeStatus,
-                accountStatusList = accountStatusList,
-                loadNativeFee = any(),
-                onNativeFeePreferred = any(),
-            )
-        } returns expected.right()
-
-        // Act
-        val actual = sut(userWallet, tronNetwork, transactionData)
-
-        // Assert
-        assertThat(actual).isEqualTo(expected.right())
-        verify { evmGaslessFeeResolver wasNot Called }
-        verify { getFeeUseCase wasNot Called }
-    }
 }

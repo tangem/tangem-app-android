@@ -449,10 +449,10 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
-    fun provideIsGaslessFeeSupportedForNetwork(
+    fun provideIsEvmGaslessFeeSupportedForNetwork(
         currencyChecksRepository: CurrencyChecksRepository,
-    ): IsGaslessFeeSupportedForNetwork {
-        return IsGaslessFeeSupportedForNetwork(currencyChecksRepository)
+    ): IsEvmGaslessFeeSupportedForNetwork {
+        return IsEvmGaslessFeeSupportedForNetwork(currencyChecksRepository)
     }
 
     @Provides

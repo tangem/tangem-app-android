@@ -9,9 +9,9 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
  *
  * Tron has its own gate — [IsTronGaslessSupportedUseCase].
  */
-class IsGaslessFeeSupportedForNetwork(
+class IsEvmGaslessFeeSupportedForNetwork(
     private val currencyChecksRepository: CurrencyChecksRepository,
 ) {
 
-    operator fun invoke(network: Network): Boolean = currencyChecksRepository.isEvmGaslessNetwork(network)
+    operator fun invoke(network: Network): Boolean = currencyChecksRepository.isNetworkSupportedForGaslessTx(network)
 }

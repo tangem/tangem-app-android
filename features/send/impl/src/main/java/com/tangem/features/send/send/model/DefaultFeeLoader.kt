@@ -3,6 +3,7 @@ package com.tangem.features.send.send.model
 import arrow.core.Either
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.GetFeeError
@@ -35,6 +36,7 @@ internal class DefaultFeeLoader @Inject constructor(
         network: Network,
         transactionData: TransactionData,
         sentAmount: BigDecimal?,
+        sentCurrencyStatus: CryptoCurrencyStatus,
     ): Either<GetFeeError, TransactionFeeExtended> {
         pinnedCoinId?.let { coinId ->
             return getFeeUseCase(transactionData = transactionData, userWallet = userWallet, network = network)
@@ -47,6 +49,7 @@ internal class DefaultFeeLoader @Inject constructor(
             network = network,
             transactionData = transactionData,
             sentAmount = sentAmount,
+            sentCurrencyStatus = sentCurrencyStatus,
             onNativeFeePreferred = { isNativeFeePreferred = true },
         ).onRight { fee ->
             if (isNativeFeePreferred) pinToNative(fee.feeTokenId)

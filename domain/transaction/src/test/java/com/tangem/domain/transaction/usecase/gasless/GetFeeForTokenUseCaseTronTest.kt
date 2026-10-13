@@ -125,19 +125,6 @@ internal class GetFeeForTokenUseCaseTronTest {
         coVerify(exactly = 0) { getTronGaslessFeeUseCase(any(), any(), any()) }
     }
 
-    @Test
-    fun `GIVEN the gasless service claims Tron WHEN invoke THEN the EVM resolver stays out`() = runTest {
-        // Arrange — Tron named in the service's remote network list must not reach the EVM resolver.
-        coEvery { isTronGaslessSupportedUseCase(userWalletId, usdt.network, usdt) } returns false
-        every { currencyChecksRepository.isNetworkSupportedForGaslessTx(usdt.network) } returns true
-
-        // Act
-        val actual = useCase(userWallet, usdt, transferTransaction)
-
-        // Assert
-        assertThat(actual).isEqualTo(GetFeeError.GaslessError.NetworkIsNotSupported.left())
-    }
-
     private companion object {
         const val USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
 

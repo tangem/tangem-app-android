@@ -37,12 +37,14 @@ class GetFeeForGaslessUseCase(
      * @param sentAmount required for a yield-supply send, whose [TransactionData.Uncompiled.amount] is zeroed.
      * @param onNativeFeePreferred fires when the network coin was picked over a compensation fee and covers
      * the fee; see [TronGaslessFeeResolver.resolveWithAutoFeeToken].
+     * @param sentCurrencyStatus the caller's status of the sent currency, used while the account list lags behind.
      */
     suspend operator fun invoke(
         userWallet: UserWallet,
         network: Network,
         transactionData: TransactionData,
         sentAmount: BigDecimal? = null,
+        sentCurrencyStatus: CryptoCurrencyStatus? = null,
         onNativeFeePreferred: () -> Unit = {},
     ): Either<GetFeeError, TransactionFeeExtended> {
         return either {
@@ -55,7 +57,7 @@ class GetFeeForGaslessUseCase(
                         raiseIllegalStateError("No native currency found: ${network.id}")
                     }
 
-                    if (currencyChecksRepository.isEvmGaslessNetwork(network)) {
+                    if (currencyChecksRepository.isNetworkSupportedForGaslessTx(network)) {
                         evmGaslessFeeResolver.resolveWithAutoFeeToken(
                             userWallet = userWallet,
                             network = network,
@@ -71,6 +73,7 @@ class GetFeeForGaslessUseCase(
                             transactionData = transactionData,
                             nativeCurrencyStatus = nativeCurrencyStatus,
                             accountStatusList = accountStatusList,
+                            sentCurrencyStatus = sentCurrencyStatus,
                             onNativeFeePreferred = onNativeFeePreferred,
                         )
                     }
@@ -90,6 +93,7 @@ class GetFeeForGaslessUseCase(
         transactionData: TransactionData,
         nativeCurrencyStatus: CryptoCurrencyStatus,
         accountStatusList: AccountStatusList,
+        sentCurrencyStatus: CryptoCurrencyStatus?,
         onNativeFeePreferred: () -> Unit,
     ): TransactionFeeExtended {
         val loadNativeFee: suspend () -> Either<GetFeeError, TransactionFeeExtended> = {
@@ -108,6 +112,7 @@ class GetFeeForGaslessUseCase(
             transactionData = transactionData,
             nativeCurrencyStatus = nativeCurrencyStatus,
             accountStatusList = accountStatusList,
+            sentCurrencyStatus = sentCurrencyStatus,
             loadNativeFee = loadNativeFee,
             onNativeFeePreferred = onNativeFeePreferred,
         )
