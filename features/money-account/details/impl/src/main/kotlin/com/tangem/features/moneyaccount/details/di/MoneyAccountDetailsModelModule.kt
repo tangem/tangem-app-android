@@ -1,9 +1,9 @@
-package com.tangem.features.moneyaccount.main.di
+package com.tangem.features.moneyaccount.details.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
-import com.tangem.features.moneyaccount.main.MoneyAccountMainModel
-import com.tangem.features.moneyaccount.main.addfunds.MoneyAccountAddFundsModel
+import com.tangem.features.moneyaccount.details.MoneyAccountDetailsModel
+import com.tangem.features.moneyaccount.details.addfunds.MoneyAccountAddFundsModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -12,12 +12,12 @@ import dagger.multibindings.IntoMap
 
 @Module
 @InstallIn(ModelComponent::class)
-internal interface MoneyAccountMainModelModule {
+internal interface MoneyAccountDetailsModelModule {
 
     @Binds
     @IntoMap
-    @ClassKey(MoneyAccountMainModel::class)
-    fun bindMoneyAccountMainModel(model: MoneyAccountMainModel): Model
+    @ClassKey(MoneyAccountDetailsModel::class)
+    fun bindMoneyAccountDetailsModel(model: MoneyAccountDetailsModel): Model
 
     @Binds
     @IntoMap

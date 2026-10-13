@@ -1,4 +1,4 @@
-package com.tangem.features.moneyaccount.main.addfunds
+package com.tangem.features.moneyaccount.details.addfunds
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
