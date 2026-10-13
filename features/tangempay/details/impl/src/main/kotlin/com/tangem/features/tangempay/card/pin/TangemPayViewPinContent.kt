@@ -201,7 +201,7 @@ private fun PinCode(value: String, modifier: Modifier = Modifier, numbersCount: 
                                 height = TangemTheme.dimens2.x16,
                             ),
                             digit = digit,
-                            backgroundColor = TangemTheme.colors3.bg.opaque.primary,
+                            backgroundColor = TangemTheme.colors3.bg.transparent.primary,
                             borderColor = TangemTheme.colors3.border.secondary,
                             textColor = TangemTheme.colors3.text.primary,
                             textStyle = TangemTheme.typography3.heading.medium,

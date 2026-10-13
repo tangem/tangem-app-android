@@ -41,7 +41,7 @@ fun TangemEmptyState(
             modifier = Modifier
                 .size(TangemTheme.dimens2.x10)
                 .background(
-                    color = TangemTheme.colors3.bg.opaque.primary,
+                    color = TangemTheme.colors3.bg.transparent.primary,
                     shape = CircleShape,
                 )
                 .padding(10.dp)
