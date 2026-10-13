@@ -207,11 +207,10 @@ internal class TokenFeeCalculator(
     /**
      * Resolves the fee-transfer gas limit from the on-chain estimation result.
      *
-     * A revert of the probe transfer means the liquid balance does not cover it. Matching
-     * [BlockchainSdkError.Ethereum.InsufficientFundsForOperation] alone misses tokens that revert without a
-     * reason string — USDT reverts with an `INVALID` opcode and arrives as a plain
-     * [BlockchainSdkError.Ethereum.Api] — so any execution error answered by the node is read as "not enough
-     * liquid balance": topped up from the module on the yield path, [GaslessError.NotEnoughFunds] otherwise.
+     * A revert of the probe transfer means the liquid balance does not cover it. The node does not answer it
+     * uniformly — USDT reverts with an `INVALID` opcode under -32000 rather than code 3 — so any execution
+     * error answered by the node ([BlockchainSdkError.Ethereum]) is read as "not enough liquid balance": topped
+     * up from the module on the yield path, [GaslessError.NotEnoughFunds] otherwise.
      * Transport failures still propagate as [GaslessError.DataError].
      */
     private fun Raise<GetFeeError>.resolveFeeTransferGasLimit(
