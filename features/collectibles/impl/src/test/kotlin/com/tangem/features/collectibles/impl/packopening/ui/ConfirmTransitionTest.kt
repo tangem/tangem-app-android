@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.confirmorder.ui
+package com.tangem.features.collectibles.impl.packopening.ui
 
 import androidx.compose.ui.unit.dp
 import com.google.common.truth.Truth.assertThat

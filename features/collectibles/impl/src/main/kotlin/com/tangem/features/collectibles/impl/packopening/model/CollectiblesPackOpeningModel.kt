@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.confirmorder.model
+package com.tangem.features.collectibles.impl.packopening.model
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -24,10 +24,10 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.features.collectibles.impl.CollectiblesRoute
-import com.tangem.features.collectibles.impl.confirmorder.CollectiblesConfirmOrderBottomSheetConfig
-import com.tangem.features.collectibles.impl.confirmorder.CollectiblesConfirmOrderComponent
-import com.tangem.features.collectibles.impl.confirmorder.model.converter.CollectiblesConfirmOrderConverter
-import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM
+import com.tangem.features.collectibles.impl.packopening.CollectiblesConfirmOrderBottomSheetConfig
+import com.tangem.features.collectibles.impl.packopening.CollectiblesPackOpeningComponent
+import com.tangem.features.collectibles.impl.packopening.model.converter.CollectiblesPackOpeningConverter
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,7 +41,7 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList")
 @ModelScoped
-internal class CollectiblesConfirmOrderModel @Inject constructor(
+internal class CollectiblesPackOpeningModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getMachineUseCase: GetCollectibleGachaMachineUseCase,
     private val accountStatusSupplier: CollectiblesAccountStatusSupplier,
@@ -52,11 +52,11 @@ internal class CollectiblesConfirmOrderModel @Inject constructor(
     paramsContainer: ParamsContainer,
 ) : Model() {
 
-    private val params = paramsContainer.require<CollectiblesConfirmOrderComponent.Params>()
+    private val params = paramsContainer.require<CollectiblesPackOpeningComponent.Params>()
 
-    val uiState: StateFlow<CollectiblesConfirmOrderUM>
-        field = MutableStateFlow<CollectiblesConfirmOrderUM>(
-            CollectiblesConfirmOrderUM.Loading(onBackClick = ::onBackClick, onCloseClick = ::onCloseClick),
+    val uiState: StateFlow<CollectiblesPackOpeningUM>
+        field = MutableStateFlow<CollectiblesPackOpeningUM>(
+            CollectiblesPackOpeningUM.Loading(onBackClick = ::onBackClick, onCloseClick = ::onCloseClick),
         )
 
     val bottomSheetNavigation = SlotNavigation<CollectiblesConfirmOrderBottomSheetConfig>()
@@ -67,7 +67,7 @@ internal class CollectiblesConfirmOrderModel @Inject constructor(
     private var machine: CollectibleGachaMachine? = null
     private var vaultBalance: CollectiblesVaultBalance? = null
 
-    private val orderConverter = CollectiblesConfirmOrderConverter(
+    private val orderConverter = CollectiblesPackOpeningConverter(
         onBackClick = ::onBackClick,
         onCloseClick = ::onCloseClick,
         onApproveClick = ::onApproveClick,
@@ -82,7 +82,7 @@ internal class CollectiblesConfirmOrderModel @Inject constructor(
             getMachineUseCase(externalId = params.externalId, skipCache = skipCache)
                 .fold(
                     ifLeft = {
-                        uiState.value = CollectiblesConfirmOrderUM.Error(
+                        uiState.value = CollectiblesPackOpeningUM.Error(
                             onBackClick = ::onBackClick,
                             onCloseClick = ::onCloseClick,
                             message = resourceReference(R.string.collectibles_machine_load_error),
@@ -95,7 +95,7 @@ internal class CollectiblesConfirmOrderModel @Inject constructor(
     }
 
     private fun reloadMachine() {
-        val error = uiState.value as? CollectiblesConfirmOrderUM.Error ?: return
+        val error = uiState.value as? CollectiblesPackOpeningUM.Error ?: return
         if (error.isReloading) return
 
         uiState.value = error.copy(isReloading = true)
@@ -112,7 +112,7 @@ internal class CollectiblesConfirmOrderModel @Inject constructor(
 
         combine(vaultBalanceFlow, openPackStep) { vaultBalance, step ->
             orderConverter.convert(
-                CollectiblesConfirmOrderConverter.Input(
+                CollectiblesPackOpeningConverter.Input(
                     machine = machine,
                     vaultBalance = vaultBalance,
                     step = step,
