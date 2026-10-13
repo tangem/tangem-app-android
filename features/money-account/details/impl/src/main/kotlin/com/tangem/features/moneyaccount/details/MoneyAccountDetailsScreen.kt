@@ -58,11 +58,11 @@ private val MessageBannerCornerRadius: Dp = 28.dp
 @Composable
 internal fun MoneyAccountDetailsScreen(
     state: MoneyAccountDetailsUM,
-    txHistoryComponent: TxHistoryComponent,
+    txHistoryComponent: TxHistoryComponent?,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
-    val txHistoryState by txHistoryComponent.txHistoryState.collectAsStateWithLifecycle()
+    val txHistory = txHistoryComponent?.let { collectTxHistory(it) }
     val density = LocalDensity.current
     val statusBarHeight = with(density) { WindowInsets.systemBars.getTop(this).toDp() }
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
@@ -93,8 +93,7 @@ internal fun MoneyAccountDetailsScreen(
             body(
                 state = state,
                 listState = listState,
-                txHistoryComponent = txHistoryComponent,
-                txHistoryState = txHistoryState,
+                txHistory = txHistory,
             )
         }
         TopBar(
@@ -106,12 +105,7 @@ internal fun MoneyAccountDetailsScreen(
     }
 }
 
-private fun LazyListScope.body(
-    state: MoneyAccountDetailsUM,
-    listState: LazyListState,
-    txHistoryComponent: TxHistoryComponent,
-    txHistoryState: TxHistoryItemsUM,
-) {
+private fun LazyListScope.body(state: MoneyAccountDetailsUM, listState: LazyListState, txHistory: TxHistory?) {
     val isBalanceUnavailable = state.balance is MoneyAccountBalanceBlockState.Unavailable
     val balanceAlpha = if (isBalanceUnavailable) UNAVAILABLE_BALANCE_ALPHA else 1f
 
@@ -140,12 +134,22 @@ private fun LazyListScope.body(
             )
         }
     }
-    item("transactionsSpacer") {
-        SpacerH24()
+    if (txHistory != null) {
+        item("transactionsSpacer") {
+            SpacerH24()
+        }
+        with(txHistory.component) {
+            txHistoryContent(listState = listState, state = txHistory.state)
+        }
     }
-    with(txHistoryComponent) {
-        txHistoryContent(listState = listState, state = txHistoryState)
-    }
+}
+
+private class TxHistory(val component: TxHistoryComponent, val state: TxHistoryItemsUM)
+
+@Composable
+private fun collectTxHistory(component: TxHistoryComponent): TxHistory {
+    val state by component.txHistoryState.collectAsStateWithLifecycle()
+    return TxHistory(component = component, state = state)
 }
 
 @Composable
