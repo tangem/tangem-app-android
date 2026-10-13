@@ -6,6 +6,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
@@ -18,7 +19,7 @@ import kotlinx.coroutines.coroutineScope
 import java.math.BigDecimal
 
 class GetMoneyAccountBalanceUseCase(
-    private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
+    private val moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
@@ -27,7 +28,7 @@ class GetMoneyAccountBalanceUseCase(
 
     suspend operator fun invoke(userWalletId: UserWalletId): Either<Throwable, MoneyAccountStatusValue.Balance> =
         Either.catch {
-            val token = tangemPayCurrencyFactory.createMoneyAccountToken(userWalletId)
+            val token = moneyAccountCurrencyFactory.create(userWalletId)
 
             coroutineScope {
                 val networkStatus = async { fetchNetworkStatus(userWalletId, token) }
