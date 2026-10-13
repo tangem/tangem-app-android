@@ -11,8 +11,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SportsResultDto(
     @SerialName("gameId") val gameId: Long,
-    @SerialName("leagueAbbreviation") val leagueAbbreviation: String? = null,
-    @SerialName("status") val status: String? = null,
     @SerialName("score") val score: String? = null,
     @SerialName("period") val period: String? = null,
     @SerialName("live") val isLive: Boolean? = null,
