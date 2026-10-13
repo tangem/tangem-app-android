@@ -6,6 +6,7 @@ import com.tangem.domain.polymarket.PolymarketActivityRepository
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRedeemRepository
+import com.tangem.domain.polymarket.PolymarketLiveScoresRepository
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.PolymarketWithdrawRepository
@@ -39,6 +40,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveScoresUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
@@ -127,6 +129,14 @@ internal object PolymarketDomainModule {
     @Singleton
     fun provideGetPolymarketEventUseCase(polymarketRepository: PolymarketRepository): GetPolymarketEventUseCase {
         return GetPolymarketEventUseCase(polymarketRepository = polymarketRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideObservePolymarketLiveScoresUseCase(
+        liveScoresRepository: PolymarketLiveScoresRepository,
+    ): ObservePolymarketLiveScoresUseCase {
+        return ObservePolymarketLiveScoresUseCase(liveScoresRepository = liveScoresRepository)
     }
 
     @Provides
