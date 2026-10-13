@@ -16,8 +16,12 @@ class GetYieldRewardsSummaryUseCase(
     private val yieldIncentivesRepository: YieldIncentivesRepository,
 ) {
 
+    /**
+     * A reward without a well-formed token address cannot be told apart from another such reward, so letting it into
+     * the allow-list would admit any claim naming the same malformed token; it is treated as unroutable instead.
+     */
     private val YieldReward.isSupported: Boolean
-        get() = finalDestination != YieldRewardDestination.Unsupported
+        get() = finalDestination != YieldRewardDestination.Unsupported && EVM_ADDRESS_FORMAT.matches(rewardToken)
 
     suspend operator fun invoke(chainId: Int, userAddress: String): Either<YieldIncentivesError, YieldRewardsSummary> =
         yieldIncentivesRepository
@@ -65,4 +69,8 @@ class GetYieldRewardsSummaryUseCase(
 
     private fun List<YieldReward>.totalNetUsd(): BigDecimal =
         fold(BigDecimal.ZERO) { total, reward -> total + reward.estimatedNetValueUsd }
+
+    private companion object {
+        val EVM_ADDRESS_FORMAT = Regex(pattern = "^0x[0-9a-fA-F]{40}$")
+    }
 }
