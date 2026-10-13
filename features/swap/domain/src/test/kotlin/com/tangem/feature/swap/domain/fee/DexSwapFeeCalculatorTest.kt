@@ -7,6 +7,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.transaction.Fee
@@ -34,6 +35,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import com.tangem.test.core.ProvideTestModels
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -323,6 +325,37 @@ internal class DexSwapFeeCalculatorTest {
                 gasLimit = any(),
                 gasPrice = any(),
             )
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideEstimationErrorModels")
+    fun `GIVEN estimation fails WHEN calculate THEN fallback only for errors other than revert`(
+        model: EstimationErrorModel,
+    ) = runTest {
+        // Arrange
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+        val transaction = buildDex(txValue = "1000000000000000", gas = BigInteger.valueOf(8_000_000L))
+        val sdkError = if (model.isWrapped) BlockchainSdkError.WrappedThrowable(model.sdkError) else model.sdkError
+        val estimationError = GetFeeError.DataError(sdkError)
+        coEvery {
+            getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
+        } returns estimationError.left()
+        coEvery {
+            getEthSpecificFeeUseCase.invoke(userWallet = any(), cryptoCurrency = any(), gasLimit = any(), gasPrice = any())
+        } returns mockk<TransactionFee.Choosable>(relaxed = true).right()
+
+        // Act
+        val result = sut.calculate(fromStatus, transaction)
+
+        // Assert
+        if (model.isFallbackExpected) {
+            assertThat(result.getOrNull()?.transactionFee).isInstanceOf(TransactionFeeResult.Loaded::class.java)
+        } else {
+            assertThat(result.leftOrNull()).isEqualTo(estimationError)
+        }
+        coVerify(exactly = if (model.isFallbackExpected) 1 else 0) {
+            getEthSpecificFeeUseCase.invoke(userWallet = any(), cryptoCurrency = any(), gasLimit = any(), gasPrice = any())
         }
     }
 
@@ -1164,6 +1197,35 @@ internal class DexSwapFeeCalculatorTest {
             )
         }
     }
+
+    data class EstimationErrorModel(
+        val sdkError: BlockchainSdkError,
+        val isFallbackExpected: Boolean,
+        val isWrapped: Boolean = true,
+    )
+
+    private fun provideEstimationErrorModels() = listOf(
+        EstimationErrorModel(
+            sdkError = BlockchainSdkError.Ethereum.ExecutionReverted(code = 3, message = "execution reverted: BAL#402"),
+            isFallbackExpected = false,
+        ),
+        EstimationErrorModel(
+            sdkError = BlockchainSdkError.Ethereum.ExecutionReverted(code = 3, message = "execution reverted"),
+            isFallbackExpected = false,
+            isWrapped = false,
+        ),
+        EstimationErrorModel(
+            sdkError = BlockchainSdkError.Ethereum.Api(
+                code = -32000,
+                message = "insufficient funds for gas * price + value",
+            ),
+            isFallbackExpected = true,
+        ),
+        EstimationErrorModel(
+            sdkError = BlockchainSdkError.CustomError("Unknown response format"),
+            isFallbackExpected = true,
+        ),
+    )
 
     private fun buildDex(
         txData: String = "dGVzdA==",
