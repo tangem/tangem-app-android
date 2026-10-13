@@ -43,9 +43,13 @@ internal class TronFeeExtensionsTest {
     @ParameterizedTest
     @ProvideTestModels
     fun isCheaperInFiatThan(model: ComparisonModel) {
+        // Arrange
+        val nativeFee = TransactionFee.Single(normal = commonFee(model.nativeFee))
+        val gaslessFee = TransactionFee.Single(normal = commonFee(model.gaslessFee))
+
         // Act
-        val actual = TransactionFee.Single(normal = commonFee(model.nativeFee)).isCheaperInFiatThan(
-            gaslessFee = TransactionFee.Single(normal = commonFee(model.gaslessFee)),
+        val actual = nativeFee.isCheaperInFiatThan(
+            gaslessFee = gaslessFee,
             nativeStatus = status(rate = model.nativeRate),
             gaslessTokenStatus = status(rate = model.gaslessRate),
         )
@@ -118,9 +122,13 @@ internal class TronFeeExtensionsTest {
     @ParameterizedTest
     @MethodSource("providePreferenceModels")
     fun isPreferredOverTronGasless(model: PreferenceModel) {
+        // Arrange
+        val nativeFee = TransactionFee.Single(normal = commonFee(model.nativeFee))
+        val gaslessFee = TransactionFee.Single(normal = commonFee("2.41"))
+
         // Act
-        val actual = TransactionFee.Single(normal = commonFee(model.nativeFee)).isPreferredOverTronGasless(
-            gaslessFee = TransactionFee.Single(normal = commonFee("2.41")),
+        val actual = nativeFee.isPreferredOverTronGasless(
+            gaslessFee = gaslessFee,
             nativeStatus = status(balance = model.nativeBalance),
             gaslessTokenStatus = status(isCoin = false, rate = USDT_RATE),
         )
