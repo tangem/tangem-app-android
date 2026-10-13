@@ -20,7 +20,7 @@ class GetYieldRewardsSummaryUseCase(
      * A reward without a well-formed token address cannot be told apart from another such reward, so letting it into
      * the allow-list would admit any claim naming the same malformed token; it is treated as unroutable instead.
      */
-    private val YieldReward.isSupported: Boolean
+    private val YieldReward.isRoutable: Boolean
         get() = finalDestination != YieldRewardDestination.Unsupported && EVM_ADDRESS_FORMAT.matches(rewardToken)
 
     suspend operator fun invoke(chainId: Int, userAddress: String): Either<YieldIncentivesError, YieldRewardsSummary> =
@@ -31,14 +31,20 @@ class GetYieldRewardsSummaryUseCase(
     private fun summarise(incentives: YieldIncentives): YieldRewardsSummary {
         val moduleAddress = incentives.moduleAddress?.takeIf(String::isNotBlank) ?: return YieldRewardsSummary.None
 
-        val claimable = incentives.rewards.filter(::isClaimable)
-        val pending = incentives.rewards.filter(::hasPending)
-        val unsupported = incentives.rewards.filterNot { it.isSupported }
+        // A claim pays out a token's whole cumulative amount, so one unroutable row for a token makes every row of
+        // that token unroutable: conflicting rows fail closed instead of admitting the payout.
+        val unroutableTokens = incentives.rewards
+            .filterNot { it.isRoutable }
+            .mapTo(mutableSetOf()) { it.rewardToken.normalizeEvmAddress() }
+        val (supported, unsupported) = incentives.rewards.partition {
+            it.rewardToken.normalizeEvmAddress() !in unroutableTokens
+        }
+
+        val claimable = supported.filter { it.claimableAmount > BigInteger.ZERO }
+        val pending = supported.filter { it.pendingAmount > BigInteger.ZERO }
         // Amounts deliberately left out: a cumulative proof keeps listing a token long after its claimable amount
         // is gone, and admitting a claim is about what may be routed, not about what is owed right now.
-        val supportedRewardTokens = incentives.rewards
-            .filter { it.isSupported }
-            .mapTo(mutableSetOf()) { it.rewardToken.normalizeEvmAddress() }
+        val supportedRewardTokens = supported.mapTo(mutableSetOf()) { it.rewardToken.normalizeEvmAddress() }
 
         return when {
             claimable.isEmpty() && pending.isEmpty() -> YieldRewardsSummary.None
@@ -61,11 +67,6 @@ class GetYieldRewardsSummaryUseCase(
             )
         }
     }
-
-    private fun isClaimable(reward: YieldReward): Boolean =
-        reward.claimableAmount > BigInteger.ZERO && reward.isSupported
-
-    private fun hasPending(reward: YieldReward): Boolean = reward.pendingAmount > BigInteger.ZERO && reward.isSupported
 
     private fun List<YieldReward>.totalNetUsd(): BigDecimal =
         fold(BigDecimal.ZERO) { total, reward -> total + reward.estimatedNetValueUsd }
