@@ -8,6 +8,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -258,6 +259,11 @@ internal class DefaultScanCardProcessorTest {
             // Assert
             assertThat(callbacks.events).containsExactly("progress:true", "progress:false", "cancel").inOrder()
             coVerify(exactly = 1) { sendFeedbackEmailUseCase(FeedbackEmailType.CardAttestationFailed) }
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    match { it is Basic.ButtonSupport && it.params[AnalyticsParam.SOURCE] == source.value },
+                )
+            }
         }
     }
 

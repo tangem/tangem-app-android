@@ -9,6 +9,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
@@ -191,6 +192,7 @@ internal class DefaultScanCardProcessor @Inject constructor(
                     appCoroutineScope.launch(dispatchers.main) {
                         onClosed()
 
+                        analyticsEventHandler.send(event = Basic.ButtonSupport(source = analyticsSource))
                         sendFeedbackEmailUseCase.invoke(
                             type = FeedbackEmailType.CardAttestationFailed,
                         )
