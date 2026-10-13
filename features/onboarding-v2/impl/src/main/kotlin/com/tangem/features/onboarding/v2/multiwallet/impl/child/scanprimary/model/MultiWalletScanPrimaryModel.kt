@@ -9,7 +9,7 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
-import com.tangem.sdk.api.BackupServiceHolder
+import com.tangem.sdk.api.BackupServiceProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.update
@@ -21,7 +21,7 @@ import javax.inject.Inject
 internal class MultiWalletScanPrimaryModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val backupServiceHolder: BackupServiceHolder,
+    private val backupServiceProvider: BackupServiceProvider,
     private val cardRepository: CardRepository,
 ) : Model() {
 
@@ -32,7 +32,7 @@ internal class MultiWalletScanPrimaryModel @Inject constructor(
     val onDone = MutableSharedFlow<Unit>()
 
     fun onScanPrimaryClick() {
-        val backupService = backupServiceHolder.backupService
+        val backupService = backupServiceProvider.backupService
         val iconScanRes = R.drawable.img_hand_scan_ring.takeIf { isRing }
 
         backupService.readPrimaryCard(iconScanRes = iconScanRes, cardId = scanResponse.card.cardId) { result ->

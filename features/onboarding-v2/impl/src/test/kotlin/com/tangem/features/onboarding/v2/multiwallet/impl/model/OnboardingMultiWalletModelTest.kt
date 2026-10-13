@@ -30,7 +30,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChild
 import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import com.tangem.operations.attestation.ArtworkSize
 import com.tangem.operations.backup.BackupService
-import com.tangem.sdk.api.BackupServiceHolder
+import com.tangem.sdk.api.BackupServiceProvider
 import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -47,7 +47,7 @@ internal class OnboardingMultiWalletModelTest {
 
     private val analyticsHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     private val router: Router = mockk(relaxUnitFun = true)
-    private val backupServiceHolder: BackupServiceHolder = mockk()
+    private val backupServiceProvider: BackupServiceProvider = mockk()
     private val backupService: BackupService = mockk()
     private val onboardingRepository: OnboardingRepository = mockk(relaxUnitFun = true)
     private val getCardImageUseCase: GetCardImageUseCase = mockk()
@@ -102,7 +102,7 @@ internal class OnboardingMultiWalletModelTest {
         every { scanResponse.productType } returns ProductType.Wallet
         every { scanResponse.primaryCard } returns null
 
-        every { backupServiceHolder.backupService } returns backupService
+        every { backupServiceProvider.backupService } returns backupService
         every { backupService.currentState } returns BackupService.State.Preparing
 
         coEvery {
@@ -491,7 +491,7 @@ internal class OnboardingMultiWalletModelTest {
             analyticsHandler = analyticsHandler,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             router = router,
-            backupServiceHolder = backupServiceHolder,
+            backupServiceProvider = backupServiceProvider,
             onboardingRepository = onboardingRepository,
             getCardImageUseCase = getCardImageUseCase,
             uiMessageSender = uiMessageSender,
