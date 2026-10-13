@@ -480,11 +480,10 @@ internal class DefaultTangemSdkManager(
         )
     }
 
-    @Suppress("MagicNumber")
     override fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
         tangemSdk.config.cardIdDisplayFormat = when {
             scanResponse == null -> CardIdDisplayFormat.Full
-            scanResponse.cardTypesResolver.isTangemTwins() -> CardIdDisplayFormat.LastLuhn(4)
+            scanResponse.cardTypesResolver.isTangemTwins() -> TWIN_CARD_ID_DISPLAY_FORMAT
             else -> CardIdDisplayFormat.Full
         }
     }
@@ -498,16 +497,18 @@ internal class DefaultTangemSdkManager(
     override suspend fun createFirstTwinWallet(cardId: String): CompletionResult<CreateWalletResponse> {
         val twinCardNumber = getTwinCardNumber(cardId)
 
-        return runTaskAsync(
-            runnable = CreateFirstTwinWalletTask(
-                firstCardId = cardId,
-                wrongTwinCardMessage = getWrongTwinCardMessage(twinCardNumber),
-            ),
-            preflightReadFilter = null,
-            cardId = cardId,
-            initialMessage = createTwinTapMessage(twinCardNumber),
-            registerColdWallet = false,
-        )
+        return withTwinCardIdDisplayFormat {
+            runTaskAsync(
+                runnable = CreateFirstTwinWalletTask(
+                    firstCardId = cardId,
+                    wrongTwinCardMessage = getWrongTwinCardMessage(twinCardNumber),
+                ),
+                preflightReadFilter = null,
+                cardId = cardId,
+                initialMessage = createTwinTapMessage(twinCardNumber),
+                registerColdWallet = false,
+            )
+        }
     }
 
     override suspend fun createSecondTwinWallet(
@@ -527,12 +528,28 @@ internal class DefaultTangemSdkManager(
                 incompatibleTwinCard = resources.getStringSafe(R.string.twin_error_wrong_twin),
             ),
         )
-        return runTaskAsync(
-            runnable = task,
-            preflightReadFilter = null,
-            initialMessage = createTwinTapMessage(secondCardNumber),
-            registerColdWallet = false,
-        )
+        return withTwinCardIdDisplayFormat {
+            runTaskAsync(
+                runnable = task,
+                preflightReadFilter = null,
+                initialMessage = createTwinTapMessage(secondCardNumber),
+                registerColdWallet = false,
+            )
+        }
+    }
+
+    /**
+     * The format is global and follows the selected wallet, which may be another one in the middle of a Twin flow
+     * (e.g. after the old Twin wallet is deleted on recreation).
+     */
+    private suspend fun <T> withTwinCardIdDisplayFormat(block: suspend () -> T): T {
+        val previousFormat = tangemSdk.config.cardIdDisplayFormat
+        tangemSdk.config.cardIdDisplayFormat = TWIN_CARD_ID_DISPLAY_FORMAT
+        return try {
+            block()
+        } finally {
+            tangemSdk.config.cardIdDisplayFormat = previousFormat
+        }
     }
 
     override fun changeProductType(isRing: Boolean) {
@@ -549,8 +566,8 @@ internal class DefaultTangemSdkManager(
         secondCardPublicKey: ByteArray,
         issuerKeyPair: KeyPair,
         cardId: String,
-    ): CompletionResult<ScanResponse> {
-        return runTaskAsync(
+    ): CompletionResult<ScanResponse> = withTwinCardIdDisplayFormat {
+        runTaskAsync(
             runnable = FinalizeTwinTask(
                 twinPublicKey = secondCardPublicKey,
                 issuerKeys = issuerKeyPair,
@@ -678,4 +695,8 @@ internal class DefaultTangemSdkManager(
     }
 
     // endregion
+
+    private companion object {
+        val TWIN_CARD_ID_DISPLAY_FORMAT = CardIdDisplayFormat.LastLuhn(numbers = 4)
+    }
 }
