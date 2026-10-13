@@ -17,6 +17,7 @@ import com.tangem.test.mock.yield.MockYieldSupply.USER_ADDRESS
 import com.tangem.test.mock.yield.MockYieldSupply.calldata
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -28,7 +29,7 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class ValidateYieldClaimCalldataUseCaseTest {
 
     private val yieldModuleAddressProvider: YieldModuleAddressProvider = mockk()
-    private val network: Network = mockk()
+    private val network: Network = mockk { every { rawId } returns "ethereum" }
 
     private val useCase = ValidateYieldClaimCalldataUseCase(
         yieldModuleAddressProvider = yieldModuleAddressProvider,
