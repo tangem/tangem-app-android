@@ -85,8 +85,6 @@ internal class DefaultPolymarketLiveScoresRepositoryTest {
 
     private fun result(gameId: Long, score: String) = SportsResultDto(
         gameId = gameId,
-        leagueAbbreviation = "nba",
-        status = "InProgress",
         score = score,
         period = "Q1",
         isLive = true,
