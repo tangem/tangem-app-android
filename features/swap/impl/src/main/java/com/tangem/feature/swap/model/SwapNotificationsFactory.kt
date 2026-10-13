@@ -150,7 +150,7 @@ internal class SwapNotificationsFactory(
             maybeAddTransactionInProgressWarning(quoteModel)
             maybeAddPriceImpactNotification(quoteModel.priceImpact)
             maybeAddHighNetworkFeeWarning(isHighNetworkFee)
-            maybeAddLowSlippageWarning(lowSlippage)
+            maybeAddLowSlippageWarning(lowSlippage, actions.onSlippageClick)
         }
         return warnings.toPersistentList()
     }
@@ -169,8 +169,11 @@ internal class SwapNotificationsFactory(
     }
 
     @Suppress("CanBeNonNullable")
-    private fun MutableList<NotificationUM>.maybeAddLowSlippageWarning(lowSlippage: TextReference?) {
-        if (lowSlippage != null) add(SwapNotificationUM.Warning.LowSlippage(lowSlippage))
+    private fun MutableList<NotificationUM>.maybeAddLowSlippageWarning(
+        lowSlippage: TextReference?,
+        onClick: () -> Unit,
+    ) {
+        if (lowSlippage != null) add(SwapNotificationUM.Warning.LowSlippage(lowSlippage, onClick))
     }
 
     private fun MutableList<NotificationUM>.maybeAddRegionRestrictionError(quoteModel: SwapState.QuotesLoadedState) {
