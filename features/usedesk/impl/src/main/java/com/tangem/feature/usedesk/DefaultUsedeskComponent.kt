@@ -21,6 +21,7 @@ import com.arkivanov.essenty.lifecycle.doOnPause
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
 import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.usedesk.model.UsedeskModel
 import com.tangem.feature.usedesk.visibility.DefaultSupportChatVisibility
