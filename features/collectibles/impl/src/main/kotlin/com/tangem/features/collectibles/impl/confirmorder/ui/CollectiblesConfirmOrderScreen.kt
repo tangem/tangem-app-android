@@ -17,12 +17,14 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.button.Back
+import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
+import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.res.TangemTheme
@@ -69,28 +71,7 @@ internal fun CollectiblesConfirmOrderScreen(state: CollectiblesConfirmOrderUM, m
 
     TangemTopBarScaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = {
-            TangemTopNavigation(
-                title = resourceReference(R.string.collectibles_confirm_order_screen_title),
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
-                // Fades in place: dropping it would slide it through the pack
-                modifier = Modifier.graphicsLayer {
-                    alpha = PackLaunch.contentAlpha(progress.exit, isDelayed = false)
-                },
-                // The slot keeps its size: without a button the bar collapses to the title's height
-                startButton = {
-                    Box(modifier = Modifier.size(44.dp)) {
-                        AnimatedVisibility(
-                            visible = (state as? CollectiblesConfirmOrderUM.Content)?.isBackVisible != false,
-                            enter = fadeIn(),
-                            exit = fadeOut(),
-                        ) {
-                            TangemButton.Back(onClick = state.onBackClick)
-                        }
-                    }
-                },
-            )
-        },
+        topBar = { ConfirmOrderTopBar(state = state, exit = progress.exit) },
         overlay = {
             when (state) {
                 is CollectiblesConfirmOrderUM.Loading -> CollectiblesConfirmOrderFooterSkeleton(
@@ -118,6 +99,44 @@ internal fun CollectiblesConfirmOrderScreen(state: CollectiblesConfirmOrderUM, m
                 progress = progress,
                 footerHeight = footerHeight,
             )
+        }
+    }
+}
+
+@Composable
+private fun ConfirmOrderTopBar(state: CollectiblesConfirmOrderUM, exit: Float) {
+    val isNavigationVisible = (state as? CollectiblesConfirmOrderUM.Content)?.isNavigationVisible != false
+
+    TangemTopNavigation(
+        contentAlign = TangemTopNavigation.ContentAlign.Center,
+        modifier = Modifier.graphicsLayer {
+            alpha = PackLaunch.contentAlpha(exit, isDelayed = false)
+        },
+        // The slots keep their size: without a button the bar collapses to the title's height
+        startButton = {
+            NavigationButtonSlot(isVisible = isNavigationVisible) {
+                TangemButton.Back(onClick = state.onBackClick)
+            }
+        },
+        endButton = {
+            NavigationButtonSlot(isVisible = isNavigationVisible) {
+                TangemButton.Close(onClick = state.onCloseClick)
+            }
+        },
+        contentColumn = {
+            TangemNavigationText(
+                text = resourceReference(R.string.collectibles_confirm_order_screen_title),
+                role = TangemNavigationText.Role.Title,
+            )
+        },
+    )
+}
+
+@Composable
+private fun NavigationButtonSlot(isVisible: Boolean, button: @Composable () -> Unit) {
+    Box(modifier = Modifier.size(44.dp)) {
+        AnimatedVisibility(visible = isVisible, enter = fadeIn(), exit = fadeOut()) {
+            button()
         }
     }
 }

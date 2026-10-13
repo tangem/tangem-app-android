@@ -3,6 +3,7 @@ package com.tangem.domain.card
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.domain.card.models.ScanConfig
 import com.tangem.domain.models.scan.ScanResponse
 
 interface ScanCardProcessor {
@@ -24,4 +25,7 @@ interface ScanCardProcessor {
         onFailure: suspend (error: TangemError) -> Unit = {},
         onSuccess: suspend (scanResponse: ScanResponse) -> Unit = {},
     )
+
+    /** Scans a card with the given [config] and reports the outcome to [ScanConfig.callback] */
+    suspend fun scan(config: ScanConfig)
 }

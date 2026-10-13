@@ -11,7 +11,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.collectibles.account.covers
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.OpenPackStep
-import com.tangem.domain.collectibles.models.total
 import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM
 import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM.ButtonUM
@@ -24,16 +23,18 @@ import java.math.BigDecimal
 /** The backend sends no total, so it is summed from the price and the fee. */
 internal class CollectiblesConfirmOrderConverter(
     private val onBackClick: () -> Unit,
+    private val onCloseClick: () -> Unit,
     private val onApproveClick: () -> Unit,
 ) : Converter<CollectiblesConfirmOrderConverter.Input, CollectiblesConfirmOrderUM.Content> {
 
     override fun convert(value: Input): CollectiblesConfirmOrderUM.Content {
         return CollectiblesConfirmOrderUM.Content(
             onBackClick = onBackClick,
+            onCloseClick = onCloseClick,
             order = createOrder(value),
             onApproveClick = onApproveClick,
             isPackOpened = value.step is OpenPackStep.Opened,
-            isBackVisible = value.step is OpenPackStep.NotStarted || value.step is OpenPackStep.Failed,
+            isNavigationVisible = value.step is OpenPackStep.NotStarted || value.step is OpenPackStep.Failed,
         )
     }
 
