@@ -109,7 +109,7 @@ internal class DefaultPolymarketPositionsRepository @Inject constructor(
         addresses: PolymarketAddresses,
     ): Either<PolymarketPositionsError, BigDecimal> = read(
         call = { dataApi.getPositionsValue(user = addresses.depositWalletAddress) },
-        convert = { it.firstOrNull()?.value ?: BigDecimal.ZERO },
+        convert = { it.data.value },
     )
 
     private suspend fun <R : Any, T> read(

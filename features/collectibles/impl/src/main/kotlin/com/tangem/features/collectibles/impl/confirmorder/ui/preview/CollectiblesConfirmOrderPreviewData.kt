@@ -10,6 +10,7 @@ internal object CollectiblesConfirmOrderPreviewData {
 
     val content = CollectiblesConfirmOrderUM.Content(
         onBackClick = {},
+        onCloseClick = {},
         order = CollectiblesConfirmOrderUM.OrderUM(
             rows = persistentListOf(
                 CollectiblesConfirmOrderUM.PriceRowUM(labelRef = stringReference("Elite pack x1"), value = "$50"),
@@ -31,7 +32,7 @@ internal object CollectiblesConfirmOrderPreviewData {
         ),
         onApproveClick = {},
         isPackOpened = false,
-        isBackVisible = true,
+        isNavigationVisible = true,
     )
 
     val notEnoughFunds = content.copy(
@@ -43,10 +44,11 @@ internal object CollectiblesConfirmOrderPreviewData {
         ),
     )
 
-    val loading = CollectiblesConfirmOrderUM.Loading(onBackClick = {})
+    val loading = CollectiblesConfirmOrderUM.Loading(onBackClick = {}, onCloseClick = {})
 
     val error = CollectiblesConfirmOrderUM.Error(
         onBackClick = {},
+        onCloseClick = {},
         message = stringReference("Failed to load the pack.\nTap to reload"),
         onReloadClick = {},
     )

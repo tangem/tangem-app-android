@@ -190,6 +190,18 @@ internal class CollectiblesConfirmOrderModelTest {
     }
 
     @Test
+    fun `GIVEN the order WHEN close tapped THEN machine details closes with it`() = runTest {
+        // Arrange
+        val model = startModel()
+
+        // Act
+        model.uiState.value.onCloseClick()
+
+        // Assert
+        verify(exactly = 1) { router.popTo(CollectiblesRoute.Main(USER_WALLET_ID), any()) }
+    }
+
+    @Test
     fun `GIVEN the order WHEN approve tapped THEN the pack is bought with the route params`() = runTest {
         // Arrange
         val model = startModel()
@@ -263,6 +275,24 @@ internal class CollectiblesConfirmOrderModelTest {
 
         // Assert
         verify(exactly = 0) { router.pop() }
+    }
+
+    @Test
+    fun `GIVEN a purchase in progress WHEN close tapped THEN the screen stays`() = runTest {
+        // Arrange
+        every { openCollectiblePackUseCase(any(), any()) } returns flow {
+            emit(OpenPackStep.Confirming)
+            awaitCancellation()
+        }
+        val model = startModel()
+        model.content().onApproveClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onCloseClick()
+
+        // Assert
+        verify(exactly = 0) { router.popTo(any<Route>(), any()) }
     }
 
     @Test
@@ -447,7 +477,6 @@ internal class CollectiblesConfirmOrderModelTest {
             imageBackUrl = null,
             rarity = null,
             gradingCompany = null,
-            grade = null,
             gradingId = "123",
             year = null,
             set = null,

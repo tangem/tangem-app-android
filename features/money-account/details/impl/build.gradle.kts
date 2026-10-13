@@ -20,7 +20,10 @@ dependencies {
     implementation(projects.core.utils)
 
     /** Domain */
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
+    implementation(projects.domain.moneyAccount)
 
     /** Features */
     implementation(projects.features.moneyAccount.details.api)

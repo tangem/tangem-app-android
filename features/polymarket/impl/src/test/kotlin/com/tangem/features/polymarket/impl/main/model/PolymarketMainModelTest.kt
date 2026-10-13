@@ -9,18 +9,15 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketCategory
-import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
-import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
-import com.tangem.domain.polymarket.model.PolymarketOutcome
-import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
@@ -56,6 +53,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -92,7 +90,6 @@ import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
 import io.mockk.coVerify
-import io.mockk.verifyOrder
 import org.junit.jupiter.api.BeforeEach
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -1596,51 +1593,9 @@ internal class PolymarketMainModelTest {
         PolymarketCategory(id = 2, label = "Sport", iconUrl = null),
     )
 
-    private fun createEvent(id: String = "event-1"): PolymarketEvent = PolymarketEvent(
+    private fun createEvent(id: String = "event-1"): PolymarketEvent = createPolymarketEvent(
         id = id,
         slug = "$id-slug",
-        title = "Event title",
-        description = "Event description",
-        rulesUrl = "https://polymarket.com/rules",
-        iconUrl = null,
-        imageUrl = null,
-        status = PolymarketStatus.ACTIVE,
-        startDate = null,
-        endDate = null,
-        volume = null,
-        volume24h = null,
-        liquidity = null,
-        totalMarketsCount = 1,
-        isNegRisk = false,
-        isLive = false,
-        displayMode = PolymarketDisplayMode.PLAIN_MARKETS,
-        markets = listOf(
-            PolymarketMarket(
-                id = "market-1",
-                conditionId = null,
-                eventId = id,
-                title = "Market question",
-                slug = "market-slug",
-                description = "Market description",
-                groupItemTitle = null,
-                iconUrl = null,
-                imageUrl = null,
-                status = PolymarketStatus.ACTIVE,
-                isNegRisk = false,
-                isAcceptingOrders = true,
-                startDate = null,
-                endDate = null,
-                startDateIso = null,
-                endDateIso = null,
-                volume = null,
-                volume24h = null,
-                liquidity = null,
-                orderIndex = 0,
-                outcomes = listOf(
-                    PolymarketOutcome(assetId = "asset-1", title = "Yes", probability = null),
-                ),
-            ),
-        ),
     )
 
     @Test
