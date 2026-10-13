@@ -72,7 +72,7 @@ internal class DefaultPolymarketPositionsRepositoryTest {
             isAcceptingOrders = false,
             isLive = false,
             resolutionStatus = PolymarketResolutionStatus.UNKNOWN,
-            result = null,
+            result = null,            version = null,
         )
 
         // Act

@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import java.math.BigDecimal
@@ -69,6 +70,7 @@ internal fun createPolymarketMarket(
     liquidity: BigDecimal? = null,
     orderIndex: Int = 0,
     outcomes: List<PolymarketOutcome> = listOf(createPolymarketOutcome()),
+    version: PolymarketMarketVersion = PolymarketMarketVersion.V1,
 ): PolymarketMarket = PolymarketMarket(
     id = id,
     conditionId = conditionId,
@@ -91,14 +93,17 @@ internal fun createPolymarketMarket(
     liquidity = liquidity,
     orderIndex = orderIndex,
     outcomes = outcomes,
+    version = version,
 )
 
 internal fun createPolymarketOutcome(
     assetId: String = "asset-1",
     title: String = "Yes",
     probability: BigDecimal? = null,
+    legacyAssetId: String? = null,
 ): PolymarketOutcome = PolymarketOutcome(
     assetId = assetId,
     title = title,
     probability = probability,
+    legacyAssetId = legacyAssetId,
 )
