@@ -3,6 +3,7 @@ package com.tangem.grow.datasource.polymarket.socket
 import com.tangem.core.socket.KeepAlive
 import com.tangem.core.socket.SocketChannelFactory
 import com.tangem.core.socket.SocketSpec
+import com.tangem.grow.datasource.BuildConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,6 +17,8 @@ internal object PolymarketSportsSocketModule {
     @Provides
     @Singleton
     fun providePolymarketSportsSocket(factory: SocketChannelFactory): PolymarketSportsSocket {
+        if (BuildConfig.MOCK_DATA_SOURCE) return FakePolymarketSportsSocket()
+
         return factory.createPolymarketSportsSocket(
             SocketSpec(
                 url = "wss://sports-api.polymarket.com/ws",
