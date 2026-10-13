@@ -19,7 +19,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
-import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.visa.model.TangemPayInitialData
 import com.tangem.domain.visa.model.MoneyAccountActivationData
 import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.domain.visa.model.VisaDataForApprove
@@ -189,9 +189,9 @@ interface TangemSdkManager {
         visaDataForApprove: VisaDataForApprove,
     ): CompletionResult<VisaSignedDataByCustomerWallet>
 
-    suspend fun tangemPayProduceInitialCredentials(
+    suspend fun tangemPayProduceInitialData(
         preflightReadFilter: PreflightReadFilter,
-    ): Either<Throwable, TangemPayInitialCredentials>
+    ): Either<Throwable, TangemPayInitialData>
 
     suspend fun tangemPayProduceMoneyAccountData(
         preflightReadFilter: PreflightReadFilter,
