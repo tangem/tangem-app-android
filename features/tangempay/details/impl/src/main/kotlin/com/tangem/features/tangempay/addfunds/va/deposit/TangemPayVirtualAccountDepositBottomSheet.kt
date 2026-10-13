@@ -263,7 +263,7 @@ private fun UsdIcon(modifier: Modifier = Modifier) {
         modifier = modifier
             .size(TangemTheme.dimens2.x20)
             .clip(CircleShape)
-            .background(TangemTheme.colors3.bg.opaque.primary)
+            .background(TangemTheme.colors3.bg.transparent.primary)
             .border(width = 1.dp, color = TangemTheme.colors3.border.secondary, shape = CircleShape),
         contentAlignment = Alignment.Center,
     ) {

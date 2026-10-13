@@ -36,7 +36,7 @@ internal fun BoxScope.DsVersionBadge(version: DsVersion?, withStatusBarPadding: 
             .conditional(withStatusBarPadding) { statusBarsPadding() }
             .padding(all = 8.dp)
             .clip(RoundedCornerShape(50))
-            .background(TangemTheme.colors3.bg.opaque.secondary)
+            .background(TangemTheme.colors3.bg.transparent.secondary)
             .padding(horizontal = 8.dp, vertical = 2.dp),
     )
 }
