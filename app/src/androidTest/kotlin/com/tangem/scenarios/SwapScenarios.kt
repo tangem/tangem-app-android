@@ -18,6 +18,7 @@ import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.common.utils.findBroadcastApproveAmounts
 import com.tangem.common.utils.findBroadcastTransactions
+import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
@@ -448,9 +449,12 @@ fun BaseTestCase.chooseIdenticalReceiveToken(tokenName: String, receiveAccountNa
     }
     step("Expand account '$receiveAccountName' in receive selector") {
         onSwapSelectTokenScreen { tokenWithName(receiveAccountName).performClick() }
+        awaitSuccess { onSwapSelectTokenScreen { tokenWithName(tokenName).assertIsDisplayed() } }
     }
     step("Click on token with name '$tokenName'") {
-        onSwapSelectTokenScreen { tokenWithName(tokenName).performClick() }
+        onSwapSelectTokenScreen {
+            tokenWithName(tokenName).clickAndWaitFor(composeTestRule) { assertReceiveTokenSelectorClosed(tokenName) }
+        }
     }
 }
 
@@ -474,12 +478,19 @@ fun BaseTestCase.chooseReceiveToken(tokenName: String, networkName: String) {
 }
 
 /** Reopens the receive selector via the receive-card icon and picks [tokenName] directly — the reopened selector keeps the account expanded. */
+private fun BaseTestCase.assertReceiveTokenSelectorClosed(tokenName: String) {
+    onSwapTokenScreen { receiveSelectTokenIcon.assertIsDisplayed() }
+    onSwapSelectTokenScreen { tokenWithName(tokenName).assertDoesNotExist() }
+}
+
 fun BaseTestCase.changeReceiveToken(tokenName: String) {
     step("Open receive token selector") {
         onSwapTokenScreen { receiveSelectTokenIcon.performClick() }
     }
     step("Click on token with name '$tokenName'") {
-        onSwapSelectTokenScreen { tokenWithName(tokenName).performClick() }
+        onSwapSelectTokenScreen {
+            tokenWithName(tokenName).clickAndWaitFor(composeTestRule) { assertReceiveTokenSelectorClosed(tokenName) }
+        }
     }
 }
 
@@ -771,5 +782,28 @@ fun BaseTestCase.confirmSwapAndAssertApproveBroadcast(
             approvesBefore.count { it == expectedApproveAmount } + 1,
             approvesAfter.count { it == expectedApproveAmount },
         )
+    }
+}
+
+fun BaseTestCase.checkProviderSlippageSheet(slippagePercent: String) {
+    val autoSlippage = getResourceString(CoreResR.string.common_auto)
+
+    step("Assert 'Slippage' value is '$autoSlippage'") {
+        onSwapTokenScreen { slippageValue.assertTextEquals(autoSlippage) }
+    }
+    step("Click on 'Slippage' row") {
+        onSwapTokenScreen { slippageRow.performClick() }
+    }
+    step("Assert 'Slippage' bottom sheet title is displayed") {
+        onSwapSlippageBottomSheet { title.assertIsDisplayed() }
+    }
+    step("Assert provider slippage up to '$slippagePercent' is displayed") {
+        onSwapSlippageBottomSheet { providerSlippageInfo(slippagePercent).assertIsDisplayed() }
+    }
+    step("Click on 'Confirm' button") {
+        onSwapSlippageBottomSheet { confirmButton.performClick() }
+    }
+    step("Assert 'Slippage' bottom sheet is not displayed") {
+        onSwapSlippageBottomSheet { providerSlippageInfo(slippagePercent).assertDoesNotExist() }
     }
 }
