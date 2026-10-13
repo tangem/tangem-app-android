@@ -86,7 +86,6 @@ import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
 
-lateinit var tangemSdkManager: TangemSdkManager
 lateinit var backupService: BackupService
 internal var lockUserWalletsTimer: LockUserWalletsTimer? = null
     private set
@@ -107,7 +106,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     lateinit var cardSdkConfigRepository: CardSdkConfigRepository
 
     @Inject
-    lateinit var injectedTangemSdkManager: TangemSdkManager
+    lateinit var tangemSdkManager: TangemSdkManager
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
@@ -287,7 +286,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     private fun installActivityDependencies() {
         cardSdkOwner.register(activity = this)
-        tangemSdkManager = injectedTangemSdkManager
 
         backupServiceHolder.createAndSetService(
             tangemSdk = cardSdkConfigRepository.sdk,
