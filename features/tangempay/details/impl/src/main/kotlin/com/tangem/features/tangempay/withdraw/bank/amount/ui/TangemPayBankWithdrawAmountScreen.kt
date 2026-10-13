@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -199,6 +200,7 @@ private fun AmountPlaceholder(currencySymbol: String) {
 
 @Composable
 private fun SourceRow(source: SourceRowUM) {
+    val focusManager = LocalFocusManager.current
     TangemRow(
         modifier = Modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_SOURCE_ROW),
         verticalAlignment = TangemRowVerticalAlignment.Center,
@@ -220,18 +222,27 @@ private fun SourceRow(source: SourceRowUM) {
                 ChevronDownIcon()
             }
         },
-        onClick = source.onClick,
+        onClick = {
+            focusManager.clearFocus()
+            source.onClick()
+        },
     )
 }
 
 @Composable
 private fun RouteRow(route: RouteRowUM) {
+    val focusManager = LocalFocusManager.current
     BankRouteRow(
         rail = route.rail,
         title = route.title,
         eta = route.eta,
         fee = route.fee,
-        onClick = route.onClick,
+        onClick = route.onClick?.let { onClick ->
+            {
+                focusManager.clearFocus()
+                onClick()
+            }
+        },
     )
 }
 
