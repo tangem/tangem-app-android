@@ -1,5 +1,6 @@
 package com.tangem.features.yield.supply.impl.incentives.claim.model
 
+import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
@@ -21,6 +22,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.yield.supply.models.incentives.YieldClaimCalldata
@@ -47,6 +49,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -159,16 +162,20 @@ internal class YieldSupplyClaimModel @Inject constructor(
             return
         }
 
-        // Scrim and back may close the sheet mid-send; a transaction already on its way is not abandoned with it
-        withContext(NonCancellable) { sendTransaction(transactionData) }
+        // Scrim and back may close the sheet mid-send; a transaction already on its way is not abandoned with it, but
+        // its dialog and dismissal no longer belong to the screen, which may be showing another sheet by then
+        withContext(NonCancellable) {
+            val result = sendTransactionUseCase(
+                txData = transactionData,
+                userWallet = params.userWallet,
+                network = cryptoCurrency.network,
+            )
+            if (modelScope.isActive) onTransactionSent(result)
+        }
     }
 
-    private suspend fun sendTransaction(transactionData: TransactionData.Uncompiled) {
-        sendTransactionUseCase(
-            txData = transactionData,
-            userWallet = params.userWallet,
-            network = cryptoCurrency.network,
-        ).fold(
+    private fun onTransactionSent(result: Either<SendTransactionError, String>) {
+        result.fold(
             ifLeft = { error ->
                 TangemLogger.e("Yield claim was not submitted: $error")
                 uiState.update { it.copy(isClaimInProgress = false) }
@@ -322,18 +329,21 @@ internal class YieldSupplyClaimModel @Inject constructor(
     private suspend fun isFeeCovered(transactionData: TransactionData.Uncompiled): Boolean {
         val fee = transactionData.fee?.amount?.value.orZero()
         val feeStatus = refreshFeeStatus()
-        val isCovered = feeStatus != null && getBalanceNotEnoughForFeeWarningUseCase(
-            fee = fee,
-            userWalletId = params.userWallet.walletId,
-            tokenStatus = cryptoCurrencyStatus,
-            feeStatus = feeStatus,
-        ).fold(ifLeft = { false }, ifRight = { warning -> warning == null })
+        val warning = feeStatus?.let {
+            getBalanceNotEnoughForFeeWarningUseCase(
+                fee = fee,
+                userWalletId = params.userWallet.walletId,
+                tokenStatus = cryptoCurrencyStatus,
+                feeStatus = feeStatus,
+            )
+        }
+        val isCovered = warning?.getOrNull() == null && warning?.isRight() == true
 
         if (!isCovered) {
             yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
                 data = YieldSupplyNotificationData(
                     feeValue = fee,
-                    feeError = if (feeStatus == null) GetFeeError.UnknownError else null,
+                    feeError = GetFeeError.UnknownError.takeIf { warning == null || warning.isLeft() },
                 ),
             )
         }
