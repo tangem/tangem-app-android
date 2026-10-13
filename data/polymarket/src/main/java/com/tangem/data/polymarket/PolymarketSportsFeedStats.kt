@@ -7,8 +7,8 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
 internal class PolymarketSportsFeedStats(
-    private val trackedGameIds: Set<String>,
-    private val summaryInterval: Duration = 30.seconds,
+    private val trackedGameIds: Set<Long>,
+    private val summaryInterval: Duration = 60.seconds,
     private val timeSource: TimeSource.WithComparableMarks = TimeSource.Monotonic,
 ) {
 
@@ -22,7 +22,7 @@ internal class PolymarketSportsFeedStats(
     private val framesByLeague = mutableMapOf<String, Int>()
 
     fun record(result: SportsResultDto) {
-        val isMatched = result.gameId.toString() in trackedGameIds
+        val isMatched = result.gameId in trackedGameIds
 
         framesCount++
         seenGameIds += result.gameId
@@ -38,7 +38,7 @@ internal class PolymarketSportsFeedStats(
         )
 
         if (lastSummaryAt.elapsedNow() >= summaryInterval) {
-            TangemLogger.d(summary(reason = "periodic"))
+            TangemLogger.i(summary(reason = "periodic"))
             lastSummaryAt = timeSource.markNow()
         }
     }

@@ -5,8 +5,8 @@ import com.tangem.grow.datasource.polymarket.socket.models.SportsResultDto
 
 internal object PolymarketLiveScoreConverter {
 
-    fun convert(value: SportsResultDto): PolymarketLiveScore = PolymarketLiveScore(
-        gameId = value.gameId.toString(),
+    fun convert(value: SportsResultDto, gameId: String): PolymarketLiveScore = PolymarketLiveScore(
+        gameId = gameId,
         score = value.score,
         period = value.period,
         isLive = value.isLive,
