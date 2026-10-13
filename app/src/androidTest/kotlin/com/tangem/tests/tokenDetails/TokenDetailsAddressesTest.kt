@@ -120,10 +120,14 @@ class TokenDetailsAddressesTest : BaseTestCase() {
     fun qrCodeEncodesDisplayedAddressLitecoinTest() {
         val tokenName = "Litecoin"
         val userTokensState = "Litecoin"
+        val quotesState = "AppTransfersNetworks"
 
         setupHooks().run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$quotesState'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = quotesState)
             }
 
             step("Open token details for '$tokenName'") {
@@ -144,10 +148,14 @@ class TokenDetailsAddressesTest : BaseTestCase() {
     fun qrCodeEncodesDisplayedAddressXdcTest() {
         val tokenName = "XDC Network"
         val userTokensState = "XDC"
+        val quotesState = "AppTransfersNetworks"
 
         setupHooks().run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$quotesState'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = quotesState)
             }
 
             step("Open token details for '$tokenName'") {
@@ -225,10 +233,14 @@ class TokenDetailsAddressesTest : BaseTestCase() {
     fun qrCodeEncodesDisplayedAddressDecimalTest() {
         val tokenName = "Decimal Smart Chain"
         val userTokensState = "Decimal"
+        val quotesState = "AppTransfersNetworks"
 
         setupHooks().run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$quotesState'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = quotesState)
             }
 
             step("Open token details for '$tokenName'") {
