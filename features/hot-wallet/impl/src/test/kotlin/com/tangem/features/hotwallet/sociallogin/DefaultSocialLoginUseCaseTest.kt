@@ -232,6 +232,38 @@ internal class DefaultSocialLoginUseCaseTest {
     )
 
     @Test
+    fun `GIVEN the release fails once WHEN register fails THEN the release is retried until it succeeds`() = runTest {
+        // Arrange
+        coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns SocialLoginError.NetworkError.left()
+        coEvery { revokeSocialRecoveryUseCase(WALLET_ID) } returnsMany listOf(
+            SocialLoginError.NetworkError.left(),
+            Unit.right(),
+        )
+
+        // Act
+        useCase.signIn(PROVIDER) { CONSENT }
+
+        // Assert
+        coVerify(exactly = 2) { revokeSocialRecoveryUseCase(WALLET_ID) }
+        coVerify(exactly = 1) { tangemHotSdk.delete(hotWalletId) }
+    }
+
+    @Test
+    fun `GIVEN the release keeps failing WHEN register fails THEN it gives up after three attempts`() = runTest {
+        // Arrange
+        coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns SocialLoginError.NetworkError.left()
+        coEvery { revokeSocialRecoveryUseCase(WALLET_ID) } returns SocialLoginError.NetworkError.left()
+
+        // Act
+        val actual = useCase.signIn(PROVIDER) { CONSENT }
+
+        // Assert
+        assertThat(actual).isEqualTo(SocialLoginError.NetworkError.left())
+        coVerify(exactly = 3) { revokeSocialRecoveryUseCase(WALLET_ID) }
+        coVerify(exactly = 1) { tangemHotSdk.delete(hotWalletId) }
+    }
+
+    @Test
     fun `GIVEN the cloud write fails AND no retry WHEN signIn THEN the binding is released AND the wallet deleted`() =
         runTest {
             // Arrange
