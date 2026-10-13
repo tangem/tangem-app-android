@@ -35,6 +35,7 @@ internal class DefaultUsedeskComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: UsedeskComponent.Params,
     supportChatVisibility: DefaultSupportChatVisibility,
+    private val useDeskFeatureToggles: UseDeskFeatureToggles,
 ) : UsedeskComponent, AppComponentContext by appComponentContext {
 
     private val model: UsedeskModel = getOrCreateModel(params)
@@ -76,6 +77,7 @@ internal class DefaultUsedeskComponent @AssistedInject constructor(
 
                     val fragment = UsedeskChatScreen.newInstance(
                         usedeskChatConfiguration = configuration,
+                        agentName = AGENT_NAME.takeIf { useDeskFeatureToggles.isSupportChatDeepLinkEnabled },
                         allowedFileExtensions = ALLOWED_FILE_EXTENSIONS,
                         cameraEnabled = false,
                     ).apply {
@@ -131,6 +133,9 @@ internal class DefaultUsedeskComponent @AssistedInject constructor(
     }
 
     private companion object {
+        // Replaces every operator's real name in the chat so personal data isn't exposed
+        const val AGENT_NAME = "Tangem Support Team"
+
         // Allowed attachment types: zip, images (jpg/jpeg/png/gif/webp/heic),
         // videos (mp4/mov/webm). jpeg is added as a synonym for jpg.
         val ALLOWED_FILE_EXTENSIONS = listOf(
