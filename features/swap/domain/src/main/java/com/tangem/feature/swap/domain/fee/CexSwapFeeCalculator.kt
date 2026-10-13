@@ -14,6 +14,7 @@ import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.isTronActivationRefusal
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.tron.canPayNativeFee
 import com.tangem.domain.transaction.models.tron.isCoveredByOwnTronEnergy
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
@@ -180,10 +181,8 @@ class CexSwapFeeCalculator(
         val nativeStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrencyStatus = fromSwapCurrencyStatus.status,
-        ).getOrNull()?.takeIf { it.currency is CryptoCurrency.Coin } ?: return null
-        val feeValue = fee.normal.amount.value ?: return null
-        val nativeBalance = nativeStatus.value.amount ?: return null
-        if (nativeBalance < feeValue) return null
+        ).getOrNull() ?: return null
+        if (!nativeStatus.canPayNativeFee(fee)) return null
 
         TangemLogger.i("Own energy covers the Tron swap fee, paying it in the network coin")
         return TransactionFeeExtended(transactionFee = fee, feeTokenId = nativeStatus.currency.id, nativeFee = fee)
