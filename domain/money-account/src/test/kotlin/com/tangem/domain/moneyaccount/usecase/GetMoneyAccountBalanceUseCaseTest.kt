@@ -12,7 +12,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
-import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
@@ -30,14 +29,12 @@ import java.math.BigDecimal
 
 internal class GetMoneyAccountBalanceUseCaseTest {
 
-    private val moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory = mockk()
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher = mockk()
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier = mockk()
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher = mockk()
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier = mockk()
 
     private val useCase = GetMoneyAccountBalanceUseCase(
-        moneyAccountCurrencyFactory = moneyAccountCurrencyFactory,
         singleNetworkStatusFetcher = singleNetworkStatusFetcher,
         singleNetworkStatusSupplier = singleNetworkStatusSupplier,
         singleQuoteStatusFetcher = singleQuoteStatusFetcher,
@@ -57,13 +54,11 @@ internal class GetMoneyAccountBalanceUseCaseTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(
-            moneyAccountCurrencyFactory,
             singleNetworkStatusFetcher,
             singleNetworkStatusSupplier,
             singleQuoteStatusFetcher,
             singleQuoteStatusSupplier,
         )
-        every { moneyAccountCurrencyFactory.create(userWalletId) } returns token
         coEvery { singleNetworkStatusFetcher(any()) } returns Unit.right()
         coEvery { singleQuoteStatusFetcher(any()) } returns Unit.right()
     }
@@ -78,7 +73,7 @@ internal class GetMoneyAccountBalanceUseCaseTest {
         coEvery { singleQuoteStatusSupplier.getSyncOrNull(quoteParams) } returns quoteStatusWith(fiatRate)
 
         // Act
-        val actual = useCase(userWalletId)
+        val actual = useCase(userWalletId, token)
 
         // Assert
         Truth.assertThat(actual.getOrNull()).isEqualTo(expectedBalance(amount = amount, fiatRate = fiatRate))
@@ -105,7 +100,7 @@ internal class GetMoneyAccountBalanceUseCaseTest {
         coEvery { singleQuoteStatusSupplier.getSyncOrNull(quoteParams) } returns null
 
         // Act
-        val actual = useCase(userWalletId)
+        val actual = useCase(userWalletId, token)
 
         // Assert
         Truth.assertThat(actual.getOrNull()).isEqualTo(expectedBalance(amount = amount, fiatRate = null))
@@ -118,7 +113,7 @@ internal class GetMoneyAccountBalanceUseCaseTest {
         coEvery { singleQuoteStatusSupplier.getSyncOrNull(quoteParams) } returns null
 
         // Act
-        val actual = useCase(userWalletId)
+        val actual = useCase(userWalletId, token)
 
         // Assert
         Truth.assertThat(actual.isLeft()).isTrue()
@@ -132,29 +127,14 @@ internal class GetMoneyAccountBalanceUseCaseTest {
         coEvery { singleQuoteStatusSupplier.getSyncOrNull(quoteParams) } returns null
 
         // Act
-        val actual = useCase(userWalletId)
+        val actual = useCase(userWalletId, token)
 
         // Assert
         Truth.assertThat(actual.isLeft()).isTrue()
-    }
-
-    @Test
-    fun `GIVEN token cannot be created WHEN invoke THEN left returned`() = runTest {
-        // Arrange
-        every { moneyAccountCurrencyFactory.create(userWalletId) } throws IllegalArgumentException()
-
-        // Act
-        val actual = useCase(userWalletId)
-
-        // Assert
-        Truth.assertThat(actual.isLeft()).isTrue()
-        coVerify(exactly = 0) { singleNetworkStatusFetcher(any()) }
-        coVerify(exactly = 0) { singleQuoteStatusFetcher(any()) }
     }
 
     private fun expectedBalance(amount: BigDecimal, fiatRate: BigDecimal?) = MoneyAccountStatusValue.Balance(
         cryptoAmount = amount,
-        cryptoCurrency = token,
         depositAddress = DEPOSIT_ADDRESS,
         currencyCode = "USD",
         fiatRate = fiatRate,
