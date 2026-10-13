@@ -3,6 +3,7 @@ package com.tangem.domain.polymarket.usecase
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import java.math.BigDecimal
@@ -279,6 +280,7 @@ internal object PolymarketMockData {
         liquidity = liquidity,
         orderIndex = orderIndex,
         outcomes = outcomes,
+        version = PolymarketMarketVersion.V1,
     )
 
     private fun outcome(assetId: String, title: String, probability: BigDecimal? = null): PolymarketOutcome =
@@ -286,5 +288,6 @@ internal object PolymarketMockData {
             assetId = assetId,
             title = title,
             probability = probability,
+            legacyAssetId = null,
         )
 }
