@@ -91,12 +91,23 @@ private fun TokenRow(item: TokenItemUM) {
 @Composable
 private fun RouteRow(item: RouteItemUM) {
     TangemRow(
+        modifier = Modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_ROUTE_OPTION),
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = { BankRailIcon(rail = item.rail, size = 40.dp) },
         titleSlot = { TangemRowText(text = item.title.resolveReference(), role = TangemRowTextRole.Title) },
         subtitleSlot = { TangemRowText(text = item.eta.resolveReference(), role = TangemRowTextRole.Subtitle) },
         valueSlot = { TangemRowText(text = item.fee, role = TangemRowTextRole.Value) },
-        endSlot = { TangemCheckmark(checked = item.isSelected, onCheckedChange = null) },
+        endSlot = {
+            TangemCheckmark(
+                checked = item.isSelected,
+                onCheckedChange = null,
+                modifier = if (item.isSelected) {
+                    Modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_ROUTE_CHECKMARK)
+                } else {
+                    Modifier
+                },
+            )
+        },
         onClick = item.onClick,
     )
 }
