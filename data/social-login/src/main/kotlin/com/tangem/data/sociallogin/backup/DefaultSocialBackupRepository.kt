@@ -136,7 +136,7 @@ internal class DefaultSocialBackupRepository(
      * behind would keep the wallet restorable after it was reported unbound. Files of other wallets
      * are left alone.
      */
-    override suspend fun deleteBackup(walletId: UserWalletId): Either<SocialLoginError, Unit> =
+    override suspend fun deleteBackup(walletId: UserWalletId): Either<SocialLoginError, Boolean> =
         withContext(dispatchers.io) {
             withAuthRetry(interactive = false) { authInteractive ->
                 val auth = authHeader(interactive = authInteractive)
@@ -145,7 +145,7 @@ internal class DefaultSocialBackupRepository(
                     data != null && cipher.validateHeader(data).isRight() && data.walletId == walletId.stringValue
                 }
 
-                owned.forEach { file ->
+                val deletedCount = owned.count { file ->
                     val response = catchingIo(onError = { SocialLoginError.BackupWriteFailed(it) }) {
                         api.deleteFile(authorization = auth, fileId = file.id)
                     }
@@ -158,7 +158,10 @@ internal class DefaultSocialBackupRepository(
                             ),
                         )
                     }
+                    response.isSuccessful
                 }
+
+                deletedCount > 0
             }
         }
 
@@ -347,7 +350,9 @@ internal class DefaultSocialBackupRepository(
             HttpURLConnection.HTTP_UNAUTHORIZED,
             HttpURLConnection.HTTP_FORBIDDEN,
             -> {
-                tokenProvider.invalidate()
+                // The account stays pinned: a re-authorization under another one would write this
+                // wallet's backup into a folder its sign-in account never reads.
+                tokenProvider.invalidateToken()
                 SocialLoginError.CloudUnavailable
             }
             HttpURLConnection.HTTP_NOT_FOUND -> notFoundError ?: errorHandler(null)
