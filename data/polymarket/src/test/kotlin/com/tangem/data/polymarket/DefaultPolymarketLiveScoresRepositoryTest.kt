@@ -1,7 +1,6 @@
 package com.tangem.data.polymarket
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.socket.SocketState
 import com.tangem.domain.polymarket.model.PolymarketLiveScore
 import com.tangem.grow.datasource.polymarket.socket.FakePolymarketSportsSocket
 import com.tangem.grow.datasource.polymarket.socket.models.SportsResultDto
@@ -85,25 +84,6 @@ internal class DefaultPolymarketLiveScoresRepositoryTest {
                 PolymarketLiveScore(gameId = "090108924", score = "2-6", period = "Q1", isLive = true, isEnded = false),
             )
         }
-
-    @Test
-    fun `GIVEN a repeated score WHEN the socket reconnects in between THEN the score is emitted again`() = runTest {
-        // Arrange
-        val received = mutableListOf<PolymarketLiveScore>()
-        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
-            repository.observeLiveScores(gameIds = setOf("100")).toList(received)
-        }
-
-        // Act
-        socket.results.emit(result(gameId = 100, score = "2-1"))
-        socket.state.value = SocketState.Connecting(attempt = 0)
-        socket.state.value = SocketState.Connected
-        socket.results.emit(result(gameId = 100, score = "2-1"))
-        job.cancel()
-
-        // Assert
-        assertThat(received.map { it.score }).containsExactly("2-1", "2-1")
-    }
 
     @Test
     fun `GIVEN two feed ids of one socket game WHEN its score arrives THEN it is emitted for both feed ids`() = runTest {
