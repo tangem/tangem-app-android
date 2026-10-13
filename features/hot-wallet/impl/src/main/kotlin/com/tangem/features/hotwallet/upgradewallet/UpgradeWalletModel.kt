@@ -123,9 +123,27 @@ internal class UpgradeWalletModel @Inject constructor(
                     shouldUpdateCardIdDisplayFormat = true,
                     shouldTrackScanFails = true,
                     shouldLaunchOnboarding = false,
-                    callback = ScanCallback(),
+                    callback = createScanCallback(),
                 ),
             )
+        }
+    }
+
+    private fun createScanCallback(): ScanConfig.Callback = object : ScanConfig.Callback {
+        override suspend fun onProgressStateChange(showProgress: Boolean) {
+            setLoading(showProgress)
+        }
+
+        override suspend fun onFailure(error: TangemError) {
+            setLoading(false)
+        }
+
+        override suspend fun onSuccess(scanResponse: ScanResponse) {
+            checkIsWalletSuitableToBeUsedAsUpgrade(scanResponse = scanResponse) {
+                delay(DELAY_SDK_DIALOG_CLOSE)
+                navigateToUpgradeFlow(scanResponse)
+            }
+            setLoading(false)
         }
     }
 
@@ -169,25 +187,6 @@ internal class UpgradeWalletModel @Inject constructor(
                 ),
             ),
         )
-    }
-
-    private inner class ScanCallback : ScanConfig.Callback {
-
-        override suspend fun onProgressStateChange(showProgress: Boolean) {
-            setLoading(showProgress)
-        }
-
-        override suspend fun onFailure(error: TangemError) {
-            setLoading(false)
-        }
-
-        override suspend fun onSuccess(scanResponse: ScanResponse) {
-            checkIsWalletSuitableToBeUsedAsUpgrade(scanResponse = scanResponse) {
-                delay(DELAY_SDK_DIALOG_CLOSE)
-                navigateToUpgradeFlow(scanResponse)
-            }
-            setLoading(false)
-        }
     }
 
     inner class ResetCardsModelCallbacks : ResetCardsComponent.ModelCallbacks {
