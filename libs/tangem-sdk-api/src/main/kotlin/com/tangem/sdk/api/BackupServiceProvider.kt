@@ -2,7 +2,7 @@ package com.tangem.sdk.api
 
 import com.tangem.operations.backup.BackupService
 
-interface BackupServiceHolder {
+interface BackupServiceProvider {
 
     /**
 
