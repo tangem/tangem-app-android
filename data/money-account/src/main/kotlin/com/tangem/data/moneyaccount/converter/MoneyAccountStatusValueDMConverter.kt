@@ -3,7 +3,7 @@ package com.tangem.data.moneyaccount.converter
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
 import com.tangem.utils.converter.Converter
 import javax.inject.Inject
@@ -11,7 +11,7 @@ import javax.inject.Singleton
 
 @Singleton
 internal class MoneyAccountStatusValueDMConverter @Inject constructor(
-    private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
+    private val moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory,
 ) : Converter<MoneyAccountStatusValue, MoneyAccountStatusValueDM?> {
 
     override fun convert(value: MoneyAccountStatusValue): MoneyAccountStatusValueDM? {
@@ -124,7 +124,7 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
     ): MoneyAccountStatusValue.Balance {
         return MoneyAccountStatusValue.Balance(
             cryptoAmount = cryptoAmount,
-            cryptoCurrency = tangemPayCurrencyFactory.createMoneyAccountToken(userWalletId),
+            cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId),
             depositAddress = depositAddress,
             currencyCode = currencyCode,
             fiatRate = fiatRate,

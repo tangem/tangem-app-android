@@ -49,23 +49,6 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
         )
     }
 
-    override fun createMoneyAccountToken(userWalletId: UserWalletId): CryptoCurrency.Token {
-        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
-        val network = networkFactory.create(
-            blockchain = VisaUtilities.visaBlockchain,
-            derivationPath = Network.DerivationPath.Custom(VisaUtilities.moneyAccountDerivationPath.rawPath),
-            userWallet = userWallet,
-        )
-        return cryptoCurrencyFactory.createToken(
-            network = requireNotNull(network),
-            rawId = TangemPayCurrencyFactory.TOKEN_ID,
-            name = TangemPayCurrencyFactory.TOKEN_NAME,
-            symbol = TangemPayCurrencyFactory.TOKEN_NAME,
-            contractAddress = TangemPayCurrencyFactory.TOKEN_CONTRACT_ADDRESS,
-            decimals = TangemPayCurrencyFactory.TOKEN_DECIMALS,
-        )
-    }
-
     override fun createNetworkStatuses(
         userWalletId: UserWalletId,
         networks: List<CustomerInfo.NetworkInfo>,
