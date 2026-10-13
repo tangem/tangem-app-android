@@ -48,11 +48,13 @@ interface TangemSdkManager {
     suspend fun checkNeedEnrollBiometrics(awaitInitialization: Boolean = true): Boolean
 
     /**
-     * Scans the card and returns [ScanResponse] with the card information.
-     * If [cardId] is provided, it will try to find the card with this ID in the card reader's range.
-     * If [allowsRequestAccessCodeFromRepository] is true, it will try to request access code from the repository
-     * if the card is protected by access code and the access code is not saved in the repository.
-     * If [shouldCheckIsAlreadyActivated] is true, it will check if the card is already activated and return an error if it is.
+     * Low-level card scan. Don't call it from features: scan through `ScanCardProcessor`, which also handles the card
+     * attestation failure dialog, the failed scans counter, the card ID display format and onboarding.
+     *
+     * @param cardId                                scans only the card with this ID; any card when `null`
+     * @param allowsRequestAccessCodeFromRepository allows using the saved access code
+     * @param shouldCheckIsAlreadyActivated         lets the SDK confirm that the wallet belongs to the user
+     * ("This is my wallet"); off when re-scanning a card already known to the app
      */
     suspend fun scanProduct(
         cardId: String? = null,
