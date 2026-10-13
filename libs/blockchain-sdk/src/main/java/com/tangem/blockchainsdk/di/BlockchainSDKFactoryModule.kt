@@ -26,6 +26,8 @@ import com.tangem.blockchainsdk.providers.ProdBlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.dev.BlockchainProvidersResponseSerializer
 import com.tangem.blockchainsdk.providers.dev.ProviderModelSerializer
 import com.tangem.blockchainsdk.providers.models.ProviderModel
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.local.assets.AssetLoader
 import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.core.remote.RetrofitApiSpec
@@ -167,6 +169,7 @@ internal object BlockchainSDKFactoryModule {
         tangemTechApi: TangemTechApi,
         appPreferencesStore: AppPreferencesStore,
         blockchainSDKLogger: BlockchainSDKLogger,
+        featureTogglesManager: FeatureTogglesManager,
     ): WalletManagerFactoryCreator {
         return WalletManagerFactoryCreator(
             accountCreator = DefaultAccountCreator(tangemTechApi),
@@ -174,6 +177,9 @@ internal object BlockchainSDKFactoryModule {
             blockchainSDKLogger = blockchainSDKLogger,
             featureToggleValues = WalletManagerFactoryCreator.FeatureToggleValues(
                 isYieldModeSwapEnabled = true,
+                isMonadYieldSupplyEnabled = featureTogglesManager.isFeatureEnabled(
+                    FeatureToggles.TWI_1520_MERKL_INCENTIVES_ENABLED,
+                ),
             ),
         )
     }
