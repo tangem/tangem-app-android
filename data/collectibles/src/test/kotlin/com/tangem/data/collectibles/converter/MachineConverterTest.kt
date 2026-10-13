@@ -57,6 +57,18 @@ internal class MachineConverterTest {
     }
 
     @Test
+    fun `GIVEN a dto without open pack media WHEN convert THEN there are no reveal assets`() {
+        // Arrange
+        val dto = MachineFactory.createDto(openPackMedia = null)
+
+        // Act
+        val actual = MachineConverter.convert(dto)
+
+        // Assert
+        assertThat(actual.revealAssets).isNull()
+    }
+
+    @Test
     fun `GIVEN dtos differing only in timestamps WHEN convert THEN the machines are equal`() {
         // Arrange — createdAt and updatedAt are deliberately not carried into the domain model
         val early = MachineFactory.createDto(createdAt = "2024-01-01 00:00:00.000 +0000", updatedAt = "2024-01-01")
