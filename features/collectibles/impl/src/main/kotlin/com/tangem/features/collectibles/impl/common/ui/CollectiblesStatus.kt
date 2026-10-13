@@ -40,7 +40,7 @@ internal fun CollectiblesStatus(
         if (onReloadClick == null) {
             TangemSurface(
                 modifier = Modifier.size(40.dp),
-                color = TangemTheme.colors3.bg.opaque.secondary,
+                color = TangemTheme.colors3.bg.transparent.secondary,
                 shape = CircleShape,
             ) {
                 TangemIcon(
