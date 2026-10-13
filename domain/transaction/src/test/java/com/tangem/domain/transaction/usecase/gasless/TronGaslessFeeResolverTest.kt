@@ -181,6 +181,46 @@ internal class TronGaslessFeeResolverTest {
         }
 
         @Test
+        fun `GIVEN own energy covers the fee and TRX rate unknown WHEN resolveWithAutoFeeToken THEN native fee`() =
+            runTest {
+                // Arrange
+                nativeFeeStub.reset(tronNativeFee(value = "0.35", remainingEnergy = 70_000, feeEnergy = 65_000).right())
+
+                // Act
+                val actual = resolve(nativeCurrencyStatus = statusOf(trx, "50", rate = null))
+
+                // Assert
+                val expected = tronNativeFee(value = "0.35", remainingEnergy = 70_000, feeEnergy = 65_000)
+                assertThat(actual).isEqualTo(expected.right())
+                coVerify(exactly = 0) { getTronGaslessFeeUseCase(any(), any(), any()) }
+            }
+
+        @ParameterizedTest
+        @MethodSource("provideFiatComparisonModels")
+        fun `GIVEN gasless quoted WHEN resolveWithAutoFeeToken THEN TRX only when payable and no dearer in fiat`(
+            model: FiatComparisonModel,
+        ) = runTest {
+            // Arrange
+            nativeFeeStub.reset(nativeFee(model.nativeFee).right())
+
+            // Act
+            val actual = resolve(nativeCurrencyStatus = statusOf(trx, model.nativeBalance, rate = model.trxRate))
+
+            // Assert
+            val expected = if (model.expectsNative) nativeFee(model.nativeFee) else gaslessFee(GASLESS_FEE)
+            assertThat(actual).isEqualTo(expected.right())
+            assertThat(nativeFeeStub.preferredCalls).isEqualTo(0)
+        }
+
+        private fun provideFiatComparisonModels() = listOf(
+            FiatComparisonModel(nativeFee = "1", expectsNative = true),
+            FiatComparisonModel(nativeFee = "6.025", expectsNative = true),
+            FiatComparisonModel(nativeFee = NATIVE_FEE, expectsNative = false),
+            FiatComparisonModel(nativeFee = "1", nativeBalance = "0.5", expectsNative = false),
+            FiatComparisonModel(nativeFee = "1", trxRate = null, expectsNative = false),
+        )
+
+        @Test
         fun `GIVEN token balance equals the fee and TRX covers native WHEN resolveWithAutoFeeToken THEN native fee`() =
             runTest {
                 // Act
@@ -305,11 +345,12 @@ internal class TronGaslessFeeResolverTest {
             nativeBalance: String? = "50",
             walletCurrencies: List<CryptoCurrency> = listOf(usdt),
             sentCurrencyStatus: CryptoCurrencyStatus? = null,
+            nativeCurrencyStatus: CryptoCurrencyStatus = statusOf(trx, nativeBalance),
         ): Either<GetFeeError, TransactionFeeExtended>? = resolver.resolveWithAutoFeeToken(
             userWalletId = userWalletId,
             network = network,
             transactionData = transactionData,
-            nativeCurrencyStatus = statusOf(trx, nativeBalance),
+            nativeCurrencyStatus = nativeCurrencyStatus,
             accountStatusList = accountStatusList(walletCurrencies.map { statusOf(it, sentBalance) }),
             sentCurrencyStatus = sentCurrencyStatus,
             loadNativeFee = nativeFeeStub::load,
@@ -432,6 +473,13 @@ internal class TronGaslessFeeResolverTest {
         val isSupported: Boolean = true,
     )
 
+    internal data class FiatComparisonModel(
+        val nativeFee: String,
+        val expectsNative: Boolean,
+        val nativeBalance: String = "50",
+        val trxRate: String? = TRX_FIAT_RATE,
+    )
+
     internal data class SelectedNotApplicableModel(
         val feeToken: CryptoCurrency = usdt,
         val transactionData: TransactionData = tokenTransfer(),
@@ -442,12 +490,23 @@ internal class TronGaslessFeeResolverTest {
         every { flattenCurrencies() } returns statuses
     }
 
-    private fun statusOf(currency: CryptoCurrency, balance: String?): CryptoCurrencyStatus = CryptoCurrencyStatus(
+    /** Rates keep the default 6.43 TRX fee dearer in fiat than the 2.41 USDT compensation. */
+    private fun statusOf(
+        currency: CryptoCurrency,
+        balance: String?,
+        rate: String? = if (currency is CryptoCurrency.Coin) TRX_FIAT_RATE else USDT_FIAT_RATE,
+    ): CryptoCurrencyStatus = CryptoCurrencyStatus(
         currency = currency,
-        value = if (balance == null) {
-            CryptoCurrencyStatus.Loading
-        } else {
-            mockk<CryptoCurrencyStatus.Loaded> { every { amount } returns BigDecimal(balance) }
+        value = when {
+            balance == null -> CryptoCurrencyStatus.Loading
+            rate == null -> mockk<CryptoCurrencyStatus.NoQuote> {
+                every { amount } returns BigDecimal(balance)
+                every { fiatRate } returns null
+            }
+            else -> mockk<CryptoCurrencyStatus.Loaded> {
+                every { amount } returns BigDecimal(balance)
+                every { fiatRate } returns BigDecimal(rate)
+            }
         },
     )
 
@@ -495,6 +554,8 @@ internal class TronGaslessFeeResolverTest {
         const val USDT_DECIMALS = 6
         const val GASLESS_FEE = "2.41"
         const val NATIVE_FEE = "6.43"
+        const val TRX_FIAT_RATE = "0.4"
+        const val USDT_FIAT_RATE = "1"
 
         val currencyFactory = MockCryptoCurrencyFactory()
         val trx: CryptoCurrency.Coin = currencyFactory.createCoin(Blockchain.Tron)
