@@ -11,6 +11,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -71,6 +72,7 @@ internal class DefaultFeeLoaderTest {
                     network = any(),
                     transactionData = any(),
                     sentAmount = any(),
+                    sentCurrencyStatus = any(),
                     onNativeFeePreferred = any(),
                 )
             }
@@ -98,6 +100,7 @@ internal class DefaultFeeLoaderTest {
                 network = network,
                 transactionData = transactionData,
                 sentAmount = SENT_AMOUNT,
+                sentCurrencyStatus = sentStatus,
                 onNativeFeePreferred = any(),
             )
         }
@@ -142,6 +145,7 @@ internal class DefaultFeeLoaderTest {
                     network = any(),
                     transactionData = any(),
                     sentAmount = any(),
+                    sentCurrencyStatus = any(),
                     onNativeFeePreferred = any(),
                 )
             }
@@ -155,10 +159,11 @@ internal class DefaultFeeLoaderTest {
                 network = network,
                 transactionData = transactionData,
                 sentAmount = SENT_AMOUNT,
+                sentCurrencyStatus = sentStatus,
                 onNativeFeePreferred = any(),
             )
         } answers {
-            if (isNativeFeePreferred) arg<() -> Unit>(4).invoke()
+            if (isNativeFeePreferred) arg<() -> Unit>(5).invoke()
             fee
         }
     }
@@ -168,6 +173,7 @@ internal class DefaultFeeLoaderTest {
         network = network,
         transactionData = transactionData,
         sentAmount = SENT_AMOUNT,
+        sentCurrencyStatus = sentStatus,
     )
 
     private fun provideTestModels() = listOf(
@@ -183,6 +189,7 @@ internal class DefaultFeeLoaderTest {
         val currencyFactory = MockCryptoCurrencyFactory()
         val trx: CryptoCurrency.Coin = currencyFactory.createCoin(Blockchain.Tron)
         val usdt: CryptoCurrency.Token = currencyFactory.createToken(blockchain = Blockchain.Tron, id = "usdt")
+        val sentStatus = CryptoCurrencyStatus(currency = usdt, value = CryptoCurrencyStatus.Loading)
 
         val plainNativeFee: TransactionFee = TransactionFee.Single(
             normal = Fee.Common(Amount(BigDecimal("7.5"), Blockchain.Tron)),
