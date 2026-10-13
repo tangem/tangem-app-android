@@ -152,15 +152,17 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
             params = YieldSupplyAboutApyComponent.Params(
                 baseApy = route.baseApy,
                 rewardsApr = route.rewardsApr,
-                onDismiss = model::onAboutApyDismiss,
+                onDismiss = model::onUnguardedSheetDismiss,
             ),
         )
-        YieldSupplyActiveRoute.Claim -> YieldSupplyClaimComponent(
+        is YieldSupplyActiveRoute.Claim -> YieldSupplyClaimComponent(
             appComponentContext = factoryContext,
             params = YieldSupplyClaimComponent.Params(
                 userWallet = model.userWallet,
                 cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
-                onDismiss = model::onClaimDismiss,
+                chainId = route.chainId,
+                userAddress = route.userAddress,
+                onDismiss = model::onUnguardedSheetDismiss,
             ),
         )
         YieldSupplyActiveRoute.Approve -> YieldSupplyApproveComponent(
