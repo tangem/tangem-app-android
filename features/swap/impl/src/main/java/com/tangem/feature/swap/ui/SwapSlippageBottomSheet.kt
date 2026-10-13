@@ -3,7 +3,9 @@ package com.tangem.feature.swap.ui
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -35,6 +37,7 @@ import com.tangem.feature.swap.model.SwapSlippage
 import com.tangem.feature.swap.models.states.SwapSlippageBottomSheetConfig
 import com.tangem.feature.swap.models.states.SwapSlippagePresetUM
 import com.tangem.feature.swap.presentation.R
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
@@ -42,13 +45,12 @@ internal fun SwapSlippageContent(state: SwapSlippageBottomSheetConfig, modifier:
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp)
             .padding(top = 12.dp, bottom = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         SlippageValue(content = state)
         Column(
-            modifier = Modifier.padding(top = 32.dp),
+            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             InfoLine(
@@ -116,7 +118,9 @@ private fun SlippageValue(content: SwapSlippageBottomSheetConfig) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.height(80.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp)
+                        .height(80.dp),
                 ) {
                     ModalAmountTextField(
                         value = valueState.value,
@@ -150,25 +154,33 @@ private fun SlippageValue(content: SwapSlippageBottomSheetConfig) {
                         }
                     }
                 }
-                Row(
-                    modifier = Modifier.padding(top = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    valueState.presets.fastForEach { preset ->
-                        TangemButton(
-                            text = preset.label,
-                            variant = TangemButton.Variant.Secondary,
-                            size = TangemButton.Size.X8,
-                            onClick = preset.onClick,
-                        )
-                    }
-                }
+                SlippagePresets(presets = valueState.presets, modifier = Modifier.padding(top = 24.dp))
             }
         }
         is SwapSlippageBottomSheetConfig.Value.ReadOnly -> TangemMessageBanner(
+            modifier = Modifier.padding(horizontal = 24.dp),
             title = valueState.info,
             variant = TangemMessageBanner.Variant.Info,
         )
+    }
+}
+
+@Composable
+private fun SlippagePresets(presets: ImmutableList<SwapSlippagePresetUM>, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        presets.fastForEach { preset ->
+            TangemButton(
+                text = preset.label,
+                variant = TangemButton.Variant.Secondary,
+                size = TangemButton.Size.X8,
+                onClick = preset.onClick,
+            )
+        }
     }
 }
 
