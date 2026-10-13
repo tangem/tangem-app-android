@@ -156,10 +156,10 @@ internal class DefaultPolymarketPositionsRepositoryTest {
         }
 
     @Test
-    fun `GIVEN a valued wallet WHEN reading the positions value THEN the first entry is returned`() = runTest {
+    fun `GIVEN a valued wallet WHEN reading the positions value THEN the wallet total is returned`() = runTest {
         // Arrange
         coEvery { dataApi.getPositionsValue(user = any()) } returns ApiResponse.Success(
-            listOf(PolymarketPositionsValueResponse(user = "0xdw", value = BigDecimal("12.34"))),
+            createPositionsValueResponse(value = BigDecimal("12.34")),
         )
 
         // Act
@@ -170,23 +170,11 @@ internal class DefaultPolymarketPositionsRepositoryTest {
     }
 
     @Test
-    fun `GIVEN no holdings WHEN reading the positions value THEN zero is returned`() = runTest {
-        // Arrange
-        coEvery { dataApi.getPositionsValue(user = any()) } returns ApiResponse.Success(emptyList())
-
-        // Act
-        val result = repository.getPositionsValue(addresses)
-
-        // Assert
-        assertThat(result).isEqualTo(Either.Right(BigDecimal.ZERO))
-    }
-
-    @Test
     fun `GIVEN the data API is unreachable WHEN reading the positions value THEN the failure is typed`() = runTest {
         // Arrange
         @Suppress("UNCHECKED_CAST")
         coEvery { dataApi.getPositionsValue(user = any()) } returns
-            ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<List<PolymarketPositionsValueResponse>>
+            ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<PolymarketPositionsValueResponse>
 
         // Act
         val result = repository.getPositionsValue(addresses)
@@ -267,6 +255,10 @@ internal class DefaultPolymarketPositionsRepositoryTest {
                 "realizedPnl":"2.75","closedAt":"$closedAt","status":"LOST"}],"hasNext":false}
             """.trimIndent(),
         )!!
+
+    private fun createPositionsValueResponse(value: BigDecimal) = PolymarketPositionsValueResponse(
+        data = PolymarketPositionsValueResponse.Data(value = value),
+    )
 
     data class ApiErrorTestModel(val apiError: ApiResponseError, val expected: PolymarketPositionsError)
 
