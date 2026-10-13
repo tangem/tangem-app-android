@@ -4,13 +4,12 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
-import com.tangem.domain.models.equalsEvmAddress
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.normalizeEvmAddress
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.domain.yield.supply.models.incentives.YieldClaimCalldata
 import com.tangem.domain.yield.supply.models.incentives.YieldClaimValidationError
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 
@@ -18,8 +17,8 @@ import com.tangem.utils.logging.TangemLogger
  * What the claim is checked against, gathered by the caller before the payload is fetched.
  *
  * @property moduleAddress module the incentives response reports the rewards under
- * @property supportedRewardTokens lowercased address of every reward that response reports as routable; a payload
- * paying out anything else is refused whole
+ * @property supportedRewardTokens address of every reward that response reports as routable; a payload paying out
+ * anything else is refused whole
  */
 data class YieldClaimValidationContext(
     val userWalletId: UserWalletId,
@@ -73,7 +72,10 @@ class ValidateYieldClaimCalldataUseCase(
             YieldClaimValidationError.IncompleteCalldata
         }
 
-        ensure(calldata.chainId == context.chainId && calldata.userAddress.equalsEvmAddress(context.userAddress)) {
+        val isCaseInsensitive = BlockchainUtils.isCaseInsensitiveContractAddress(context.network.rawId)
+        fun String.isSameAddress(other: String): Boolean = equals(other, ignoreCase = isCaseInsensitive)
+
+        ensure(calldata.chainId == context.chainId && calldata.userAddress.isSameAddress(context.userAddress)) {
             YieldClaimValidationError.ContextMismatch
         }
 
@@ -83,9 +85,9 @@ class ValidateYieldClaimCalldataUseCase(
         // Rewards reported under another module say nothing about what this one may claim, so the reported module
         // is held to the derived one as well.
         ensure(
-            to.equalsEvmAddress(responseModule) &&
-                to.equalsEvmAddress(derivedModule) &&
-                context.moduleAddress.equalsEvmAddress(derivedModule),
+            to.isSameAddress(responseModule) &&
+                to.isSameAddress(derivedModule) &&
+                context.moduleAddress.isSameAddress(derivedModule),
         ) {
             YieldClaimValidationError.DestinationMismatch
         }
@@ -96,7 +98,9 @@ class ValidateYieldClaimCalldataUseCase(
 
         // An allow-list, not a deny-list: a token the incentives response says nothing about is as unroutable as one
         // it names unsupported, and the wrapped rewards the service is gaining pay out under an address of their own.
-        ensure(calldata.rewardTokens.all { token -> token.normalizeEvmAddress() in context.supportedRewardTokens }) {
+        ensure(
+            calldata.rewardTokens.all { token -> context.supportedRewardTokens.any { it.isSameAddress(token) } },
+        ) {
             YieldClaimValidationError.UnsupportedRewardToken
         }
 
