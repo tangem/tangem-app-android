@@ -32,6 +32,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.flow.first
@@ -190,6 +191,47 @@ internal class DefaultYieldSupplyRepositoryTest {
     }
 
     @Test
+    fun `GIVEN incentives disabled WHEN updateMarkets THEN Monad markets are not requested`() = runTest {
+        // Arrange
+        val chains = slot<String>()
+        coEvery { yieldSupplyApi.getYieldMarkets(capture(chains)) } returns ApiResponse.Success(
+            YieldMarketsResponse(marketDtos = listOf(marketDto(chainId = 1)), lastUpdated = "now"),
+        )
+
+        // Act
+        repository.updateMarkets()
+
+        // Assert
+        assertThat(chains.captured.split(",")).doesNotContain(Blockchain.Monad.getChainId().toString())
+    }
+
+    @Test
+    fun `GIVEN incentives disabled WHEN getCachedMarkets THEN cached Monad markets are dropped`() = runTest {
+        // Arrange
+        val monadChainId = requireNotNull(Blockchain.Monad.getChainId())
+        coEvery { store.getSyncOrNull() } returns listOf(marketDto(chainId = 1), marketDto(chainId = monadChainId))
+
+        // Act
+        val result = repository.getCachedMarkets()
+
+        // Assert
+        assertThat(result.map { it.chainId }).containsExactly(1)
+    }
+
+    @Test
+    fun `GIVEN incentives enabled WHEN getCachedMarkets THEN cached Monad markets are kept`() = runTest {
+        // Arrange
+        val monadChainId = requireNotNull(Blockchain.Monad.getChainId())
+        coEvery { store.getSyncOrNull() } returns listOf(marketDto(chainId = 1), marketDto(chainId = monadChainId))
+
+        // Act
+        val result = incentivisedRepository.getCachedMarkets()
+
+        // Assert
+        assertThat(result.map { it.chainId }).containsExactly(1, monadChainId)
+    }
+
+    @Test
     fun `GIVEN store flow WHEN getMarketsFlow THEN emits enriched domain`() = runTest {
         // Arrange
         every { store.get() } returns flowOf(listOf(marketDto(chainId = 1)))
@@ -226,6 +268,19 @@ internal class DefaultYieldSupplyRepositoryTest {
 
         // Assert
         assertThat(error).isInstanceOf(IllegalStateException::class.java)
+    }
+
+    @Test
+    fun `GIVEN incentives disabled WHEN getTokenStatus for Monad token THEN throws without calling api`() = runTest {
+        // Arrange
+        val monadToken = token(rawId = "monad")
+
+        // Act
+        val error = runCatching { repository.getTokenStatus(monadToken) }.exceptionOrNull()
+
+        // Assert
+        assertThat(error).isInstanceOf(IllegalStateException::class.java)
+        coVerify(exactly = 0) { yieldSupplyApi.getYieldTokenStatus(any(), any()) }
     }
 
     @Test
