@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.confirmorder
+package com.tangem.features.collectibles.impl.packopening
 
 import kotlinx.serialization.Serializable
 

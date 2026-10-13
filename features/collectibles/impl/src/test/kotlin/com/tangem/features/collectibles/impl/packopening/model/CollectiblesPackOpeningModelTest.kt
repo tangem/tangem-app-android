@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.confirmorder.model
+package com.tangem.features.collectibles.impl.packopening.model
 
 import arrow.core.Either
 import arrow.core.left
@@ -26,9 +26,9 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.collectibles.impl.CollectiblesRoute
-import com.tangem.features.collectibles.impl.confirmorder.CollectiblesConfirmOrderBottomSheetConfig
-import com.tangem.features.collectibles.impl.confirmorder.CollectiblesConfirmOrderComponent
-import com.tangem.features.collectibles.impl.confirmorder.ui.state.CollectiblesConfirmOrderUM
+import com.tangem.features.collectibles.impl.packopening.CollectiblesConfirmOrderBottomSheetConfig
+import com.tangem.features.collectibles.impl.packopening.CollectiblesPackOpeningComponent
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
 import com.tangem.features.collectibles.impl.createMachine
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.collectibles.MockCollectibles
@@ -57,7 +57,7 @@ import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class CollectiblesConfirmOrderModelTest {
+internal class CollectiblesPackOpeningModelTest {
 
     private val getMachineUseCase: GetCollectibleGachaMachineUseCase = mockk()
     private val router: Router = mockk(relaxed = true)
@@ -70,7 +70,7 @@ internal class CollectiblesConfirmOrderModelTest {
 
     private val statusFlow = MutableStateFlow<CollectiblesAccountStatusValue>(onboarded(usdcAmount = "1000"))
 
-    private var model: CollectiblesConfirmOrderModel? = null
+    private var model: CollectiblesPackOpeningModel? = null
 
     @BeforeEach
     fun setUp() {
@@ -102,9 +102,9 @@ internal class CollectiblesConfirmOrderModelTest {
 
         // Assert
         val state = model.uiState.value
-        assertThat(state).isInstanceOf(CollectiblesConfirmOrderUM.Content::class.java)
+        assertThat(state).isInstanceOf(CollectiblesPackOpeningUM.Content::class.java)
 
-        val content = state as CollectiblesConfirmOrderUM.Content
+        val content = state as CollectiblesPackOpeningUM.Content
         assertThat(content.order.rows).hasSize(3)
         coVerify(exactly = 1) { getMachineUseCase(externalId = EXTERNAL_ID, skipCache = false) }
     }
@@ -118,7 +118,7 @@ internal class CollectiblesConfirmOrderModelTest {
         val model = startModel()
 
         // Assert
-        assertThat(model.uiState.value).isInstanceOf(CollectiblesConfirmOrderUM.Error::class.java)
+        assertThat(model.uiState.value).isInstanceOf(CollectiblesPackOpeningUM.Error::class.java)
     }
 
     @Test
@@ -128,7 +128,7 @@ internal class CollectiblesConfirmOrderModelTest {
             coEvery { getMachineUseCase(EXTERNAL_ID, false) } returns CollectiblesError.Api(IllegalStateException()).left()
             coEvery { getMachineUseCase(EXTERNAL_ID, true) } coAnswers { CompletableDeferred<MachineResult>().await() }
             val model = startModel()
-            val error = model.uiState.value as CollectiblesConfirmOrderUM.Error
+            val error = model.uiState.value as CollectiblesPackOpeningUM.Error
 
             // Act
             error.onReloadClick()
@@ -147,7 +147,7 @@ internal class CollectiblesConfirmOrderModelTest {
         coEvery { getMachineUseCase(EXTERNAL_ID, false) } returns CollectiblesError.Api(IllegalStateException()).left()
         coEvery { getMachineUseCase(EXTERNAL_ID, true) } coAnswers { retry.await() }
         val model = startModel()
-        (model.uiState.value as CollectiblesConfirmOrderUM.Error).onReloadClick()
+        (model.uiState.value as CollectiblesPackOpeningUM.Error).onReloadClick()
         runCurrent()
 
         // Act
@@ -155,7 +155,7 @@ internal class CollectiblesConfirmOrderModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value).isInstanceOf(CollectiblesConfirmOrderUM.Content::class.java)
+        assertThat(model.uiState.value).isInstanceOf(CollectiblesPackOpeningUM.Content::class.java)
     }
 
     @Test
@@ -165,7 +165,7 @@ internal class CollectiblesConfirmOrderModelTest {
         coEvery { getMachineUseCase(EXTERNAL_ID, false) } returns CollectiblesError.Api(IllegalStateException()).left()
         coEvery { getMachineUseCase(EXTERNAL_ID, true) } coAnswers { retry.await() }
         val model = startModel()
-        val error = model.uiState.value as CollectiblesConfirmOrderUM.Error
+        val error = model.uiState.value as CollectiblesPackOpeningUM.Error
         error.onReloadClick()
         runCurrent()
 
@@ -251,7 +251,7 @@ internal class CollectiblesConfirmOrderModelTest {
 
         // Assert
         assertThat(model.order().button).isEqualTo(
-            CollectiblesConfirmOrderUM.ButtonUM(
+            CollectiblesPackOpeningUM.ButtonUM(
                 textRef = resourceReference(R.string.collectibles_confirm_order_confirming_transaction_button),
                 isEnabled = false,
             ),
@@ -431,17 +431,17 @@ internal class CollectiblesConfirmOrderModelTest {
         assertThat(model.order().button.isEnabled).isTrue()
     }
 
-    private fun CollectiblesConfirmOrderModel.content() = uiState.value as CollectiblesConfirmOrderUM.Content
+    private fun CollectiblesPackOpeningModel.content() = uiState.value as CollectiblesPackOpeningUM.Content
 
-    private fun CollectiblesConfirmOrderModel.order() = content().order
+    private fun CollectiblesPackOpeningModel.order() = content().order
 
     private fun onboarded(usdcAmount: String) = CollectiblesAccountStatusValue.Onboarded(
         source = StatusSource.ACTUAL,
         vaultBalance = MockCollectibles.vaultBalance(amount = BigDecimal(usdcAmount), fiatRate = BigDecimal.ONE),
     )
 
-    private fun TestScope.startModel(): CollectiblesConfirmOrderModel {
-        val model = CollectiblesConfirmOrderModel(
+    private fun TestScope.startModel(): CollectiblesPackOpeningModel {
+        val model = CollectiblesPackOpeningModel(
             dispatchers = createTestingCoroutineDispatcherProvider(),
             getMachineUseCase = getMachineUseCase,
             accountStatusSupplier = accountStatusSupplier,
@@ -450,13 +450,13 @@ internal class CollectiblesConfirmOrderModelTest {
             messageSender = messageSender,
             router = router,
             paramsContainer = MutableParamsContainer(
-                CollectiblesConfirmOrderComponent.Params(
+                CollectiblesPackOpeningComponent.Params(
                     userWalletId = USER_WALLET_ID,
                     externalId = EXTERNAL_ID,
                     isTurboEnabled = false,
                 ),
             ),
-        ).also { this@CollectiblesConfirmOrderModelTest.model = it }
+        ).also { this@CollectiblesPackOpeningModelTest.model = it }
 
         advanceUntilIdle()
 

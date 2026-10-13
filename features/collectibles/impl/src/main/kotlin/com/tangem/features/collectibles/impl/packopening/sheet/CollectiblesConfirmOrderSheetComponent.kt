@@ -1,11 +1,11 @@
-package com.tangem.features.collectibles.impl.confirmorder.sheet
+package com.tangem.features.collectibles.impl.packopening.sheet
 
 import androidx.compose.runtime.Composable
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.features.collectibles.impl.confirmorder.CollectiblesConfirmOrderBottomSheetConfig
-import com.tangem.features.collectibles.impl.confirmorder.ui.CollectiblesLowInventorySheet
-import com.tangem.features.collectibles.impl.confirmorder.ui.CollectiblesPackUnopenedSheet
+import com.tangem.features.collectibles.impl.packopening.CollectiblesConfirmOrderBottomSheetConfig
+import com.tangem.features.collectibles.impl.packopening.ui.components.confirmorder.CollectiblesLowInventorySheet
+import com.tangem.features.collectibles.impl.packopening.ui.components.confirmorder.CollectiblesPackUnopenedSheet
 
 /** A purchase outcome that needs the user's choice: a pack left unopened or low inventory. */
 internal class CollectiblesConfirmOrderSheetComponent(
