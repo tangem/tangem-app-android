@@ -19,8 +19,7 @@ class CreateSecondTwinWalletTask(
     private val firstPublicKey: String,
     private val firstCardId: String,
     private val issuerKeys: KeyPair,
-    private val preparingMessage: Message,
-    private val creatingWalletMessage: Message,
+    private val messages: Messages,
 ) : CardSessionRunnable<CreateWalletResponse> {
 
     override val allowsRequestAccessCodeFromRepository: Boolean = false
@@ -34,18 +33,18 @@ class CreateSecondTwinWalletTask(
         if (walletIndex != null) {
             val currentTwinCardNumber = TwinsHelper.getTwinCardNumber(card.cardId)
             if (TwinsHelper.getTwinCardNumber(firstCardId) == currentTwinCardNumber) {
-                currentTwinCardNumber?.pairNumber()?.let {
-                    callback(CompletionResult.Failure(WrongTwinCard(it)))
+                if (currentTwinCardNumber != null) {
+                    callback(CompletionResult.Failure(WrongTwinCard(messages.wrongTwinCard)))
                 }
                 return
             }
 
             if (!TwinsHelper.isTwinsCompatible(firstCardId, card.cardId)) {
-                callback(CompletionResult.Failure(IncompatibleTwinCard()))
+                callback(CompletionResult.Failure(IncompatibleTwinCard(messages.incompatibleTwinCard)))
                 return
             }
 
-            session.setMessage(preparingMessage)
+            session.setMessage(messages.preparing)
             PurgeWalletCommand(walletIndex).run(session) { response ->
                 when (response) {
                     is CompletionResult.Success -> {
@@ -61,7 +60,7 @@ class CreateSecondTwinWalletTask(
     }
 
     private fun finishTask(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
-        session.setMessage(creatingWalletMessage)
+        session.setMessage(messages.creatingWallet)
         CreateWalletTask(EllipticCurve.Secp256k1).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
@@ -91,4 +90,11 @@ class CreateSecondTwinWalletTask(
             }
         }
     }
+
+    data class Messages(
+        val preparing: Message,
+        val creatingWallet: Message,
+        val wrongTwinCard: String,
+        val incompatibleTwinCard: String,
+    )
 }

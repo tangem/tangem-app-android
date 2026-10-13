@@ -2,7 +2,6 @@ package com.tangem.tap.domain.sdk.impl
 
 import android.content.res.Resources
 import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
@@ -25,6 +24,8 @@ import com.tangem.core.res.getStringSafe
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.domain.card.common.TwinCardNumber
+import com.tangem.domain.card.common.TwinsHelper
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -488,28 +489,23 @@ internal class DefaultTangemSdkManager(
         }
     }
 
-    @Deprecated("TangemSdkManager shouldn't returns a string from resources")
-    override fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String {
-        val args = formatArgs.toSet().filterNotNull().toTypedArray()
-
-        return resources.getStringSafe(stringResId, *args)
-    }
-
     override fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy) {
         tangemSdk.config.userCodeRequestPolicy = policy
     }
 
     // region Twin-specific
 
-    override suspend fun createFirstTwinWallet(
-        cardId: String,
-        initialMessage: Message,
-    ): CompletionResult<CreateWalletResponse> {
+    override suspend fun createFirstTwinWallet(cardId: String): CompletionResult<CreateWalletResponse> {
+        val twinCardNumber = getTwinCardNumber(cardId)
+
         return runTaskAsync(
-            runnable = CreateFirstTwinWalletTask(cardId),
+            runnable = CreateFirstTwinWalletTask(
+                firstCardId = cardId,
+                wrongTwinCardMessage = getWrongTwinCardMessage(twinCardNumber),
+            ),
             preflightReadFilter = null,
             cardId = cardId,
-            initialMessage = initialMessage,
+            initialMessage = createTwinTapMessage(twinCardNumber),
             registerColdWallet = false,
         )
     }
@@ -518,21 +514,23 @@ internal class DefaultTangemSdkManager(
         firstPublicKey: String,
         firstCardId: String,
         issuerKeys: KeyPair,
-        preparingMessage: Message,
-        creatingWalletMessage: Message,
-        initialMessage: Message,
     ): CompletionResult<CreateWalletResponse> {
+        val secondCardNumber = getTwinCardNumber(firstCardId).pairNumber()
         val task = CreateSecondTwinWalletTask(
             firstPublicKey = firstPublicKey,
             firstCardId = firstCardId,
             issuerKeys = issuerKeys,
-            preparingMessage = preparingMessage,
-            creatingWalletMessage = creatingWalletMessage,
+            messages = CreateSecondTwinWalletTask.Messages(
+                preparing = Message(resources.getStringSafe(R.string.twins_recreate_title_preparing)),
+                creatingWallet = Message(resources.getStringSafe(R.string.twins_recreate_title_creating_wallet)),
+                wrongTwinCard = getWrongTwinCardMessage(secondCardNumber),
+                incompatibleTwinCard = resources.getStringSafe(R.string.twin_error_wrong_twin),
+            ),
         )
         return runTaskAsync(
             runnable = task,
             preflightReadFilter = null,
-            initialMessage = initialMessage,
+            initialMessage = createTwinTapMessage(secondCardNumber),
             registerColdWallet = false,
         )
     }
@@ -551,7 +549,6 @@ internal class DefaultTangemSdkManager(
         secondCardPublicKey: ByteArray,
         issuerKeyPair: KeyPair,
         cardId: String,
-        initialMessage: Message,
     ): CompletionResult<ScanResponse> {
         return runTaskAsync(
             runnable = FinalizeTwinTask(
@@ -561,9 +558,21 @@ internal class DefaultTangemSdkManager(
             ),
             preflightReadFilter = null,
             cardId = cardId,
-            initialMessage = initialMessage,
+            initialMessage = createTwinTapMessage(getTwinCardNumber(cardId)),
             registerColdWallet = false,
         )
+    }
+
+    private fun getTwinCardNumber(cardId: String): TwinCardNumber {
+        return requireNotNull(TwinsHelper.getTwinCardNumber(cardId)) { "Card is not a twin" }
+    }
+
+    private fun createTwinTapMessage(twinCardNumber: TwinCardNumber): Message {
+        return Message(resources.getStringSafe(R.string.twins_recreate_title_format, twinCardNumber.number))
+    }
+
+    private fun getWrongTwinCardMessage(requiredTwinCardNumber: TwinCardNumber): String {
+        return resources.getStringSafe(R.string.twin_error_same_card, requiredTwinCardNumber.number)
     }
 
     // endregion
