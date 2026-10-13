@@ -1,5 +1,6 @@
 package com.tangem.screens.tangempay
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.res.R as CoreResR
@@ -46,6 +47,17 @@ class TangemPayBankWithdrawFormPageObject(semanticsProvider: SemanticsNodeIntera
     fun input(field: TangemPayBankWithdrawField): KNode = child {
         hasAnyAncestor(withTestTag(TangemPayTestTags.bankWithdrawFormField(field.name)))
         addSemanticsMatcher(withSetTextAction())
+        useUnmergedTree = true
+    }
+
+    fun focus(field: TangemPayBankWithdrawField) {
+        input(field).performScrollTo()
+        input(field).performSemanticsAction(SemanticsActions.RequestFocus)
+    }
+
+    fun fieldError(field: TangemPayBankWithdrawField, text: String): KNode = child {
+        hasAnyAncestor(withTestTag(TangemPayTestTags.bankWithdrawFormField(field.name)))
+        hasText(text)
         useUnmergedTree = true
     }
 
