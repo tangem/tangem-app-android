@@ -50,9 +50,6 @@ import com.tangem.pagination.BatchListState
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
-import com.tangem.domain.polymarket.model.PolymarketLiveScore
-import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveScoresUseCase
-import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -121,14 +118,6 @@ internal class PolymarketMainModelTest {
         every { this@mockk.invoke(USER_WALLET_ID) } returns hasCredentials
     }
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
-    private val liveScores = MutableSharedFlow<PolymarketLiveScore>()
-    private val observeLiveScores: ObservePolymarketLiveScoresUseCase = mockk {
-        every { this@mockk.invoke(any()) } returns liveScores
-    }
-    private var isPhaseTwoEnabled = false
-    private val featureToggles: PolymarketFeatureToggles = mockk {
-        every { isPolymarketPhaseTwoEnabled } answers { isPhaseTwoEnabled }
-    }
 
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
         value = activeStatus(depositAddress = DEPOSIT_ADDRESS),
@@ -1580,8 +1569,6 @@ internal class PolymarketMainModelTest {
             predictionFundingWindow = fundingWindow,
             observePolymarketCredentialsPresenceUseCase = observeCredentialsPresence,
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
-            observePolymarketLiveScoresUseCase = observeLiveScores,
-            polymarketFeatureToggles = featureToggles,
         ).also { model = it }
     }
 
@@ -1695,87 +1682,6 @@ internal class PolymarketMainModelTest {
         // Assert
         verify(exactly = 1) { router.replaceAll(PolymarketRoute.Onboarding(userWalletId = USER_WALLET_ID)) }
     }
-
-    @Test
-    fun `GIVEN phase two off WHEN a resumed feed has sports events THEN the sports socket is not observed`() = runTest {
-        // Arrange
-        val model = createModel(testScope = this)
-        batchState.value = sportsState(gameIds = listOf("100"))
-
-        // Act
-        model.onResume()
-        runCurrent()
-
-        // Assert
-        verify(exactly = 0) { observeLiveScores(any()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN phase two on WHEN the resumed feed has no sports events THEN the sports socket is not observed`() =
-        runTest {
-            // Arrange
-            isPhaseTwoEnabled = true
-            val model = createModel(testScope = this)
-            batchState.value = sportsState(gameIds = listOf(null))
-
-            // Act
-            model.onResume()
-            runCurrent()
-
-            // Assert
-            verify(exactly = 0) { observeLiveScores(any()) }
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN phase two on WHEN the resumed feed has sports events THEN their game ids are observed`() = runTest {
-        // Arrange
-        isPhaseTwoEnabled = true
-        val model = createModel(testScope = this)
-        batchState.value = sportsState(gameIds = listOf("100", null, "200"))
-
-        // Act
-        model.onResume()
-        runCurrent()
-
-        // Assert
-        verify(exactly = 1) { observeLiveScores(setOf("100", "200")) }
-        assertThat(liveScores.subscriptionCount.value).isEqualTo(1)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN observed sports events WHEN the screen pauses THEN the sports socket is released`() = runTest {
-        // Arrange
-        isPhaseTwoEnabled = true
-        val model = createModel(testScope = this)
-        batchState.value = sportsState(gameIds = listOf("100"))
-        model.onResume()
-        runCurrent()
-
-        // Act
-        model.onPause()
-        runCurrent()
-
-        // Assert
-        assertThat(liveScores.subscriptionCount.value).isEqualTo(0)
-        model.onDestroy()
-    }
-
-    private fun sportsState(gameIds: List<String?>) = BatchListState(
-        data = listOf(
-            Batch(
-                key = 0,
-                data = batchOf(
-                    *gameIds.mapIndexed { index, gameId ->
-                        createEvent(id = "event-$index").copy(gameId = gameId)
-                    }.toTypedArray(),
-                ),
-            ),
-        ),
-        status = PaginationStatus.EndOfPagination,
-    )
 
     private companion object {
         const val DEPOSIT_ADDRESS = "0xbridge0000000000000000000000000000000001"
