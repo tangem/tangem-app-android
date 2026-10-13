@@ -119,6 +119,15 @@ internal class DefaultWalletRegistrar(
             }
         }
 
+    override suspend fun markRegistered(walletId: String): Either<WalletRegistrationError, Unit> = either {
+        try {
+            addRegisteredMarker(walletId)
+        } catch (e: Exception) {
+            TangemLogger.e("Failed to persist the wallet-registration marker", e)
+            raise(WalletRegistrationError.PersistenceFailed(e))
+        }
+    }
+
     override suspend fun submit(prepared: PreparedWalletRegistration): Either<WalletRegistrationError, Unit> =
         withContext(dispatchers.io) {
             locks.forWallet(prepared.walletId).withLock {
@@ -164,7 +173,19 @@ internal class DefaultWalletRegistrar(
             }
             is ApiResponse.Error -> {
                 val authError = errorConverter.convert(response.cause)
-                if (authError is AuthError.NotFound) {
+                // With the social recovery erased too, a 404 is not the end state: the backend answers it
+                // for a wallet not registered on this device without touching the binding. The marker goes,
+                // so a registration can follow, and the caller learns the binding may still be there.
+                if (authError is AuthError.NotFound && shouldDeleteSocialRecovery) {
+                    TangemLogger.i("Wallet not registered server-side (404) — its social recovery stays")
+                    // PersistenceFailed would read as "erased on the server", so a stale marker is only logged
+                    try {
+                        markUnregistered(walletId)
+                    } catch (e: Exception) {
+                        TangemLogger.e("Failed to clear marker after unregister 404", e)
+                    }
+                    raise(WalletRegistrationError.Api(authError))
+                } else if (authError is AuthError.NotFound) {
                     // Wallet is already not registered server-side (e.g. unregistered elsewhere). The
                     // desired end state is reached, so clear the local marker and treat it as success —
                     // idempotent, mirroring how register treats a 409 Conflict.
@@ -290,7 +311,7 @@ internal class DefaultWalletRegistrar(
                     // Keep both writes inside one catch — if the marker write fails, the wallet
                     // stays unregistered locally and the next attempt retries cleanly.
                     store.save(tokens)
-                    markRegistered(walletId)
+                    addRegisteredMarker(walletId)
                 } catch (e: Exception) {
                     TangemLogger.e("Failed to persist wallet-registration tokens / marker", e)
                     raise(WalletRegistrationError.PersistenceFailed(e))
@@ -304,7 +325,7 @@ internal class DefaultWalletRegistrar(
                     // reinstall). Persist the marker to stop retrying.
                     TangemLogger.i("Wallet already registered server-side (409) — marking as registered")
                     try {
-                        markRegistered(walletId)
+                        addRegisteredMarker(walletId)
                     } catch (e: Exception) {
                         TangemLogger.e("Failed to persist wallet-registration marker after 409", e)
                         raise(WalletRegistrationError.PersistenceFailed(e))
@@ -328,7 +349,7 @@ internal class DefaultWalletRegistrar(
         default = emptySet(),
     )
 
-    private suspend fun markRegistered(walletId: String) {
+    private suspend fun addRegisteredMarker(walletId: String) {
         // Atomic read-modify-write inside a single DataStore transaction — DataStore serialises
         // these, so concurrent registrations of different wallets can't lose set entries.
         appPreferencesStore.editData { preferences ->

@@ -38,12 +38,14 @@ import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LongParameterList")
 @Singleton
@@ -274,9 +276,18 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
         listed?.hotWalletId == userWallet.hotWalletId
     }.getOrDefault(false)
 
+    /**
+     * Retried because a binding left behind cannot be released later: the wallet is about to leave the device,
+     * and the identity would keep failing to restore with no file to restore from. Typically called right after
+     * a register that got no answer, so the network is likely to be flaky.
+     */
     private suspend fun releaseBinding(walletId: UserWalletId) {
-        revokeSocialRecoveryUseCase(walletId)
-            .onLeft { TangemLogger.e("Failed to release the binding of a wallet left without a backup: $it") }
+        repeat(RELEASE_BINDING_ATTEMPTS) { attempt ->
+            if (attempt > 0) delay(RELEASE_BINDING_RETRY_DELAY * attempt)
+            revokeSocialRecoveryUseCase(walletId)
+                .onRight { return }
+                .onLeft { TangemLogger.e("Failed to release the binding of a wallet left without a backup: $it") }
+        }
     }
 
     private suspend fun discardFromSdk(userWallet: UserWallet.Hot) {
@@ -324,3 +335,6 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
         }
     }
 }
+
+private const val RELEASE_BINDING_ATTEMPTS = 3
+private val RELEASE_BINDING_RETRY_DELAY = 1.seconds

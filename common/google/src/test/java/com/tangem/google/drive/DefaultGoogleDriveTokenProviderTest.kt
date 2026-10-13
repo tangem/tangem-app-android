@@ -214,6 +214,23 @@ internal class DefaultGoogleDriveTokenProviderTest {
     }
 
     @Test
+    fun `GIVEN cached token WHEN invalidateToken THEN token dropped AND account stays pinned`() = runTest {
+        // Arrange
+        coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
+        coEvery { authorizer.clearToken(TOKEN) } just Runs
+        provider.getAccessToken()
+
+        // Act
+        provider.invalidateToken()
+        provider.getAccessToken()
+
+        // Assert
+        coVerify(exactly = 1) { authorizer.clearToken(TOKEN) }
+        verify(exactly = 0) { authorizer.clearAuthorization() }
+        coVerify(exactly = 2) { authorizer.authorize(any(), any()) }
+    }
+
+    @Test
     fun `GIVEN cached token WHEN switchAccount THEN token dropped before the account is pinned`() = runTest {
         // Arrange — a token cached for the previous account must not survive the switch
         coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()

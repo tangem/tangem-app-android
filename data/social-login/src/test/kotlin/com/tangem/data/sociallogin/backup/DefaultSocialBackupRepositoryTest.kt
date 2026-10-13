@@ -257,7 +257,7 @@ internal class DefaultSocialBackupRepositoryTest {
         val result = repository.deleteBackup(UserWalletId(stringValue = WALLET_ID))
 
         // Assert
-        assertThat(result.isRight()).isTrue()
+        assertThat(result).isEqualTo(false.right())
         coVerify(exactly = 0) { api.deleteFile(any(), any()) }
     }
 
@@ -272,7 +272,7 @@ internal class DefaultSocialBackupRepositoryTest {
         val result = repository.deleteBackup(UserWalletId(stringValue = WALLET_ID))
 
         // Assert
-        assertThat(result.isRight()).isTrue()
+        assertThat(result).isEqualTo(true.right())
         coVerify(exactly = 1) { api.deleteFile(any(), NEW_FILE_ID) }
         coVerify(exactly = 1) { api.deleteFile(any(), OLD_FILE_ID) }
     }
@@ -288,9 +288,23 @@ internal class DefaultSocialBackupRepositoryTest {
         val result = repository.deleteBackup(UserWalletId(stringValue = WALLET_ID))
 
         // Assert
-        assertThat(result.isRight()).isTrue()
+        assertThat(result).isEqualTo(true.right())
         coVerify(exactly = 1) { api.deleteFile(any(), OLD_FILE_ID) }
         coVerify(exactly = 0) { api.deleteFile(any(), NEW_FILE_ID) }
+    }
+
+    @Test
+    fun `GIVEN the owned file is already gone WHEN deleteBackup THEN nothing is reported as deleted`() = runTest {
+        // Arrange
+        stubList(driveFile(id = NEW_FILE_ID))
+        stubDownload(fileId = NEW_FILE_ID, content = backupJson())
+        coEvery { api.deleteFile(any(), NEW_FILE_ID) } returns errorResponse(code = 404)
+
+        // Act
+        val result = repository.deleteBackup(UserWalletId(stringValue = WALLET_ID))
+
+        // Assert
+        assertThat(result).isEqualTo(false.right())
     }
 
     @Test
@@ -303,7 +317,7 @@ internal class DefaultSocialBackupRepositoryTest {
         val result = repository.deleteBackup(UserWalletId(stringValue = WALLET_ID))
 
         // Assert
-        assertThat(result.isRight()).isTrue()
+        assertThat(result).isEqualTo(true.right())
         coVerify(exactly = 1) { api.deleteFile(any(), NEW_FILE_ID) }
     }
 
@@ -322,7 +336,7 @@ internal class DefaultSocialBackupRepositoryTest {
         }
 
     @Test
-    fun `GIVEN the token expired WHEN getBackupInfo THEN it is invalidated and the call is retried silently`() =
+    fun `GIVEN the token expired WHEN getBackupInfo THEN only the token is invalidated and the call is retried silently`() =
         runTest {
             // Arrange
             coEvery { api.listFiles(any(), any(), any(), any()) } returnsMany listOf(
@@ -336,7 +350,8 @@ internal class DefaultSocialBackupRepositoryTest {
 
             // Assert
             assertThat(result.getOrNull()?.walletId).isEqualTo(UserWalletId(stringValue = WALLET_ID))
-            coVerify(exactly = 1) { tokenProvider.invalidate() }
+            coVerify(exactly = 1) { tokenProvider.invalidateToken() }
+            coVerify(exactly = 0) { tokenProvider.invalidate() }
             coVerify(exactly = 1) { tokenProvider.getAccessToken(interactive = false) }
         }
 

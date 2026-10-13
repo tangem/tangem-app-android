@@ -15,6 +15,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onboarding.repository.OnboardingRepository
+import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -27,6 +28,7 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.wallets.usecase.SyncWalletWithRemoteUseCase
 import com.tangem.domain.wallets.usecase.UpdateWalletUseCase
+import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.usecase.DeleteSocialBackupAfterUpgradeUseCase
 import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import io.mockk.verify
@@ -640,11 +642,10 @@ internal class MultiWalletFinalizeModelTest {
             // Act
             finishBackupAsUpgrade()
 
-            // Assert — the mark is read while the record is still hot, the file deleted once it is upgraded
+            // Assert — the mark is read while the record is still hot, the file deleted once it is replaced
             coVerifyOrder {
                 isSocialBackupCompletedUseCase(UPGRADED_WALLET_ID)
                 updateWalletUseCase.invoke(eq(UPGRADED_WALLET_ID), any())
-                walletsRepository.upgradeWallet(UPGRADED_WALLET_ID)
                 deleteSocialBackupAfterUpgradeUseCase(UPGRADED_WALLET_ID)
             }
         }
@@ -683,17 +684,40 @@ internal class MultiWalletFinalizeModelTest {
     }
 
     @Test
-    fun `GIVEN the upgrade fails WHEN backup finishes THEN social recovery is kept`() = runTest {
-        // Arrange — the wallet is still hot as far as the app knows, so its recovery must stay
+    fun `GIVEN the social backup cannot be deleted WHEN backup finishes THEN the error is reported`() = runTest {
+        // Arrange
         arrangeHotWalletUpgrade()
-        coEvery { walletsRepository.upgradeWallet(UPGRADED_WALLET_ID) } throws IllegalStateException("boom")
+        coEvery { walletsRepository.upgradeWallet(UPGRADED_WALLET_ID) } just Runs
+        coEvery { deleteSocialBackupAfterUpgradeUseCase(UPGRADED_WALLET_ID) } returns
+            SocialLoginError.BackupNotFound.left()
 
         // Act
         finishBackupAsUpgrade()
 
         // Assert
-        coVerify(exactly = 0) { deleteSocialBackupAfterUpgradeUseCase(any()) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                WalletSettingsAnalyticEvents.SocialRecoveryDeletionError(SocialLoginError.BackupNotFound),
+            )
+        }
+        verify(exactly = 0) {
+            analyticsEventHandler.send(ofType<WalletSettingsAnalyticEvents.SocialRecoveryDeleted>())
+        }
     }
+
+    @Test
+    fun `GIVEN marking the wallet as upgraded fails WHEN backup finishes THEN the social backup is still deleted`() =
+        runTest {
+            // Arrange — the hot keys are already gone, the file must not outlive them
+            arrangeHotWalletUpgrade()
+            coEvery { walletsRepository.upgradeWallet(UPGRADED_WALLET_ID) } throws IllegalStateException("boom")
+
+            // Act
+            finishBackupAsUpgrade()
+
+            // Assert
+            coVerify(exactly = 1) { deleteSocialBackupAfterUpgradeUseCase(UPGRADED_WALLET_ID) }
+        }
 
     private fun arrangeHotWalletUpgrade() {
         multiWalletStateFlow.value = multiWalletStateFlow.value.copy(
@@ -704,6 +728,7 @@ internal class MultiWalletFinalizeModelTest {
         every { backupService.currentState } returns BackupService.State.Finished
         every { coldUserWalletBuilderFactory.create(any()) } returns coldUserWalletBuilder
         coEvery { isSocialBackupCompletedUseCase(UPGRADED_WALLET_ID) } returns true
+        coEvery { deleteSocialBackupAfterUpgradeUseCase(UPGRADED_WALLET_ID) } returns Unit.right()
         coEvery { updateWalletUseCase.invoke(eq(UPGRADED_WALLET_ID), any()) } returns coldUserWallet.right()
         coEvery { syncWalletWithRemoteUseCase(any()) } returns mockk(relaxed = true)
         coEvery { cardRepository.finishCardActivation(any(), any()) } just Runs
