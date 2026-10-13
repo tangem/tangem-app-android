@@ -367,7 +367,6 @@ internal class OpenCollectiblePackUseCaseTest {
             imageBackUrl = null,
             rarity = null,
             gradingCompany = null,
-            grade = null,
             gradingId = "123",
             year = null,
             set = null,
