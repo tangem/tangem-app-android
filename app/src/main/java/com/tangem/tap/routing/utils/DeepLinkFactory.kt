@@ -11,6 +11,8 @@ import com.tangem.common.uri.ExternalUrlValidator
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
+import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
+import com.tangem.feature.usedesk.api.deeplink.SupportDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.DiscoverDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.EarnDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsDeepLinkHandler
@@ -81,6 +83,8 @@ internal class DeepLinkFactory @Inject constructor(
     private val yieldDeepLink: YieldDeepLinkHandler.Factory,
     private val discoverDeepLink: DiscoverDeepLinkHandler.Factory,
     private val surveyDeepLink: SurveyDeepLinkHandler.Factory,
+    private val supportDeepLink: SupportDeepLinkHandler.Factory,
+    private val useDeskFeatureToggles: UseDeskFeatureToggles,
     private val promoCampaignsDeepLink: CampaignsDeepLinkHandler.Factory,
     private val jointAccountDeepLink: JointAccountDeepLinkHandler.Factory,
     private val jointAccountInviteDeepLink: JointAccountInviteDeepLinkHandler.Factory,
@@ -333,6 +337,10 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.PayAppMain.host -> tangemPayMainDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.PayAccount.host -> tangemPayAccountDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.Survey.host -> surveyDeepLink.create(queryParams)
+            DeepLinkRoute.Support.host -> {
+                if (!useDeskFeatureToggles.isSupportChatDeepLinkEnabled) return false
+                supportDeepLink.create(coroutineScope)
+            }
             DeepLinkRoute.Campaigns.host -> promoCampaignsDeepLink.create(queryParams)
             DeepLinkRoute.McpAuthorization.host -> {
                 if (!mcpFeatureToggles.isMcpEnabled) return false
