@@ -44,6 +44,9 @@ interface SocialRecoveryRepository {
     /**
      * Drops the binding of [walletId] and the recovery key stored with it, so the identity can no longer
      * restore this wallet. Used when the wallet is deleted. Unbinding a wallet that has no binding is a success.
+     *
+     * The backend erases a binding only for a wallet registered on this device. A listed wallet that is not is
+     * registered first, signed with its own key, which may ask the user to unlock it.
      */
     suspend fun unbindWallet(walletId: UserWalletId): Either<SocialLoginError, Unit>
 }

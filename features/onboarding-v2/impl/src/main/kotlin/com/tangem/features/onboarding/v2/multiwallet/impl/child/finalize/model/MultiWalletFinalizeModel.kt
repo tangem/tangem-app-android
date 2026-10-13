@@ -24,6 +24,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.scan.isRing
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.models.wallet.requireHotWallet
 import com.tangem.domain.onboarding.repository.OnboardingRepository
@@ -381,18 +382,9 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                         launch(NonCancellable) {
                             runSuspendCatching { walletsRepository.upgradeWallet(userWalletCreated.walletId) }
                                 .onFailure { TangemLogger.e("Failed to mark the wallet as upgraded", it) }
-                                .onSuccess {
-                                    if (!hasSocialBackup) return@onSuccess
-                                    deleteSocialBackupAfterUpgradeUseCase(userWalletCreated.walletId)
-                                        .onLeft { error ->
-                                            TangemLogger.e("Failed to delete the social backup after upgrade: $error")
-                                        }
-                                        .onRight {
-                                            analyticsEventHandler.send(
-                                                WalletSettingsAnalyticEvents.SocialRecoveryDeleted(),
-                                            )
-                                        }
-                                }
+                        }
+                        if (hasSocialBackup) {
+                            launch(NonCancellable) { deleteSocialBackupAfterUpgrade(userWalletCreated.walletId) }
                         }
                     }.getOrElse {
                         error("Failed to upgrade to cold wallet. Error: $it")
@@ -424,6 +416,16 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             backupServiceProvider.backupService.discardSavedBackup()
             onEvent.emit(MultiWalletFinalizeComponent.Event.ThreeBackupCardsAdded)
         }
+    }
+
+    private suspend fun deleteSocialBackupAfterUpgrade(walletId: UserWalletId) {
+        deleteSocialBackupAfterUpgradeUseCase(walletId).fold(
+            ifLeft = { error ->
+                TangemLogger.e("Failed to delete the social backup after upgrade: $error")
+                analyticsEventHandler.send(WalletSettingsAnalyticEvents.SocialRecoveryDeletionError(error))
+            },
+            ifRight = { analyticsEventHandler.send(WalletSettingsAnalyticEvents.SocialRecoveryDeleted()) },
+        )
     }
 
     /**
