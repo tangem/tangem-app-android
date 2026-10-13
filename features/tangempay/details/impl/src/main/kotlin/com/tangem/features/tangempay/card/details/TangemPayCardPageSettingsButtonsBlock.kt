@@ -33,7 +33,9 @@ internal fun TangemPayCardPageSettingsButtonsBlock(
     ) {
         settings.fastForEach { setting ->
             TangemPayActionButton(
-                modifier = Modifier.then(if (setting.testTag != null) Modifier.testTag(setting.testTag) else Modifier),
+                modifier = Modifier
+                    .weight(1f)
+                    .then(if (setting.testTag != null) Modifier.testTag(setting.testTag) else Modifier),
                 title = setting.title,
                 icon = TangemIconUM.Icon(iconRes = setting.iconRes),
                 onClick = setting.onClick,

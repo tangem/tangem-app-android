@@ -8,12 +8,17 @@ import kotlinx.collections.immutable.ImmutableList
 internal sealed interface CollectiblesConfirmOrderUM {
 
     val onBackClick: () -> Unit
+    val onCloseClick: () -> Unit
 
-    data class Loading(override val onBackClick: () -> Unit) : CollectiblesConfirmOrderUM
+    data class Loading(
+        override val onBackClick: () -> Unit,
+        override val onCloseClick: () -> Unit,
+    ) : CollectiblesConfirmOrderUM
 
     /** @property isReloading a retry is in flight; the error stays with a spinner in its button */
     data class Error(
         override val onBackClick: () -> Unit,
+        override val onCloseClick: () -> Unit,
         val message: TextReference,
         val onReloadClick: () -> Unit,
         val isReloading: Boolean = false,
@@ -21,14 +26,15 @@ internal sealed interface CollectiblesConfirmOrderUM {
 
     /**
      * @property isPackOpened the card is known, so the pack is thrown
-     * @property isBackVisible false while a purchase runs; a failure brings it back
+     * @property isNavigationVisible false while a purchase runs; a failure brings it back
      */
     data class Content(
         override val onBackClick: () -> Unit,
+        override val onCloseClick: () -> Unit,
         val order: OrderUM,
         val onApproveClick: () -> Unit,
         val isPackOpened: Boolean,
-        val isBackVisible: Boolean,
+        val isNavigationVisible: Boolean,
     ) : CollectiblesConfirmOrderUM
 
     /** @property packImageUrl null renders the placeholder */

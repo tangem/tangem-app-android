@@ -32,6 +32,7 @@ internal fun createMachine(
     expectedValue: BigDecimal = BigDecimal("12.00"),
     imageUrl: String? = "https://tangem.com/pack.png",
     categoryId: String = "sports",
+    revealAssets: CollectibleGachaMachine.RevealAssets? = null,
 ): CollectibleGachaMachine = CollectibleGachaMachine(
     id = id,
     externalId = externalId,
@@ -49,6 +50,7 @@ internal fun createMachine(
     expectedValue = expectedValue,
     imageUrl = imageUrl,
     categoryId = categoryId,
+    revealAssets = revealAssets,
 )
 
 internal fun createOdds(
@@ -135,7 +137,8 @@ internal fun createNft(
     description: String? = "2024 #208 Raging Bolt EX PSA 10",
     rarity: CollectibleRarity? = CollectibleRarity.RARE,
     grade: CollectibleGachaMachineNft.Grade? = CollectibleGachaMachineNft.Grade(company = "PSA", value = "10"),
-    imageUrl: String? = "https://tangem.com/nft.png",
+    frontImageUrl: String? = "https://tangem.com/nft.png",
+    backImageUrl: String? = null,
     insuredValue: BigDecimal? = BigDecimal("240"),
 ): CollectibleGachaMachineNft = CollectibleGachaMachineNft(
     id = id,
@@ -144,7 +147,8 @@ internal fun createNft(
     description = description,
     rarity = rarity,
     grade = grade,
-    imageUrl = imageUrl,
+    frontImageUrl = frontImageUrl,
+    backImageUrl = backImageUrl,
     insuredValue = insuredValue,
 )
 
