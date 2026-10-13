@@ -1,4 +1,4 @@
-package com.tangem.features.moneyaccount.main
+package com.tangem.features.moneyaccount.details
 
 import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
@@ -14,7 +14,7 @@ import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
-import com.tangem.features.moneyaccount.details.component.MoneyAccountMainComponent
+import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -23,7 +23,7 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 @Stable
 @ModelScoped
-internal class MoneyAccountMainModel @Inject constructor(
+internal class MoneyAccountDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -34,14 +34,14 @@ internal class MoneyAccountMainModel @Inject constructor(
     moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory,
 ) : Model() {
 
-    private val params = paramsContainer.require<MoneyAccountMainComponent.Params>()
+    private val params = paramsContainer.require<MoneyAccountDetailsComponent.Params>()
     val currency: CryptoCurrency.Token = moneyAccountCurrencyFactory.create(params.userWalletId)
-    private val stateFactory = MoneyAccountMainStateFactory(
+    private val stateFactory = MoneyAccountDetailsStateFactory(
         onTermsClick = ::onTermsClick,
         onSupportClick = ::onSupportClick,
         onBackClick = ::onBackClick,
     )
-    val uiState: StateFlow<MoneyAccountMainUM>
+    val uiState: StateFlow<MoneyAccountDetailsUM>
         field = MutableStateFlow(stateFactory.createInitialState())
 
     private var currentState: MoneyAccountStatusValue.Account? = null

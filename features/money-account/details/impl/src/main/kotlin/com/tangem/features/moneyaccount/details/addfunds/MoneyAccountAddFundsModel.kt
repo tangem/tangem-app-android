@@ -1,4 +1,4 @@
-package com.tangem.features.moneyaccount.main.addfunds
+package com.tangem.features.moneyaccount.details.addfunds
 
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.util.fastForEach
