@@ -27,9 +27,9 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 3. **Approvals are only really checked on a fresh wallet.** The BFF reads on-chain allowances before it
    validates our batch, so an already-approved deposit wallet answers `READY_TO_TRADE` to *any* batch.
    Test approvals changes on a brand-new wallet.
-4. **The 13-call approvals batch is not pinned by the backend.** It is validated as a set of
-   `{target, selector, spender}` and grew from 6 to 13 without notice (August 2026); the next change breaks
-   the app with a BFF `400` until a release ships.
+4. **The 17-call approvals batch is not pinned by the backend.** It is validated as a set of
+   `{target, selector, spender}` and grew from 6 to 13 without notice (August 2026), then to 17 with the V2
+   exchange (October 2026); the next change breaks the app with a BFF `400` until a release ships.
 5. **Collateral ≠ top-up token.** `COLLATERAL` is pUSD — what orders spend and the CLOB balance reports.
    Deposits are native USDC on Polygon (`USDC_TOKEN_ADDRESS`); the bridge converts.
 6. **The region is read by the flow that commits, never supplied by its entry route.** An unreadable region
