@@ -15,7 +15,7 @@ internal object CollectiblesPrizeConverter :
     override fun convert(value: CollectibleGachaMachineNft): CollectiblesMachineDetailsUM.PrizeUM {
         return CollectiblesMachineDetailsUM.PrizeUM(
             id = value.id,
-            imageUrl = value.imageUrl,
+            imageUrl = value.frontImageUrl,
             grade = value.grade?.let { stringReference("${it.company}${it.value}") },
             title = stringReference(value.name),
             value = stringReference(
