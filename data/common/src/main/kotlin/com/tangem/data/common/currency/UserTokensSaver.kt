@@ -276,20 +276,23 @@ class UserTokensSaver(
         return Retryer(attempt = 3) { iteration ->
             var isSuccess = true
 
-            // An edit saved since the failure is newer than the captured list
-            val latestResponse = walletAccountsFetcher.get().getSaved(userWalletId)?.toUserTokensResponse() ?: response
+            // An edit saved since the failure is newer than the captured list; read and pushed under one lock
+            walletAccountsSync.withLock(userWalletId) {
+                val latestResponse = walletAccountsFetcher.get().getSaved(userWalletId)?.toUserTokensResponse()
+                    ?: response
 
-            push(
-                userWalletId = userWalletId,
-                response = latestResponse,
-                onFailSend = {
-                    TangemLogger.e(
-                        "Retryer: Failed to push updated tokens on attempt ${iteration + 1} for $userWalletId",
-                    )
+                push(
+                    userWalletId = userWalletId,
+                    response = latestResponse,
+                    onFailSend = {
+                        TangemLogger.e(
+                            "Retryer: Failed to push updated tokens on attempt ${iteration + 1} for $userWalletId",
+                        )
 
-                    isSuccess = false
-                },
-            )
+                        isSuccess = false
+                    },
+                )
+            }
 
             isSuccess
         }
