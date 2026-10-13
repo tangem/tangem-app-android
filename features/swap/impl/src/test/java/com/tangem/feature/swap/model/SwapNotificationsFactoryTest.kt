@@ -81,6 +81,8 @@ internal class SwapNotificationsFactoryTest {
     fun `GIVEN low slippage WHEN notifications built THEN low slippage warning shown`() {
         // Arrange
         every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        val onSlippageClick: () -> Unit = {}
+        every { actions.onSlippageClick } returns onSlippageClick
         val percent = stringReference("0.11%")
 
         // Act
@@ -95,7 +97,7 @@ internal class SwapNotificationsFactoryTest {
 
         // Assert
         assertThat(notifications.filterIsInstance<SwapNotificationUM.Warning.LowSlippage>())
-            .containsExactly(SwapNotificationUM.Warning.LowSlippage(percent))
+            .containsExactly(SwapNotificationUM.Warning.LowSlippage(percent, onSlippageClick))
     }
 
     @Test
