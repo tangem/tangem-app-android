@@ -37,6 +37,8 @@ class TronGaslessFeeResolver(
      *
      * [onNativeFeePreferred] fires when TRX is returned in place of an offered or failed gasless quote and
      * the balance covers it, so the caller can keep paying in TRX instead of re-quoting gasless.
+     *
+     * [sentCurrencyStatus] stands in for the sent token while [accountStatusList] has not caught up with it.
      */
     @Suppress("LongParameterList")
     suspend fun resolveWithAutoFeeToken(
@@ -45,10 +47,16 @@ class TronGaslessFeeResolver(
         transactionData: TransactionData,
         nativeCurrencyStatus: CryptoCurrencyStatus,
         accountStatusList: AccountStatusList,
+        sentCurrencyStatus: CryptoCurrencyStatus?,
         loadNativeFee: suspend () -> Either<GetFeeError, TransactionFeeExtended>,
         onNativeFeePreferred: () -> Unit,
     ): Either<GetFeeError, TransactionFeeExtended>? {
-        val sentStatus = findSentTokenStatus(transactionData, network, accountStatusList) ?: return null
+        val sentStatus = findSentTokenStatus(
+            transactionData = transactionData,
+            network = network,
+            accountStatusList = accountStatusList,
+            fallbackStatus = sentCurrencyStatus,
+        ) ?: return null
         val sentToken = sentStatus.currency as CryptoCurrency.Token
         // Not cached: the supported-token check reports a transport failure as "unsupported"
         if (!isTronGaslessSupportedUseCase(userWalletId, network, sentToken)) return null
@@ -119,18 +127,22 @@ class TronGaslessFeeResolver(
      * Tron contracts are base58, where case carries meaning, so the match is exact — the same
      * comparison [IsTronGaslessSupportedUseCase] then applies to the token found here. A looser match
      * would hand it a token its own check rejects, silently dropping the gasless quote.
+     *
+     * The account list is preferred for its fresher balance, with [fallbackStatus] used when the list lags.
      */
     private fun findSentTokenStatus(
         transactionData: TransactionData,
         network: Network,
         accountStatusList: AccountStatusList,
+        fallbackStatus: CryptoCurrencyStatus?,
     ): CryptoCurrencyStatus? {
         val contractAddress = transactionData.tronGaslessTokenContractOrNull() ?: return null
-        return accountStatusList.flattenCurrencies().firstOrNull { status ->
-            val currency = status.currency
-            currency is CryptoCurrency.Token &&
-                currency.network.id == network.id &&
-                currency.contractAddress == contractAddress
+        fun CryptoCurrencyStatus.isSentToken(): Boolean {
+            val token = currency as? CryptoCurrency.Token ?: return false
+            return token.network.id == network.id && token.contractAddress == contractAddress
         }
+
+        return accountStatusList.flattenCurrencies().firstOrNull { it.isSentToken() }
+            ?: fallbackStatus?.takeIf { it.isSentToken() }
     }
 }

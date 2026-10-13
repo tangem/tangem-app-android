@@ -211,8 +211,7 @@ class EvmGaslessFeeResolver(
         // so adding effectiveProtocolBalance again would double-count the module portion.
         val candidates = networkCurrenciesStatuses
             .asSequence()
-            .filter { it.currency is CryptoCurrency.Token }
-            .filter { (it.currency as CryptoCurrency.Token).contractAddress.lowercase() in supportedGaslessTokens }
+            .filter { (it.currency as? CryptoCurrency.Token)?.contractAddress?.lowercase() in supportedGaslessTokens }
             .filter { status ->
                 val total = status.value.amount ?: BigDecimal.ZERO
                 total > BigDecimal.ZERO || status.value.yieldSupplyStatus?.isActive == true
