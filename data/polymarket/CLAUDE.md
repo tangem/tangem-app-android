@@ -18,6 +18,7 @@ in the same PR as the code.
 - [Deposit & withdraw guide](https://app.notion.com/p/3cd5d34eb6788087b7f2c748c6b24a46) — bridge, `/withdraw`, minimums · 17.09.2026
 - [Deposit use cases](https://app.notion.com/p/3d55d34eb6788088b536d7d22b5143cc) — add-funds cases · 08.09.2026
 - [Tradezone balance](https://app.notion.com/p/3dc5d34eb6788099b050dd757a787996) — polling, `/value`, PnL · 21.09.2026 (PnL not implemented)
+- [Polymarket V2 client migration](https://app.notion.com/p/8805d34eb67882d98db581e4245436a6) — Data API `/v2/value` (v1 is off from 24.10.2026) · 12.10.2026
 - [Positions & rewards](https://app.notion.com/p/3c15d34eb67880859ea2f883ac086d02) — positions, claim · 17.09.2026
 - [Close position](https://app.notion.com/p/3dd5d34eb6788087a944c0d8a60af953) — sell rules · 17.09.2026 (cases 5/7/8 not implemented)
 
