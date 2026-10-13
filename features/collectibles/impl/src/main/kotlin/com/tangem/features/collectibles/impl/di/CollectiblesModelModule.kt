@@ -2,11 +2,11 @@ package com.tangem.features.collectibles.impl.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
-import com.tangem.features.collectibles.impl.confirmorder.model.CollectiblesConfirmOrderModel
 import com.tangem.features.collectibles.impl.discovery.model.CollectiblesDiscoveryModel
 import com.tangem.features.collectibles.impl.machinedetails.model.CollectiblesMachineDetailsModel
 import com.tangem.features.collectibles.impl.main.model.CollectiblesMainModel
 import com.tangem.features.collectibles.impl.onboarding.model.CollectiblesOnboardingModel
+import com.tangem.features.collectibles.impl.packopening.model.CollectiblesPackOpeningModel
 import com.tangem.features.collectibles.impl.stories.model.CollectiblesStoriesModel
 import dagger.Binds
 import dagger.Module
@@ -45,6 +45,6 @@ internal interface CollectiblesModelModule {
 
     @Binds
     @IntoMap
-    @ClassKey(CollectiblesConfirmOrderModel::class)
-    fun bindCollectiblesConfirmOrderModel(impl: CollectiblesConfirmOrderModel): Model
+    @ClassKey(CollectiblesPackOpeningModel::class)
+    fun bindCollectiblesPackOpeningModel(impl: CollectiblesPackOpeningModel): Model
 }

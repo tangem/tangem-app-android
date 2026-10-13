@@ -158,7 +158,7 @@ private fun <T> ChipGrid(items: List<T>, label: (T) -> String, isSelected: (T) -
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .clip(shape)
-            .background(TangemTheme.colors3.bg.opaque.primary)
+            .background(TangemTheme.colors3.bg.transparent.primary)
             .border(
                 width = 1.dp,
                 color = TangemTheme.colors3.border.primary,
@@ -186,7 +186,11 @@ private fun Chip(label: String, selected: Boolean, onClick: () -> Unit, modifier
         modifier = modifier
             .clip(chipShape)
             .background(
-                if (selected) TangemTheme.colors3.bg.opaque.secondary else TangemTheme.colors3.bg.opaque.primary,
+                if (selected) {
+                    TangemTheme.colors3.bg.transparent.secondary
+                } else {
+                    TangemTheme.colors3.bg.transparent.primary
+                },
             )
             .clickable(onClick = onClick)
             .padding(vertical = 8.dp, horizontal = 4.dp),

@@ -46,6 +46,7 @@ internal object PolymarketOpenPositionConverter : Converter<PolymarketOpenPositi
         result = value.status?.let { status ->
             PolymarketPositionResult.entries.firstOrNull { it.name == status } ?: PolymarketPositionResult.UNKNOWN
         },
+        version = value.version?.let(PolymarketMarketVersionConverter::convert),
     )
 }
 
