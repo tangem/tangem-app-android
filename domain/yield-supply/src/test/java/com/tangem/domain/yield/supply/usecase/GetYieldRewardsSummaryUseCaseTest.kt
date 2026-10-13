@@ -55,6 +55,24 @@ internal class GetYieldRewardsSummaryUseCaseTest {
     }
 
     @Test
+    fun `GIVEN chain unknown to the SDK WHEN summarised THEN nothing is admitted`() = runTest {
+        // Arrange
+        coEvery {
+            repository.getIncentives(chainId = UNKNOWN_CHAIN_ID, userAddress = USER_ADDRESS)
+        } returns incentives(
+            moduleAddress = MODULE_ADDRESS,
+            isClaimRecommended = true,
+            rewards = listOf(reward(symbol = "WETH", claimable = "1000", netUsd = "1.00")),
+        ).copy(chainId = UNKNOWN_CHAIN_ID).right()
+
+        // Act
+        val actual = useCase(chainId = UNKNOWN_CHAIN_ID, userAddress = USER_ADDRESS)
+
+        // Assert
+        assertThat(actual.getOrNull()).isEqualTo(YieldRewardsSummary.None)
+    }
+
+    @Test
     fun `GIVEN incentives unavailable WHEN summarised THEN error propagated`() = runTest {
         // Arrange
         coEvery {
@@ -86,6 +104,14 @@ internal class GetYieldRewardsSummaryUseCaseTest {
             destination = YieldRewardDestination.Unsupported,
         )
         val pending = reward(symbol = "USDC", pending = "500")
+        val drained = reward(symbol = "WBTC")
+        val conflictingWeth = reward(
+            symbol = "WETH",
+            claimable = "1000",
+            netUsd = "1.00",
+            destination = YieldRewardDestination.Unsupported,
+        )
+        val malformed = reward(symbol = "BAD", rewardToken = "", claimable = "4000", netUsd = "5.00")
         val unsupportedPending = reward(
             symbol = "stkGHO",
             pending = "700",
@@ -101,6 +127,8 @@ internal class GetYieldRewardsSummaryUseCaseTest {
                     moduleAddress = MODULE_ADDRESS,
                     claimable = listOf(weth),
                     pending = listOf(pending),
+                    unsupported = listOf(unsupported),
+                    supportedRewardTokens = setOf(token("WETH"), token("USDC")),
                     totalNetUsd = BigDecimal("1.00"),
                 ),
             ),
@@ -112,6 +140,8 @@ internal class GetYieldRewardsSummaryUseCaseTest {
                     moduleAddress = MODULE_ADDRESS,
                     claimable = listOf(weth, aave),
                     pending = emptyList(),
+                    unsupported = emptyList(),
+                    supportedRewardTokens = setOf(token("WETH"), token("AAVE")),
                     totalNetUsd = BigDecimal("1.30"),
                 ),
             ),
@@ -123,6 +153,21 @@ internal class GetYieldRewardsSummaryUseCaseTest {
                     moduleAddress = MODULE_ADDRESS,
                     claimable = listOf(aave),
                     pending = listOf(pending),
+                    unsupported = emptyList(),
+                    supportedRewardTokens = setOf(token("AAVE"), token("USDC")),
+                    totalNetUsd = BigDecimal("0.30"),
+                ),
+            ),
+            SummaryModel(
+                moduleAddress = MODULE_ADDRESS,
+                isClaimRecommended = false,
+                rewards = listOf(aave, unsupported),
+                expected = YieldRewardsSummary.Deferred(
+                    moduleAddress = MODULE_ADDRESS,
+                    claimable = listOf(aave),
+                    pending = emptyList(),
+                    unsupported = listOf(unsupported),
+                    supportedRewardTokens = setOf(token("AAVE")),
                     totalNetUsd = BigDecimal("0.30"),
                 ),
             ),
@@ -134,6 +179,8 @@ internal class GetYieldRewardsSummaryUseCaseTest {
                     moduleAddress = MODULE_ADDRESS,
                     claimable = listOf(weth, aave),
                     pending = emptyList(),
+                    unsupported = emptyList(),
+                    supportedRewardTokens = setOf(token("WETH"), token("AAVE")),
                     totalNetUsd = BigDecimal("1.30"),
                 ),
             ),
@@ -151,6 +198,8 @@ internal class GetYieldRewardsSummaryUseCaseTest {
                     moduleAddress = MODULE_ADDRESS,
                     claimable = listOf(weth),
                     pending = listOf(pending),
+                    unsupported = listOf(unsupportedPending),
+                    supportedRewardTokens = setOf(token("WETH"), token("USDC")),
                     totalNetUsd = BigDecimal("1.00"),
                 ),
             ),
@@ -165,6 +214,45 @@ internal class GetYieldRewardsSummaryUseCaseTest {
                 isClaimRecommended = true,
                 rewards = listOf(unsupported),
                 expected = YieldRewardsSummary.None,
+            ),
+            SummaryModel(
+                moduleAddress = MODULE_ADDRESS,
+                isClaimRecommended = true,
+                rewards = listOf(weth, drained),
+                expected = YieldRewardsSummary.Claimable(
+                    moduleAddress = MODULE_ADDRESS,
+                    claimable = listOf(weth),
+                    pending = emptyList(),
+                    unsupported = emptyList(),
+                    supportedRewardTokens = setOf(token("WETH"), token("WBTC")),
+                    totalNetUsd = BigDecimal("1.00"),
+                ),
+            ),
+            SummaryModel(
+                moduleAddress = MODULE_ADDRESS,
+                isClaimRecommended = true,
+                rewards = listOf(weth, malformed),
+                expected = YieldRewardsSummary.Claimable(
+                    moduleAddress = MODULE_ADDRESS,
+                    claimable = listOf(weth),
+                    pending = emptyList(),
+                    unsupported = listOf(malformed),
+                    supportedRewardTokens = setOf(token("WETH")),
+                    totalNetUsd = BigDecimal("1.00"),
+                ),
+            ),
+            SummaryModel(
+                moduleAddress = MODULE_ADDRESS,
+                isClaimRecommended = true,
+                rewards = listOf(weth, conflictingWeth, aave),
+                expected = YieldRewardsSummary.Claimable(
+                    moduleAddress = MODULE_ADDRESS,
+                    claimable = listOf(aave),
+                    pending = emptyList(),
+                    unsupported = listOf(weth, conflictingWeth),
+                    supportedRewardTokens = setOf(token("AAVE")),
+                    totalNetUsd = BigDecimal("0.30"),
+                ),
             ),
             SummaryModel(
                 moduleAddress = MODULE_ADDRESS,
@@ -199,12 +287,13 @@ internal class GetYieldRewardsSummaryUseCaseTest {
 
     private fun reward(
         symbol: String,
+        rewardToken: String = token(symbol),
         claimable: String = "0",
         pending: String = "0",
         netUsd: String = "0.00",
         destination: YieldRewardDestination = YieldRewardDestination.Owner,
     ) = MockYieldSupply.reward(
-        rewardToken = "0x$symbol",
+        rewardToken = rewardToken,
         symbol = symbol,
         claimableAmount = BigInteger(claimable),
         pendingAmount = BigInteger(pending),
@@ -214,8 +303,19 @@ internal class GetYieldRewardsSummaryUseCaseTest {
         finalDestination = destination,
     )
 
+    private fun token(symbol: String): String = TOKENS.getValue(symbol)
+
     private companion object {
-        const val CHAIN_ID = 1
+        val TOKENS = mapOf(
+            "WETH" to "0x0000000000000000000000000000000000000001",
+            "AAVE" to "0x0000000000000000000000000000000000000002",
+            "GHO" to "0x0000000000000000000000000000000000000003",
+            "USDC" to "0x0000000000000000000000000000000000000004",
+            "WBTC" to "0x0000000000000000000000000000000000000005",
+            "stkGHO" to "0x0000000000000000000000000000000000000006",
+        )
+        const val CHAIN_ID = MockYieldSupply.CHAIN_ID
+        const val UNKNOWN_CHAIN_ID = -1
         const val USER_ADDRESS = "0xuser"
         const val MODULE_ADDRESS = "0xmodule"
     }
