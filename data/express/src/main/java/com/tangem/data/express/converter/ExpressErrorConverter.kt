@@ -33,6 +33,8 @@ class ExpressErrorConverter(
                 2290 -> error.toInvalidFromDecimalsError()
 
                 2320 -> error.toProviderDifferentAmountError()
+
+                2610 -> ExpressError.IntentOfAnotherWalletError(code = error.code)
                 else -> ExpressError.DataError(error.code, error.description)
             }
         } catch (e: Exception) {
