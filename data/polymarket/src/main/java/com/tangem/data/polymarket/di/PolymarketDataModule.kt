@@ -2,6 +2,7 @@ package com.tangem.data.polymarket.di
 
 import com.tangem.data.polymarket.DefaultPolymarketBridgeRepository
 import com.tangem.data.polymarket.DefaultPolymarketActivityRepository
+import com.tangem.data.polymarket.DefaultPolymarketLiveScoresRepository
 import com.tangem.data.polymarket.DefaultPolymarketRepository
 import com.tangem.data.polymarket.DefaultPolymarketPositionsRepository
 import com.tangem.data.polymarket.DefaultPolymarketRedeemRepository
@@ -22,6 +23,7 @@ import com.tangem.domain.polymarket.PolymarketActivityRepository
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketRedeemRepository
+import com.tangem.domain.polymarket.PolymarketLiveScoresRepository
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketWithdrawRepository
 import com.tangem.domain.polymarket.PredictionDepositAddressWriter
@@ -68,6 +70,10 @@ internal interface PolymarketDataModule {
     @Binds
     @Singleton
     fun bindPolymarketRepository(impl: DefaultPolymarketRepository): PolymarketRepository
+
+    @Binds
+    @Singleton
+    fun bindPolymarketLiveScoresRepository(impl: DefaultPolymarketLiveScoresRepository): PolymarketLiveScoresRepository
 
     @Binds
     @Singleton

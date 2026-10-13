@@ -168,5 +168,7 @@ internal class PolymarketMainComponentTest {
         predictionFundingWindow = fundingWindow,
         observePolymarketCredentialsPresenceUseCase = observeCredentialsPresence,
         getWalletMetaInfoUseCase = mockk(),
+        observePolymarketLiveScoresUseCase = mockk(),
+        polymarketFeatureToggles = mockk { every { isPolymarketPhaseTwoEnabled } returns false },
     )
 }

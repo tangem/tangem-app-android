@@ -55,6 +55,12 @@ import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.persistentListOf
+import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveScoresUseCase
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -97,6 +103,8 @@ internal class PolymarketMainModel @Inject constructor(
     private val predictionFundingWindow: PredictionFundingWindow,
     private val observePolymarketCredentialsPresenceUseCase: ObservePolymarketCredentialsPresenceUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
+    private val observePolymarketLiveScoresUseCase: ObservePolymarketLiveScoresUseCase,
+    private val polymarketFeatureToggles: PolymarketFeatureToggles,
 ) : Model(), PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PolymarketMainParams>()
@@ -205,7 +213,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     private var categories: List<PolymarketCategory> = emptyList()
     private var selectedCategoryId: Int? = null
-    private var isScreenResumed = false
+    private val isScreenResumed = MutableStateFlow(value = false)
 
     private val categoriesJob = JobHolder()
 
@@ -213,6 +221,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     init {
         observeEvents()
+        observeLiveScores()
         loadCategories()
         modelScope.launch { tradingAllowance.refresh() }
     }
@@ -275,7 +284,7 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     fun onResume() {
-        isScreenResumed = true
+        isScreenResumed.value = true
         activeFeed.value?.poller?.resume()
         fundingRequisites.retryIfFailed()
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
@@ -289,7 +298,7 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     fun onPause() {
-        isScreenResumed = false
+        isScreenResumed.value = false
         activeFeed.value?.poller?.pause()
         balancePollJobHolder.cancel()
     }
@@ -326,7 +335,7 @@ internal class PolymarketMainModel @Inject constructor(
         uiState.update { it.copy(pendingScrollPosition = feed.scrollPosition) }
 
         if (visited == null || reloadVisited) reloadEvents(feed = feed)
-        if (isScreenResumed) feed.poller.resume()
+        if (isScreenResumed.value) feed.poller.resume()
     }
 
     private fun createFeed(config: PolymarketEventsListConfig): PolymarketCategoryFeed {
@@ -375,6 +384,27 @@ internal class PolymarketMainModel @Inject constructor(
                     onNextPageRetryClick = ::onLoadMore,
                 )
                 uiState.update(transformer::transform)
+            }
+            .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+    }
+
+    private fun observeLiveScores() {
+        if (!polymarketFeatureToggles.isPolymarketPhaseTwoEnabled) return
+
+        val feedGameIds = activeFeed
+            .filterNotNull()
+            .flatMapLatest { feed -> feed.batchFlow.state }
+            .map { batchState ->
+                batchState.data
+                    .flatMap { batch -> batch.data.events }
+                    .mapNotNullTo(mutableSetOf(), PolymarketEvent::gameId)
+            }
+
+        combine(feedGameIds, isScreenResumed) { gameIds, isResumed -> if (isResumed) gameIds else emptySet() }
+            .distinctUntilChanged()
+            .flatMapLatest { gameIds ->
+                if (gameIds.isEmpty()) emptyFlow() else observePolymarketLiveScoresUseCase(gameIds)
             }
             .flowOn(dispatchers.default)
             .launchIn(modelScope)
