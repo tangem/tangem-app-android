@@ -51,7 +51,7 @@ import com.tangem.features.promobanners.api.swapcashback.CampaignsComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.android.create
-import com.tangem.sdk.api.BackupServiceHolder
+import com.tangem.sdk.api.BackupServiceProvider
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.analytics.appsflyer.AppsFlyerDeeplinkRouter
 import com.tangem.tap.features.hot.TangemHotSDKProxy
@@ -96,7 +96,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val scanFailsRequesterProxy: ScanFailsRequesterProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
-    private val backupServiceHolder: BackupServiceHolder,
+    private val backupServiceProvider: BackupServiceProvider,
     private val notificationsRepository: NotificationsRepository,
     private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase,
     private val shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase,
@@ -380,7 +380,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
     private fun discardSavedBackup() {
         componentScope.launch(dispatchers.main) {
-            backupServiceHolder.backupService.discardSavedBackup()
+            backupServiceProvider.backupService.discardSavedBackup()
             val unfinishedBackup = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
             cardRepository.finishCardActivation(cardId = unfinishedBackup.card.cardId, hasBackupError = true)
             onboardingRepository.clearUnfinishedFinalizeOnboarding()

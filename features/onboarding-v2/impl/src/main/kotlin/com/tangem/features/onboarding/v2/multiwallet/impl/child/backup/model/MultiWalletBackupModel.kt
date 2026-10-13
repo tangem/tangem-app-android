@@ -34,7 +34,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.resetB
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.state.MultiWalletBackupUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.WalletCardsBackupReporter
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.usedSeedPhrase
-import com.tangem.sdk.api.BackupServiceHolder
+import com.tangem.sdk.api.BackupServiceProvider
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -51,7 +51,7 @@ import javax.inject.Inject
 internal class MultiWalletBackupModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val backupServiceHolder: BackupServiceHolder,
+    private val backupServiceProvider: BackupServiceProvider,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val tangemSdkManager: TangemSdkManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -67,7 +67,7 @@ internal class MultiWalletBackupModel @Inject constructor(
     private val scanResponse
         get() = params.multiWalletState.value.currentScanResponse
     private val backupService
-        get() = backupServiceHolder.backupService
+        get() = backupServiceProvider.backupService
 
     private val state = MutableStateFlow(BackupState())
 

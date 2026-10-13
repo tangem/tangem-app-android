@@ -10,7 +10,7 @@ import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.ui.state.MultiWalletAccessCodeUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
-import com.tangem.sdk.api.BackupServiceHolder
+import com.tangem.sdk.api.BackupServiceProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +26,7 @@ private const val MINIMUM_ACCESS_CODE_LENGTH = 4
 internal class MultiWalletAccessCodeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val backupServiceHolder: BackupServiceHolder,
+    private val backupServiceProvider: BackupServiceProvider,
     private val analyticsHandler: AnalyticsEventHandler,
 ) : Model() {
 
@@ -116,7 +116,7 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
             }
             MultiWalletAccessCodeUM.Step.ConfirmAccessCode -> {
                 if (checkAccessCode()) {
-                    backupServiceHolder.backupService.setAccessCode(_uiState.value.accessCodeFirst.text)
+                    backupServiceProvider.backupService.setAccessCode(_uiState.value.accessCodeFirst.text)
 
                     // make on done
                     params.multiWalletState.update {

@@ -25,7 +25,7 @@ import com.tangem.core.remote.config.managers.MutableApiConfigsManager
 import com.tangem.datasource.remote.interceptors.AddHeadersInterceptor
 import com.tangem.operations.attestation.api.TangemApiServiceSettings
 import com.tangem.operations.backup.BackupService
-import com.tangem.sdk.api.BackupServiceHolder
+import com.tangem.sdk.api.BackupServiceProvider
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.DefaultSessionViewDelegate
 import com.tangem.sdk.extensions.*
@@ -58,7 +58,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
     private val tangemSdkManager: Lazy<TangemSdkManager>,
     appInfoProvider: AppInfoProvider,
     tangemApiKeyHeaderProvider: TangemApiKeyHeaderProvider,
-) : CardSdkProvider, CardSdkOwner, BackupServiceHolder {
+) : CardSdkProvider, CardSdkOwner, BackupServiceProvider {
 
     private val observer = Observer()
 
