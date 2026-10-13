@@ -45,7 +45,7 @@ class GetFeeForTokenUseCase(
                     tronGaslessFeeResolver.resolveWithSelectedFeeToken(userWallet.walletId, token, transactionData)
                         ?.let { return@either it.bind() }
 
-                    if (!currencyChecksRepository.isEvmGaslessNetwork(token.network)) {
+                    if (!currencyChecksRepository.isNetworkSupportedForGaslessTx(token.network)) {
                         raise(GaslessError.NetworkIsNotSupported)
                     }
 

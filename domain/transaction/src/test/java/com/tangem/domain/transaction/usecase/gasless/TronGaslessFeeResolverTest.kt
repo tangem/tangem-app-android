@@ -231,17 +231,44 @@ internal class TronGaslessFeeResolverTest {
                 coVerify(exactly = 0) { getTronGaslessFeeUseCase(any(), any(), any()) }
             }
 
+        @Test
+        fun `GIVEN the account list lags WHEN resolveWithAutoFeeToken THEN the caller's status is quoted`() =
+            runTest {
+                // Act
+                val actual = resolve(walletCurrencies = emptyList(), sentCurrencyStatus = statusOf(usdt, "100"))
+
+                // Assert
+                assertThat(actual).isEqualTo(gaslessFee(GASLESS_FEE).right())
+                coVerify(exactly = 1) { getTronGaslessFeeUseCase(userWalletId, any(), usdt) }
+            }
+
+        @Test
+        fun `GIVEN the caller's status is another token WHEN resolveWithAutoFeeToken THEN returns null`() =
+            runTest {
+                // Act
+                val actual = resolve(
+                    walletCurrencies = emptyList(),
+                    sentCurrencyStatus = statusOf(usdtOnEthereum, "100"),
+                )
+
+                // Assert
+                assertThat(actual).isNull()
+                coVerify(exactly = 0) { getTronGaslessFeeUseCase(any(), any(), any()) }
+            }
+
         private suspend fun resolve(
             transactionData: TransactionData = tokenTransfer(),
             sentBalance: String? = "100",
             nativeBalance: String? = "50",
             walletCurrencies: List<CryptoCurrency> = listOf(usdt),
+            sentCurrencyStatus: CryptoCurrencyStatus? = null,
         ): Either<GetFeeError, TransactionFeeExtended>? = resolver.resolveWithAutoFeeToken(
             userWalletId = userWalletId,
             network = network,
             transactionData = transactionData,
             nativeCurrencyStatus = statusOf(trx, nativeBalance),
             accountStatusList = accountStatusList(walletCurrencies.map { statusOf(it, sentBalance) }),
+            sentCurrencyStatus = sentCurrencyStatus,
             loadNativeFee = nativeFeeStub::load,
             onNativeFeePreferred = nativeFeeStub::onPreferred,
         )
@@ -280,6 +307,7 @@ internal class TronGaslessFeeResolverTest {
                 transactionData = tokenTransfer(),
                 nativeCurrencyStatus = statusOf(trx, "50"),
                 accountStatusList = accountStatusList(listOf(statusOf(usdt, "1"))),
+                sentCurrencyStatus = null,
                 loadNativeFee = nativeFeeStub::load,
                 onNativeFeePreferred = nativeFeeStub::onPreferred,
             )
