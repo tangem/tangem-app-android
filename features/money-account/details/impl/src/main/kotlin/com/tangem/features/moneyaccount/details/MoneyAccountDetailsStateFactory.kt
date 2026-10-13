@@ -1,4 +1,4 @@
-package com.tangem.features.moneyaccount.main
+package com.tangem.features.moneyaccount.details
 
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
@@ -15,12 +15,12 @@ import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.features.moneyaccount.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
-internal class MoneyAccountMainStateFactory(
+internal class MoneyAccountDetailsStateFactory(
     private val onTermsClick: () -> Unit,
     private val onSupportClick: () -> Unit,
     private val onBackClick: () -> Unit,
 ) {
-    fun createInitialState(): MoneyAccountMainUM = MoneyAccountMainUM(
+    fun createInitialState(): MoneyAccountDetailsUM = MoneyAccountDetailsUM(
         title = resourceReference(R.string.virtual_account_title),
         subtitle = resourceReference(R.string.tangempay_usdc_on_polygon_network),
         balance = MoneyAccountBalanceBlockState.Loading,
@@ -48,7 +48,7 @@ internal class MoneyAccountMainStateFactory(
         onSendClick = {},
     )
 
-    fun createAccountState(account: MoneyAccountStatusValue.Account): MoneyAccountMainUM {
+    fun createAccountState(account: MoneyAccountStatusValue.Account): MoneyAccountDetailsUM {
         val balance = account.balance
         return createInitialState().copy(
             balance = if (balance == null) {
