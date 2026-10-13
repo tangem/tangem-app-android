@@ -13,6 +13,7 @@ import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.ArchivedAccountsStore
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.common.account.WalletAccountsSaver
+import com.tangem.data.common.account.WalletAccountsSync
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
@@ -68,6 +69,7 @@ class DefaultAccountsCRUDRepositoryTest {
         convertersContainer = convertersContainer,
         resources = resources,
         dispatchers = TestingCoroutineDispatcherProvider(),
+        walletAccountsSync = WalletAccountsSync(),
     )
 
     private val userWalletId = UserWalletId("011")
