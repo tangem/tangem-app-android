@@ -42,6 +42,9 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
     val uiState: StateFlow<YieldSupplyRewardsBannerUM?>
         field = MutableStateFlow<YieldSupplyRewardsBannerUM?>(null)
 
+    private var claimChainId: Int? = null
+    private var claimUserAddress: String? = null
+
     init {
         modelScope.launch {
             val userAddress = params.cryptoCurrencyStatusFlow
@@ -58,8 +61,16 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
         }
     }
 
+    fun onClaimClick() {
+        val chainId = claimChainId ?: return
+        val userAddress = claimUserAddress ?: return
+        params.onClaimClick(chainId, userAddress)
+    }
+
     private suspend fun resolveBanner(market: YieldMarketToken?, userAddress: String): YieldSupplyRewardsBannerUM? {
         if (market?.campaign?.hasActiveCampaign != true) return null
+        claimChainId = market.chainId
+        claimUserAddress = userAddress
 
         return getYieldRewardsSummaryUseCase(chainId = market.chainId, userAddress = userAddress)
             .fold(
