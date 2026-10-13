@@ -108,7 +108,7 @@ class SwapTokenScreenTest : BaseTestCase() {
             }
             step("Assert no '$dexType' provider is listed") {
                 onChooseProviderBottomSheet {
-                    flakySafely(WAIT_UNTIL_TIMEOUT) { providerTypeLabel(dexType).assertDoesNotExist() }
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { providerTypeLabel(dexType).assertIsNotDisplayed() }
                 }
             }
             step("Click on '$dexFilter' filter") {
@@ -125,7 +125,9 @@ class SwapTokenScreenTest : BaseTestCase() {
                 }
             }
             step("Assert no '$cexType' provider is listed") {
-                onChooseProviderBottomSheet { providerTypeLabel(cexType).assertDoesNotExist() }
+                onChooseProviderBottomSheet {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { providerTypeLabel(cexType).assertIsNotDisplayed() }
+                }
             }
         }
     }
@@ -665,7 +667,7 @@ class SwapTokenScreenTest : BaseTestCase() {
         val inputAmount = "100"
         val switchedInputAmount = "0.1"
         val pairsToScenarioName = "polygon_pos_to_pairs"
-        val pairsToScenarioState = "DexProvider"
+        val pairsToScenarioState = "SwapTokensSwitch"
         val reverseQuoteScenarioName = "exchange_quote_ethereum_polygon"
         val reverseQuoteScenarioState = "Native"
 
