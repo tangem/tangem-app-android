@@ -514,13 +514,35 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN a claim being sent WHEN the sheet is closed THEN the transaction still completes`() = runTest {
+    fun `GIVEN a claim being sent WHEN the sheet is closed THEN the transaction completes without dismissing again`() =
+        runTest {
+            // Arrange
+            var isSendCompleted = false
+            coEvery { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) } coAnswers {
+                delay(SLOW_CALL_MILLIS)
+                isSendCompleted = true
+                TX_HASH.right()
+            }
+            val model = createModel()
+            advanceUntilIdle()
+            model.onClaimClick()
+            advanceTimeBy(SLOW_CALL_MILLIS / 2)
+
+            // Act
+            model.onDestroy()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(isSendCompleted).isTrue()
+            assertThat(isSheetDismissed).isFalse()
+        }
+
+    @Test
+    fun `GIVEN a claim failing after the sheet was closed WHEN sending ends THEN no error dialog is shown`() = runTest {
         // Arrange
-        var isSendCompleted = false
         coEvery { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) } coAnswers {
             delay(SLOW_CALL_MILLIS)
-            isSendCompleted = true
-            TX_HASH.right()
+            SendTransactionError.UnknownError().left()
         }
         val model = createModel()
         advanceUntilIdle()
@@ -532,7 +554,34 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         advanceUntilIdle()
 
         // Assert
-        assertThat(isSendCompleted).isTrue()
+        verify(exactly = 0) {
+            alertFactory.getSendTransactionErrorState(error = any(), popBack = any(), onFailedTxEmailClick = any())
+        }
+    }
+
+    @Test
+    fun `GIVEN the balance check fails WHEN confirmed THEN the fee offers a reload and nothing is signed`() = runTest {
+        // Arrange
+        val model = createModel()
+        advanceUntilIdle()
+        coEvery {
+            getBalanceNotEnoughForFeeWarningUseCase(fee = any(), userWalletId = any(), tokenStatus = any(), feeStatus = any())
+        } returns IllegalStateException("balance check failed").left()
+
+        // Act
+        model.onClaimClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) }
+        coVerify {
+            notificationsUpdateTrigger.triggerUpdate(
+                data = YieldSupplyNotificationData(feeValue = BigDecimal("2"), feeError = GetFeeError.UnknownError),
+            )
+        }
+        assertThat(model.uiState.value.isClaimEnabled).isFalse()
+
+        model.onDestroy()
     }
 
     @Test
