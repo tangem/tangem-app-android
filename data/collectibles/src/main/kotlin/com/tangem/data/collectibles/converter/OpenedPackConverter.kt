@@ -15,7 +15,6 @@ internal object OpenedPackConverter : Converter<OpenedPackConverter.Input, Opene
             imageBackUrl = imageBack,
             rarity = CollectibleRarity.entries.firstOrNull { it.name.equals(other = rarity, ignoreCase = true) },
             gradingCompany = gradingCompany,
-            grade = grade,
             gradingId = gradingId,
             year = year,
             set = set,

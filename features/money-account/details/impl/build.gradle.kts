@@ -20,10 +20,15 @@ dependencies {
     implementation(projects.core.utils)
 
     /** Domain */
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
+    implementation(projects.domain.moneyAccount)
+    implementation(projects.domain.wallets)
 
     /** Features */
     implementation(projects.features.moneyAccount.details.api)
+    implementation(projects.features.txhistory.api)
 
     /** Compose */
     implementation(deps.compose.foundation)

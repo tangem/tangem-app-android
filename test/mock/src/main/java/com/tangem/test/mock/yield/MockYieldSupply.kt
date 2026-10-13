@@ -3,9 +3,11 @@ package com.tangem.test.mock.yield
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.yield.supply.models.YieldMarketToken
+import com.tangem.domain.yield.supply.models.incentives.YieldClaimCalldata
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentiveCampaign
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardDestination
+import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -21,6 +23,7 @@ object MockYieldSupply {
     const val CHAIN_ID = 1
     const val TOKEN_ADDRESS = "0xTokenAbC"
     const val USER_ADDRESS = "0xUser"
+    const val MODULE_ADDRESS = "0xModule"
     const val REWARD_TOKEN = "0xWETH"
 
     fun market(
@@ -76,6 +79,63 @@ object MockYieldSupply {
         estimatedServiceFeeUsd = estimatedServiceFeeUsd,
         serviceFeeRateBps = serviceFeeRateBps,
         finalDestination = finalDestination,
+    )
+
+    @Suppress("LongParameterList")
+    fun calldata(
+        chainId: Int = CHAIN_ID,
+        userAddress: String = USER_ADDRESS,
+        moduleAddress: String? = MODULE_ADDRESS,
+        hasClaimable: Boolean = true,
+        to: String? = MODULE_ADDRESS,
+        data: String? = "0xdeadbeef",
+        rewardTokens: List<String> = listOf(REWARD_TOKEN),
+        cumulativeAmounts: List<String> = listOf("1000000000000000000"),
+        totalEstimatedServiceFeeUsd: BigDecimal = BigDecimal("1.50"),
+        isClaimRecommended: Boolean = true,
+    ) = YieldClaimCalldata(
+        chainId = chainId,
+        userAddress = userAddress,
+        moduleAddress = moduleAddress,
+        hasClaimable = hasClaimable,
+        to = to,
+        data = data,
+        rewardTokens = rewardTokens,
+        cumulativeAmounts = cumulativeAmounts,
+        totalEstimatedServiceFeeUsd = totalEstimatedServiceFeeUsd,
+        isClaimRecommended = isClaimRecommended,
+    )
+
+    fun claimableSummary(
+        moduleAddress: String = MODULE_ADDRESS,
+        claimable: List<YieldReward> = listOf(reward()),
+        pending: List<YieldReward> = emptyList(),
+        unsupported: List<YieldReward> = emptyList(),
+        supportedRewardTokens: Set<String> = setOf(REWARD_TOKEN.lowercase()),
+        totalNetUsd: BigDecimal = BigDecimal("8.50"),
+    ) = YieldRewardsSummary.Claimable(
+        moduleAddress = moduleAddress,
+        claimable = claimable,
+        pending = pending,
+        unsupported = unsupported,
+        supportedRewardTokens = supportedRewardTokens,
+        totalNetUsd = totalNetUsd,
+    )
+
+    fun deferredSummary(
+        moduleAddress: String = MODULE_ADDRESS,
+        claimable: List<YieldReward> = listOf(reward()),
+        pending: List<YieldReward> = emptyList(),
+        unsupported: List<YieldReward> = emptyList(),
+        supportedRewardTokens: Set<String> = setOf(REWARD_TOKEN.lowercase()),
+        totalNetUsd: BigDecimal = BigDecimal("8.50"),
+    ) = YieldRewardsSummary.Deferred(
+        moduleAddress = moduleAddress,
+        claimable = claimable,
+        pending = pending,
+        unsupported = unsupported,
+        supportedRewardTokens = supportedRewardTokens,
+        totalNetUsd = totalNetUsd,
     )
 
     fun network(id: String = NETWORK_ID, name: String = "Ethereum", currencySymbol: String = "ETH") = Network(

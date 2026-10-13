@@ -54,9 +54,13 @@ internal fun darkColors3() =
             inverse = TangemColorPalette.Neutral.`5`,
             base = TangemColorPalette.Base.black,
             disabled = TangemColorPalette.Neutral.`70`,
-            opaque = TangemColors3.Bg.Opaque(
+            transparent = TangemColors3.Bg.Transparent(
                 primary = TangemColorPalette.Opaque.BaseWhite.`5`,
                 secondary = TangemColorPalette.Opaque.BaseWhite.`10`,
+                onMaterial = TangemColors3.Bg.Transparent.OnMaterial(
+                    primary = Color(0x992C2C2C),
+                    secondary = Color(0xCC2C2C2C),
+                ),
             ),
             status = TangemColors3.Bg.Status(
                 success = TangemColorPalette.Green.`50`,
@@ -79,6 +83,7 @@ internal fun darkColors3() =
             ),
             special = TangemColors3.Bg.Special(
                 control = TangemColorPalette.Opaque.BaseWhite.`10`,
+                switch = TangemColorPalette.Neutral.`70`,
             ),
         ),
         icon = TangemColors3.Icon(

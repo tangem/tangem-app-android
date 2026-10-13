@@ -263,7 +263,7 @@ private fun TransactionListIcon(iconState: TangemIconUM, modifier: Modifier = Mo
                 modifier = modifier
                     .size(TangemTheme.dimens2.x10)
                     .clip(CircleShape)
-                    .background(TangemTheme.colors3.bg.opaque.primary),
+                    .background(TangemTheme.colors3.bg.transparent.primary),
                 contentAlignment = Alignment.Center,
             ) {
                 TangemIcon(
@@ -343,7 +343,7 @@ private fun TangemPayTransactionEmptyBlock(
             modifier = Modifier
                 .size(TangemTheme.dimens2.x10)
                 .background(
-                    color = TangemTheme.colors3.bg.opaque.primary,
+                    color = TangemTheme.colors3.bg.transparent.primary,
                     shape = CircleShape,
                 )
                 .padding(10.dp)

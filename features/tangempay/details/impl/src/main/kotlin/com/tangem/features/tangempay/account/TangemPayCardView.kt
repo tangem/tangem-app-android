@@ -130,7 +130,7 @@ internal fun TangemPayAddCardView(onClick: () -> Unit, isEnabled: Boolean, modif
                 width = TangemTheme.dimens2.x14,
             )
             .clip(RoundedCornerShape(6.dp))
-            .background(TangemTheme.colors3.bg.opaque.primary)
+            .background(TangemTheme.colors3.bg.transparent.primary)
             .clickableSingle(onClick = onClick, enabled = isEnabled),
         contentAlignment = Alignment.Center,
     ) {

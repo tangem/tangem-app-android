@@ -9,9 +9,12 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionReceiptProvider
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderFactory
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
 import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
@@ -28,6 +31,7 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.spyk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -353,6 +357,64 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CreateClaimRewardsTransaction {
+
+        private val callData = mockk<SmartContractCallData>()
+
+        @Test
+        fun `GIVEN no fee WHEN createClaimRewardsTransaction THEN builds a zero amount call to the module`() = runTest {
+            // Act
+            val result = repository.createClaimRewardsTransaction(
+                userWalletId = userWalletId,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                destinationAddress = MODULE_ADDRESS,
+                callData = callData,
+                fee = null,
+            )
+
+            // Assert
+            Truth.assertThat(result.destinationAddress).isEqualTo(MODULE_ADDRESS)
+            Truth.assertThat(result.amount.value).isEqualTo(BigDecimal.ZERO)
+            Truth.assertThat(result.fee).isNull()
+            Truth.assertThat((result.extras as EthereumTransactionExtras).callData).isSameInstanceAs(callData)
+        }
+
+        @Test
+        fun `GIVEN fee WHEN createClaimRewardsTransaction THEN wallet manager builds a zero amount call to the module`() =
+            runTest {
+                // Arrange
+                val fee = mockk<Fee>()
+                val amount = slot<Amount>()
+                every {
+                    walletManager.createTransaction(amount = capture(amount), fee = fee, destination = MODULE_ADDRESS)
+                } answers {
+                    TransactionData.Uncompiled(
+                        amount = amount.captured,
+                        fee = fee,
+                        sourceAddress = "0xowner",
+                        destinationAddress = MODULE_ADDRESS,
+                    )
+                }
+
+                // Act
+                val result = repository.createClaimRewardsTransaction(
+                    userWalletId = userWalletId,
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    destinationAddress = MODULE_ADDRESS,
+                    callData = callData,
+                    fee = fee,
+                )
+
+                // Assert
+                Truth.assertThat(amount.captured.value).isEqualTo(BigDecimal.ZERO)
+                Truth.assertThat(result.destinationAddress).isEqualTo(MODULE_ADDRESS)
+                Truth.assertThat(result.fee).isSameInstanceAs(fee)
+                Truth.assertThat((result.extras as EthereumTransactionExtras).callData).isSameInstanceAs(callData)
+            }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class GetEnterTransactionOutcome {
 
         private val receiptWalletManager = mockk<WalletManager>(
@@ -438,5 +500,6 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
     private companion object {
         const val ENTER_TX_HASH = "0xenter"
+        const val MODULE_ADDRESS = "0x2222222222222222222222222222222222222222"
     }
 }

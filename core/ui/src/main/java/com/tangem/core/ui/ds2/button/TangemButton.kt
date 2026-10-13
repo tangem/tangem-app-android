@@ -37,7 +37,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 /**
  * Design-system v2 button supporting an optional leading icon, label, and trailing icon.
  *
- * Version: 1.2.0
+ * Version: 1.2.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=0-1)
  *
@@ -155,7 +155,7 @@ private fun Color.scaleAlpha(factor: Float): Color = if (factor == 1f) this else
 
 object TangemButton {
 
-    val version = DsVersion(major = 1, minor = 2, patch = 0)
+    val version = DsVersion(major = 1, minor = 2, patch = 1)
 
     /**
      * Visual style of the button.

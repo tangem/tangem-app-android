@@ -142,7 +142,7 @@ private fun TransactionIcon(iconState: TangemIconUM, modifier: Modifier = Modifi
             .testTag(TangemPayTestTags.TRANSACTION_DETAILS_ICON)
             .size(80.dp)
             .clip(CircleShape)
-            .background(TangemTheme.colors3.bg.opaque.primary),
+            .background(TangemTheme.colors3.bg.transparent.primary),
         contentAlignment = Alignment.Center,
     ) {
         when (iconState) {

@@ -43,7 +43,13 @@ import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.currentTime
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
 import org.junit.jupiter.api.BeforeEach
@@ -457,6 +463,111 @@ internal class IntroductionSocialLoginHandlerTest {
         assertThat(host.progress[3]).isNull()
     }
 
+    @ParameterizedTest
+    @MethodSource("provideStageMinDisplayModels")
+    fun `GIVEN a stage finished at once WHEN signIn THEN the stage stays up for the minimum time`(
+        model: StageMinDisplayModel,
+    ) = runTest {
+        // Arrange
+        stubStageThenResult(stage = model.stage, workDurationMs = 0, result = model.outcome.right())
+
+        // Act
+        launch { handler.signIn(PROVIDER, SOURCE, host) }
+        advanceTimeBy(STAGE_MIN_DISPLAY_MS - 1)
+        runCurrent()
+        val isLeftEarly = host.progress.last() == null
+        advanceTimeBy(1)
+        runCurrent()
+
+        // Assert
+        assertThat(isLeftEarly).isFalse()
+        verify(exactly = 1) { router.replaceAll(AppRoute.Wallet) }
+        assertThat(host.progress.last()).isNull()
+    }
+
+    private fun provideStageMinDisplayModels() = listOf(
+        StageMinDisplayModel(
+            stage = SocialLoginStage.CreatingWallet,
+            outcome = SocialLoginOutcome.WalletCreated(WALLET_ID),
+        ),
+        StageMinDisplayModel(
+            stage = SocialLoginStage.RestoringWallet,
+            outcome = SocialLoginOutcome.WalletRestored(WALLET_ID),
+        ),
+    )
+
+    data class StageMinDisplayModel(val stage: SocialLoginStage, val outcome: SocialLoginOutcome)
+
+    @Test
+    fun `GIVEN a stage outlasting the minimum time WHEN signIn succeeds THEN the main screen opens at once`() = runTest {
+        // Arrange
+        stubStageThenResult(
+            stage = SocialLoginStage.CreatingWallet,
+            workDurationMs = STAGE_MIN_DISPLAY_MS + 500,
+            result = SocialLoginOutcome.WalletCreated(WALLET_ID).right(),
+        )
+
+        // Act
+        handler.signIn(PROVIDER, SOURCE, host)
+
+        // Assert
+        assertThat(currentTime).isEqualTo(STAGE_MIN_DISPLAY_MS + 500)
+        verify(exactly = 1) { router.replaceAll(AppRoute.Wallet) }
+    }
+
+    @Test
+    fun `GIVEN a stage shown WHEN signIn fails at once THEN the failure is not held back`() = runTest {
+        // Arrange
+        stubStageThenResult(
+            stage = SocialLoginStage.RestoringWallet,
+            workDurationMs = 0,
+            result = SocialLoginError.NetworkError.left(),
+        )
+
+        // Act
+        handler.signIn(PROVIDER, SOURCE, host)
+
+        // Assert
+        assertThat(currentTime).isEqualTo(0)
+        verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
+        assertThat(host.progress.last()).isNull()
+    }
+
+    @Test
+    fun `GIVEN a stage held for the minimum time WHEN the attempt is cancelled THEN it stops without navigating`() =
+        runTest {
+            // Arrange
+            stubStageThenResult(
+                stage = SocialLoginStage.CreatingWallet,
+                workDurationMs = 0,
+                result = SocialLoginOutcome.WalletCreated(WALLET_ID).right(),
+            )
+            val attempt = launch { handler.signIn(PROVIDER, SOURCE, host) }
+            runCurrent()
+
+            // Act
+            attempt.cancel()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(attempt.isCancelled).isTrue()
+            verify(exactly = 0) { router.replaceAll(any()) }
+            assertThat(host.progress.last()).isNull()
+        }
+
+    private fun stubStageThenResult(
+        stage: SocialLoginStage,
+        workDurationMs: Long,
+        result: Either<SocialLoginError, SocialLoginOutcome>,
+    ) {
+        val onStageChanged = slot<(SocialLoginStage) -> Unit>()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, capture(onStageChanged), any(), any()) } coAnswers {
+            onStageChanged.captured(stage)
+            delay(workDurationMs)
+            result
+        }
+    }
+
     @Test
     fun `GIVEN the consent is confirmed WHEN signIn THEN the choice reaches the flow`() = runTest {
         // Arrange
@@ -708,5 +819,6 @@ internal class IntroductionSocialLoginHandlerTest {
         val SELECT_ERROR = SelectWalletError.UnableToSelectUserWallet
         const val CONSENT_TEXT = "Teilen Sie meine E-Mail mit Tangem"
         val SOURCE = AnalyticsParam.ScreensSources.ImportWallet
+        const val STAGE_MIN_DISPLAY_MS = 3_000L
     }
 }

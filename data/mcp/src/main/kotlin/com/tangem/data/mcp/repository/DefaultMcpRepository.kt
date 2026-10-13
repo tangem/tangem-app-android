@@ -2,8 +2,10 @@ package com.tangem.data.mcp.repository
 
 import android.util.Base64
 import arrow.core.Either
+import arrow.core.getOrElse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.data.mcp.converter.toDomain
+import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
@@ -35,6 +37,14 @@ internal class DefaultMcpRepository @Inject constructor(
     private val loadJobHolder = JobHolder()
 
     override fun getSessions(): Flow<List<McpSession>> = sessions.onStart { loadSessions(force = false) }
+
+    override suspend fun getAgent(clientId: String): McpAgent {
+        return mcpApi.getClient(clientId = clientId)
+            .toEither()
+            .map { it.toDomain() }
+            .onLeft { TangemLogger.withTag(TAG).e("Agent $clientId cannot be looked up, treating it as unknown", it) }
+            .getOrElse { McpAgent.unknown(clientId) }
+    }
 
     override suspend fun getDeviceVerification(userCode: String): Either<Throwable, McpDeviceVerification> {
         val response = mcpApi.getDeviceVerification(userCode = userCode)
