@@ -22,7 +22,7 @@ internal class LowSlippageNoticeAnalyticsTest {
     private val sentEvents = mutableListOf<AnalyticsEvent>()
 
     private val lowSlippage = BigDecimal("0.1")
-    private val notices = listOf(SwapNotificationUM.Warning.LowSlippage(stringReference("0.1%")))
+    private val notices = listOf(SwapNotificationUM.Warning.LowSlippage(stringReference("0.1%"), {}))
     private val state: SwapState.QuotesLoadedState = mockk(relaxed = true) {
         every { fromTokenInfo.swapCurrencyStatus.currency } returns currency(symbol = "ETH", networkName = "Ethereum")
         every { toTokenInfo.swapCurrencyStatus.currency } returns currency(symbol = "BTC", networkName = "Bitcoin")

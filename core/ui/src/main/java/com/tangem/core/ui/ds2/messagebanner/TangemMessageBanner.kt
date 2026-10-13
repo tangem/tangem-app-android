@@ -270,7 +270,7 @@ private fun MessageBannerTextWrapper(
             style = TangemTheme.typography3.body.medium,
             color = TangemTheme.colors3.text.primary,
             textAlign = textAlign,
-            maxLines = 2,
+            maxLines = 3,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.testTag(NotificationTestTags.TITLE),
         )
