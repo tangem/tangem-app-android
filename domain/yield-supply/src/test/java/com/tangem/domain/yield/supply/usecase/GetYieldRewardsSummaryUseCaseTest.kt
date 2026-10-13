@@ -87,6 +87,12 @@ internal class GetYieldRewardsSummaryUseCaseTest {
         )
         val pending = reward(symbol = "USDC", pending = "500")
         val drained = reward(symbol = "WBTC")
+        val conflictingWeth = reward(
+            symbol = "WETH",
+            claimable = "1000",
+            netUsd = "1.00",
+            destination = YieldRewardDestination.Unsupported,
+        )
         val malformed = reward(symbol = "BAD", rewardToken = "", claimable = "4000", netUsd = "5.00")
         val unsupportedPending = reward(
             symbol = "stkGHO",
@@ -215,6 +221,19 @@ internal class GetYieldRewardsSummaryUseCaseTest {
                     unsupported = listOf(malformed),
                     supportedRewardTokens = setOf(token("WETH")),
                     totalNetUsd = BigDecimal("1.00"),
+                ),
+            ),
+            SummaryModel(
+                moduleAddress = MODULE_ADDRESS,
+                isClaimRecommended = true,
+                rewards = listOf(weth, conflictingWeth, aave),
+                expected = YieldRewardsSummary.Claimable(
+                    moduleAddress = MODULE_ADDRESS,
+                    claimable = listOf(aave),
+                    pending = emptyList(),
+                    unsupported = listOf(weth, conflictingWeth),
+                    supportedRewardTokens = setOf(token("AAVE")),
+                    totalNetUsd = BigDecimal("0.30"),
                 ),
             ),
             SummaryModel(
