@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,6 +49,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM
@@ -64,7 +66,8 @@ internal fun TangemPayBankWithdrawAmountScreen(state: TangemPayBankWithdrawAmoun
         modifier = modifier
             .fillMaxSize()
             .background(TangemTheme.colors3.bg.primary)
-            .imePadding(),
+            .imePadding()
+            .testTag(TangemPayTestTags.BANK_WITHDRAW_AMOUNT_SCREEN),
     ) {
         TangemTopNavigation(
             title = state.header.title,
@@ -197,6 +200,7 @@ private fun AmountPlaceholder(currencySymbol: String) {
 @Composable
 private fun SourceRow(source: SourceRowUM) {
     TangemRow(
+        modifier = Modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_SOURCE_ROW),
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = {
             CurrencyIcon(state = source.icon, iconSize = 40.dp, networkBadgeSize = 12.dp)
