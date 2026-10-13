@@ -61,6 +61,7 @@ internal class JointAccountActionsFactory(
                 userWallet = userWallet,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 shouldShowSwapStories = false,
+                isExpressUnreachable = false,
             )
             addHeldBack(natural = naturalSwap.unavailabilityReason) {
                 ActionState.Swap(unavailabilityReason = it, shouldShowBadge = false)
