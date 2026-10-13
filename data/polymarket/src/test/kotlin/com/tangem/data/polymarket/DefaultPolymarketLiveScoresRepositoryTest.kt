@@ -64,6 +64,25 @@ internal class DefaultPolymarketLiveScoresRepositoryTest {
             ).inOrder()
         }
 
+    @Test
+    fun `GIVEN a feed game id with a leading zero WHEN the socket sends it as a number THEN the feed id is emitted`() =
+        runTest {
+            // Arrange
+            val received = mutableListOf<PolymarketLiveScore>()
+            val job = launch(UnconfinedTestDispatcher(testScheduler)) {
+                repository.observeLiveScores(gameIds = setOf("090108924")).toList(received)
+            }
+
+            // Act
+            socket.results.emit(result(gameId = 90108924, score = "2-6"))
+            job.cancel()
+
+            // Assert
+            assertThat(received).containsExactly(
+                PolymarketLiveScore(gameId = "090108924", score = "2-6", period = "Q1", isLive = true, isEnded = false),
+            )
+        }
+
     private fun result(gameId: Long, score: String) = SportsResultDto(
         gameId = gameId,
         leagueAbbreviation = "nba",
