@@ -5,9 +5,11 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.express.converter.ExpressErrorConverter
+import com.tangem.data.swap.DefaultExchangeIntentRepository
 import com.tangem.data.swap.DefaultSwapErrorResolver
 import com.tangem.data.swap.DefaultSwapRepositoryV2
 import com.tangem.data.swap.DefaultSwapTransactionRepository
+import com.tangem.data.swap.converter.ExchangeIntentConverter
 import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
@@ -16,9 +18,11 @@ import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
+import com.tangem.domain.express.ExpressErrorResolver
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
+import com.tangem.domain.swap.ExchangeIntentRepository
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.SwapTransactionRepository
@@ -85,6 +89,19 @@ internal object SwapDataModule {
             multiAccountListSupplier = multiAccountListSupplier,
             dispatchers = dispatchers,
             growPreferencesKeys = growPreferencesKeys,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideExchangeIntentRepository(
+        tangemExpressApi: TangemExpressApi,
+        expressErrorResolver: ExpressErrorResolver,
+    ): ExchangeIntentRepository {
+        return DefaultExchangeIntentRepository(
+            tangemExpressApi = tangemExpressApi,
+            exchangeIntentConverter = ExchangeIntentConverter(),
+            expressErrorResolver = expressErrorResolver,
         )
     }
 }
