@@ -90,6 +90,11 @@ internal class LockUserWalletsTimer @Inject constructor(
         startTimerWorker()
     }
 
+    override fun onDestroy(owner: LifecycleOwner) {
+        owner.lifecycle.removeObserver(this)
+        if (attachedLifecycle === owner.lifecycle) attachedLifecycle = null
+    }
+
     fun restart() {
         if (delayJobHolder.isEmpty()) return
         TangemLogger.i(
