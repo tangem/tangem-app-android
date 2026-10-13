@@ -606,9 +606,9 @@ internal class DefaultTangemSdkManager(
         )
     }
 
-    override suspend fun tangemPayProduceInitialCredentials(
+    override suspend fun tangemPayProduceInitialData(
         preflightReadFilter: PreflightReadFilter,
-    ): Either<Throwable, TangemPayInitialCredentials> {
+    ): Either<Throwable, TangemPayInitialData> {
         val result = runTaskAsyncReturnOnMain(
             runnable = tangemPayChallengeTask,
             cardId = null,
@@ -619,7 +619,7 @@ internal class DefaultTangemSdkManager(
 
         return when (result) {
             is CompletionResult.Failure<*> -> result.error.left()
-            is CompletionResult.Success<TangemPayInitialCredentials> -> result.data.right()
+            is CompletionResult.Success<TangemPayInitialData> -> result.data.right()
         }
     }
 
