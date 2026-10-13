@@ -21,6 +21,7 @@ dependencies {
     implementation(projects.core.analytics.models)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
+    implementation(projects.common.routing)
 
     /** Features api */
     api(projects.features.usedesk.api)
@@ -28,6 +29,7 @@ dependencies {
     /** Domain */
     api(projects.domain.feedback)
     api(projects.domain.settings)
+    implementation(projects.domain.wallets)
 
     /** DI */
     implementation(deps.hilt.android)
