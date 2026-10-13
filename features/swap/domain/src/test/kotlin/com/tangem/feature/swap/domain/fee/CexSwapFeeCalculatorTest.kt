@@ -509,6 +509,35 @@ internal class CexSwapFeeCalculatorTest {
         }
 
     @Test
+    fun `GIVEN Tron gasless quote unavailable and TRX payable WHEN calculate THEN native fee is returned`() =
+        runTest {
+            // Arrange
+            val fromStatus = tronUsdtStatus()
+            val nativeFee = tronNativeFee(value = "6.43")
+            coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+            coEvery { estimateFeeUseCase(any(), any(), any()) } returns nativeFee.right()
+            val trxStatus = givenTrxBalance(balance = "50")
+            stubTronTransferTransaction()
+            coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns
+                GetFeeError.GaslessError.DataError(null).left()
+
+            // Act
+            val result = calculateDefaultFee(fromStatus)
+
+            // Assert
+            val expected = TransactionFeeExtended(
+                transactionFee = nativeFee,
+                feeTokenId = trxStatus.currency.id,
+                nativeFee = nativeFee,
+            )
+            val loaded = result.getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended
+            assertThat(loaded?.fee).isEqualTo(expected)
+            coVerify(exactly = 0) {
+                estimateFeeForGaslessTxUseCase(amount = any(), userWallet = any(), sendingTokenCurrencyStatus = any())
+            }
+        }
+
+    @Test
     fun `GIVEN no fee token and Tron activation refused WHEN calculate THEN error is propagated`() = runTest {
         // Arrange
         val fromStatus = tronUsdtStatus()
@@ -570,7 +599,7 @@ internal class CexSwapFeeCalculatorTest {
         runTest {
             // Arrange
             val fromStatus = tronUsdtStatus()
-            val nativeFee = tronNativeFee(remainingEnergy = 70_000, feeEnergy = 65_000)
+            val nativeFee = tronEnergyFee(remainingEnergy = 70_000, feeEnergy = 65_000)
             coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
             coEvery { estimateFeeUseCase(any(), any(), any()) } returns nativeFee.right()
             val trxStatus = givenTrxBalance(balance = "50")
@@ -594,10 +623,10 @@ internal class CexSwapFeeCalculatorTest {
         runTest {
             // Arrange
             val fromStatus = tronUsdtStatus()
-            val gasless = mockk<TransactionFeeExtended>()
+            val gasless = tronGaslessFee(fromStatus)
             coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
             coEvery { estimateFeeUseCase(any(), any(), any()) } returns
-                tronNativeFee(remainingEnergy = 70_000, feeEnergy = 65_000).right()
+                tronEnergyFee(remainingEnergy = 70_000, feeEnergy = 65_000).right()
             givenTrxBalance(balance = "0.1")
             stubTronTransferTransaction()
             coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns gasless.right()
@@ -611,37 +640,65 @@ internal class CexSwapFeeCalculatorTest {
         }
 
     @Test
-    fun `GIVEN own energy covers the fee and TRX status unavailable WHEN calculate THEN quotes Tron gasless fee`() =
+    fun `GIVEN own energy partly covers the fee and TRX cheaper in fiat WHEN calculate THEN native fee is returned`() =
         runTest {
             // Arrange
             val fromStatus = tronUsdtStatus()
-            val gasless = mockk<TransactionFeeExtended>()
+            val nativeFee = tronEnergyFee(remainingEnergy = 10_000, feeEnergy = 65_000)
             coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
-            coEvery { estimateFeeUseCase(any(), any(), any()) } returns
-                tronNativeFee(remainingEnergy = 70_000, feeEnergy = 65_000).right()
-            coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns null.right()
+            coEvery { estimateFeeUseCase(any(), any(), any()) } returns nativeFee.right()
+            val trxStatus = givenTrxBalance(balance = "50")
             stubTronTransferTransaction()
-            coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns gasless.right()
+            coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns tronGaslessFee(fromStatus).right()
 
             // Act
             val result = calculateDefaultFee(fromStatus)
 
             // Assert
+            val expected = TransactionFeeExtended(
+                transactionFee = nativeFee,
+                feeTokenId = trxStatus.currency.id,
+                nativeFee = nativeFee,
+            )
             val loaded = result.getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended
-            assertThat(loaded?.fee).isSameInstanceAs(gasless)
+            assertThat(loaded?.fee).isEqualTo(expected)
+            coVerify(exactly = 1) { getTronGaslessFeeUseCase(any(), any(), any()) }
         }
 
     @Test
-    fun `GIVEN own energy short WHEN calculate THEN quotes Tron gasless fee`() = runTest {
+    fun `GIVEN TRX fee cheaper in fiat and payable WHEN calculate THEN native fee is returned`() = runTest {
         // Arrange
         val fromStatus = tronUsdtStatus()
-        val gasless = mockk<TransactionFeeExtended>()
+        val nativeFee = tronNativeFee(value = "0.35")
         coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
-        coEvery { estimateFeeUseCase(any(), any(), any()) } returns
-            tronNativeFee(remainingEnergy = 10_000, feeEnergy = 65_000).right()
-        givenTrxBalance(balance = "50")
+        stubTronTransferTransaction()
+        coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns tronGaslessFee(fromStatus).right()
+        coEvery { estimateFeeUseCase(any(), any(), any()) } returns nativeFee.right()
+        val trxStatus = givenTrxBalance(balance = "50")
+
+        // Act
+        val result = calculateDefaultFee(fromStatus)
+
+        // Assert
+        val expected = TransactionFeeExtended(
+            transactionFee = nativeFee,
+            feeTokenId = trxStatus.currency.id,
+            nativeFee = nativeFee,
+        )
+        val loaded = result.getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended
+        assertThat(loaded?.fee).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN TRX fee dearer in fiat WHEN calculate THEN Tron gasless fee is returned`() = runTest {
+        // Arrange
+        val fromStatus = tronUsdtStatus()
+        val gasless = tronGaslessFee(fromStatus)
+        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
         stubTronTransferTransaction()
         coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns gasless.right()
+        coEvery { estimateFeeUseCase(any(), any(), any()) } returns tronNativeFee(value = "13").right()
+        givenTrxBalance(balance = "50")
 
         // Act
         val result = calculateDefaultFee(fromStatus)
@@ -650,6 +707,46 @@ internal class CexSwapFeeCalculatorTest {
         val loaded = result.getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended
         assertThat(loaded?.fee).isSameInstanceAs(gasless)
     }
+
+    @Test
+    fun `GIVEN TRX fee cheaper in fiat and TRX short WHEN calculate THEN Tron gasless fee is returned`() = runTest {
+        // Arrange
+        val fromStatus = tronUsdtStatus()
+        val gasless = tronGaslessFee(fromStatus)
+        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+        stubTronTransferTransaction()
+        coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns gasless.right()
+        coEvery { estimateFeeUseCase(any(), any(), any()) } returns tronNativeFee(value = "0.35").right()
+        givenTrxBalance(balance = "0.1")
+
+        // Act
+        val result = calculateDefaultFee(fromStatus)
+
+        // Assert
+        val loaded = result.getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended
+        assertThat(loaded?.fee).isSameInstanceAs(gasless)
+    }
+
+    @Test
+    fun `GIVEN own energy covers the fee and TRX status unavailable WHEN calculate THEN quotes Tron gasless fee`() =
+        runTest {
+            // Arrange
+            val fromStatus = tronUsdtStatus()
+            val gasless = tronGaslessFee(fromStatus)
+            coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+            stubTronTransferTransaction()
+            coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns gasless.right()
+            coEvery { estimateFeeUseCase(any(), any(), any()) } returns
+                tronEnergyFee(remainingEnergy = 70_000, feeEnergy = 65_000).right()
+            coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns null.right()
+
+            // Act
+            val result = calculateDefaultFee(fromStatus)
+
+            // Assert
+            val loaded = result.getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended
+            assertThat(loaded?.fee).isSameInstanceAs(gasless)
+        }
 
     private fun tronUsdtStatus(): SwapCurrencyStatus = buildSwapCurrencyStatus(
         networkRawId = Blockchain.Tron.toNetworkId(),
@@ -666,12 +763,21 @@ internal class CexSwapFeeCalculatorTest {
         isGasless = true,
     )
 
-    private fun tronNativeFee(remainingEnergy: Long, feeEnergy: Long) = TransactionFee.Single(
+    private fun tronNativeFee(value: String) = TransactionFee.Single(
+        normal = Fee.Common(Amount(BigDecimal(value), Blockchain.Tron)),
+    )
+
+    private fun tronEnergyFee(remainingEnergy: Long, feeEnergy: Long) = TransactionFee.Single(
         normal = Fee.Tron(
             amount = Amount(BigDecimal("0.35"), Blockchain.Tron),
             remainingEnergy = remainingEnergy,
             feeEnergy = feeEnergy,
         ),
+    )
+
+    private fun tronGaslessFee(fromStatus: SwapCurrencyStatus) = TransactionFeeExtended(
+        transactionFee = TransactionFee.Single(normal = Fee.Common(Amount(BigDecimal("2.41"), Blockchain.Tron))),
+        feeTokenId = fromStatus.currency.id,
     )
 
     private fun givenTrxBalance(balance: String): CryptoCurrencyStatus {
@@ -680,6 +786,7 @@ internal class CexSwapFeeCalculatorTest {
             isCoin = true,
             amount = BigDecimal(balance),
             decimals = 6,
+            fiatRate = BigDecimal("0.4"),
         ).status
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns trxStatus.right()
         return trxStatus
