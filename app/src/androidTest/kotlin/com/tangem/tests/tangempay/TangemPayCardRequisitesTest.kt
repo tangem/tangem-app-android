@@ -1,6 +1,7 @@
 package com.tangem.tests.tangempay
 
 import com.tangem.common.BaseTestCase
+import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.extensions.assertSnackbarWithText
 import com.tangem.common.extensions.assertTextContainsSafe
@@ -20,7 +21,13 @@ import org.junit.Test
 @HiltAndroidTest
 class TangemPayCardRequisitesTest : BaseTestCase() {
 
+    override val featureToggleOverrides = mapOf(
+        FeatureToggles.TWI_1062_GOOGLE_WALLET_BUTTON_ALWAYS_SHOWN.rawName to false,
+    )
+
     private val eligibilityState = "PaeraCustomer"
+    private val walletStatusKey = "uitest.tangempay.google_wallet_card_status"
+    private val walletStatusUnsupported = "unsupported"
 
     @AllureId("9595")
     @DisplayName("Tangem Pay: card requisites are displayed on the card details and in the Add to wallet guide")
@@ -33,7 +40,9 @@ class TangemPayCardRequisitesTest : BaseTestCase() {
         setupHooks(
             additionalBeforeSection = {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
-            }
+                System.setProperty(walletStatusKey, walletStatusUnsupported)
+            },
+            additionalAfterSection = { System.clearProperty(walletStatusKey) },
         ).run {
             openTangemPayCardPage()
             step("Reveal card details from the card page") { revealCardDetailsFromCardPage() }
@@ -78,7 +87,9 @@ class TangemPayCardRequisitesTest : BaseTestCase() {
         setupHooks(
             additionalBeforeSection = {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
-            }
+                System.setProperty(walletStatusKey, walletStatusUnsupported)
+            },
+            additionalAfterSection = { System.clearProperty(walletStatusKey) },
         ).run {
             openTangemPayCardPage()
             step("Reveal card details from the card page") { revealCardDetailsFromCardPage() }
