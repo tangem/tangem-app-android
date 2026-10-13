@@ -166,6 +166,10 @@ class CexSwapFeeCalculator(
         }
     }
 
+    /**
+     * Estimated against the SDK placeholder, an empty Tron account: a token transfer there costs as much energy as
+     * to a fresh CEX deposit address (about twice a transfer to a holder), so the estimate is already the worst case.
+     */
     private suspend fun estimateNativeFeeCoveredByOwnEnergyOrNull(
         userWallet: UserWallet,
         fromSwapCurrencyStatus: SwapCurrencyStatus,
