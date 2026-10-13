@@ -25,7 +25,7 @@ sealed interface YieldRewardsSummary {
      * Claimable, but the backend recommends waiting — claiming now would cost more than it returns.
      *
      * @property unsupported every reward this version cannot route, whatever its amount, excluded from [totalNetUsd]
-     * @property supportedRewardTokens lowercased address of every reward the service currently reports as routable,
+     * @property supportedRewardTokens address of every reward the service currently reports as routable,
      * whatever its amounts — the set a claim payload is admitted against
      */
     data class Deferred(
@@ -41,7 +41,7 @@ sealed interface YieldRewardsSummary {
      * At least one claimable reward the backend recommends claiming.
      *
      * @property unsupported every reward this version cannot route, whatever its amount, excluded from [totalNetUsd]
-     * @property supportedRewardTokens lowercased address of every reward the service currently reports as routable,
+     * @property supportedRewardTokens address of every reward the service currently reports as routable,
      * whatever its amounts — the set a claim payload is admitted against
      */
     data class Claimable(
