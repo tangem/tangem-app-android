@@ -245,6 +245,31 @@ internal class SwapInteractorImplOnSwapCexSendTest : SwapInteractorImplTestBase(
         coVerify(exactly = 1) { sendTransactionUseCase(txData = txData, userWallet = any(), network = any()) }
     }
 
+    @Test
+    fun `GIVEN TRX coin swap WHEN onSwap CEX THEN fee is not re-estimated`() = runTest {
+        // Arrange
+        val trxStatus = buildSwapCurrencyStatus(networkRawId = tronNetwork, decimals = 6)
+        val fromStatus = SwapCurrencyStatus(
+            userWallet = mockk<UserWallet.Hot>(relaxed = true),
+            status = trxStatus.status,
+            account = trxStatus.account,
+        )
+        stubReestimatedFee(REESTIMATED_FEE)
+
+        // Act
+        val result = onSwapCex(fromStatus, nativeSwapFee())
+
+        // Assert
+        assertThat(result).isInstanceOf(SwapTransactionState.TxSent::class.java)
+        coVerify(exactly = 0) {
+            getFeeUseCase(
+                userWallet = any(), network = any(), transactionData = any(),
+                spenderAddress = any(), isSimulateEstimation = any(),
+            )
+        }
+        coVerify(exactly = 1) { sendTransactionUseCase(txData = txData, userWallet = any(), network = any()) }
+    }
+
     private fun stubReestimatedFee(value: String) {
         coEvery {
             getFeeUseCase(

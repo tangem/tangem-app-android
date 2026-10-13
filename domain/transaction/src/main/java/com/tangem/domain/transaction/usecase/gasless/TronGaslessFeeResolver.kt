@@ -13,6 +13,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.isTronActivationRefusal
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.tron.canPayNativeFee
 import com.tangem.domain.transaction.models.tron.isCoveredByOwnTronEnergy
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
@@ -65,11 +66,8 @@ class TronGaslessFeeResolver(
         val nativeFeeResult = loadNativeFee()
         nativeFeeResult.onRight { nativeFee ->
             // Not reported as preferred: a later destination may need more energy than the account holds.
-            if (nativeFee.transactionFee.isCoveredByOwnTronEnergy() &&
-                isPayableInNative(nativeCurrencyStatus, nativeFee)
-            ) {
-                return nativeFee.right()
-            }
+            val fee = nativeFee.transactionFee
+            if (fee.isCoveredByOwnTronEnergy() && nativeCurrencyStatus.canPayNativeFee(fee)) return nativeFee.right()
         }
 
         val gaslessFee = getTronGaslessFeeUseCase(userWalletId, transactionData, sentToken).getOrElse { error ->
