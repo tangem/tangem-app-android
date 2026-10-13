@@ -42,7 +42,6 @@ import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
 import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
@@ -56,15 +55,11 @@ import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.google.auth.GoogleAuthActivityResultBridge
-import com.tangem.operations.backup.BackupService
-import com.tangem.sdk.api.BackupServiceHolder
-import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.spend.pushProvisioning.PushProvisioningActivityBridge
 import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.analytics.events.Push
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
-import com.tangem.tap.domain.walletregistration.withBackupColdWalletRegistration
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.routing.component.RoutingComponent
@@ -85,7 +80,6 @@ import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
 
-lateinit var backupService: BackupService
 internal var lockUserWalletsTimer: LockUserWalletsTimer? = null
     private set
 
@@ -100,12 +94,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     /** Router for opening tester menu */
     @Inject
     lateinit var cardSdkOwner: CardSdkOwner
-
-    @Inject
-    lateinit var cardSdkConfigRepository: CardSdkConfigRepository
-
-    @Inject
-    lateinit var tangemSdkManager: TangemSdkManager
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
@@ -131,9 +119,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     lateinit var cardRepository: CardRepository
-
-    @Inject
-    lateinit var backupServiceHolder: BackupServiceHolder
 
     @Inject
     lateinit var setGoogleServicesAvailabilityUseCase: SetGoogleServicesAvailabilityUseCase
@@ -285,15 +270,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     private fun installActivityDependencies() {
         cardSdkOwner.register(activity = this)
-
-        backupServiceHolder.createAndSetService(
-            tangemSdk = cardSdkConfigRepository.sdk,
-            activity = this,
-            primaryCardRunnableDecorator = { primaryCard, finalization ->
-                tangemSdkManager.withBackupColdWalletRegistration(primaryCard, finalization)
-            },
-        )
-        backupService = requireNotNull(backupServiceHolder.backupService.get()) // will be deleted eventually
 
         lockUserWalletsTimer = LockUserWalletsTimer(
             context = this,

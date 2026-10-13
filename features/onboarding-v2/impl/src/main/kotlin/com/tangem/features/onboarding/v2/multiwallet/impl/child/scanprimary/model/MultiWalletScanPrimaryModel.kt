@@ -32,7 +32,7 @@ internal class MultiWalletScanPrimaryModel @Inject constructor(
     val onDone = MutableSharedFlow<Unit>()
 
     fun onScanPrimaryClick() {
-        val backupService = backupServiceHolder.backupService.get() ?: return
+        val backupService = backupServiceHolder.backupService
         val iconScanRes = R.drawable.img_hand_scan_ring.takeIf { isRing }
 
         backupService.readPrimaryCard(iconScanRes = iconScanRes, cardId = scanResponse.card.cardId) { result ->

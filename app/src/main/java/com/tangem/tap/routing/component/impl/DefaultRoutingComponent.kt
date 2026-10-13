@@ -380,7 +380,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
     private fun discardSavedBackup() {
         componentScope.launch(dispatchers.main) {
-            backupServiceHolder.backupService.get()?.discardSavedBackup()
+            backupServiceHolder.backupService.discardSavedBackup()
             val unfinishedBackup = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
             cardRepository.finishCardActivation(cardId = unfinishedBackup.card.cardId, hasBackupError = true)
             onboardingRepository.clearUnfinishedFinalizeOnboarding()
