@@ -27,6 +27,20 @@ interface YieldSupplyTransactionRepository : GaslessYieldRepository {
     ): TransactionData.Uncompiled
 
     /**
+     * Builds the owner-signed transaction that claims Merkl rewards.
+     *
+     * [callData] is built by the backend and carries the cumulative proof, so it is passed through untouched; the
+     * transaction moves no tokens of its own and its amount is always zero.
+     */
+    suspend fun createClaimRewardsTransaction(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        destinationAddress: String,
+        callData: SmartContractCallData,
+        fee: Fee?,
+    ): TransactionData.Uncompiled
+
+    /**
      * Checks the version status of the user's yield-module contract and wraps [callData] with an
      * upgrade transaction if the deployed version is out of date.
      */
