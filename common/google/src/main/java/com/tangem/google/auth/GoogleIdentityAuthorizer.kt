@@ -192,8 +192,12 @@ internal class GoogleIdentityAuthorizer @Inject constructor(
     private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { continuation ->
         addOnSuccessListener { if (continuation.isActive) continuation.resume(it) }
         addOnFailureListener { if (continuation.isActive) continuation.resumeWithException(it) }
-        addOnCanceledListener { continuation.cancel() }
+        // Google Play services cancelled the task, not the caller: a CancellationException would stop a caller
+        // that is still active without telling it why, so it surfaces as an ordinary failure instead
+        addOnCanceledListener { if (continuation.isActive) continuation.resumeWithException(TaskCanceledException()) }
     }
+
+    private class TaskCanceledException : Exception("Google Play services cancelled the authorization task")
 
     private companion object {
         const val TAG = "GoogleIdentityAuthorizer"
