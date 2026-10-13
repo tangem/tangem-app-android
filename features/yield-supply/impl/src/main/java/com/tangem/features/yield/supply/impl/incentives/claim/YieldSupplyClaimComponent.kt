@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
@@ -24,16 +23,13 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.test.YieldSupplyTestTags
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.incentives.claim.model.YieldSupplyClaimModel
 import com.tangem.features.yield.supply.impl.incentives.claim.ui.YieldSupplyClaimContent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import kotlinx.coroutines.flow.StateFlow
-import com.tangem.core.res.R as CoreResR
 
 internal class YieldSupplyClaimComponent(
     private val appComponentContext: AppComponentContext,
@@ -63,8 +59,8 @@ internal class YieldSupplyClaimComponent(
             TangemBottomSheetConfig(
                 isShown = true,
                 onDismissRequest = params.onDismiss,
-                // Vetoes the drag only: the scrim and the back press hide the sheet before they ask, and swallowing
-                // their request would leave the hidden dialog swallowing every touch instead
+                // Vetoes only the drag: scrim and back hide the sheet before asking, so refusing them leaves an invisible
+                // dialog eating touches
                 dismissOnClickOutside = { !model.uiState.value.isClaimInProgress },
                 content = TangemBottomSheetConfigContent.Empty,
             )
@@ -75,23 +71,22 @@ internal class YieldSupplyClaimComponent(
             containerColor = TangemTheme.colors.background.tertiary,
             title = {
                 TangemModalBottomSheetTitle(
-                    title = resourceReference(CoreResR.string.yield_module_claim_sheet_title),
-                    subtitle = resourceReference(CoreResR.string.yield_module_claim_sheet_subtitle),
+                    title = resourceReference(R.string.yield_module_claim_sheet_title),
+                    subtitle = resourceReference(R.string.yield_module_claim_sheet_subtitle),
                     endIconRes = R.drawable.ic_close_24,
                     onEndClick = model::onCloseClick,
                 )
             },
             footer = {
                 val text = stringResourceSafe(
-                    id = CoreResR.string.yield_module_claim_button_title,
+                    id = R.string.yield_module_claim_button_title,
                     state.total.resolveReference(),
                 )
                 val modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-                    .testTag(YieldSupplyTestTags.CLAIM_REWARDS_CONFIRM_BUTTON)
 
-                if (params.userWallet.isHotWallet) {
+                if (state.isHoldToConfirmEnabled) {
                     HoldToConfirmButton(
                         text = text,
                         onConfirm = model::onClaimClick,
@@ -114,7 +109,6 @@ internal class YieldSupplyClaimComponent(
                 YieldSupplyClaimContent(
                     state = state,
                     notificationsComponent = notificationsComponent,
-                    onRetryClick = model::onRetryClick,
                 )
             },
         )
@@ -123,6 +117,8 @@ internal class YieldSupplyClaimComponent(
     data class Params(
         val userWallet: UserWallet,
         val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
+        val chainId: Int,
+        val userAddress: String,
         val onDismiss: () -> Unit,
     )
 }

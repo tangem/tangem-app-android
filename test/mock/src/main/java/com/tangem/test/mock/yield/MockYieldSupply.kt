@@ -66,7 +66,7 @@ object MockYieldSupply {
         usdValue: BigDecimal = BigDecimal("10.00"),
         estimatedNetValueUsd: BigDecimal = BigDecimal("8.50"),
         estimatedServiceFeeUsd: BigDecimal = BigDecimal("1.50"),
-        serviceFeeRateBps: Int = 1_500,
+        serviceFeeRate: BigDecimal = BigDecimal("0.15"),
         finalDestination: YieldRewardDestination = YieldRewardDestination.Owner,
     ) = YieldReward(
         rewardToken = rewardToken,
@@ -77,7 +77,7 @@ object MockYieldSupply {
         usdValue = usdValue,
         estimatedNetValueUsd = estimatedNetValueUsd,
         estimatedServiceFeeUsd = estimatedServiceFeeUsd,
-        serviceFeeRateBps = serviceFeeRateBps,
+        serviceFeeRate = serviceFeeRate,
         finalDestination = finalDestination,
     )
 

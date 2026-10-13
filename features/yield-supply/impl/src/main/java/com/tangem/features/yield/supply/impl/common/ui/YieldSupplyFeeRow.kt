@@ -19,7 +19,6 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.yield.supply.impl.R
 
-/** @param badge optional label shown beside the value */
 @Composable
 internal fun YieldSupplyFeeRow(
     title: TextReference,
