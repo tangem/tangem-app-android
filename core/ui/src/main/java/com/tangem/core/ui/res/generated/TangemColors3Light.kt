@@ -54,9 +54,13 @@ internal fun lightColors3() =
             inverse = TangemColorPalette.Neutral.`95`,
             base = TangemColorPalette.Neutral.`5`,
             disabled = TangemColorPalette.Neutral.`20`,
-            opaque = TangemColors3.Bg.Opaque(
+            transparent = TangemColors3.Bg.Transparent(
                 primary = TangemColorPalette.Opaque.Neutral95.`5`,
                 secondary = TangemColorPalette.Opaque.Neutral95.`10`,
+                onMaterial = TangemColors3.Bg.Transparent.OnMaterial(
+                    primary = Color(0x99FFFFFF),
+                    secondary = Color(0xCCFFFFFF),
+                ),
             ),
             status = TangemColors3.Bg.Status(
                 success = TangemColorPalette.Green.`50`,
@@ -79,6 +83,7 @@ internal fun lightColors3() =
             ),
             special = TangemColors3.Bg.Special(
                 control = TangemColorPalette.Base.white,
+                switch = TangemColorPalette.Neutral.`30`,
             ),
         ),
         icon = TangemColors3.Icon(
@@ -154,27 +159,27 @@ internal fun lightColors3() =
         glow = TangemColors3.Glow(
             magic = TangemColors3.Glow.Magic(
                 step1 = TangemColorPalette.Yellow.`30`,
-                step2 = Color(0x00DBF1FF),
-                step3 = Color(0x00109FF0),
+                step2 = Color(0x009EE1AB),
+                step3 = Color(0x009EE1AB),
                 step4 = TangemColorPalette.Blue.`40`,
-                step5 = Color(0x00DBF1FF),
-                step6 = Color(0x00C5A5FC),
+                step5 = Color(0x0098D7FF),
+                step6 = Color(0x00DAC8FB),
                 step7 = TangemColorPalette.Violet.`40`,
-                step8 = Color(0x00FF979D),
+                step8 = Color(0x00FFC0C3),
                 step9 = Color(0x4DC5A5FC),
-                step10 = Color(0x00EEE7FD),
+                step10 = Color(0x00FFC0C3),
             ),
             magicBlend = TangemColors3.Glow.MagicBlend(
-                step1 = TangemColorPalette.Violet.`40`,
-                step2 = Color(0x0098D7FF),
-                step3 = Color(0x00FFC3AD),
-                step4 = TangemColorPalette.Yellow.`30`,
-                step5 = Color(0x009EE1AB),
-                step6 = Color(0x00109FF0),
-                step7 = TangemColorPalette.Green.`30`,
-                step8 = Color(0x00B07BFD),
+                step1 = TangemColorPalette.Red.`40`,
+                step2 = Color(0x00F4B42F),
+                step3 = Color(0x00DAC8FB),
+                step4 = TangemColorPalette.Violet.`40`,
+                step5 = Color(0x00FFC0C3),
+                step6 = Color(0x0064C973),
+                step7 = TangemColorPalette.Blue.`40`,
+                step8 = Color(0x00FFC0C3),
                 step9 = Color(0x4DC5A5FC),
-                step10 = Color(0x00FF979D),
+                step10 = Color(0x00FFC0C3),
             ),
             success = TangemColors3.Glow.Success(
                 step1 = TangemColorPalette.Green.`40`,
