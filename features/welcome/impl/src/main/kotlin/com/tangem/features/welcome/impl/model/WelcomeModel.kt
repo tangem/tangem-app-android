@@ -203,23 +203,25 @@ internal class WelcomeModel @Inject constructor(
             scanCardProcessor.scan(
                 config = ScanConfig.signIn(
                     analyticsSource = AnalyticsParam.ScreensSources.SignIn,
-                    callback = object : ScanConfig.Callback {
-                        override suspend fun onFailure(error: TangemError) {
-                            if (!error.silent) {
-                                val message = error.messageResId
-                                    ?.let(::resourceReference)
-                                    ?: stringReference(error.customMessage)
-
-                                messageSender.send(SnackbarMessage(message))
-                            }
-                        }
-
-                        override suspend fun onSuccess(scanResponse: ScanResponse) {
-                            saveScannedWallet(scanResponse)
-                        }
-                    },
+                    callback = createScanCallback(),
                 ),
             )
+        }
+    }
+
+    private fun createScanCallback(): ScanConfig.Callback = object : ScanConfig.Callback {
+        override suspend fun onFailure(error: TangemError) {
+            if (!error.silent) {
+                val message = error.messageResId
+                    ?.let(::resourceReference)
+                    ?: stringReference(error.customMessage)
+
+                messageSender.send(SnackbarMessage(message))
+            }
+        }
+
+        override suspend fun onSuccess(scanResponse: ScanResponse) {
+            saveScannedWallet(scanResponse)
         }
     }
 

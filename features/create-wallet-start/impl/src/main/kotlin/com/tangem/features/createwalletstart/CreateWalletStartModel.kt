@@ -195,28 +195,30 @@ internal class CreateWalletStartModel @Inject constructor(
             scanCardProcessor.scan(
                 config = ScanConfig.signIn(
                     analyticsSource = analyticsSource,
-                    callback = object : ScanConfig.Callback {
-                        override suspend fun onProgressStateChange(showProgress: Boolean) {
-                            if (!showProgress) {
-                                delay(HIDE_PROGRESS_DELAY)
-                                setLoading(false)
-                            } else {
-                                setLoading(true)
-                            }
-                        }
-
-                        override suspend fun onFailure(error: TangemError) {
-                            handleScanError(error)
-                            delay(HIDE_PROGRESS_DELAY)
-                            setLoading(false)
-                        }
-
-                        override suspend fun onSuccess(scanResponse: ScanResponse) {
-                            proceedWithScanResponse(scanResponse)
-                        }
-                    },
+                    callback = createScanCallback(),
                 ),
             )
+        }
+    }
+
+    private fun createScanCallback(): ScanConfig.Callback = object : ScanConfig.Callback {
+        override suspend fun onProgressStateChange(showProgress: Boolean) {
+            if (!showProgress) {
+                delay(HIDE_PROGRESS_DELAY)
+                setLoading(false)
+            } else {
+                setLoading(true)
+            }
+        }
+
+        override suspend fun onFailure(error: TangemError) {
+            handleScanError(error)
+            delay(HIDE_PROGRESS_DELAY)
+            setLoading(false)
+        }
+
+        override suspend fun onSuccess(scanResponse: ScanResponse) {
+            proceedWithScanResponse(scanResponse)
         }
     }
 

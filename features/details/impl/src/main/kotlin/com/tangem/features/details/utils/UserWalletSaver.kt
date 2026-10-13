@@ -30,6 +30,7 @@ import com.tangem.features.details.impl.R
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -151,34 +152,38 @@ internal class UserWalletSaver @Inject constructor(
             scanCardProcessor.scan(
                 config = ScanConfig.signIn(
                     analyticsSource = AnalyticsParam.ScreensSources.Settings,
-                    callback = object : ScanConfig.Callback {
-                        override suspend fun onOnboardingRequired() {
-                            continuation.resume(Either.Right(null))
-                        }
-
-                        override suspend fun onCardVerificationFailed() {
-                            continuation.resume(Either.Right(null))
-                        }
-
-                        override suspend fun onFailure(error: TangemError) {
-                            val saverError = if (!error.silent) {
-                                val message = error.messageResId
-                                    ?.let(::resourceReference)
-                                    ?: stringReference(error.customMessage)
-
-                                Error.Message(message)
-                            } else {
-                                Error.Silent
-                            }
-                            continuation.resume(Either.Left(saverError))
-                        }
-
-                        override suspend fun onSuccess(scanResponse: ScanResponse) {
-                            continuation.resume(Either.Right(scanResponse))
-                        }
-                    },
+                    callback = createScanCallback(continuation),
                 ),
             )
+        }
+    }
+
+    private fun createScanCallback(
+        continuation: CancellableContinuation<Either<Error, ScanResponse?>>,
+    ): ScanConfig.Callback = object : ScanConfig.Callback {
+        override suspend fun onOnboardingRequired() {
+            continuation.resume(Either.Right(null))
+        }
+
+        override suspend fun onCardVerificationFailed() {
+            continuation.resume(Either.Right(null))
+        }
+
+        override suspend fun onFailure(error: TangemError) {
+            val saverError = if (!error.silent) {
+                val message = error.messageResId
+                    ?.let(::resourceReference)
+                    ?: stringReference(error.customMessage)
+
+                Error.Message(message)
+            } else {
+                Error.Silent
+            }
+            continuation.resume(Either.Left(saverError))
+        }
+
+        override suspend fun onSuccess(scanResponse: ScanResponse) {
+            continuation.resume(Either.Right(scanResponse))
         }
     }
 

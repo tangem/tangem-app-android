@@ -72,32 +72,42 @@ internal class IntroductionCardScanner @Inject constructor(
         scanCardProcessor.scan(
             config = ScanConfig.signIn(
                 analyticsSource = analyticsSource,
-                callback = object : ScanConfig.Callback {
-                    // The scan layer itself pushes an inactive card's activation route right after this callback.
-                    override suspend fun onOnboardingRequired() {
-                        onNavigatedAway()
-                    }
-
-                    override suspend fun onCardVerificationFailed() {
-                        onFailed()
-                    }
-
-                    override suspend fun onFailure(error: TangemError) {
-                        onScanFailure(error, analyticsSource)
-                        onFailed()
-                    }
-
-                    override suspend fun onSuccess(scanResponse: ScanResponse) {
-                        saveAndOpen(
-                            scanResponse = scanResponse,
-                            analyticsSource = analyticsSource,
-                            onNavigatedAway = onNavigatedAway,
-                            onFailed = onFailed,
-                        )
-                    }
-                },
+                callback = createScanCallback(
+                    analyticsSource = analyticsSource,
+                    onNavigatedAway = onNavigatedAway,
+                    onFailed = onFailed,
+                ),
             ),
         )
+    }
+
+    private fun createScanCallback(
+        analyticsSource: AnalyticsParam.ScreensSources,
+        onNavigatedAway: () -> Unit,
+        onFailed: () -> Unit,
+    ): ScanConfig.Callback = object : ScanConfig.Callback {
+        // The scan layer itself pushes an inactive card's activation route right after this callback.
+        override suspend fun onOnboardingRequired() {
+            onNavigatedAway()
+        }
+
+        override suspend fun onCardVerificationFailed() {
+            onFailed()
+        }
+
+        override suspend fun onFailure(error: TangemError) {
+            onScanFailure(error, analyticsSource)
+            onFailed()
+        }
+
+        override suspend fun onSuccess(scanResponse: ScanResponse) {
+            saveAndOpen(
+                scanResponse = scanResponse,
+                analyticsSource = analyticsSource,
+                onNavigatedAway = onNavigatedAway,
+                onFailed = onFailed,
+            )
+        }
     }
 
     private suspend fun saveAndOpen(
