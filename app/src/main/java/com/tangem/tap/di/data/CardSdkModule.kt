@@ -5,6 +5,7 @@ import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.operations.attestation.CardArtworksProvider
+import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.tap.data.DefaultCardSdkProvider
 import dagger.Binds
 import dagger.Module
@@ -26,6 +27,10 @@ internal interface CardSdkModule {
     @Binds
     @Singleton
     fun providerCardSdkLifecycleObserver(defaultCardSdkProvider: DefaultCardSdkProvider): CardSdkOwner
+
+    @Binds
+    @Singleton
+    fun bindBackupServiceHolder(defaultCardSdkProvider: DefaultCardSdkProvider): BackupServiceHolder
 
     companion object {
 

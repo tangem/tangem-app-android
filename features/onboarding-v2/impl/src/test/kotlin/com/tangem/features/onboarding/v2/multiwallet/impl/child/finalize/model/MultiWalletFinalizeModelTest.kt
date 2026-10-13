@@ -54,14 +54,12 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.lang.ref.WeakReference
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class MultiWalletFinalizeModelTest {
 
     private val backupServiceHolder: BackupServiceHolder = mockk()
     private val backupService: BackupService = mockk()
-    private val backupServiceWeakRef: WeakReference<BackupService> = WeakReference(backupService)
     private val tangemSdkManager: TangemSdkManager = mockk(relaxUnitFun = true)
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk()
@@ -138,7 +136,7 @@ internal class MultiWalletFinalizeModelTest {
         every { parentParams.mode } returns OnboardingMultiWalletComponent.Mode.Onboarding
         multiWalletStateFlow.value = multiWalletStateFlow.value.copy(startFromFinalize = null)
         every { paramsContainer.require<MultiWalletChildParams>() } returns params
-        every { backupServiceHolder.backupService } returns backupServiceWeakRef
+        every { backupServiceHolder.backupService } returns backupService
         every { backupService.primaryCardId } returns "primary-id-aaaa"
         every { backupService.primaryCardBatchId } returns NON_RING_BATCH_ID
         every { backupService.backupCardIds } returns listOf("backup-1-bbbb", "backup-2-cccc")
@@ -204,20 +202,6 @@ internal class MultiWalletFinalizeModelTest {
             ),
             events,
         )
-    }
-
-    @Test
-    fun `GIVEN backupService is null WHEN model is created THEN initial state is default`() = runTest {
-        every { backupServiceHolder.backupService } returns WeakReference(null)
-
-        val model = createModel(this)
-        advanceUntilIdle()
-
-        val state = model.uiState.value
-        Assertions.assertEquals(MultiWalletFinalizeUM.Step.Primary, state.step)
-        Assertions.assertEquals(true, state.scanPrimary)
-        Assertions.assertEquals("", state.cardNumber)
-        Assertions.assertEquals(false, state.isRing)
     }
 
     @Test

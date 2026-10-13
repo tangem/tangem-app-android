@@ -116,7 +116,7 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
             }
             MultiWalletAccessCodeUM.Step.ConfirmAccessCode -> {
                 if (checkAccessCode()) {
-                    backupServiceHolder.backupService.get()?.setAccessCode(_uiState.value.accessCodeFirst.text)
+                    backupServiceHolder.backupService.setAccessCode(_uiState.value.accessCodeFirst.text)
 
                     // make on done
                     params.multiWalletState.update {

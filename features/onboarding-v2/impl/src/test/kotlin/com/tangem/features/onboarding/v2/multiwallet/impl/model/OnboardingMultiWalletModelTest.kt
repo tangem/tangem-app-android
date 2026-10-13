@@ -40,7 +40,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.lang.ref.WeakReference
 import java.util.Date
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -49,7 +48,7 @@ internal class OnboardingMultiWalletModelTest {
     private val analyticsHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     private val router: Router = mockk(relaxUnitFun = true)
     private val backupServiceHolder: BackupServiceHolder = mockk()
-    private val backupServiceWeakRef: WeakReference<BackupService> = WeakReference(null)
+    private val backupService: BackupService = mockk()
     private val onboardingRepository: OnboardingRepository = mockk(relaxUnitFun = true)
     private val getCardImageUseCase: GetCardImageUseCase = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxUnitFun = true)
@@ -103,7 +102,8 @@ internal class OnboardingMultiWalletModelTest {
         every { scanResponse.productType } returns ProductType.Wallet
         every { scanResponse.primaryCard } returns null
 
-        every { backupServiceHolder.backupService } returns backupServiceWeakRef
+        every { backupServiceHolder.backupService } returns backupService
+        every { backupService.currentState } returns BackupService.State.Preparing
 
         coEvery {
             getCardImageUseCase.invoke(

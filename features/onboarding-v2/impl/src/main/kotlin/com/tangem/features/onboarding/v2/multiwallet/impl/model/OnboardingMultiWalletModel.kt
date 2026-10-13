@@ -173,7 +173,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     }
 
     private fun getInitialStartFromFinalize(): FinalizeStage? {
-        val backupService = backupServiceHolder.backupService.get() ?: return null
+        val backupService = backupServiceHolder.backupService
         return when (val state = backupService.currentState) {
             BackupService.State.FinalizingPrimaryCard -> FinalizeStage.ScanPrimaryCard
             is BackupService.State.FinalizingBackupCard -> if (state.index == 1) {
@@ -186,7 +186,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     }
 
     private fun isThreeCardsInit(): Boolean {
-        val backupService = backupServiceHolder.backupService.get() ?: return true
+        val backupService = backupServiceHolder.backupService
         return when (backupService.currentState) {
             BackupService.State.FinalizingPrimaryCard,
             is BackupService.State.FinalizingBackupCard,

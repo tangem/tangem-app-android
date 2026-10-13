@@ -99,7 +99,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val multiWalletState get() = params.multiWalletState
     private val _uiState = MutableStateFlow(getInitialState())
 
-    private val backupCardIds = backupServiceHolder.backupService.get()?.backupCardIds.orEmpty()
+    private val backupCardIds = backupServiceHolder.backupService.backupCardIds
 
     /** Cards finalized in this session, the only place their curves and backup status are available */
     private val finalizedCards = mutableMapOf<WalletCardBackup.Role, CardDTO>()
@@ -140,7 +140,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     }
 
     private fun getInitialState(): MultiWalletFinalizeUM {
-        val backupService = backupServiceHolder.backupService.get() ?: return MultiWalletFinalizeUM()
+        val backupService = backupServiceHolder.backupService
         val initialStep = getInitialStep()
 
         val batchId = when (initialStep) {
@@ -190,7 +190,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     }
 
     private fun writePrimaryCard() {
-        val backupService = backupServiceHolder.backupService.get() ?: return
+        val backupService = backupServiceHolder.backupService
         val primaryCardBatchId = backupService.primaryCardBatchId ?: return
         val isRing = isRing(primaryCardBatchId)
         val iconScanRes = if (isRing) R.drawable.img_hand_scan_ring else null
@@ -226,7 +226,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     }
 
     private fun writeBackupCard(cardIndex: Int) {
-        val backupService = backupServiceHolder.backupService.get() ?: return
+        val backupService = backupServiceHolder.backupService
         val backupCardBatchId = backupService.backupCardsBatchIds.getOrNull(cardIndex) ?: return
         val isRing = isRing(backupCardBatchId)
         val iconScanRes = if (isRing) R.drawable.img_hand_scan_ring else null
@@ -421,7 +421,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                 cardId = scanResponse.card.cardId,
                 hasBackupError = hasWalletBackupError,
             )
-            backupServiceHolder.backupService.get()?.discardSavedBackup()
+            backupServiceHolder.backupService.discardSavedBackup()
             onEvent.emit(MultiWalletFinalizeComponent.Event.ThreeBackupCardsAdded)
         }
     }
@@ -564,7 +564,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         override fun onComplete() {
             modelScope.launch {
                 onboardingRepository.clearUnfinishedFinalizeOnboarding()
-                backupServiceHolder.backupService.get()?.discardSavedBackup()
+                backupServiceHolder.backupService.discardSavedBackup()
                 onEvent.emit(MultiWalletFinalizeComponent.Event.ExitFromFlow)
             }
         }
