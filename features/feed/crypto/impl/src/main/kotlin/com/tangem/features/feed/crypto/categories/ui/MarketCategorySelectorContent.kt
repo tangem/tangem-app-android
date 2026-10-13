@@ -255,7 +255,7 @@ private fun NoResults(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .size(40.dp)
                 .alpha(NO_RESULTS_ICON_ALPHA)
-                .background(color = TangemTheme.colors3.bg.opaque.secondary, shape = CircleShape),
+                .background(color = TangemTheme.colors3.bg.transparent.secondary, shape = CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

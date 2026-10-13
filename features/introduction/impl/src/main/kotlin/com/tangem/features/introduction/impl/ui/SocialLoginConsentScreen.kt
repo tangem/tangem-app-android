@@ -216,7 +216,7 @@ private fun Badge(modifier: Modifier = Modifier, content: @Composable BoxScope.(
     Box(
         modifier = modifier
             .size(TangemTheme.dimens2.x18)
-            .background(color = TangemTheme.colors3.bg.opaque.primary, shape = CircleShape),
+            .background(color = TangemTheme.colors3.bg.transparent.primary, shape = CircleShape),
         contentAlignment = Alignment.Center,
         content = content,
     )

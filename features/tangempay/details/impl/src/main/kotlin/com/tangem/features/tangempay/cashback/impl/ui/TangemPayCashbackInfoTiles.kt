@@ -82,7 +82,7 @@ private fun Tile(tile: TangemPayCashbackInfoTilesUM.Tile, modifier: Modifier = M
             Box(
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(TangemTheme.colors3.bg.opaque.primary)
+                    .background(TangemTheme.colors3.bg.transparent.primary)
                     .padding(6.dp),
             ) {
                 Icon(
