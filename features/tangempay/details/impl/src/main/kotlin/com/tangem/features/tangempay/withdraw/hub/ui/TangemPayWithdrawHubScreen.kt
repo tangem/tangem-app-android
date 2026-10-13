@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -47,6 +48,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_left_20
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.hub.model.WithdrawHubState
@@ -67,7 +69,8 @@ internal fun TangemPayWithdrawHubScreen(state: TangemPayWithdrawHubUM, modifier:
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors3.bg.primary),
+            .background(TangemTheme.colors3.bg.primary)
+            .testTag(TangemPayTestTags.WITHDRAW_HUB_SCREEN),
     ) {
         WithdrawHubTopBar(onBackClick = state.onBackClick)
         Column(
@@ -101,7 +104,7 @@ private fun WithdrawHubTopBar(onBackClick: () -> Unit) {
 
 @Composable
 private fun SwapSection(state: TangemPayWithdrawHubUM.SwapSectionUM) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier.fillMaxWidth().testTag(TangemPayTestTags.WITHDRAW_HUB_SWAP_SECTION)) {
         HubSectionHeader(
             title = resourceReference(R.string.tangempay_withdraw_hub_swap_section_title),
             subtitle = resourceReference(R.string.tangempay_withdraw_hub_swap_section_subtitle),
@@ -159,6 +162,7 @@ private fun HubActionCard(state: TangemPayWithdrawHubUM.ActionCardUM) {
             .clip(RoundedCornerShape(RecentsCardCornerRadius))
             .background(TangemTheme.colors3.bg.status.infoSubtle)
             .clickable(onClick = state.onClick)
+            .testTag(TangemPayTestTags.WITHDRAW_HUB_WITHIN_PORTFOLIO)
             .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -177,7 +181,7 @@ private fun HubActionCard(state: TangemPayWithdrawHubUM.ActionCardUM) {
 
 @Composable
 private fun RecentTokenCard(state: RecentTokenUM, onClick: () -> Unit) {
-    RecentsCard(onClick = onClick) {
+    RecentsCard(modifier = Modifier.testTag(TangemPayTestTags.WITHDRAW_HUB_RECENT_TOKEN), onClick = onClick) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
