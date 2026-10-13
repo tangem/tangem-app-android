@@ -13,7 +13,6 @@ import android.view.WindowManager
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -86,7 +85,6 @@ import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
 
-lateinit var tangemSdkManager: TangemSdkManager
 lateinit var backupService: BackupService
 internal var lockUserWalletsTimer: LockUserWalletsTimer? = null
     private set
@@ -107,7 +105,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     lateinit var cardSdkConfigRepository: CardSdkConfigRepository
 
     @Inject
-    lateinit var injectedTangemSdkManager: TangemSdkManager
+    lateinit var tangemSdkManager: TangemSdkManager
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
@@ -287,7 +285,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     private fun installActivityDependencies() {
         cardSdkOwner.register(activity = this)
-        tangemSdkManager = injectedTangemSdkManager
 
         backupServiceHolder.createAndSetService(
             tangemSdk = cardSdkConfigRepository.sdk,
@@ -314,18 +311,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         pushProvisioningActivityBridge.attach(activity = this)
 
         if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
-            // registerForActivityResult unregisters itself on destroy; the bridge is the only holder
-            val bridge = googleAuthActivityResultBridge.get()
-            bridge.registerLauncher(
-                launcher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
-                    bridge.onResult(it)
-                },
-            )
-            bridge.registerIntentLauncher(
-                launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-                    bridge.onResult(it)
-                },
-            )
+            googleAuthActivityResultBridge.get().attach(registry = activityResultRegistry, lifecycle = lifecycle)
         }
     }
 
@@ -387,7 +373,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     override fun onDestroy() {
         TangemLogger.i("onDestroy")
         if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
-            googleAuthActivityResultBridge.get().unregisterLauncher()
+            googleAuthActivityResultBridge.get().detach(registry = activityResultRegistry)
         }
         pushProvisioningActivityBridge.detach(activity = this)
         // workaround: kill process when activity destroy to avoid state when lock() wallets
