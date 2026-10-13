@@ -1,5 +1,7 @@
 package com.tangem.data.common.currency
 
+import com.tangem.data.common.account.WalletAccountsSaver
+import com.tangem.data.common.account.WalletAccountsSync
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.wallet.WalletServerBinder
@@ -32,6 +34,7 @@ class UserTokensSaverTest {
     private val walletServerBinder: WalletServerBinder = mockk()
     private val eTagsStore: ETagsStore = mockk(relaxUnitFun = true)
     private val jointAccountFeatureToggles: JointAccountFeatureToggles = mockk()
+    private val walletAccountsSaver: WalletAccountsSaver = mockk(relaxUnitFun = true)
 
     private val userTokensSaver: UserTokensSaver = UserTokensSaver(
         tangemTechApi = tangemTechApi,
@@ -42,6 +45,8 @@ class UserTokensSaverTest {
         pushTokensRetryerPool = mockk(),
         walletAccountsETags = WalletAccountsETags(eTagsStore = eTagsStore),
         jointAccountFeatureToggles = jointAccountFeatureToggles,
+        walletAccountsSync = WalletAccountsSync(),
+        walletAccountsSaver = { walletAccountsSaver },
     )
 
     @BeforeEach
@@ -269,6 +274,44 @@ class UserTokensSaverTest {
     }
 
     @Test
+    fun `GIVEN merged list pushed after 412 WHEN push THEN local copy becomes the merged document`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("1234567890abcdef")
+        stubUserWallet(userWalletId)
+        every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
+        coEvery {
+            eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts)
+        } returnsMany listOf(STALE_ETAG, FRESH_ETAG)
+
+        val pushedToken = createToken()
+        val peerToken = createToken().copy(id = "polygon", networkId = "polygon")
+        val response = createResponse(tokens = listOf(pushedToken))
+        val fresh = createAccountsV2Response(tokens = listOf(peerToken))
+        coEvery { enricher(userWalletId, response) } returns response
+        coEvery { tangemTechApi.saveTokens(any(), any(), any()) } returnsMany listOf(
+            preconditionFailed(),
+            ApiResponse.Success(data = Unit, headers = mapOf(ETAG_HEADER to listOf(MERGED_ETAG))),
+        )
+        coEvery { tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue) } returns ApiResponse.Success(
+            data = fresh,
+            headers = mapOf(ETAG_HEADER to listOf(FRESH_ETAG)),
+        )
+
+        // Act
+        userTokensSaver.push(userWalletId = userWalletId, response = response)
+
+        // Assert
+        val expected = fresh.toResponse().let { document ->
+            document.copy(
+                accounts = document.accounts.map { it.copy(tokens = listOf(pushedToken, peerToken)) },
+                unassignedTokens = emptyList(),
+            )
+        }
+        coVerify(exactly = 1) { walletAccountsSaver.store(userWalletId, expected) }
+        coVerify(exactly = 1) { eTagsStore.store(userWalletId, ETagsStore.Key.WalletAccounts, MERGED_ETAG) }
+    }
+
+    @Test
     fun `GIVEN backend tokens lacking account ids WHEN merging after 412 THEN they take the owning account id`() =
         runTest {
             // Arrange
@@ -422,5 +465,6 @@ class UserTokensSaverTest {
     private companion object {
         const val STALE_ETAG = """{"a":1,"t":1}"""
         const val FRESH_ETAG = """{"a":1,"t":2}"""
+        const val MERGED_ETAG = """{"a":1,"t":3}"""
     }
 }

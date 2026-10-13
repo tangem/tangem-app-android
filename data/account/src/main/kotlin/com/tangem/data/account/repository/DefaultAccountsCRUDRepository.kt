@@ -18,6 +18,7 @@ import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.ArchivedAccountsStore
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.common.account.WalletAccountsSaver
+import com.tangem.data.common.account.WalletAccountsSync
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.core.remote.response.ETAG_HEADER
@@ -52,6 +53,7 @@ internal class DefaultAccountsCRUDRepository(
     private val convertersContainer: AccountConverterFactoryContainer,
     private val resources: Resources,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val walletAccountsSync: WalletAccountsSync,
 ) : AccountsCRUDRepository {
 
     override suspend fun getAccountListSync(userWalletId: UserWalletId): Option<AccountList> = option {
@@ -131,14 +133,13 @@ internal class DefaultAccountsCRUDRepository(
     }
 
     override suspend fun saveAccountsLocally(accountList: AccountList) {
-        val converter = convertersContainer.createWalletAccountsResponseConverter(
-            userWalletId = accountList.userWalletId,
-        )
+        val userWalletId = accountList.userWalletId
+        val converter = convertersContainer.createWalletAccountsResponseConverter(userWalletId = userWalletId)
 
-        walletAccountsSaver.store(
-            userWalletId = accountList.userWalletId,
-            response = converter.convert(accountList),
-        )
+        walletAccountsSync.withLock(userWalletId) {
+            walletAccountsSaver.store(userWalletId = userWalletId, response = converter.convert(accountList))
+            walletAccountsSync.markLocalAhead(userWalletId)
+        }
     }
 
     /**
@@ -147,13 +148,18 @@ internal class DefaultAccountsCRUDRepository(
      * joint accounts on any edit of an ordinary one.
      */
     override suspend fun saveAccounts(accountList: AccountList) {
-        val syncedResponse = walletAccountsSaver.push(
-            userWalletId = accountList.userWalletId,
-            body = SaveWalletAccountsResponseConverter.convert(value = accountList),
-        )
-            ?: error("Failed to push accounts for wallet: ${accountList.userWalletId}")
+        val userWalletId = accountList.userWalletId
 
-        walletAccountsSaver.store(userWalletId = accountList.userWalletId, response = syncedResponse)
+        walletAccountsSync.withLock(userWalletId) {
+            val syncedResponse = walletAccountsSaver.push(
+                userWalletId = userWalletId,
+                body = SaveWalletAccountsResponseConverter.convert(value = accountList),
+            )
+                ?: error("Failed to push accounts for wallet: $userWalletId")
+
+            walletAccountsSaver.store(userWalletId = userWalletId, response = syncedResponse)
+            walletAccountsSync.markInSync(userWalletId)
+        }
     }
 
     override suspend fun saveAccount(account: Account.CryptoPortfolio) {
@@ -163,23 +169,26 @@ internal class DefaultAccountsCRUDRepository(
             .createCryptoPortfolioConverter(userWalletId = account.userWalletId)
             .convertBack(value = account)
 
-        store.updateData { response ->
-            response ?: return@updateData response
+        walletAccountsSync.withLock(account.userWalletId) {
+            store.updateData { response ->
+                response ?: return@updateData response
 
-            response.copy(
-                accounts = response.accounts.toMutableList().apply {
-                    replaceBy(newAccountDTO) { it.id == newAccountDTO.id }
-                },
-            )
+                response.copy(
+                    accounts = response.accounts.toMutableList().apply {
+                        replaceBy(newAccountDTO) { it.id == newAccountDTO.id }
+                    },
+                )
+            }
+            walletAccountsSync.markLocalAhead(account.userWalletId)
         }
     }
 
-    override suspend fun syncTokens(userWalletId: UserWalletId) {
+    override suspend fun syncTokens(userWalletId: UserWalletId) = walletAccountsSync.withLock(userWalletId) {
         val response = getAccountsResponseSync(userWalletId = userWalletId)
 
         if (response == null) {
             TangemLogger.e("Can't sync tokens. No accounts response found for wallet: $userWalletId")
-            return
+            return@withLock
         }
 
         userTokensSaver.pushWithRetryer(userWalletId = userWalletId, response = response.toUserTokensResponse())

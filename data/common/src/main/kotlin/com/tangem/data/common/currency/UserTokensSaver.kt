@@ -1,5 +1,7 @@
 package com.tangem.data.common.currency
 
+import com.tangem.data.common.account.WalletAccountsSaver
+import com.tangem.data.common.account.WalletAccountsSync
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.wallet.WalletServerBinder
@@ -8,6 +10,7 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWallet
@@ -17,6 +20,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.retryer.Retryer
 import com.tangem.utils.retryer.RetryerPool
+import dagger.Lazy
 import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList")
@@ -29,6 +33,8 @@ class UserTokensSaver(
     private val pushTokensRetryerPool: RetryerPool,
     private val walletAccountsETags: WalletAccountsETags,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
+    private val walletAccountsSync: WalletAccountsSync,
+    private val walletAccountsSaver: Lazy<WalletAccountsSaver>,
 ) {
 
     suspend fun push(
@@ -70,6 +76,12 @@ class UserTokensSaver(
     }
 
     private suspend fun push(userWallet: UserWallet, response: UserTokensResponse, onFailSend: () -> Unit) {
+        walletAccountsSync.withLock(userWalletId = userWallet.walletId) {
+            pushTokens(userWallet = userWallet, response = response, onFailSend = onFailSend)
+        }
+    }
+
+    private suspend fun pushTokens(userWallet: UserWallet, response: UserTokensResponse, onFailSend: () -> Unit) {
         safeApiCall(
             call = {
                 // Both codes are expected flow, not failures, so they are handled before bind() gets to log them
@@ -89,6 +101,7 @@ class UserTokensSaver(
                     mergeAndRetry(userWalletId = userWallet.walletId, response = response, onFailSend = onFailSend)
                 } else {
                     apiResponse.bind()
+                    walletAccountsSync.markInSync(userWallet.walletId)
                 }
             },
             onError = { error ->
@@ -144,11 +157,35 @@ class UserTokensSaver(
                 )
 
                 saveTokensWithETag(userWalletId = userWalletId, response = merged).bind()
+
+                // The stored ETag is now the merged list's, so the copy must be that list too
+                storeMerged(userWalletId = userWalletId, fresh = fresh, merged = merged)
+                walletAccountsSync.markInSync(userWalletId)
             },
             onError = { error ->
                 TangemLogger.e("Failed to merge and re-push user tokens after a 412", error)
                 onFailSend()
             },
+        )
+    }
+
+    private suspend fun storeMerged(
+        userWalletId: UserWalletId,
+        fresh: GetWalletAccountsResponse,
+        merged: UserTokensResponse,
+    ) {
+        val accountIds = fresh.accounts.mapTo(hashSetOf()) { it.id }
+        val tokensByAccount = merged.tokens.groupBy { it.accountId }
+
+        walletAccountsSaver.get().store(
+            userWalletId = userWalletId,
+            response = fresh.copy(
+                wallet = fresh.wallet.copy(group = merged.group, sort = merged.sort),
+                accounts = fresh.accounts.map { account ->
+                    account.copy(tokens = tokensByAccount[account.id].orEmpty())
+                },
+                unassignedTokens = merged.tokens.filter { it.accountId !in accountIds },
+            ),
         )
     }
 
