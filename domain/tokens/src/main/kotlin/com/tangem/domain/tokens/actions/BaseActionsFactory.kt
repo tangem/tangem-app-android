@@ -202,6 +202,7 @@ internal open class BaseActionsFactory(
         userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         shouldShowSwapStories: Boolean,
+        isExpressUnreachable: Boolean,
     ): ActionState.Swap {
         val cryptoCurrency = cryptoCurrencyStatus.currency
         val isMultiCurrency = userWallet is UserWallet.Cold && userWallet.isMultiCurrency ||
@@ -224,6 +225,12 @@ internal open class BaseActionsFactory(
             cryptoCurrencyStatus.value is CryptoCurrencyStatus.NoQuote -> {
                 ActionState.Swap(
                     unavailabilityReason = ScenarioUnavailabilityReason.TokenNoQuotes(cryptoCurrency.name),
+                    shouldShowBadge = false,
+                )
+            }
+            isExpressUnreachable -> {
+                ActionState.Swap(
+                    unavailabilityReason = ScenarioUnavailabilityReason.ExpressUnreachable(cryptoCurrency.name),
                     shouldShowBadge = false,
                 )
             }
