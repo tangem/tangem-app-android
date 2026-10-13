@@ -378,6 +378,7 @@ internal class SendModel @Inject constructor(
                 network = params.currency.network,
                 transactionData = transferTransaction,
                 sentAmount = sentAmount,
+                sentCurrencyStatus = cryptoCurrencyStatusFlow.value,
             )
         } else {
             getFeeForTokenUseCase(
