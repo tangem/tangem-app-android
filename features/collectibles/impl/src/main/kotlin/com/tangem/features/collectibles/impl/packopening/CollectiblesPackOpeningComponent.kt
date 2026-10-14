@@ -46,7 +46,6 @@ internal class CollectiblesPackOpeningComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
-
         CollectiblesPackOpeningScreen(state = state, modifier = modifier)
 
         bottomSheet.child?.instance?.BottomSheet()
