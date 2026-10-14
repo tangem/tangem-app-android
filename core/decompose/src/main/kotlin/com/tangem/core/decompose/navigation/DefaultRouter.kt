@@ -76,8 +76,8 @@ internal class DefaultRouter(
     }
 
     /**
-     * [block] must report its result through the provided callback. A failure of the navigation itself becomes
-     * `onComplete(false)`; a failure thrown by [onComplete] is the caller's and is rethrown, so it is never retried.
+     * [block] must report its result through the provided callback. A failure is logged; [onComplete] gets `false`
+     * only if it hasn't been called yet, so a failure thrown by the callback itself never retries it.
      */
     private fun navigateSafely(
         onComplete: (isSuccess: Boolean) -> Unit,
@@ -91,10 +91,8 @@ internal class DefaultRouter(
             }
 
             runCatching { navigation.block(complete) }.onFailure { throwable ->
-                if (isCompleted) throw throwable
-
                 logger.e(messageString = "Navigation failed", throwable = throwable)
-                onComplete(false)
+                if (!isCompleted) onComplete(false)
             }
         }
 
