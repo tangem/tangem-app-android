@@ -10,7 +10,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
-import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
+import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.ExpressTxType
@@ -56,13 +56,13 @@ import java.math.BigDecimal
 internal class SwapNotificationsFactoryTest {
 
     private val actions: UiActions = mockk(relaxed = true)
-    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk()
+    private val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork = mockk()
     private val appCurrencyProvider: Provider<AppCurrency> = Provider { AppCurrency.Default }
     private val appRouter: AppRouter = mockk()
 
     private val factory = SwapNotificationsFactory(
         actions = actions,
-        isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+        isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
         appCurrencyProvider = appCurrencyProvider,
     )
 
@@ -73,14 +73,14 @@ internal class SwapNotificationsFactoryTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(isGaslessFeeSupportedForNetwork, appRouter)
+        clearMocks(isEvmGaslessFeeSupportedForNetwork, appRouter)
         every { appRouter.stack } returns emptyList()
     }
 
     @Test
     fun `GIVEN low slippage WHEN notifications built THEN low slippage warning shown`() {
         // Arrange
-        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
         val onSlippageClick: () -> Unit = {}
         every { actions.onSlippageClick } returns onSlippageClick
         val percent = stringReference("0.11%")
@@ -103,7 +103,7 @@ internal class SwapNotificationsFactoryTest {
     @Test
     fun `GIVEN no low slippage WHEN notifications built THEN low slippage warning absent`() {
         // Arrange
-        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
 
         // Act
         val notifications = factory.getConfirmationStateNotifications(
@@ -121,7 +121,7 @@ internal class SwapNotificationsFactoryTest {
     @Test
     fun `GIVEN CEX and no gasless support WHEN insufficient fee THEN cover fee warning shown`() {
         // Arrange
-        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
         val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.CEX)
 
         // Act
@@ -142,7 +142,7 @@ internal class SwapNotificationsFactoryTest {
     @Test
     fun `GIVEN CEX and gasless support WHEN insufficient fee THEN cover fee warning suppressed`() {
         // Arrange
-        every { isGaslessFeeSupportedForNetwork(any()) } returns true
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns true
         val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.CEX)
 
         // Act
@@ -161,7 +161,7 @@ internal class SwapNotificationsFactoryTest {
     @Test
     fun `GIVEN DEX and gasless support WHEN insufficient fee THEN cover fee warning shown`() {
         // Arrange
-        every { isGaslessFeeSupportedForNetwork(any()) } returns true
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns true
         val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.DEX)
 
         // Act
@@ -180,7 +180,7 @@ internal class SwapNotificationsFactoryTest {
     @Test
     fun `GIVEN DEX with SEND txType and gasless support WHEN insufficient fee THEN warning suppressed like CEX`() {
         // Arrange
-        every { isGaslessFeeSupportedForNetwork(any()) } returns true
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns true
         val quoteModel = buildQuotesLoadedState(
             providerType = ExchangeProviderType.DEX,
             txType = ExpressTxType.SEND,
@@ -202,7 +202,7 @@ internal class SwapNotificationsFactoryTest {
     @Test
     fun `GIVEN DEX with SEND txType and no gasless support WHEN insufficient fee THEN warning shown`() {
         // Arrange
-        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
         val quoteModel = buildQuotesLoadedState(
             providerType = ExchangeProviderType.DEX,
             txType = ExpressTxType.SEND,
@@ -224,7 +224,7 @@ internal class SwapNotificationsFactoryTest {
     @Test
     fun `GIVEN CEX and gasless support WHEN fee token resolved and insufficient THEN warning shown`() {
         // Arrange
-        every { isGaslessFeeSupportedForNetwork(any()) } returns true
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns true
         val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.CEX)
 
         // Act
@@ -245,7 +245,7 @@ internal class SwapNotificationsFactoryTest {
     @Test
     fun `GIVEN DEX with SEND txType and gasless support WHEN fee token resolved THEN warning shown`() {
         // Arrange
-        every { isGaslessFeeSupportedForNetwork(any()) } returns true
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns true
         val quoteModel = buildQuotesLoadedState(
             providerType = ExchangeProviderType.DEX,
             txType = ExpressTxType.SEND,
@@ -267,7 +267,7 @@ internal class SwapNotificationsFactoryTest {
     @Test
     fun `GIVEN permission required and insufficient approve fee WHEN notifications built THEN approve prompt hidden`() {
         // Arrange — the fee coin cannot cover the approve fee
-        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
         val quoteModel = buildQuotesLoadedState(
             providerType = ExchangeProviderType.DEX,
             permissionState = PermissionDataState.PermissionRequired(
@@ -293,7 +293,7 @@ internal class SwapNotificationsFactoryTest {
     @Test
     fun `GIVEN permission required and pending balance status WHEN notifications built THEN approve prompt shown`() {
         // Arrange — fee not resolved yet, the approve prompt keeps its usual behavior
-        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
         val quoteModel = buildQuotesLoadedState(
             providerType = ExchangeProviderType.DEX,
             permissionState = PermissionDataState.PermissionRequired(
@@ -325,7 +325,7 @@ internal class SwapNotificationsFactoryTest {
     @Test
     fun `GIVEN restricted quote WHEN notifications built THEN region restriction error shown first`() {
         // Arrange
-        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
         val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.CEX, isRestricted = true)
 
         // Act
@@ -346,7 +346,7 @@ internal class SwapNotificationsFactoryTest {
     @Test
     fun `GIVEN purchasable quote WHEN notifications built THEN no region restriction error`() {
         // Arrange
-        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
         val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.CEX, isRestricted = false)
 
         // Act
@@ -365,7 +365,7 @@ internal class SwapNotificationsFactoryTest {
     @Test
     fun `GIVEN prediction limits and receive amount below minimum WHEN notifications built THEN minimum warning shown first`() {
         // Arrange
-        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
         val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.CEX, isRestricted = true)
 
         // Act
@@ -385,7 +385,7 @@ internal class SwapNotificationsFactoryTest {
     @Test
     fun `GIVEN prediction limits and receive amount at maximum WHEN notifications built THEN maximum warning shown first`() {
         // Arrange
-        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
         val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.CEX)
 
         // Act
@@ -405,7 +405,7 @@ internal class SwapNotificationsFactoryTest {
     @Test
     fun `GIVEN no prediction limits WHEN notifications built THEN no prediction warning`() {
         // Arrange
-        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
         val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.CEX)
 
         // Act
@@ -480,7 +480,7 @@ internal class SwapNotificationsFactoryTest {
 
     private fun factoryWithLimits(minimum: String, maximum: String) = SwapNotificationsFactory(
         actions = actions,
-        isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+        isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
         appCurrencyProvider = appCurrencyProvider,
         predictionTopUpLimitsProvider = Provider {
             PredictionTopUpLimits(
