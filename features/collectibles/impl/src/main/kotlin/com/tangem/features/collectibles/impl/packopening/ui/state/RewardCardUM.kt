@@ -1,8 +1,10 @@
 package com.tangem.features.collectibles.impl.packopening.ui.state
 
+import com.tangem.core.ui.extensions.TextReference
+
 /** @property accent colours the case's glow and the rarity badge by how rare the card is */
 internal data class RewardCardUM(
-    val rarity: String,
+    val rarity: TextReference,
     val accent: Accent,
     val title: String,
     val editionNumber: String,
