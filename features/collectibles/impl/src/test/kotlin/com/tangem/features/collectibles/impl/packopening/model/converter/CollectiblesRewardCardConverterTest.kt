@@ -1,6 +1,9 @@
 package com.tangem.features.collectibles.impl.packopening.model.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.collectibles.models.CollectibleRarity
 import com.tangem.features.collectibles.impl.createOpenedPack
 import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardUM
@@ -23,7 +26,7 @@ internal class CollectiblesRewardCardConverterTest {
         // Assert
         assertThat(actual).isEqualTo(
             RewardCardUM(
-                rarity = "Uncommon pull",
+                rarity = resourceReference(R.string.collectibles_open_pack_pull_uncommon),
                 accent = RewardCardUM.Accent.Green,
                 title = "2024 Series One",
                 editionNumber = "#216",
@@ -63,16 +66,36 @@ internal class CollectiblesRewardCardConverterTest {
     }
 
     private fun provideTestModels() = listOf(
-        RarityModel(CollectibleRarity.COMMON, expected = "Common pull", expectedAccent = RewardCardUM.Accent.Neutral),
-        RarityModel(CollectibleRarity.UNCOMMON, expected = "Uncommon pull", expectedAccent = RewardCardUM.Accent.Green),
-        RarityModel(CollectibleRarity.RARE, expected = "Rare pull", expectedAccent = RewardCardUM.Accent.Blue),
-        RarityModel(CollectibleRarity.EPIC, expected = "Epic pull", expectedAccent = RewardCardUM.Accent.Violet),
-        RarityModel(rarity = null, expected = "Your pull", expectedAccent = RewardCardUM.Accent.Neutral),
+        RarityModel(
+            rarity = CollectibleRarity.COMMON,
+            expected = resourceReference(R.string.collectibles_open_pack_pull_common),
+            expectedAccent = RewardCardUM.Accent.Neutral,
+        ),
+        RarityModel(
+            rarity = CollectibleRarity.UNCOMMON,
+            expected = resourceReference(R.string.collectibles_open_pack_pull_uncommon),
+            expectedAccent = RewardCardUM.Accent.Green,
+        ),
+        RarityModel(
+            rarity = CollectibleRarity.RARE,
+            expected = resourceReference(R.string.collectibles_open_pack_pull_rare),
+            expectedAccent = RewardCardUM.Accent.Blue,
+        ),
+        RarityModel(
+            rarity = CollectibleRarity.EPIC,
+            expected = resourceReference(R.string.collectibles_open_pack_pull_epic),
+            expectedAccent = RewardCardUM.Accent.Violet,
+        ),
+        RarityModel(
+            rarity = null,
+            expected = resourceReference(R.string.collectibles_open_pack_pull_common),
+            expectedAccent = RewardCardUM.Accent.Neutral,
+        ),
     )
 
     internal data class RarityModel(
         val rarity: CollectibleRarity?,
-        val expected: String,
+        val expected: TextReference,
         val expectedAccent: RewardCardUM.Accent,
     )
 }
