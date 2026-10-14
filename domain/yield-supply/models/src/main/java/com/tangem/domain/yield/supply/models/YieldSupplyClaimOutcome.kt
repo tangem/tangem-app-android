@@ -1,6 +1,7 @@
 package com.tangem.domain.yield.supply.models
 
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
@@ -10,7 +11,10 @@ import com.tangem.domain.models.wallet.UserWalletId
 data class YieldSupplyClaimOutcome(
     val userWalletId: UserWalletId,
     val cryptoCurrencyId: CryptoCurrency.ID,
+    val networkId: Network.ID,
+    val tokenSymbol: String,
     val chainId: Int,
     val userAddress: String,
+    val transactionHash: String,
     val outcome: YieldSupplyTransactionOutcome,
 )
