@@ -84,5 +84,6 @@ dependencies {
     testImplementation(deps.test.junit5)
     testRuntimeOnly(deps.orgJson)
     testImplementation(deps.test.truth)
+    testImplementation(deps.test.mockk)
     api(deps.kotlin.coroutines)
 }
