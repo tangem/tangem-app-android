@@ -67,12 +67,14 @@ internal class DefaultJointAccountCompromisedAlert @Inject constructor(
         return isCompromised
     }
 
-    /** `null` while the joint status is still loading — the answer is not known yet */
+    /** `null` while the joint status is loading or unavailable — the composition has not been verified yet */
     private fun AccountStatus.compromisedOrNull(): Boolean? {
         if (this !is AccountStatus.Joint) return false
 
         return when (value) {
-            is JointAccountStatusValue.Loading -> null
+            is JointAccountStatusValue.Loading,
+            is JointAccountStatusValue.Error.Unavailable,
+            -> null
             is JointAccountStatusValue.Error.Compromised -> true
             else -> false
         }

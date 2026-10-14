@@ -81,6 +81,19 @@ internal class JointAccountCompositionVerifierTest {
         }
 
     @Test
+    fun `GIVEN an active account without a safe address WHEN verify THEN not verified`() = runTest {
+        // Act
+        val actual = verifier.isVerified(
+            userWalletId,
+            ownerKeyIndex,
+            jointAccount(safeAddress = null).copy(status = JointAccount.Status.ACTIVE),
+        )
+
+        // Assert
+        assertThat(actual).isFalse()
+    }
+
+    @Test
     fun `GIVEN own address cannot be derived WHEN verify THEN not verified`() = runTest {
         // Arrange
         coEvery { ownerAddressResolver.resolve(userWalletId, ownerKeyIndex) } returns IllegalStateException().left()
