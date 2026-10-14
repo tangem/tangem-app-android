@@ -186,6 +186,44 @@ internal class DefaultDeriveAndSignSessionTest {
         }
 
     @Test
+    fun `GIVEN the user closes the sheet during the network part WHEN run on cold THEN returns Left before any sign`() =
+        runTest {
+            // Arrange
+            val wallet = coldWallet()
+            coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
+            every { cardSdkConfigRepository.getCommonSigner(any(), any(), any(), session) } returns signer
+            val isAwaitingNetwork = CompletableDeferred<Unit>()
+            coEvery {
+                tangemSdkManager.runTaskAsync(
+                    runnable = any<CardSessionRunnable<Unit>>(),
+                    preflightReadFilter = any(),
+                    cardId = any(),
+                    initialMessage = any(),
+                    accessCode = any(),
+                    iconScanRes = any(),
+                    registerColdWallet = any(),
+                )
+            } coAnswers {
+                firstArg<CardSessionRunnable<Unit>>().run(session) { sessionResult = it }
+                isAwaitingNetwork.await()
+                CompletionResult.Failure(TangemSdkError.UserCancelled())
+            }
+
+            // Act
+            val actual = sut.run(wallet, SEED_KEY, PATH) {
+                isAwaitingNetwork.complete(Unit)
+                awaitCancellation()
+                sign(listOf(HASH))
+            }
+
+            // Assert
+            assertThat(actual.leftOrNull()).isInstanceOf(TangemSdkError.UserCancelled::class.java)
+            assertThat(sessionResult).isNull()
+            coVerify(exactly = 1) { derivationsRepository.storeDerivedKeys(any(), any()) }
+            coVerify(exactly = 0) { signer.sign(any<List<ByteArray>>(), any()) }
+        }
+
+    @Test
     fun `GIVEN the caller is cancelled during the session WHEN run on cold THEN the sheet closes as cancelled`() =
         runTest {
             // Arrange
@@ -296,7 +334,7 @@ internal class DefaultDeriveAndSignSessionTest {
     }
 
     @Test
-    fun `GIVEN the hot derivation prompt is cancelled WHEN run THEN Left and the own unlock is cleared`() = runTest {
+    fun `GIVEN the hot derivation prompt is cancelled WHEN run THEN Left and no unlock is cleared`() = runTest {
         // Arrange
         val wallet = hotWallet()
         coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
@@ -308,7 +346,7 @@ internal class DefaultDeriveAndSignSessionTest {
 
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(TangemSdkError.UserCancelled::class.java)
-        verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(HOT_WALLET_ID) }
+        verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
     }
 
     @Test
@@ -324,6 +362,7 @@ internal class DefaultDeriveAndSignSessionTest {
         // Assert
         assertThat(actual.getOrNull()).isEqualTo("nothing to sign")
         coVerify(exactly = 0) { hotWalletAccessor.unlockContextual(any<HotWalletId>()) }
+        verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
     }
 
     @Test
@@ -331,8 +370,7 @@ internal class DefaultDeriveAndSignSessionTest {
         // Arrange
         val wallet = hotWallet()
         coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-        every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany
-            listOf(null, null, mockk(), mockk())
+        every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany listOf(null, mockk())
         coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } returns mockk()
         coEvery { hotWalletAccessor.derivePublicKeysReusingContextualUnlock(HOT_WALLET_ID, any()) } returns
             derivedResponse()
@@ -372,7 +410,7 @@ internal class DefaultDeriveAndSignSessionTest {
     }
 
     @Test
-    fun `GIVEN the block throws WHEN run on hot THEN returns Left and the own unlock is cleared`() = runTest {
+    fun `GIVEN the block throws before signing WHEN run on hot THEN returns Left and no unlock is cleared`() = runTest {
         // Arrange
         val wallet = hotWallet()
         coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns storedDerivedKey()
@@ -383,7 +421,7 @@ internal class DefaultDeriveAndSignSessionTest {
 
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(TangemSdkError.ExceptionError::class.java)
-        verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(HOT_WALLET_ID) }
+        verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
     }
 
     private fun stubCardSession() {
