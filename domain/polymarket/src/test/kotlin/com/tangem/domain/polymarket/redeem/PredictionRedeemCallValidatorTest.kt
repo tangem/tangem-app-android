@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import java.math.BigInteger
 
 internal class PredictionRedeemCallValidatorTest {
 
@@ -31,9 +30,21 @@ internal class PredictionRedeemCallValidatorTest {
         )
 
         @Test
-        fun `GIVEN one adapter call naming the condition WHEN validated THEN it is accepted`() {
+        fun `GIVEN one adapter redeemPositions call for both index sets WHEN validated THEN it is accepted`() {
             // Arrange
             val calls = served(PolymarketMarketVersion.V1, v1Call())
+
+            // Act
+            val actual = PredictionRedeemCallValidator.validate(calls, expectation)
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+        }
+
+        @Test
+        fun `GIVEN a redeemPositions call for one index set WHEN validated THEN it is accepted`() {
+            // Arrange
+            val calls = served(PolymarketMarketVersion.V1, v1Call(indexSets = listOf(2)))
 
             // Act
             val actual = PredictionRedeemCallValidator.validate(calls, expectation)
@@ -56,9 +67,10 @@ internal class PredictionRedeemCallValidatorTest {
         }
 
         @Test
-        fun `GIVEN a hex zero value WHEN validated THEN it is accepted`() {
+        fun `GIVEN upper-case calldata and a hex zero value WHEN validated THEN it is accepted`() {
             // Arrange
-            val calls = served(PolymarketMarketVersion.V1, v1Call(value = "0x0"))
+            val call = v1Call(value = "0x0").let { it.copy(data = "0x" + it.data.drop(2).uppercase()) }
+            val calls = served(PolymarketMarketVersion.V1, call)
 
             // Act
             val actual = PredictionRedeemCallValidator.validate(calls, expectation)
@@ -103,11 +115,42 @@ internal class PredictionRedeemCallValidatorTest {
                 rejection = Rejection.Target(0),
             ),
             RejectionModel(
+                calls = served(PolymarketMarketVersion.V1, v1Call(selector = MERGE_POSITIONS_SELECTOR)),
+                rejection = Rejection.Calldata(0),
+            ),
+            RejectionModel(
                 calls = served(PolymarketMarketVersion.V1, v1Call(conditionId = OTHER_CONDITION_ID)),
                 rejection = Rejection.Calldata(0),
             ),
             RejectionModel(
-                calls = served(PolymarketMarketVersion.V1, v1Call(leadingWordHex = "aa")),
+                calls = served(
+                    PolymarketMarketVersion.V1,
+                    v1Call(parentCollectionId = CONDITION_ID, conditionId = OTHER_CONDITION_ID),
+                ),
+                rejection = Rejection.Calldata(0),
+            ),
+            RejectionModel(
+                calls = served(PolymarketMarketVersion.V1, v1Call(parentCollectionId = OTHER_CONDITION_ID)),
+                rejection = Rejection.Calldata(0),
+            ),
+            RejectionModel(
+                calls = served(PolymarketMarketVersion.V1, v1Call(indexSetsOffset = "a0")),
+                rejection = Rejection.Calldata(0),
+            ),
+            RejectionModel(
+                calls = served(PolymarketMarketVersion.V1, v1Call(indexSets = emptyList())),
+                rejection = Rejection.Calldata(0),
+            ),
+            RejectionModel(
+                calls = served(PolymarketMarketVersion.V1, v1Call(indexSets = listOf(1, 2, 4))),
+                rejection = Rejection.Calldata(0),
+            ),
+            RejectionModel(
+                calls = served(PolymarketMarketVersion.V1, v1Call(trailingHex = word(CONDITION_ID))),
+                rejection = Rejection.Calldata(0),
+            ),
+            RejectionModel(
+                calls = served(PolymarketMarketVersion.V1, v1Call(trailingHex = "00")),
                 rejection = Rejection.Calldata(0),
             ),
             RejectionModel(
@@ -178,11 +221,15 @@ internal class PredictionRedeemCallValidatorTest {
                 rejection = Rejection.Target(1),
             ),
             RejectionModel(
-                calls = served(PolymarketMarketVersion.V2, v2Call(0, selector = "a9059cbb")),
+                calls = served(PolymarketMarketVersion.V2, v2Call(0, selector = TRANSFER_SELECTOR)),
                 rejection = Rejection.Calldata(0),
             ),
             RejectionModel(
-                calls = served(PolymarketMarketVersion.V2, v2Call(0, assetId = LEGACY_ASSET_ID)),
+                calls = served(PolymarketMarketVersion.V2, v2Call(0, positionWord = LEGACY_POSITION_WORD)),
+                rejection = Rejection.Calldata(0),
+            ),
+            RejectionModel(
+                calls = served(PolymarketMarketVersion.V2, v2Call(0, positionWord = ASSET_ID_WORD)),
                 rejection = Rejection.Calldata(0),
             ),
             RejectionModel(
@@ -190,7 +237,11 @@ internal class PredictionRedeemCallValidatorTest {
                 rejection = Rejection.Calldata(0),
             ),
             RejectionModel(
-                calls = served(PolymarketMarketVersion.V2, v2Call(0, amount = BigInteger.ZERO)),
+                calls = served(PolymarketMarketVersion.V2, v2Call(0, amountHex = "0")),
+                rejection = Rejection.Calldata(0),
+            ),
+            RejectionModel(
+                calls = served(PolymarketMarketVersion.V2, v2Call(0, trailingHex = word("0"))),
                 rejection = Rejection.Calldata(0),
             ),
             RejectionModel(
@@ -226,46 +277,59 @@ internal class PredictionRedeemCallValidatorTest {
     private companion object {
         const val CONDITION_ID = "0x94947A23d1f1f6E0dFb6f2B2C4d1A4e9c0D1e2F3a4b5c6d7e8f9a0b1c2d3e4f5"
         const val OTHER_CONDITION_ID = "0x0000000000000000000000000000000000000000000000000000000000000001"
+
+        /** A decimal token id and, worked out apart from the validator, its 32-byte hex and the `bytes31` word. */
         const val ASSET_ID = "21742633143463906290569050155826241533067272736897614950488156847949938836455"
-        const val LEGACY_ASSET_ID = "98765432109876543210987654321098765432109876543210987654321098765432109876543"
-        const val V2_SELECTOR = "d217a3cc"
+        const val ASSET_ID_WORD = "3011e4ede0f6befa0ad3f571001d3e1ffeef3d4af78c3112aaac90416e3a43e7"
+        const val ASSET_POSITION_WORD = "3011e4ede0f6befa0ad3f571001d3e1ffeef3d4af78c3112aaac90416e3a4300"
+        const val LEGACY_POSITION_WORD = "da5b40ea9292a66146ad7a808a1a6dc26051afff6818ca5807e4a36e8d234500"
+
+        const val REDEEM_POSITIONS_SELECTOR = "01b7037c"
+        const val MERGE_POSITIONS_SELECTOR = "9e7212ad"
+        const val REDEEM_SELECTOR = "d217a3cc"
+        const val TRANSFER_SELECTOR = "a9059cbb"
 
         fun served(version: PolymarketMarketVersion?, first: PolymarketApprovalCall, vararg rest: PolymarketApprovalCall) =
             PredictionRedeemCalls(version = version, calls = nonEmptyListOf(first, *rest))
 
-        /** @param leadingWordHex extra hex before the words, which shifts the condition off its word boundary */
+        fun word(hex: String) = hex.removePrefix("0x").lowercase().padStart(64, '0')
+
+        /** `redeemPositions(address,bytes32,bytes32,uint256[])` as the adapters' ABI lays it out */
         fun v1Call(
             target: String = PolymarketContracts.CTF_COLLATERAL_ADAPTER,
+            selector: String = REDEEM_POSITIONS_SELECTOR,
+            parentCollectionId: String = "0",
             conditionId: String = CONDITION_ID,
+            indexSetsOffset: String = "80",
+            indexSets: List<Int> = listOf(1, 2),
+            trailingHex: String = "",
             value: String = "0",
-            leadingWordHex: String = "",
         ) = PolymarketApprovalCall(
             target = target,
             value = value,
-            data = "0x01b7037c" + leadingWordHex +
-                PolymarketContracts.COLLATERAL.removePrefix("0x").lowercase().padStart(64, '0') +
-                "".padStart(64, '0') +
-                conditionId.removePrefix("0x").lowercase() +
-                "".padStart(64, '0'),
+            data = "0x" + selector +
+                word(PolymarketContracts.COLLATERAL) +
+                word(parentCollectionId) +
+                word(conditionId) +
+                word(indexSetsOffset) +
+                word(indexSets.size.toString(16)) +
+                indexSets.joinToString(separator = "") { word(it.toString(16)) } +
+                trailingHex,
         )
 
+        /** `redeem(bytes31,uint256,uint256)` on the Router */
         fun v2Call(
             outcome: Int,
             target: String = PolymarketContracts.ROUTER_V3,
-            selector: String = V2_SELECTOR,
-            assetId: String = ASSET_ID,
-            amount: BigInteger = BigInteger("5000000"),
+            selector: String = REDEEM_SELECTOR,
+            positionWord: String = ASSET_POSITION_WORD,
+            amountHex: String = "4c4b40",
+            trailingHex: String = "",
             value: String = "0",
-        ): PolymarketApprovalCall {
-            val positionWord = BigInteger(assetId).toString(16).padStart(64, '0').dropLast(2) + "00"
-            return PolymarketApprovalCall(
-                target = target,
-                value = value,
-                data = "0x" + selector +
-                    positionWord +
-                    outcome.toString(16).padStart(64, '0') +
-                    amount.toString(16).padStart(64, '0'),
-            )
-        }
+        ) = PolymarketApprovalCall(
+            target = target,
+            value = value,
+            data = "0x" + selector + positionWord + word(outcome.toString(16)) + word(amountHex) + trailingHex,
+        )
     }
 }
