@@ -26,18 +26,18 @@ internal class DefaultRouter(
         get() = navigationProvider.getOrCreate()
 
     override fun push(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
-        navigate(onComplete) { complete -> navigation.pushNew(route, complete) }
+        navigateSafely(onComplete) { complete -> pushNew(route, complete) }
     }
 
     override fun replaceCurrent(route: Route, onComplete: (Boolean) -> Unit) {
-        navigate(onComplete) { complete -> navigation.replaceCurrent(route, { complete(true) }) }
+        navigateSafely(onComplete) { complete -> this.replaceCurrent(route, { complete(true) }) }
     }
 
     override fun replaceAll(vararg routes: Route, onComplete: (isSuccess: Boolean) -> Unit) {
         val newRoutes = routes.toList()
 
-        navigate(onComplete) { complete ->
-            navigation.navigate(
+        navigateSafely(onComplete) { complete ->
+            navigate(
                 transformer = { newRoutes },
                 onComplete = { newStack, _ -> complete(newStack == newRoutes) },
             )
@@ -45,7 +45,7 @@ internal class DefaultRouter(
     }
 
     override fun pop(onComplete: (isSuccess: Boolean) -> Unit) {
-        navigate(onComplete) { complete -> navigation.pop(complete) }
+        navigateSafely(onComplete) { complete -> this.pop(complete) }
     }
 
     override fun popTo(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
@@ -63,8 +63,8 @@ internal class DefaultRouter(
     }
 
     private fun popTo(predicate: (Route) -> Boolean, onComplete: (isSuccess: Boolean) -> Unit) {
-        navigate(onComplete) { complete ->
-            navigation.navigate(
+        navigateSafely(onComplete) { complete ->
+            navigate(
                 transformer = { stack ->
                     stack
                         .dropLastWhile(predicate)
@@ -79,7 +79,10 @@ internal class DefaultRouter(
      * [block] must report its result through the provided callback. A failure of the navigation itself becomes
      * `onComplete(false)`; a failure thrown by [onComplete] is the caller's and is rethrown, so it is never retried.
      */
-    private fun navigate(onComplete: (isSuccess: Boolean) -> Unit, block: (complete: (Boolean) -> Unit) -> Unit) {
+    private fun navigateSafely(
+        onComplete: (isSuccess: Boolean) -> Unit,
+        block: StackNavigation<Route>.(complete: (Boolean) -> Unit) -> Unit,
+    ) {
         val safeBlock = Runnable {
             var isCompleted = false
             val complete: (Boolean) -> Unit = { isSuccess ->
@@ -87,7 +90,7 @@ internal class DefaultRouter(
                 onComplete(isSuccess)
             }
 
-            runCatching { block(complete) }.onFailure { throwable ->
+            runCatching { navigation.block(complete) }.onFailure { throwable ->
                 if (isCompleted) throw throwable
 
                 logger.e(messageString = "Navigation failed", throwable = throwable)
