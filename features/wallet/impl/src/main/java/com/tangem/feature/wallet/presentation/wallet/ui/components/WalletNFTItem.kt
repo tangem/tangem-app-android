@@ -133,13 +133,13 @@ private fun WalletNFTItemFailed(modifier: Modifier = Modifier) {
         icon = {
             Box(
                 modifier = Modifier
-                    .size(TangemTheme.dimens.size36)
-                    .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(8.dp))
                     .background(TangemTheme.colors.field.primary),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    modifier = Modifier.size(TangemTheme.dimens.size20),
+                    modifier = Modifier.size(20.dp),
                     painter = painterResource(R.drawable.ic_error_sync_24),
                     tint = TangemTheme.colors.icon.informative,
                     contentDescription = null,
@@ -173,21 +173,21 @@ private fun WalletNFTItemLoading(modifier: Modifier = Modifier) {
         icon = {
             Box(
                 modifier = Modifier
-                    .size(TangemTheme.dimens.size36)
-                    .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(8.dp))
                     .background(TangemTheme.colors.field.primary),
             )
         },
         text = {
             TextShimmer(
-                modifier = Modifier.width(TangemTheme.dimens.size110),
+                modifier = Modifier.width(110.dp),
                 style = TangemTheme.typography.caption2,
                 textSizeHeight = true,
             )
             TextShimmer(
                 modifier = Modifier
-                    .width(TangemTheme.dimens.size80)
-                    .padding(top = TangemTheme.dimens.spacing4),
+                    .width(80.dp)
+                    .padding(top = 4.dp),
                 style = TangemTheme.typography.caption2,
                 textSizeHeight = true,
             )
@@ -207,7 +207,7 @@ private fun BoxScope.CollectionsPreviews(previews: ImmutableList<CollectionPrevi
     }
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens.size36),
+            .size(36.dp),
     ) {
         previews.take(modifiers.size).forEachIndexed { index, s ->
             val modifier = modifiers[index]
@@ -243,29 +243,29 @@ private fun BoxScope.CollectionsPreviews(previews: ImmutableList<CollectionPrevi
 @Composable
 private fun BoxScope.previews1Modifiers(): List<Modifier> = listOf(
     Modifier
-        .size(TangemTheme.dimens.size36)
-        .clip(RoundedCornerShape(TangemTheme.dimens.radius6)),
+        .size(36.dp)
+        .clip(RoundedCornerShape(6.dp)),
 )
 
 @Composable
 private fun BoxScope.previews2Modifiers(): List<Modifier> = listOf(
     Modifier
-        .size(TangemTheme.dimens.size22)
+        .size(22.dp)
         .padding(
-            top = TangemTheme.dimens.spacing1,
+            top = 1.dp,
         )
-        .clip(RoundedCornerShape(TangemTheme.dimens.radius6))
+        .clip(RoundedCornerShape(6.dp))
         .align(Alignment.TopStart),
     Modifier
         .zIndex(1f)
-        .clip(RoundedCornerShape(TangemTheme.dimens.radius6))
+        .clip(RoundedCornerShape(6.dp))
         .background(TangemTheme.colors.background.primary)
         .padding(
-            top = TangemTheme.dimens.spacing2,
-            start = TangemTheme.dimens.spacing2,
+            top = 2.dp,
+            start = 2.dp,
         )
-        .size(TangemTheme.dimens.size22)
-        .clip(RoundedCornerShape(TangemTheme.dimens.radius6))
+        .size(22.dp)
+        .clip(RoundedCornerShape(6.dp))
         .align(Alignment.BottomEnd),
 )
 
@@ -273,55 +273,55 @@ private fun BoxScope.previews2Modifiers(): List<Modifier> = listOf(
 private fun BoxScope.previews3Modifiers(): List<Modifier> = listOf(
     Modifier
         .padding(
-            top = TangemTheme.dimens.spacing1,
-            bottom = TangemTheme.dimens.spacing1,
+            top = 1.dp,
+            bottom = 1.dp,
         )
-        .size(TangemTheme.dimens.size16)
+        .size(16.dp)
         .clip(RoundedCornerShape(5.dp))
         .align(Alignment.TopStart),
     Modifier
         .zIndex(1f)
         .padding(
-            top = TangemTheme.dimens.radius4,
+            top = 4.dp,
         )
-        .clip(RoundedCornerShape(TangemTheme.dimens.radius6))
+        .clip(RoundedCornerShape(6.dp))
         .background(TangemTheme.colors.background.primary)
         .padding(
-            start = TangemTheme.dimens.spacing2,
-            top = TangemTheme.dimens.spacing2,
-            end = TangemTheme.dimens.spacing1,
-            bottom = TangemTheme.dimens.spacing2,
+            start = 2.dp,
+            top = 2.dp,
+            end = 1.dp,
+            bottom = 2.dp,
         )
-        .size(TangemTheme.dimens.size18)
-        .clip(RoundedCornerShape(TangemTheme.dimens.radius6))
+        .size(18.dp)
+        .clip(RoundedCornerShape(6.dp))
         .align(Alignment.TopEnd),
     Modifier
         .padding(
-            start = TangemTheme.dimens.spacing6,
-            bottom = TangemTheme.dimens.spacing1,
+            start = 6.dp,
+            bottom = 1.dp,
         )
-        .clip(RoundedCornerShape(TangemTheme.dimens.radius4))
-        .size(TangemTheme.dimens.size14)
+        .clip(RoundedCornerShape(4.dp))
+        .size(14.dp)
         .align(Alignment.BottomStart),
 )
 
 @Composable
 private fun BoxScope.previews4Modifiers(): List<Modifier> = listOf(
     Modifier
-        .clip(RoundedCornerShape(TangemTheme.dimens.radius4))
-        .size(TangemTheme.dimens.size16)
+        .clip(RoundedCornerShape(4.dp))
+        .size(16.dp)
         .align(Alignment.TopStart),
     Modifier
-        .clip(RoundedCornerShape(TangemTheme.dimens.radius4))
-        .size(TangemTheme.dimens.size16)
+        .clip(RoundedCornerShape(4.dp))
+        .size(16.dp)
         .align(Alignment.TopEnd),
     Modifier
-        .clip(RoundedCornerShape(TangemTheme.dimens.radius4))
-        .size(TangemTheme.dimens.size16)
+        .clip(RoundedCornerShape(4.dp))
+        .size(16.dp)
         .align(Alignment.BottomStart),
     Modifier
-        .clip(RoundedCornerShape(TangemTheme.dimens.radius4))
-        .size(TangemTheme.dimens.size16)
+        .clip(RoundedCornerShape(4.dp))
+        .size(16.dp)
         .align(Alignment.BottomEnd),
 )
 
@@ -346,7 +346,7 @@ private fun RowContentContainer(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(TangemTheme.dimens.radius16),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = TangemTheme.colors.background.primary,
             contentColor = TangemTheme.colors.text.primary1,
@@ -359,8 +359,8 @@ private fun RowContentContainer(
         Row(
             modifier = Modifier
                 .padding(
-                    horizontal = TangemTheme.dimens.spacing12,
-                    vertical = TangemTheme.dimens.spacing16,
+                    horizontal = 12.dp,
+                    vertical = 16.dp,
                 ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -375,14 +375,14 @@ private fun RowContentContainer(
                 Column(
                     modifier = Modifier
                         .padding(
-                            horizontal = TangemTheme.dimens.spacing12,
+                            horizontal = 12.dp,
                         )
                         .weight(1f),
                     horizontalAlignment = Alignment.Start,
                     content = text,
                 )
                 Box(
-                    modifier = Modifier.heightIn(min = TangemTheme.dimens.size24),
+                    modifier = Modifier.heightIn(min = 24.dp),
                     contentAlignment = Alignment.CenterEnd,
                     content = action,
                 )

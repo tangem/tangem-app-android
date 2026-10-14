@@ -85,7 +85,7 @@ private fun StaleBalanceColumn(state: BalanceDisplayState.Stale, modifier: Modif
                 contentDescription = null,
                 tint = TangemTheme.colors2.markers.iconGray,
             )
-            SpacerW(TangemTheme.dimens2.x0_5)
+            SpacerW(2.dp)
             Text(
                 text = state.fiatBalance.resolveAnnotatedReference(),
                 style = TangemTheme.typography2.bodyMedium16,
@@ -122,7 +122,7 @@ private fun UnreachableBalanceColumn(modifier: Modifier = Modifier) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            SpacerW(TangemTheme.dimens2.x0_5)
+            SpacerW(2.dp)
             Icon(
                 modifier = Modifier.size(16.dp),
                 painter = painterResource(id = R.drawable.ic_alert_triange_24),

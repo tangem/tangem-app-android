@@ -69,7 +69,7 @@ fun BaseTestCase.openMainScreen(
             timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG,
         )
         onPushNotificationsScreen {
-            if (allowButton.isDisplayedSafely()) allowButton.performClick()
+            if (isAllowButtonShown()) allowButton.performClick()
         }
     }
     step("Assert 'Main' screen is displayed") {

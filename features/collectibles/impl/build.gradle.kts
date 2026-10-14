@@ -52,6 +52,14 @@ dependencies {
     implementation(deps.lifecycle.compose)
     implementation(deps.lifecycle.runtime.ktx)
 
+    /** Media */
+    implementation(deps.androidx.media3.common)
+    implementation(deps.androidx.media3.database)
+    implementation(deps.androidx.media3.datasource)
+    implementation(deps.androidx.media3.exoplayer)
+    // `@UnstableApi` in media3 is an androidx opt-in marker, so opting in needs androidx's own OptIn annotation.
+    implementation(deps.androidx.annotation.experimental)
+
     /** Other */
     api(deps.compose.coil)
     implementation(deps.androidx.annotation)
