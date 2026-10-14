@@ -20,14 +20,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Reports a Merkl rewards claim that reverted on chain, wherever the user happens to be by then.
- *
- * A claim is signed on the Yield Mode screen but settles minutes later, and the result sheet's own "Go to token"
- * button leaves that screen — so a listener tied to it would drop exactly the outcome the user cannot work out on
- * their own: the rewards are still there, the fee was spent, and nothing says why. A confirmed claim needs no such
- * announcement, since the rewards banner and the transaction history already show it.
- */
+/** Announces a reverted claim app-wide: it settles after the user has left the claim sheet. */
 @Singleton
 class YieldSupplyClaimOutcomeAnnouncer @Inject constructor(
     private val yieldSupplyClaimTracker: YieldSupplyClaimTracker,
