@@ -5,9 +5,10 @@ background, story slides and anything similar. Derived from [REDACTED_TASK_KEY] 
 
 ## The main rule
 
-By default the x264 `veryslow` preset sets 16 reference frames and up to 8 consecutive B-frames, and places keyframes
-only at scene cuts. The file comes out compact and valid, but heavy for a phone's hardware decoder. That is why every
-recipe sets the reference frames, the B-frames and the keyframe interval explicitly.
+By default the x264 `veryslow` preset sets 16 reference frames and up to 8 consecutive B-frames, and puts keyframes at
+scene cuts and otherwise only every 250 frames (the default `keyint`), which is over ten seconds at 24 fps. The file
+comes out compact and valid, but heavy for a phone's hardware decoder. That is why every recipe sets the reference
+frames, the B-frames and the keyframe interval explicitly.
 
 ## Requirements and why
 
@@ -80,9 +81,11 @@ ffprobe -v trace "$F" 2>&1 | grep -oE "type:'(moov|mdat)'" | head -2
 # 5. Decodes without errors: the output must be empty
 ffmpeg -v error -i "$F" -f null -
 
-# 6. Quality against the master: minimum, 5th percentile and median of per-frame SSIM
+# 6. Quality against the master: minimum, 5th percentile and median of per-frame SSIM.
+#    PRE is the recipe's -vf: the ssim filter needs equal frame sizes, so the master gets the same crop as the clip.
+PRE="format=yuv420p"  # story slides: PRE="crop=1080:2340:0:0,format=yuv420p"
 ffmpeg -v error -i "$F" -i "<master>.mov" \
-  -lavfi "[0:v]format=yuv420p[a];[1:v]format=yuv420p[b];[a][b]ssim=stats_file=ssim.txt" -f null -
+  -lavfi "[0:v]format=yuv420p[a];[1:v]${PRE}[b];[a][b]ssim=stats_file=ssim.txt" -f null -
 python3 -c "
 import re; v=sorted(float(re.search(r'All:([0-9.]+)',l).group(1)) for l in open('ssim.txt'))
 print(f'min={v[0]:.4f} p5={v[len(v)//20]:.4f} median={v[len(v)//2]:.4f}')"
