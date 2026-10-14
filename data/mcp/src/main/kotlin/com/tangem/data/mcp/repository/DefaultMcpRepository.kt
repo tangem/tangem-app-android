@@ -4,6 +4,7 @@ import android.util.Base64
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.data.mcp.converter.McpClientConverter
 import com.tangem.data.mcp.converter.toDomain
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.models.McpDeviceVerification
@@ -31,6 +32,7 @@ internal class DefaultMcpRepository @Inject constructor(
     private val mcpApi: McpApi,
     private val appScope: AppCoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val mcpClientConverter: McpClientConverter,
 ) : McpRepository {
 
     private val sessions = MutableStateFlow<List<McpSession>>(value = emptyList())
@@ -41,7 +43,7 @@ internal class DefaultMcpRepository @Inject constructor(
     override suspend fun getAgent(clientId: String): McpAgent {
         return mcpApi.getClient(clientId = clientId)
             .toEither()
-            .map { it.toDomain() }
+            .map(mcpClientConverter::convert)
             .onLeft { TangemLogger.withTag(TAG).e("Agent $clientId cannot be looked up, treating it as unknown", it) }
             .getOrElse { McpAgent.unknown(clientId) }
     }
