@@ -4,21 +4,18 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.optionalDecimals
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.collectibles.account.covers
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.OpenPackStep
 import com.tangem.domain.models.account.CollectiblesVaultBalance
+import com.tangem.features.collectibles.impl.common.formatter.formatUsd
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.ButtonUM
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.OrderUM
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.PriceRowUM
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
-import java.math.BigDecimal
 
 /** The backend sends no total, so it is summed from the price and the fee. */
 internal class CollectiblesPackOpeningConverter(
@@ -49,11 +46,11 @@ internal class CollectiblesPackOpeningConverter(
                 PriceRowUM(
                     // Always one pack: phase one sells packs one at a time
                     labelRef = stringReference("${machine.shortName.ifBlank { machine.name }} x1"),
-                    value = machine.price.toFiat(),
+                    value = machine.price.formatUsd(),
                 ),
                 PriceRowUM(
                     labelRef = resourceReference(R.string.collectibles_confirm_order_platform_fee),
-                    value = fee.toFiat(),
+                    value = fee.formatUsd(),
                 ),
                 PriceRowUM(
                     labelRef = resourceReference(R.string.collectibles_confirm_order_total),
@@ -105,11 +102,4 @@ internal class CollectiblesPackOpeningConverter(
         val vaultBalance: CollectiblesVaultBalance,
         val step: OpenPackStep,
     )
-
-    private fun BigDecimal.toFiat(): String = format {
-        fiat(
-            fiatCurrencyCode = AppCurrency.Default.code,
-            fiatCurrencySymbol = AppCurrency.Default.symbol,
-        ).optionalDecimals()
-    }
 }

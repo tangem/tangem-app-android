@@ -1,11 +1,8 @@
 package com.tangem.features.collectibles.impl.packopening.model.converter
 
-import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.optionalDecimals
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.collectibles.models.CollectibleRarity
 import com.tangem.domain.collectibles.models.OpenedCollectiblePack
+import com.tangem.features.collectibles.impl.common.formatter.formatUsd
 import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardUM
 import com.tangem.utils.StringsSigns.NUMBER_SIGN
 import java.math.BigDecimal
@@ -22,8 +19,8 @@ internal object CollectiblesRewardCardConverter {
             accent = pack.rarity.toAccent(),
             title = listOfNotNull(pack.year, pack.set).joinToString(separator = " "),
             editionNumber = pack.serialNumber.toNumber(),
-            marketValue = pack.insuredValue.toFiat(),
-            sellBackValue = SELL_BACK_VALUE.toFiat(),
+            marketValue = pack.insuredValue.formatUsd(),
+            sellBackValue = SELL_BACK_VALUE.formatUsd(),
             frontImageUrl = pack.imageFrontUrl,
             backImageUrl = pack.imageBackUrl,
         )
@@ -46,11 +43,4 @@ internal object CollectiblesRewardCardConverter {
     }
 
     private fun String?.toNumber(): String = this?.let { "$NUMBER_SIGN$it" }.orEmpty()
-
-    private fun BigDecimal?.toFiat(): String = format {
-        fiat(
-            fiatCurrencyCode = AppCurrency.Default.code,
-            fiatCurrencySymbol = AppCurrency.Default.symbol,
-        ).optionalDecimals()
-    }
 }
