@@ -3,6 +3,7 @@ package com.tangem.core.ui.res
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.dp
 
 @Immutable
 data class TangemShapes internal constructor(
@@ -16,21 +17,21 @@ data class TangemShapes internal constructor(
     val bottomSheet: Shape,
     val bottomSheetLarge: Shape,
 ) {
-    constructor(dimens: TangemDimens) : this(
-        roundedCornersSmall = RoundedCornerShape(size = dimens.radius2),
-        roundedCornersSmall2 = RoundedCornerShape(size = dimens.radius4),
-        roundedCorners8 = RoundedCornerShape(size = dimens.radius8),
-        roundedCornersMedium = RoundedCornerShape(size = dimens.radius12),
-        roundedCornersXMedium = RoundedCornerShape(size = dimens.radius16),
-        roundedCornersLarge = RoundedCornerShape(size = dimens.radius28),
-        roundedCornersXLarge = RoundedCornerShape(size = dimens.radius36),
+    constructor() : this(
+        roundedCornersSmall = RoundedCornerShape(size = 2.dp),
+        roundedCornersSmall2 = RoundedCornerShape(size = 4.dp),
+        roundedCorners8 = RoundedCornerShape(size = 8.dp),
+        roundedCornersMedium = RoundedCornerShape(size = 12.dp),
+        roundedCornersXMedium = RoundedCornerShape(size = 16.dp),
+        roundedCornersLarge = RoundedCornerShape(size = 28.dp),
+        roundedCornersXLarge = RoundedCornerShape(size = 36.dp),
         bottomSheet = RoundedCornerShape(
-            topStart = dimens.radius16,
-            topEnd = dimens.radius16,
+            topStart = 16.dp,
+            topEnd = 16.dp,
         ),
         bottomSheetLarge = RoundedCornerShape(
-            topStart = dimens.radius24,
-            topEnd = dimens.radius24,
+            topStart = 24.dp,
+            topEnd = 24.dp,
         ),
     )
 }

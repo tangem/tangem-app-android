@@ -11,6 +11,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -33,21 +34,21 @@ fun NetworkTitle(
     title: @Composable BoxScope.() -> Unit,
     action: (@Composable BoxScope.() -> Unit)? = null,
 ) {
-    val minHeight = if (action == null) TangemTheme.dimens.size36 else TangemTheme.dimens.size40
+    val minHeight = if (action == null) 36.dp else 40.dp
 
     val padding = if (action == null) {
         PaddingValues(
-            start = TangemTheme.dimens.spacing12,
-            top = TangemTheme.dimens.spacing12,
-            end = TangemTheme.dimens.spacing12,
-            bottom = TangemTheme.dimens.spacing4,
+            start = 12.dp,
+            top = 12.dp,
+            end = 12.dp,
+            bottom = 4.dp,
         )
     } else {
         PaddingValues(
-            start = TangemTheme.dimens.spacing12,
-            top = TangemTheme.dimens.spacing11,
-            end = TangemTheme.dimens.spacing12,
-            bottom = TangemTheme.dimens.spacing5,
+            start = 12.dp,
+            top = 11.dp,
+            end = 12.dp,
+            bottom = 5.dp,
         )
     }
 
@@ -61,16 +62,16 @@ fun NetworkTitle(
     ) {
         Box(
             modifier = Modifier
-                .heightIn(min = TangemTheme.dimens.size20),
+                .heightIn(min = 20.dp),
             contentAlignment = Alignment.CenterStart,
             content = title,
         )
 
         if (action != null) {
-            Spacer(modifier = Modifier.size(TangemTheme.dimens.spacing8))
+            Spacer(modifier = Modifier.size(8.dp))
             Box(
                 modifier = Modifier
-                    .heightIn(min = TangemTheme.dimens.size24),
+                    .heightIn(min = 24.dp),
                 contentAlignment = Alignment.CenterEnd,
                 content = action,
             )

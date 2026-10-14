@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.BaseBottomSheetTestTags
 
@@ -32,7 +33,7 @@ fun SimpleSettingsRow(
 ) {
     Row(
         modifier = modifier
-            .height(if (redesign) TangemTheme.dimens.size48 else TangemTheme.dimens.size56)
+            .height(if (redesign) 48.dp else 56.dp)
             .fillMaxWidth()
             .clickable(
                 onClick = {
@@ -48,14 +49,14 @@ fun SimpleSettingsRow(
             painter = painterResource(id = icon),
             contentDescription = null,
             modifier = Modifier
-                .padding(horizontal = if (redesign) TangemTheme.dimens.spacing12 else TangemTheme.dimens.spacing20)
+                .padding(horizontal = if (redesign) 12.dp else 20.dp)
                 .testTag(BaseBottomSheetTestTags.ACTION_ICON),
             tint = rowColors.iconColor(enabled = enabled).value,
         )
         Column(
             modifier = Modifier
                 .padding(
-                    end = if (redesign) TangemTheme.dimens.spacing12 else TangemTheme.dimens.spacing20,
+                    end = if (redesign) 12.dp else 20.dp,
                 ),
         ) {
             Text(

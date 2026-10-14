@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.CircleShimmer
@@ -138,7 +139,7 @@ private inline fun DefaultCurrencyIcon(
     val isDarkTheme = isSystemInDarkTheme()
     val coroutineScope = rememberCoroutineScope()
 
-    val pixelsSize = with(LocalDensity.current) { TangemTheme.dimens.size48.roundToPx() }
+    val pixelsSize = with(LocalDensity.current) { 48.dp.roundToPx() }
     SubcomposeAsyncImage(
         modifier = modifier
             .background(

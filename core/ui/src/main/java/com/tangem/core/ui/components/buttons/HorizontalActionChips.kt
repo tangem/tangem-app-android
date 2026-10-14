@@ -31,13 +31,13 @@ fun HorizontalActionChips(
     buttons: ImmutableList<ActionButtonConfig>,
     modifier: Modifier = Modifier,
     containerColor: Color = TangemTheme.colors.background.secondary,
-    contentPadding: PaddingValues = PaddingValues(TangemTheme.dimens.spacing0),
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     LazyRow(
         modifier = modifier
             .fillMaxWidth()
             .testTag(BaseActionButtonsBlockTestTags.HORIZONTAL_ACTION_CHIPS),
-        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
+        horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         contentPadding = contentPadding,
     ) {

@@ -120,10 +120,10 @@ private fun TokenList(
         val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
         val listContentPadding = PaddingValues(
-            top = TangemTheme.dimens.spacing4,
-            bottom = TangemTheme.dimens.spacing92 + bottomBarHeight,
-            start = TangemTheme.dimens.spacing16,
-            end = TangemTheme.dimens.spacing16,
+            top = 4.dp,
+            bottom = 92.dp + bottomBarHeight,
+            start = 16.dp,
+            end = 16.dp,
         )
 
         // workaround to force recomposition of list items when the list is updated
@@ -241,7 +241,7 @@ private fun TopBar(
         }
     }
     val elevation by animateDpAsState(
-        targetValue = if (isElevationEnabled) TangemTheme.dimens.elevation4 else TangemTheme.dimens.elevation0,
+        targetValue = if (isElevationEnabled) 4.dp else 0.dp,
         label = "top_bar_shadow_elevation",
     )
 
@@ -250,13 +250,13 @@ private fun TopBar(
             .shadow(elevation)
             .background(TangemTheme.colors.background.secondary)
             .statusBarsPadding()
-            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .padding(horizontal = 16.dp)
             .fillMaxWidth(),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = TangemTheme.dimens.size56),
+                .heightIn(min = 56.dp),
             contentAlignment = Alignment.CenterStart,
         ) {
             Text(
@@ -269,9 +269,9 @@ private fun TopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = TangemTheme.dimens.spacing8),
+                .padding(bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             RoundedActionButton(
                 modifier = Modifier
@@ -312,10 +312,10 @@ private fun TopBar(
 private fun Actions(config: OrganizeTokensState.ActionsConfig, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
-            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .padding(horizontal = 16.dp)
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         SecondaryButton(
             modifier = Modifier
@@ -340,19 +340,19 @@ private fun Modifier.applyShapeAndShadow(roundingMode: RoundingModeUM, showShado
     return composed {
         val radius by animateDpAsState(
             targetValue = when (roundingMode) {
-                is RoundingModeUM.None -> TangemTheme.dimens.radius0
-                is RoundingModeUM.All -> TangemTheme.dimens.radius12
+                is RoundingModeUM.None -> 0.dp
+                is RoundingModeUM.All -> 12.dp
                 is RoundingModeUM.Bottom,
                 is RoundingModeUM.Top,
-                -> TangemTheme.dimens.radius16
+                -> 16.dp
             },
             label = "item_shape_radius",
         )
         val elevation by animateDpAsState(
             targetValue = if (showShadow) {
-                TangemTheme.dimens.elevation8
+                8.dp
             } else {
-                TangemTheme.dimens.elevation0
+                0.dp
             },
             label = "item_elevation",
         )
@@ -370,7 +370,7 @@ private fun Modifier.applyShapeAndShadow(roundingMode: RoundingModeUM, showShado
 @Composable
 @ReadOnlyComposable
 private fun getItemGap(roundingMode: RoundingModeUM): PaddingValues {
-    val paddingValue = TangemTheme.dimens.spacing4
+    val paddingValue = 4.dp
 
     return if (roundingMode.isShowGap) {
         when (roundingMode) {
