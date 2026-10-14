@@ -202,7 +202,7 @@ private fun FeeBlock(feeSelectorUM: FeeSelectorUM.Content) {
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
-            .padding(TangemTheme.dimens.spacing12)
+            .padding(12.dp)
             .testTag(TransactionSuccessScreenTestTags.FEE_BLOCK),
     ) {
         Text(
@@ -211,7 +211,7 @@ private fun FeeBlock(feeSelectorUM: FeeSelectorUM.Content) {
             color = TangemTheme.colors.text.tertiary,
         )
 
-        Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {
+        Box(modifier = Modifier.padding(top = 8.dp)) {
             val feeItemUM = feeSelectorUM.selectedFeeItem
             val feeAmount = feeItemUM.fee.amount
             SelectorRowItem(
@@ -273,7 +273,7 @@ private fun DestinationBlock(
             IdentIcon(
                 address = address.value,
                 modifier = Modifier
-                    .size(TangemTheme.dimens.size36)
+                    .size(36.dp)
                     .clip(RoundedCornerShape(18.dp))
                     .background(TangemTheme.colors.background.tertiary),
             )
@@ -283,7 +283,7 @@ private fun DestinationBlock(
                 text = stringResourceSafe(R.string.send_memo, memo.value),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
+                modifier = Modifier.padding(top = 8.dp),
             )
         }
     }

@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.inputrow.InputRowApprox
@@ -40,10 +41,10 @@ fun ExpressEstimate(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = TangemTheme.dimens.spacing12,
-                    end = TangemTheme.dimens.spacing12,
-                    top = TangemTheme.dimens.spacing14,
-                    bottom = TangemTheme.dimens.spacing2,
+                    start = 12.dp,
+                    end = 12.dp,
+                    top = 14.dp,
+                    bottom = 2.dp,
                 ),
         ) {
             Text(

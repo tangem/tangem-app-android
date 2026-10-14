@@ -64,7 +64,7 @@ internal fun MultiWalletSeedPhraseWords(
 @Composable
 private fun SegmentSeedBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, modifier: Modifier = Modifier) {
     SegmentedButtons(
-        modifier = modifier.padding(horizontal = TangemTheme.dimens.spacing76),
+        modifier = modifier.padding(horizontal = 76.dp),
         config = persistentListOf(GeneratedWordsType.Words12, GeneratedWordsType.Words24),
         initialSelectedItem = state.option,
         onClick = {
@@ -85,7 +85,7 @@ private fun SegmentSeedBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, 
                 it.length,
             ),
             modifier = Modifier
-                .padding(vertical = TangemTheme.dimens.spacing10)
+                .padding(vertical = 10.dp)
                 .fillMaxWidth(),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.primary1,
@@ -99,7 +99,7 @@ private fun SegmentSeedBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, 
 private fun TitleBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .padding(horizontal = TangemTheme.dimens.size36)
+            .padding(horizontal = 36.dp)
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {

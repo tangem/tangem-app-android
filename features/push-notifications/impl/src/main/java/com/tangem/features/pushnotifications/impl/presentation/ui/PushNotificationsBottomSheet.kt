@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH28
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -70,7 +71,7 @@ internal fun PushNotificationsContent(
                     subTitle = resourceReference(argumentTwoSubtitleRes),
                 ),
             ),
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing40),
+            modifier = Modifier.padding(top = 40.dp),
         )
         SpacerH28()
         ShowcaseButtons(

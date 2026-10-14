@@ -54,22 +54,22 @@ fun AddTokenContent(state: AddTokenUM, modifier: Modifier = Modifier) {
     ) {
         TokenItem(
             modifier = Modifier
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+                .clip(RoundedCornerShape(14.dp))
                 .background(color = TangemTheme.colors.background.action),
             state = state.tokenToAdd,
             isBalanceHidden = false,
         )
 
-        SpacerH(TangemTheme.dimens.spacing14)
+        SpacerH(14.dp)
         Column(
             modifier = Modifier
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+                .clip(RoundedCornerShape(14.dp))
                 .background(color = TangemTheme.colors.background.action),
         ) {
             PortfolioSelectRow(state.portfolio)
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 12.dp),
-                thickness = TangemTheme.dimens.size0_5,
+                thickness = 0.5.dp,
                 color = TangemTheme.colors.stroke.primary,
             )
             NetworkRow(state.network)

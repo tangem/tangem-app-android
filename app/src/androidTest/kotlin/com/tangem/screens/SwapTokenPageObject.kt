@@ -381,6 +381,12 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    val receiveChooseTokenButton: KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD))
+        hasText(getResourceString(R.string.common_choose_token))
+        useUnmergedTree = true
+    }
+
     // Transfer mode auto-fills the memo/destination tag — the manual Send-address field must never render here.
     val destinationTagField: KNode = child {
         hasTestTag(SendAddressScreenTestTags.DESTINATION_TAG_TEXT_FIELD)

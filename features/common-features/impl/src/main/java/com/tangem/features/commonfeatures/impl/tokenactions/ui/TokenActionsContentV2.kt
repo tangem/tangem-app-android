@@ -107,7 +107,7 @@ private fun RegionRestrictionBanner(state: TangemMessageBanner.State?, modifier:
 
     TangemMessageBanner(
         state = state,
-        modifier = modifier.padding(bottom = TangemTheme.dimens2.x2),
+        modifier = modifier.padding(bottom = 8.dp),
     )
 }
 
@@ -115,7 +115,7 @@ private fun RegionRestrictionBanner(state: TangemMessageBanner.State?, modifier:
 private fun QuickActionsList(state: TokenActionsUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         state.quickActions.actions.fastForEach { actionUM ->
             key(actionUM.title) {
@@ -159,7 +159,7 @@ private fun TokenHeader(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = TangemTheme.dimens2.x8),
+            .padding(vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CurrencyIcon(
@@ -168,7 +168,7 @@ private fun TokenHeader(
             networkBadgeSize = 24.dp,
         )
 
-        SpacerH(TangemTheme.dimens2.x5)
+        SpacerH(20.dp)
 
         when (val fiat = addedToken.fiatAmountState) {
             is TokenItemState.FiatAmountState.AnnotatedContent -> {
@@ -177,7 +177,7 @@ private fun TokenHeader(
                     style = TangemTheme.typography2.titleRegular44,
                     color = TangemTheme.colors2.text.neutral.primary,
                 )
-                SpacerH(TangemTheme.dimens2.x2)
+                SpacerH(8.dp)
             }
             else -> Unit
         }
@@ -189,12 +189,12 @@ private fun TokenHeader(
                     style = TangemTheme.typography2.bodyMedium16,
                     color = TangemTheme.colors2.text.neutral.secondary,
                 )
-                SpacerH(TangemTheme.dimens2.x2)
+                SpacerH(8.dp)
             }
             else -> Unit
         }
 
-        SpacerH(TangemTheme.dimens2.x7)
+        SpacerH(28.dp)
 
         when (portfolioBadge) {
             is PortfolioBadgeUM.None -> Unit
@@ -211,12 +211,12 @@ private fun TokenHeader(
 private fun WalletPortfolioRow(name: TextReference, deviceIcon: DeviceIconUM, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
-            .heightIn(TangemTheme.dimens2.x6)
-            .clip(RoundedCornerShape(TangemTheme.dimens2.x4))
+            .heightIn(24.dp)
+            .clip(RoundedCornerShape(16.dp))
             .background(TangemTheme.colors2.markers.backgroundSolidGray)
-            .padding(start = TangemTheme.dimens2.x3, end = TangemTheme.dimens2.x2),
+            .padding(start = 12.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
             text = name.resolveReference(),
@@ -226,7 +226,7 @@ private fun WalletPortfolioRow(name: TextReference, deviceIcon: DeviceIconUM, mo
         )
         TangemDeviceIcon(
             state = deviceIcon,
-            modifier = Modifier.size(TangemTheme.dimens2.x4),
+            modifier = Modifier.size(16.dp),
         )
     }
 }

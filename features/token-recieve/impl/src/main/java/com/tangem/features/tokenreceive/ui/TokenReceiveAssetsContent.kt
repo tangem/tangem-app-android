@@ -88,7 +88,7 @@ private fun LoadingBlock(modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = TangemTheme.colors3.bg.opaque.primary),
+        colors = CardDefaults.cardColors(containerColor = TangemTheme.colors3.bg.transparent.primary),
     ) {
         Box(
             modifier = Modifier
@@ -332,7 +332,7 @@ private fun EnsItem(onCopyClick: () -> Unit, address: String, modifier: Modifier
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = TangemTheme.colors3.bg.opaque.primary),
+        colors = CardDefaults.cardColors(containerColor = TangemTheme.colors3.bg.transparent.primary),
     ) {
         Row(
             modifier = Modifier

@@ -114,7 +114,7 @@ internal fun TangemAvatar.Appearance.tokens(): AvatarAppearanceTokens {
     val colors = TangemTheme.colors3
     return when (this) {
         TangemAvatar.Appearance.Neutral -> AvatarAppearanceTokens(
-            background = colors.bg.opaque.primary,
+            background = colors.bg.transparent.primary,
             tint = colors.icon.secondary,
         )
         TangemAvatar.Appearance.Success -> AvatarAppearanceTokens(
