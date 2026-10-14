@@ -18,6 +18,7 @@ import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupp
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.OpenPackRequest
 import com.tangem.domain.collectibles.models.OpenPackStep
+import com.tangem.domain.collectibles.models.OpenedCollectiblePack
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineUseCase
 import com.tangem.domain.collectibles.usecase.OpenCollectiblePackUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -27,7 +28,9 @@ import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.packopening.CollectiblesConfirmOrderBottomSheetConfig
 import com.tangem.features.collectibles.impl.packopening.CollectiblesPackOpeningComponent
 import com.tangem.features.collectibles.impl.packopening.model.converter.CollectiblesPackOpeningConverter
+import com.tangem.features.collectibles.impl.packopening.model.converter.CollectiblesRewardCardConverter
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.Stage
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,6 +39,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -67,10 +71,18 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
     private var machine: CollectibleGachaMachine? = null
     private var vaultBalance: CollectiblesVaultBalance? = null
 
+    private val reveal = MutableStateFlow(RevealState())
+
     private val orderConverter = CollectiblesPackOpeningConverter(
         onBackClick = ::onBackClick,
         onCloseClick = ::onCloseClick,
         onApproveClick = ::onApproveClick,
+        reveal = CollectiblesPackOpeningUM.RevealUM(
+            card = null,
+            onKeepCardClick = ::onKeepCardClick,
+            onSellBackClick = ::onSellBackClick,
+            onPackAnimationFinished = ::onPackAnimationFinished,
+        ),
     )
 
     init {
@@ -102,6 +114,7 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
         loadMachine(skipCache = true)
     }
 
+    // The catalogue below in the stack keeps this flow subscribed, so the balance is replayed without a request
     private suspend fun observeBalance(machine: CollectibleGachaMachine) {
         this.machine = machine
 
@@ -110,12 +123,18 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
             .distinctUntilChanged()
             .onEach { balance -> vaultBalance = balance }
 
-        combine(vaultBalanceFlow, openPackStep) { vaultBalance, step ->
-            orderConverter.convert(
+        combine(vaultBalanceFlow, openPackStep, reveal) { vaultBalance, step, reveal ->
+            val content = orderConverter.convert(
                 CollectiblesPackOpeningConverter.Input(
                     machine = machine,
                     vaultBalance = vaultBalance,
                     step = step,
+                ),
+            )
+            content.copy(
+                reveal = content.reveal.copy(
+                    card = reveal.pack?.let(CollectiblesRewardCardConverter::convert),
+                    stage = reveal.stage,
                 ),
             )
         }.collect { content -> uiState.value = content }
@@ -124,12 +143,7 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
     private fun onApproveClick() {
         // Re-checked on tap, the same rule the button is drawn by
         if (!hasEnoughFunds()) {
-            messageSender.send(
-                SnackbarMessage(
-                    message = resourceReference(R.string.collectibles_confirm_order_not_enough_funds_button),
-                ),
-            )
-
+            showSnackbar(resourceReference(R.string.collectibles_confirm_order_not_enough_funds_button))
             return
         }
 
@@ -147,8 +161,15 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
                 if (step is OpenPackStep.Failed) showOpenPackError(step)
 
                 openPackStep.value = step
+
+                // Thrown once the card is known: an earlier throw could not be taken back if the purchase then failed
+                if (step is OpenPackStep.Opened) launchPack(step.pack)
             }
         }
+    }
+
+    private fun launchPack(pack: OpenedCollectiblePack) {
+        reveal.update { it.copy(stage = Stage.Launching, pack = pack) }
     }
 
     private fun hasEnoughFunds(): Boolean {
@@ -198,6 +219,20 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
         bottomSheetNavigation.dismiss()
     }
 
+    private fun onPackAnimationFinished() {
+        reveal.update { it.copy(stage = Stage.Reward) }
+    }
+
+    @Suppress("EmptyFunctionBlock")
+    private fun onKeepCardClick() {
+        // TODO([REDACTED_TASK_KEY]): keeping a card needs the collection screen, which is not built yet
+    }
+
+    @Suppress("EmptyFunctionBlock")
+    private fun onSellBackClick() {
+        // TODO([REDACTED_TASK_KEY]): instant buy-back needs the tx pipeline
+    }
+
     private fun onBackClick() {
         if (isPurchaseRunning()) return
 
@@ -210,5 +245,13 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
         router.popTo(CollectiblesRoute.Main(params.userWalletId))
     }
 
-    private fun isPurchaseRunning(): Boolean = openPackJob?.isActive == true
+    private fun isPurchaseRunning(): Boolean = when (openPackStep.value) {
+        OpenPackStep.Generating, OpenPackStep.Confirming, OpenPackStep.Opening -> true
+        else -> false
+    }
+
+    private data class RevealState(
+        val stage: Stage = Stage.Order,
+        val pack: OpenedCollectiblePack? = null,
+    )
 }
