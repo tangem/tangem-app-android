@@ -443,22 +443,29 @@ internal class SubmitPredictionClaimInteractorTest {
         const val TX_ID = "0x4f2c"
         const val SIGNATURE = "0xsignature"
         const val NOW_MILLIS = 1_787_346_200_000L
+        const val ASSET_POSITION_WORD = "3011e4ede0f6befa0ad3f571001d3e1ffeef3d4af78c3112aaac90416e3a4300"
         val CALL = PolymarketApprovalCall(
             target = "0xada2005600dec949baf300f4c6120000bdb6eaab",
             value = "0",
-            data = "0x01b7037c" + "".padStart(64, '0') + CONDITION_ID.removePrefix("0x") + "".padStart(64, '0'),
+            data = "0x01b7037c" +
+                word("c011a7e12a19f7b1f670d46f03b03f3342e82dfb") +
+                word("0") +
+                word(CONDITION_ID) +
+                word("80") +
+                word("2") +
+                word("1") +
+                word("2"),
         )
         val V2_CALL_NO = v2Call(outcome = 0)
         val V2_CALL_YES = v2Call(outcome = 1)
         val CALLS = PredictionRedeemCalls(version = PolymarketMarketVersion.V1, calls = nonEmptyListOf(CALL))
 
+        fun word(hex: String) = hex.removePrefix("0x").padStart(64, '0')
+
         fun v2Call(outcome: Int) = PolymarketApprovalCall(
             target = "0x12121212006e4cd160d18e3f00711da5c3372600",
             value = "0",
-            data = "0xd217a3cc" +
-                (BigInteger(ASSET_ID).toString(16).padStart(64, '0').dropLast(2) + "00") +
-                outcome.toString(16).padStart(64, '0') +
-                BigInteger("5000000").toString(16).padStart(64, '0'),
+            data = "0xd217a3cc" + ASSET_POSITION_WORD + word(outcome.toString()) + word("4c4b40"),
         )
     }
 }
