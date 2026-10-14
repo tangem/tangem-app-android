@@ -202,13 +202,16 @@ internal class YieldSupplyActiveModel @Inject constructor(
         slotNavigation.activate(YieldSupplyActiveRoute.Exit)
     }
 
-    /** Dismiss that skips the in-transaction guard of [onDismissClick] — the About APY sheet signs nothing. */
-    fun onAboutApyDismiss() {
+    /**
+     * Skips the in-transaction guard of [onDismissClick]: the About APY sheet signs nothing, and the claim sheet
+     * guards its own dismissal.
+     */
+    fun onUnguardedSheetDismiss() {
         slotNavigation.dismiss()
     }
 
-    fun onClaimRewardsClick() {
-        // The claim sheet arrives with the claim part of the Merkl incentives series.
+    fun onClaimRewardsClick(chainId: Int, userAddress: String) {
+        slotNavigation.activate(YieldSupplyActiveRoute.Claim(chainId = chainId, userAddress = userAddress))
     }
 
     private fun onApyInfoClick() {
