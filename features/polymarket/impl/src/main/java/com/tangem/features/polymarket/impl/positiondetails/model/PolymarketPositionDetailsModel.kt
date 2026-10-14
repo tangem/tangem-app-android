@@ -8,7 +8,11 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
+import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketPosition
+import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
+import com.tangem.domain.polymarket.model.findMarket
+import com.tangem.domain.polymarket.model.findOutcome
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketConst
@@ -153,12 +157,13 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
     private fun openEvent() {
         val loaded = position ?: return
         val eventId = loaded.eventId ?: return
+        val market = eventMarket(loaded)
         router.push(
             PolymarketRoute.EventDetails(
                 eventId = eventId,
                 userWalletId = params.userWalletId,
                 marketId = loaded.marketId,
-                assetId = loaded.id.assetId,
+                assetId = market?.findOutcome(loaded)?.assetId ?: loaded.id.assetId,
             ),
         )
     }
@@ -169,13 +174,20 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
         else -> ::showMarketClosedSheet
     }
 
+    /**
+     * Whether orders are accepted is read off the event's market, not the position: a position still held in a
+     * market's legacy token reports that it accepts no orders while the market itself trades on under its new
+     * token. The resolution status stays the position's.
+     */
     private fun buyMoreAction(loaded: PolymarketPosition.Open): (() -> Unit)? {
-        if (!loaded.isMarketTradable) return ::showMarketClosedSheet
-        val market = eventMarket(loaded) ?: return null
-        return if (market.isAcceptingOrders) {
-            { buyMore(market) }
-        } else {
-            ::showMarketClosedSheet
+        val market = eventMarket(loaded)
+        val outcome = market?.findOutcome(loaded)
+        return when {
+            market == null || outcome == null -> if (loaded.isMarketTradable) null else ::showMarketClosedSheet
+            market.isAcceptingOrders && loaded.resolutionStatus == PolymarketResolutionStatus.OPEN -> {
+                { buyMore(market = market, outcome = outcome) }
+            }
+            else -> ::showMarketClosedSheet
         }
     }
 
@@ -199,12 +211,10 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
         )
     }
 
-    private fun eventMarket(loaded: PolymarketPosition.Open): PolymarketMarket? {
-        val loadedEvent = event?.takeIf { it.id == loaded.eventId } ?: return null
-        return loadedEvent.markets.firstOrNull { market -> market.outcomes.any { it.assetId == loaded.id.assetId } }
-    }
+    private fun eventMarket(loaded: PolymarketPosition.Open): PolymarketMarket? =
+        event?.takeIf { it.id == loaded.eventId }?.findMarket(loaded)
 
-    private fun buyMore(market: PolymarketMarket) {
+    private fun buyMore(market: PolymarketMarket, outcome: PolymarketOutcome) {
         val loaded = position ?: return
         val eventId = loaded.eventId ?: return
         router.push(
@@ -212,7 +222,7 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
                 userWalletId = params.userWalletId,
                 eventId = eventId,
                 marketId = market.id,
-                assetId = loaded.id.assetId,
+                assetId = outcome.assetId,
             ),
         )
     }

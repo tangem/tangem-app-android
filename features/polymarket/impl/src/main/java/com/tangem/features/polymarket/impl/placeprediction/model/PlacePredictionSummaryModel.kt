@@ -167,7 +167,7 @@ internal class PlacePredictionSummaryModel @Inject constructor(
                 request = PredictionSignRequest(
                     addresses = addresses,
                     quote = frozen.quote,
-                    assetId = params.assetId,
+                    assetId = frozen.assetId,
                     side = params.side,
                     isNegRisk = isNegRisk,
                     quoteReceivedAtMillis = frozen.receivedAtMillis,
