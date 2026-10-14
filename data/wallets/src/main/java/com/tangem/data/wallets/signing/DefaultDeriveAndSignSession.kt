@@ -35,6 +35,7 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 
@@ -155,16 +156,16 @@ internal class DefaultDeriveAndSignSession(
         val hotWalletId = userWallet.hotWalletId
         val curve = userWallet.wallets.orEmpty().firstOrNull { it.publicKey.contentEquals(seedKey) }?.curve
             ?: return TangemSdkError.WalletNotFound().left()
-        val isUnlockedElsewhere = hotWalletAccessor.getContextualUnlock(hotWalletId) != null
+        val unlock = RunScopedUnlock(hotWalletId)
 
         return try {
             val derivedKey = storedKey ?: runSuspendCatching {
-                deriveHot(userWallet = userWallet, seedKey = seedKey, path = path, curve = curve)
+                deriveHot(userWallet = userWallet, seedKey = seedKey, path = path, curve = curve, unlock = unlock)
             }.getOrElse { error -> return error.asTangemSdkError().left() }
 
             val signingScope = DeriveAndSignScope { hashes ->
                 runSuspendCatching {
-                    signHot(hotWalletId = hotWalletId, curve = curve, path = path, hashes = hashes)
+                    signHot(unlock = unlock, curve = curve, path = path, hashes = hashes)
                 }.fold(
                     onSuccess = { CompletionResult.Success(it) },
                     onFailure = { CompletionResult.Failure(it.asTangemSdkError()) },
@@ -172,7 +173,7 @@ internal class DefaultDeriveAndSignSession(
             }
             runBlockCatching(signingScope, derivedKey, block)
         } finally {
-            if (!isUnlockedElsewhere) hotWalletAccessor.clearContextualUnlock(hotWalletId)
+            unlock.clearIfEstablished()
         }
     }
 
@@ -181,8 +182,9 @@ internal class DefaultDeriveAndSignSession(
         seedKey: ByteArray,
         path: DerivationPath,
         curve: EllipticCurve,
+        unlock: RunScopedUnlock,
     ): ExtendedPublicKey {
-        ensureUnlocked(userWallet.hotWalletId)
+        unlock.ensureUnlocked()
         val response = hotWalletAccessor.derivePublicKeysReusingContextualUnlock(
             hotWalletId = userWallet.hotWalletId,
             request = DeriveWalletRequest(
@@ -201,20 +203,32 @@ internal class DefaultDeriveAndSignSession(
     }
 
     private suspend fun signHot(
-        hotWalletId: HotWalletId,
+        unlock: RunScopedUnlock,
         curve: EllipticCurve,
         path: DerivationPath,
         hashes: List<ByteArray>,
     ): List<ByteArray> {
-        ensureUnlocked(hotWalletId)
+        unlock.ensureUnlocked()
         return hotWalletAccessor.signHashesReusingContextualUnlock(
-            hotWalletId = hotWalletId,
+            hotWalletId = unlock.hotWalletId,
             dataToSign = listOf(DataToSign(curve = curve, derivationPath = path, hashes = hashes)),
         ).flatMap { it.signatures }
     }
 
-    private suspend fun ensureUnlocked(hotWalletId: HotWalletId) {
-        if (hotWalletAccessor.getContextualUnlock(hotWalletId) == null) hotWalletAccessor.unlockContextual(hotWalletId)
+    private inner class RunScopedUnlock(val hotWalletId: HotWalletId) {
+
+        private val isEstablishedByThisRun = AtomicBoolean(false)
+
+        suspend fun ensureUnlocked() {
+            if (hotWalletAccessor.getContextualUnlock(hotWalletId) != null) return
+
+            hotWalletAccessor.unlockContextual(hotWalletId)
+            isEstablishedByThisRun.set(true)
+        }
+
+        fun clearIfEstablished() {
+            if (isEstablishedByThisRun.get()) hotWalletAccessor.clearContextualUnlock(hotWalletId)
+        }
     }
 
     private suspend fun <T> runBlockCatching(
