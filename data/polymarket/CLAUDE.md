@@ -66,7 +66,8 @@ deliberate exceptions:
   despite the failed response.
 
 BFF `/wallet*` `409` means approvals were sent before the deploy finished; `/withdraw*` `409` means the same
-nonce was already submitted — neither is a generic conflict.
+nonce was already submitted; `/positions/redeem/call` `409` means nothing to redeem (claimed elsewhere, or an
+unsupported market version) — none is a generic conflict.
 
 ## Stores
 
