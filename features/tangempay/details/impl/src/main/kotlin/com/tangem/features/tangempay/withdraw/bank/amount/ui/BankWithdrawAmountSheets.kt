@@ -92,6 +92,7 @@ private fun TokenRow(item: TokenItemUM) {
 @Composable
 private fun RouteRow(item: RouteItemUM) {
     TangemRow(
+        modifier = Modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_ROUTE_OPTION),
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = { BankRailIcon(rail = item.rail, size = 40.dp) },
