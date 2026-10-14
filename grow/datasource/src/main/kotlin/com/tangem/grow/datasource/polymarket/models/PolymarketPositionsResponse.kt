@@ -6,13 +6,13 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class PolymarketPositionsResponse(
     @Json(name = "positions") val positions: List<PolymarketOpenPositionDto>,
-    @Json(name = "hasNext") val hasNext: Boolean,
+    @Json(name = "nextCursor") val nextCursor: String? = null,
 )
 
 @JsonClass(generateAdapter = true)
 data class PolymarketClosedPositionsResponse(
     @Json(name = "positions") val positions: List<PolymarketClosedPositionDto>,
-    @Json(name = "hasNext") val hasNext: Boolean,
+    @Json(name = "nextCursor") val nextCursor: String? = null,
 )
 
 @JsonClass(generateAdapter = true)
