@@ -24,6 +24,7 @@ import com.tangem.domain.notifications.models.NotificationType
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.usecase.ResolveAndSelectUserWalletUseCase
+import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
@@ -51,6 +52,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     private val walletBalanceFetcher: WalletBalanceFetcher,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val singleAccountListFetcher: SingleAccountListFetcher,
+    private val jointAccountCompromisedAlert: JointAccountCompromisedAlert,
 ) : TokenDetailsDeepLinkHandler {
 
     init {
@@ -90,6 +92,15 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
             }
 
             analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationOpened(type.name))
+
+            val isCompromised = accountId != null && jointAccountCompromisedAlert.showIfCompromised(
+                userWalletId = userWallet.walletId,
+                accountId = accountId,
+            )
+            if (isCompromised) {
+                appRouter.popTo(AppRoute.Wallet)
+                return@launch
+            }
 
             if (userWallet.isMultiCurrency) {
                 openCurrencyDetails(
