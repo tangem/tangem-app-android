@@ -33,9 +33,9 @@ class HotUserWalletBuilder @AssistedInject constructor(
         val curves = allNetworks.map { it.getSupportedCurves() }.flatten().toSet()
         val requests = curves.sortedBy { it.ordinal }.map { curve ->
             val derivationPaths = allNetworks.filter { curve in it.getSupportedCurves() }
-                .mapNotNull {
-                    val derivationPath = it.derivationPath(DerivationStyle.V3) ?: return@mapNotNull null
-                    if (it == Blockchain.Cardano) {
+                .mapNotNull { blockchain ->
+                    val derivationPath = blockchain.derivationPath(DerivationStyle.V3) ?: return@mapNotNull null
+                    if (blockchain == Blockchain.Cardano) {
                         val extendedDerivationPath = CardanoUtils.extendedDerivationPath(derivationPath)
                         listOf(derivationPath, extendedDerivationPath)
                     } else {
@@ -59,12 +59,12 @@ class HotUserWalletBuilder @AssistedInject constructor(
             ),
         )
 
-        val wallets = derivationResult.responses.map {
+        val wallets = derivationResult.responses.map { response ->
             MobileWallet(
-                publicKey = it.seedKey.publicKey,
-                chainCode = it.seedKey.chainCode,
-                curve = it.curve,
-                derivedKeys = it.publicKeys,
+                publicKey = response.seedKey.publicKey,
+                chainCode = response.seedKey.chainCode,
+                curve = response.curve,
+                derivedKeys = response.publicKeys,
             )
         }
 

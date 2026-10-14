@@ -223,10 +223,10 @@ internal class WcSendTransactionModel @Inject constructor(
             feeSelectorUM = feeSelectorUM,
             onFeeReload = ::triggerFeeReload,
         )
-        _uiState.update {
-            it?.copy(
+        _uiState.update { state ->
+            state?.copy(
                 feeSelectorUM = feeSelectorUM,
-                transaction = it.transaction.copy(
+                transaction = state.transaction.copy(
                     sendEnabled = feeSelectorUM is FeeSelectorUM.Content && feeErrorNotification == null,
                     feeErrorNotification = feeErrorNotification,
                 ),
