@@ -212,6 +212,18 @@ internal class CollectiblesPackOpeningModelTest {
     }
 
     @Test
+    fun `GIVEN the reward card WHEN keep card tapped THEN machine details opens`() = runTest {
+        // Arrange
+        val model = startModel()
+
+        // Act
+        model.reveal().onKeepCardClick()
+
+        // Assert
+        verify(exactly = 1) { router.pop() }
+    }
+
+    @Test
     fun `GIVEN the order WHEN close tapped THEN machine details closes with it`() = runTest {
         // Arrange
         val model = startModel()
