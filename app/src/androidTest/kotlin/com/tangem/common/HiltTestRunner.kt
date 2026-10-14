@@ -9,8 +9,7 @@ import com.tangem.common.di.TangemMockedApplication_Application
 class HiltTestRunner : KaspressoRunner() {
 
     override fun onCreate(arguments: Bundle) {
-        // Mirrors the UITEST_*_FROM_API keys of the MockAware* repositories: WireMock serves this data under
-        // instrumentation, while a hand-launched mocked build keeps the canned demo data.
+        // MockAware* repositories serve WireMock data under instrumentation, canned data in a hand-launched build.
         System.setProperty("uitest.tangempay.tx_history_from_api", "1")
         System.setProperty("uitest.tangempay.bank_offramp_orders_from_api", "1")
         super.onCreate(arguments)
