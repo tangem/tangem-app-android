@@ -15,6 +15,7 @@ import com.tangem.common.services.InMemoryStorage
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.data.wallets.signing.DeriveKeyInSessionTask
 import com.tangem.domain.jointaccount.model.JointAccountSignResult
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
@@ -36,6 +37,8 @@ import com.tangem.tap.domain.sdk.mocks.MockProvider
 import com.tangem.tap.domain.sdk.mocks.showMockCardPicker
 import com.tangem.tap.domain.tasks.jointaccount.JointAccountSignTask
 import com.tangem.tap.foregroundActivityObserver
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
 @Suppress("TooManyFunctions")
 class MockTangemSdkManager : TangemSdkManager {
@@ -171,7 +174,21 @@ class MockTangemSdkManager : TangemSdkManager {
             @Suppress("UNCHECKED_CAST")
             CompletionResult.Success(mockJointAccountSignResult() as T)
         }
+        is DeriveKeyInSessionTask -> {
+            @Suppress("UNCHECKED_CAST")
+            runWithoutCard(runnable) as CompletionResult<T>
+        }
         else -> error("This method is deprecated")
+    }
+
+    private suspend fun runWithoutCard(task: DeriveKeyInSessionTask): CompletionResult<Unit> {
+        val derivedKey = when (val derived = MockProvider.getExtendedPublicKey()) {
+            is CompletionResult.Success -> derived.data
+            is CompletionResult.Failure -> return CompletionResult.Failure(derived.error)
+        }
+        return suspendCancellableCoroutine { continuation ->
+            task.runWithoutCard(derivedKey) { result -> if (continuation.isActive) continuation.resume(result) }
+        }
     }
 
     private fun mockJointAccountSignResult(): JointAccountSignResult = JointAccountSignResult(
