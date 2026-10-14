@@ -18,7 +18,7 @@ import com.tangem.grow.datasource.express.models.response.ExchangeIntent as Exch
 
 internal class ExchangeIntentConverterTest {
 
-    private val converter = ExchangeIntentConverter()
+    private val converter = ExchangeIntentConverter(rateTypeConverter = ExpressRateTypeConverter())
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)

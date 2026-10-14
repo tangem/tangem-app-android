@@ -131,7 +131,7 @@ internal fun MarketPositionCard(item: MetricItemUM.MarketPosition) {
                             .height(6.dp),
                         progress = { item.rangeValue },
                         dotColor = TangemTheme.colors3.icon.primary,
-                        backgroundColor = TangemTheme.colors3.bg.opaque.secondary,
+                        backgroundColor = TangemTheme.colors3.bg.transparent.secondary,
                     )
                 }
                 SpacerH(12.dp)

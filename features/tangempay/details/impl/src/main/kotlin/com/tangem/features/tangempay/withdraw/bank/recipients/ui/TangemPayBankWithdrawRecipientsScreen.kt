@@ -127,7 +127,7 @@ private fun RecipientInitial(initial: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .size(AvatarSize)
-            .background(color = TangemTheme.colors3.bg.opaque.secondary, shape = CircleShape),
+            .background(color = TangemTheme.colors3.bg.transparent.secondary, shape = CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -178,7 +178,7 @@ private fun NoResultsContent(contentPadding: PaddingValues, modifier: Modifier =
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .background(color = TangemTheme.colors3.bg.opaque.primary, shape = CircleShape),
+                .background(color = TangemTheme.colors3.bg.transparent.primary, shape = CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

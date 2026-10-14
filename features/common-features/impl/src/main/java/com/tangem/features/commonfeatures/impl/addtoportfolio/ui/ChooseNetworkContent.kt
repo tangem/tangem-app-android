@@ -58,7 +58,7 @@ internal fun ChooseNetworkContentV1(state: ChooseNetworkUM, modifier: Modifier =
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+            .clip(RoundedCornerShape(14.dp))
             .background(TangemTheme.colors.background.action),
     ) {
         state.networks.fastForEach { model ->
@@ -66,8 +66,8 @@ internal fun ChooseNetworkContentV1(state: ChooseNetworkUM, modifier: Modifier =
                 BlockchainRow(
                     model = model,
                     itemPadding = PaddingValues(
-                        horizontal = TangemTheme.dimens.spacing12,
-                        vertical = TangemTheme.dimens.spacing14,
+                        horizontal = 12.dp,
+                        vertical = 14.dp,
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -97,10 +97,10 @@ internal fun ChooseNetworkContentV2(state: ChooseNetworkUM, modifier: Modifier =
                 color = TangemTheme.colors2.surface.level3,
                 shape = RoundedCornerShape(34.dp),
             )
-            .padding(horizontal = TangemTheme.dimens2.x4, vertical = TangemTheme.dimens2.x2),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
         Text(
-            modifier = Modifier.padding(top = TangemTheme.dimens2.x4, bottom = TangemTheme.dimens2.x2),
+            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
             text = stringResourceSafe(R.string.common_choose_network),
             style = TangemTheme.typography2.subheadlineMedium14,
             color = TangemTheme.colors2.text.neutral.tertiary,
@@ -113,12 +113,12 @@ internal fun ChooseNetworkContentV2(state: ChooseNetworkUM, modifier: Modifier =
                         enabled = model.isEnabled,
                         onClick = { state.onNetworkClick(model) },
                     ),
-                    contentPadding = PaddingValues(vertical = TangemTheme.dimens2.x3),
+                    contentPadding = PaddingValues(vertical = 12.dp),
                     content = {
                         NetworkIcon(
                             modifier = Modifier
                                 .layoutId(layoutId = TangemRowLayoutId.HEAD)
-                                .padding(end = TangemTheme.dimens2.x3),
+                                .padding(end = 12.dp),
                             model = model,
                         )
 
@@ -130,7 +130,7 @@ internal fun ChooseNetworkContentV2(state: ChooseNetworkUM, modifier: Modifier =
                             TangemBadge(
                                 modifier = Modifier
                                     .layoutId(layoutId = TangemRowLayoutId.TAIL)
-                                    .padding(start = TangemTheme.dimens2.x2),
+                                    .padding(start = 8.dp),
                                 text = resourceReference(R.string.common_added),
                                 size = TangemBadgeSize.X6,
                                 shape = TangemBadgeShape.Rounded,
@@ -148,7 +148,7 @@ private fun NetworkIcon(model: BlockchainRowUM, modifier: Modifier = Modifier) {
     if (model.isSelected && model.isEnabled) {
         Image(
             modifier = modifier
-                .size(TangemTheme.dimens2.x10),
+                .size(40.dp),
             painter = painterResource(id = model.iconResId),
             contentDescription = null,
         )
@@ -159,7 +159,7 @@ private fun NetworkIcon(model: BlockchainRowUM, modifier: Modifier = Modifier) {
                     color = TangemTheme.colors2.button.backgroundSecondary,
                     shape = CircleShape,
                 )
-                .size(TangemTheme.dimens2.x10),
+                .size(40.dp),
             painter = painterResource(id = model.iconResId),
             tint = TangemTheme.colors2.graphic.neutral.tertiary,
             contentDescription = null,
@@ -172,7 +172,7 @@ private fun NetworkText(model: BlockchainRowUM, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
             modifier = Modifier.weight(weight = 10f, fill = false),

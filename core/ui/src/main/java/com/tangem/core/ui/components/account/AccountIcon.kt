@@ -294,7 +294,7 @@ private fun PreviewRedesigned() {
 private fun Sample() {
     var sizeState by remember { mutableStateOf(AccountIconSize.ExtraSmall) }
 
-    Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         AccountResIcon(resId = R.drawable.ic_shirt_24, color = Color.Red, size = sizeState)
         Button(onClick = {
             sizeState = when (sizeState) {
@@ -315,7 +315,7 @@ private fun Sample() {
         AccountResIcon(resId = R.drawable.ic_wallet_24, color = Color.Green, size = AccountIconSize.ExtraSmall)
         PaymentAccountIcon(size = AccountIconSize.Default)
     }
-    Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         AccountCharIcon(char = 'D', color = Color.Red, size = sizeState)
         AccountCharIcon(char = 'D', color = Color.Red, size = AccountIconSize.Default)
         AccountCharIcon(char = 'L', color = Color.Blue, size = AccountIconSize.Large)

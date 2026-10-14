@@ -22,11 +22,11 @@ fun TopAppBarButton(button: TopAppBarButtonUM, tint: Color, modifier: Modifier =
         is TopAppBarButtonUM.Icon -> {
             IconButton(
                 enabled = button.isEnabled,
-                modifier = modifier.size(TangemTheme.dimens.size32),
+                modifier = modifier.size(32.dp),
                 onClick = button.onClicked,
             ) {
                 Icon(
-                    modifier = Modifier.size(TangemTheme.dimens.size24),
+                    modifier = Modifier.size(24.dp),
                     painter = painterResource(id = button.iconRes),
                     tint = tint,
                     contentDescription = null,

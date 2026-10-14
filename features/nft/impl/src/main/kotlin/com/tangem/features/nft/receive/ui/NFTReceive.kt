@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.fields.SearchBar
@@ -37,7 +38,7 @@ internal fun NFTReceive(state: NFTReceiveUM, modifier: Modifier = Modifier) {
         SearchBar(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens.spacing16),
+                .padding(horizontal = 16.dp),
             state = state.search,
             colors = TangemSearchBarDefaults.secondaryTextFieldColors,
         )

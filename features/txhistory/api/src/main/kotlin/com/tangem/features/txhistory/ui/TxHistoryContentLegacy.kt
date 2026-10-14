@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.components.transactions.PendingTxsBlock
@@ -17,7 +18,6 @@ import com.tangem.core.ui.components.transactions.empty.EmptyTransactionBlockLeg
 import com.tangem.core.ui.components.transactions.empty.EmptyTransactionsBlockState
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.txhistory.entity.TxHistoryUM
 
 private const val LOAD_ITEMS_BUFFER = 20
@@ -63,7 +63,7 @@ private fun LazyListScope.nonContentItem(state: EmptyTransactionsBlockState, mod
             state = state,
             modifier = modifier
                 .animateItem(fadeInSpec = null, fadeOutSpec = null)
-                .padding(horizontal = TangemTheme.dimens.spacing16, vertical = TangemTheme.dimens.spacing12)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
                 .fillMaxWidth(),
         )
     }

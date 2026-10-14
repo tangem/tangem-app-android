@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
@@ -53,7 +54,7 @@ internal class TransferBottomSheetComponent(
             content = { contentState ->
                 TransferBottomSheetContent(
                     state = contentState,
-                    modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
             },
         )

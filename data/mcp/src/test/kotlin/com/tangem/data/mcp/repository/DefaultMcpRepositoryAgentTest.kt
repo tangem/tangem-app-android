@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.mcp.api.McpApi
+import com.tangem.data.mcp.converter.McpClientConverter
 import com.tangem.data.mcp.api.models.response.McpClientResponse
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.test.core.ProvideTestModels
@@ -35,6 +36,7 @@ internal class DefaultMcpRepositoryAgentTest {
         mcpApi = mcpApi,
         appScope = appScope,
         dispatchers = TestingCoroutineDispatcherProvider(),
+        mcpClientConverter = McpClientConverter(),
     )
 
     @BeforeEach
