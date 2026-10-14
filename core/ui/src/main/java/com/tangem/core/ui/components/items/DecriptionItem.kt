@@ -96,17 +96,17 @@ private fun DescriptionPlaceholderV2(modifier: Modifier = Modifier) {
         TextShimmer(
             modifier = Modifier.fillMaxWidth(),
             style = TangemTheme.typography2.bodyMedium16,
-            radius = TangemTheme.dimens2.x25,
+            radius = 100.dp,
         )
         TextShimmer(
             modifier = Modifier.fillMaxWidth(),
             style = TangemTheme.typography2.bodyMedium16,
-            radius = TangemTheme.dimens2.x25,
+            radius = 100.dp,
         )
         TextShimmer(
             modifier = Modifier.fillMaxWidth(fraction = 0.8f),
             style = TangemTheme.typography2.bodyMedium16,
-            radius = TangemTheme.dimens2.x25,
+            radius = 100.dp,
         )
     }
 }

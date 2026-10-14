@@ -1,10 +1,6 @@
 package com.tangem.features.hotwallet.upgradewallet
 
 import com.tangem.common.core.TangemError
-import com.tangem.common.core.TangemSdkError
-import com.tangem.common.doOnFailure
-import com.tangem.common.doOnResult
-import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -18,14 +14,12 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.card.models.ScanConfig
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.feedback.SendFeedbackEmailUseCase
-import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.settings.repositories.SettingsRepository
@@ -38,8 +32,6 @@ import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.UpgradeWalletComponent
 import com.tangem.features.hotwallet.upgradewallet.entity.UpgradeWalletUM
 import com.tangem.features.onboarding.v2.util.ResetCardsComponent
-import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
@@ -62,8 +54,7 @@ internal class UpgradeWalletModel @Inject constructor(
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val uiMessageSender: UiMessageSender,
     private val clearHotWalletContextualUnlockUseCase: ClearHotWalletContextualUnlockUseCase,
-    private val tangemSdkManager: TangemSdkManager,
-    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val scanCardProcessor: ScanCardProcessor,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -124,24 +115,17 @@ internal class UpgradeWalletModel @Inject constructor(
                 isBiometricsRequestPolicy = shouldSaveAccessCodes,
             )
 
-            tangemSdkManager
-                .scanProduct(
-                    shouldCheckIsAlreadyActivated = true,
-                    source = AnalyticsParam.ScreensSources.CreateWallet,
-                )
-                .doOnSuccess { scanResponse ->
-                    checkIsWalletSuitableToBeUsedAsUpgrade(scanResponse = scanResponse) {
-                        delay(DELAY_SDK_DIALOG_CLOSE)
-                        tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
-                        navigateToUpgradeFlow(scanResponse)
-                    }
-                }
-                .doOnFailure {
-                    showCardVerificationFailedDialog(it)
-                }
-                .doOnResult {
-                    setLoading(false)
-                }
+            scanCardProcessor.scan(
+                config = ScanConfig(
+                    analyticsSource = AnalyticsParam.ScreensSources.Upgrade,
+                    shouldConfirmWalletOwnership = true,
+                    canRequestAccessCodeFromRepository = false,
+                    shouldUpdateCardIdDisplayFormat = true,
+                    shouldTrackScanFails = true,
+                    shouldLaunchOnboarding = false,
+                    callback = ScanCallback(),
+                ),
+            )
         }
     }
 
@@ -175,36 +159,6 @@ internal class UpgradeWalletModel @Inject constructor(
         }
     }
 
-    private fun showCardVerificationFailedDialog(error: TangemError) {
-        if (error !is TangemSdkError.CardVerificationFailed) return
-
-        val resource = error.localizedDescriptionRes()
-        val resId = resource.resId ?: R.string.common_unknown_error
-        val resArgs = resource.args.map { it.value }
-
-        uiMessageSender.send(
-            DialogMessage(
-                message = resourceReference(id = resId, resArgs.toWrappedList()),
-                title = resourceReference(id = R.string.security_alert_title),
-                isDismissable = false,
-                firstActionBuilder = {
-                    EventMessageAction(
-                        title = resourceReference(id = R.string.alert_button_request_support),
-                        onClick = {
-                            modelScope.launch {
-                                analyticsEventHandler.send(
-                                    Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Upgrade),
-                                )
-                                sendFeedbackEmailUseCase(type = FeedbackEmailType.CardAttestationFailed)
-                            }
-                        },
-                    )
-                },
-                secondActionBuilder = { cancelAction(onClick = {}) },
-            ),
-        )
-    }
-
     private fun navigateToUpgradeFlow(scanResponse: ScanResponse) {
         setLoading(false)
         router.push(
@@ -215,6 +169,25 @@ internal class UpgradeWalletModel @Inject constructor(
                 ),
             ),
         )
+    }
+
+    private inner class ScanCallback : ScanConfig.Callback {
+
+        override suspend fun onProgressStateChange(showProgress: Boolean) {
+            setLoading(showProgress)
+        }
+
+        override suspend fun onFailure(error: TangemError) {
+            setLoading(false)
+        }
+
+        override suspend fun onSuccess(scanResponse: ScanResponse) {
+            checkIsWalletSuitableToBeUsedAsUpgrade(scanResponse = scanResponse) {
+                delay(DELAY_SDK_DIALOG_CLOSE)
+                navigateToUpgradeFlow(scanResponse)
+            }
+            setLoading(false)
+        }
     }
 
     inner class ResetCardsModelCallbacks : ResetCardsComponent.ModelCallbacks {

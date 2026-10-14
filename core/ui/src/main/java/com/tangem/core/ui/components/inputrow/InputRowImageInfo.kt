@@ -21,6 +21,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.extensions.*
@@ -68,9 +69,9 @@ fun InputRowImageInfo(
     onImageError: (@Composable () -> Unit)? = null,
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
         modifier = modifier
-            .padding(TangemTheme.dimens.spacing12),
+            .padding(12.dp),
     ) {
         if (title != null) {
             Text(
@@ -98,7 +99,7 @@ fun InputRowImageInfo(
             },
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
                 horizontalAlignment = Alignment.End,
                 modifier = Modifier.weight(1f),
             ) {
@@ -147,7 +148,7 @@ private fun RowScope.SubtitleEndIconRes(subtitleEndIconRes: Int?, subtitleEndIco
             painter = rememberVectorPainter(image = ImageVector.vectorResource(id = icon)),
             tint = subtitleEndIconTint,
             contentDescription = null,
-            modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+            modifier = Modifier.padding(start = 4.dp),
         )
     }
 }

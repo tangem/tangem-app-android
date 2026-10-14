@@ -354,6 +354,42 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
+    val lowSignaturesNotificationTitle: KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(R.string.warning_low_signatures_title))
+        useUnmergedTree = true
+    }
+
+    fun lowSignaturesNotificationMessage(remainingSignatures: Int): KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(getResourceString(R.string.warning_low_signatures_message, remainingSignatures.toString()))
+        useUnmergedTree = true
+    }
+
+    val rateAppNotificationTitle: KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(R.string.warning_rate_app_title))
+        useUnmergedTree = true
+    }
+
+    val rateAppNotificationMessage: KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(getResourceString(R.string.warning_rate_app_message))
+        useUnmergedTree = true
+    }
+
+    val rateAppCouldBeBetterButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.warning_button_could_be_better))
+        useUnmergedTree = true
+    }
+
+    val rateAppLikeItButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.warning_button_like_it))
+        useUnmergedTree = true
+    }
+
     val totalBalanceContainer: KNode = child {
         hasTestTag(MainScreenTestTags.WALLET_LIST_ITEM)
     }

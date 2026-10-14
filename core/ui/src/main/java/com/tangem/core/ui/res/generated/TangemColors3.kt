@@ -188,7 +188,7 @@ class TangemColors3 internal constructor(
         inverse: Color,
         base: Color,
         disabled: Color,
-        val opaque: Opaque,
+        val transparent: Transparent,
         val status: Status,
         val accent: Accent,
         val special: Special,
@@ -209,18 +209,36 @@ class TangemColors3 internal constructor(
             private set
 
         @Stable
-        class Opaque internal constructor(
+        class Transparent internal constructor(
             primary: Color,
             secondary: Color,
+            val onMaterial: OnMaterial,
         ) {
             var primary by mutableStateOf(primary)
                 private set
             var secondary by mutableStateOf(secondary)
                 private set
 
-            fun update(other: Opaque) {
+            @Stable
+            class OnMaterial internal constructor(
+                primary: Color,
+                secondary: Color,
+            ) {
+                var primary by mutableStateOf(primary)
+                    private set
+                var secondary by mutableStateOf(secondary)
+                    private set
+
+                fun update(other: OnMaterial) {
+                    primary = other.primary
+                    secondary = other.secondary
+                }
+            }
+
+            fun update(other: Transparent) {
                 primary = other.primary
                 secondary = other.secondary
+                onMaterial.update(other.onMaterial)
             }
         }
 
@@ -303,12 +321,16 @@ class TangemColors3 internal constructor(
         @Stable
         class Special internal constructor(
             control: Color,
+            switch: Color,
         ) {
             var control by mutableStateOf(control)
+                private set
+            var switch by mutableStateOf(switch)
                 private set
 
             fun update(other: Special) {
                 control = other.control
+                switch = other.switch
             }
         }
 
@@ -320,7 +342,7 @@ class TangemColors3 internal constructor(
             inverse = other.inverse
             base = other.base
             disabled = other.disabled
-            opaque.update(other.opaque)
+            transparent.update(other.transparent)
             status.update(other.status)
             accent.update(other.accent)
             special.update(other.special)

@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.R
 
@@ -42,7 +41,7 @@ private fun HomeButtonsV2Preview() {
         ) {
             HomeButtonsV2(
                 onGetStartedClick = {},
-                modifier = Modifier.padding(all = TangemTheme.dimens.spacing16),
+                modifier = Modifier.padding(all = 16.dp),
             )
         }
     }

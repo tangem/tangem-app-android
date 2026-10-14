@@ -29,6 +29,7 @@ import java.math.BigDecimal
  * @property liquidity available liquidity in USD, if known
  * @property orderIndex position of the market within its event
  * @property outcomes normalized outcomes with their implied probabilities
+ * @property version protocol the market trades on; [PolymarketMarketVersion.UNKNOWN] is never traded
  */
 data class PolymarketMarket(
     val id: String,
@@ -52,4 +53,5 @@ data class PolymarketMarket(
     val liquidity: BigDecimal?,
     val orderIndex: Int,
     val outcomes: List<PolymarketOutcome>,
+    val version: PolymarketMarketVersion,
 )

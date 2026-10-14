@@ -31,7 +31,10 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
    `{target, selector, spender}` and grew from 6 to 13 without notice (August 2026); the next change breaks
    the app with a BFF `400` until a release ships.
 5. **Collateral ≠ top-up token.** `COLLATERAL` is pUSD — what orders spend and the CLOB balance reports.
-   Deposits are native USDC on Polygon (`USDC_TOKEN_ADDRESS`); the bridge converts.
+   Deposits are USDC; the bridge converts. The default is native USDC on Polygon (`USDC_TOKEN_ADDRESS`); the
+   swap top-up also takes every `PolymarketDepositAsset.CATALOG` row the bridge lists with the same contract,
+   decimals and a minimum (`PolymarketDepositRequisites.options`, iOS parity). A listed asset outside the
+   catalogue is never offered: a wrong token or chain is lost.
 6. **The region is read by the flow that commits, never supplied by its entry route.** An unreadable region
    never locks a user out of an existing account (browse, withdraw stay open) but refuses what would commit
    them: no new deploy (`UNDETERMINED`), order gate shut as "unknown", not "restricted". Fail-closed edge:
@@ -81,8 +84,8 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 - **Balance**: `syncBalanceAllowance` must precede `getBalanceAllowance` — the CLOB serves a cached figure it
   recomputes only when asked, so a wallet funded after onboarding would report zero forever. The sync is
   best-effort.
-- **Funding window** (5 s polling instead of 30 s) opens only on a send this app made; an external
-  transfer's timing is unknown.
+- **Funding window** (5 s polling instead of 30 s, up to 90 s like iOS) opens only on a send this app made; an
+  external transfer's timing is unknown.
 - **Positions value** is kept apart from the account status: it needs only the deposit-wallet address
   (public data API), and a failed read must not touch the balance. `PredictionTotalBalance.of` is the one
   place collateral and positions are added. Runtime only — persist it when the wallet total starts counting

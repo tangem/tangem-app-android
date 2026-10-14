@@ -15,7 +15,8 @@ internal object MachineNftConverter : Converter<MachineNftDTO, CollectibleGachaM
         description = value.description,
         rarity = value.rarity?.toRarity(),
         grade = value.toGrade(),
-        imageUrl = value.image,
+        frontImageUrl = value.imageFront,
+        backImageUrl = value.imageBack,
         insuredValue = value.insuredValue?.movePointLeft(CENTS_SCALE),
     )
 

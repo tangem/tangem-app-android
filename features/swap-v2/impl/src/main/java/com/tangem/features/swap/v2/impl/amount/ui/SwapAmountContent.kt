@@ -250,7 +250,7 @@ private fun SwapRateBadge(isFixedRate: Boolean, onClick: () -> Unit, modifier: M
             painter = rememberVectorPainter(ImageVector.vectorResource(id = iconRes)),
             contentDescription = null,
             tint = TangemTheme.colors.icon.informative,
-            modifier = Modifier.padding(start = TangemTheme.dimens.spacing2),
+            modifier = Modifier.padding(start = 2.dp),
         )
         Text(
             text = stringResourceSafe(textRes),

@@ -77,7 +77,7 @@ fun InputRowEnter(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(TangemTheme.dimens.spacing12),
+                .padding(12.dp),
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(
@@ -115,7 +115,7 @@ fun InputRowEnter(
                     visualTransformation = visualTransformation,
                     keyboardOptions = keyboardOptions,
                     modifier = Modifier
-                        .padding(top = TangemTheme.dimens.spacing8)
+                        .padding(top = 8.dp)
                         .testTag(SelectNetworkFeeBottomSheetTestTags.NONCE_INPUT_TEXT_FIELD),
                 )
             }
@@ -126,8 +126,8 @@ fun InputRowEnter(
                     tint = iconTint,
                     modifier = Modifier
                         .padding(
-                            top = TangemTheme.dimens.spacing10,
-                            bottom = TangemTheme.dimens.spacing10,
+                            top = 10.dp,
+                            bottom = 10.dp,
                         )
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },

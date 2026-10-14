@@ -1,108 +1,94 @@
 package com.tangem.features.moneyaccount.main
 
 import androidx.compose.runtime.Stable
-import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
-import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsBottomSheetComponent
-import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsListener
+import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.feedback.models.WalletMetaInfo
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.account.MoneyAccountStatusValue
+import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
+import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.features.moneyaccount.details.component.MoneyAccountMainComponent
-import com.tangem.features.moneyaccount.details.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class MoneyAccountMainModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-) : Model(), MoneyAccountAddFundsListener {
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val urlOpener: UrlOpener,
+    private val getExploreUrlUseCase: GetExploreUrlUseCase,
+    moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory,
+) : Model() {
 
-    @Suppress("UnusedPrivateProperty")
     private val params = paramsContainer.require<MoneyAccountMainComponent.Params>()
-
-    val bottomSheetNavigation: SlotNavigation<MoneyAccountMainNavigationBottomSheetConfig> = SlotNavigation()
-
+    val currency: CryptoCurrency.Token = moneyAccountCurrencyFactory.create(params.userWalletId)
+    private val stateFactory = MoneyAccountMainStateFactory(
+        onTermsClick = ::onTermsClick,
+        onSupportClick = ::onSupportClick,
+        onBackClick = ::onBackClick,
+    )
     val uiState: StateFlow<MoneyAccountMainUM>
-        field = MutableStateFlow(
-            createInitialState(),
-        )
+        field = MutableStateFlow(stateFactory.createInitialState())
 
-    override fun onAddFundsDismiss() {
-        bottomSheetNavigation.dismiss()
+    private var currentState: MoneyAccountStatusValue.Account? = null
+
+    init {
+        moneyAccountStatusSupplier.invoke(params.userWalletId)
+            .map { it.value }
+            .onEach { value ->
+                when (value) {
+                    is MoneyAccountStatusValue.Account -> {
+                        currentState = value
+                        uiState.update { stateFactory.createAccountState(value) }
+                    }
+                    else -> router.pop()
+                }
+            }
+            .launchIn(modelScope)
     }
 
-    private fun createInitialState(): MoneyAccountMainUM = MoneyAccountMainUM(
-        title = resourceReference(R.string.virtual_account_title),
-        subtitle = resourceReference(R.string.tangempay_usdc_on_polygon_network),
-        balance = MoneyAccountBalanceBlockState.Content(
-            fiatBalance = stringReference("$0.00"),
-            isBalanceFlickering = false,
-        ),
-        isBalanceHidden = false,
-        onBackClick = { router.pop() },
-        onMenuClick = {},
-        onAddFundsClick = ::onAddFundsClick,
-        onSendClick = {},
-    )
-
-    private fun buildRequisites(details: MoneyAccountDepositDetails) = listOf(
-        MoneyAccountAddFundsBottomSheetComponent.RequisitesRow(
-            title = resourceReference(R.string.virtual_account_requisites_beneficiary_name),
-            titleForShare = "Beneficiary name",
-            value = details.beneficiaryName,
-        ),
-        MoneyAccountAddFundsBottomSheetComponent.RequisitesRow(
-            title = resourceReference(R.string.virtual_account_requisites_account_number),
-            titleForShare = "Account number",
-            value = details.accountNumber,
-        ),
-        MoneyAccountAddFundsBottomSheetComponent.RequisitesRow(
-            title = resourceReference(R.string.virtual_account_requisites_routing_number),
-            titleForShare = "Routing number",
-            value = details.routingNumber,
-        ),
-    )
-
-    private fun onAddFundsClick() {
-        val details = getDepositDetails()
-        bottomSheetNavigation.activate(
-            MoneyAccountMainNavigationBottomSheetConfig.AddFunds(
-                requisites = buildRequisites(details),
-                dailyDepositLimit = details.dailyDepositLimit,
-            ),
-        )
+    private fun onBackClick() {
+        router.pop()
     }
 
-    // TODO v_rodionov: HARDCODE - get this data from backend
-    private fun getDepositDetails(): MoneyAccountDepositDetails {
-        return MoneyAccountDepositDetails(
-            beneficiaryName = "Ivan Ivanov",
-            beneficiaryAddress = "18, Rue Rubens 20, Paris, Ile-de-France 75013, US",
-            bankName = "SSB Bank",
-            bankAddress = "8700 Perry Highway, Pittsburgh, PA 15237, US",
-            accountNumber = "707613210122",
-            routingNumber = "043087080",
-            dailyDepositLimit = "$10,000",
-        )
+    fun onExploreClick() {
+        modelScope.launch {
+            val url = getExploreUrlUseCase(userWalletId = params.userWalletId, currency = currency)
+            if (url.isNotBlank()) urlOpener.openUrl(url)
+        }
     }
 
-    private data class MoneyAccountDepositDetails(
-        val beneficiaryName: String,
-        val beneficiaryAddress: String,
-        val bankName: String,
-        val bankAddress: String,
-        val accountNumber: String,
-        val routingNumber: String,
-        val dailyDepositLimit: String,
-    )
+    private fun onTermsClick() {
+        urlOpener.openUrl(TERMS_OF_USE_URL)
+    }
+
+    private fun onSupportClick() {
+        val customerId = currentState?.customerId ?: return
+        modelScope.launch {
+            sendFeedbackEmailUseCase(
+                type = FeedbackEmailType.Visa.DirectUserRequest(
+                    walletMetaInfo = WalletMetaInfo(userWalletId = params.userWalletId),
+                    customerId = customerId,
+                ),
+            )
+        }
+    }
+
+    private companion object {
+        const val TERMS_OF_USE_URL = "https://tangem.com/docs/en/virtual-account-terms.pdf"
+    }
 }

@@ -3,6 +3,7 @@ package com.tangem.tap
 import android.app.job.JobScheduler
 import android.content.Context
 import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
@@ -13,35 +14,51 @@ import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.domain.wallets.usecase.ClearAllHotWalletContextualUnlockUseCase
 import com.tangem.tap.LockTimerWorker.Companion.TAG
+import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.CoroutineScope
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import java.util.concurrent.TimeUnit
-import kotlin.time.Duration
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.time.Duration.Companion.minutes
 
 @Suppress("LongParameterList")
-internal class LockUserWalletsTimer(
-    private val context: Context,
+@Singleton
+internal class LockUserWalletsTimer @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val settingsRepository: SettingsRepository,
-    private val duration: Duration = with(Duration) { 5.minutes },
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val coroutineScope: CoroutineScope,
     private val clearAllHotWalletContextualUnlockUseCase: ClearAllHotWalletContextualUnlockUseCase,
     private val passwordRequester: HotWalletPasswordRequester,
     private val appRouter: AppRouter,
-) : LifecycleOwner by context as LifecycleOwner,
-    DefaultLifecycleObserver {
+    appScope: AppCoroutineScope,
+    dispatchers: CoroutineDispatcherProvider,
+) : DefaultLifecycleObserver {
 
-    private var delayJob: Job? = null
-        set(value) {
-            field?.cancel()
-            field = value
-        }
+    // Rethrows like the former global main scope: a failure must not leave the wallets unlocked
+    private val coroutineScope = appScope +
+        dispatchers.main +
+        FeatureCoroutineExceptionHandler.create(from = "lockUserWalletsTimer")
 
-    init {
-        lifecycle.addObserver(this)
+    private val delayJobHolder = JobHolder()
+
+    private var attachedLifecycle: Lifecycle? = null
+
+    /**
+
+     * destroyed, so the previous lifecycle is detached to stop its events from affecting the timer.
+     */
+    fun attach(owner: LifecycleOwner) {
+        attachedLifecycle?.removeObserver(this)
+        attachedLifecycle = owner.lifecycle.apply { addObserver(this@LockUserWalletsTimer) }
     }
 
     override fun onStart(owner: LifecycleOwner) {
@@ -56,9 +73,7 @@ internal class LockUserWalletsTimer(
             )
 
             if (shouldOpenWelcomeScreenOnResume) {
-                passwordRequester.dismiss()
-                clearAllHotWalletContextualUnlockUseCase.invoke()
-                appRouter.replaceAll(AppRoute.Welcome())
+                resetToLockScreen()
                 settingsRepository.setShouldOpenWelcomeScreenOnResume(value = false)
             }
         }
@@ -70,17 +85,22 @@ internal class LockUserWalletsTimer(
 
     override fun onStop(owner: LifecycleOwner) {
         TangemLogger.i("Owner stopped")
-        delayJob = null
+        delayJobHolder.cancel()
 
         startTimerWorker()
     }
 
+    override fun onDestroy(owner: LifecycleOwner) {
+        owner.lifecycle.removeObserver(this)
+        if (attachedLifecycle === owner.lifecycle) attachedLifecycle = null
+    }
+
     fun restart() {
-        if (delayJob == null) return
+        if (delayJobHolder.isEmpty()) return
         TangemLogger.i(
             """
                 Timer restart
-                |- Duration millis: ${duration.inWholeMilliseconds}
+                |- Duration millis: ${DURATION.inWholeMilliseconds}
             """.trimIndent(),
         )
         start(log = false)
@@ -89,7 +109,7 @@ internal class LockUserWalletsTimer(
     private fun startTimerWorker() {
         val lockWorkRequest = OneTimeWorkRequest.Builder(LockTimerWorker::class.java)
             .addTag(TAG)
-            .setInitialDelay(duration.inWholeSeconds, TimeUnit.SECONDS)
+            .setInitialDelay(DURATION.inWholeSeconds, TimeUnit.SECONDS)
             .build()
 
         WorkManager.getInstance(context).enqueue(lockWorkRequest)
@@ -100,18 +120,18 @@ internal class LockUserWalletsTimer(
             TangemLogger.i(
                 """
                     Timer start
-                    |- Duration millis: ${duration.inWholeMilliseconds}
+                    |- Duration millis: ${DURATION.inWholeMilliseconds}
                 """.trimIndent(),
             )
         }
-        delayJob = createDelayJob()
+        createDelayJob().saveIn(delayJobHolder)
     }
 
     /**
      * This job used only when app is foreground when background use [JobScheduler]
      */
     private fun createDelayJob(): Job = coroutineScope.launch {
-        delay(duration)
+        delay(DURATION)
 
         val userWallets = userWalletsListRepository.userWalletsSync()
         if (userWallets.isNotEmpty()) {
@@ -120,10 +140,18 @@ internal class LockUserWalletsTimer(
                     start()
                 }
                 .onRight {
-                    passwordRequester.dismiss()
-                    clearAllHotWalletContextualUnlockUseCase.invoke()
-                    appRouter.replaceAll(AppRoute.Welcome())
+                    resetToLockScreen()
                 }
         }
+    }
+
+    private suspend fun resetToLockScreen() {
+        passwordRequester.dismiss()
+        clearAllHotWalletContextualUnlockUseCase.invoke()
+        appRouter.replaceAll(AppRoute.Welcome())
+    }
+
+    private companion object {
+        val DURATION = 5.minutes
     }
 }

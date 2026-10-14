@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.positions.model
 
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketClosedPositionStatus
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
@@ -18,6 +19,7 @@ internal fun createPolymarketPosition(
     realizedPnl: BigDecimal = BigDecimal("12"),
     result: PolymarketPositionResult? = null,
     resolutionStatus: PolymarketResolutionStatus = PolymarketResolutionStatus.OPEN,
+    version: PolymarketMarketVersion? = PolymarketMarketVersion.V1,
 ): PolymarketPosition.Open = PolymarketPosition.Open(
     id = PolymarketPositionId(conditionId = "condition", assetId = assetId),
     title = "Will the event happen?",
@@ -43,6 +45,7 @@ internal fun createPolymarketPosition(
     isLive = false,
     resolutionStatus = resolutionStatus,
     result = result,
+    version = version,
 )
 
 internal fun createClosedPolymarketPosition(
