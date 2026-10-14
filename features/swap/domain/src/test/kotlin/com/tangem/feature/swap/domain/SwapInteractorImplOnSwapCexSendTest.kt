@@ -11,6 +11,7 @@ import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.feature.swap.domain.fee.TransactionFeeResult
@@ -78,7 +79,7 @@ internal class SwapInteractorImplOnSwapCexSendTest : SwapInteractorImplTestBase(
         val feeExtended = TransactionFeeExtended(
             transactionFee = TransactionFee.Single(normal = mockk<Fee.Common>(relaxed = true)),
             feeTokenId = fromStatus.currency.id,
-            tronGaslessQuote = mockk<TronGaslessQuote>(relaxed = true),
+            gaslessProtocolData = GaslessProtocolData.Tron(quote = mockk<TronGaslessQuote>(relaxed = true)),
         )
 
         // Act
@@ -103,6 +104,7 @@ internal class SwapInteractorImplOnSwapCexSendTest : SwapInteractorImplTestBase(
         val feeExtended = TransactionFeeExtended(
             transactionFee = TransactionFee.Single(normal = mockk<Fee.Ethereum.TokenCurrency>(relaxed = true)),
             feeTokenId = fromStatus.currency.id,
+            gaslessProtocolData = GaslessProtocolData.Evm,
         )
 
         // Act
