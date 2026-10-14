@@ -58,6 +58,11 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
    `(deposit wallet, nonce)`, so resending the same batch returns the same receipt. The record is cleared
    on a terminal receipt or on a rejection of the submit itself (`RelayerRejected`, `InvalidRequest` — the
    relayer recorded nothing), never on an ambiguous error. A double withdrawal is worse than a stuck record.
+10. **The local confirmation is a fallback, not the answer.** The backend can demote a ready wallet to
+    `DEPLOYED` — the V2 approvals set did it to every wallet — so the entry gate re-reads `GET /wallet` whenever
+    the addresses are stored, and `DEPLOYED` sends the user back to the approvals step: one signing session, no
+    deploy, stored credentials kept. The record answers alone only without stored addresses or when the read
+    fails, and `DEPLOYED` never clears it — the Prediction account in the account list hangs on it.
 
 ## Onboarding
 
@@ -66,7 +71,7 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 - Credentials: derive-api-key first, create only on "no key yet".
 - `PolymarketOnboardedStore` mirrors backend reads: `READY_TO_TRADE` records the wallet, `NOT_CREATED`
   withdraws it, any other status leaves it alone. Without stored addresses nothing is asked: the record
-  alone answers `Reconnect`, its absence `Undetermined`.
+  alone answers `Onboarded` with credentials, `Reconnect` without, its absence `Undetermined`.
 
 ## Signing and orders
 

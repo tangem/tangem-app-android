@@ -350,6 +350,8 @@ internal class RunPolymarketOnboardingInteractorTest {
                 awaitComplete()
             }
             coVerify(exactly = 0) { deriveApiCredentials(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { deployDepositWallet(any()) }
+            coVerify(exactly = 1) { signOnboardingDigests(ADDRESSES, NONCE) }
             coVerify(exactly = 1) { submitApprovals(ADDRESSES, SIGNED) }
         }
 
