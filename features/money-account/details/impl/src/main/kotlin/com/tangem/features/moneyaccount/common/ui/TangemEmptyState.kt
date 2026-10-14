@@ -34,12 +34,12 @@ fun TangemEmptyState(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3, Alignment.CenterVertically),
+        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
             modifier = Modifier
-                .size(TangemTheme.dimens2.x10)
+                .size(40.dp)
                 .background(
                     color = TangemTheme.colors3.bg.transparent.primary,
                     shape = CircleShape,
