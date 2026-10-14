@@ -173,6 +173,7 @@ internal class YieldSupplyClaimModel @Inject constructor(
                 userWallet = params.userWallet,
                 network = cryptoCurrency.network,
             )
+            result.onRight(::trackClaim)
             if (modelScope.isActive) onTransactionSent(result)
         }
     }
@@ -196,25 +197,20 @@ internal class YieldSupplyClaimModel @Inject constructor(
                     },
                 )
             },
-            ifRight = { transactionHash -> onClaimSubmitted(transactionHash) },
+            ifRight = { params.onDismiss() },
         )
     }
 
-    /**
-     * Hands the claim over to the tracker: the transaction is still pending, and neither this model nor this sheet
-     * is alive long enough to see what becomes of it.
-     */
-    private fun onClaimSubmitted(transactionHash: String) {
-        (cryptoCurrency as? CryptoCurrency.Token)?.let { token ->
-            yieldSupplyClaimTracker.track(
-                userWalletId = params.userWallet.walletId,
-                cryptoCurrency = token,
-                chainId = params.chainId,
-                userAddress = params.userAddress,
-                transactionHash = transactionHash,
-            )
-        }
-        params.onDismiss()
+    private fun trackClaim(transactionHash: String) {
+        val token = cryptoCurrency as? CryptoCurrency.Token ?: return
+
+        yieldSupplyClaimTracker.track(
+            userWalletId = params.userWallet.walletId,
+            cryptoCurrency = token,
+            chainId = params.chainId,
+            userAddress = params.userAddress,
+            transactionHash = transactionHash,
+        )
     }
 
     private suspend fun resolveStorage(): AccountTitleUM.Account? {

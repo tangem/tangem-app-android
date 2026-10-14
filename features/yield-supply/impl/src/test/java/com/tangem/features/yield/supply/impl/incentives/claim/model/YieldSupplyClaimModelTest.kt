@@ -562,7 +562,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN a claim being sent WHEN the sheet is closed THEN the transaction completes without dismissing again`() =
+    fun `GIVEN a claim being sent WHEN the sheet is closed THEN the claim is still followed without dismissing again`() =
         runTest {
             // Arrange
             var isSendCompleted = false
@@ -583,6 +583,15 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
             // Assert
             assertThat(isSendCompleted).isTrue()
             assertThat(isSheetDismissed).isFalse()
+            verify(exactly = 1) {
+                claimTracker.track(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = token,
+                    chainId = CHAIN_ID,
+                    userAddress = SOURCE_ADDRESS,
+                    transactionHash = TX_HASH,
+                )
+            }
         }
 
     @Test
