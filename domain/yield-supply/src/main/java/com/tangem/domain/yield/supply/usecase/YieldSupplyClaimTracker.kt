@@ -69,11 +69,8 @@ class YieldSupplyClaimTracker(
                 YieldSupplyClaimOutcome(
                     userWalletId = userWalletId,
                     cryptoCurrencyId = cryptoCurrency.id,
-                    networkId = cryptoCurrency.network.id,
-                    tokenSymbol = cryptoCurrency.symbol,
                     chainId = chainId,
                     userAddress = userAddress,
-                    transactionHash = transactionHash,
                     outcome = outcome,
                 ),
             )
