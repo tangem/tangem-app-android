@@ -396,7 +396,7 @@ private fun NetworkIcons(items: ImmutableList<WcNetworkInfoItem>, modifier: Modi
         }
         if (remainingCount > 0) {
             Box(
-                modifier = modifier
+                modifier = Modifier
                     .padding(start = 48.dp)
                     .border(
                         width = 2.dp,
