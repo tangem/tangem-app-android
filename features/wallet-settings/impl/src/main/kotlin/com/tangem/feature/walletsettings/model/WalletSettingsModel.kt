@@ -489,7 +489,7 @@ internal class WalletSettingsModel @Inject constructor(
         state.update { prevState ->
             prevState.copy(
                 items = prevState.items.mutate {
-                    it.add(toIndex - 1, it.removeAt(fromIndex - 1))
+                    it.add(toIndex, it.removeAt(fromIndex))
                 },
             )
         }
