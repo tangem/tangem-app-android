@@ -12,6 +12,7 @@ import coil.ImageLoaderFactory
 import com.tangem.blockchain.common.ExceptionHandler
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.TechAnalyticsEvent
 import com.tangem.core.ui.components.background.northernlights.NorthernLightsCrashGuard
 import com.tangem.core.ui.components.background.northernlights.NorthernLightsCrashGuardPreferences
@@ -121,6 +122,9 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val openTelemetryMetricsHolder: OpenTelemetryMetricsHolder
         get() = entryPoint.getOpenTelemetryMetricsHolder()
 
+    private val analyticsEventHandler: AnalyticsEventHandler
+        get() = entryPoint.getAnalyticsEventHandler()
+
     // endregion
 
     private val appScope = MainScope()
@@ -227,7 +231,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private fun reportShaderCrashIfDetected() {
         if (!NorthernLightsCrashGuard.hasDetectedCrash) return
 
-        Analytics.send(
+        analyticsEventHandler.send(
             TechAnalyticsEvent.ShaderCrashDetected(
                 model = Build.MODEL,
                 manufacturer = Build.MANUFACTURER,
