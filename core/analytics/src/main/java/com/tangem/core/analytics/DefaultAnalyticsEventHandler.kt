@@ -8,53 +8,54 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.analytics.models.OneTimePerSessionEvent
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
+import dagger.Lazy
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
-[REDACTED_AUTHOR]
+ * Dispatches analytics events to every [AnalyticsHandler] on a dedicated single thread.
+ *
+ * [filters] are ordered: the first filter applicable to an event decides whether and to which handlers it is sent.
+ * Handlers and filters are resolved lazily: their dependencies (e.g. preferences, app scope) themselves depend on
+ * analytics.
  */
-interface GlobalAnalyticsEventHandler :
-    AnalyticsEventHandler,
-    AnalyticsHandlerHolder,
-    AnalyticsFilterHolder,
-    ParamsInterceptorHolder,
+@Singleton
+internal class DefaultAnalyticsEventHandler(
+    private val handlers: Lazy<Set<@JvmSuppressWildcards AnalyticsHandler>>,
+    private val filters: Lazy<List<@JvmSuppressWildcards AnalyticsEventFilter>>,
+    staticInterceptors: Set<@JvmSuppressWildcards ParamsInterceptor>,
+    dispatcher: CoroutineDispatcher,
+) : AnalyticsEventHandler,
     AnalyticsErrorHandler,
     AnalyticsExceptionHandler,
-    AnalyticsUserIdHandler
+    AnalyticsUserIdHandler,
+    ParamsInterceptorHolder {
 
-object Analytics : GlobalAnalyticsEventHandler {
+    private val analyticsScope = CoroutineScope(
+        SupervisorJob() + dispatcher + CoroutineName(NAME) + FeatureCoroutineExceptionHandler.create(NAME),
+    )
 
-    private val analyticsScope: CoroutineScope by lazy { createScope() }
-
-    private val handlers = mutableMapOf<String, AnalyticsHandler>()
-    private val paramsInterceptors = ConcurrentHashMap<String, ParamsInterceptor>()
+    private val paramsInterceptors = ConcurrentHashMap(staticInterceptors.associateBy { it.id() })
     private val throttledEventsState = ConcurrentHashMap<String, Long>()
-    private val analyticsFilters = mutableSetOf<AnalyticsEventFilter>()
     private val analyticsMutex = Mutex()
 
-    private val analyticsHandlers: List<AnalyticsHandler>
-        get() = handlers.values.toList()
-
-    override fun addHandler(name: String, handler: AnalyticsHandler) {
-        handlers[name] = handler
-    }
-
-    override fun removeHandler(name: String): AnalyticsHandler? {
-        return handlers.remove(name)
-    }
-
-    override fun addFilter(filter: AnalyticsEventFilter) {
-        analyticsFilters.add(filter)
-    }
-
-    override fun removeFilter(filter: AnalyticsEventFilter): Boolean {
-        return analyticsFilters.remove(filter)
-    }
+    @Inject
+    constructor(
+        handlers: Lazy<Set<@JvmSuppressWildcards AnalyticsHandler>>,
+        filters: Lazy<List<@JvmSuppressWildcards AnalyticsEventFilter>>,
+        staticInterceptors: Set<@JvmSuppressWildcards ParamsInterceptor>,
+    ) : this(
+        handlers = handlers,
+        filters = filters,
+        staticInterceptors = staticInterceptors,
+        dispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher(),
+    )
 
     override fun addParamsInterceptor(interceptor: ParamsInterceptor) {
         paramsInterceptors[interceptor.id()] = interceptor
@@ -71,7 +72,7 @@ object Analytics : GlobalAnalyticsEventHandler {
                 .toHexString()
 
             analyticsMutex.withLock {
-                analyticsHandlers.filterIsInstance<AnalyticsUserIdHandler>()
+                handlers.get().filterIsInstance<AnalyticsUserIdHandler>()
                     .forEach { handler -> handler.setUserId(userIdHash) }
             }
         }
@@ -80,7 +81,7 @@ object Analytics : GlobalAnalyticsEventHandler {
     override fun clearUserId() {
         analyticsScope.launch {
             analyticsMutex.withLock {
-                analyticsHandlers.filterIsInstance<AnalyticsUserIdHandler>()
+                handlers.get().filterIsInstance<AnalyticsUserIdHandler>()
                     .forEach { handler -> handler.clearUserId() }
             }
         }
@@ -92,13 +93,13 @@ object Analytics : GlobalAnalyticsEventHandler {
                 return@launch
             }
             val eventWithParams = event.withParams(applyParamsInterceptors(event))
-            val eventFilter = analyticsFilters.firstOrNull { it.canBeAppliedTo(eventWithParams) }
+            val eventFilter = filters.get().firstOrNull { it.canBeAppliedTo(eventWithParams) }
 
             analyticsMutex.withLock {
                 when {
-                    eventFilter == null -> analyticsHandlers.forEach { handler -> handler.send(eventWithParams) }
+                    eventFilter == null -> handlers.get().forEach { handler -> handler.send(eventWithParams) }
                     eventFilter.canBeSent(eventWithParams) -> {
-                        analyticsHandlers
+                        handlers.get()
                             .filter { handler -> eventFilter.canBeConsumedByHandler(handler, eventWithParams) }
                             .forEach { handler -> handler.send(eventWithParams) }
                     }
@@ -111,7 +112,7 @@ object Analytics : GlobalAnalyticsEventHandler {
         analyticsScope.launch {
             val eventWithParams = event.withParams(applyParamsInterceptors(event))
             analyticsMutex.withLock {
-                analyticsHandlers.filterIsInstance<AnalyticsErrorHandler>()
+                handlers.get().filterIsInstance<AnalyticsErrorHandler>()
                     .forEach { handler -> handler.sendErrorEvent(eventWithParams) }
             }
         }
@@ -120,7 +121,7 @@ object Analytics : GlobalAnalyticsEventHandler {
     override fun sendException(event: ExceptionAnalyticsEvent) {
         analyticsScope.launch {
             analyticsMutex.withLock {
-                analyticsHandlers.filterIsInstance<AnalyticsExceptionHandler>()
+                handlers.get().filterIsInstance<AnalyticsExceptionHandler>()
                     .forEach { it.sendException(event) }
             }
         }
@@ -151,10 +152,7 @@ object Analytics : GlobalAnalyticsEventHandler {
         }
     }
 
-    private fun createScope(): CoroutineScope {
-        val name = "Analytics"
-        val dispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
-        val exHandler = FeatureCoroutineExceptionHandler.create(name)
-        return CoroutineScope(SupervisorJob() + dispatcher + CoroutineName(name) + exHandler)
+    private companion object {
+        const val NAME = "Analytics"
     }
 }
