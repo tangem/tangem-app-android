@@ -137,9 +137,9 @@ private fun AddressBlock(assetsUM: ReceiveAssetsUM) {
     PrimaryAddressesItems(
         addresses = assetsUM.addresses.fastFilter { it.type is ReceiveAddress.Type.Primary }.toImmutableList(),
         currencyIconState = assetsUM.currencyIconState,
-        onShareClick = {
+        onShareClick = { address ->
             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-            assetsUM.onShareClick(it)
+            assetsUM.onShareClick(address)
         },
         onCopyClick = { address ->
             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)

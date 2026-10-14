@@ -61,7 +61,7 @@ fun TangemRadioButton(
         AnimatedVisibility(
             visible = isSelected,
             label = "Radio button animation",
-            modifier = modifier
+            modifier = Modifier
                 .size(24.dp),
         ) {
             Icon(

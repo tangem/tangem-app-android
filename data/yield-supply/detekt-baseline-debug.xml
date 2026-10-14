@@ -8,7 +8,5 @@
     <ID>NullableBooleanCheck:DefaultYieldSupplyTransactionRepository.kt$DefaultYieldSupplyTransactionRepository$yieldSupplyStatus?.isActive ?: false</ID>
     <ID>NullableBooleanCheck:DefaultYieldSupplyTransactionRepository.kt$DefaultYieldSupplyTransactionRepository$yieldSupplyStatus?.isAllowedToSpend ?: false</ID>
     <ID>NullableBooleanCheck:DefaultYieldSupplyTransactionRepository.kt$DefaultYieldSupplyTransactionRepository$yieldSupplyStatus?.isInitialized ?: false</ID>
-    <ID>NullableBooleanCheck:YieldMarketTokenConverter.kt$YieldMarketTokenConverter$value.isActive ?: false</ID>
-    <ID>SuspendFunSwallowedCancellation:DefaultYieldSupplyTransactionRepository.kt$DefaultYieldSupplyTransactionRepository$runCatching</ID>
   </CurrentIssues>
 </SmellBaseline>

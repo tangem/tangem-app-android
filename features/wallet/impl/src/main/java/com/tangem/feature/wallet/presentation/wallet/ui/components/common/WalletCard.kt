@@ -89,13 +89,13 @@ internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifi
                         .indication(interactionSource = interactionSource, indication = LocalIndication.current)
                         .pointerInput(true) {
                             detectTapGestures(
-                                onLongPress = {
+                                onLongPress = { offset ->
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     isMenuVisible = true
-                                    pressOffset = DpOffset(x = it.x.toDp(), y = it.y.toDp())
+                                    pressOffset = DpOffset(x = offset.x.toDp(), y = offset.y.toDp())
                                 },
-                                onPress = {
-                                    val press = PressInteraction.Press(it)
+                                onPress = { offset ->
+                                    val press = PressInteraction.Press(offset)
                                     interactionSource.emit(press)
                                     tryAwaitRelease()
                                     interactionSource.emit(PressInteraction.Release(press))

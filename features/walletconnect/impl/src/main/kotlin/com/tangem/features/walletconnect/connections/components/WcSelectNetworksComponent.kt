@@ -160,7 +160,7 @@ private fun MissingRequiredBlock(missingNetworks: ImmutableList<WcNetworkInfoIte
             iconTint = TangemTheme.colors.icon.attention,
         )
         HorizontalDivider(
-            modifier = modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             thickness = 1.dp,
             color = TangemTheme.colors.stroke.primary,
         )
