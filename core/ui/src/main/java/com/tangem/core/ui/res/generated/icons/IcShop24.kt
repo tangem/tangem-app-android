@@ -1,0 +1,47 @@
+@file:Suppress("all")
+
+package com.tangem.core.ui.res.generated.icons
+
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+/**
+ * Auto-generated from design tokens. Do not edit manually.
+ */
+
+private var _ic_shop_24: ImageVector? = null
+
+val Icons.ic_shop_24: ImageVector
+    get() {
+        if (_ic_shop_24 != null) return _ic_shop_24!!
+        _ic_shop_24 = ImageVector.Builder(
+            name = "ic_shop_24",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f,
+        ).apply {
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M17.6777 2.5C18.9535 2.5 20.0787 3.33668 20.4453 4.55859L21.3779 7.66895C21.411 7.77922 21.4354 7.89167 21.4551 8.00488C21.4589 8.02228 21.4619 8.03989 21.4648 8.05762C21.4666 8.06899 21.4681 8.0804 21.4697 8.0918C21.4718 8.10765 21.4733 8.12357 21.4746 8.13965C21.4896 8.25885 21.5 8.37866 21.5 8.49902V10.1113C21.4999 11.3116 20.9476 12.3821 20.084 13.085V18.6113C20.0839 20.2066 18.7895 21.4997 17.1943 21.5H6.80566C5.21033 21.4999 3.91708 20.2067 3.91699 18.6113V13.0859C3.05276 12.3831 2.50007 11.3121 2.5 10.1113V8.49902C2.50002 8.3787 2.50942 8.25881 2.52441 8.13965C2.52573 8.12359 2.52723 8.10763 2.5293 8.0918C2.53092 8.0804 2.53242 8.06899 2.53418 8.05762C2.53711 8.0399 2.54009 8.02227 2.54395 8.00488C2.56366 7.89161 2.58897 7.77928 2.62207 7.66895L3.55469 4.55859C3.9213 3.33668 5.04654 2.5 6.32227 2.5H17.6777ZM14.832 12.6904C14.1722 13.4141 13.2406 13.8855 12.1973 13.9385L12 13.9443L11.8027 13.9385C10.7595 13.8855 9.82668 13.415 9.16699 12.6914C8.46572 13.4609 7.456 13.9443 6.33301 13.9443C6.1924 13.9443 6.05368 13.9357 5.91699 13.9209V18.6113C5.91708 19.1021 6.3149 19.4999 6.80566 19.5H17.1943C17.685 19.4997 18.0839 19.102 18.084 18.6113V13.9209C18.0113 13.9288 17.9381 13.9357 17.8643 13.9395L17.667 13.9443L17.4697 13.9395C16.4254 13.8866 15.492 13.4152 14.832 12.6904ZM4.5 10.1113C4.50012 11.1236 5.32071 11.9442 6.33301 11.9443C7.34546 11.9443 8.16687 11.1238 8.16699 10.1113V9.22266H4.5V10.1113ZM10.167 10.1104C10.167 11.1228 10.9876 11.9442 12 11.9443C13.0081 11.9441 13.8263 11.1297 13.833 10.123V9.22266H10.167V10.1104ZM15.834 10.1104C15.834 10.1145 15.833 10.1189 15.833 10.123C15.8394 11.1301 16.6585 11.9443 17.667 11.9443C18.6793 11.9442 19.4999 11.1236 19.5 10.1113V9.22266H15.834V10.1104ZM6.32227 4.5C5.92973 4.5 5.5835 4.7578 5.4707 5.13379L4.84375 7.22266H9.15039C9.15575 7.22257 9.16161 7.22168 9.16699 7.22168C9.17254 7.22168 9.17807 7.22256 9.18359 7.22266H14.8174C14.8227 7.22257 14.8286 7.22168 14.834 7.22168C14.8395 7.22168 14.8451 7.22256 14.8506 7.22266H19.1562L18.5293 5.13379C18.4165 4.7578 18.0703 4.5 17.6777 4.5H6.32227Z"),
+            )
+        }.build()
+        return _ic_shop_24!!
+    }
+
+@Composable
+@Preview(showBackground = true)
+private fun IcShop24Preview() {
+    Icon(
+        imageVector = Icons.ic_shop_24,
+        contentDescription = null,
+    )
+}
