@@ -135,6 +135,24 @@ internal class DefaultRouterTest {
     }
 
     @Test
+    fun `GIVEN navigation and completion callback throw WHEN push THEN failure is reported once and not rethrown`() {
+        // Arrange
+        every { navigation.navigate(any(), any()) } throws IllegalStateException("Configurations must be unique")
+        val calls = mutableListOf<Boolean>()
+        val failingOnComplete: (Boolean) -> Unit = { isSuccess ->
+            calls += isSuccess
+            throw IllegalStateException("Caller failure")
+        }
+
+        // Act
+        val actual = runCatching { router.push(RouteB, failingOnComplete) }.exceptionOrNull()
+
+        // Assert
+        assertThat(actual).isNull()
+        assertThat(calls).containsExactly(false)
+    }
+
+    @Test
     fun `GIVEN main dispatch needed WHEN push THEN navigation runs only on the main dispatcher`() = runTest {
         // Arrange
         val mainDispatcher = StandardTestDispatcher(testScheduler)
