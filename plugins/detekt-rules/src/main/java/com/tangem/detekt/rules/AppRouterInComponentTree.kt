@@ -24,7 +24,10 @@ class AppRouterInComponentTree(config: Config) : Rule(config) {
         val isAppRouterImported = klass.containingKtFile.importDirectives
             .any { it.importedFqName?.asString() == APP_ROUTER_FQ_NAME }
 
-        klass.primaryConstructorParameters
+        val constructorParameters = klass.primaryConstructorParameters +
+            klass.secondaryConstructors.flatMap { it.valueParameters }
+
+        constructorParameters
             .filter { parameter -> parameter.isAppRouter(isAppRouterImported) }
             .forEach { parameter ->
                 report(
@@ -39,7 +42,7 @@ class AppRouterInComponentTree(config: Config) : Rule(config) {
     }
 
     private fun KtClass.isModel(): Boolean = superTypeListEntries.any { entry ->
-        entry is KtSuperTypeCallEntry && entry.typeReference?.text == MODEL
+        entry !is KtDelegatedSuperTypeEntry && entry.typeReference?.text == MODEL
     }
 
     private fun KtClass.isComponent(): Boolean = superTypeListEntries.any { entry ->

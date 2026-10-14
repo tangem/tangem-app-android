@@ -53,6 +53,16 @@ internal class AppRouterInComponentTreeTest {
             expectedParameters = listOf("appRouter"),
         ),
         LintModel(
+            name = "model injecting AppRouter through a secondary constructor",
+            code = """
+                import com.tangem.common.routing.AppRouter
+                class FooModel : Model {
+                    constructor(appRouter: AppRouter) : super()
+                }
+            """,
+            expectedParameters = listOf("appRouter"),
+        ),
+        LintModel(
             name = "fully qualified AppRouter without import",
             code = """
                 class FooModel(private val appRouter: com.tangem.common.routing.AppRouter) : Model()
