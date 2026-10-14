@@ -11,6 +11,7 @@ import com.tangem.common.constants.TangemPayBankRoutes.ACH
 import com.tangem.common.constants.TangemPayBankRoutes.WIRE
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ACCESS_CODE
 import com.tangem.common.extensions.assertTextContainsSafe
+import com.tangem.common.extensions.tapBackButton
 import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
@@ -708,18 +709,18 @@ class TangemPayBankOfframpTransferTest : BaseTestCase() {
     }
 
     @AllureId("12200")
-    @DisplayName("Tangem Pay: the bank account details fields are validated")
+    @DisplayName("Tangem Pay: the bank account numbers and the postal code are validated")
     @Test
-    fun bankAccountDetailsValidationTest() {
+    fun bankAccountNumbersAndPostalCodeValidationTest() {
         val geoCountriesScenario = "tangem_pay_geo_countries"
         val geoWithGermanyState = "WithGermany"
-        val amount = "5"
         val unitedStates = "United States"
         val california = "California"
         val germany = "Germany"
+        val germanRegion = "Berlin"
+        val germanPostalCode = "10115AB"
         val invalidFormat = getResourceString(CoreResR.string.tangempay_withdraw_bank_field_error_invalid_format)
         val invalidRoutingNumber = getResourceString(CoreResR.string.tangempay_withdraw_bank_field_error_routing_number)
-        val latinOnly = getResourceString(CoreResR.string.tangempay_order_data_field_latin_only)
 
         setupHooks().run {
             step("Set WireMock scenarios for a Tangem Pay bank transfer") { setTangemPayBankOfframpTransferScenarios() }
@@ -729,15 +730,8 @@ class TangemPayBankOfframpTransferTest : BaseTestCase() {
             step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub() }
             step("Click on 'To personal account' button") { openTangemPayBankWithdrawToPersonalAccount() }
             step("Assert the default source and route") { assertTangemPayBankWithdrawDefaults() }
-            step("Enter amount '$amount'") { enterTangemPayBankWithdrawAmount(amount) }
-            step("Click on 'Continue' button") { clickTangemPayBankWithdrawAmountContinue() }
-            step("Choose '$ownAccount' '$checkingAccount' account") {
-                chooseTangemPayBankWithdrawAccountTypes(ownAccount, checkingAccount)
-            }
-            step("Assert recipient details step is displayed") {
-                flakySafely {
-                    onTangemPayBankWithdrawFormScreen { field(TangemPayBankWithdrawField.AccountNumber).assertIsDisplayed() }
-                }
+            step("Open recipient details of '$ownAccount' '$checkingAccount' account") {
+                openTangemPayBankRecipientDetailsStep(ownAccount, checkingAccount)
             }
             listOf("123", "123456789012345678", "12345-678").forEach { value ->
                 step("Assert account number '$value' is rejected") {
@@ -762,44 +756,84 @@ class TangemPayBankOfframpTransferTest : BaseTestCase() {
             step("Select '$germany' residency") {
                 selectTangemPayBankWithdrawResidency(TangemPayBankWithdrawField.Country, germany)
             }
-            step("Assert region 'Бавария' is rejected") {
-                assertTangemPayBankWithdrawFieldError(
-                    field = TangemPayBankWithdrawField.Region,
-                    value = "Бавария",
-                    blurField = TangemPayBankWithdrawField.City,
-                    error = latinOnly,
-                )
+            step("Fill in the remaining fields with valid values") {
+                listOf(
+                    TangemPayBankWithdrawField.PostalCode to germanPostalCode,
+                    TangemPayBankWithdrawField.AccountNumber to MICHAEL.accountNumber,
+                    TangemPayBankWithdrawField.RoutingNumber to MICHAEL.routingNumber,
+                    TangemPayBankWithdrawField.FirstName to MICHAEL.firstName,
+                    TangemPayBankWithdrawField.LastName to MICHAEL.lastName,
+                    TangemPayBankWithdrawField.Region to germanRegion,
+                    TangemPayBankWithdrawField.City to MICHAEL.city,
+                    TangemPayBankWithdrawField.AddressLine1 to MICHAEL.addressLine1,
+                ).forEach { (field, value) -> enterTangemPayBankWithdrawField(field, value) }
             }
-            step("Assert region 'Bayern' is accepted") {
-                assertTangemPayBankWithdrawFieldValid(
-                    field = TangemPayBankWithdrawField.Region,
-                    value = "Bayern",
-                    blurField = TangemPayBankWithdrawField.City,
-                    error = latinOnly,
-                )
+            step("Click on 'Continue' button") { clickTangemPayBankWithdrawFormContinue() }
+            step("Assert bank details step is displayed with non-US postal code '$germanPostalCode'") {
+                flakySafely {
+                    onTangemPayBankWithdrawFormScreen { field(TangemPayBankWithdrawField.BankName).assertIsDisplayed() }
+                }
             }
-            step("Assert region 'Württemberg' is accepted") {
-                assertTangemPayBankWithdrawFieldValid(
-                    field = TangemPayBankWithdrawField.Region,
-                    value = "Württemberg",
-                    blurField = TangemPayBankWithdrawField.City,
-                    error = latinOnly,
-                )
-            }
-            step("Assert non-US postal code '10115AB' is accepted") {
-                assertTangemPayBankWithdrawFieldValid(
-                    field = TangemPayBankWithdrawField.PostalCode,
-                    value = "10115AB",
-                    blurField = TangemPayBankWithdrawField.City,
-                    error = invalidFormat,
-                )
+            step("Click on 'Back' button") { tapBackButton() }
+            step("Assert recipient details step is displayed") {
+                flakySafely {
+                    onTangemPayBankWithdrawFormScreen { field(TangemPayBankWithdrawField.AccountNumber).assertIsDisplayed() }
+                }
             }
             step("Select '$unitedStates', '$california' residency") {
                 selectTangemPayBankWithdrawResidency(TangemPayBankWithdrawField.Country, unitedStates, california)
             }
+            step("Assert US postal code 'ABCDE' is rejected") {
+                assertTangemPayBankWithdrawFieldError(
+                    field = TangemPayBankWithdrawField.PostalCode,
+                    value = "ABCDE",
+                    blurField = TangemPayBankWithdrawField.City,
+                    error = invalidFormat,
+                )
+            }
+            step("Enter US postal code '${MICHAEL.postalCode}'") {
+                enterTangemPayBankWithdrawField(TangemPayBankWithdrawField.PostalCode, MICHAEL.postalCode)
+            }
+            step("Click on 'Continue' button") { clickTangemPayBankWithdrawFormContinue() }
+            step("Assert bank details step is displayed with US postal code '${MICHAEL.postalCode}'") {
+                flakySafely {
+                    onTangemPayBankWithdrawFormScreen { field(TangemPayBankWithdrawField.BankName).assertIsDisplayed() }
+                }
+            }
+        }
+    }
+
+    @AllureId("12738")
+    @DisplayName("Tangem Pay: the bank account text fields accept Latin letters with diacritics only")
+    @Test
+    fun bankAccountTextFieldsLatinValidationTest() {
+        val geoCountriesScenario = "tangem_pay_geo_countries"
+        val geoWithGermanyState = "WithGermany"
+        val unitedStates = "United States"
+        val california = "California"
+        val germany = "Germany"
+        val germanPostalCode = "10115"
+        val latinOnly = getResourceString(CoreResR.string.tangempay_order_data_field_latin_only)
+        val nonLatinBusinessName = "Ромашка"
+        val diacriticBusinessName = "Société Générale"
+
+        setupHooks().run {
+            step("Set WireMock scenarios for a Tangem Pay bank transfer") { setTangemPayBankOfframpTransferScenarios() }
+            step("Set WireMock scenario '$geoCountriesScenario' to '$geoWithGermanyState'") {
+                setWireMockScenarioState(geoCountriesScenario, geoWithGermanyState)
+            }
+            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub() }
+            step("Click on 'To personal account' button") { openTangemPayBankWithdrawToPersonalAccount() }
+            step("Open recipient details of '$ownAccount' '$checkingAccount' account") {
+                openTangemPayBankRecipientDetailsStep(ownAccount, checkingAccount)
+            }
+            step("Select '$germany' residency") {
+                selectTangemPayBankWithdrawResidency(TangemPayBankWithdrawField.Country, germany)
+            }
             listOf(
                 TangemPayBankWithdrawField.FirstName to "Иван",
                 TangemPayBankWithdrawField.LastName to "Иванов",
+                TangemPayBankWithdrawField.Region to "Бавария",
                 TangemPayBankWithdrawField.City to "Москва",
                 TangemPayBankWithdrawField.AddressLine1 to "Ленина 1",
             ).forEach { (field, value) ->
@@ -812,13 +846,13 @@ class TangemPayBankOfframpTransferTest : BaseTestCase() {
                     )
                 }
             }
-            val diacriticValues = listOf(
+            listOf(
                 TangemPayBankWithdrawField.FirstName to "José",
                 TangemPayBankWithdrawField.LastName to "Müller",
-                TangemPayBankWithdrawField.City to "São Paulo",
+                TangemPayBankWithdrawField.Region to "Württemberg",
+                TangemPayBankWithdrawField.City to "Zürich",
                 TangemPayBankWithdrawField.AddressLine1 to "Straße 1",
-            )
-            diacriticValues.forEach { (field, value) ->
+            ).forEach { (field, value) ->
                 step("Assert '${field.name}' '$value' is accepted") {
                     assertTangemPayBankWithdrawFieldValid(
                         field = field,
@@ -828,27 +862,52 @@ class TangemPayBankOfframpTransferTest : BaseTestCase() {
                     )
                 }
             }
-            step("Assert US postal code 'ABCDE' is rejected") {
+            step("Fill in the remaining fields with valid values") {
+                listOf(
+                    TangemPayBankWithdrawField.PostalCode to germanPostalCode,
+                    TangemPayBankWithdrawField.AccountNumber to MICHAEL.accountNumber,
+                    TangemPayBankWithdrawField.RoutingNumber to MICHAEL.routingNumber,
+                ).forEach { (field, value) -> enterTangemPayBankWithdrawField(field, value) }
+            }
+            step("Click on 'Continue' button") { clickTangemPayBankWithdrawFormContinue() }
+            step("Assert bank details step is displayed") {
+                flakySafely {
+                    onTangemPayBankWithdrawFormScreen { field(TangemPayBankWithdrawField.BankName).assertIsDisplayed() }
+                }
+            }
+            step("Close the bank transfer") { closeTangemPayBankWithdrawForm() }
+            step("Open 'Withdraw' hub") { openWithdrawHubFromPaymentAccount() }
+            step("Click on 'To business account' button") { openTangemPayBankWithdrawToBusinessAccount() }
+            step("Open recipient details of '$checkingAccount' business account") {
+                openTangemPayBankRecipientDetailsStep(transferType = null, accountType = checkingAccount)
+            }
+            step("Assert business name '$nonLatinBusinessName' is rejected") {
                 assertTangemPayBankWithdrawFieldError(
-                    field = TangemPayBankWithdrawField.PostalCode,
-                    value = "ABCDE",
-                    blurField = TangemPayBankWithdrawField.City,
-                    error = invalidFormat,
+                    field = TangemPayBankWithdrawField.BusinessName,
+                    value = nonLatinBusinessName,
+                    blurField = TangemPayBankWithdrawField.AccountNumber,
+                    error = latinOnly,
                 )
             }
-            step("Assert US postal code '${MICHAEL.postalCode}' is accepted") {
+            step("Assert business name '$diacriticBusinessName' is accepted") {
                 assertTangemPayBankWithdrawFieldValid(
-                    field = TangemPayBankWithdrawField.PostalCode,
-                    value = MICHAEL.postalCode,
-                    blurField = TangemPayBankWithdrawField.City,
-                    error = invalidFormat,
+                    field = TangemPayBankWithdrawField.BusinessName,
+                    value = diacriticBusinessName,
+                    blurField = TangemPayBankWithdrawField.AccountNumber,
+                    error = latinOnly,
                 )
             }
-            step("Enter account number '${MICHAEL.accountNumber}'") {
-                enterTangemPayBankWithdrawField(TangemPayBankWithdrawField.AccountNumber, MICHAEL.accountNumber)
+            step("Select '$unitedStates', '$california' residency") {
+                selectTangemPayBankWithdrawResidency(TangemPayBankWithdrawField.Country, unitedStates, california)
             }
-            step("Enter routing number '${MICHAEL.routingNumber}'") {
-                enterTangemPayBankWithdrawField(TangemPayBankWithdrawField.RoutingNumber, MICHAEL.routingNumber)
+            step("Fill in the remaining fields with valid values") {
+                listOf(
+                    TangemPayBankWithdrawField.AccountNumber to DUNDER.accountNumber,
+                    TangemPayBankWithdrawField.RoutingNumber to DUNDER.routingNumber,
+                    TangemPayBankWithdrawField.City to DUNDER.city,
+                    TangemPayBankWithdrawField.AddressLine1 to DUNDER.addressLine1,
+                    TangemPayBankWithdrawField.PostalCode to DUNDER.postalCode,
+                ).forEach { (field, value) -> enterTangemPayBankWithdrawField(field, value) }
             }
             step("Click on 'Continue' button") { clickTangemPayBankWithdrawFormContinue() }
             step("Assert bank details step is displayed") {
