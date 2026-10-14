@@ -185,7 +185,7 @@ private fun EmptyHistory(onExploreEventsClick: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Box(
-            modifier = Modifier.size(40.dp).background(TangemTheme.colors3.bg.opaque.secondary, CircleShape),
+            modifier = Modifier.size(40.dp).background(TangemTheme.colors3.bg.transparent.secondary, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

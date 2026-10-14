@@ -34,7 +34,7 @@ internal fun QuickTopUpBlock(state: QuickTopUpBlockUM, modifier: Modifier = Modi
     Box(modifier = modifier.fillMaxWidth()) {
         TangemSurface(
             modifier = Modifier.fillMaxWidth(),
-            color = TangemTheme.colors3.bg.opaque.primary,
+            color = TangemTheme.colors3.bg.transparent.primary,
             shape = RoundedCornerShape(24.dp),
         ) {
             Column(

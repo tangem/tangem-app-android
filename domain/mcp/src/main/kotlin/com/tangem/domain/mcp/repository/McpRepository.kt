@@ -1,6 +1,7 @@
 package com.tangem.domain.mcp.repository
 
 import arrow.core.Either
+import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
@@ -15,6 +16,14 @@ import kotlinx.coroutines.flow.Flow
  * that follows it have to be made from the same device.
  */
 interface McpRepository {
+
+    /**
+     * Returns the agent behind [clientId], for the sheets that tell the owner who is asking for something.
+     *
+     * Never fails: an agent that cannot be looked up (unknown client, no network, rate limit) comes back as
+     * [McpAgent.unknown], because not knowing who asks must not block the owner from the request itself.
+     */
+    suspend fun getAgent(clientId: String): McpAgent
 
     /** Returns who is asking for access behind [userCode], so the owner can decide on it. */
     suspend fun getDeviceVerification(userCode: String): Either<Throwable, McpDeviceVerification>
