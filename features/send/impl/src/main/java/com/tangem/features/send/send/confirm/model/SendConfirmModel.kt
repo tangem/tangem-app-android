@@ -330,6 +330,7 @@ internal class SendConfirmModel @Inject constructor(
             is JointOperationCreateError.SlotBusy -> alertFactory.getJointSlotBusyState()
             is JointOperationCreateError.AccountNotReady -> alertFactory.getJointAccountNotReadyState()
             is JointOperationCreateError.NetworkStateMoved -> alertFactory.getJointNetworkStateMovedState()
+            is JointOperationCreateError.Malicious -> alertFactory.getJointMaliciousState()
             is JointOperationCreateError.CompositionMismatch -> {
                 TangemLogger.e("Unable to create the joint operation: $error")
                 alertFactory.getJointSendBlockedState(onSupportClick = { onFailedTxEmailClick(error.toString()) })
