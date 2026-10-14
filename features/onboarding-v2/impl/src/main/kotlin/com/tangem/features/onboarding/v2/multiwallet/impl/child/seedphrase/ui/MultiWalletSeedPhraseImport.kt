@@ -83,7 +83,7 @@ internal fun MultiWalletSeedPhraseImport(state: MultiWalletSeedPhraseUM.Import, 
                 )
 
                 OutlineTextFieldWithIcon(
-                    modifier = modifier
+                    modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .fillMaxWidth(),
                     value = state.passPhrase,
