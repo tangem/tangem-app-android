@@ -179,7 +179,7 @@ private fun PromoTokenSelector(state: PromoTokenSelectorUM) {
                 .padding(horizontal = 16.dp)
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
-                .background(TangemTheme.colors3.bg.opaque.primary)
+                .background(TangemTheme.colors3.bg.transparent.primary)
 
             PromoSelectedTokenItem(
                 selectedToken = state.selectedToken,

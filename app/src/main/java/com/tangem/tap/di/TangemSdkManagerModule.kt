@@ -45,7 +45,7 @@ internal class TangemSdkManagerModule {
         authFeatureToggles: AuthFeatureToggles,
     ): TangemSdkManager {
         return if (BuildConfig.MOCK_DATA_SOURCE) {
-            MockTangemSdkManager(resources = context.resources)
+            MockTangemSdkManager()
         } else {
             DefaultTangemSdkManager(
                 cardSdkConfigRepository = cardSdkConfigRepository,

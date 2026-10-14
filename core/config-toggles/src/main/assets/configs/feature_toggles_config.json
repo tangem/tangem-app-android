@@ -166,5 +166,9 @@
     {
         "name": "TWI_1700_POLYMARKET_PHASE_TWO_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1760_SUPPORT_CHAT_DEEPLINK_ENABLED",
+        "version": "undefined"
     }
 ]

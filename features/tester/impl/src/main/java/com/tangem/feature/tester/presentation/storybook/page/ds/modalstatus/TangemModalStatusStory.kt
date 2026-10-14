@@ -413,7 +413,7 @@ private fun RecipientCard(name: String) {
     TangemRow(
         modifier = Modifier
             .clip(RoundedCornerShape(24.dp))
-            .background(TangemTheme.colors3.bg.opaque.primary),
+            .background(TangemTheme.colors3.bg.transparent.primary),
         startSlot = {
             Box(
                 modifier = Modifier
