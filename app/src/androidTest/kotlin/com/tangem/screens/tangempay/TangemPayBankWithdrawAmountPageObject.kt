@@ -10,6 +10,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasAnyDescendant as withAnyDescendant
 import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
 
@@ -79,10 +80,11 @@ class TangemPayBankWithdrawAmountPageObject(semanticsProvider: SemanticsNodeInte
         useUnmergedTree = true
     }
 
-    fun selectedRouteOption(route: TangemPayBankRoute): KNode = child {
-        hasTestTag(TangemPayTestTags.BANK_WITHDRAW_ROUTE_OPTION)
-        hasAnyDescendant(withText(route.title))
-        hasAnyDescendant(withTestTag(TangemPayTestTags.BANK_WITHDRAW_ROUTE_CHECKMARK))
+    fun routeOptionCheckmark(route: TangemPayBankRoute): KNode = child {
+        isToggleable()
+        hasAnyAncestor(
+            withTestTag(TangemPayTestTags.BANK_WITHDRAW_ROUTE_OPTION) and withAnyDescendant(withText(route.title)),
+        )
         useUnmergedTree = true
     }
 
