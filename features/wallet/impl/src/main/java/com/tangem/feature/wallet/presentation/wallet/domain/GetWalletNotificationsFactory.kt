@@ -43,7 +43,6 @@ import com.tangem.utils.coroutines.combine7
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.orZero
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -129,7 +128,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         }
 
     @Suppress("LongMethod")
-    fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotificationUM>> {
+    fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<WalletNotificationsSnapshot> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
         return combine7(
@@ -163,7 +162,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
             val isAddFundsBannerShown = isAddFundsBannerVisible(totalFiatBalance)
 
-            buildList {
+            val notifications = buildList {
                 addUsedOutdatedDataNotification(totalFiatBalance)
 
                 addAddFundsBanner(
@@ -227,6 +226,25 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
                 addSoftUpdateBanner(appUpdateState, clickIntents)
             }.sortedBy { it.type.ordinal }.toImmutableList()
+
+            WalletNotificationsSnapshot(
+                notifications = notifications,
+                balanceState = getBalanceState(totalFiatBalance, flattenCurrencies),
+            )
+        }
+    }
+
+    /** Every network fetch marks the statuses as cache first, so a status still on cache is being refreshed */
+    private fun getBalanceState(
+        totalFiatBalance: TotalFiatBalance,
+        currencies: List<CryptoCurrencyStatus>,
+    ): NotificationsBalanceState {
+        val isRefreshing = currencies.any { it.value.sources.networkSource == StatusSource.CACHE }
+
+        return when {
+            totalFiatBalance is TotalFiatBalance.Loading -> NotificationsBalanceState.Loading
+            isRefreshing -> NotificationsBalanceState.Resolved
+            else -> NotificationsBalanceState.Settled
         }
     }
 
