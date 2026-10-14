@@ -15,8 +15,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeSourceTangem
-import com.tangem.core.ui.ds2.button.Back
-import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.res.LocalHazeState
@@ -67,7 +65,6 @@ private enum class RewardSlot { Case, Title, Footer }
 internal fun RewardCard(
     um: RewardCardUM,
     timing: RewardCardTiming,
-    onBackClick: () -> Unit,
     onKeepCardClick: () -> Unit,
     onSellBackClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -78,7 +75,6 @@ internal fun RewardCard(
         timing = timing,
         progress = rememberRewardCardAnimation(timing),
         cardAspect = cardAspect,
-        onBackClick = onBackClick,
         onKeepCardClick = onKeepCardClick,
         onSellBackClick = onSellBackClick,
         modifier = modifier,
@@ -119,7 +115,6 @@ internal fun RewardCardContent(
     progress: RewardCardProgress,
     modifier: Modifier = Modifier,
     cardAspect: Float? = null,
-    onBackClick: () -> Unit = {},
     onKeepCardClick: () -> Unit = {},
     onSellBackClick: () -> Unit = {},
 ) {
@@ -130,10 +125,10 @@ internal fun RewardCardContent(
             containerColor = containerColor,
             topBar = {
                 TangemTopNavigation(
-                    startButton = { TangemButton.Back(onClick = onBackClick) },
+                    // Holds the bar at its height with a button, which the layout is designed against
+                    startButton = { Spacer(modifier = Modifier.size(44.dp)) },
                     // Nothing scrolls under the bar here, and its fade would cover the video during the reveal
                     fadeEnabled = false,
-                    modifier = Modifier.graphicsLayer { alpha = chromeAlpha(progress.chrome) },
                 )
             },
         ) { contentPadding ->

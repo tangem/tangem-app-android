@@ -4,7 +4,7 @@ Gacha packs from Collector Crypt. Users land on an onboarding screen, optionally
 explainer, then browse a paginated catalogue of packs ("gacha machines") filtered by category and
 search, open a pack's details — its odds, its metadata and the collectibles in its prize pool — and buy
 and open a pack: confirm order → pack throw → reveal video → reward card. The collection screen, the
-activity log, withdrawal and the card's "keep" / "sell back" actions are not built yet; the main screen's
+activity log, withdrawal and the card's "sell back" action are not built yet; the main screen's
 balance is live, its collection widget is a stub.
 
 > This is **not** `features/nft` / `domain/nft`, which is the unrelated NFT-collection feature.
@@ -345,8 +345,8 @@ updated, and `skipToMs` must land on a keyframe.
 codec failure, or system animations off (`ANIMATOR_DURATION_SCALE == 0`, which also mutes the skip sound)
 — every path falls back to the short version and ends on the card.
 
-**Keep / sell back are stubs.** `onKeepCardClick` / `onSellBackClick` are empty `TODO([REDACTED_TASK_KEY])`;
-`Expired` / `Refunded` failures show hardcoded English snackbars.
+**Sell back is a stub.** `onSellBackClick` is an empty `TODO([REDACTED_TASK_KEY])`; "Keep card" only returns to the
+machine details. `Expired` / `Refunded` failures show hardcoded English snackbars.
 
 **A few strings are still literals.** Most copy is in `core/res` (`collectibles_*`), but some
 `stringReference("…")` literals remain (menu, add funds, reward card chrome, status, the snackbars above).
