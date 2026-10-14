@@ -127,9 +127,9 @@ private fun PriceChangeIcon(type: PriceChangeType, modifier: Modifier = Modifier
     AnimatedContent(
         targetState = type,
         label = "Update the price change's arrow",
+        modifier = modifier,
     ) { animatedType ->
         Icon(
-            modifier = modifier,
             painter = painterResource(
                 id = when (animatedType) {
                     PriceChangeType.UP -> R.drawable.ic_arrow_up_8

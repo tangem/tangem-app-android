@@ -204,11 +204,11 @@ private fun ChooseManagedTokenContent_Preview() {
                     isInitialBatchLoading = false,
                     isNextBatchLoading = false,
                     items = buildList {
-                        repeat(10) {
+                        repeat(10) { index ->
                             add(
                                 CurrencyItemUM.Basic(
                                     id = ManagedCryptoCurrency.ID(
-                                        value = "ID+$it",
+                                        value = "ID+$index",
                                     ),
                                     name = "Bitcoin",
                                     symbol = "BTC",

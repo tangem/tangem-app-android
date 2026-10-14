@@ -46,8 +46,8 @@ class DefaultUserWalletImageFetcher @Inject constructor(
 
     override fun walletImage(walletId: UserWalletId, size: ArtworkSize): Flow<UserWalletItemUM.ImageState> =
         getUserWalletUseCase.invokeFlow(walletId)
-            .transform {
-                it.fold(
+            .transform { walletResult ->
+                walletResult.fold(
                     ifLeft = { emit(UserWalletItemUM.ImageState.Loading) },
                     ifRight = { wallet -> emitAll(walletImage(wallet, size)) },
                 )

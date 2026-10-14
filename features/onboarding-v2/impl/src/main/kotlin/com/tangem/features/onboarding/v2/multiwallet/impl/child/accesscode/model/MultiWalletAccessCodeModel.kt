@@ -50,8 +50,8 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
                 modelScope.launch { onDismiss.emit(Unit) }
             }
             MultiWalletAccessCodeUM.Step.AccessCode -> {
-                _uiState.update {
-                    it.copy(
+                _uiState.update { state ->
+                    state.copy(
                         step = MultiWalletAccessCodeUM.Step.Intro,
                         accessCodeFirst = TextFieldValue(""),
                         accessCodeSecond = TextFieldValue(""),
@@ -59,8 +59,8 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
                 }
             }
             MultiWalletAccessCodeUM.Step.ConfirmAccessCode -> {
-                _uiState.update {
-                    it.copy(
+                _uiState.update { state ->
+                    state.copy(
                         step = MultiWalletAccessCodeUM.Step.AccessCode,
                         accessCodeSecond = TextFieldValue(""),
                     )
@@ -76,8 +76,8 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
     )
 
     private fun onAccessCodeFirstChange(textFieldValue: TextFieldValue) {
-        _uiState.update {
-            it.copy(
+        _uiState.update { state ->
+            state.copy(
                 accessCodeFirst = textFieldValue,
                 atLeast4CharError = false,
             )
@@ -85,8 +85,8 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
     }
 
     private fun onAccessCodeSecondChange(textFieldValue: TextFieldValue) {
-        _uiState.update {
-            it.copy(
+        _uiState.update { state ->
+            state.copy(
                 accessCodeSecond = textFieldValue,
                 codesNotMatchError = false,
             )
@@ -100,8 +100,8 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
             }
             MultiWalletAccessCodeUM.Step.AccessCode -> {
                 if (_uiState.value.accessCodeFirst.text.length >= MINIMUM_ACCESS_CODE_LENGTH) {
-                    _uiState.update {
-                        it.copy(
+                    _uiState.update { state ->
+                        state.copy(
                             step = MultiWalletAccessCodeUM.Step.ConfirmAccessCode,
                             atLeast4CharError = false,
                         )
