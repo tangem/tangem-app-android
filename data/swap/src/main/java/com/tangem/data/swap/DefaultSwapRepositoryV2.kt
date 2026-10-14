@@ -528,17 +528,13 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         val isYieldSupplyActive = cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
         if (!isYieldSupplyActive) return this
 
-        return if (featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED)) {
-            filterNot { it.type == ExpressProviderType.ONRAMP }
-        } else {
-            filter { provider ->
-                when (provider.type) {
-                    ExpressProviderType.CEX -> true
-                    ExpressProviderType.DEX,
-                    ExpressProviderType.DEX_BRIDGE,
-                    -> provider.providerId in YIELD_ALLOWED_DEX_PROVIDER_IDS
-                    ExpressProviderType.ONRAMP -> false
-                }
+        return filter { provider ->
+            when (provider.type) {
+                ExpressProviderType.CEX -> true
+                ExpressProviderType.DEX,
+                ExpressProviderType.DEX_BRIDGE,
+                -> provider.providerId in YIELD_ALLOWED_DEX_PROVIDER_IDS
+                ExpressProviderType.ONRAMP -> false
             }
         }
     }
