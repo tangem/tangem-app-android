@@ -15,6 +15,7 @@ import com.tangem.domain.transaction.error.GaslessServiceException
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.error.TronActivationRefusal
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.raiseIllegalStateError
@@ -22,7 +23,8 @@ import com.tangem.domain.transaction.raiseIllegalStateError
 /**
  * Fetches the Tron gasless compensation quote (eager estimate) for an original token transfer and
  * exposes it as a [TransactionFeeExtended] whose displayed fee is the compensation amount in the fee
- * token. The carried [TransactionFeeExtended.tronGaslessQuote] routes the send step to the Tron flow.
+ * token. The carried [com.tangem.domain.transaction.models.GaslessProtocolData.Tron] routes the send
+ * step to the Tron flow.
  *
  * Tron does not use the EVM gasless machinery — this is a parallel, thin path. The fee is returned
  * regardless of balance: insufficiency is surfaced as a send notification (see
@@ -75,7 +77,7 @@ class GetTronGaslessFeeUseCase(
                 TransactionFeeExtended(
                     transactionFee = TransactionFee.Single(normal = Fee.Common(amount = feeAmount)),
                     feeTokenId = feeToken.id,
-                    tronGaslessQuote = quote,
+                    gaslessProtocolData = GaslessProtocolData.Tron(quote = quote),
                 )
             },
             catch = { raise(it.toGaslessError(feeToken)) },
