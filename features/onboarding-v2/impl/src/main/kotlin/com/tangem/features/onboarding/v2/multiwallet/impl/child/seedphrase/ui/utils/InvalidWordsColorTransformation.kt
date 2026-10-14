@@ -56,13 +56,13 @@ class InvalidWordsColorTransformation(
     }
 
     private fun makeAnnotatedString(wordList: List<String>): AnnotatedString = buildAnnotatedString {
-        wordList.forEach {
-            if (it == WORD_SEPARATOR) {
+        wordList.forEach { word ->
+            if (word == WORD_SEPARATOR) {
                 append(WHITE_SPACE)
-            } else if (wordsToBrush.contains(it)) {
-                append(it.annotate())
+            } else if (wordsToBrush.contains(word)) {
+                append(word.annotate())
             } else {
-                append(it)
+                append(word)
             }
         }
     }

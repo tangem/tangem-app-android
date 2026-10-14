@@ -31,9 +31,9 @@ internal fun AgreementText(@StringRes firstPartResId: Int, onClick: () -> Unit) 
             .padding(horizontal = 54.dp),
         style = TangemTheme.typography.caption2.copy(textAlign = TextAlign.Center),
         maxLines = 2,
-        onClick = {
+        onClick = { offset ->
             val clickableSpanStyle = requireNotNull(agreementText.spanStyles.getOrNull(1))
-            if (it in clickableSpanStyle.start..clickableSpanStyle.end) {
+            if (offset in clickableSpanStyle.start..clickableSpanStyle.end) {
                 onClick()
             }
         },
