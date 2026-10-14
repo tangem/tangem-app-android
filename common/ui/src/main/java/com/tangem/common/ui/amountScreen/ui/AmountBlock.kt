@@ -64,7 +64,7 @@ fun AmountBlock(
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
             .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)
-            .padding(TangemTheme.dimens.spacing16),
+            .padding(16.dp),
     ) {
         AccountTitle(accountTitleUM = amountState.accountTitleUM)
         SpacerH(20.dp)
@@ -83,7 +83,7 @@ fun AmountBlock(
             maxLines = 1,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = TangemTheme.dimens.spacing24),
+                .padding(top = 24.dp),
         )
         Text(
             text = secondAmount,
@@ -92,7 +92,7 @@ fun AmountBlock(
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = TangemTheme.dimens.spacing8),
+                .padding(top = 8.dp),
         )
     }
 }

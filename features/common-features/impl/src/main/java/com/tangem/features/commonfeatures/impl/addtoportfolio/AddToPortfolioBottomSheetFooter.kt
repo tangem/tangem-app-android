@@ -64,8 +64,8 @@ private fun CancelFooterButton(onClick: () -> Unit) {
     SecondaryTangemButton(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens2.x4)
-            .padding(bottom = TangemTheme.dimens2.x4),
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp),
         onClick = onClick,
         text = resourceReference(R.string.common_cancel),
         size = TangemButtonSize.X12,
@@ -77,8 +77,8 @@ private fun CancelFooterButton(onClick: () -> Unit) {
 private fun UserPortfolioAddFooter(isEnabled: Boolean, isAddedEverywhere: Boolean, onClick: () -> Unit) {
     TangemRowContainer(
         contentPadding = PaddingValues(
-            horizontal = TangemTheme.dimens2.x6,
-            vertical = TangemTheme.dimens2.x5,
+            horizontal = 24.dp,
+            vertical = 20.dp,
         ),
     ) {
         Text(

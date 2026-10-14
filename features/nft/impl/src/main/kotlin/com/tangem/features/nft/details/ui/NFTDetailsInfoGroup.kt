@@ -52,7 +52,7 @@ internal fun NFTDetailsInfoGroup(
                 Column(
                     modifier = Modifier
                         .padding(
-                            bottom = TangemTheme.dimens.spacing12,
+                            bottom = 12.dp,
                         ),
                 ) {
                     SalePrice(state.salePrice)
@@ -80,20 +80,20 @@ private fun SalePrice(state: NFTAssetUM.SalePrice, modifier: Modifier = Modifier
                 Column(
                     modifier = modifier
                         .padding(
-                            start = TangemTheme.dimens.spacing12,
-                            end = TangemTheme.dimens.spacing12,
+                            start = 12.dp,
+                            end = 12.dp,
                         ),
                 ) {
                     TextShimmer(
                         modifier = Modifier
-                            .width(TangemTheme.dimens.size158),
+                            .width(158.dp),
                         style = TangemTheme.typography.head,
                         textSizeHeight = true,
                     )
                     TextShimmer(
                         modifier = Modifier
-                            .padding(top = TangemTheme.dimens.spacing4)
-                            .width(TangemTheme.dimens.size90),
+                            .padding(top = 4.dp)
+                            .width(90.dp),
                         style = TangemTheme.typography.caption2,
                         textSizeHeight = true,
                     )
@@ -103,8 +103,8 @@ private fun SalePrice(state: NFTAssetUM.SalePrice, modifier: Modifier = Modifier
                 Column(
                     modifier = modifier
                         .padding(
-                            start = TangemTheme.dimens.spacing12,
-                            end = TangemTheme.dimens.spacing12,
+                            start = 12.dp,
+                            end = 12.dp,
                         ),
                     verticalArrangement = Arrangement.SpaceAround,
                 ) {
@@ -115,7 +115,7 @@ private fun SalePrice(state: NFTAssetUM.SalePrice, modifier: Modifier = Modifier
                     )
                     Text(
                         modifier = Modifier
-                            .padding(top = TangemTheme.dimens.spacing4)
+                            .padding(top = 4.dp)
                             .flicker(state.isFlickering),
                         text = state.fiatPrice.resolveReference(),
                         style = TangemTheme.typography.caption2,
@@ -139,9 +139,9 @@ private fun Description(description: String?, onReadMoreClick: () -> Unit, modif
                     onClick = onReadMoreClick,
                 )
                 .padding(
-                    start = TangemTheme.dimens.spacing12,
-                    top = TangemTheme.dimens.spacing12,
-                    end = TangemTheme.dimens.spacing12,
+                    start = 12.dp,
+                    top = 12.dp,
+                    end = 12.dp,
                 ),
             expanded = false,
             text = description,
@@ -165,9 +165,9 @@ private fun Rarity(state: NFTAssetUM.Rarity, modifier: Modifier = Modifier) {
             if (state.showDivider) {
                 HorizontalDivider(
                     modifier = Modifier.padding(
-                        start = TangemTheme.dimens.spacing12,
-                        top = TangemTheme.dimens.spacing8,
-                        end = TangemTheme.dimens.spacing12,
+                        start = 12.dp,
+                        top = 8.dp,
+                        end = 12.dp,
                     ),
                     color = TangemTheme.colors.stroke.primary,
                 )
@@ -176,16 +176,16 @@ private fun Rarity(state: NFTAssetUM.Rarity, modifier: Modifier = Modifier) {
                 modifier = modifier
                     .fillMaxWidth()
                     .padding(
-                        start = TangemTheme.dimens.spacing6,
-                        top = TangemTheme.dimens.spacing12,
-                        end = TangemTheme.dimens.spacing6,
+                        start = 6.dp,
+                        top = 12.dp,
+                        end = 6.dp,
                     ),
             ) {
                 NFTDetailsGroupBlock(
                     modifier = Modifier
                         .weight(1f)
                         .padding(
-                            horizontal = TangemTheme.dimens.spacing6,
+                            horizontal = 6.dp,
                         ),
                     title = resourceReference(R.string.nft_details_rarity_label),
                     value = stringReference(state.label),
@@ -196,7 +196,7 @@ private fun Rarity(state: NFTAssetUM.Rarity, modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .weight(1f)
                         .padding(
-                            horizontal = TangemTheme.dimens.spacing6,
+                            horizontal = 6.dp,
                         ),
                     title = resourceReference(R.string.nft_details_rarity_rank),
                     value = stringReference(state.rank),

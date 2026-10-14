@@ -25,6 +25,7 @@ internal class CollectiblesPackOpeningConverter(
     private val onBackClick: () -> Unit,
     private val onCloseClick: () -> Unit,
     private val onApproveClick: () -> Unit,
+    private val reveal: CollectiblesPackOpeningUM.RevealUM,
 ) : Converter<CollectiblesPackOpeningConverter.Input, CollectiblesPackOpeningUM.Content> {
 
     override fun convert(value: Input): CollectiblesPackOpeningUM.Content {
@@ -32,8 +33,8 @@ internal class CollectiblesPackOpeningConverter(
             onBackClick = onBackClick,
             onCloseClick = onCloseClick,
             order = createOrder(value),
+            reveal = reveal,
             onApproveClick = onApproveClick,
-            isPackOpened = value.step is OpenPackStep.Opened,
             isNavigationVisible = value.step is OpenPackStep.NotStarted || value.step is OpenPackStep.Failed,
         )
     }

@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.tooltip.TangemTooltip
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -30,21 +31,21 @@ internal fun WcNetworkItem(networkInfo: WcNetworkInfoUM, modifier: Modifier = Mo
     ) {
         var isTooltipEnabled by remember { mutableStateOf(false) }
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size24),
+            modifier = Modifier.size(24.dp),
             painter = painterResource(R.drawable.ic_network_new_24),
             contentDescription = null,
             tint = TangemTheme.colors.icon.accent,
         )
         Row(modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
+                modifier = Modifier.padding(start = 8.dp),
                 text = stringResourceSafe(R.string.wc_common_network),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.primary1,
                 maxLines = 1,
             )
             TangemTooltip(
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing16),
+                modifier = Modifier.padding(start = 16.dp),
                 text = stringReference(networkInfo.name),
                 enabled = isTooltipEnabled,
                 content = { contentModifier ->
@@ -65,9 +66,9 @@ internal fun WcNetworkItem(networkInfo: WcNetworkInfoUM, modifier: Modifier = Mo
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing6)
+                .padding(start = 6.dp)
                 .clip(CircleShape)
-                .size(TangemTheme.dimens.size20),
+                .size(20.dp),
         )
     }
 }

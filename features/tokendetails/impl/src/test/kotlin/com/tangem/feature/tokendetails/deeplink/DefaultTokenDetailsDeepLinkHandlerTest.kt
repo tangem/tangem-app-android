@@ -326,7 +326,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["income_transaction", "promo", "unknown", "joint_tx_sent"])
+    @ValueSource(strings = ["income_transaction", "promo", "unknown", "joint_tx_sent", "support_message"])
     fun `GIVEN type WHEN handle deeplink THEN token details deeplink not triggered`(type: String) = runTest {
         val queryParams = mapOf(
             WALLET_ID_KEY to "011",

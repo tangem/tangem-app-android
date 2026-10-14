@@ -87,7 +87,7 @@ internal fun MoneyAccountDetailsScreen(
             state = listState,
             contentPadding = PaddingValues(
                 top = topBarTotalHeight,
-                bottom = TangemTheme.dimens2.x4 + bottomBarHeight,
+                bottom = 16.dp + bottomBarHeight,
             ),
         ) {
             body(
@@ -122,8 +122,8 @@ private fun LazyListScope.body(
             modifier = Modifier
                 .alpha(balanceAlpha)
                 .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens2.x4)
-                .padding(top = TangemTheme.dimens2.x12),
+                .padding(horizontal = 16.dp)
+                .padding(top = 48.dp),
         )
     }
     item("actionButtonsBlock") {
@@ -136,7 +136,7 @@ private fun LazyListScope.body(
             BalanceUnavailableBanner(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = TangemTheme.dimens2.x4),
+                    .padding(horizontal = 16.dp),
             )
         }
     }
@@ -179,7 +179,7 @@ private fun BalanceUnavailableBanner(modifier: Modifier = Modifier) {
             showGlowRing = false,
             slotEnd = {
                 TangemIcon(
-                    modifier = Modifier.size(TangemTheme.dimens2.x5),
+                    modifier = Modifier.size(20.dp),
                     tangemIconUM = TangemIconUM.Icon(
                         imageVector = Icons.ic_error_20,
                         tintReference = { TangemTheme.colors3.icon.primary },
@@ -203,7 +203,7 @@ private fun LazyItemScope.ActionBlock(state: MoneyAccountDetailsUM, modifier: Mo
         horizontalArrangement = Arrangement.Center,
     ) {
         TangemCircleActionButton(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+            modifier = Modifier.padding(horizontal = 16.dp),
             title = resourceReference(R.string.common_add_funds),
             icon = TangemIconUM.Icon(
                 imageVector = Icons.ic_arrow_down_24,
@@ -212,7 +212,7 @@ private fun LazyItemScope.ActionBlock(state: MoneyAccountDetailsUM, modifier: Mo
             onClick = state.onAddFundsClick,
         )
         TangemCircleActionButton(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+            modifier = Modifier.padding(horizontal = 16.dp),
             title = resourceReference(R.string.common_send),
             icon = TangemIconUM.Icon(
                 imageVector = Icons.ic_arrow_up_24,
@@ -275,12 +275,12 @@ private fun MenuItem(item: MoneyAccountMenuItemUM, onMenuDismiss: () -> Unit) {
                 item.onClick()
                 onMenuDismiss()
             }
-            .padding(vertical = TangemTheme.dimens2.x3, horizontal = TangemTheme.dimens2.x4),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+            .padding(vertical = 12.dp, horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TangemIcon(
-            modifier = Modifier.size(TangemTheme.dimens2.x5),
+            modifier = Modifier.size(20.dp),
             tangemIconUM = item.icon,
         )
         Text(

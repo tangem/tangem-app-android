@@ -6,17 +6,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.collectibles.impl.packopening.ui.CollectiblesPackOpeningScreen
+import com.tangem.features.collectibles.impl.packopening.ui.components.confirmorder.ConfirmOrder
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
 
 @Preview(showBackground = true, widthDp = 402, heightDp = 874)
 @Preview(showBackground = true, widthDp = 402, heightDp = 874, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(showBackground = true, widthDp = 360, heightDp = 800, name = "360x800")
+@Preview(showBackground = true, widthDp = 360, heightDp = 640, name = "360x640")
 @Composable
 private fun CollectiblesPackOpeningScreenPreview(
     @PreviewParameter(CollectiblesPackOpeningProvider::class) state: CollectiblesPackOpeningUM,
 ) {
     TangemThemePreviewRedesign {
-        CollectiblesPackOpeningScreen(state = state)
+        ConfirmOrder(state = state)
     }
 }
 

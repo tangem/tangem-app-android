@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -70,7 +71,7 @@ internal fun TangemPayAddFundsContent(state: TangemPayAddFundsUM) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = TangemTheme.dimens2.x4, vertical = TangemTheme.dimens2.x3),
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
                     state.items.fastForEach { item ->
                         key(item.title) {
@@ -95,8 +96,8 @@ private fun TangemPayTopUpItem(state: TangemPayAddFundsItemUM, modifier: Modifie
             .fillMaxWidth()
             .clickable(enabled = onClick != null) { onClick?.invoke() }
             .testTag(TangemPayTestTags.ADD_FUNDS_OPTION)
-            .padding(vertical = TangemTheme.dimens2.x3),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
+            .padding(vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Box(
             contentAlignment = Alignment.Center,
@@ -105,16 +106,16 @@ private fun TangemPayTopUpItem(state: TangemPayAddFundsItemUM, modifier: Modifie
                     color = iconBackground,
                     shape = CircleShape,
                 )
-                .size(TangemTheme.dimens2.x10),
+                .size(40.dp),
         ) {
             TangemIcon(
-                modifier = Modifier.size(TangemTheme.dimens2.x5),
+                modifier = Modifier.size(20.dp),
                 tangemIconUM = state.icon,
             )
         }
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x0_5),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Text(
                 text = state.title.resolveReference(),
