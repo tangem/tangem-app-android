@@ -67,14 +67,14 @@ internal class DefaultMarketsTokenListComponent(
                     contentDescription = null,
                     tint = TangemTheme.colors2.graphic.neutral.primary,
                     modifier = Modifier
-                        .size(TangemTheme.dimens2.x11)
+                        .size(44.dp)
                         .clip(CircleShape)
                         .hazeEffectTangem { blurRadius = 8.dp }
                         .clickableSingle(
                             onClick = clickIntents.onBackClicked,
                             enabled = bottomSheetState.value == BottomSheetState.EXPANDED,
                         )
-                        .padding(TangemTheme.dimens2.x2),
+                        .padding(8.dp),
                 )
             },
         )
