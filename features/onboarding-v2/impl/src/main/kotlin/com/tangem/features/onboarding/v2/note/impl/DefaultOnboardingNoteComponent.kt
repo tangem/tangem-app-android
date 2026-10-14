@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.note.impl
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -120,9 +121,10 @@ internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
 
         Children(
             stack = stackState,
+            modifier = modifier,
             animation = stackAnimation(slide()),
         ) {
-            it.instance.Content(modifier)
+            it.instance.Content(Modifier.fillMaxSize())
         }
     }
 
