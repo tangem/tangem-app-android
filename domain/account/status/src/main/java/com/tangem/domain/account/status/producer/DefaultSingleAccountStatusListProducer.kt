@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.onStart
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.converter.JointAccountStatusValueConverter
+import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceLoading
@@ -66,6 +67,7 @@ import java.math.BigDecimal
  * @property userWalletsListRepository Repository for getting user wallet by id.
  * @property singleAccountListSupplier Supplier to get the list of accounts for the user wallet.
  * @property singleJointAccountListSupplier Supplier to get the joint accounts the wallet participates in.
+ * @property jointAccountCompositionVerifier Checks every joint account's composition as it arrives.
  * @property networksRepository Repository for checking network statuses in a cache.
  * @property dispatchers Coroutine dispatcher provider for managing threading.
  * @property networkStatusSupplier Supplier for getting network statuses.
@@ -82,6 +84,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val userWalletsListRepository: UserWalletsListRepository,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val singleJointAccountListSupplier: SingleJointAccountListSupplier,
+    private val jointAccountCompositionVerifier: JointAccountCompositionVerifier,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
@@ -242,7 +245,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
      * The lifecycle state comes from the joint accounts, the money from the network statuses — read by the Safe
      * address, so only an active account has any. A pending one, or one this device has no record of yet
      */
-    private fun buildJointStatus(
+    private suspend fun buildJointStatus(
         account: Account.Joint,
         currencyStatusMap: Map<AccountCurrencyId, CryptoCurrencyStatus>,
         jointAccounts: Map<String, JointAccount>?,
@@ -250,6 +253,17 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     ): AccountStatus.Joint {
         val loadedAccounts = jointAccounts ?: return account.loadingJointAccountStatus
         val jointAccount = loadedAccounts[account.accountId.value] ?: return account.errorJointAccountStatus
+
+        val isVerified = jointAccountCompositionVerifier.isVerified(
+            userWalletId = account.userWalletId,
+            ownerKeyIndex = account.ownerKeyIndex,
+            jointAccount = jointAccount,
+        )
+        if (!isVerified) {
+            logger.e("Joint account ${account.accountId.value} does not verify, it is shown as compromised")
+            return buildCompromisedJointStatus(account, jointAccount, currencyStatusMap, accountList)
+        }
+
         val value = JointAccountStatusValueConverter.convert(value = jointAccount)
 
         if (value !is JointAccountStatusValue.Active || account.cryptoCurrencies.isEmpty()) {
@@ -296,6 +310,34 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
 
         return predictionAccountStatusSupplier.invoke(userWalletId = userWallet.walletId)
             .onStart { emit(PredictionAccountStatusValue.Loading) }
+    }
+
+    /** The tokens are priced for the row but left out of the token list, so no flow and no total can reach them */
+    private fun buildCompromisedJointStatus(
+        account: Account.Joint,
+        jointAccount: JointAccount,
+        currencyStatusMap: Map<AccountCurrencyId, CryptoCurrencyStatus>,
+        accountList: AccountList,
+    ): AccountStatus.Joint {
+        val statuses = account.cryptoCurrencies.map { currency ->
+            currencyStatusMap[account.accountId to currency.id] ?: currency.toLoadingCurrencyStatus()
+        }
+        val tokenList = TokenListFactory.create(
+            statuses = statuses,
+            groupType = accountList.groupType,
+            sortType = accountList.sortType,
+        )
+
+        return AccountStatus.Joint(
+            account = account,
+            value = JointAccountStatusValue.Error.Compromised(
+                totalMembers = jointAccount.membersCount,
+                tokensCount = account.tokensCount,
+                fiatBalance = tokenList.totalFiatBalance,
+            ),
+            tokenList = TokenList.Empty,
+            priceChangeLce = PriceChangeCalculator.calculate(statuses = statuses),
+        )
     }
 
     private fun buildCryptoPortfolioStatus(
