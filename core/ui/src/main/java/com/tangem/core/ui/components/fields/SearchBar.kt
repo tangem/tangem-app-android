@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resolveReference
@@ -59,7 +60,7 @@ fun SearchBar(
     BasicTextField(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = TangemTheme.dimens.size48)
+            .heightIn(min = 48.dp)
             .onFocusChanged { focusState ->
                 if (!isInitialComposition) {
                     if (focusState.isFocused) {
@@ -124,11 +125,11 @@ private fun DecorationBox(
         interactionSource = interactionSource,
         shape = TangemTheme.shapes.roundedCornersXLarge,
         colors = colors,
-        contentPadding = PaddingValues(all = TangemTheme.dimens.spacing12),
+        contentPadding = PaddingValues(all = 12.dp),
         leadingIcon = {
             Icon(
                 modifier = Modifier
-                    .size(TangemTheme.dimens.size20)
+                    .size(20.dp)
                     .testTag(SearchBarTestTags.ICON),
                 painter = painterResource(id = R.drawable.ic_search_24),
                 tint = TangemTheme.colors.icon.informative,
@@ -177,7 +178,7 @@ private fun ClearButton(
             },
         ) {
             Icon(
-                modifier = Modifier.size(TangemTheme.dimens.size20),
+                modifier = Modifier.size(20.dp),
                 painter = painterResource(id = R.drawable.ic_close_24),
                 tint = TangemTheme.colors.icon.informative,
                 contentDescription = null,

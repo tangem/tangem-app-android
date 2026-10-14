@@ -105,7 +105,7 @@ internal fun TextFieldWithPaste(
                     backgroundColorEnabled = TangemTheme.colors.button.secondary,
                     textColor = TangemTheme.colors.text.primary1,
                     modifier = Modifier
-                        .padding(start = TangemTheme.dimens.spacing8)
+                        .padding(start = 8.dp)
                         .testTag(SendAddressScreenTestTags.DESTINATION_TAG_PASTE_BUTTON),
                 )
             }

@@ -125,7 +125,7 @@ private fun WcSelectNetworksBS(
 @Composable
 private fun WcSelectNetworksContent(state: WcSelectNetworksUM, modifier: Modifier = Modifier) {
     val blocksModifier = Modifier
-        .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+        .clip(RoundedCornerShape(14.dp))
         .background(color = TangemTheme.colors.background.action)
         .fillMaxWidth()
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
