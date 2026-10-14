@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError.HttpException.Code.BAD_REQUEST
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.polymarket.converter.PolymarketClosedPositionConverter
 import com.tangem.data.polymarket.converter.PolymarketOpenPositionConverter
@@ -16,6 +17,7 @@ import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketPositionsListConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsPage
+import com.tangem.domain.polymarket.model.PolymarketPositionsPageRequest
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
@@ -47,47 +49,52 @@ internal class DefaultPolymarketPositionsRepository @Inject constructor(
 
     private suspend fun fetchPage(
         config: PolymarketPositionsListConfig,
-        limit: Int,
-        offset: Int,
+        request: PolymarketPositionsPageRequest,
     ): Either<PolymarketPositionsError, PolymarketPositionsPage<PolymarketPosition>> = when (config.tab) {
-        PolymarketPositionsTab.ACTIVE -> getOpenPositions(config.addresses, limit, offset)
-        PolymarketPositionsTab.FINISHED -> getClosedPositions(config.addresses, limit, offset)
+        PolymarketPositionsTab.ACTIVE -> getOpenPositions(config.addresses, request)
+        PolymarketPositionsTab.FINISHED -> getClosedPositions(config.addresses, request)
     }
 
     override suspend fun getOpenPositions(
         addresses: PolymarketAddresses,
-        limit: Int,
-        offset: Int,
+        request: PolymarketPositionsPageRequest,
     ): Either<PolymarketPositionsError, PolymarketPositionsPage<PolymarketPosition.Open>> = read(
         call = {
             api.getPositions(
                 walletId = addresses.userWalletId.stringValue,
                 depositWalletAddress = addresses.depositWalletAddress,
-                limit = limit,
-                offset = offset,
+                limit = request.limit,
+                cursor = request.cursor,
             )
         },
         convert = { response ->
-            PolymarketPositionsPage(PolymarketOpenPositionConverter.convertList(response.positions), response.hasNext)
+            PolymarketPositionsPage(
+                positions = PolymarketOpenPositionConverter.convertList(response.positions),
+                nextCursor = response.nextCursor,
+            )
         },
+        request = request,
     )
 
     override suspend fun getClosedPositions(
         addresses: PolymarketAddresses,
-        limit: Int,
-        offset: Int,
+        request: PolymarketPositionsPageRequest,
     ): Either<PolymarketPositionsError, PolymarketPositionsPage<PolymarketPosition.Closed>> = read(
         call = {
             api.getClosedPositions(
                 walletId = addresses.userWalletId.stringValue,
                 depositWalletAddress = addresses.depositWalletAddress,
-                limit = limit,
-                offset = offset,
+                limit = request.limit,
+                cursor = request.cursor,
             )
         },
         convert = { response ->
-            PolymarketPositionsPage(PolymarketClosedPositionConverter.convertList(response.positions), response.hasNext)
+            PolymarketPositionsPage(
+                positions = PolymarketClosedPositionConverter.convertList(response.positions),
+                nextCursor = response.nextCursor,
+            )
         },
+        request = request,
     )
 
     override suspend fun getPosition(
@@ -115,6 +122,7 @@ internal class DefaultPolymarketPositionsRepository @Inject constructor(
     private suspend fun <R : Any, T> read(
         call: suspend () -> ApiResponse<R>,
         convert: (R) -> T,
+        request: PolymarketPositionsPageRequest? = null,
     ): Either<PolymarketPositionsError, T> = withContext(dispatchers.io) {
         safeApiCall(
             call = {
@@ -122,15 +130,27 @@ internal class DefaultPolymarketPositionsRepository @Inject constructor(
                 Either.catch { convert(response) }
                     .mapLeft { PolymarketPositionsError.Unknown(httpCode = null, detail = it.message) }
             },
-            onError = { it.toPositionsError().left() },
+            onError = { it.toPositionsError(request).left() },
         )
     }
 
-    private fun ApiResponseError.toPositionsError(): PolymarketPositionsError = when (this) {
-        is ApiResponseError.NetworkException,
-        is ApiResponseError.TimeoutException,
-        -> PolymarketPositionsError.Network
-        is ApiResponseError.HttpException -> PolymarketPositionsError.Unknown(code.numericCode, errorBody)
-        is ApiResponseError.UnknownException -> PolymarketPositionsError.Unknown(null, cause.message ?: message)
-    }
+    private fun ApiResponseError.toPositionsError(request: PolymarketPositionsPageRequest?): PolymarketPositionsError =
+        when (this) {
+            is ApiResponseError.NetworkException,
+            is ApiResponseError.TimeoutException,
+            -> PolymarketPositionsError.Network
+            is ApiResponseError.HttpException -> when {
+                request is PolymarketPositionsPageRequest.Next && code == BAD_REQUEST -> {
+                    PolymarketPositionsError.StaleCursor
+                }
+                else -> PolymarketPositionsError.Unknown(code.numericCode, errorBody)
+            }
+            is ApiResponseError.UnknownException -> PolymarketPositionsError.Unknown(null, cause.message ?: message)
+        }
 }
+
+private val PolymarketPositionsPageRequest.limit: Int?
+    get() = (this as? PolymarketPositionsPageRequest.First)?.limit
+
+private val PolymarketPositionsPageRequest.cursor: String?
+    get() = (this as? PolymarketPositionsPageRequest.Next)?.cursor
