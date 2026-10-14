@@ -12,7 +12,6 @@ import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onTokenDetailsScreen
 import com.tangem.screens.onTxHistoryScreen
-import com.tangem.utils.toBriefAddressFormat
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
@@ -32,7 +31,8 @@ class TokenDetailsTests : BaseTestCase() {
         val currencySymbol = "DOGE"
         val txHistoryScenarioState = "UnconfirmedOutgoing"
         val sendingTitle = getResourceString(R.string.common_sending)
-        val recipientBriefAddress = DOGECOIN_RECIPIENT_ADDRESS.toBriefAddressFormat()
+        val recipientAddressStart = DOGECOIN_RECIPIENT_ADDRESS.take(BRIEF_ADDRESS_EDGE_LENGTH)
+        val recipientAddressEnd = DOGECOIN_RECIPIENT_ADDRESS.takeLast(BRIEF_ADDRESS_EDGE_LENGTH)
 
         setupHooks().run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokenName'") {
@@ -70,9 +70,14 @@ class TokenDetailsTests : BaseTestCase() {
                     transactionCurrency(sendingTitle).assertTextEquals(currencySymbol)
                 }
             }
-            step("Assert active outgoing transaction recipient address '$recipientBriefAddress' is displayed") {
-                onTxHistoryScreen { transactionAddress(sendingTitle, recipientBriefAddress).assertIsDisplayed() }
+            step("Assert active outgoing transaction recipient address edges are displayed") {
+                onTxHistoryScreen {
+                    transactionAddress(sendingTitle, recipientAddressStart).assertIsDisplayed()
+                    transactionAddress(sendingTitle, recipientAddressEnd).assertIsDisplayed()
+                }
             }
         }
     }
 }
+
+private const val BRIEF_ADDRESS_EDGE_LENGTH = 4

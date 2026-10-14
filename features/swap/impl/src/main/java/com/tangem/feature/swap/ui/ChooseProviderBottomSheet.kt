@@ -212,6 +212,7 @@ private fun ProviderInfo(content: ProviderState.Content, modifier: Modifier = Mo
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.tertiary,
                 maxLines = 1,
+                modifier = Modifier.testTag(SwapTokenScreenTestTags.PROVIDER_TYPE),
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
