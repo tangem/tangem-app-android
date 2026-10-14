@@ -93,7 +93,7 @@ fun TangemPagerIndicator(
                         }
                 } ?: this
             }
-            .padding(TangemTheme.dimens2.x3),
+            .padding(12.dp),
         contentAlignment = Alignment.Center,
     ) {
         Row(
@@ -231,12 +231,12 @@ private class PagerIndicatorAnimationState(
 @Composable
 private fun getSize(pageCount: Int): Dp {
     return when (pageCount) {
-        0 -> TangemTheme.dimens2.x0
-        1 -> TangemTheme.dimens2.x8
-        2 -> TangemTheme.dimens2.x12
-        3 -> TangemTheme.dimens2.x16
-        4 -> TangemTheme.dimens2.x20
-        else -> TangemTheme.dimens2.x24
+        0 -> 0.dp
+        1 -> 32.dp
+        2 -> 48.dp
+        3 -> 64.dp
+        4 -> 80.dp
+        else -> 96.dp
     }
 }
 

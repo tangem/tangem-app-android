@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -28,10 +29,10 @@ internal fun SettingsButtonItem(item: Item.Button, modifier: Modifier = Modifier
     ) {
         Column(
             modifier = Modifier.padding(
-                horizontal = TangemTheme.dimens.spacing20,
-                vertical = TangemTheme.dimens.spacing8,
+                horizontal = 20.dp,
+                vertical = 8.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalAlignment = Alignment.Start,
         ) {
             Text(

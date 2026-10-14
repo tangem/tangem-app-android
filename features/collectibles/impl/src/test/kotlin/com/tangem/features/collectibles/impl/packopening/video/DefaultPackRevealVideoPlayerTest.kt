@@ -199,7 +199,7 @@ internal class DefaultPackRevealVideoPlayerTest {
             val player = createPlayer()
 
             // Act
-            player.preloadSound(SOUND_URL)
+            player.preloadSkipSound(SOUND_URL)
 
             // Assert
             verify(exactly = 1) { soundPlayer.setMediaSource(soundSource) }
@@ -213,7 +213,7 @@ internal class DefaultPackRevealVideoPlayerTest {
             val player = createPlayer()
 
             // Act
-            player.preloadSound(null)
+            player.preloadSkipSound(null)
 
             // Assert
             coVerify(exactly = 0) { mediaSourceFactory.create(any()) }
@@ -227,7 +227,7 @@ internal class DefaultPackRevealVideoPlayerTest {
             player.preloadVideo(asset)
 
             // Act
-            player.preloadSound(SOUND_URL)
+            player.preloadSkipSound(SOUND_URL)
 
             // Assert
             assertThat(player.videoLoadState.value).isEqualTo(VideoLoadState.Loading)
@@ -240,7 +240,7 @@ internal class DefaultPackRevealVideoPlayerTest {
             val player = createPlayer(isMotionEnabled = false)
 
             // Act
-            player.preloadSound(SOUND_URL)
+            player.preloadSkipSound(SOUND_URL)
 
             // Assert
             coVerify(exactly = 0) { mediaSourceFactory.create(any()) }
@@ -379,7 +379,7 @@ internal class DefaultPackRevealVideoPlayerTest {
             val player = createReadyPlayer()
 
             // Act
-            player.playShortSound()
+            player.playSkipSound()
 
             // Assert
             verifyOrder {
@@ -392,10 +392,10 @@ internal class DefaultPackRevealVideoPlayerTest {
         fun `GIVEN the sound is not ready WHEN played THEN nothing plays`() = runTest {
             // Arrange
             val player = createPlayer()
-            player.preloadSound(SOUND_URL)
+            player.preloadSkipSound(SOUND_URL)
 
             // Act
-            player.playShortSound()
+            player.playSkipSound()
 
             // Assert
             verify(exactly = 0) { soundPlayer.play() }
@@ -506,7 +506,7 @@ internal class DefaultPackRevealVideoPlayerTest {
     private suspend fun createReadyPlayer(): DefaultPackRevealVideoPlayer {
         val player = createPlayer()
         player.preloadVideo(asset)
-        player.preloadSound(SOUND_URL)
+        player.preloadSkipSound(SOUND_URL)
         videoEvents().onPlaybackStateChanged(Player.STATE_READY)
         soundEvents().onPlaybackStateChanged(Player.STATE_READY)
         return player
@@ -535,7 +535,7 @@ internal class DefaultPackRevealVideoPlayerTest {
 
         const val VIDEO_URL = "https://cdn/reveal.mp4"
         const val OTHER_VIDEO_URL = "https://cdn/reveal-dark.mp4"
-        const val SOUND_URL = "https://cdn/short.m4a"
+        const val SOUND_URL = "https://cdn/skip.mp3"
         const val CARD_REVEAL_MS = 7_000L
         const val SKIP_TO_MS = 6_000L
     }
