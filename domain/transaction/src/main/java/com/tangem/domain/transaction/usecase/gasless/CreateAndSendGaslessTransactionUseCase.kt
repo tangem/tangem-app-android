@@ -5,8 +5,8 @@ import arrow.core.left
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
-import com.tangem.domain.transaction.models.isGasless
 
 /**
  * Sends a transaction whose fee a relayer fronts. Mirrors the fee side, where [GetFeeForGaslessUseCase]
@@ -26,14 +26,14 @@ class CreateAndSendGaslessTransactionUseCase(
         transactionData: TransactionData,
         fee: TransactionFeeExtended,
     ): Either<SendTransactionError, String> {
-        return when {
-            !fee.isGasless -> SendTransactionError.DataError("Gasless send called with a native fee").left()
-            fee.tronGaslessQuote != null -> createAndSendTronGaslessTransactionUseCase(
+        return when (fee.gaslessProtocolData) {
+            null -> SendTransactionError.DataError("Gasless send called with a native fee").left()
+            GaslessProtocolData.Evm -> createAndSendEvmGaslessTransactionUseCase(
                 userWallet = userWallet,
                 transactionData = transactionData,
                 fee = fee,
             )
-            else -> createAndSendEvmGaslessTransactionUseCase(
+            is GaslessProtocolData.Tron -> createAndSendTronGaslessTransactionUseCase(
                 userWallet = userWallet,
                 transactionData = transactionData,
                 fee = fee,

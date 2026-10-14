@@ -16,6 +16,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.test.core.ProvideTestModels
@@ -463,7 +464,7 @@ internal class TronGaslessFeeResolverTest {
                 normal = Fee.Common(Amount(token = usdtSdkToken(USDT_CONTRACT), value = BigDecimal(compensation))),
             ),
             feeTokenId = usdt.id,
-            tronGaslessQuote = quote,
+            gaslessProtocolData = GaslessProtocolData.Tron(quote = quote),
         )
 
         fun usdtSdkToken(contract: String) = Token(

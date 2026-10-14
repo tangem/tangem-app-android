@@ -615,7 +615,9 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun getCurrencyStatusForFeePayment(): CryptoCurrencyStatus {
         val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
-        return if (feeExtended?.isGasless == true) {
+        // A joint send pays in a Smart Gas token through the Safe, not through a relayer, so it is not gasless
+        val isFeeInToken = feeExtended?.isGasless == true || isFeeInSmartGasToken()
+        return if (isFeeInToken) {
             feeUMV2?.feeExtraInfo?.feeCryptoCurrencyStatus ?: cryptoCurrencyStatus
         } else {
             params.feeCryptoCurrencyStatus
