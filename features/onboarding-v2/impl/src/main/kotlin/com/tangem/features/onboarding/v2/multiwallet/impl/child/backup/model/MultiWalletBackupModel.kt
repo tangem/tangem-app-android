@@ -175,8 +175,8 @@ internal class MultiWalletBackupModel @Inject constructor(
     }
 
     private fun showOnlyOneBackupWarningDialog() {
-        _uiState.update {
-            it.copy(
+        _uiState.update { state ->
+            state.copy(
                 dialog = onlyOneBackupDeviceDialog(
                     onDismiss = { _uiState.update { it.copy(dialog = null) } },
                     onConfirm = { onFinalizeClick(fromDialog = true) },
@@ -210,10 +210,10 @@ internal class MultiWalletBackupModel @Inject constructor(
                         manufacturer = result.data.manufacturer,
                         firmwareVersion = result.data.firmwareVersion,
                     )
-                    params.backups.update {
-                        it.copy(
-                            card2 = if (state.value.numberOfBackupCards == 1) backupCardInfo else it.card2,
-                            card3 = if (state.value.numberOfBackupCards == 2) backupCardInfo else it.card3,
+                    params.backups.update { currentState ->
+                        currentState.copy(
+                            card2 = if (state.value.numberOfBackupCards == 1) backupCardInfo else currentState.card2,
+                            card3 = if (state.value.numberOfBackupCards == 2) backupCardInfo else currentState.card3,
                         )
                     }
 

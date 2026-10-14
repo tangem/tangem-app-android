@@ -41,8 +41,8 @@ internal class MultiWalletScanPrimaryModel @Inject constructor(
                     modelScope.launch {
                         cardRepository.startCardActivation(cardId = scanResponse.card.cardId)
                     }
-                    params.multiWalletState.update {
-                        it.copy(
+                    params.multiWalletState.update { state ->
+                        state.copy(
                             currentScanResponse = scanResponse.copy(
                                 primaryCard = result.data,
                             ),

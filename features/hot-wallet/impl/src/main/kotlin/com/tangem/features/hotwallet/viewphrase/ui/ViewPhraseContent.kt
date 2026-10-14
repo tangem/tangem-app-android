@@ -91,10 +91,10 @@ private fun Preview() {
         ViewPhraseContent(
             state = ViewPhraseUM(
                 onBackClick = {},
-                words = List(12) {
+                words = List(12) { index ->
                     EnumeratedTwoColumnGridItem(
-                        index = it + 1,
-                        mnemonic = "word${it + 1}",
+                        index = index + 1,
+                        mnemonic = "word${index + 1}",
                     )
                 }.toImmutableList(),
             ),
