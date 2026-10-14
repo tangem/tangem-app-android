@@ -14,7 +14,11 @@ import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.AppCoroutineScope
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import com.tangem.core.ui.R as CoreUiR
 
 internal class DefaultJointAccountCompromisedAlert @Inject constructor(
@@ -46,14 +50,32 @@ internal class DefaultJointAccountCompromisedAlert @Inject constructor(
         )
     }
 
+    /**
+     * Waits for the account's verified status rather than taking the first snapshot: on a cold start the joint
+     * status is still loading, and a loading account is not a trusted one. No verdict in time blocks it too.
+     */
     override suspend fun showIfCompromised(userWalletId: UserWalletId, accountId: String): Boolean {
-        val status = singleAccountStatusListSupplier.getSyncOrNull(userWalletId)
-            ?.accountStatuses
-            ?.firstOrNull { it.accountId.value == accountId } as? AccountStatus.Joint
-        val isCompromised = status?.value is JointAccountStatusValue.Error.Compromised
+        val isReportedCompromised = withTimeoutOrNull(STATUS_TIMEOUT) {
+            singleAccountStatusListSupplier(userWalletId)
+                .mapNotNull { list -> list.accountStatuses.firstOrNull { it.accountId.value == accountId } }
+                .mapNotNull { status -> status.compromisedOrNull() }
+                .first()
+        }
+        val isCompromised = isReportedCompromised != false
 
         if (isCompromised) show(userWalletId = userWalletId)
         return isCompromised
+    }
+
+    /** `null` while the joint status is still loading — the answer is not known yet */
+    private fun AccountStatus.compromisedOrNull(): Boolean? {
+        if (this !is AccountStatus.Joint) return false
+
+        return when (value) {
+            is JointAccountStatusValue.Loading -> null
+            is JointAccountStatusValue.Error.Compromised -> true
+            else -> false
+        }
     }
 
     private fun openSupport(userWalletId: UserWalletId) {
@@ -61,5 +83,9 @@ internal class DefaultJointAccountCompromisedAlert @Inject constructor(
             val metaInfo = getWalletMetaInfoUseCase(userWalletId).getOrNull() ?: return@launch
             sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(walletMetaInfo = metaInfo))
         }
+    }
+
+    private companion object {
+        val STATUS_TIMEOUT = 10.seconds
     }
 }

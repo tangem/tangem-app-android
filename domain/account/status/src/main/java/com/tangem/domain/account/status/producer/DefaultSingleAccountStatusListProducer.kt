@@ -261,7 +261,12 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         )
         if (!isVerified) {
             logger.e("Joint account ${account.accountId.value} does not verify, it is shown as compromised")
-            return buildCompromisedJointStatus(account, jointAccount, currencyStatusMap, accountList)
+            return buildCompromisedJointStatus(
+                account = account,
+                jointAccount = jointAccount,
+                currencyStatusMap = currencyStatusMap,
+                accountList = accountList,
+            )
         }
 
         val value = JointAccountStatusValueConverter.convert(value = jointAccount)
