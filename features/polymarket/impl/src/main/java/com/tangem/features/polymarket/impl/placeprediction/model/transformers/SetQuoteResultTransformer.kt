@@ -16,6 +16,7 @@ import com.tangem.utils.transformer.Transformer
 internal class SetQuoteResultTransformer(
     private val result: Either<PredictionOrderQuoteError, PredictionOrderQuote>,
     private val receivedAtMillis: Long,
+    private val assetId: String,
 ) : Transformer<PlacePredictionUM> {
 
     override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
@@ -63,7 +64,7 @@ internal class SetQuoteResultTransformer(
             expected = quote.expectedExecutionAmount,
             feeTotal = quote.fees.total,
             total = quote.total,
-            signable = SignableQuoteUM(quote = quote, receivedAtMillis = receivedAtMillis),
+            signable = SignableQuoteUM(quote = quote, receivedAtMillis = receivedAtMillis, assetId = assetId),
         )
     }
 }
