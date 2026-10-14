@@ -17,7 +17,7 @@ fun DividerWithPadding(start: Dp = 0.dp, end: Dp = 0.dp, top: Dp = 0.dp, bottom:
             top = top,
             bottom = bottom,
         ),
-        thickness = TangemTheme.dimens.size1,
+        thickness = 1.dp,
         color = TangemTheme.colors.stroke.primary,
     )
 }

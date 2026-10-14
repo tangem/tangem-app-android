@@ -10,7 +10,7 @@ import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Constraints
-import com.tangem.core.ui.res.TangemTheme
+import androidx.compose.ui.unit.dp
 import kotlin.math.max
 
 /**
@@ -31,13 +31,13 @@ enum class TangemRowLayoutId {
 @Composable
 fun TangemRowContainer(
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(TangemTheme.dimens2.x3),
+    contentPadding: PaddingValues = PaddingValues(12.dp),
     content: @Composable () -> Unit,
 ) {
     val density = LocalDensity.current
     val localDirection = LocalLayoutDirection.current
-    val verticalPadding = with(density) { TangemTheme.dimens2.x1.roundToPx() }
-    val extraContentPadding = with(density) { TangemTheme.dimens2.x2.roundToPx() }
+    val verticalPadding = with(density) { 4.dp.roundToPx() }
+    val extraContentPadding = with(density) { 8.dp.roundToPx() }
     val contentTopPadding = with(density) { contentPadding.calculateTopPadding().roundToPx() }
     val contentBottomPadding = with(density) { contentPadding.calculateBottomPadding().roundToPx() }
     val contentStartPadding = with(density) { contentPadding.calculateLeftPadding(localDirection).roundToPx() }
