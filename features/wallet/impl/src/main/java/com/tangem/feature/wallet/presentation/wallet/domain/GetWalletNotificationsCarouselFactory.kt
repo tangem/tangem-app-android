@@ -14,7 +14,6 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoU
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
 import com.tangem.utils.extensions.addIf
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -36,7 +35,7 @@ internal class GetWalletNotificationsCarouselFactory @Inject constructor(
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
 ) {
-    fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotificationUM>> {
+    fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<WalletNotificationsSnapshot> {
         val isBalanceResolvedFlow = singleAccountStatusListSupplier(
             SingleAccountStatusListProducer.Params(userWallet.walletId),
         )
@@ -50,7 +49,7 @@ internal class GetWalletNotificationsCarouselFactory @Inject constructor(
             flow4 = isBalanceResolvedFlow,
         ) { showRateAppPromo, wallets, shouldShowYieldPromoLocal, isBalanceResolved ->
 
-            buildList {
+            val notifications = buildList {
                 addNoteMigrationNotification(userWallet, wallets, clickIntents)
 
                 // isBalanceResolved gates Rate App on the balance leaving the loading state, so it does not
@@ -63,6 +62,15 @@ internal class GetWalletNotificationsCarouselFactory @Inject constructor(
                     clickIntents = clickIntents,
                 )
             }.sortedBy { it.type.ordinal }.toImmutableList()
+
+            // These cards depend on the balance only through it leaving the loading state
+            val balanceState = if (isBalanceResolved) {
+                NotificationsBalanceState.Settled
+            } else {
+                NotificationsBalanceState.Loading
+            }
+
+            WalletNotificationsSnapshot(notifications = notifications, balanceState = balanceState)
         }
     }
 

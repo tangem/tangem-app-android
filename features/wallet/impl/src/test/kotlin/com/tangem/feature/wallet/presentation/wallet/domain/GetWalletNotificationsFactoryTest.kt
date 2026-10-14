@@ -188,7 +188,7 @@ internal class GetWalletNotificationsFactoryTest {
     @Test
     fun `GIVEN default gates WHEN create THEN no notification is shown for cold wallet`() = runTest {
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result).isEmpty()
@@ -197,7 +197,7 @@ internal class GetWalletNotificationsFactoryTest {
     @Test
     fun `GIVEN default gates WHEN create THEN no notification is shown for hot wallet`() = runTest {
         // Act
-        val result = factory.create(hotWallet, clickIntents).first()
+        val result = factory.create(hotWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result).isEmpty()
@@ -213,7 +213,7 @@ internal class GetWalletNotificationsFactoryTest {
         stubAccountStatusList(balance = model.balance)
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.UsedOutdatedData }).isEqualTo(model.expectedShown)
@@ -241,7 +241,7 @@ internal class GetWalletNotificationsFactoryTest {
         stubAccountStatusList(balance = model.balance)
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.AddFunds }).isEqualTo(model.expectedShown)
@@ -268,7 +268,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { isWalletBackupProblematicUseCase(coldWallet) } returns problematic
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.BackupError }).isEqualTo(problematic)
@@ -280,7 +280,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { isWalletBackupProblematicUseCase(any()) } returns true
 
         // Act
-        val result = factory.create(hotWallet, clickIntents).first()
+        val result = factory.create(hotWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.none { it is WalletNotificationUM.BackupError }).isTrue()
@@ -295,7 +295,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { coldResolver.isReleaseFirmwareType() } returns isRelease
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.DevCard }).isEqualTo(!isRelease)
@@ -311,7 +311,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { coldResolver.isAttestationFailed() } returns model.isAttestationFailed
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.FailedCardValidation }).isEqualTo(model.expectedShown)
@@ -339,7 +339,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { coldResolver.getRemainingSignatures() } returns model.remainingSignatures
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.LowSignatures }).isEqualTo(model.expectedShown)
@@ -364,7 +364,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { isDemoCardUseCase(CARD_ID) } returns isDemo
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.DemoCard }).isEqualTo(isDemo)
@@ -376,7 +376,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { isDemoCardUseCase(any()) } returns true
 
         // Act
-        val result = factory.create(hotWallet, clickIntents).first()
+        val result = factory.create(hotWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.none { it is WalletNotificationUM.DemoCard }).isTrue()
@@ -396,7 +396,7 @@ internal class GetWalletNotificationsFactoryTest {
         )
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         val banner = result.filterIsInstance<WalletNotificationUM.MissingAddresses>().single()
@@ -410,7 +410,7 @@ internal class GetWalletNotificationsFactoryTest {
         stubAccountStatusList(balance = LOADED_NON_ZERO, currencies = emptyList())
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.none { it is WalletNotificationUM.MissingAddresses }).isTrue()
@@ -426,7 +426,7 @@ internal class GetWalletNotificationsFactoryTest {
             )
 
             // Act
-            val result = factory.create(hotWallet, clickIntents).first()
+            val result = factory.create(hotWallet, clickIntents).first().notifications
 
             // Assert
             val banner = result.filterIsInstance<WalletNotificationUM.MissingAddresses>().single()
@@ -446,7 +446,7 @@ internal class GetWalletNotificationsFactoryTest {
         coEvery { getMissingJointOwnerKeysCountUseCase(listOf(jointAccount), coldWallet) } returns 1
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         val banner = result.filterIsInstance<WalletNotificationUM.MissingAddresses>().single()
@@ -466,7 +466,7 @@ internal class GetWalletNotificationsFactoryTest {
             coEvery { getMissingJointOwnerKeysCountUseCase(listOf(jointAccount), coldWallet) } returns 1
 
             // Act
-            val result = factory.create(coldWallet, clickIntents).first()
+            val result = factory.create(coldWallet, clickIntents).first().notifications
 
             // Assert
             val banner = result.filterIsInstance<WalletNotificationUM.MissingAddresses>().single()
@@ -484,7 +484,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { isNeedToBackupUseCase(WALLET_ID) } returns flowOf(needToBackup)
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.MissingBackup }).isEqualTo(needToBackup)
@@ -499,7 +499,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { coldResolver.isTestCard() } returns isTestCard
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.TestnetCard }).isEqualTo(isTestCard)
@@ -516,7 +516,7 @@ internal class GetWalletNotificationsFactoryTest {
         )
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.SomeNetworksUnreachable }).isTrue()
@@ -525,7 +525,7 @@ internal class GetWalletNotificationsFactoryTest {
     @Test
     fun `GIVEN no unreachable currency WHEN create THEN unreachable-networks banner is hidden`() = runTest {
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.none { it is WalletNotificationUM.SomeNetworksUnreachable }).isTrue()
@@ -549,7 +549,7 @@ internal class GetWalletNotificationsFactoryTest {
             )
 
             // Act
-            val result = factory.create(coldWallet, clickIntents).first()
+            val result = factory.create(coldWallet, clickIntents).first().notifications
 
             // Assert
             assertThat(result.any { it is WalletNotificationUM.CloreMigration }).isEqualTo(model.expectedShown)
@@ -586,7 +586,7 @@ internal class GetWalletNotificationsFactoryTest {
         )
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.NumberOfSignedHashesIncorrect }).isEqualTo(hasSignedHashes)
@@ -602,7 +602,7 @@ internal class GetWalletNotificationsFactoryTest {
         )
 
         // Act
-        val result = factory.create(hotWallet, clickIntents).first()
+        val result = factory.create(hotWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.none { it is WalletNotificationUM.NumberOfSignedHashesIncorrect }).isTrue()
@@ -625,7 +625,7 @@ internal class GetWalletNotificationsFactoryTest {
         stubAccountStatusList(balance = model.balance)
 
         // Act
-        val result = factory.create(hotWallet, clickIntents).first()
+        val result = factory.create(hotWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.FinishWalletActivation }).isEqualTo(model.expectedShown)
@@ -732,7 +732,7 @@ internal class GetWalletNotificationsFactoryTest {
             every { hotWallet.hotWalletId } returns hotWalletId
             every { getAccessCodeSkippedUseCase(WALLET_ID) } returns flowOf(true)
             every { isSocialBackupCompletedUseCase.flow(WALLET_ID) } returns flowOf(true)
-            val banner = factory.create(hotWallet, clickIntents).first()
+            val banner = factory.create(hotWallet, clickIntents).first().notifications
                 .filterIsInstance<WalletNotificationUM.FinishWalletActivation>()
                 .single()
 
@@ -753,7 +753,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { isSocialBackupCompletedUseCase.flow(WALLET_ID) } returns hasSocialBackup
 
         factory.create(hotWallet, clickIntents)
-            .map { notifications -> notifications.any { it is WalletNotificationUM.FinishWalletActivation } }
+            .map { snapshot -> snapshot.notifications.any { it is WalletNotificationUM.FinishWalletActivation } }
             .distinctUntilChanged()
             .test {
                 assertThat(awaitItem()).isFalse()
@@ -775,7 +775,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { getAccessCodeSkippedUseCase(WALLET_ID) } returns flowOf(false)
 
         // Act
-        val result = factory.create(hotWallet, clickIntents).first()
+        val result = factory.create(hotWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.none { it is WalletNotificationUM.FinishWalletActivation }).isTrue()
@@ -798,7 +798,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { isWalletBackedUpUseCase.flow(freshHotWallet) } returns flowOf(true)
 
         // Act
-        val result = factory.create(hotWallet, clickIntents).first()
+        val result = factory.create(hotWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.none { it is WalletNotificationUM.FinishWalletActivation }).isTrue()
@@ -807,7 +807,7 @@ internal class GetWalletNotificationsFactoryTest {
     @Test
     fun `GIVEN cold wallet WHEN create THEN finish-activation banner is hidden`() = runTest {
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.none { it is WalletNotificationUM.FinishWalletActivation }).isTrue()
@@ -821,7 +821,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { observeAssetsDiscoveryUseCase(WALLET_ID) } returns flowOf(AssetsDiscoveryProgress.Completed)
 
         // Act
-        val result = factory.create(hotWallet, clickIntents).first()
+        val result = factory.create(hotWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.AssetsDiscoveryCompleted }).isTrue()
@@ -836,7 +836,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { observeAssetsDiscoveryUseCase(WALLET_ID) } returns flowOf(progress)
 
         // Act
-        val result = factory.create(hotWallet, clickIntents).first()
+        val result = factory.create(hotWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.none { it is WalletNotificationUM.AssetsDiscoveryCompleted }).isTrue()
@@ -853,7 +853,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { observeAssetsDiscoveryUseCase(any()) } returns flowOf(AssetsDiscoveryProgress.Completed)
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.none { it is WalletNotificationUM.AssetsDiscoveryCompleted }).isTrue()
@@ -867,7 +867,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { getAppUpdateStateUseCase.getBannerStateFlow() } returns flowOf(AppUpdateState.OptionalUpdate)
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.SoftUpdateAvailable }).isTrue()
@@ -882,7 +882,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { getAppUpdateStateUseCase.getBannerStateFlow() } returns flowOf(state)
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.none { it is WalletNotificationUM.SoftUpdateAvailable }).isTrue()
@@ -911,7 +911,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { onboardingRepository.isMainOnboardingBannerHidden(WALLET_ID) } returns flowOf(model.isPromoHidden)
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.TangemPayRefreshNeeded })
@@ -940,7 +940,7 @@ internal class GetWalletNotificationsFactoryTest {
     @Test
     fun `GIVEN no payment account status WHEN create THEN no tangem-pay banner is shown`() = runTest {
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(
@@ -964,7 +964,7 @@ internal class GetWalletNotificationsFactoryTest {
         stubAccountStatusList(balance = model.balance)
 
         // Act
-        val result = factory.create(hotWallet, clickIntents).first()
+        val result = factory.create(hotWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.UpgradeHotWalletPromo }).isEqualTo(model.expectedShown)
@@ -1014,7 +1014,10 @@ internal class GetWalletNotificationsFactoryTest {
         // Arrange
         val fundedStatus = CryptoCurrencyStatus(
             currency = currencyFactory.ethereum,
-            value = mockk<CryptoCurrencyStatus.NoQuote> { every { amount } returns BigDecimal.ONE },
+            value = mockk<CryptoCurrencyStatus.NoQuote> {
+                every { amount } returns BigDecimal.ONE
+                every { sources } returns CryptoCurrencyStatus.Sources()
+            },
         )
         every { shouldShowUpgradeHotWalletBannerUseCase(WALLET_ID) } returns flowOf(true)
         every { getUpgradeBannerClosureTimestampUseCase(WALLET_ID) } returns flowOf(CLOSURE_TIMESTAMP)
@@ -1040,12 +1043,76 @@ internal class GetWalletNotificationsFactoryTest {
         coEvery { checkHotWalletUpgradeBannerUseCase(any(), any(), any(), any()) } returns true.right()
 
         // Act
-        val result = factory.create(coldWallet, clickIntents).first()
+        val result = factory.create(coldWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.none { it is WalletNotificationUM.UpgradeHotWalletPromo }).isTrue()
         coVerify(exactly = 0) { checkHotWalletUpgradeBannerUseCase(any(), any(), any(), any()) }
     }
+    // endregion
+
+    // region Balance state
+    @ParameterizedTest
+    @MethodSource("provideBalanceStateModels")
+    fun `GIVEN balance and network sources WHEN create THEN balance state matches`(
+        model: BalanceStateModel,
+    ) = runTest {
+        // Arrange
+        val currencies = model.networkSources.map { networkSource ->
+            CryptoCurrencyStatus(
+                currency = currencyFactory.ethereum,
+                value = mockk<CryptoCurrencyStatus.NoAmount> {
+                    every { sources } returns CryptoCurrencyStatus.Sources(networkSource = networkSource)
+                },
+            )
+        }
+        stubAccountStatusList(balance = model.balance, currencies = currencies)
+
+        // Act
+        val actual = factory.create(coldWallet, clickIntents).first().balanceState
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
+    }
+
+    internal data class BalanceStateModel(
+        val balance: TotalFiatBalance,
+        val networkSources: List<StatusSource>,
+        val expected: NotificationsBalanceState,
+    )
+
+    private fun provideBalanceStateModels() = listOf(
+        BalanceStateModel(
+            balance = TotalFiatBalance.Loading,
+            networkSources = listOf(StatusSource.CACHE),
+            expected = NotificationsBalanceState.Loading,
+        ),
+        BalanceStateModel(
+            balance = LOADED_NON_ZERO,
+            networkSources = listOf(StatusSource.ACTUAL, StatusSource.CACHE),
+            expected = NotificationsBalanceState.Resolved,
+        ),
+        BalanceStateModel(
+            balance = LOADED_NON_ZERO,
+            networkSources = listOf(StatusSource.ACTUAL, StatusSource.ONLY_CACHE),
+            expected = NotificationsBalanceState.Settled,
+        ),
+        BalanceStateModel(
+            balance = TotalFiatBalance.Failed,
+            networkSources = listOf(StatusSource.ACTUAL),
+            expected = NotificationsBalanceState.Settled,
+        ),
+        BalanceStateModel(
+            balance = TotalFiatBalance.Failed,
+            networkSources = listOf(StatusSource.CACHE),
+            expected = NotificationsBalanceState.Resolved,
+        ),
+        BalanceStateModel(
+            balance = LOADED_NON_ZERO,
+            networkSources = emptyList(),
+            expected = NotificationsBalanceState.Settled,
+        ),
+    )
     // endregion
 
     private fun stubAccountStatusList(
