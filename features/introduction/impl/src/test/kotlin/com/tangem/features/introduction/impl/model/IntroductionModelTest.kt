@@ -11,6 +11,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
@@ -45,6 +46,8 @@ import com.tangem.features.storiesv2.StoryV2ActionTarget
 import com.tangem.features.introduction.impl.ui.state.HaveWalletUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
 import com.tangem.features.introduction.impl.ui.state.IntroductionUM
+import com.tangem.features.introduction.impl.ui.state.SocialLoginConsentUM
+import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -128,7 +131,7 @@ internal class IntroductionModelTest {
         every { isHotWalletCreationSupported() } returns true
         every { socialLoginHandler.provider } returns SocialLoginProvider.Google
         every { socialLoginHandler.createWalletOption(any(), any(), any()) } answers {
-            createWalletSocialOption(isEnabled = firstArg(), onPicked = thirdArg())
+            createWalletSocialOption(isEnabled = firstArg(), isLoading = secondArg(), onPicked = thirdArg())
         }
         every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
         sentEvents.clear()
@@ -955,6 +958,23 @@ internal class IntroductionModelTest {
             assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
         }
 
+        @Test
+        fun `GIVEN social login running WHEN the close button is tapped THEN the sheet stays open and silent`() {
+            // Arrange
+            val model = createModel()
+            requireNotNull(model.openSheet().socialLogin).onClick()
+            val sheet = model.uiState.value.bottomSheetConfig?.content as CreateWalletUM
+            sentEvents.clear()
+
+            // Act
+            sheet.onCloseClick()
+
+            // Assert
+            assertThat(sheet.isSigningInSocially).isTrue()
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
+            assertThat(sentEvents.filterIsInstance<SheetDismissed>()).isEmpty()
+        }
+
         private fun IntroductionModel.openSheet(): CreateWalletUM {
             uiState.value.onCreateWalletClick()
             return uiState.value.bottomSheetConfig?.content as? CreateWalletUM
@@ -1482,6 +1502,88 @@ internal class IntroductionModelTest {
                 .isEqualTo(resourceReference(CoreResR.string.hw_import_existing_wallet))
             assertThat(options.importWallet.description)
                 .isEqualTo(resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description))
+        }
+
+        @Test
+        fun `GIVEN social login running WHEN the close button is tapped THEN the sheet stays open and silent`() {
+            // Arrange
+            val model = createModel()
+            requireNotNull(model.openHaveWallet().socialLogin).onClick()
+            val sheet = model.uiState.value.haveWalletBottomSheetConfig?.content as HaveWalletUM
+            sentEvents.clear()
+
+            // Act
+            sheet.onCloseClick()
+
+            // Assert
+            assertThat(sheet.isSigningInSocially).isTrue()
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isTrue()
+            assertThat(sentEvents.filterIsInstance<SheetDismissed>()).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN a bare loader reported WHEN the sheet is open THEN the sheet keeps the spinning row`() {
+            // Arrange
+            val model = createModel()
+            val host = model.startSocialLoginFromHaveWallet()
+
+            // Act
+            host.onProgress(SocialLoginProgressUM.Loader)
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isTrue()
+            assertThat(model.uiState.value.socialLoginProgress).isNull()
+        }
+
+        @Test
+        fun `GIVEN the sheet is open WHEN a stage is reported THEN the sheet steps aside for it`() {
+            // Arrange
+            val model = createModel()
+            val host = model.startSocialLoginFromHaveWallet()
+            val stage = SocialLoginProgressUM.Stage(title = stringReference("Restoring"))
+
+            // Act
+            host.onProgress(stage)
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+            assertThat(model.uiState.value.socialLoginProgress).isEqualTo(stage)
+        }
+
+        @Test
+        fun `GIVEN the sheet is open WHEN the consent is shown THEN the sheet steps aside for it`() {
+            // Arrange
+            val model = createModel()
+            val host = model.startSocialLoginFromHaveWallet()
+            val consent: SocialLoginConsentUM = mockk()
+
+            // Act
+            host.onConsent(consent)
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+            assertThat(model.uiState.value.socialLoginConsent).isSameInstanceAs(consent)
+        }
+
+        @Test
+        fun `GIVEN no sheet left WHEN a bare loader is reported THEN the loader is shown`() {
+            // Arrange
+            val model = createModel()
+            val host = model.startSocialLoginFromHaveWallet()
+            host.onProgress(SocialLoginProgressUM.Stage(title = stringReference("Restoring")))
+
+            // Act
+            host.onProgress(SocialLoginProgressUM.Loader)
+
+            // Assert
+            assertThat(model.uiState.value.socialLoginProgress).isEqualTo(SocialLoginProgressUM.Loader)
+        }
+
+        private fun IntroductionModel.startSocialLoginFromHaveWallet(): IntroductionSocialLoginHandler.Host {
+            val host = slot<IntroductionSocialLoginHandler.Host>()
+            every { socialLoginHandler.start(any(), any(), any(), capture(host)) } just runs
+            requireNotNull(openHaveWallet().socialLogin).onClick()
+            return host.captured
         }
 
         private fun IntroductionModel.openHaveWallet(): HaveWalletUM.Step.Options {
@@ -2469,8 +2571,11 @@ internal class IntroductionModelTest {
         uiMessageSender = uiMessageSender,
     )
 
-    private fun createWalletSocialOption(isEnabled: Boolean, onPicked: (SocialLoginProvider) -> Unit) =
-        WalletOptionUM(
+    private fun createWalletSocialOption(
+        isEnabled: Boolean,
+        isLoading: Boolean,
+        onPicked: (SocialLoginProvider) -> Unit,
+    ) = WalletOptionUM(
             icon = WalletOptionUM.Icon.Image(CoreUiR.drawable.img_google_32),
             title = resourceReference(
                 id = CoreResR.string.introduction_create_wallet_social_title,
@@ -2478,6 +2583,8 @@ internal class IntroductionModelTest {
             ),
             description = resourceReference(CoreResR.string.introduction_create_wallet_social_description),
             isEnabled = isEnabled,
+            isLoading = isLoading,
+            isLoaderSpaceReserved = true,
             onClick = { onPicked(SocialLoginProvider.Google) },
         )
 

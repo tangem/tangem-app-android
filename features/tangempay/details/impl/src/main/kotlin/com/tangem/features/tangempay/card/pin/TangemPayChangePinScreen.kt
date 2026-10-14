@@ -184,7 +184,7 @@ private fun PinCode(
                                 height = TangemTheme.dimens2.x16,
                             ),
                             digit = digit,
-                            backgroundColor = TangemTheme.colors3.bg.opaque.primary,
+                            backgroundColor = TangemTheme.colors3.bg.transparent.primary,
                             borderColor = when {
                                 isError -> TangemTheme.colors3.border.status.error
                                 isActive -> TangemTheme.colors3.border.status.info

@@ -105,6 +105,10 @@ sealed class DeepLinkRoute {
         override val host: String = "survey"
     }
 
+    data object Support : DeepLinkRoute() {
+        override val host: String = "support"
+    }
+
     data object Campaigns : DeepLinkRoute() {
         override val host: String = "campaigns"
     }
