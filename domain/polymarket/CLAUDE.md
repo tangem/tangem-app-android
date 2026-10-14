@@ -84,6 +84,10 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 - **Balance**: `syncBalanceAllowance` must precede `getBalanceAllowance` — the CLOB serves a cached figure it
   recomputes only when asked, so a wallet funded after onboarding would report zero forever. The sync is
   best-effort.
+  A SELL refreshes the cache of the shares it spends (`CONDITIONAL` for a V1 market, `CONDITIONAL-V2` for V2,
+  with the token id) right before the order, inside the credentials lock; a failure there is logged and the order
+  is sent anyway, and its `401` drops nothing — only the order's own `401` does.
+
 - **Funding window** (5 s polling instead of 30 s, up to 90 s like iOS) opens only on a send this app made; an
   external transfer's timing is unknown.
 - **Positions value** is kept apart from the account status: it needs only the deposit-wallet address
