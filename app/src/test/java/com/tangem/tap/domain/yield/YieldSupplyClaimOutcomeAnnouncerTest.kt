@@ -73,7 +73,6 @@ internal class YieldSupplyClaimOutcomeAnnouncerTest {
         verify(exactly = 0) { uiMessageSender.send(any()) }
     }
 
-    /** The announcer never stops collecting, so it runs on the background scope and subscribes before the Act. */
     private fun TestScope.startAnnouncer() {
         YieldSupplyClaimOutcomeAnnouncer(
             yieldSupplyClaimTracker = claimTracker,
