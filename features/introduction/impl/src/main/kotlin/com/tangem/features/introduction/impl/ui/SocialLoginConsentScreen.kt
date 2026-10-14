@@ -108,15 +108,15 @@ private fun Content(state: SocialLoginConsentUM, contentPadding: PaddingValues, 
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column {
-                    ProviderBadges(modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x5))
-                    SpacerH(TangemTheme.dimens2.x8)
-                    Column(modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x6)) {
+                    ProviderBadges(modifier = Modifier.padding(horizontal = 20.dp))
+                    SpacerH(32.dp)
+                    Column(modifier = Modifier.padding(horizontal = 24.dp)) {
                         Text(
                             text = state.title.resolveAnnotatedReference(),
                             style = TangemTheme.typography3.heading.medium,
                             color = TangemTheme.colors3.text.primary,
                         )
-                        SpacerH(TangemTheme.dimens2.x2)
+                        SpacerH(8.dp)
                         Text(
                             text = state.description.resolveAnnotatedReference(),
                             style = TangemTheme.typography3.subheading.medium,
@@ -126,9 +126,9 @@ private fun Content(state: SocialLoginConsentUM, contentPadding: PaddingValues, 
                 }
                 Column(
                     modifier = Modifier
-                        .padding(horizontal = TangemTheme.dimens2.x4)
-                        .padding(top = TangemTheme.dimens2.x6),
-                    verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     ConsentRow(
                         checked = state.isEmailSharingAllowed,
@@ -147,7 +147,7 @@ private fun Content(state: SocialLoginConsentUM, contentPadding: PaddingValues, 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens2.x4, vertical = TangemTheme.dimens2.x3),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
             ConfirmButton(state = state)
         }
@@ -173,20 +173,20 @@ private fun ConfirmButton(state: SocialLoginConsentUM) {
 private fun ProviderBadges(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(-TangemTheme.dimens2.x4),
+        horizontalArrangement = Arrangement.spacedBy(-16.dp),
     ) {
         Badge {
             Image(
-                modifier = Modifier.size(TangemTheme.dimens2.x8),
+                modifier = Modifier.size(32.dp),
                 painter = painterResource(CoreUiR.drawable.img_google_32),
                 contentDescription = null,
             )
         }
         Badge(
             modifier = Modifier.notchedByPrecedingBadge(
-                badgeSize = TangemTheme.dimens2.x18,
-                overlap = TangemTheme.dimens2.x4,
-                notch = TangemTheme.dimens2.x0_5,
+                badgeSize = 72.dp,
+                overlap = 16.dp,
+                notch = 2.dp,
             ),
         ) {
             Icon(
@@ -215,8 +215,8 @@ private fun Modifier.notchedByPrecedingBadge(badgeSize: Dp, overlap: Dp, notch: 
 private fun Badge(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens2.x18)
-            .background(color = TangemTheme.colors3.bg.opaque.primary, shape = CircleShape),
+            .size(72.dp)
+            .background(color = TangemTheme.colors3.bg.transparent.primary, shape = CircleShape),
         contentAlignment = Alignment.Center,
         content = content,
     )
@@ -238,7 +238,7 @@ private fun ConsentRow(
     ) {
         TangemCheckbox(checked = checked, onCheckedChange = null)
         Text(
-            modifier = Modifier.padding(start = TangemTheme.dimens2.x3),
+            modifier = Modifier.padding(start = 12.dp),
             text = text.resolveAnnotatedReference(),
             style = TangemTheme.typography3.caption.medium,
             color = if (isError) TangemTheme.colors3.text.status.error else TangemTheme.colors3.text.primary,

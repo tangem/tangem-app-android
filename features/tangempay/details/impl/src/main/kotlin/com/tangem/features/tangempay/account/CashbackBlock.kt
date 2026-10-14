@@ -73,7 +73,7 @@ private fun WidgetRow(state: CashbackBlockUM.Widget, modifier: Modifier = Modifi
             CircledIcon(
                 imageVector = Icons.ic_chevron_right_20,
                 iconTint = TangemTheme.colors3.icon.primary,
-                background = TangemTheme.colors3.bg.opaque.primary,
+                background = TangemTheme.colors3.bg.transparent.primary,
                 size = 32.dp,
             )
         },
@@ -109,7 +109,7 @@ private fun ErrorRow(state: CashbackBlockUM.Error, modifier: Modifier = Modifier
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(TangemTheme.colors3.bg.opaque.primary),
+                        .background(TangemTheme.colors3.bg.transparent.primary),
                     contentAlignment = Alignment.Center,
                 ) {
                     TangemLoader(size = TangemLoaderSize.X20)
@@ -118,7 +118,7 @@ private fun ErrorRow(state: CashbackBlockUM.Error, modifier: Modifier = Modifier
                 CircledIcon(
                     imageVector = Icons.ic_arrow_refresh_20,
                     iconTint = TangemTheme.colors3.icon.primary,
-                    background = TangemTheme.colors3.bg.opaque.primary,
+                    background = TangemTheme.colors3.bg.transparent.primary,
                     size = 32.dp,
                 )
             }

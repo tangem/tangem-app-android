@@ -67,7 +67,7 @@ internal fun WcAppInfoModalBottomSheet(state: WcAppInfoUM, onBack: () -> Unit, o
         },
         content = {
             WcAppInfoModalBottomSheet(
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                modifier = Modifier.padding(horizontal = 16.dp),
                 state = state,
             )
         },
@@ -94,13 +94,13 @@ private fun WcAppInfoModalBottomSheet(state: WcAppInfoUM, modifier: Modifier = M
 private fun WcAppInfoModalBottomSheetContent(state: WcAppInfoUM.Content, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         val blocksModifier = Modifier
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+            .clip(RoundedCornerShape(14.dp))
             .background(color = TangemTheme.colors.background.action)
             .fillMaxWidth()
         WcAppInfoFirstBlock(modifier = blocksModifier, state = state)
         state.notification?.let { notification ->
             Notification(
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing14),
+                modifier = Modifier.padding(top = 14.dp),
                 config = notification.config,
                 containerColor = when (notification) {
                     WcAppInfoSecurityNotification.SecurityRisk -> TangemColorPalette.Amaranth.copy(alpha = 0.1F)
@@ -119,7 +119,7 @@ private fun WcAppInfoModalBottomSheetContent(state: WcAppInfoUM.Content, modifie
         }
         WcAppInfoSecondBlock(
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing14)
+                .padding(top = 14.dp)
                 .then(blocksModifier),
             state = state,
         )
@@ -141,13 +141,13 @@ private fun WcAppInfoFirstBlock(state: WcAppInfoUM.Content, modifier: Modifier =
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { connectionRequestExpanded = !connectionRequestExpanded }
-                .padding(TangemTheme.dimens.spacing12),
+                .padding(12.dp),
             expanded = connectionRequestExpanded,
         )
         if (connectionRequestExpanded) {
             ConnectionRequestDescription(
                 modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing12)
+                    .padding(horizontal = 12.dp)
                     .padding(top = 8.dp, bottom = 12.dp),
             )
         }
@@ -167,7 +167,7 @@ private fun ConnectionRequestBlock(expanded: Boolean, modifier: Modifier = Modif
         )
         Text(
             modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing4)
+                .padding(start = 4.dp)
                 .weight(1f)
                 .testTag(WalletConnectBottomSheetTestTags.CONNECTION_REQUEST_TEXT),
             text = stringResourceSafe(R.string.wc_connection_request),
@@ -176,7 +176,7 @@ private fun ConnectionRequestBlock(expanded: Boolean, modifier: Modifier = Modif
         )
         Icon(
             modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing12)
+                .padding(start = 12.dp)
                 .size(width = 18.dp, height = 24.dp)
                 .testTag(WalletConnectBottomSheetTestTags.CONNECTION_REQUEST_CHEVRON),
             painter = painterResource(if (expanded) R.drawable.ic_chevron_up_24 else R.drawable.ic_chevron_24),
@@ -207,7 +207,7 @@ private fun ConnectionRequestDescription(modifier: Modifier = Modifier) {
             backgroundColor = TangemTheme.colors.icon.accent,
         )
         HorizontalDivider(
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
+            modifier = Modifier.padding(top = 12.dp),
             thickness = 0.5.dp,
             color = TangemTheme.colors.stroke.primary,
         )
@@ -237,19 +237,19 @@ private fun ConnectionRequestDescriptionRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = TangemTheme.dimens.spacing8),
+            .padding(top = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Box(
             modifier = Modifier
-                .size(TangemTheme.dimens.size24)
+                .size(24.dp)
                 .clip(CircleShape)
                 .background(backgroundColor.copy(alpha = 0.1F)),
             contentAlignment = Alignment.Center,
             content = {
                 Icon(
-                    modifier = Modifier.size(TangemTheme.dimens.size20),
+                    modifier = Modifier.size(20.dp),
                     painter = iconPainter,
                     contentDescription = null,
                     tint = tint,
@@ -270,7 +270,7 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
     Column(modifier = modifier) {
         val itemsModifier = Modifier
             .fillMaxWidth()
-            .padding(TangemTheme.dimens.spacing12)
+            .padding(12.dp)
         PortfolioRowItem(portfolioSelectRow = state.portfolioSelectRow)
         HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
         SelectNetworksBlock(
@@ -343,7 +343,7 @@ private fun SelectNetworksBlock(networksInfo: WcNetworksInfo, modifier: Modifier
         )
         Text(
             modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing4)
+                .padding(start = 4.dp)
                 .weight(1f)
                 .testTag(WalletConnectBottomSheetTestTags.NETWORKS_TITLE),
             text = stringResourceSafe(R.string.wc_common_networks),
@@ -382,7 +382,7 @@ private fun NetworkIcons(items: ImmutableList<WcNetworkInfoItem>, modifier: Modi
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing16.times(index))
+                    .padding(start = 16.dp.times(index))
                     .border(
                         width = 2.dp,
                         color = TangemTheme.colors.background.action,
@@ -426,7 +426,7 @@ private fun WcAppInfoButtons(
     connectButtonConfig: WcPrimaryButtonConfig,
     modifier: Modifier = Modifier,
 ) {
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         SecondaryButton(
             modifier = Modifier
                 .fillMaxWidth()
@@ -452,7 +452,7 @@ private fun WcAppInfoButtons(
 private fun WcAppInfoModalBottomSheetLoading(state: WcAppInfoUM.Loading, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         val blocksModifier = Modifier
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+            .clip(RoundedCornerShape(14.dp))
             .background(color = TangemTheme.colors.background.action)
             .fillMaxWidth()
         WcAppInfoFirstLoadingBlock(blocksModifier)
@@ -538,7 +538,7 @@ private fun WcAppInfoLoadingNetworkIcons(modifier: Modifier = Modifier) {
         for (index in 0..3) {
             CircleShimmer(
                 modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing16.times(index))
+                    .padding(start = 16.dp.times(index))
                     .border(
                         width = 2.dp,
                         color = TangemTheme.colors.background.action,
@@ -555,13 +555,13 @@ private fun WcAppInfoLoadingNetworkIcons(modifier: Modifier = Modifier) {
 @Composable
 private fun WcLoadingAppInfoItem(modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.padding(TangemTheme.dimens.spacing12),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+        modifier = modifier.padding(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        RectangleShimmer(modifier = Modifier.size(TangemTheme.dimens.size48), radius = 16.dp)
+        RectangleShimmer(modifier = Modifier.size(48.dp), radius = 16.dp)
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             TextShimmer(
                 modifier = Modifier
@@ -591,7 +591,7 @@ private fun WcAppInfoBottomSheetPreview(@PreviewParameter(WcAppInfoStateProvider
             state = state,
             modifier = Modifier
                 .background(TangemTheme.colors.background.tertiary)
-                .padding(horizontal = TangemTheme.dimens.spacing16),
+                .padding(horizontal = 16.dp),
         )
     }
 }

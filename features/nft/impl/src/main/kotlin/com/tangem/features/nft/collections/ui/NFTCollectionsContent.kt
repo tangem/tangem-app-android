@@ -48,16 +48,16 @@ import java.util.UUID
 internal fun NFTCollectionsContent(content: NFTCollectionsUM.Content, modifier: Modifier = Modifier) {
     val listState = rememberLazyListState()
 
-    val bottomPadding = TangemTheme.dimens.spacing60
+    val bottomPadding = 60.dp
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(TangemTheme.colors.background.secondary)
             .padding(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
-                bottom = TangemTheme.dimens.spacing16,
+                start = 16.dp,
+                end = 16.dp,
+                bottom = 16.dp,
             ),
     ) {
         Column(
@@ -88,7 +88,7 @@ internal fun NFTCollectionsContent(content: NFTCollectionsUM.Content, modifier: 
                     key(it.id) {
                         NFTCollectionWarning(
                             modifier = Modifier
-                                .padding(top = TangemTheme.dimens.spacing16),
+                                .padding(top = 16.dp),
                             state = it,
                         )
                     }
@@ -97,7 +97,7 @@ internal fun NFTCollectionsContent(content: NFTCollectionsUM.Content, modifier: 
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
-                            top = TangemTheme.dimens.spacing16,
+                            top = 16.dp,
                             bottom = bottomPadding,
                         )
                         .testTag(NFTCollectionsScreenTestTags.LAZY_LIST),
@@ -235,17 +235,17 @@ private fun LazyListScope.assetsListLoading(
                 exit = fadeOut() + shrinkVertically(),
             ) {
                 val paddingValues = PaddingValues(
-                    start = TangemTheme.dimens.spacing6,
-                    top = TangemTheme.dimens.spacing6,
-                    end = TangemTheme.dimens.spacing6,
-                    bottom = TangemTheme.dimens.spacing20,
+                    start = 6.dp,
+                    top = 6.dp,
+                    end = 6.dp,
+                    bottom = 20.dp,
                 )
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(assetsShape(isNextItemNFTCollection))
                         .background(TangemTheme.colors.background.action)
-                        .padding(TangemTheme.dimens.spacing6),
+                        .padding(6.dp),
                 ) {
                     NFTCollectionAssetLoading(
                         modifier = Modifier
@@ -290,7 +290,7 @@ private fun LazyListScope.assetsListFailed(
                     .fillMaxWidth()
                     .clip(assetsShape(isNextItemNFTCollection))
                     .background(TangemTheme.colors.background.action)
-                    .height(TangemTheme.dimens.size142),
+                    .height(142.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 UnableToLoadData(
@@ -322,10 +322,10 @@ private fun LazyListScope.assetsListContent(
                 exit = fadeOut() + shrinkVertically(),
             ) {
                 val paddingValues = PaddingValues(
-                    start = TangemTheme.dimens.spacing6,
-                    top = TangemTheme.dimens.spacing6,
-                    end = TangemTheme.dimens.spacing6,
-                    bottom = TangemTheme.dimens.spacing20,
+                    start = 6.dp,
+                    top = 6.dp,
+                    end = 6.dp,
+                    bottom = 20.dp,
                 )
                 Row(
                     modifier = Modifier
@@ -334,7 +334,7 @@ private fun LazyListScope.assetsListContent(
                         }
                         .background(TangemTheme.colors.background.action)
                         .fillMaxWidth()
-                        .padding(TangemTheme.dimens.spacing6),
+                        .padding(6.dp),
                 ) {
                     NFTCollectionAsset(
                         modifier = Modifier
