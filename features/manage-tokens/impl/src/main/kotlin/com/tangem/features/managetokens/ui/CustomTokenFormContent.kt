@@ -264,8 +264,8 @@ private class PreviewCustomTokenFormComponentProvider :
             PreviewCustomTokenFormComponent(
                 tokenForm = PreviewCustomTokenFormComponent.tokenForm.let { form ->
                     form.copy(
-                        fields = form.fields.mutate {
-                            it[Field.CONTRACT_ADDRESS] = it[Field.CONTRACT_ADDRESS]!!.copy(
+                        fields = form.fields.mutate { mutableFields ->
+                            mutableFields[Field.CONTRACT_ADDRESS] = mutableFields.getValue(Field.CONTRACT_ADDRESS).copy(
                                 label = stringReference("Contract address"),
                                 value = "0x1234567890",
                                 placeholder = stringReference("0x1234567890"),
@@ -277,8 +277,8 @@ private class PreviewCustomTokenFormComponentProvider :
             PreviewCustomTokenFormComponent(
                 tokenForm = PreviewCustomTokenFormComponent.tokenForm.let { form ->
                     form.copy(
-                        fields = form.fields.mutate {
-                            it[Field.CONTRACT_ADDRESS] = it[Field.CONTRACT_ADDRESS]!!.copy(
+                        fields = form.fields.mutate { mutableFields ->
+                            mutableFields[Field.CONTRACT_ADDRESS] = mutableFields.getValue(Field.CONTRACT_ADDRESS).copy(
                                 label = stringReference("Contract address"),
                                 value = "0x1234567890",
                                 error = stringReference("Contract address is invalid"),

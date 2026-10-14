@@ -84,12 +84,12 @@ internal fun NFTCollectionsContent(content: NFTCollectionsUM.Content, modifier: 
                     )
                 }
             } else {
-                content.warnings.fastForEach {
-                    key(it.id) {
+                content.warnings.fastForEach { warning ->
+                    key(warning.id) {
                         NFTCollectionWarning(
                             modifier = Modifier
                                 .padding(top = 16.dp),
-                            state = it,
+                            state = warning,
                         )
                     }
                 }
