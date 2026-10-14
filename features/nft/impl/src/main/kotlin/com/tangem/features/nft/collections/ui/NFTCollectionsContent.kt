@@ -70,7 +70,7 @@ internal fun NFTCollectionsContent(content: NFTCollectionsUM.Content, modifier: 
             )
             if (content.collections.isEmpty()) {
                 Box(
-                    modifier = modifier
+                    modifier = Modifier
                         .fillMaxSize()
                         .padding(bottom = bottomPadding),
                 ) {

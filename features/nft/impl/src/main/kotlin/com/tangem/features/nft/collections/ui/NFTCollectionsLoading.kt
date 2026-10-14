@@ -43,7 +43,7 @@ internal fun NFTCollectionsLoading(state: NFTCollectionsUM.Loading, modifier: Mo
                 enabled = false,
             )
             Card(
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(
                         top = 16.dp,
