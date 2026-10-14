@@ -8,6 +8,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_WALLET_CREATION
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.res.R as CoreResR
 import com.tangem.domain.appsflyer.AppsFlyerDeeplink
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
@@ -19,6 +20,7 @@ import com.tangem.screens.onIntroductionScreen
 import com.tangem.screens.tangempay.onTangemPayHotWalletOnboardingScreen
 import com.tangem.screens.tangempay.onTangemPayMainScreen
 import com.tangem.screens.tangempay.onTangemPayOnboardingScreen
+import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
@@ -29,6 +31,15 @@ import javax.inject.Inject
 
 @HiltAndroidTest
 class TangemPayHotWalletOnboardingTest : BaseTestCase() {
+
+    // These tests cover Tangem Pay onboarding: under TWI_1841 the Main promo gives way to the wallet's system cards
+    @RemoveWithToggle(
+        toggleName = "TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED",
+        description = "Move the test to a wallet without system cards, where the Main promo is shown",
+    )
+    override val featureToggleOverrides = mapOf(
+        FeatureToggles.TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED.rawName to false,
+    )
 
     @Inject
     lateinit var appsFlyerRepository: AppsFlyerRepository
