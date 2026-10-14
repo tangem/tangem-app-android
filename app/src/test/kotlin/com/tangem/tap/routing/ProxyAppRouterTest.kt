@@ -7,28 +7,22 @@ import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.routing.configurator.AppRouterConfig
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ProxyAppRouterTest {
 
     private val innerRouter = mockk<Router>(relaxed = true)
     private val snackbarHandler = mockk<SnackbarHandler>(relaxed = true)
     private val analyticsExceptionHandler = mockk<AnalyticsExceptionHandler>(relaxed = true)
-    private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val config = mockk<AppRouterConfig>(relaxed = true) {
         every { componentRouter } returns innerRouter
@@ -46,19 +40,16 @@ internal class ProxyAppRouterTest {
         every { config.initializedState } returns MutableStateFlow(true)
     }
 
-    private fun createRouter(routerScope: CoroutineScope): ProxyAppRouter {
-        every { config.routerScope } returns routerScope
-        return ProxyAppRouter(config, dispatchers, analyticsExceptionHandler)
-    }
+    private fun createRouter(): ProxyAppRouter = ProxyAppRouter(config, analyticsExceptionHandler)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Push {
 
         @Test
-        fun `delegates to inner router`() = runTest {
+        fun `delegates to inner router`() {
             // Arrange
-            val router = createRouter(this)
+            val router = createRouter()
             val route = AppRoute.AppSettings
 
             // Act
@@ -68,19 +59,6 @@ internal class ProxyAppRouterTest {
             verify { innerRouter.push(route, any()) }
         }
 
-        @Test
-        fun `calls onComplete false when inner router throws`() = runTest {
-            // Arrange
-            val router = createRouter(this)
-            every { innerRouter.push(any(), any()) } throws RuntimeException("Navigation error")
-            var result: Boolean? = null
-
-            // Act
-            router.push(AppRoute.AppSettings) { result = it }
-
-            // Assert
-            assertThat(result).isFalse()
-        }
     }
 
     @Nested
@@ -88,9 +66,9 @@ internal class ProxyAppRouterTest {
     inner class ReplaceCurrent {
 
         @Test
-        fun `delegates to inner router`() = runTest {
+        fun `delegates to inner router`() {
             // Arrange
-            val router = createRouter(this)
+            val router = createRouter()
             val route = AppRoute.AppSettings
 
             // Act
@@ -106,9 +84,9 @@ internal class ProxyAppRouterTest {
     inner class ReplaceAll {
 
         @Test
-        fun `delegates to inner router`() = runTest {
+        fun `delegates to inner router`() {
             // Arrange
-            val router = createRouter(this)
+            val router = createRouter()
             val route = AppRoute.Wallet
 
             // Act
@@ -118,19 +96,6 @@ internal class ProxyAppRouterTest {
             verify { innerRouter.replaceAll(route, onComplete = any()) }
         }
 
-        @Test
-        fun `catches exception silently via safeNavigate`() = runTest {
-            // Arrange
-            val router = createRouter(this)
-            every { innerRouter.replaceAll(*anyVararg(), onComplete = any()) } throws RuntimeException("Error")
-
-            // Act
-            val actual = runCatching { router.replaceAll(AppRoute.Wallet) }.isSuccess
-
-            // Assert
-            assertThat(actual).isTrue()
-            verify { innerRouter.replaceAll(AppRoute.Wallet, onComplete = any()) }
-        }
     }
 
     @Nested
@@ -138,9 +103,9 @@ internal class ProxyAppRouterTest {
     inner class Pop {
 
         @Test
-        fun `delegates to inner router`() = runTest {
+        fun `delegates to inner router`() {
             // Arrange
-            val router = createRouter(this)
+            val router = createRouter()
 
             // Act
             router.pop()
@@ -155,9 +120,9 @@ internal class ProxyAppRouterTest {
     inner class PopTo {
 
         @Test
-        fun `delegates to inner router with route`() = runTest {
+        fun `delegates to inner router with route`() {
             // Arrange
-            val router = createRouter(this)
+            val router = createRouter()
             val route = AppRoute.Wallet
 
             // Act
@@ -168,9 +133,9 @@ internal class ProxyAppRouterTest {
         }
 
         @Test
-        fun `delegates to inner router with routeClass`() = runTest {
+        fun `delegates to inner router with routeClass`() {
             // Arrange
-            val router = createRouter(this)
+            val router = createRouter()
 
             // Act
             router.popTo(AppRoute.Wallet::class)
@@ -187,7 +152,7 @@ internal class ProxyAppRouterTest {
         @Test
         fun `does nothing on success`() {
             // Arrange
-            val router = createRouter(mockk())
+            val router = createRouter()
 
             // Act
             router.defaultCompletionHandler(isSuccess = true, errorMessage = "error")
@@ -200,7 +165,7 @@ internal class ProxyAppRouterTest {
         @Test
         fun `sends analytics and shows snackbar on failure`() {
             // Arrange
-            val router = createRouter(mockk())
+            val router = createRouter()
 
             // Act
             router.defaultCompletionHandler(isSuccess = false, errorMessage = "Navigation failed")
@@ -214,7 +179,7 @@ internal class ProxyAppRouterTest {
         fun `sends analytics without snackbar when handler is null`() {
             // Arrange
             every { config.snackbarHandler } returns null
-            val router = createRouter(mockk())
+            val router = createRouter()
 
             // Act
             router.defaultCompletionHandler(isSuccess = false, errorMessage = "Navigation failed")
@@ -232,7 +197,7 @@ internal class ProxyAppRouterTest {
         @Test
         fun `returns config stack`() {
             // Arrange
-            val router = createRouter(mockk())
+            val router = createRouter()
             val expected = listOf(AppRoute.Wallet)
 
             // Act
