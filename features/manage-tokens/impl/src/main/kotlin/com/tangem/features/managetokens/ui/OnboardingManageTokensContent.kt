@@ -12,6 +12,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
@@ -39,7 +40,7 @@ internal fun OnboardingManageTokensContent(state: OnboardingManageTokensUM, modi
         topBar = {
             SearchBar(
                 modifier = Modifier
-                    .padding(vertical = TangemTheme.dimens.spacing12, horizontal = TangemTheme.dimens.spacing16),
+                    .padding(vertical = 12.dp, horizontal = 16.dp),
                 state = state.search,
             )
         },
@@ -55,7 +56,7 @@ internal fun OnboardingManageTokensContent(state: OnboardingManageTokensUM, modi
         floatingActionButton = {
             FloatingActionButton(
                 modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing16)
+                    .padding(horizontal = 16.dp)
                     .fillMaxWidth()
                     .navigationBarsPadding(),
                 config = state.actionButtonConfig,

@@ -101,7 +101,7 @@ private fun Currencies(
         modifier = modifier.padding(horizontal = 16.dp),
         state = listState,
         contentPadding = PaddingValues(
-            bottom = TangemTheme.dimens.spacing76 + bottomBarHeight,
+            bottom = 76.dp + bottomBarHeight,
         ),
     ) {
         if (notificationUM?.config != null) {
@@ -121,7 +121,7 @@ private fun Currencies(
             item(key = "loading_item") {
                 ProgressIndicator(
                     modifier = Modifier
-                        .padding(vertical = TangemTheme.dimens.spacing16)
+                        .padding(vertical = 16.dp)
                         .fillMaxWidth(),
                 )
             }

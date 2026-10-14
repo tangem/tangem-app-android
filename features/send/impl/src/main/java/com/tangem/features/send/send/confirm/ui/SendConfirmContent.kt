@@ -49,7 +49,7 @@ internal fun SendConfirmContent(
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
-                .padding(horizontal = TangemTheme.dimens.spacing16),
+                .padding(horizontal = 16.dp),
         ) {
             blocks(
                 destinationBlockComponent = destinationBlockComponent,
