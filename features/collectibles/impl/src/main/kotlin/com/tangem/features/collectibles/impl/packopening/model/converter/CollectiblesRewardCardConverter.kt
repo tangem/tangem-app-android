@@ -1,5 +1,8 @@
 package com.tangem.features.collectibles.impl.packopening.model.converter
 
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.collectibles.models.CollectibleRarity
 import com.tangem.domain.collectibles.models.OpenedCollectiblePack
 import com.tangem.features.collectibles.impl.common.formatter.formatUsd
@@ -26,14 +29,14 @@ internal object CollectiblesRewardCardConverter {
         )
     }
 
-    /** An unrecognised or absent rarity still has to read as *something* the user pulled. */
-    private fun CollectibleRarity?.toLabel(): String = when (this) {
-        CollectibleRarity.COMMON -> "Common pull"
-        CollectibleRarity.UNCOMMON -> "Uncommon pull"
-        CollectibleRarity.RARE -> "Rare pull"
-        CollectibleRarity.EPIC -> "Epic pull"
-        null -> "Your pull"
-    }
+    private fun CollectibleRarity?.toLabel(): TextReference = resourceReference(
+        when (this) {
+            CollectibleRarity.COMMON, null -> R.string.collectibles_open_pack_pull_common
+            CollectibleRarity.UNCOMMON -> R.string.collectibles_open_pack_pull_uncommon
+            CollectibleRarity.RARE -> R.string.collectibles_open_pack_pull_rare
+            CollectibleRarity.EPIC -> R.string.collectibles_open_pack_pull_epic
+        },
+    )
 
     private fun CollectibleRarity?.toAccent(): RewardCardUM.Accent = when (this) {
         CollectibleRarity.COMMON, null -> RewardCardUM.Accent.Neutral

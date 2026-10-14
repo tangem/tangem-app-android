@@ -19,12 +19,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.tangem.core.res.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.footer.TangemFooter
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_dot_12_filled
@@ -58,7 +61,7 @@ internal fun RewardTitle(um: RewardCardUM, progress: Float, modifier: Modifier =
     ) {
         ChromeRow(progress = progress) {
             TangemBadge(
-                text = stringReference(um.rarity),
+                text = um.rarity,
                 variant = TangemBadge.Variant.Tinted,
                 status = um.accent.badgeStatus(),
                 size = TangemBadge.Size.X6,
@@ -85,7 +88,7 @@ internal fun RewardTitle(um: RewardCardUM, progress: Float, modifier: Modifier =
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Text(
-                    text = "Market value ${um.marketValue} · Insured",
+                    text = stringResourceSafe(R.string.collectibles_open_pack_market_value, um.marketValue),
                     style = TangemTheme.typography3.caption.medium,
                     color = TangemTheme.colors3.text.secondary,
                     textAlign = TextAlign.Center,
@@ -117,13 +120,16 @@ internal fun RewardFooter(
                 TangemButton(
                     variant = TangemButton.Variant.Secondary,
                     size = TangemButton.Size.X12,
-                    text = stringReference("Keep card"),
+                    text = resourceReference(R.string.collectibles_open_pack_keep_card_button),
                     onClick = onKeepCardClick,
                 )
                 TangemButton(
                     variant = TangemButton.Variant.Primary,
                     size = TangemButton.Size.X12,
-                    text = stringReference("Sell back for ${um.sellBackValue}"),
+                    text = resourceReference(
+                        id = R.string.collectibles_open_pack_sell_back_button,
+                        formatArgs = wrappedList(um.sellBackValue),
+                    ),
                     iconEnd = TangemIconUM.Icon(Icons.ic_logo_tangem_24),
                     onClick = onSellBackClick,
                 )

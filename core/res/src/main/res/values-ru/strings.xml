@@ -185,7 +185,7 @@
   <string name="app_settings_require_access_code_footer">Эта опция отключает использование биометрии для выполнения чувствительных действий. Каждый раз, например, при подписании транзакции, вам потребуется вводить код доступа.</string>
   <string name="app_settings_saved_access_codes">Сохранение кода доступа</string>
   <string name="app_settings_saved_access_codes_footer">Подключите функцию хранения кодов доступа от карт на телефоне в зашифрованном виде, и при работе с картой или кольцом вместо кода доступа будет запрашиваться биометрическая аутентификация.</string>
-  <string name="app_settings_saved_wallet">Cохранение кошелька</string>
+  <string name="app_settings_saved_wallet">Сохранение кошелька</string>
   <string name="app_settings_saved_wallet_footer">Подключите функцию привязки карты в приложении, а также возможность биометрической аутентификации. Подпись транзакции все так же потребует карту или кольцо.</string>
   <string name="app_settings_theme_mode_dark">Тёмная</string>
   <string name="app_settings_theme_mode_light">Светлая</string>
@@ -199,7 +199,7 @@
     <item quantity="one">%d карта</item>
     <item quantity="few">%d карты</item>
     <item quantity="many">%d карт</item>
-    <item quantity="other">%d карты</item>
+    <item quantity="other">%d карт</item>
   </plurals>
   <string name="auth_wallet_mobile_description">Мобильный кошелек</string>
   <string name="backup_complete_description">Вы успешно завершили бэкап вашего кошелька.</string>
@@ -215,17 +215,17 @@
   <string name="backup_seed_description">Запишите эти %s слов в указанном порядке и храните их в безопасности и в тайне.</string>
   <string name="backup_seed_responsibility">Вы несёте полную ответственность за безопасность кошелька и фразы восстановления.</string>
   <string name="backup_seed_title">Фраза восстановления</string>
-  <string name="balance_hidden_description">Чтобы скрыть или показать баланс, просто поверните ваше устройство вниз или отключите опцию его в разделе \"Настройки\"</string>
+  <string name="balance_hidden_description">Чтобы скрыть или показать баланс, просто поверните ваше устройство вниз или отключите эту опцию в разделе \"Настройки\"</string>
   <string name="balance_hidden_do_not_show_button">Больше не показывать</string>
   <string name="balance_hidden_got_it_button">Понятно</string>
   <string name="balance_hidden_title">Балансы скрыты</string>
   <string name="beta_mode_warning_message">Согласно информации от разработчиков сети, токены Kaspa находятся в режиме бета. Следите за обновлениями!</string>
   <string name="beta_mode_warning_title">Бета режим</string>
   <string name="biometric_disabled_warning_description">Биометрия отключена на вашем устройстве, поэтому вы не можете использовать её для разблокировки кошельков. Включите биометрию в настройках устройства, чтобы снова использовать этот способ.</string>
-  <string name="biometric_disabled_warning_title">Биометрическая аутентификации отключена</string>
+  <string name="biometric_disabled_warning_title">Биометрическая аутентификация отключена</string>
   <string name="biometric_lockout_permanent_warning_description">Пожалуйста, отсканируйте карту или кольцо</string>
   <string name="biometric_lockout_permanent_warning_description_2">Вы достигли лимита попыток биометрии. Разблокируйте кошелёк с помощью касания устройства или введите код доступа.</string>
-  <string name="biometric_lockout_permanent_warning_title">Биометрическая аутентификации заблокирована</string>
+  <string name="biometric_lockout_permanent_warning_title">Биометрическая аутентификация заблокирована</string>
   <string name="biometric_lockout_warning_description">Пожалуйста, попробуйте снова через 30 секунд или отсканируйте карту или кольцо</string>
   <string name="biometric_lockout_warning_description_2">Вход по биометрии временно заблокирован. Попробуйте снова через 30 секунд или разблокируйте кошелёк с помощью прикладывания устройства или кода доступа.</string>
   <string name="biometric_lockout_warning_title">Слишком много попыток</string>
@@ -256,7 +256,7 @@
     <item quantity="one">%d токен</item>
     <item quantity="few">%d токена</item>
     <item quantity="many">%d токенов</item>
-    <item quantity="other">%d токены</item>
+    <item quantity="other">%d токенов</item>
   </plurals>
   <string name="card_reset_alert_continue_message">Пожалуйста, сбросьте следующее устройство, чтобы продолжить.</string>
   <string name="card_reset_alert_continue_title">Сброс кошелька</string>
@@ -281,7 +281,7 @@
   <string name="card_settings_reset_card_to_factory">Заводские настройки</string>
   <string name="card_settings_security_mode">Тип безопасности</string>
   <string name="card_settings_title">Настройки устройства</string>
-  <string name="cardano_coin_will_be_send_with_token_description">Помимо сетевой комиссий, сеть Cardano взимает %1$s ADA при транзакции с токеном %2$s</string>
+  <string name="cardano_coin_will_be_send_with_token_description">Помимо сетевой комиссии, сеть Cardano взимает %1$s ADA при транзакции с токеном %2$s</string>
   <string name="cardano_coin_will_be_send_with_token_title">Требования к транзакции Cardano</string>
   <string name="cardano_insufficient_balance_to_send_token_description">Чтобы совершить транзакцию %1$s, внесите некоторую сумму ADA для покрытия сетевой комиссии и минимального значения ADA (рекомендуется 5 ADA)</string>
   <string name="cardano_insufficient_balance_to_send_token_title">Недостаточно ADA для транзакции</string>
@@ -414,9 +414,9 @@
   <string name="common_hour">час</string>
   <plurals name="common_hours">
     <item quantity="one">%d час</item>
-    <item quantity="few">%d часa</item>
+    <item quantity="few">%d часа</item>
     <item quantity="many">%d часов</item>
-    <item quantity="other">%d часа</item>
+    <item quantity="other">%d часов</item>
   </plurals>
   <plurals name="common_hours_time_ago">
     <item quantity="one">%dч назад</item>
@@ -467,7 +467,7 @@
     <item quantity="one">%d сеть</item>
     <item quantity="few">%d сети</item>
     <item quantity="many">%d сетей</item>
-    <item quantity="other">%d сетях</item>
+    <item quantity="other">%d сетей</item>
   </plurals>
   <string name="common_neutral">Нейтрально</string>
   <string name="common_new_address">Новый адрес</string>
@@ -599,7 +599,7 @@
   <string name="custom_token_creation_error_token_already_exist_title">Токен уже существует</string>
   <string name="custom_token_creation_error_wrong_decimals">Десятичное число должно быть действительным целым числом, до %d</string>
   <string name="custom_token_custom_derivation">Своя деривация</string>
-  <string name="custom_token_custom_derivation_dynamic_addresses_enabled_error">Включены динамические адреса. Пользовательские значения \\"change\"\ и \\"index\"\ недоступны.</string>
+  <string name="custom_token_custom_derivation_dynamic_addresses_enabled_error">Включены динамические адреса. Пользовательские значения \"change\" и \"index\" недоступны.</string>
   <string name="custom_token_custom_derivation_placeholder">Например m/00\'/0000\'/0\'/0/0</string>
   <string name="custom_token_custom_derivation_title">Введите свою деривацию</string>
   <string name="custom_token_decimals_input_title">Знаков после запятой</string>
@@ -841,8 +841,8 @@
   <string name="give_permission_rows_amount">Количество %s</string>
   <string name="give_permission_staking_footer">Функция подтверждения необходима для предоставления другому адресу разрешения на использование определенного количества ваших токенов. По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту StakeKit разрешение использовать ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете осуществить стейкинг токена.</string>
   <string name="give_permission_staking_subtitle">Чтобы продолжить, вам необходимо разрешить смарт контракту Polygon использовать ваш %s</string>
-  <string name="give_permission_swap_subtitle" formatted="false">Чтобы продолжить, вам нужно разрешить смарт-контракту %1s использовать ваш %2s</string>
-  <string name="give_permission_swap_subtitle_v2">Децентрализованные биржи требуют разрешения на взаимодействие с вашим кошельком. %1s</string>
+  <string name="give_permission_swap_subtitle">Чтобы продолжить, вам нужно разрешить смарт-контракту %1$s использовать ваш %2$s</string>
+  <string name="give_permission_swap_subtitle_v2">Децентрализованные биржи требуют разрешения на взаимодействие с вашим кошельком. %1$s</string>
   <string name="give_permission_title">Дать разрешение</string>
   <string name="give_permission_unlimited">Безлимитно</string>
   <string name="hardware_wallet_backup_feature_description">Адреса будут сгенерированы прямо в аппаратном кошельке Tangem — готовы к использованию и полностью защищены</string>
@@ -1088,7 +1088,7 @@
   <string name="joint_account_invite_members_title">Пригласите участников</string>
   <string name="joint_account_invite_members_to_join">Пригласите участников в аккаунт</string>
   <string name="joint_account_invite_members_waiting_title">Ожидаем участников</string>
-  <string name="joint_account_invite_share_title">Пригласите в %s</string>
+  <string name="joint_account_invite_share_title">Пригласите в аккаунт %s</string>
   <string name="joint_account_join_confirm_sheet_subtitle">У всех участников аккаунта общий баланс. Другие участники могут распоряжаться средствами без вашего согласия, если соберут достаточно подписей</string>
   <string name="joint_account_join_confirm_sheet_title">Вы вступаете в общий аккаунт</string>
   <string name="joint_account_join_invalid_link_subtitle">Проверьте, что открыли правильную ссылку, или попросите создателя аккаунта отправить её ещё раз</string>
@@ -1425,9 +1425,9 @@
   <string name="nft_asset">NFT</string>
   <plurals name="nft_collections_count">
     <item quantity="one">%d NFT</item>
-    <item quantity="few">%d NFTs</item>
-    <item quantity="many">%d NFTs</item>
-    <item quantity="other">%d NFTs</item>
+    <item quantity="few">%d NFT</item>
+    <item quantity="many">%d NFT</item>
+    <item quantity="other">%d NFT</item>
   </plurals>
   <string name="nft_collections_empty_description">Здесь будут отображаться NFT, полученные на ваш кошелёк</string>
   <string name="nft_collections_empty_title">У вас ещё нет коллекций</string>
@@ -1536,7 +1536,7 @@
   <string name="onboarding_create_wallet_header">Создать кошелек</string>
   <string name="onboarding_create_wallet_options_button_options">Другие опции</string>
   <string name="onboarding_create_wallet_options_message">Ваши ключи будут надежно сгенерированы внутри чипа. Никакой seed-фразы, а это значит, что никто не может экспортировать или украсть ее.</string>
-  <string name="onboarding_create_wallet_options_title">Cоздавайте ключи приватно</string>
+  <string name="onboarding_create_wallet_options_title">Создавайте ключи приватно</string>
   <string name="onboarding_create_wallet_term_of_conditions_text">Продолжая, вы соглашаетесь с \n%s</string>
   <string name="onboarding_done_body">Ваша карта активирована и готова к использованию</string>
   <string name="onboarding_done_header">Успешно!</string>
@@ -1544,7 +1544,7 @@
   <string name="onboarding_exit_alert_message">В этом случае вам будет необходимо начать процесс заново.</string>
   <string name="onboarding_exit_alert_title">Вы хотите выйти из процесса активации?</string>
   <string name="onboarding_getting_started">Подготовка</string>
-  <string name="onboarding_linking_error_card_with_wallets">Другой кошелек уже был создан на карте, которую вы пытаетесь добавить. Если на нем есть средства, пожалуйста сначала выведите их, а затем сделайте сброс до заводских настроек и используйте как резервную.</string>
+  <string name="onboarding_linking_error_card_with_wallets">Другой кошелек уже был создан на карте, которую вы пытаетесь добавить. Если на нем есть средства, пожалуйста, сначала выведите их, а затем сделайте сброс до заводских настроек и используйте как резервную.</string>
   <string name="onboarding_navbar_save_wallet">Сохраните ваш кошелек</string>
   <string name="onboarding_navbar_title_biometrics">Использовать биометрию</string>
   <string name="onboarding_navbar_title_creating_backup">Резервная копия</string>
@@ -1598,7 +1598,7 @@
   <string name="onboarding_top_up_min_create_account_amount">Пополните кошелек более чем на %1$s, чтобы начать пользоваться картой</string>
   <string name="onboarding_topup_title">Активация кошелька</string>
   <string name="onboarding_twin_exit_warning">Процесс связывания карт частично завершен. Вы не можете выйти из него сейчас.</string>
-  <string name="onboarding_twins_interrupt_warning">Если процесc создания кошелька каким-либо образом прервется, вам придется начинать сначала</string>
+  <string name="onboarding_twins_interrupt_warning">Если процесс создания кошелька каким-либо образом прервется, вам придется начинать сначала</string>
   <string name="onboarding_wallet_info_subtitle_first">Вы можете сделать резервную копию своих ключей на одной или двух других пустых картах или кольцах Tangem Wallet.</string>
   <string name="onboarding_wallet_info_subtitle_fourth">Код доступа можно восстановить с помощью одной из резервных карт.</string>
   <string name="onboarding_wallet_info_subtitle_second">Все резервные карты являются полнофункциональными и содержат одинаковые ключи.</string>
@@ -1631,10 +1631,10 @@
   <string name="onramp_legal_text">Услуга предоставляется сторонним провайдером.\nTangem не несет ответственности.</string>
   <string name="onramp_max_amount_restriction">Сумма покупки не может быть больше, чем %s</string>
   <string name="onramp_min_amount_restriction">Сумма покупки должна составлять минимум %s</string>
-  <string name="onramp_native_payment_cumulative_limit" formatted="false">Общая сумма транзакций свыше %1s может потребовать верификации личности через %2s</string>
-  <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">Общая сумма транзакций, превышающая эквивалент %1s, может потребовать верификации личности через %2s</string>
-  <string name="onramp_native_payment_identity_verification">Для транзакций через Apple Pay может потребоваться верификация личности в %1s</string>
-  <string name="onramp_native_payment_legal_notice" formatted="false">Нажимая «Оплатить», вы соглашаетесь с %1s\'s %2s и %3s.</string>
+  <string name="onramp_native_payment_cumulative_limit">Общая сумма транзакций свыше %1$s может потребовать верификации личности через %2$s</string>
+  <string name="onramp_native_payment_cumulative_limit_equivalent">Общая сумма транзакций, превышающая эквивалент %1$s, может потребовать верификации личности через %2$s</string>
+  <string name="onramp_native_payment_identity_verification">Для транзакций через Apple Pay может потребоваться верификация личности в %1$s</string>
+  <string name="onramp_native_payment_legal_notice">Нажимая «Оплатить», вы соглашаетесь с %1$s\'s %2$s и %3$s.</string>
   <string name="onramp_no_available_providers">Нет доступных провайдеров для выбранной валюты</string>
   <string name="onramp_offer_type_fastet">Самый быстрый</string>
   <string name="onramp_pay_with">Оплата с</string>
@@ -1857,10 +1857,10 @@
   <string name="send_memo_destination_tag_error">Недопустимый Memo</string>
   <string name="send_network_fee_warning_title">Покрытие сетевой комиссии</string>
   <plurals name="send_network_selection_hidden_tokens">
-    <item quantity="one">%d токен не совместим с этим адресом</item>
-    <item quantity="few">%d токена не совместимы с этим адресом</item>
-    <item quantity="many">%d токенов не совместимо с этим адресом</item>
-    <item quantity="other">%d токены не совместимы с этим адресом</item>
+    <item quantity="one">%d токен несовместим с этим адресом</item>
+    <item quantity="few">%d токена несовместимы с этим адресом</item>
+    <item quantity="many">%d токенов несовместимо с этим адресом</item>
+    <item quantity="other">%d токенов несовместимо с этим адресом</item>
   </plurals>
   <string name="send_nonce">Nonce</string>
   <string name="send_nonce_footer">Уникальный номер транзакции. Измените, чтобы ускорить отправку или отменить зависшую операцию.</string>
@@ -1972,7 +1972,7 @@
   <string name="staking_details_auto_claiming_rewards_daily_text">Награда автоматически аккумулируется на вашем стейкинг балансе.</string>
   <string name="staking_details_autocompound_rewards_earned">Вознаграждения реинвестируются в ваш баланс стейкинга. Заработано: %s</string>
   <string name="staking_details_available">Доступно</string>
-  <string name="staking_details_average_reward_rate">Средння ставка вознаграждения</string>
+  <string name="staking_details_average_reward_rate">Средняя ставка вознаграждения</string>
   <string name="staking_details_banner_text">Что такое Стейкинг?</string>
   <string name="staking_details_estimated_profit">%s оценка доходности</string>
   <string name="staking_details_market_rating">Позиция в рынке</string>
@@ -2210,7 +2210,7 @@
   <string name="tangem_pay_terms_fees_limits">Тарифы и полные условия</string>
   <string name="tangem_pay_terms_limits">Полные условия</string>
   <string name="tangem_pay_transaction_declined_notification_text">Банк отклонил транзакцию</string>
-  <string name="tangem_pay_transaction_details_cashback_below_min">Ниже мин.суммы</string>
+  <string name="tangem_pay_transaction_details_cashback_below_min">Ниже мин. суммы</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Достигнут лимит</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC исключён</string>
   <string name="tangem_pay_transaction_details_cashback_none">—</string>
@@ -2307,8 +2307,8 @@
   <string name="tangempay_card_details_hide_text">Скрыть</string>
   <string name="tangempay_card_details_name_on_card">Имя держателя карты</string>
   <string name="tangempay_card_details_open_wallet_button">Открыть Google Wallet</string>
-  <string name="tangempay_card_details_open_wallet_notification_subtitle">Настройте в пару кликов и начините платить</string>
-  <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Настройте в пару кликов и начините платить</string>
+  <string name="tangempay_card_details_open_wallet_notification_subtitle">Настройте в пару кликов и начните платить</string>
+  <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Настройте в пару кликов и начните платить</string>
   <string name="tangempay_card_details_open_wallet_notification_title">Добавьте карту в Google Pay</string>
   <string name="tangempay_card_details_open_wallet_notification_title_apple">Добавьте карту в Apple Pay</string>
   <string name="tangempay_card_details_open_wallet_step_1">Откройте Google Wallet</string>
@@ -2363,7 +2363,7 @@
     <item quantity="one">%d карта</item>
     <item quantity="few">%d карты</item>
     <item quantity="many">%d карт</item>
-    <item quantity="other">%d карты</item>
+    <item quantity="other">%d карт</item>
   </plurals>
   <string name="tangempay_cashback_accruals_calc_description">Мы обрабатываем покупки в течение 5 дней после операции и учитываем только завершённые транзакции</string>
   <string name="tangempay_cashback_accruals_calc_title">Как мы рассчитываем кэшбэк?</string>
@@ -2462,7 +2462,7 @@
   <string name="tangempay_issue_card_notification_title">Готовим вашу Tangem Card</string>
   <string name="tangempay_issuing_new_digital_card_title">Выпуск новой цифровой карты</string>
   <string name="tangempay_issuing_your_card">Выпускаем карту</string>
-  <string name="tangempay_issuing_your_card_description">Обычно это занимает не больше 5 минут, в редких случах при необходимости ручной проверки – до 48 часов.</string>
+  <string name="tangempay_issuing_your_card_description">Обычно это занимает не больше 5 минут, в редких случаях при необходимости ручной проверки – до 48 часов.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">Подтвердите отмену</string>
   <string name="tangempay_kyc_confirm_cancellation_description">Если вы отмените верификацию сейчас, вы сможете потом начать его заново</string>
@@ -2472,7 +2472,7 @@
   <string name="tangempay_kyc_in_progress">Верификация в процессе</string>
   <string name="tangempay_kyc_in_progress_notification_button">Посмотреть статус</string>
   <string name="tangempay_kyc_in_progress_notification_title">Идёт верификация для Tangem Pay</string>
-  <string name="tangempay_kyc_in_progress_popup_description">Обычно документы проверяются автоматически в течение 5 минут, в редких случах при необходимости ручной проверки – до 48 часов.</string>
+  <string name="tangempay_kyc_in_progress_popup_description">Обычно документы проверяются автоматически в течение 5 минут, в редких случаях при необходимости ручной проверки – до 48 часов.</string>
   <string name="tangempay_kyc_rejected">Отклонено</string>
   <string name="tangempay_kyc_rejected_button_text">Скрыть верификацию</string>
   <string name="tangempay_kyc_rejected_description">Извините, мы не смогли подтвердить</string>
@@ -2574,7 +2574,7 @@
   <string name="tangempay_other_networks_title">Отправьте USDT/USDC в любой EVM-сети на ваш Tangem Wallet</string>
   <string name="tangempay_pay_support">Поддержка</string>
   <string name="tangempay_payment_account">Платежный аккаунт</string>
-  <string name="tangempay_payment_account_sync_needed">Tangem Pay · Cессия истекла</string>
+  <string name="tangempay_payment_account_sync_needed">Tangem Pay · Сессия истекла</string>
   <string name="tangempay_pin_validation_error_message">Слабый ПИН: не используйте повторы или последовательности.</string>
   <string name="tangempay_region_unavailable_description">Мы работаем над расширением на другие регионы. \nВстаньте в лист ожидания, чтобы первыми узнать о запуске</string>
   <string name="tangempay_region_unavailable_primary_button">Встать в лист ожидания</string>
@@ -2629,7 +2629,7 @@
   <string name="tangempay_sync_needed">Используйте карту или кольцо для обновления сессии</string>
   <string name="tangempay_sync_needed_body">Используйте карту или кольцо для обновления сессии</string>
   <string name="tangempay_sync_needed_button">Обновить сессию</string>
-  <string name="tangempay_sync_needed_title">Tangem Pay · Cессия истекла</string>
+  <string name="tangempay_sync_needed_title">Tangem Pay · Сессия истекла</string>
   <string name="tangempay_tangem_visa_card">Платите за ежедневные покупки криптой</string>
   <string name="tangempay_temporarily_unavailable">Проблема с соединением</string>
   <string name="tangempay_title">Tangem Pay</string>
@@ -2946,7 +2946,7 @@
   <string name="wallet_notification_address_copied">Адрес скопирован в буфер обмена</string>
   <string name="wallet_notification_no_internet">Нет соединения с интернетом</string>
   <string name="wallet_promo_banner_button_title">Получить с 10% скидкой</string>
-  <string name="wallet_promo_banner_description">Получите доступ к более чем 13 000 криптовалют. Покупайте, продавайте, обменивайте и стейкайте в один клик. Свяжите до трех карт для резервного копирования. </string>
+  <string name="wallet_promo_banner_description">Получите доступ к более чем 13 000 криптовалют. Покупайте, продавайте, обменивайте и стейкайте в один клик. Свяжите до трех карт для резервного копирования.</string>
   <string name="wallet_promo_banner_title">Откройте Tangem Wallet</string>
   <string name="wallet_settings_access_code_description">Код доступа защищает кошелёк и нужен для входа и подписания транзакций.</string>
   <string name="wallet_settings_access_code_title">Установить/изменить код доступа</string>
@@ -2993,7 +2993,7 @@
   <string name="warning_demo_mode_title">Демо режим включен</string>
   <string name="warning_developer_card_message">Отсканированная вами карта является картой разработчика. Не используйте ее для создания своего кошелька.</string>
   <string name="warning_developer_card_title">Не для пользователя!</string>
-  <string name="warning_existential_deposit_message">Cеть %1$s использует концепцию экзистенциального депозита. Если баланс вашего счета будет ниже %2$s, то он будет деактивирован, а средства на счете уничтожены.</string>
+  <string name="warning_existential_deposit_message">Сеть %1$s использует концепцию экзистенциального депозита. Если баланс вашего счета будет ниже %2$s, то он будет деактивирован, а средства на счете уничтожены.</string>
   <string name="warning_existential_deposit_title">Для работы с сетью необходим депозит</string>
   <string name="warning_express_active_transaction_message">Обмен будет доступен после завершения %s транзакции</string>
   <string name="warning_express_active_transaction_title">У вас есть активная транзакция</string>
@@ -3074,7 +3074,7 @@
   <string name="warning_some_networks_unreachable_message">Свайпните вниз для обновления или попробуйте позже.</string>
   <string name="warning_some_networks_unreachable_title">Некоторые сети недоступны</string>
   <string name="warning_some_token_balances_not_updated">Некоторые балансы токенов не удалось обновить</string>
-  <string name="warning_stellar_token_trustline_not_enough_xlm">Недостаточно %s. Пополните свой XLM аккаунт чтобы открыть трастлайн.</string>
+  <string name="warning_stellar_token_trustline_not_enough_xlm">Недостаточно %s. Пополните свой XLM аккаунт, чтобы открыть трастлайн.</string>
   <string name="warning_testnet_card_message">Это Testnet карта. Он не может обрабатывать транзакции и используется только в целях тестирования и разработки.</string>
   <string name="warning_testnet_card_title">Только для целей тестирования</string>
   <string name="warning_token_balance_not_updated">Возможно, баланс устарел. Обновите страницу.</string>
@@ -3108,9 +3108,9 @@
   <string name="wc_alert_unsupported_network_title">Неподдерживаемая сеть</string>
   <string name="wc_alert_unsupported_networks_description">Tangem в настоящее время не поддерживает необходимую сеть для %s</string>
   <string name="wc_alert_unsupported_networks_title">Неподдерживаемые сети</string>
-  <string name="wc_alert_verified_domain_description">Этот домен прошёл проверку и считается безопасным, надёжным и свободным от известных угроз или подозрительной активности. </string>
+  <string name="wc_alert_verified_domain_description">Этот домен прошёл проверку и считается безопасным, надёжным и свободным от известных угроз или подозрительной активности.</string>
   <string name="wc_alert_verified_domain_title">Верифицированный домен</string>
-  <string name="wc_alert_wrong_card_description">Выбрана не верная карта или кольцо</string>
+  <string name="wc_alert_wrong_card_description">Выбрана неверная карта или кольцо</string>
   <string name="wc_alert_wrong_card_title">Похоже, возникла проблема</string>
   <string name="wc_all_dapps_disconnected">Все dapps отключены</string>
   <string name="wc_allow_to_spend">Разрешение на использование</string>
@@ -3211,7 +3211,7 @@
   <string name="yield_apy_boost_promo_activate_bonus">Активировать бонус</string>
   <string name="yield_apy_boost_promo_bonus_paid_out_subtitle">Подробности в истории транзакций</string>
   <string name="yield_apy_boost_promo_bonus_paid_out_title">Бонус режима доходности выплачен</string>
-  <string name="yield_apy_boost_promo_days_left_to_unlock">%1$sдней до разблокировки бонуса</string>
+  <string name="yield_apy_boost_promo_days_left_to_unlock">%1$s дней до разблокировки бонуса</string>
   <string name="yield_apy_boost_promo_eligibility_text">Вам доступен буст APY на 30 дней</string>
   <string name="yield_apy_boost_promo_terms_and_conditions">Действуют Условия и Положения</string>
   <string name="yield_apy_boost_story_first_subtitle">Включите режим доходности впервые и получите до 3x дохода за первые 30 дней</string>
@@ -3277,7 +3277,7 @@
   <string name="yield_module_promo_screen_self_custodial_title">Децентрализованный и некастодиальный</string>
   <string name="yield_module_promo_screen_terms_disclaimer">Используя сервис, вы соглашаетесь с %1$s и %2$s</string>
   <string name="yield_module_promo_screen_title">Подключить Aave</string>
-  <string name="yield_module_promo_screen_title_v2">Подключите %1$s %% APY\nна ваш баланс</string>
+  <string name="yield_module_promo_screen_title_v2">Подключите %1$s%% APY\nна ваш баланс</string>
   <string name="yield_module_promo_screen_variable_rate_info">Aave %1$s%% • Плавающая ставка</string>
   <string name="yield_module_promo_screen_variable_rate_info_v2">Динамическая процентная ставка</string>
   <string name="yield_module_provider">Aave</string>

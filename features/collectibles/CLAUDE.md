@@ -349,7 +349,7 @@ codec failure, or system animations off (`ANIMATOR_DURATION_SCALE == 0`, which a
 `Expired` / `Refunded` failures show hardcoded English snackbars.
 
 **A few strings are still literals.** Most copy is in `core/res` (`collectibles_*`), but some
-`stringReference("…")` literals remain (menu, add funds, reward card chrome, status, the snackbars above).
+`stringReference("…")` literals remain (menu, add funds, status, the snackbars above).
 New strings go through the `lokalise-strings` skill.
 
 **The `"all"` tab id is synthesized.** `CollectiblesDiscoveryTabsConverter` prepends an "All cards" tab with
