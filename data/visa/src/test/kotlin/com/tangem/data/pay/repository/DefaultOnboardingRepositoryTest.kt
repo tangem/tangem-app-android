@@ -49,6 +49,7 @@ internal class DefaultOnboardingRepositoryTest {
         txHistoryItemsStore = mockk(relaxed = true),
         cashbackSummaryStore = cashbackSummaryStore,
         customerInfoStore = mockk(relaxed = true),
+        derivationsRepository = mockk(relaxed = true),
     )
 
     @BeforeEach
