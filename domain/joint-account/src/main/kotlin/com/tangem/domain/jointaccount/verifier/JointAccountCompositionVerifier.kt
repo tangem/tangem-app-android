@@ -30,7 +30,9 @@ class JointAccountCompositionVerifier(
         val ownerAddress = ownerAddress(userWalletId = userWalletId, ownerKeyIndex = ownerKeyIndex) ?: return false
 
         val isMember = jointAccount.members.any { it.address.equals(ownerAddress, ignoreCase = true) }
-        val safeAddress = jointAccount.safeAddress ?: return isMember
+        // Only a pending account has no Safe address yet; once the composition is full one is always stated
+        val safeAddress = jointAccount.safeAddress
+            ?: return isMember && jointAccount.status == JointAccount.Status.PENDING
 
         return isMember && isSafeAddressComputed(jointAccount = jointAccount, safeAddress = safeAddress)
     }

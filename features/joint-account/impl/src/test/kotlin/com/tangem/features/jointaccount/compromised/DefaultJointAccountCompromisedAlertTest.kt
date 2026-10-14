@@ -84,6 +84,19 @@ internal class DefaultJointAccountCompromisedAlertTest {
     }
 
     @Test
+    fun `GIVEN status unavailable first WHEN showIfCompromised THEN it waits for the verified status`() = runTest {
+        // Arrange
+        stubStatuses(jointStatus(JointAccountStatusValue.Error.Unavailable), jointStatus(active))
+
+        // Act
+        val actual = alert.showIfCompromised(userWalletId = userWalletId, accountId = jointAccount.accountId.value)
+
+        // Assert
+        assertThat(actual).isFalse()
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+    }
+
+    @Test
     fun `GIVEN status never leaves loading WHEN showIfCompromised THEN the account is blocked`() = runTest {
         // Arrange
         val list = statusList(jointStatus(JointAccountStatusValue.Loading))

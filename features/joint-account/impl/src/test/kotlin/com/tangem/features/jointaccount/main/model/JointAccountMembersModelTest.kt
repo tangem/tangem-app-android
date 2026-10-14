@@ -15,12 +15,9 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.ToastMessage
-import com.tangem.domain.account.models.AccountStatusList
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
@@ -32,14 +29,11 @@ import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.GetSharedJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.MarkJointAccountInviteSharedUseCase
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.JointAccountStatusValue
-import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatcher
 import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
@@ -101,7 +95,7 @@ internal class JointAccountMembersModelTest {
     private val activateUseCase: ActivateJointAccountUseCase = mockk()
     private val archiveCryptoPortfolioUseCase: ArchiveCryptoPortfolioUseCase = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
-    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
+    private val compositionVerifier: JointAccountCompositionVerifier = mockk()
     private val jointAccountCompromisedAlert: JointAccountCompromisedAlert = mockk(relaxed = true)
 
     @BeforeEach
@@ -122,10 +116,11 @@ internal class JointAccountMembersModelTest {
             activateUseCase,
             archiveCryptoPortfolioUseCase,
             userWalletsListRepository,
-            singleAccountStatusListSupplier,
+            compositionVerifier,
             jointAccountCompromisedAlert,
         )
-        every { singleAccountStatusListSupplier(USER_WALLET_ID) } returns emptyFlow()
+        coEvery { compositionVerifier.isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any()) } returns
+            true
         val coldWallet = mockk<UserWallet.Cold> {
             every { walletId } returns USER_WALLET_ID
         }
@@ -802,30 +797,22 @@ internal class JointAccountMembersModelTest {
 
     /** Stubs a creator-owned pending account; returns its resolved [AccountId] for the archive use case. */
     @Test
-    fun `GIVEN the account turns compromised WHEN the screen is open THEN it closes with the alert`() = runTest {
+    fun `GIVEN the composition does not verify WHEN the screen opens THEN it closes with the alert unshown`() = runTest {
         // Arrange
         stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
-        val compromised = AccountStatus.Joint(
-            account = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID).copy(
-                accountId = AccountId.forJointAccount(userWalletId = USER_WALLET_ID, value = ACCOUNT_ID).getOrNull()!!,
-            ),
-            value = JointAccountStatusValue.Error.Compromised(
-                totalMembers = THREE_SLOTS,
-                tokensCount = 0,
-                fiatBalance = TotalFiatBalance.Loading,
-            ),
-            tokenList = TokenList.Empty,
-            priceChangeLce = lceLoading(),
-        )
-        val statusList = mockk<AccountStatusList> { every { accountStatuses } returns listOf(compromised) }
-        every { singleAccountStatusListSupplier(USER_WALLET_ID) } returns flowOf(statusList)
+        val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
+        every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns flowOf(jointAccount)
+        coEvery {
+            compositionVerifier.isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any())
+        } returns false
 
         // Act
-        createModel()
+        val model = createModel()
 
         // Assert
         verify(exactly = 1) { router.pop() }
         verify(exactly = 1) { jointAccountCompromisedAlert.show(USER_WALLET_ID) }
+        assertThat(model.uiState.value.joined).isEmpty()
     }
 
     private fun stubForArchive(): AccountId {
@@ -879,7 +866,8 @@ internal class JointAccountMembersModelTest {
                 markJointAccountInviteSharedUseCase = markInviteSharedUseCase,
             ),
             compromiseWatcher = JointAccountCompromiseWatcher(
-                singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+                singleAccountSupplier = singleAccountSupplier,
+                compositionVerifier = compositionVerifier,
                 jointAccountCompromisedAlert = jointAccountCompromisedAlert,
             ),
         )
