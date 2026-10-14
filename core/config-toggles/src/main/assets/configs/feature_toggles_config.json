@@ -137,11 +137,11 @@
     },
     {
         "name": "TWI_1062_GOOGLE_WALLET_PUSH_PROVISIONING_ENABLED",
-        "version": "6.5"
+        "version": "undefined"
     },
     {
         "name": "TWI_1062_GOOGLE_WALLET_BUTTON_ALWAYS_SHOWN",
-        "version": "6.5"
+        "version": "undefined"
     },
     {
         "name": "TWI_1357_HARDWARE_UPGRADE_STORIES_AB_ENABLED",
