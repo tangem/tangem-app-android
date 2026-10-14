@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.features.collectibles.impl.packopening.ui.components.confirmorder.ConfirmOrder
 import com.tangem.features.collectibles.impl.packopening.ui.components.confirmorder.rememberPackLaunchProgress
+import com.tangem.features.collectibles.impl.packopening.ui.components.packreveal.PackReveal
 import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.RewardCard
 import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.RewardCardTiming
 import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.rememberCardAspect
@@ -27,10 +28,19 @@ internal fun CollectiblesPackOpeningScreen(state: CollectiblesPackOpeningUM, mod
     )
 
     Box(modifier = modifier.fillMaxSize()) {
+        if (reveal != null) {
+            PackReveal(
+                onSurfaceAttach = reveal.onSurfaceAttached,
+                onSurfaceDetach = reveal.onSurfaceDetached,
+                isTapEnabled = stage == Stage.Reveal,
+                onTap = reveal.onRevealTap,
+            )
+        }
+
         if (content != null && card != null && stage == Stage.Reward) {
             RewardCard(
                 um = card,
-                timing = RewardCardTiming.Default,
+                timing = if (content.reveal.isSkipped) RewardCardTiming.Skipped else RewardCardTiming.Default,
                 cardAspect = cardAspect,
                 onBackClick = content.onBackClick,
                 onKeepCardClick = content.reveal.onKeepCardClick,
