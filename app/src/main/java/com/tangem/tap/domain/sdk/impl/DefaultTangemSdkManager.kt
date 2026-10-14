@@ -15,8 +15,8 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.services.secure.AccessCodeRepository
 import com.tangem.common.services.secure.CardAccessTokensRepository
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -74,6 +74,7 @@ internal class DefaultTangemSdkManager(
     private val tangemPayChallengeTask: TangemPayGenerateAddressAndSignChallengeTask,
     private val tangemPayMoneyAccountTask: TangemPayGenerateMoneyAccountAddressTask,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
     private val cardRepository: CardRepository,
     private val derivationsHelper: DerivationsHelper,
@@ -265,12 +266,12 @@ internal class DefaultTangemSdkManager(
                 val params = analyticsEvent.params.toMutableMap()
                 interceptor.intercept(params)
 
-                Analytics.send(event = analyticsEvent.withParams(params.toMap()))
+                analyticsEventHandler.send(event = analyticsEvent.withParams(params.toMap()))
             }
             .doOnFailure { tangemError ->
                 TangemLogger.e("scanProduct failed: code=${tangemError.code}, message=${tangemError.customMessage}")
                 (tangemError as? TangemSdkError)?.let { error ->
-                    Analytics.sendErrorEvent(TangemSdkErrorEvent(error))
+                    analyticsErrorHandler.sendErrorEvent(TangemSdkErrorEvent(error))
                 }
             }
     }
