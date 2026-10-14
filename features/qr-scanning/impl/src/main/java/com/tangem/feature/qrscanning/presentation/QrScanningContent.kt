@@ -81,10 +81,10 @@ internal fun QrScanningContent(
                     targetState = isFlash,
                     transitionSpec = { fadeIn().togetherWith(fadeOut()) },
                     label = "Flash Change",
-                ) {
+                ) { isFlashOn ->
                     TopAppBarButton(
                         button = TopAppBarButtonUM.Icon(
-                            iconRes = if (it) R.drawable.ic_flash_on_24 else R.drawable.ic_flash_off_24,
+                            iconRes = if (isFlashOn) R.drawable.ic_flash_on_24 else R.drawable.ic_flash_off_24,
                             onClicked = {
                                 isFlash = !isFlash
                             },
@@ -167,14 +167,12 @@ private fun Overlay(
                     ),
                 ),
             )
-            text?.let {
-                val textLayoutResult = text.let {
-                    textMeasurer.measure(
-                        text = it,
-                        style = style,
-                        constraints = Constraints.fixedWidth(squareSize.roundToInt()),
-                    )
-                }
+            if (text != null) {
+                val textLayoutResult = textMeasurer.measure(
+                    text = text,
+                    style = style,
+                    constraints = Constraints.fixedWidth(squareSize.roundToInt()),
+                )
                 drawText(
                     textLayoutResult = textLayoutResult,
                     color = whiteColor,

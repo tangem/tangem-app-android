@@ -91,11 +91,11 @@ fun ActionButton(
     ActionBaseButton(
         config = config,
         shape = RoundedCornerShape(size = 12.dp),
-        content = {
+        content = { contentModifier ->
             ActionButtonContent(
                 config = config,
                 text = { textColor -> Text(text = config.text, textColor = textColor) },
-                modifier = it.padding(
+                modifier = contentModifier.padding(
                     start = 16.dp,
                     end = 24.dp,
                 ),

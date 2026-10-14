@@ -50,8 +50,8 @@ internal class UserWalletSaver @Inject constructor(
     suspend fun scanAndSaveUserWallet(scope: CoroutineScope) {
         val response = scanCard(scope)
         response.fold(
-            ifLeft = {
-                val message = it.message
+            ifLeft = { error ->
+                val message = error.message
 
                 if (!message.isNullOrEmpty()) {
                     messageSender.send(SnackbarMessage(message))
@@ -64,8 +64,8 @@ internal class UserWalletSaver @Inject constructor(
                         val userWallet = createUserWallet(scanResponse)
                         saveWallet(userWallet, scanResponse)
                     },
-                    recover = {
-                        val message = it.message
+                    recover = { throwable ->
+                        val message = throwable.message
 
                         if (!message.isNullOrEmpty()) {
                             messageSender.send(SnackbarMessage(message))

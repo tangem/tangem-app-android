@@ -17,10 +17,10 @@ internal class TangemPayTxHistoryUiManager(
     @OptIn(ExperimentalCoroutinesApi::class)
     val items: Flow<ImmutableList<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM>> = state
         // filter initial states, since we dont emit loading items as UI items
-        .filter {
-            it.status !is PaginationStatus.None &&
-                it.status !is PaginationStatus.InitialLoading &&
-                it.status !is PaginationStatus.InitialLoadingError
+        .filter { batch ->
+            batch.status !is PaginationStatus.None &&
+                batch.status !is PaginationStatus.InitialLoading &&
+                batch.status !is PaginationStatus.InitialLoadingError
         }
         .mapLatest { state ->
             state.uiBatches.asSequence()

@@ -199,7 +199,7 @@ private fun WalletNFTItemLoading(modifier: Modifier = Modifier) {
 @Composable
 @Suppress("MagicNumber")
 private fun BoxScope.CollectionsPreviews(previews: ImmutableList<CollectionPreview>, modifier: Modifier = Modifier) {
-    val modifiers = when (previews.size) {
+    val previewModifiers = when (previews.size) {
         1 -> previews1Modifiers()
         2 -> previews2Modifiers()
         3 -> previews3Modifiers()
@@ -209,12 +209,12 @@ private fun BoxScope.CollectionsPreviews(previews: ImmutableList<CollectionPrevi
         modifier = modifier
             .size(36.dp),
     ) {
-        previews.take(modifiers.size).forEachIndexed { index, s ->
-            val modifier = modifiers[index]
+        previews.take(previewModifiers.size).forEachIndexed { index, s ->
+            val previewModifier = previewModifiers[index]
             when (s) {
                 is CollectionPreview.Image -> {
                     SubcomposeAsyncImage(
-                        modifier = modifier,
+                        modifier = previewModifier,
                         model = s.url,
                         loading = {
                             RectangleShimmer(radius = 0.dp)
@@ -229,7 +229,7 @@ private fun BoxScope.CollectionsPreviews(previews: ImmutableList<CollectionPrevi
                 }
                 is CollectionPreview.More -> {
                     Image(
-                        modifier = modifier
+                        modifier = previewModifier
                             .background(TangemTheme.colors.stroke.primary),
                         painter = painterResource(R.drawable.ic_nft_preview_more_16),
                         contentDescription = null,

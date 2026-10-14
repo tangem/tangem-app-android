@@ -67,7 +67,7 @@ internal fun NFTDetailsInfoGroup(
 @Composable
 private fun SalePrice(state: NFTAssetUM.SalePrice, modifier: Modifier = Modifier) {
     AnimatedVisibility(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .animateContentSize(),
         visible = state !is NFTAssetUM.SalePrice.Empty,
@@ -78,7 +78,7 @@ private fun SalePrice(state: NFTAssetUM.SalePrice, modifier: Modifier = Modifier
             is NFTAssetUM.SalePrice.Empty -> Unit
             is NFTAssetUM.SalePrice.Loading -> {
                 Column(
-                    modifier = modifier
+                    modifier = Modifier
                         .padding(
                             start = 12.dp,
                             end = 12.dp,
@@ -101,7 +101,7 @@ private fun SalePrice(state: NFTAssetUM.SalePrice, modifier: Modifier = Modifier
             }
             is NFTAssetUM.SalePrice.Content -> {
                 Column(
-                    modifier = modifier
+                    modifier = Modifier
                         .padding(
                             start = 12.dp,
                             end = 12.dp,

@@ -37,12 +37,12 @@ internal fun NFTDetailsAsset(
     val bottomPadding = 76.dp + bottomBarHeight
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .bottomFade(),
     ) {
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .verticalScroll(scrollState)
                 .padding(
                     start = 16.dp,
