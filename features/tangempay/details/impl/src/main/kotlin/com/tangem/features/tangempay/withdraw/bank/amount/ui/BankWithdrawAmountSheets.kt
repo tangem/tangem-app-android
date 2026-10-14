@@ -13,6 +13,7 @@ import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
@@ -92,6 +93,7 @@ private fun TokenRow(item: TokenItemUM) {
 private fun RouteRow(item: RouteItemUM) {
     TangemRow(
         modifier = Modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_ROUTE_OPTION),
+        contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = { BankRailIcon(rail = item.rail, size = 40.dp) },
         titleSlot = { TangemRowText(text = item.title.resolveReference(), role = TangemRowTextRole.Title) },
