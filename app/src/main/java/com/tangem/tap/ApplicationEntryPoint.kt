@@ -19,7 +19,6 @@ import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
 import com.tangem.tap.common.log.TangemLoggingInitializer
-import com.tangem.tap.domain.yield.YieldSupplyClaimOutcomeAnnouncer
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -43,8 +42,6 @@ interface ApplicationEntryPoint {
     fun getOneTimeEventFilter(): OneTimeEventFilter
 
     fun getTangemLoggingInitializer(): TangemLoggingInitializer
-
-    fun getYieldSupplyClaimOutcomeAnnouncer(): YieldSupplyClaimOutcomeAnnouncer
 
     fun getBlockchainExceptionHandler(): BlockchainExceptionHandler
 
