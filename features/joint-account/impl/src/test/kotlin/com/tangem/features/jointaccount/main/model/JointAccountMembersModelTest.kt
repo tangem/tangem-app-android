@@ -15,7 +15,9 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.ToastMessage
+import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
@@ -28,12 +30,12 @@ import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.GetSharedJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.MarkJointAccountInviteSharedUseCase
+import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatcher
 import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
@@ -96,6 +98,7 @@ internal class JointAccountMembersModelTest {
     private val archiveCryptoPortfolioUseCase: ArchiveCryptoPortfolioUseCase = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val compositionVerifier: JointAccountCompositionVerifier = mockk()
+    private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
     private val jointAccountCompromisedAlert: JointAccountCompromisedAlert = mockk(relaxed = true)
 
     @BeforeEach
@@ -118,7 +121,14 @@ internal class JointAccountMembersModelTest {
             userWalletsListRepository,
             compositionVerifier,
             jointAccountCompromisedAlert,
+            singleAccountListSupplier,
         )
+        val localAccount = mockk<Account.Joint> {
+            every { accountId } returns AccountId.forJointAccount(USER_WALLET_ID, ACCOUNT_ID).getOrNull()!!
+            every { ownerKeyIndex } returns MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID).ownerKeyIndex
+        }
+        every { singleAccountListSupplier(USER_WALLET_ID) } returns
+            flowOf(mockk<AccountList> { every { accounts } returns listOf(localAccount) })
         coEvery { compositionVerifier.isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any()) } returns
             true
         val coldWallet = mockk<UserWallet.Cold> {
@@ -797,11 +807,9 @@ internal class JointAccountMembersModelTest {
 
     /** Stubs a creator-owned pending account; returns its resolved [AccountId] for the archive use case. */
     @Test
-    fun `GIVEN the composition does not verify WHEN the screen opens THEN it closes with the alert unshown`() = runTest {
+    fun `GIVEN the composition does not verify WHEN the screen opens THEN it closes with the alert shown`() = runTest {
         // Arrange
         stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
-        val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
-        every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns flowOf(jointAccount)
         coEvery {
             compositionVerifier.isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any())
         } returns false
@@ -866,7 +874,7 @@ internal class JointAccountMembersModelTest {
                 markJointAccountInviteSharedUseCase = markInviteSharedUseCase,
             ),
             compromiseWatcher = JointAccountCompromiseWatcher(
-                singleAccountSupplier = singleAccountSupplier,
+                singleAccountListSupplier = singleAccountListSupplier,
                 compositionVerifier = compositionVerifier,
                 jointAccountCompromisedAlert = jointAccountCompromisedAlert,
             ),
