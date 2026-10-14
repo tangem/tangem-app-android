@@ -115,6 +115,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                     NotificationType.JointMembers,
                     NotificationType.JointOverview,
                     NotificationType.JointTxSent,
+                    NotificationType.SupportMessage,
                     NotificationType.Unknown,
                     -> Unit
                 }
