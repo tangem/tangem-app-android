@@ -19,6 +19,7 @@ import com.tangem.domain.swap.usecase.GetSwapDataUseCase
 import com.tangem.domain.swap.usecase.SwapTransactionSentUseCase
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
@@ -190,9 +191,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
             txData.destinationAddress
         }
 
-        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
-
-        val result = if (feeExtended != null && isFeeInTokenCurrency) {
+        val result = if (feeExtended?.isGasless == true) {
             createAndSendGaslessTransactionUseCase(
                 userWallet = userWallet,
                 transactionData = txData,

@@ -40,7 +40,6 @@ import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
-import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -129,8 +128,6 @@ internal abstract class SendModelTestBase {
     protected val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase = mockk(relaxed = true)
     protected val currenciesRepository: CurrenciesRepository = mockk(relaxed = true)
     protected val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase = mockk(relaxed = true)
-    protected val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase =
-        mockk(relaxed = true)
     protected val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase = mockk(relaxed = true)
     protected val sendAnalyticHelper: SendAnalyticHelper = mockk(relaxed = true)
     protected val recordTokenTransferFromSendUseCase: RecordTokenTransferFromSendUseCase = mockk(relaxed = true)
@@ -249,7 +246,6 @@ internal abstract class SendModelTestBase {
             manageCryptoCurrenciesUseCase = manageCryptoCurrenciesUseCase,
             currenciesRepository = currenciesRepository,
             createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
-            createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
             isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
             jointSendDelegate = jointSendDelegate,
             recordTokenTransferFromSendUseCase = recordTokenTransferFromSendUseCase,
