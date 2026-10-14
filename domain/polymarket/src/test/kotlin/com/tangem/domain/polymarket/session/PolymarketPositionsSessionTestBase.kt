@@ -18,7 +18,7 @@ import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchUpdateFetcher
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.BatchListSource
-import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
+import com.tangem.pagination.fetcher.BatchFetcher
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -37,8 +37,9 @@ internal abstract class PolymarketPositionsSessionTestBase {
     protected val wallet = UserWalletId("011")
     protected val addresses: PolymarketAddresses = mockk()
     protected val positionsUpdater = DefaultPredictionPositionsUpdater()
+    /** Every page read, as the list identity and the zero-based page index. */
     protected val requests = mutableListOf<Pair<PolymarketPositionsListConfig, Int>>()
-    protected var fetch: suspend (Int) -> BatchFetchResult<List<PolymarketPosition>> = { page() }
+    protected var fetch: suspend (index: Int) -> BatchFetchResult<List<PolymarketPosition>> = { page() }
 
     protected fun TestScope.createFactory(
         dispatcher: TestDispatcher = StandardTestDispatcher(testScheduler),
@@ -52,15 +53,8 @@ internal abstract class PolymarketPositionsSessionTestBase {
                 fetchDispatcher = fetchDispatcher,
                 context = context,
                 generateNewKey = { keys -> keys.size },
-                batchFetcher = LimitOffsetBatchFetcher<PolymarketPositionsListConfig, List<PolymarketPosition>>(
-                    prefetchDistance = size,
-                    batchSize = size,
-                    subFetcher = { request, _, _ ->
-                        requests += request.params to request.offset
-                        fetch(request.offset)
-                    },
-                ),
-                updateFetcher = refreshByOffset(size),
+                batchFetcher = PagesFetcher(),
+                updateFetcher = refreshByWalking(),
             ).toBatchFlow()
         }
         return CreatePolymarketPositionsSessionUseCase(
@@ -87,18 +81,52 @@ internal abstract class PolymarketPositionsSessionTestBase {
         last: Boolean = true,
     ): BatchFetchResult<List<PolymarketPosition>> = BatchFetchResult.Success(positions, positions.isEmpty(), last)
 
-    /** Mirrors the production update fetcher: page `k` is read again at offset `k * size` and replaced. */
-    private fun refreshByOffset(size: Int) =
+    /** Mirrors the production batch fetcher: pages are read in order, a failed page is read again. */
+    private inner class PagesFetcher : BatchFetcher<PolymarketPositionsListConfig, List<PolymarketPosition>> {
+
+        private var config: PolymarketPositionsListConfig? = null
+        private var index = 0
+
+        override suspend fun fetchFirst(
+            requestParams: PolymarketPositionsListConfig,
+        ): BatchFetchResult<List<PolymarketPosition>> {
+            config = requestParams
+            index = 0
+            return read()
+        }
+
+        override suspend fun fetchNext(
+            overrideRequestParams: PolymarketPositionsListConfig?,
+            lastResult: BatchFetchResult<List<PolymarketPosition>>,
+        ): BatchFetchResult<List<PolymarketPosition>> =
+            if (overrideRequestParams != null) fetchFirst(overrideRequestParams) else read()
+
+        private suspend fun read(): BatchFetchResult<List<PolymarketPosition>> {
+            requests += requireNotNull(config) to index
+            return fetch(index).also { if (it is BatchFetchResult.Success) index++ }
+        }
+    }
+
+    /**
+     * Mirrors the production update fetcher: page `k` is read again through the pages before it, so a page past
+     * the end of a shrunk list is emptied without a read.
+     */
+    private fun refreshByWalking() =
         object : BatchUpdateFetcher<Int, List<PolymarketPosition>, PolymarketPositionsUpdateRequest> {
             override suspend fun BatchUpdateFetcher.UpdateContext<Int, List<PolymarketPosition>>.fetchUpdateAsync(
                 toUpdate: List<Batch<Int, List<PolymarketPosition>>>,
                 updateRequest: PolymarketPositionsUpdateRequest,
             ) {
-                toUpdate.forEach { batch ->
-                    requests += updateRequest.config to batch.key * size
-                    val positions = when (val result = fetch(batch.key * size)) {
-                        is BatchFetchResult.Success -> result.data
-                        is BatchFetchResult.Error -> throw result.throwable
+                var hasNext = true
+                toUpdate.sortedBy { it.key }.forEach { batch ->
+                    val positions = if (hasNext) {
+                        requests += updateRequest.config to batch.key
+                        when (val result = fetch(batch.key)) {
+                            is BatchFetchResult.Success -> result.data.also { hasNext = !result.last }
+                            is BatchFetchResult.Error -> throw result.throwable
+                        }
+                    } else {
+                        emptyList()
                     }
                     update {
                         BatchUpdateResult.Success(
