@@ -43,11 +43,7 @@ internal class SwapInteractorImplOnSwapCexSendTest : SwapInteractorImplTestBase(
 
     @BeforeEach
     fun setup() {
-        clearMocks(
-            sendTransactionUseCase,
-            createAndSendGaslessTransactionUseCase,
-            createAndSendTronGaslessTransactionUseCase,
-        )
+        clearMocks(sendTransactionUseCase, createAndSendGaslessTransactionUseCase)
         every { isDemoCardUseCase(any()) } returns false
         coEvery {
             repository.getExchangeData(
@@ -70,21 +66,13 @@ internal class SwapInteractorImplOnSwapCexSendTest : SwapInteractorImplTestBase(
                 payInAddress = any(), txHash = any(), payInExtraId = any(),
             )
         } returns Unit.right()
-        coEvery {
-            createAndSendTronGaslessTransactionUseCase(
-                userWallet = any(),
-                network = any(),
-                transactionData = any(),
-                fee = any(),
-            )
-        } returns TRON_TX_HASH.right()
-        coEvery { createAndSendGaslessTransactionUseCase(any(), any(), any()) } returns EVM_TX_HASH.right()
+        coEvery { createAndSendGaslessTransactionUseCase(any(), any(), any()) } returns GASLESS_TX_HASH.right()
         coEvery { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) } returns
             NATIVE_TX_HASH.right()
     }
 
     @Test
-    fun `GIVEN fee with Tron gasless quote WHEN onSwap CEX THEN sends via Tron gasless`() = runTest {
+    fun `GIVEN fee with Tron gasless quote WHEN onSwap CEX THEN sends via gasless dispatcher`() = runTest {
         // Arrange
         val fromStatus = hotTronTokenStatus()
         val feeExtended = TransactionFeeExtended(
@@ -98,23 +86,18 @@ internal class SwapInteractorImplOnSwapCexSendTest : SwapInteractorImplTestBase(
 
         // Assert
         assertThat(result).isInstanceOf(SwapTransactionState.TxSent::class.java)
-        val network = fromStatus.currency.network
         coVerify(exactly = 1) {
-            createAndSendTronGaslessTransactionUseCase(
-                userWallet = fromStatus.userWallet,
-                network = network,
+            createAndSendGaslessTransactionUseCase(
                 transactionData = txData,
+                userWallet = fromStatus.userWallet,
                 fee = feeExtended,
             )
         }
-        coVerify(exactly = 0) {
-            createAndSendGaslessTransactionUseCase(any(), any(), any())
-            sendTransactionUseCase(txData = any(), userWallet = any(), network = any())
-        }
+        coVerify(exactly = 0) { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) }
     }
 
     @Test
-    fun `GIVEN token fee without Tron quote WHEN onSwap CEX THEN sends via EVM gasless`() = runTest {
+    fun `GIVEN EVM token fee WHEN onSwap CEX THEN sends via gasless dispatcher`() = runTest {
         // Arrange
         val fromStatus = hotTronTokenStatus()
         val feeExtended = TransactionFeeExtended(
@@ -123,9 +106,10 @@ internal class SwapInteractorImplOnSwapCexSendTest : SwapInteractorImplTestBase(
         )
 
         // Act
-        onSwapCex(fromStatus, swapFee(feeExtended, feeToken = fromStatus.status))
+        val result = onSwapCex(fromStatus, swapFee(feeExtended, feeToken = fromStatus.status))
 
         // Assert
+        assertThat(result).isInstanceOf(SwapTransactionState.TxSent::class.java)
         coVerify(exactly = 1) {
             createAndSendGaslessTransactionUseCase(
                 transactionData = txData,
@@ -133,14 +117,7 @@ internal class SwapInteractorImplOnSwapCexSendTest : SwapInteractorImplTestBase(
                 fee = feeExtended,
             )
         }
-        coVerify(exactly = 0) {
-            createAndSendTronGaslessTransactionUseCase(
-                userWallet = any(),
-                network = any(),
-                transactionData = any(),
-                fee = any(),
-            )
-        }
+        coVerify(exactly = 0) { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) }
     }
 
     @Test
@@ -156,21 +133,15 @@ internal class SwapInteractorImplOnSwapCexSendTest : SwapInteractorImplTestBase(
         )
 
         // Act
-        onSwapCex(fromStatus, nativeFee)
+        val result = onSwapCex(fromStatus, nativeFee)
 
         // Assert
+        assertThat(result).isInstanceOf(SwapTransactionState.TxSent::class.java)
+        val network = fromStatus.currency.network
         coVerify(exactly = 1) {
-            sendTransactionUseCase(txData = txData, userWallet = fromStatus.userWallet, network = any())
+            sendTransactionUseCase(txData = txData, userWallet = fromStatus.userWallet, network = network)
         }
-        coVerify(exactly = 0) {
-            createAndSendTronGaslessTransactionUseCase(
-                userWallet = any(),
-                network = any(),
-                transactionData = any(),
-                fee = any(),
-            )
-            createAndSendGaslessTransactionUseCase(any(), any(), any())
-        }
+        coVerify(exactly = 0) { createAndSendGaslessTransactionUseCase(any(), any(), any()) }
     }
 
     private suspend fun onSwapCex(fromStatus: SwapCurrencyStatus, fee: SwapFee): SwapTransactionState = sut.onSwap(
@@ -225,8 +196,7 @@ internal class SwapInteractorImplOnSwapCexSendTest : SwapInteractorImplTestBase(
     private companion object {
         const val USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
         const val CEX_DEPOSIT_ADDRESS = "TCexDepositAddress"
-        const val TRON_TX_HASH = "tron-original-hash"
-        const val EVM_TX_HASH = "evm-gasless-hash"
+        const val GASLESS_TX_HASH = "gasless-hash"
         const val NATIVE_TX_HASH = "native-hash"
     }
 }
