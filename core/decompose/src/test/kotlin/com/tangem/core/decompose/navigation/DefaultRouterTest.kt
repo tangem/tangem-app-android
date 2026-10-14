@@ -53,6 +53,32 @@ internal class DefaultRouterTest {
     }
 
     @Test
+    fun `GIVEN stack WHEN replaceCurrent THEN top route is replaced and completion is successful`() {
+        // Arrange
+        stack = listOf(RouteA, RouteB)
+
+        // Act
+        router.replaceCurrent(RouteC, onComplete)
+
+        // Assert
+        assertThat(stack).containsExactly(RouteA, RouteC).inOrder()
+        assertThat(results).containsExactly(true)
+    }
+
+    @Test
+    fun `GIVEN stack WHEN pop THEN top route is removed and completion is successful`() {
+        // Arrange
+        stack = listOf(RouteA, RouteB)
+
+        // Act
+        router.pop(onComplete)
+
+        // Assert
+        assertThat(stack).containsExactly(RouteA)
+        assertThat(results).containsExactly(true)
+    }
+
+    @Test
     fun `GIVEN stack WHEN replaceAll THEN stack is replaced and completion is successful`() {
         // Arrange
         stack = listOf(RouteA, RouteB)
