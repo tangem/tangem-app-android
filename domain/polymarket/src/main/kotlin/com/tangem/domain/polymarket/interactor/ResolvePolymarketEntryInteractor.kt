@@ -1,6 +1,7 @@
 package com.tangem.domain.polymarket.interactor
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.raise.either
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
@@ -25,9 +26,11 @@ import com.tangem.utils.logging.TangemLogger
  * stored locally, so a reinstall, a new device or a wallet onboarded elsewhere leaves the status ready with
  * nothing to sign with. Such a user still owes onboarding, which restores the credentials without deploying.
  *
- * A wallet the backend has already confirmed resolves from local state alone. [invoke] may open a card session
- * to derive the owner address; [withoutPrompting] stops short of that instead of paying for a session the user
- * never asked for.
+ * A wallet confirmed earlier is still checked against the backend whenever its addresses are stored: the backend
+ * can demote a ready wallet (a new approvals set), and only its status sends that user back to onboarding. The
+ * local confirmation answers alone only when the backend cannot be read or the addresses are not stored.
+ * [invoke] may open a card session to derive the owner address; [withoutPrompting] stops short of that instead of
+ * paying for a session the user never asked for.
  */
 class ResolvePolymarketEntryInteractor(
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
@@ -78,9 +81,16 @@ class ResolvePolymarketEntryInteractor(
         if (!polymarketOnboardedStore.isOnboardedSync(userWalletId)) return null
         if (getPolymarketApiCredentialsUseCase(userWalletId) == null) return null
 
-        TangemLogger.i("Resolve: $userWalletId is confirmed onboarded")
+        val addresses = derivePolymarketAddressesUseCase.stored(userWalletId)
+        if (addresses == null) {
+            TangemLogger.i("Resolve: $userWalletId is confirmed onboarded, no stored addresses to recheck")
+            return PolymarketEntry.Onboarded
+        }
 
-        return PolymarketEntry.Onboarded
+        return entryFor(addresses).getOrElse {
+            TangemLogger.i("Resolve: $userWalletId is confirmed onboarded, recheck unavailable")
+            PolymarketEntry.Onboarded
+        }
     }
 
     private suspend fun entryFor(addresses: PolymarketAddresses): Either<PolymarketOnboardingError, PolymarketEntry> =
