@@ -326,9 +326,8 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
         if (player.skipToReveal()) reveal.update { it.copy(isSkipped = true) }
     }
 
-    @Suppress("EmptyFunctionBlock")
     private fun onKeepCardClick() {
-        // TODO([REDACTED_TASK_KEY]): keeping a card needs the collection screen, which is not built yet
+        router.pop()
     }
 
     @Suppress("EmptyFunctionBlock")
