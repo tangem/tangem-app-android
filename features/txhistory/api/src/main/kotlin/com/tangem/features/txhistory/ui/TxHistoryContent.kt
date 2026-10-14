@@ -99,13 +99,13 @@ private fun TxHistoryLoadMoreFooter(
         Box(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(vertical = TangemTheme.dimens2.x4),
+                .padding(vertical = 16.dp),
             contentAlignment = Alignment.Center,
         ) {
             CircularProgressIndicator(
-                modifier = Modifier.size(TangemTheme.dimens2.x6),
+                modifier = Modifier.size(24.dp),
                 color = TangemTheme.colors2.graphic.neutral.tertiaryConstant,
-                strokeWidth = TangemTheme.dimens2.x0_5,
+                strokeWidth = 2.dp,
             )
         }
     }
@@ -189,12 +189,12 @@ private fun TxHistoryLoadingDateHeader(modifier: Modifier = Modifier) {
     RectangleShimmer(
         modifier = modifier
             .padding(
-                top = TangemTheme.dimens2.x6,
-                bottom = TangemTheme.dimens2.x3,
-                start = TangemTheme.dimens2.x4,
+                top = 24.dp,
+                bottom = 12.dp,
+                start = 16.dp,
             )
-            .size(width = LoadingTitleShimmerWidth, height = TangemTheme.dimens2.x4),
-        radius = TangemTheme.dimens2.x2,
+            .size(width = LoadingTitleShimmerWidth, height = 16.dp),
+        radius = 8.dp,
     )
 }
 
@@ -203,39 +203,39 @@ private fun TxHistoryLoadingTransaction(modifier: Modifier = Modifier) {
     TangemRowContainer(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(
-            horizontal = TangemTheme.dimens2.x4,
-            vertical = TangemTheme.dimens2.x3,
+            horizontal = 16.dp,
+            vertical = 12.dp,
         ),
         content = {
             CircleShimmer(
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.HEAD)
-                    .padding(end = TangemTheme.dimens2.x3)
-                    .size(TangemTheme.dimens2.x10),
+                    .padding(end = 12.dp)
+                    .size(40.dp),
             )
             RectangleShimmer(
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.START_TOP)
-                    .size(width = LoadingPrimaryShimmerWidth, height = TangemTheme.dimens2.x5),
-                radius = TangemTheme.dimens2.x2,
+                    .size(width = LoadingPrimaryShimmerWidth, height = 20.dp),
+                radius = 8.dp,
             )
             RectangleShimmer(
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.START_BOTTOM)
-                    .size(width = LoadingSecondaryShimmerWidth, height = TangemTheme.dimens2.x4),
-                radius = TangemTheme.dimens2.x2,
+                    .size(width = LoadingSecondaryShimmerWidth, height = 16.dp),
+                radius = 8.dp,
             )
             RectangleShimmer(
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.END_TOP)
-                    .size(width = LoadingEndTopShimmerWidth, height = TangemTheme.dimens2.x5),
-                radius = TangemTheme.dimens2.x2,
+                    .size(width = LoadingEndTopShimmerWidth, height = 20.dp),
+                radius = 8.dp,
             )
             RectangleShimmer(
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.END_BOTTOM)
-                    .size(width = LoadingEndBottomShimmerWidth, height = TangemTheme.dimens2.x4),
-                radius = TangemTheme.dimens2.x2,
+                    .size(width = LoadingEndBottomShimmerWidth, height = 16.dp),
+                radius = 8.dp,
             )
         },
     )

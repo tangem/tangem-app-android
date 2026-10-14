@@ -1,6 +1,7 @@
 package com.tangem.features.collectibles.impl.packopening
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -13,6 +14,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.collectibles.impl.packopening.model.CollectiblesPackOpeningModel
 import com.tangem.features.collectibles.impl.packopening.sheet.CollectiblesConfirmOrderSheetComponent
@@ -46,6 +48,9 @@ internal class CollectiblesPackOpeningComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
+        val isDarkTheme = LocalIsInDarkTheme.current
+
+        LaunchedEffect(isDarkTheme) { model.onThemeChanged(isDarkTheme) }
 
         CollectiblesPackOpeningScreen(state = state, modifier = modifier)
 

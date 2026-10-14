@@ -81,7 +81,7 @@ internal fun WcConnectedAppInfoBS(state: WcConnectedAppInfoUM) {
 private fun WcConnectedAppInfoBSContent(state: WcConnectedAppInfoUM, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         val blocksModifier = Modifier
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+            .clip(RoundedCornerShape(14.dp))
             .background(color = TangemTheme.colors.background.action)
             .fillMaxWidth()
         AppInfoFirstBlock(
@@ -104,7 +104,7 @@ private fun WcConnectedAppInfoBSContent(state: WcConnectedAppInfoUM, modifier: M
                 )
             }
             Notification(
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing14),
+                modifier = Modifier.padding(top = 14.dp),
                 config = notification.config,
                 containerColor = containerColor,
                 titleColor = titleColor,
@@ -152,7 +152,7 @@ private fun PortfolioName(portfolioName: AccountTitleUM, modifier: Modifier = Mo
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(TangemTheme.dimens.spacing12),
+            .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
@@ -169,7 +169,7 @@ private fun PortfolioName(portfolioName: AccountTitleUM, modifier: Modifier = Mo
         }
         Text(
             modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing4)
+                .padding(start = 4.dp)
                 .weight(1f)
                 .testTag(WalletConnectDetailsBottomSheetTestTags.WALLET_TITLE),
             text = leftText,
@@ -178,7 +178,7 @@ private fun PortfolioName(portfolioName: AccountTitleUM, modifier: Modifier = Mo
         )
         AccountTitle(
             modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing16)
+                .padding(start = 16.dp)
                 .testTag(WalletConnectDetailsBottomSheetTestTags.WALLET_NAME),
             accountTitleUM = portfolioName,
             textStyle = TangemTheme.typography.body1,

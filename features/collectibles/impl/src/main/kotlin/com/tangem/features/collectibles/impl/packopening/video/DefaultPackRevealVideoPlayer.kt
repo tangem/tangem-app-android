@@ -30,7 +30,7 @@ internal class DefaultPackRevealVideoPlayer(
 
     private var videoPlaybackState = VideoPlaybackState.Idle
 
-    private var isSoundReady = false
+    private var isSkipSoundReady = false
 
     private val videoListener = object : Player.Listener {
 
@@ -53,12 +53,12 @@ internal class DefaultPackRevealVideoPlayer(
     private val soundListener = object : Player.Listener {
 
         override fun onPlaybackStateChanged(state: Int) {
-            if (state == Player.STATE_READY) isSoundReady = true
+            if (state == Player.STATE_READY) isSkipSoundReady = true
         }
 
         override fun onPlayerError(error: PlaybackException) {
             listener.onError(error)
-            isSoundReady = false
+            isSkipSoundReady = false
         }
     }
 
@@ -79,7 +79,7 @@ internal class DefaultPackRevealVideoPlayer(
         videoPlayer.clearVideoSurfaceView(surfaceView)
     }
 
-    override suspend fun preloadSound(url: String?) {
+    override suspend fun preloadSkipSound(url: String?) {
         if (!isMotionEnabled || url == null) return
 
         load(url = url, into = soundPlayer, onFailure = {})
@@ -117,8 +117,8 @@ internal class DefaultPackRevealVideoPlayer(
         videoPlayer.play()
     }
 
-    override fun playShortSound() {
-        if (!isSoundReady) return
+    override fun playSkipSound() {
+        if (!isSkipSoundReady) return
 
         soundPlayer.seekTo(0L)
         soundPlayer.play()
@@ -130,7 +130,8 @@ internal class DefaultPackRevealVideoPlayer(
 
         videoPlayer.seekTo(skipToMs)
         videoPlayer.volume = 0f
-        playShortSound()
+        playSkipSound()
+
         return true
     }
 

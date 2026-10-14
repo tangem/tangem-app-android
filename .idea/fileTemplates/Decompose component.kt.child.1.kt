@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -26,13 +27,13 @@ internal fun ${NAME}Content(state: ${NAME}UM, modifier: Modifier = Modifier) {
     ) {
         AppBarWithBackButton(
             onBackClick = state.onBackClick,
-            modifier = Modifier.height(TangemTheme.dimens.size56),
+            modifier = Modifier.height(56.dp),
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = TangemTheme.dimens.spacing16)
+                .padding(horizontal = 16.dp)
                 .weight(1f),
 
         ) {

@@ -112,7 +112,7 @@ private fun FcaProviderWarning(modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size16),
+            modifier = Modifier.size(16.dp),
             painter = painterResource(id = R.drawable.ic_warning_16),
             tint = TangemTheme.colors.icon.informative,
             contentDescription = null,

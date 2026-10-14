@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.res.TangemColorPalette
@@ -21,10 +22,10 @@ internal fun PaymentMethodIcon(method: OnrampPaymentMethod, modifier: Modifier =
 
     SubcomposeAsyncImage(
         modifier = modifier
-            .size(TangemTheme.dimens.size40)
+            .size(40.dp)
             .clip(TangemTheme.shapes.roundedCorners8)
             .background(tileColor)
-            .padding(TangemTheme.dimens.spacing4)
+            .padding(4.dp)
             .testTag(SelectProviderBottomSheetTestTags.PAYMENT_METHOD_ICON),
         model = ImageRequest.Builder(context = LocalContext.current)
             .data(method.themedImageUrl())

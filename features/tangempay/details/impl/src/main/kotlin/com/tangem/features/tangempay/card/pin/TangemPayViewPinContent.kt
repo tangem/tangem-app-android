@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -86,8 +87,8 @@ internal fun TangemPayViewPinContent(state: TangemPayViewPinUM) {
 private fun PinSuccessContent(state: TangemPayViewPinUM.Content, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .padding(horizontal = TangemTheme.dimens2.x4)
-            .padding(top = TangemTheme.dimens2.x12)
+            .padding(horizontal = 16.dp)
+            .padding(top = 48.dp)
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -99,7 +100,7 @@ private fun PinSuccessContent(state: TangemPayViewPinUM.Content, modifier: Modif
             textAlign = TextAlign.Center,
         )
 
-        SpacerH(TangemTheme.dimens2.x2)
+        SpacerH(8.dp)
 
         Text(
             text = stringResourceSafe(R.string.tangempay_card_details_view_pin_code_description),
@@ -108,16 +109,16 @@ private fun PinSuccessContent(state: TangemPayViewPinUM.Content, modifier: Modif
             textAlign = TextAlign.Center,
         )
 
-        SpacerH(TangemTheme.dimens2.x8)
+        SpacerH(32.dp)
 
         PinCode(value = state.pin)
 
-        SpacerH(TangemTheme.dimens2.x12)
+        SpacerH(48.dp)
 
         TangemButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = TangemTheme.dimens2.x4)
+                .padding(vertical = 16.dp)
                 .testTag(TangemPayTestTags.VIEW_PIN_CHANGE_BUTTON),
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.tangempay_change_pin_code),
@@ -130,8 +131,8 @@ private fun PinSuccessContent(state: TangemPayViewPinUM.Content, modifier: Modif
 private fun PinLoadingContent(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .padding(horizontal = TangemTheme.dimens2.x4)
-            .padding(top = TangemTheme.dimens2.x12)
+            .padding(horizontal = 16.dp)
+            .padding(top = 48.dp)
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -143,7 +144,7 @@ private fun PinLoadingContent(modifier: Modifier = Modifier) {
             textAlign = TextAlign.Center,
         )
 
-        SpacerH(TangemTheme.dimens2.x2)
+        SpacerH(8.dp)
 
         Text(
             text = stringResourceSafe(R.string.tangempay_card_details_view_pin_code_description),
@@ -152,20 +153,20 @@ private fun PinLoadingContent(modifier: Modifier = Modifier) {
             textAlign = TextAlign.Center,
         )
 
-        SpacerH(TangemTheme.dimens2.x8)
+        SpacerH(32.dp)
 
         TangemLoader(
             modifier = Modifier
-                .padding(vertical = TangemTheme.dimens2.x5)
+                .padding(vertical = 20.dp)
                 .testTag(TangemPayTestTags.VIEW_PIN_LOADER),
         )
 
-        SpacerH(TangemTheme.dimens2.x12)
+        SpacerH(48.dp)
 
         TangemButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = TangemTheme.dimens2.x4)
+                .padding(vertical = 16.dp)
                 .testTag(TangemPayTestTags.VIEW_PIN_CHANGE_BUTTON),
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.tangempay_change_pin_code),
@@ -190,15 +191,15 @@ private fun PinCode(value: String, modifier: Modifier = Modifier, numbersCount: 
                 contentAlignment = Alignment.Center,
             ) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     repeat(numbersCount) { index ->
                         val digit = value.getOrNull(index)?.toString()
                         PinDigitBox(
                             modifier = Modifier.size(
-                                width = TangemTheme.dimens2.x14,
-                                height = TangemTheme.dimens2.x16,
+                                width = 56.dp,
+                                height = 64.dp,
                             ),
                             digit = digit,
                             backgroundColor = TangemTheme.colors3.bg.transparent.primary,

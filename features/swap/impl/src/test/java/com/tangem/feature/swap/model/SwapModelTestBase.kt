@@ -52,7 +52,7 @@ import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
-import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
+import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.domain.GetSwapUiModeUseCase
 import com.tangem.feature.swap.domain.SetSwapUiModeUseCase
@@ -112,7 +112,7 @@ internal abstract class SwapModelTestBase {
     protected val getPaymentAccountCryptoCurrencyStatusUseCase: GetPaymentAccountCryptoCurrencyStatusUseCase =
         mockk(relaxed = true)
     protected val tangemPayWithdrawWithSwapUseCase: TangemPayWithdrawWithSwapUseCase = mockk(relaxed = true)
-    protected val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk(relaxed = true)
+    protected val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork = mockk(relaxed = true)
     protected val feeSelectorReloadTrigger: FeeSelectorReloadTrigger = mockk(relaxed = true)
     protected val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase = mockk(relaxed = true)
     protected val appsFlyerRepository: AppsFlyerRepository = mockk(relaxed = true)
@@ -267,7 +267,7 @@ internal abstract class SwapModelTestBase {
         getAccountCurrencyStatusUseCase = getAccountCurrencyStatusUseCase,
         getPaymentAccountCryptoCurrencyStatusUseCase = getPaymentAccountCryptoCurrencyStatusUseCase,
         tangemPayWithdrawWithSwapUseCase = tangemPayWithdrawWithSwapUseCase,
-        isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+        isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
         feeSelectorReloadTrigger = feeSelectorReloadTrigger,
         getTangemPayCustomerIdUseCase = getTangemPayCustomerIdUseCase,
         appsFlyerRepository = appsFlyerRepository,

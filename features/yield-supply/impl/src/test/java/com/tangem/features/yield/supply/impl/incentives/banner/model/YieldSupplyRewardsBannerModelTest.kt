@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -44,11 +45,13 @@ internal class YieldSupplyRewardsBannerModelTest {
     private val getRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase = mockk()
 
     private var originalLocale: Locale = Locale.getDefault()
+    private val claimClicks = mutableListOf<Pair<Int, String>>()
 
     @BeforeEach
     fun setUp() {
         originalLocale = Locale.getDefault()
         Locale.setDefault(Locale.US)
+        claimClicks.clear()
         clearMocks(marketFlowUseCase, getRewardsSummaryUseCase)
         every { marketFlowUseCase(any()) } returns flowOf(market(hasCampaign = true))
     }
@@ -59,7 +62,7 @@ internal class YieldSupplyRewardsBannerModelTest {
     }
 
     @Test
-    fun `GIVEN recommended rewards WHEN model created THEN banner shows them with the claim CTA inert`() = runTest {
+    fun `GIVEN recommended rewards WHEN model created THEN banner offers claim`() = runTest {
         // Arrange
         coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
             MockYieldSupply.claimableSummary(
@@ -74,14 +77,32 @@ internal class YieldSupplyRewardsBannerModelTest {
         // Assert
         assertThat(model.uiState.value).isEqualTo(
             YieldSupplyRewardsBannerUM(
-                title = resourceReference(R.string.yield_module_rewards_banner_title, wrappedList("\$30.00")),
+                title = resourceReference(R.string.yield_module_rewards_banner_title, wrappedList(stringReference("\$30.00"))),
                 description = resourceReference(R.string.yield_module_rewards_banner_subtitle),
-                claim = YieldSupplyRewardsBannerUM.Claim.Disabled,
+                claim = YieldSupplyRewardsBannerUM.Claim.Enabled,
             ),
         )
 
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN recommended rewards WHEN claim clicked THEN the sheet is opened for the market chain and address`() =
+        runTest {
+            // Arrange
+            coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
+                MockYieldSupply.claimableSummary(claimable = listOf(reward(claimable = "1000"))).right()
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            model.onClaimClick()
+
+            // Assert
+            assertThat(claimClicks).containsExactly(CHAIN_ID to USER_ADDRESS)
+
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN rewards below threshold WHEN model created THEN claim is disabled`() = runTest {
@@ -99,7 +120,7 @@ internal class YieldSupplyRewardsBannerModelTest {
         // Assert
         assertThat(model.uiState.value).isEqualTo(
             YieldSupplyRewardsBannerUM(
-                title = resourceReference(R.string.yield_module_rewards_banner_title, wrappedList("\$0.30")),
+                title = resourceReference(R.string.yield_module_rewards_banner_title, wrappedList(stringReference("\$0.30"))),
                 description = resourceReference(R.string.yield_module_rewards_banner_below_threshold_subtitle),
                 claim = YieldSupplyRewardsBannerUM.Claim.Disabled,
             ),
@@ -244,7 +265,7 @@ internal class YieldSupplyRewardsBannerModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value?.claim).isEqualTo(YieldSupplyRewardsBannerUM.Claim.Disabled)
+        assertThat(model.uiState.value?.claim).isEqualTo(YieldSupplyRewardsBannerUM.Claim.Enabled)
 
         model.onDestroy()
     }
@@ -277,7 +298,7 @@ internal class YieldSupplyRewardsBannerModelTest {
             DefaultYieldSupplyRewardsBannerComponent.Params(
                 cryptoCurrency = createToken(),
                 cryptoCurrencyStatusFlow = cryptoCurrencyStatusFlow,
-                onClaimClick = {},
+                onClaimClick = { chainId, userAddress -> claimClicks += chainId to userAddress },
             ),
         ),
         dispatchers = createTestingCoroutineDispatcherProvider(),

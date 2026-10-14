@@ -17,7 +17,6 @@ import com.patrykandpatrick.vico.core.common.Dimensions
 import com.patrykandpatrick.vico.core.common.LayeredComponent
 import com.patrykandpatrick.vico.core.common.component.TextComponent
 import com.patrykandpatrick.vico.core.common.shape.Shape
-import com.tangem.core.ui.res.TangemTheme
 
 /**
  * @param color The color of the indicator and guideline.
@@ -29,7 +28,7 @@ import com.tangem.core.ui.res.TangemTheme
 internal fun rememberTangemChartMarker(color: Color): CartesianMarker {
     val guideline = rememberUnboundedLineComponent(
         color = color,
-        verticalAddDrawSpace = TangemTheme.dimens.spacing24,
+        verticalAddDrawSpace = 24.dp,
         shape = remember { Shape.dashed(Shape.Rectangle, 4.dp, 4.dp) },
     )
 

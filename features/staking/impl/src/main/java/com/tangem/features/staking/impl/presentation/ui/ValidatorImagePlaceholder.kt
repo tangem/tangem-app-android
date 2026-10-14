@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.staking.impl.R
 
@@ -20,6 +21,6 @@ internal fun ValidatorImagePlaceholder() {
         tint = TangemTheme.colors.icon.inactive,
         modifier = Modifier
             .background(TangemTheme.colors.icon.primary1, CircleShape)
-            .padding(TangemTheme.dimens.size9),
+            .padding(9.dp),
     )
 }

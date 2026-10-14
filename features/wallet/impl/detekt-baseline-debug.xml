@@ -24,7 +24,7 @@
     <ID>MultilineLambdaItParameter:WalletCard.kt${ val press = PressInteraction.Press(it) interactionSource.emit(press) tryAwaitRelease() interactionSource.emit(PressInteraction.Release(press)) }</ID>
     <ID>MultilineLambdaItParameter:WalletCurrencyActionsClickIntents.kt$WalletCurrencyActionsClickIntentsImplementor${ onAddressTypeSelected( userWalletId = userWalletId, currency = currency, addressModel = it, ) }</ID>
     <ID>MultilineLambdaItParameter:WalletScreen.kt${ PaddingValues( bottom = it.calculateBottomPadding() + marketHintAproxHeight + 52.dp, ) }</ID>
-    <ID>MultilineLambdaItParameter:WalletScreen.kt${ WalletSnackbarHost( snackbarHostState = it, event = state.event, modifier = Modifier .padding(bottom = TangemTheme.dimens.spacing4) .navigationBarsPadding(), ) }</ID>
+    <ID>MultilineLambdaItParameter:WalletScreen.kt${ WalletSnackbarHost( snackbarHostState = it, event = state.event, modifier = Modifier .padding(bottom = 4.dp) .navigationBarsPadding(), ) }</ID>
     <ID>MultilineLambdaItParameter:WalletScreen.kt${ nftCollections( modifier = itemModifier, state = it.nftState, ) }</ID>
     <ID>MultilineLambdaItParameter:WalletWarningsClickIntents.kt$WalletWarningsClickIntentsImplementor${ router.openOnboardingScreen( scanResponse = it.scanResponse, continueBackup = true, ) }</ID>
     <ID>MultilineLambdaItParameter:WalletWithFundsChecker.kt$WalletWithFundsChecker${ val amount = it.value.amount ?: return@any false !amount.isZero() }</ID>

@@ -7,9 +7,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.rows.ArrowRow
-import com.tangem.core.ui.res.TangemTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -17,7 +17,7 @@ import kotlinx.collections.immutable.toImmutableList
 inline fun <T : Any> InformationBlockContentScope.ListItems(
     items: ImmutableList<T>,
     modifier: Modifier = Modifier,
-    itemPadding: PaddingValues = PaddingValues(all = TangemTheme.dimens.spacing0),
+    itemPadding: PaddingValues = PaddingValues(all = 0.dp),
     horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     verticalArragement: Arrangement.Vertical = Arrangement.Top,
     itemContent: @Composable BoxScope.(T) -> Unit,
@@ -82,7 +82,7 @@ inline fun <T : Any> GridItems(
 inline fun <T : Any> InformationBlockContentScope.ArrowRowItems(
     items: ImmutableList<T>,
     modifier: Modifier = Modifier,
-    itemPadding: PaddingValues = PaddingValues(all = TangemTheme.dimens.spacing0),
+    itemPadding: PaddingValues = PaddingValues(all = 0.dp),
     rootContent: @Composable BoxScope.() -> Unit,
     itemContent: @Composable BoxScope.(T) -> Unit,
 ) {

@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.ds2.badge.TangemBadge
@@ -58,7 +59,7 @@ fun AccountRowLegacy(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         AccountIcon(
             name = title,
@@ -67,7 +68,7 @@ fun AccountRowLegacy(
             modifier = Modifier.testTag(AccountRowTestTags.ICON),
         )
         Column(
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             if (isReverse) {
                 Subtitle(subtitle)
@@ -84,7 +85,7 @@ fun AccountRowLegacy(
 private fun Title(title: TextReference, badge: TangemBadgeUM?) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
             modifier = Modifier
@@ -140,7 +141,7 @@ private fun Sample() {
     fun icon(letter: Boolean = false) = AccountIconPreviewData.randomAccountIcon(letter)
     Column(
         modifier = Modifier.background(TangemTheme.colors.background.primary),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         AccountRowLegacy(title = name, subtitle = info, icon = icon())
         AccountRowLegacy(title = name, subtitle = subtitle, icon = icon(), isReverse = true)

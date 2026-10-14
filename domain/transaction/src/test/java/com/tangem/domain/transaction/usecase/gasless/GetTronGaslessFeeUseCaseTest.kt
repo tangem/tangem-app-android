@@ -11,6 +11,7 @@ import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.GaslessServiceException
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.TronActivationRefusal
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
@@ -85,7 +86,7 @@ internal class GetTronGaslessFeeUseCaseTest {
         // Assert
         val extended = result.getOrNull()
         assertThat(extended).isNotNull()
-        assertThat(extended!!.tronGaslessQuote).isEqualTo(quote)
+        assertThat(extended!!.gaslessProtocolData).isEqualTo(GaslessProtocolData.Tron(quote = quote))
         assertThat(extended.feeTokenId).isEqualTo(usdtToken.id)
         assertThat(extended.transactionFee.normal.amount.value).isEquivalentAccordingToCompareTo(BigDecimal("2.75"))
         assertThat(extended.transactionFee.normal.amount.currencySymbol).isEqualTo(usdtToken.symbol)
