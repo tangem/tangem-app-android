@@ -78,7 +78,7 @@ fun AddTokenContent(state: AddTokenUM, modifier: Modifier = Modifier) {
         SpacerH16()
 
         AddButton(
-            modifier = modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             state = state.button,
         )
     }
