@@ -2,7 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>MultilineLambdaItParameter:TechAnalyticsEvent.kt$TechAnalyticsEvent.KeyboardIdentifier${ put("Package", it) put("GPUrl", "https://play.google.com/store/apps/details?id=$packageName") }</ID>
     <ID>UseEmptyCounterpart:AnalyticsEvent.kt$AnalyticsEvent$mapOf()</ID>
     <ID>UseEmptyCounterpart:ExceptionAnalyticsEvent.kt$ExceptionAnalyticsEvent$mapOf()</ID>
     <ID>UseEmptyCounterpart:MainScreenAnalyticsEvent.kt$MainScreenAnalyticsEvent$mapOf()</ID>
