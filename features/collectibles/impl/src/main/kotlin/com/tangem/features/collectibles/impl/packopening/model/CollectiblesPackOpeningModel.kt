@@ -34,6 +34,7 @@ import com.tangem.features.collectibles.impl.packopening.model.converter.Collect
 import com.tangem.features.collectibles.impl.packopening.model.converter.CollectiblesRewardCardConverter
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.Stage
+import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardUM
 import com.tangem.features.collectibles.impl.packopening.video.PackRevealVideoPlayer
 import com.tangem.features.collectibles.impl.packopening.video.PackRevealVideoPlayer.VideoLoadState
 import com.tangem.features.collectibles.impl.packopening.video.source.PackRevealAsset
@@ -178,7 +179,7 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
             )
             content.copy(
                 reveal = content.reveal.copy(
-                    card = reveal.pack?.let(CollectiblesRewardCardConverter::convert),
+                    card = reveal.card,
                     stage = reveal.stage,
                     isFullReveal = reveal.isFullReveal,
                     isSkipped = reveal.isSkipped,
@@ -237,7 +238,13 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
 
         if (isFull) player.start()
 
-        reveal.update { it.copy(stage = Stage.Launching, isFullReveal = isFull, pack = pack) }
+        reveal.update { state ->
+            state.copy(
+                stage = Stage.Launching,
+                isFullReveal = isFull,
+                card = CollectiblesRewardCardConverter.convert(pack),
+            )
+        }
     }
 
     private fun hasEnoughFunds(): Boolean {
@@ -352,6 +359,6 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
         val isFullReveal: Boolean = true,
         val isCardRevealReached: Boolean = false,
         val isSkipped: Boolean = false,
-        val pack: OpenedCollectiblePack? = null,
+        val card: RewardCardUM? = null,
     )
 }
