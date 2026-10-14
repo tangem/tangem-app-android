@@ -108,21 +108,19 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private val isResumed = MutableStateFlow(false)
 
-    private val resolvedAccountFlow: Flow<JointAccount?> = jointAccountListSupplier(userWalletId = params.userWalletId)
-        .map { accounts ->
-            accounts.firstOrNull { params.cryptoAccountId == null || it.cryptoAccountId == params.cryptoAccountId }
-        }
-        .distinctUntilChanged()
+    private val resolvedAccountFlow: Flow<JointAccount?> = compromiseWatcher.verified(
+        userWalletId = params.userWalletId,
+        accounts = jointAccountListSupplier(userWalletId = params.userWalletId)
+            .map { accounts ->
+                accounts.firstOrNull { params.cryptoAccountId == null || it.cryptoAccountId == params.cryptoAccountId }
+            }
+            .distinctUntilChanged(),
+        onCompromised = router::pop,
+    )
 
     init {
         stateController.update(UpdateMembersInitialStateTransformer(onCloseClick = ::onCloseClick))
         observeAccount()
-        compromiseWatcher.watch(
-            userWalletId = params.userWalletId,
-            account = resolvedAccountFlow,
-            scope = modelScope,
-            onClose = router::pop,
-        )
         recordSharedInvites()
         subscribePolling()
         refreshAccounts()
