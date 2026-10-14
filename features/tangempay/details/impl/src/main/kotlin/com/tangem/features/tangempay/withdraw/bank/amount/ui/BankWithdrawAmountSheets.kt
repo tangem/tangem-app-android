@@ -97,17 +97,7 @@ private fun RouteRow(item: RouteItemUM) {
         titleSlot = { TangemRowText(text = item.title.resolveReference(), role = TangemRowTextRole.Title) },
         subtitleSlot = { TangemRowText(text = item.eta.resolveReference(), role = TangemRowTextRole.Subtitle) },
         valueSlot = { TangemRowText(text = item.fee, role = TangemRowTextRole.Value) },
-        endSlot = {
-            TangemCheckmark(
-                checked = item.isSelected,
-                onCheckedChange = null,
-                modifier = if (item.isSelected) {
-                    Modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_ROUTE_CHECKMARK)
-                } else {
-                    Modifier
-                },
-            )
-        },
+        endSlot = { TangemCheckmark(checked = item.isSelected, onCheckedChange = null) },
         onClick = item.onClick,
     )
 }

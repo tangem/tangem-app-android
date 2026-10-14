@@ -155,7 +155,10 @@ class TangemPayBankOfframpTransferTest : BaseTestCase() {
                 onTangemPayBankWithdrawAmountScreen { routeOption(WIRE).assertIsDisplayed() }
             }
             step("Assert '${ACH.title}' route is checked") {
-                onTangemPayBankWithdrawAmountScreen { selectedRouteOption(ACH).assertIsDisplayed() }
+                onTangemPayBankWithdrawAmountScreen { routeOptionCheckmark(ACH).assertIsOn() }
+            }
+            step("Assert '${WIRE.title}' route is not checked") {
+                onTangemPayBankWithdrawAmountScreen { routeOptionCheckmark(WIRE).assertIsOff() }
             }
             step("Click on '${WIRE.title}' route") {
                 onTangemPayBankWithdrawAmountScreen { routeOption(WIRE).performClick() }
