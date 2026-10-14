@@ -3,17 +3,20 @@ package com.tangem.screens.tangempay
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.res.R as CoreResR
+import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasText as withText
 
-class TangemPayVirtualAccountDepositSheetPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
-    ComposeScreen<TangemPayVirtualAccountDepositSheetPageObject>(semanticsProvider = semanticsProvider) {
+class TangemPayBankTransferOnboardingPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+    ComposeScreen<TangemPayBankTransferOnboardingPageObject>(semanticsProvider = semanticsProvider) {
 
-    val showDetailsButton: KNode = child {
-        hasTestTag(TangemPayTestTags.VA_DEPOSIT_SHOW_DETAILS_BUTTON)
+    val continueButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.common_continue)))
         useUnmergedTree = true
     }
 
@@ -38,6 +41,6 @@ class TangemPayVirtualAccountDepositSheetPageObject(semanticsProvider: Semantics
     }
 }
 
-internal fun BaseTestCase.onTangemPayVirtualAccountDepositSheet(
-    function: TangemPayVirtualAccountDepositSheetPageObject.() -> Unit,
+internal fun BaseTestCase.onTangemPayBankTransferOnboardingScreen(
+    function: TangemPayBankTransferOnboardingPageObject.() -> Unit,
 ) = onComposeScreen(composeTestRule, function)

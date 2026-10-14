@@ -23,6 +23,7 @@ import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.assertVisibility
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
+import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.common.extensions.restartApp
 import com.tangem.common.utils.assertClipboardTextEquals
 import com.tangem.common.utils.clearClipboard
@@ -285,6 +286,25 @@ fun BaseTestCase.openReferralPortfolioSelector() {
     step("Click on the rewards account row") {
         awaitSuccess { onReferralProgramScreen { rewardsAccountRow.assertIsDisplayed() } }
         onReferralProgramScreen { rewardsAccountRow.performClick() }
+    }
+}
+
+fun BaseTestCase.selectTangemPayResidency(
+    country: String,
+    region: String,
+    timeoutMillis: Long = WAIT_UNTIL_TIMEOUT_LONG,
+) {
+    step("Assert 'Country of residence' screen is displayed") {
+        awaitSuccess(timeoutMillis = timeoutMillis) { onTangemPayResidencyScreen { countryTitle.assertIsDisplayed() } }
+    }
+    step("Click on country: '$country'") {
+        awaitSuccess { onTangemPayResidencyScreen { item(country).performClick() } }
+    }
+    step("Assert 'Select state' screen is displayed") {
+        awaitSuccess { onTangemPayResidencyScreen { regionTitle.assertIsDisplayed() } }
+    }
+    step("Click on state: '$region'") {
+        awaitSuccess { onTangemPayResidencyScreen { item(region).performClick() } }
     }
 }
 
@@ -930,8 +950,22 @@ fun BaseTestCase.openTangemPayAddFunds() {
     }
 }
 
-/** From the open payment account screen, opens the bank-transfer (virtual account) deposit sheet. */
-fun BaseTestCase.openTangemPayBankTransferSheet() {
+// The sheet snapshots the on-ramp state when it opens, so a sheet opened while the order is pending never updates.
+fun BaseTestCase.openTangemPayAddFundsWithBankTransferAvailable() {
+    repeat(BANK_TRANSFER_AVAILABILITY_ATTEMPTS) {
+        openTangemPayAddFunds()
+        var isAvailable = false
+        onTangemPayAddFundsSheet { isAvailable = bankTransferAvailableDescription.isDisplayedSafely() }
+        if (isAvailable) return
+        step("Close 'Add funds' sheet while the bank transfer is still pending") {
+            device.uiDevice.pressBack()
+            awaitSuccess { onTangemPayAddFundsSheet { receiveOption.assertDoesNotExist() } }
+        }
+    }
+    throw AssertionError("Bank transfer did not become available after $BANK_TRANSFER_AVAILABILITY_ATTEMPTS attempts")
+}
+
+fun BaseTestCase.clickTangemPayBankTransferOption() {
     openTangemPayAddFunds()
     step("Assert 'From a bank account' option is displayed") {
         onTangemPayAddFundsSheet { bankTransferOption.assertIsDisplayed() }
@@ -939,16 +973,19 @@ fun BaseTestCase.openTangemPayBankTransferSheet() {
     step("Click on 'From a bank account' option") {
         onTangemPayAddFundsSheet { bankTransferOption.performClick() }
     }
-    step("Assert bank transfer deposit sheet is displayed") {
-        awaitSuccess { onTangemPayVirtualAccountDepositSheet { showDetailsButton.assertIsDisplayed() } }
+}
+
+fun BaseTestCase.openTangemPayBankTransferOnboarding() {
+    clickTangemPayBankTransferOption()
+    step("Assert bank transfer onboarding screen is displayed") {
+        awaitSuccess { onTangemPayBankTransferOnboardingScreen { continueButton.assertIsDisplayed() } }
     }
 }
 
-/** On the open bank-transfer sheet, asserts the [feeType] row shows [expectedTitle] and [expectedValue]. */
 fun BaseTestCase.assertVirtualAccountFee(feeType: String, expectedTitle: String, expectedValue: String) {
     step("Assert '$expectedTitle' fee equals '$expectedValue'") {
         awaitSuccess {
-            onTangemPayVirtualAccountDepositSheet {
+            onTangemPayBankTransferOnboardingScreen {
                 feeTitle(feeType).assertTextEquals(expectedTitle)
                 feeValue(feeType).assertTextEquals(expectedValue)
             }
@@ -958,11 +995,11 @@ fun BaseTestCase.assertVirtualAccountFee(feeType: String, expectedTitle: String,
 
 /**
  * Asserts the [feeType] row is absent. Both rows are rendered as shimmer placeholders while the fees load,
- * so call this only after the sheet has settled — an asserted fee row or the error banner.
+ * so call this only after the onboarding has settled — an asserted fee row or the error banner.
  */
 fun BaseTestCase.assertVirtualAccountFeeNotDisplayed(feeType: String, expectedTitle: String) {
     step("Assert '$expectedTitle' fee row is not displayed") {
-        onTangemPayVirtualAccountDepositSheet { feeTitle(feeType).assertVisibility(shouldBeDisplayed = false) }
+        onTangemPayBankTransferOnboardingScreen { feeTitle(feeType).assertVisibility(shouldBeDisplayed = false) }
     }
 }
 
@@ -1197,12 +1234,8 @@ fun BaseTestCase.assertTangemPayCardClosed(closedLastDigits: String, remainingLa
     }
 }
 
-/** From the open payment account screen, walks Add funds -> bank transfer -> Show details to the requisites. */
 fun BaseTestCase.openTangemPayVirtualAccountRequisites() {
-    openTangemPayBankTransferSheet()
-    step("Click on 'Show details' button") {
-        onTangemPayVirtualAccountDepositSheet { showDetailsButton.clickWithAssertion() }
-    }
+    clickTangemPayBankTransferOption()
     step("Assert virtual account banking details are displayed") {
         awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
             onVirtualAccountRequisitesBottomSheet {
@@ -1212,7 +1245,6 @@ fun BaseTestCase.openTangemPayVirtualAccountRequisites() {
     }
 }
 
-/** On the open requisites sheet, asserts the [field] row shows [expectedValue]. */
 fun BaseTestCase.assertVirtualAccountRequisite(field: String, expectedValue: String) {
     step("Assert '$field' equals '$expectedValue'") {
         onVirtualAccountRequisitesBottomSheet {
@@ -1222,7 +1254,6 @@ fun BaseTestCase.assertVirtualAccountRequisite(field: String, expectedValue: Str
     }
 }
 
-/** On the open requisites sheet, copies the [field] row and asserts [expectedValue] reached the clipboard. */
 fun BaseTestCase.copyVirtualAccountRequisite(field: String, expectedValue: String) {
     step("Clear the clipboard") { clearClipboard() }
     step("Click on the 'Copy' button of '$field'") {
@@ -1353,3 +1384,5 @@ fun BaseTestCase.awaitTangemPayStatusOfSelectedWallet(
         check(expectedStatus.isInstance(status?.value)) { "Tangem Pay status is ${status?.value}" }
     }
 }
+
+private const val BANK_TRANSFER_AVAILABILITY_ATTEMPTS = 3
