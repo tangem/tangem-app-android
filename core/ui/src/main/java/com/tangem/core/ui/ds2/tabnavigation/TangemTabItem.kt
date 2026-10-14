@@ -198,7 +198,7 @@ private fun resolveFill(
     return when {
         !isPainted -> TabFill(color = Color.Transparent)
         variant == TangemTabItem.Variant.Material -> TabFill(color = Color.Transparent, isMaterial = true)
-        else -> TabFill(color = TangemTheme.colors3.bg.opaque.secondary)
+        else -> TabFill(color = TangemTheme.colors3.bg.transparent.secondary)
     }
 }
 

@@ -71,7 +71,7 @@ internal fun ManualBackupPhraseContent(state: ManualBackupPhraseUM, modifier: Mo
 private fun TitleBlock(state: ManualBackupPhraseUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .padding(horizontal = TangemTheme.dimens.size36)
+            .padding(horizontal = 36.dp)
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {

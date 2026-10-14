@@ -22,7 +22,7 @@ internal fun AddressSyncLoading(modifier: Modifier = Modifier) {
     ) {
         CircularProgressIndicator(
             modifier = Modifier
-                .size(TangemTheme.dimens.size30)
+                .size(30.dp)
                 .padding(4.dp),
             color = TangemTheme.colors.icon.accent,
         )
