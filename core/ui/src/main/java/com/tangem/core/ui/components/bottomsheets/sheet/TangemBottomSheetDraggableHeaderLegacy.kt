@@ -11,21 +11,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.MainScreenTestTags
 
 @Composable
 fun TangemBottomSheetDraggableHeaderLegacy(color: Color = TangemTheme.colors.background.primary) {
     Surface(
-        modifier = Modifier.height(TangemTheme.dimens.size20),
+        modifier = Modifier.height(20.dp),
         color = color,
     ) {
         Box(
             modifier = Modifier
-                .padding(vertical = TangemTheme.dimens.spacing8)
+                .padding(vertical = 8.dp)
                 .size(
-                    width = TangemTheme.dimens.size32,
-                    height = TangemTheme.dimens.size4,
+                    width = 32.dp,
+                    height = 4.dp,
                 )
                 .background(
                     color = TangemTheme.colors.icon.inactive,
@@ -40,15 +41,15 @@ fun TangemBottomSheetDraggableHeader() {
     Box(
         modifier = Modifier
             .testTag(MainScreenTestTags.MARKETS_SHEET_DRAG_HANDLE)
-            .height(TangemTheme.dimens2.x3)
-            .padding(vertical = TangemTheme.dimens2.x1)
+            .height(12.dp)
+            .padding(vertical = 4.dp)
             .size(
-                width = TangemTheme.dimens2.x10,
-                height = TangemTheme.dimens2.x1,
+                width = 40.dp,
+                height = 4.dp,
             )
             .background(
                 color = TangemTheme.colors3.icon.tertiary,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x0_5),
+                shape = RoundedCornerShape(2.dp),
             ),
     )
 }

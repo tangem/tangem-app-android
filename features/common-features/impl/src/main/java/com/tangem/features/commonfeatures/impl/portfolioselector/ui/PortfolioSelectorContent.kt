@@ -71,14 +71,14 @@ internal fun PortfolioSelectorContent(
                 val offsetModifier = when {
                     previewItem == null -> Modifier
                     item is PortfolioSelectorItemUM.GroupTitle -> Modifier.padding(
-                        top = TangemTheme.dimens.spacing16,
+                        top = 16.dp,
                     )
                     else -> Modifier.padding(
-                        top = TangemTheme.dimens.spacing8,
+                        top = 8.dp,
                     )
                 }
 
-                val portfolioShape = RoundedCornerShape(TangemTheme.dimens.radius14)
+                val portfolioShape = RoundedCornerShape(14.dp)
                 val border = BorderStroke(
                     width = 1.dp,
                     color = TangemTheme.colors.text.accent,
@@ -89,19 +89,19 @@ internal fun PortfolioSelectorContent(
                         state = item.item,
                         modifier = offsetModifier
                             .fillMaxWidth()
-                            .heightIn(min = TangemTheme.dimens.size68)
+                            .heightIn(min = 68.dp)
                             .clip(portfolioShape)
                             .background(TangemTheme.colors.background.action)
                             .conditional(item.isSelected) { border(border, portfolioShape) }
                             .clickable(enabled = item.item.isEnabled, onClick = item.item.onClick)
-                            .padding(all = TangemTheme.dimens.spacing12)
+                            .padding(all = 12.dp)
                             .conditional(!item.item.isEnabled) { alpha(DISABLED_WALLET_ALPHA) },
                     )
                     is PortfolioSelectorItemUM.GroupTitle -> WalletNameRow(
                         model = item,
                         modifier = offsetModifier
                             .fillMaxWidth()
-                            .padding(horizontal = TangemTheme.dimens.spacing16),
+                            .padding(horizontal = 16.dp),
                     )
                 }
             }

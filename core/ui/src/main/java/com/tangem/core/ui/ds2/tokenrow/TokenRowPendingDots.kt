@@ -3,8 +3,11 @@
 package com.tangem.core.ui.ds2.tokenrow
 
 import android.content.res.Configuration
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,20 +17,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.progressSemantics
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import kotlinx.coroutines.delay
+import kotlin.math.abs
+import kotlin.math.min
 
 /**
  * Pending-transaction indicator of [TangemTokenRow] — three accent-blue dots cycling through three
@@ -44,14 +45,20 @@ import kotlinx.coroutines.delay
  */
 @Composable
 internal fun TokenRowPendingDots(modifier: Modifier = Modifier, color: Color = TangemTheme.colors3.icon.accent.blue) {
-    var idleIndex by remember { mutableIntStateOf(1) }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(timeMillis = STEP_DURATION_MILLIS)
-            idleIndex = (idleIndex + 1) % DOT_COUNT
-        }
-    }
+    // Not a delay loop: Compose UI tests never go idle while a finite animation keeps restarting.
+    val idlePosition by rememberInfiniteTransition(label = "TokenRowPendingDots").animateFloat(
+        initialValue = INITIAL_IDLE_INDEX.toFloat(),
+        targetValue = (INITIAL_IDLE_INDEX + DOT_COUNT).toFloat(),
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = STEP_DURATION_MILLIS * DOT_COUNT
+                repeat(DOT_COUNT) { step ->
+                    (INITIAL_IDLE_INDEX + step).toFloat() at STEP_DURATION_MILLIS * step using FastOutSlowInEasing
+                }
+            },
+        ),
+        label = "TokenRowPendingDotsIdlePosition",
+    )
 
     Row(
         modifier = modifier.progressSemantics(),
@@ -59,33 +66,31 @@ internal fun TokenRowPendingDots(modifier: Modifier = Modifier, color: Color = T
         verticalAlignment = Alignment.CenterVertically,
     ) {
         repeat(DOT_COUNT) { index ->
-            val isIdle = index == idleIndex
-            val alpha by animateFloatAsState(
-                targetValue = if (isIdle) IDLE_ALPHA else 1f,
-                animationSpec = tween(durationMillis = STEP_DURATION_MILLIS.toInt()),
-                label = "TokenRowPendingDotAlpha",
-            )
-            val scale by animateFloatAsState(
-                targetValue = if (isIdle) IDLE_SCALE else 1f,
-                animationSpec = tween(durationMillis = STEP_DURATION_MILLIS.toInt()),
-                label = "TokenRowPendingDotScale",
-            )
-
             Box(
                 modifier = Modifier
                     .size(3.dp)
                     .graphicsLayer {
+                        val idleness = idleness(dotIndex = index, idlePosition = idlePosition)
+                        val scale = lerp(start = 1f, stop = IDLE_SCALE, fraction = idleness)
                         scaleX = scale
                         scaleY = scale
+                        alpha = lerp(start = 1f, stop = IDLE_ALPHA, fraction = idleness)
                     }
-                    .background(color = color.copy(alpha = alpha), shape = CircleShape),
+                    .background(color = color, shape = CircleShape),
             )
         }
     }
 }
 
+private fun idleness(dotIndex: Int, idlePosition: Float): Float {
+    val offset = abs(idlePosition % DOT_COUNT - dotIndex)
+    val distance = min(offset, DOT_COUNT - offset)
+    return (1f - distance).coerceIn(0f, 1f)
+}
+
 private const val DOT_COUNT = 3
-private const val STEP_DURATION_MILLIS = 400L
+private const val STEP_DURATION_MILLIS = 400
+private const val INITIAL_IDLE_INDEX = 1
 private const val IDLE_ALPHA = 0.4f
 private const val IDLE_SCALE = 0.75f
 
