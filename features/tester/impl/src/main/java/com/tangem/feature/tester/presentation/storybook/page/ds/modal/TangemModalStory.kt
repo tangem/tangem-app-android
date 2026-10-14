@@ -10,10 +10,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -66,6 +69,7 @@ internal fun TangemModalStory(state: TangemModalStory, modifier: Modifier = Modi
 
         StoryModal(state = state)
         StackedStoryModal(state = state)
+        TangemModalTemplateModals(state = state.templates, onChange = state.onTemplatesChange)
     }
 }
 
@@ -139,7 +143,9 @@ private fun Controls(state: TangemModalStory, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors2.surface.level1)
+            .verticalScroll(rememberScrollState())
             .statusBarsPadding()
+            .navigationBarsPadding()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -161,6 +167,7 @@ private fun Controls(state: TangemModalStory, modifier: Modifier = Modifier) {
         )
         ToggleRow(label = "tall content", checked = state.isTallContent, onToggle = state.onTallContentToggle)
         ToggleRow(label = "text field", checked = state.isInputVisible, onToggle = state.onInputToggle)
+        TangemModalTemplatesSection(state = state.templates, onChange = state.onTemplatesChange)
     }
 }
 
@@ -182,7 +189,7 @@ private fun StoryTextField() {
 }
 
 @Composable
-private fun <T : Enum<T>> ChipSelector(items: List<T>, selected: T, onSelect: (T) -> Unit) {
+internal fun <T : Enum<T>> ChipSelector(items: List<T>, selected: T, onSelect: (T) -> Unit) {
     val shape = RoundedCornerShape(50)
     Row(
         modifier = Modifier
@@ -227,7 +234,7 @@ private fun Chip(label: String, selected: Boolean, onClick: () -> Unit, modifier
 private object TangemModalStoryContent : TangemBottomSheetConfigContent
 
 @Composable
-private fun ShowModalButton(label: String, onClick: () -> Unit) {
+internal fun ShowModalButton(label: String, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -246,7 +253,7 @@ private fun ShowModalButton(label: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ToggleRow(label: String, checked: Boolean, onToggle: () -> Unit) {
+internal fun ToggleRow(label: String, checked: Boolean, onToggle: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
