@@ -539,11 +539,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             ChooseAddressBottomSheetConfig(
                 currency = currency,
                 networkAddress = addresses,
-                onClick = {
+                onClick = { addressModel ->
                     onAddressTypeSelected(
                         userWalletId = userWalletId,
                         currency = currency,
-                        addressModel = it,
+                        addressModel = addressModel,
                     )
                 },
             ),
