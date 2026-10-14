@@ -239,17 +239,17 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
                 Default -> Modifier
                     .clip(
                         RoundedCornerShape(
-                            topStart = TangemTheme.dimens2.x8,
-                            topEnd = TangemTheme.dimens2.x8,
+                            topStart = 32.dp,
+                            topEnd = 32.dp,
                         ),
                     )
                 Modal -> Modifier
                     .padding(
-                        start = TangemTheme.dimens2.x2,
-                        end = TangemTheme.dimens2.x2,
+                        start = 8.dp,
+                        end = 8.dp,
                         bottom = bottomBarHeight,
                     )
-                    .clip(RoundedCornerShape(TangemTheme.dimens2.x8))
+                    .clip(RoundedCornerShape(32.dp))
             }
 
             Column(
@@ -310,7 +310,7 @@ fun BoxScope.FooterOverlay(
 ) {
     val density = LocalDensity.current
     val isContentScrollable = remember { mutableStateOf(true) }
-    val gradientHeight = if (isContentScrollable.value) TangemTheme.dimens2.x10 else 0.dp
+    val gradientHeight = if (isContentScrollable.value) 40.dp else 0.dp
     val isFooterRendered = measuredFooterHeight == null || measuredFooterHeight > 0.dp
     val contentBottomOverlayHeight = if (isFooterRendered) {
         (measuredFooterHeight ?: 0.dp) + gradientHeight

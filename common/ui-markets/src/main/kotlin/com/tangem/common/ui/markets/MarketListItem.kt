@@ -65,7 +65,7 @@ fun MarketsListItem(model: MarketsListItemUM, modifier: Modifier = Modifier, onC
             TangemIcon(
                 tangemIconUM = TangemIconUM.Url(model.iconUrl, fallbackRes = R.drawable.ic_custom_token_44),
                 modifier = Modifier
-                    .size(TangemTheme.dimens2.x10)
+                    .size(40.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .layoutId(layoutId = TangemRowLayoutId.HEAD),
             )
@@ -73,7 +73,7 @@ fun MarketsListItem(model: MarketsListItemUM, modifier: Modifier = Modifier, onC
             TokenTitle(
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.START_TOP)
-                    .padding(start = TangemTheme.dimens2.x3),
+                    .padding(start = 12.dp),
                 name = model.name,
                 currencySymbol = model.currencySymbol,
             )
@@ -81,7 +81,7 @@ fun MarketsListItem(model: MarketsListItemUM, modifier: Modifier = Modifier, onC
             TokenPriceText(
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_TOP)
-                    .padding(start = TangemTheme.dimens2.x3)
+                    .padding(start = 12.dp)
                     .testTag(tag = TokenElementsTestTags.TOKEN_FIAT_AMOUNT),
                 priceChangeType = model.price.changeType,
                 priceAnnotated = model.price.annotated,
@@ -91,7 +91,7 @@ fun MarketsListItem(model: MarketsListItemUM, modifier: Modifier = Modifier, onC
             TokenSubtitle(
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.START_BOTTOM)
-                    .padding(start = TangemTheme.dimens2.x3),
+                    .padding(start = 12.dp),
                 ratingPosition = model.ratingPosition,
                 marketCap = model.marketCap,
                 stakingRate = model.stakingRate,
@@ -99,7 +99,7 @@ fun MarketsListItem(model: MarketsListItemUM, modifier: Modifier = Modifier, onC
 
             PriceChangeInPercent(
                 modifier = Modifier
-                    .padding(start = TangemTheme.dimens2.x3)
+                    .padding(start = 12.dp)
                     .layoutId(layoutId = TangemRowLayoutId.END_BOTTOM),
                 textStyle = TangemTheme.typography2.captionRegular12,
                 type = model.trendType,
@@ -108,7 +108,7 @@ fun MarketsListItem(model: MarketsListItemUM, modifier: Modifier = Modifier, onC
             if (windowSize.widthAtLeast(WindowSizeType.Small)) {
                 Chart(
                     modifier = Modifier
-                        .padding(start = TangemTheme.dimens2.x3)
+                        .padding(start = 12.dp)
                         .layoutId(layoutId = TangemRowLayoutId.TAIL),
                     chartType = model.chartType,
                     chartRawData = model.chartData,
@@ -155,7 +155,7 @@ private fun TokenSubtitle(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         TokenRatingPlace(
             ratingPosition = ratingPosition,
@@ -179,11 +179,11 @@ private fun RowScope.TokenRatingPlace(ratingPosition: String?, ratingColor: Colo
     Row(
         modifier = Modifier
             .alignByBaseline()
-            .heightIn(min = TangemTheme.dimens2.x4),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+            .heightIn(min = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Icon(
-            modifier = Modifier.size(height = TangemTheme.dimens2.x4, width = TangemTheme.dimens2.x2),
+            modifier = Modifier.size(height = 16.dp, width = 8.dp),
             imageVector = ImageVector.vectorResource(R.drawable.ic_laurel_left),
             tint = ratingColor,
             contentDescription = null,
@@ -198,7 +198,7 @@ private fun RowScope.TokenRatingPlace(ratingPosition: String?, ratingColor: Colo
         )
 
         Icon(
-            modifier = Modifier.size(height = TangemTheme.dimens2.x4, width = TangemTheme.dimens2.x2),
+            modifier = Modifier.size(height = 16.dp, width = 8.dp),
             imageVector = ImageVector.vectorResource(R.drawable.ic_laurel_right),
             tint = ratingColor,
             contentDescription = null,
@@ -235,7 +235,7 @@ private fun Chart(chartType: MarketChartLook.Type, chartRawData: MarketChartRawD
     Box(
         modifier = modifier
             .padding(vertical = 6.dp)
-            .size(height = TangemTheme.dimens2.x6, width = TangemTheme.dimens2.x12),
+            .size(height = 24.dp, width = 48.dp),
     ) {
         if (chartRawData != null) {
             MarketChartMini(
@@ -246,7 +246,7 @@ private fun Chart(chartType: MarketChartLook.Type, chartRawData: MarketChartRawD
             RectangleShimmer(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(TangemTheme.dimens2.x3)
+                    .height(12.dp)
                     .align(Alignment.Center),
                 radius = 3.dp,
             )

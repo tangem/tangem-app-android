@@ -19,12 +19,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemColorPalette
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.home.impl.ui.compose.StoriesTextAnimation
 
 private val firstStoryTitleStyle = TextStyle(
@@ -55,7 +55,7 @@ internal fun FirstStoriesContent(isPaused: Boolean, duration: Int) {
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        SpacerH(TangemTheme.dimens.spacing94)
+        SpacerH(94.dp)
         StoriesTextAnimation(
             slideInDuration = 500,
             slideInDelay = 150,
@@ -68,7 +68,7 @@ internal fun FirstStoriesContent(isPaused: Boolean, duration: Int) {
                 textAlign = TextAlign.Center,
             )
         }
-        SpacerH(TangemTheme.dimens.spacing46)
+        SpacerH(46.dp)
         Image(
             modifier = Modifier.fillMaxWidth(),
             painter = painterResource(R.drawable.img_meet_tangem),
