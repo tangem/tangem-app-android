@@ -108,7 +108,7 @@ import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.models.TransactionFeeExtended
-import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
+import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.analytics.SwapQuotePerformanceTracker
@@ -190,7 +190,7 @@ internal class SwapModel @Inject constructor(
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val getPaymentAccountCryptoCurrencyStatusUseCase: GetPaymentAccountCryptoCurrencyStatusUseCase,
     private val tangemPayWithdrawWithSwapUseCase: TangemPayWithdrawWithSwapUseCase,
-    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    private val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
     private val appsFlyerRepository: AppsFlyerRepository,
@@ -305,7 +305,7 @@ internal class SwapModel @Inject constructor(
         isBalanceHiddenProvider = Provider { isBalanceHidden },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isAccountsModeProvider = Provider { isAccountsMode },
-        isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+        isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
         appRouter = appRouter,
         isChooseTokenPulseEnabled = swapFeatureToggles.isChooseTokenPulseEnabled,
         isCustomSlippageEnabled = swapFeatureToggles.isCustomSlippageEnabled,

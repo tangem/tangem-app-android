@@ -54,13 +54,13 @@ fun TooltipText(
 
         IconButton(
             modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing4)
-                .requiredSize(TangemTheme.dimens.size16),
+                .padding(horizontal = 4.dp)
+                .requiredSize(16.dp),
             interactionSource = interactionSource,
             onClick = onInfoClick,
         ) {
             Icon(
-                modifier = Modifier.size(TangemTheme.dimens.size16),
+                modifier = Modifier.size(16.dp),
                 painter = painterResource(id = R.drawable.ic_information_24),
                 tint = TangemTheme.colors.icon.informative,
                 contentDescription = null,

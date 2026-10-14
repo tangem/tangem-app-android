@@ -1,256 +1,56 @@
 package com.tangem.features.collectibles.impl.packopening.ui
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.ds2.button.Back
-import com.tangem.core.ui.ds2.button.Close
-import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.footer.TangemFooter
-import com.tangem.core.ui.ds2.row.TangemRow
-import com.tangem.core.ui.ds2.row.TangemRowText
-import com.tangem.core.ui.ds2.row.TangemRowTextRole
-import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
-import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
-import com.tangem.core.ui.ds2.shimmers.TangemShimmer
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImage
-import com.tangem.features.collectibles.impl.common.ui.CollectiblesPackImageErrorCard
-import com.tangem.features.collectibles.impl.common.ui.CollectiblesStatus
-import com.tangem.features.collectibles.impl.common.ui.PACK_IMAGE_CARD_RADIUS
+import com.tangem.features.collectibles.impl.packopening.ui.components.confirmorder.ConfirmOrder
+import com.tangem.features.collectibles.impl.packopening.ui.components.confirmorder.rememberPackLaunchProgress
+import com.tangem.features.collectibles.impl.packopening.ui.components.packreveal.PackReveal
+import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.RewardCard
+import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.RewardCardTiming
+import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.rememberCardAspect
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
-import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.OrderUM
-import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.PriceRowUM
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import com.tangem.core.res.R
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-
-private val ROWS_MARGIN = 8.dp
-
-private val PACK_GLOW_RADIUS = 48.dp
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.Stage
 
 @Composable
 internal fun CollectiblesPackOpeningScreen(state: CollectiblesPackOpeningUM, modifier: Modifier = Modifier) {
-    // Kept out of the model: a StateFlow would recompose the screen on every animation frame
-    val dip = remember { Animatable(0f) }
-    val launchUp = remember { Animatable(0f) }
-    val exit = remember { Animatable(0f) }
-    val progress = ConfirmProgress(dip = dip.value, launch = launchUp.value, exit = exit.value)
+    val content = state as? CollectiblesPackOpeningUM.Content
+    val reveal = content?.reveal
+    val stage = reveal?.stage ?: Stage.Order
 
-    var footerHeight by remember { mutableIntStateOf(0) }
+    val card = reveal?.card
+    val cardAspect = rememberCardAspect(frontImageUrl = card?.frontImageUrl)
 
-    // Thrown once the card is known: an earlier throw could not be taken back if the purchase then failed
-    val isPackOpened = (state as? CollectiblesPackOpeningUM.Content)?.isPackOpened == true
-    LaunchedEffect(isPackOpened) {
-        if (!isPackOpened) return@LaunchedEffect
-
-        // The content exit runs alongside the pack's beats, not after them
-        coroutineScope {
-            launch { exit.animateTo(1f, tween(ConfirmTiming.EXIT_MS, easing = FastOutLinearInEasing)) }
-            dip.animateTo(1f, tween(ConfirmTiming.DIP_MS, easing = FastOutLinearInEasing))
-            launchUp.animateTo(1f, tween(ConfirmTiming.LAUNCH_MS, easing = LinearOutSlowInEasing))
-        }
-    }
-
-    TangemTopBarScaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = { ConfirmOrderTopBar(state = state, exit = progress.exit) },
-        overlay = {
-            when (state) {
-                is CollectiblesPackOpeningUM.Loading -> CollectiblesPackOpeningFooterSkeleton(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .onSizeChanged { size -> footerHeight = size.height },
-                )
-                is CollectiblesPackOpeningUM.Error -> Unit
-                is CollectiblesPackOpeningUM.Content -> ConfirmFooter(
-                    order = state.order,
-                    onConfirm = state.onApproveClick,
-                    modifier = Modifier
-                        .dropAway(exit = progress.exit, isDelayed = false)
-                        .align(Alignment.BottomCenter)
-                        .onSizeChanged { size -> footerHeight = size.height },
-                )
-            }
-        },
-    ) { contentPadding ->
-        when (state) {
-            is CollectiblesPackOpeningUM.Loading -> CollectiblesPackOpeningSkeleton(footerHeight = footerHeight)
-            is CollectiblesPackOpeningUM.Error -> ConfirmOrderError(state = state, contentPadding = contentPadding)
-            is CollectiblesPackOpeningUM.Content -> ConfirmOrderContent(
-                order = state.order,
-                progress = progress,
-                footerHeight = footerHeight,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ConfirmOrderTopBar(state: CollectiblesPackOpeningUM, exit: Float) {
-    val isNavigationVisible = (state as? CollectiblesPackOpeningUM.Content)?.isNavigationVisible != false
-
-    TangemTopNavigation(
-        contentAlign = TangemTopNavigation.ContentAlign.Center,
-        modifier = Modifier.graphicsLayer {
-            alpha = PackLaunch.contentAlpha(exit, isDelayed = false)
-        },
-        // The slots keep their size: without a button the bar collapses to the title's height
-        startButton = {
-            NavigationButtonSlot(isVisible = isNavigationVisible) {
-                TangemButton.Back(onClick = state.onBackClick)
-            }
-        },
-        endButton = {
-            NavigationButtonSlot(isVisible = isNavigationVisible) {
-                TangemButton.Close(onClick = state.onCloseClick)
-            }
-        },
-        contentColumn = {
-            TangemNavigationText(
-                text = resourceReference(R.string.collectibles_confirm_order_screen_title),
-                role = TangemNavigationText.Role.Title,
-            )
-        },
+    val launchProgress = rememberPackLaunchProgress(
+        isLaunching = stage == Stage.Launching,
+        onFinish = { reveal?.onPackAnimationFinished?.invoke() },
     )
-}
 
-@Composable
-private fun NavigationButtonSlot(isVisible: Boolean, button: @Composable () -> Unit) {
-    Box(modifier = Modifier.size(44.dp)) {
-        AnimatedVisibility(visible = isVisible, enter = fadeIn(), exit = fadeOut()) {
-            button()
-        }
-    }
-}
-
-@Composable
-private fun ConfirmOrderError(state: CollectiblesPackOpeningUM.Error, contentPadding: PaddingValues) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding),
-        contentAlignment = Alignment.Center,
-    ) {
-        CollectiblesStatus(
-            message = state.message,
-            onReloadClick = state.onReloadClick,
-            isReloading = state.isReloading,
-        )
-    }
-}
-
-@Composable
-private fun ConfirmOrderContent(order: OrderUM, progress: ConfirmProgress, footerHeight: Int) {
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val density = LocalDensity.current
-        val packWidth = with(density) { (constraints.maxWidth * PACK_WIDTH_FRACTION).toDp() }
-
-        PackImage(
-            imageUrl = order.packImageUrl,
-            progress = progress,
-            modifier = Modifier
-                .align(Alignment.Center)
-                .offset(y = -PACK_LIFT)
-                .size(width = packWidth, height = packWidth * PACK_ASPECT),
-        )
-
-        Column(modifier = Modifier.align(Alignment.BottomCenter)) {
-            // Delayed: the tapped button leaves first, the rows follow
-            PriceRows(
-                rows = order.rows,
-                modifier = Modifier.dropAway(exit = progress.exit, isDelayed = true),
-            )
-            Spacer(modifier = Modifier.height(with(density) { footerHeight.toDp() }))
-        }
-    }
-}
-
-private fun Modifier.dropAway(exit: Float, isDelayed: Boolean): Modifier = graphicsLayer {
-    translationY = PackLaunch.contentShift(exit = exit, isDelayed = isDelayed).toPx()
-    alpha = PackLaunch.contentAlpha(exit = exit, isDelayed = isDelayed)
-}
-
-@Composable
-private fun PackImage(imageUrl: String?, progress: ConfirmProgress, modifier: Modifier = Modifier) {
-    var isImageLoading by remember(imageUrl) { mutableStateOf(true) }
-
-    Box(
-        modifier = modifier
-            .offset(x = PackLaunch.offsetX(progress), y = PackLaunch.offsetY(progress))
-            .graphicsLayer {
-                val packScale = PackLaunch.scale(progress)
-                scaleX = packScale
-                scaleY = packScale
-                rotationZ = PackLaunch.rotation(progress)
-                alpha = PackLaunch.alpha(progress)
-            },
-    ) {
-        CollectiblesPackImage(
-            imageUrl = imageUrl,
-            glowRadius = PACK_GLOW_RADIUS,
-            onLoadingChange = { isImageLoading = it },
-            modifier = Modifier.matchParentSize(),
-            errorContent = { CollectiblesPackImageErrorCard() },
-        )
-
-        if (isImageLoading) {
-            TangemShimmer(modifier = Modifier.matchParentSize(), radius = PACK_IMAGE_CARD_RADIUS)
-        }
-    }
-}
-
-@Composable
-private fun PriceRows(rows: ImmutableList<PriceRowUM>, modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(horizontal = ROWS_MARGIN)) {
-        rows.forEach { row ->
-            TangemRow(
-                divider = row.hasDivider,
-                titleSlot = {
-                    // The DS makes every title primary; the design dims all but the total
-                    if (row.isEmphasised) {
-                        TangemRowText(text = row.labelRef, role = TangemRowTextRole.Title)
-                    } else {
-                        Text(
-                            text = row.labelRef.resolveReference(),
-                            style = TangemTheme.typography3.body.medium,
-                            color = TangemTheme.colors3.text.secondary,
-                        )
-                    }
-                },
-                valueSlot = { TangemRowText(text = row.value, role = TangemRowTextRole.Value) },
+    Box(modifier = modifier.fillMaxSize()) {
+        if (reveal != null) {
+            PackReveal(
+                onSurfaceAttach = reveal.onSurfaceAttached,
+                onSurfaceDetach = reveal.onSurfaceDetached,
+                isTapEnabled = stage == Stage.Reveal,
+                onTap = reveal.onRevealTap,
             )
         }
-    }
-}
 
-@Composable
-private fun ConfirmFooter(order: OrderUM, onConfirm: () -> Unit, modifier: Modifier = Modifier) {
-    TangemFooter(modifier = modifier) {
-        TangemButton(
-            variant = TangemButton.Variant.Primary,
-            size = TangemButton.Size.X12,
-            isEnabled = order.button.isEnabled,
-            text = order.button.textRef,
-            onClick = onConfirm,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        if (content != null && card != null && stage == Stage.Reward) {
+            RewardCard(
+                um = card,
+                timing = if (content.reveal.isSkipped) RewardCardTiming.Skipped else RewardCardTiming.Default,
+                cardAspect = cardAspect,
+                onBackClick = content.onBackClick,
+                onKeepCardClick = content.reveal.onKeepCardClick,
+                onSellBackClick = content.reveal.onSellBackClick,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        if (stage == Stage.Order || stage == Stage.Launching) {
+            ConfirmOrder(state = state, progress = launchProgress)
+        }
     }
 }
