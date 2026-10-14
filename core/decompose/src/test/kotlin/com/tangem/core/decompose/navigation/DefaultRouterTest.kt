@@ -117,21 +117,20 @@ internal class DefaultRouterTest {
     }
 
     @Test
-    fun `GIVEN completion callback throws WHEN push THEN callback is not retried and error is rethrown`() {
+    fun `GIVEN completion callback throws WHEN push THEN callback is not retried and error is not rethrown`() {
         // Arrange
-        val callbackError = IllegalStateException("Caller failure")
-        var calls = 0
-        val failingOnComplete: (Boolean) -> Unit = {
-            calls++
-            throw callbackError
+        val calls = mutableListOf<Boolean>()
+        val failingOnComplete: (Boolean) -> Unit = { isSuccess ->
+            calls += isSuccess
+            throw IllegalStateException("Caller failure")
         }
 
         // Act
         val actual = runCatching { router.push(RouteB, failingOnComplete) }.exceptionOrNull()
 
         // Assert
-        assertThat(actual).isSameInstanceAs(callbackError)
-        assertThat(calls).isEqualTo(1)
+        assertThat(actual).isNull()
+        assertThat(calls).containsExactly(true)
         assertThat(stack).containsExactly(RouteA, RouteB).inOrder()
     }
 
