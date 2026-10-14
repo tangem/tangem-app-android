@@ -168,6 +168,10 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED",
+        "version": "6.5"
+    },
+    {
         "name": "TWI_1760_SUPPORT_CHAT_DEEPLINK_ENABLED",
         "version": "undefined"
     }
