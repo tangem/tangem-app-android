@@ -58,8 +58,11 @@ internal class YieldSupplyClaimTrackerTest {
                 YieldSupplyClaimOutcome(
                     userWalletId = USER_WALLET_ID,
                     cryptoCurrencyId = TOKEN.id,
+                    networkId = TOKEN.network.id,
+                    tokenSymbol = TOKEN.symbol,
                     chainId = CHAIN_ID,
                     userAddress = USER_ADDRESS,
+                    transactionHash = TX_HASH,
                     outcome = YieldSupplyTransactionOutcome.Confirmed,
                 ),
             )
@@ -87,8 +90,11 @@ internal class YieldSupplyClaimTrackerTest {
             YieldSupplyClaimOutcome(
                 userWalletId = USER_WALLET_ID,
                 cryptoCurrencyId = TOKEN.id,
+                networkId = TOKEN.network.id,
+                tokenSymbol = TOKEN.symbol,
                 chainId = CHAIN_ID,
                 userAddress = USER_ADDRESS,
+                transactionHash = TX_HASH,
                 outcome = YieldSupplyTransactionOutcome.Reverted,
             ),
         )
