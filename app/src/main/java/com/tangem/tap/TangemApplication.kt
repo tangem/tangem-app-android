@@ -40,7 +40,6 @@ import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryAnaly
 import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLoggingInitializer
-import com.tangem.tap.domain.yield.YieldSupplyClaimOutcomeAnnouncer
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -77,9 +76,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
     private val tangemLoggingInitializer: TangemLoggingInitializer
         get() = entryPoint.getTangemLoggingInitializer()
-
-    private val yieldSupplyClaimOutcomeAnnouncer: YieldSupplyClaimOutcomeAnnouncer
-        get() = entryPoint.getYieldSupplyClaimOutcomeAnnouncer()
 
     private val blockchainExceptionHandler: BlockchainExceptionHandler
         get() = entryPoint.getBlockchainExceptionHandler()
@@ -169,7 +165,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     }
 
     fun init() {
-        yieldSupplyClaimOutcomeAnnouncer.start()
         if (authFeatureToggles.isBackendAuthenticationEnabled) {
             appScope.launch {
                 // Order matters: registration reads the device public key, so it must wait for
