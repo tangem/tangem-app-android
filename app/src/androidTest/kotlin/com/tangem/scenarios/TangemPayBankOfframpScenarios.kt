@@ -471,7 +471,7 @@ fun BaseTestCase.clickTangemPayBankWithdrawFormContinue() {
 
 private fun String.toTangemPayBankOfframpOrder(): TangemPayBankOfframpOrder? = runCatching {
     val data = JSONObject(this).getJSONObject("data")
-    if (data.optString("type") != BANK_OFFRAMP_ORDER_TYPE) return null
+    if (data.optString("type") != BANK_OFFRAMP_ORDER_TYPE) return@runCatching null
     val details = data.optJSONObject("bank_account")?.optJSONObject("details")
     TangemPayBankOfframpOrder(
         amountInCents = data.getLong("amount_in_cents"),
