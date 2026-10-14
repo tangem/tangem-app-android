@@ -41,7 +41,7 @@ import kotlinx.collections.immutable.toImmutableList
 internal fun ExchangeStatusBottomSheetContent(state: ExchangeUM, extraContent: (@Composable () -> Unit)? = null) {
     Column(
         modifier = Modifier
-            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .padding(horizontal = 16.dp)
             .verticalScroll(rememberScrollState()),
     ) {
         SpacerH10()
@@ -129,7 +129,7 @@ private fun ExchangeStatusState.toExpressStatusItemUM(): ExpressStatusItemUM = E
 private fun Notification(state: ExchangeStatusNotification) {
     AnimatedContent(
         targetState = state,
-        modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
+        modifier = Modifier.padding(top = 12.dp),
         label = "Exchange Status Notification Change",
         contentKey = { it::class.java },
     ) { notification ->

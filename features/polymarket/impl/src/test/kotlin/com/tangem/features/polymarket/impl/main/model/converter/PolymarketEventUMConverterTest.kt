@@ -9,7 +9,9 @@ import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
-import com.tangem.domain.polymarket.model.PolymarketStatus
+import com.tangem.features.polymarket.impl.createPolymarketEvent
+import com.tangem.features.polymarket.impl.createPolymarketMarket
+import com.tangem.features.polymarket.impl.createPolymarketOutcome
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
 import com.tangem.test.core.ProvideTestModels
@@ -356,25 +358,12 @@ internal class PolymarketEventUMConverterTest {
         volume: BigDecimal? = null,
         markets: List<PolymarketMarket> = listOf(createMarket()),
         totalMarketsCount: Int = markets.size,
-    ): PolymarketEvent = PolymarketEvent(
-        id = "event-1",
-        slug = "event-slug",
-        title = "Event title",
-        description = "Event description",
-        rulesUrl = "https://polymarket.com/rules",
-        iconUrl = null,
-        imageUrl = null,
-        status = PolymarketStatus.ACTIVE,
-        startDate = null,
-        endDate = null,
+    ): PolymarketEvent = createPolymarketEvent(
         volume = volume,
-        volume24h = null,
-        liquidity = null,
-        totalMarketsCount = totalMarketsCount,
         isNegRisk = displayMode == PolymarketDisplayMode.GROUPED_OUTCOMES,
-        isLive = false,
         displayMode = displayMode,
         markets = markets,
+        totalMarketsCount = totalMarketsCount,
     )
 
     private fun createMarket(
@@ -382,27 +371,10 @@ internal class PolymarketEventUMConverterTest {
         title: String = "Market question",
         groupItemTitle: String? = "France",
         outcomes: List<PolymarketOutcome> = listOf(createOutcome()),
-    ): PolymarketMarket = PolymarketMarket(
+    ): PolymarketMarket = createPolymarketMarket(
         id = id,
-        conditionId = null,
-        eventId = "event-1",
         title = title,
-        slug = "market-slug",
-        description = "Market description",
         groupItemTitle = groupItemTitle,
-        iconUrl = null,
-        imageUrl = null,
-        status = PolymarketStatus.ACTIVE,
-        isNegRisk = false,
-        isAcceptingOrders = true,
-        startDate = null,
-        endDate = null,
-        startDateIso = null,
-        endDateIso = null,
-        volume = null,
-        volume24h = null,
-        liquidity = null,
-        orderIndex = 0,
         outcomes = outcomes,
     )
 
@@ -410,7 +382,7 @@ internal class PolymarketEventUMConverterTest {
         assetId: String = "asset-1",
         title: String = "Yes",
         probability: BigDecimal? = null,
-    ): PolymarketOutcome = PolymarketOutcome(
+    ): PolymarketOutcome = createPolymarketOutcome(
         assetId = assetId,
         title = title,
         probability = probability,

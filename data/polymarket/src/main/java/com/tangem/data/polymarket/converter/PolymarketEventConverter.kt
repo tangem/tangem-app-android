@@ -83,6 +83,7 @@ internal object PolymarketEventConverter : Converter<PolymarketEventDto, Polymar
             liquidity = dto.liquidity?.let(BigDecimal::valueOf),
             orderIndex = dto.orderIndex,
             outcomes = dto.outcomes.map(::convertOutcome),
+            version = PolymarketMarketVersionConverter.convert(dto.version),
         )
     }
 
@@ -91,6 +92,7 @@ internal object PolymarketEventConverter : Converter<PolymarketEventDto, Polymar
             assetId = dto.assetId,
             title = dto.label,
             probability = dto.probability?.let(BigDecimal::valueOf),
+            legacyAssetId = dto.legacyAssetId,
         )
     }
 

@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
@@ -22,9 +23,9 @@ fun CurrencyIconTopBadge(
     colorFilter: ColorFilter?,
     modifier: Modifier = Modifier,
     background: Color = TangemTheme.colors.background.primary,
-    size: Dp = TangemTheme.dimens.size14,
+    size: Dp = 14.dp,
 ) {
-    val innerSpacing = TangemTheme.dimens.spacing2
+    val innerSpacing = 2.dp
     Box(
         modifier = modifier
             .size(size + innerSpacing * 2)

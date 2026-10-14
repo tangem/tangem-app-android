@@ -7,6 +7,14 @@ plugins {
 android {
     namespace = "com.tangem.domain.card"
 }
+
+kotlin {
+    compilerOptions {
+        // ScanConfig.Callback members are defaults: JVM default methods keep implementors in other modules valid
+        // when a default member is added, without compiled bridges
+        freeCompilerArgs.add("-Xjvm-default=all")
+    }
+}
 dependencies {
 
     // region Kotlin

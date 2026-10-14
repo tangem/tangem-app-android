@@ -149,7 +149,7 @@ object TangemModalStatus {
         @ReadOnlyComposable
         @Composable
         internal fun backgroundColor(): Color = when (this) {
-            Neutral -> TangemTheme.colors3.bg.opaque.primary
+            Neutral -> TangemTheme.colors3.bg.transparent.primary
             Success -> TangemTheme.colors3.bg.status.successSubtle
             Error -> TangemTheme.colors3.bg.status.errorSubtle
             Warning -> TangemTheme.colors3.bg.status.warningSubtle

@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -39,11 +40,11 @@ internal fun AskBiometry(state: AskBiometryUM, modifier: Modifier = Modifier) {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
             ) {
-                Title(modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing56))
+                Title(modifier = Modifier.padding(horizontal = 56.dp))
                 SpacerH32()
                 Description(
                     modifier = Modifier
-                        .padding(horizontal = TangemTheme.dimens.spacing34)
+                        .padding(horizontal = 34.dp)
                         .fillMaxWidth(),
                 )
             }
@@ -62,11 +63,11 @@ private fun Header(onCloseClick: () -> Unit, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.End,
     ) {
         IconButton(
-            modifier = Modifier.size(TangemTheme.dimens.size32),
+            modifier = Modifier.size(32.dp),
             onClick = onCloseClick,
         ) {
             Icon(
-                modifier = Modifier.size(TangemTheme.dimens.size24),
+                modifier = Modifier.size(24.dp),
                 painter = painterResource(id = R.drawable.ic_close_24),
                 tint = TangemTheme.colors.icon.secondary,
                 contentDescription = stringResourceSafe(id = R.string.common_cancel),
@@ -81,10 +82,10 @@ private fun Title(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing32),
+        verticalArrangement = Arrangement.spacedBy(32.dp),
     ) {
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size56),
+            modifier = Modifier.size(56.dp),
             painter = painterResource(id = R.drawable.ic_fingerprint_24),
             tint = TangemTheme.colors.icon.primary1,
             contentDescription = null,
@@ -102,7 +103,7 @@ private fun Title(modifier: Modifier = Modifier) {
 private fun Description(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.Start,
     ) {
         DescriptionItem(
@@ -122,7 +123,7 @@ private fun Description(modifier: Modifier = Modifier) {
 private fun Footer(state: AskBiometryUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .padding(horizontal = 16.dp)
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -162,7 +163,7 @@ private fun DescriptionItem(iconPainter: Painter, title: String, description: St
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size24),
+            modifier = Modifier.size(24.dp),
             painter = iconPainter,
             tint = TangemTheme.colors.icon.primary1,
             contentDescription = null,

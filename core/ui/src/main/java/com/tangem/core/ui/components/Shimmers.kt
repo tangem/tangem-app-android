@@ -37,7 +37,7 @@ import com.valentinilk.shimmer.*
  * Rectangle shimmer item with rounded shape from DS
  */
 @Composable
-fun RectangleShimmer(modifier: Modifier = Modifier, radius: Dp = TangemTheme.dimens.radius6) {
+fun RectangleShimmer(modifier: Modifier = Modifier, radius: Dp = 6.dp) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(size = radius))
@@ -69,7 +69,7 @@ fun TextShimmer(
     style: TextStyle,
     modifier: Modifier = Modifier,
     text: String = "A",
-    radius: Dp = TangemTheme.dimens.radius3,
+    radius: Dp = 3.dp,
     textSizeHeight: Boolean = false,
 ) {
     if (textSizeHeight) {
@@ -107,7 +107,7 @@ fun TextShimmer(
 @Composable
 fun SmallButtonShimmer(
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(size = TangemTheme.dimens.radius16),
+    shape: Shape = RoundedCornerShape(size = 16.dp),
     withIcon: Boolean = false,
 ) {
     PrimarySmallButton(
@@ -195,14 +195,14 @@ private fun ShimmersPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(TangemTheme.colors.background.primary),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing18),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             RectangleShimmer(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(TangemTheme.dimens.size24),
+                    .height(24.dp),
             )
-            CircleShimmer(modifier = Modifier.size(size = TangemTheme.dimens.size42))
+            CircleShimmer(modifier = Modifier.size(size = 42.dp))
             TextShimmer(
                 style = TangemTheme.typography.body1,
                 modifier = Modifier.fillMaxWidth(fraction = 0.4f),
