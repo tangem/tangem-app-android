@@ -97,8 +97,8 @@ private fun DropdownMenuContent(
             }
         },
         label = "",
-    ) {
-        if (it) {
+    ) { isExpanded ->
+        if (isExpanded) {
             // Menu is expanded.
             1f
         } else {
@@ -118,8 +118,8 @@ private fun DropdownMenuContent(
             }
         },
         label = "",
-    ) {
-        if (it) {
+    ) { isExpanded ->
+        if (isExpanded) {
             // Menu is expanded.
             1f
         } else {

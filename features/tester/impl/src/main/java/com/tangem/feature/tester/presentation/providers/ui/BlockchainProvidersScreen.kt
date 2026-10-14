@@ -332,9 +332,9 @@ private fun AddPublicProviderDialog(state: BlockchainProvidersUM.AddPublicProvid
             },
         ),
         onDismissDialog = onDismiss,
-        onValueChange = {
-            value = it
-            state.onValueChange(it.text)
+        onValueChange = { textFieldValue ->
+            value = textFieldValue
+            state.onValueChange(textFieldValue.text)
         },
         textFieldParams = AdditionalTextInputDialogUM(
             label = "Url",
