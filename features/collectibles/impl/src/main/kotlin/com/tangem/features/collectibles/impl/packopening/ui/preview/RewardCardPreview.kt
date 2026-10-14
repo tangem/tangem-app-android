@@ -7,6 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.RewardCardContent
 import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.RewardCardTiming
@@ -66,7 +68,7 @@ private class RewardCardPreviewProvider : PreviewParameterProvider<RewardCardPre
 }
 
 private val RewardCardPreviewUM = RewardCardUM(
-    rarity = "Uncommon pull",
+    rarity = resourceReference(R.string.collectibles_open_pack_pull_uncommon),
     accent = RewardCardUM.Accent.Green,
     title = "2024 Series One",
     editionNumber = "#216",
