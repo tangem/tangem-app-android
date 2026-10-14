@@ -1,5 +1,6 @@
 package com.tangem.screens
 
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
@@ -127,7 +128,11 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         val matcher = withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM) and hasAnyDescendant(withText(tokenName))
         val nodes = semanticsProvider.onAllNodes(matcher, useUnmergedTree = true)
         for (i in 0 until nodes.fetchSemanticsNodes().size) {
-            if (runCatching { nodes[i].assertIsDisplayed(); nodes[i].performClick() }.isSuccess) return
+            val isClicked = runCatching {
+                nodes[i].assertIsDisplayed()
+                nodes[i].performTouchInput { click(Offset(x = width * TOKEN_ICON_TAP_X_FRACTION, y = centerY)) }
+            }.isSuccess
+            if (isClicked) return
         }
         error("Token '$tokenName' is not displayed on the current wallet page")
     }
@@ -759,3 +764,5 @@ internal val UNDERIVED_TOKEN_ACTIONS = listOf(TokenActionMenuTestTags.HIDE_TOKEN
 
 internal fun BaseTestCase.onMainScreen(function: MainScreenPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)
+
+private const val TOKEN_ICON_TAP_X_FRACTION = 0.1f
