@@ -11,6 +11,8 @@ import com.tangem.data.wallets.derivations.DefaultDerivationsHelper
 import com.tangem.data.wallets.derivations.DefaultDerivationsRepository
 import com.tangem.data.wallets.hot.DefaultHotMapDerivationsRepository
 import com.tangem.data.wallets.hot.DefaultHotWalletAccessCodeAttemptsRepository
+import com.tangem.data.wallets.signing.DefaultDeriveAndSignSession
+import com.tangem.data.wallets.signing.DeriveAndSignSession
 import com.tangem.data.wallets.store.PendingWalletCardsBackup
 import com.tangem.data.wallets.store.PendingWalletCardsBackupStore
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -124,6 +126,10 @@ internal object WalletsDataModule {
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface WalletsDataBindsModule {
+
+    @Binds
+    @Singleton
+    fun bindDeriveAndSignSession(impl: DefaultDeriveAndSignSession): DeriveAndSignSession
 
     @Binds
     @Singleton
