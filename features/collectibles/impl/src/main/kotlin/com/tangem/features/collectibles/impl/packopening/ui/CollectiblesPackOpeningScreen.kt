@@ -42,7 +42,6 @@ internal fun CollectiblesPackOpeningScreen(state: CollectiblesPackOpeningUM, mod
                 um = card,
                 timing = if (content.reveal.isSkipped) RewardCardTiming.Skipped else RewardCardTiming.Default,
                 cardAspect = cardAspect,
-                onBackClick = content.onBackClick,
                 onKeepCardClick = content.reveal.onKeepCardClick,
                 onSellBackClick = content.reveal.onSellBackClick,
                 modifier = Modifier.fillMaxSize(),
