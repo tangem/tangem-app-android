@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.extensions.TextReference
@@ -65,7 +66,7 @@ fun SecondarySmallButton(config: SmallButtonConfig, modifier: Modifier = Modifie
 @Suppress("LongMethod")
 @Composable
 private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier: Modifier = Modifier) {
-    val shape = RoundedCornerShape(size = TangemTheme.dimens.radius16)
+    val shape = RoundedCornerShape(size = 16.dp)
 
     val backgroundColor by animateColorAsState(
         targetValue = if (isPrimary) TangemTheme.colors.button.primary else TangemTheme.colors.button.secondary,
@@ -75,8 +76,8 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
     Box(
         modifier = modifier
             .defaultMinSize(
-                minWidth = TangemTheme.dimens.size46,
-                minHeight = TangemTheme.dimens.size24,
+                minWidth = 46.dp,
+                minHeight = 24.dp,
             )
             .clip(shape)
             .background(
@@ -87,15 +88,15 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
             .padding(
                 paddingValues = when (config.icon) {
                     is TangemButtonIconPosition.None -> PaddingValues(
-                        horizontal = TangemTheme.dimens.spacing12,
+                        horizontal = 12.dp,
                     )
                     is TangemButtonIconPosition.End -> PaddingValues(
-                        start = TangemTheme.dimens.spacing12,
-                        end = TangemTheme.dimens.spacing8,
+                        start = 12.dp,
+                        end = 8.dp,
                     )
                     is TangemButtonIconPosition.Start -> PaddingValues(
-                        start = TangemTheme.dimens.spacing8,
-                        end = TangemTheme.dimens.spacing12,
+                        start = 8.dp,
+                        end = 12.dp,
                     )
                 },
             ),
@@ -103,9 +104,9 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
     ) {
         if (config.isLoading) {
             CircularProgressIndicator(
-                strokeWidth = TangemTheme.dimens.size2,
+                strokeWidth = 2.dp,
                 color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier.size(TangemTheme.dimens.size16),
+                modifier = Modifier.size(16.dp),
             )
         }
         Row(
@@ -126,7 +127,7 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
                     )
 
                     Text(
-                        modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing4),
+                        modifier = Modifier.padding(vertical = 4.dp),
                         text = config.text.resolveReference(),
                         color = textColor,
                         maxLines = 1,
@@ -135,7 +136,7 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
                 },
                 icon = { iconResId ->
                     Icon(
-                        modifier = Modifier.size(TangemTheme.dimens.size16),
+                        modifier = Modifier.size(16.dp),
                         painter = painterResource(id = iconResId),
                         tint = if (config.isEnabled) {
                             TangemTheme.colors.icon.secondary
@@ -158,11 +159,11 @@ private fun RowScope.ContentContainer(
 ) {
     if (iconPosition is TangemButtonIconPosition.Start) {
         icon(iconPosition.iconResId)
-        Spacer(modifier = Modifier.requiredWidth(TangemTheme.dimens.spacing4))
+        Spacer(modifier = Modifier.requiredWidth(4.dp))
     }
     text()
     if (iconPosition is TangemButtonIconPosition.End) {
-        Spacer(modifier = Modifier.requiredWidth(TangemTheme.dimens.spacing4))
+        Spacer(modifier = Modifier.requiredWidth(4.dp))
         icon(iconPosition.iconResId)
     }
 }
@@ -180,7 +181,7 @@ private fun Preview_SmallButton() {
 private fun ButtonsSample() {
     Column(
         modifier = Modifier.background(TangemTheme.colors.background.primary),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         val config = SmallButtonConfig(
             text = TextReference.Str(value = "Adddddddd"),

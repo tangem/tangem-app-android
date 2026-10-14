@@ -52,7 +52,7 @@ internal fun CustomTokenFormContent(model: CustomTokenFormUM, modifier: Modifier
     val bottomBarHeight by animateDpAsState(
         label = "Bottom bar height",
         targetValue = if (keyboard.isOpened) {
-            TangemTheme.dimens.spacing0
+            0.dp
         } else {
             with(LocalDensity.current) {
                 WindowInsets.systemBars.getBottom(density = this).toDp()
@@ -79,7 +79,7 @@ internal fun CustomTokenFormContent(model: CustomTokenFormUM, modifier: Modifier
                     .fillMaxSize()
                     .padding(bottom = 128.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 AddCustomTokenDescription()
                 FormContent(model)
@@ -89,7 +89,7 @@ internal fun CustomTokenFormContent(model: CustomTokenFormUM, modifier: Modifier
         TangemButton(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = TangemTheme.dimens.spacing16 + bottomBarHeight)
+                .padding(bottom = 16.dp + bottomBarHeight)
                 .fillMaxWidth(),
             text = stringResourceSafe(id = R.string.common_add_token),
             colors = TangemButtonsDefaults.primaryButtonColors,
@@ -111,7 +111,7 @@ internal fun CustomTokenFormContent(model: CustomTokenFormUM, modifier: Modifier
 private fun FormContent(model: CustomTokenFormUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         ClickableField(
             model = model.networkName,
@@ -201,7 +201,7 @@ private fun TextField(model: TextInputFieldUM, modifier: Modifier = Modifier, fi
 
             SimpleTextField(
                 modifier = Modifier
-                    .padding(bottom = TangemTheme.dimens.spacing12)
+                    .padding(bottom = 12.dp)
                     .fillMaxWidth()
                     .then(if (fieldTestTag != null) Modifier.testTag(fieldTestTag) else Modifier)
                     .onFocusChanged {
@@ -234,7 +234,7 @@ private fun ClickableField(model: ClickableFieldUM, modifier: Modifier = Modifie
         },
         content = {
             Text(
-                modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                modifier = Modifier.padding(bottom = 12.dp),
                 text = model.value.resolveReference(),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.primary1,

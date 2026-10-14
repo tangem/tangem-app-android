@@ -77,13 +77,13 @@ internal fun SwapScreenContent(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
-                    top = TangemTheme.dimens.spacing8,
-                    bottom = TangemTheme.dimens.spacing32,
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 8.dp,
+                    bottom = 32.dp,
                 ),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             MainInfo(state)
 
@@ -120,14 +120,14 @@ internal fun SwapScreenContent(
                 ProviderTos(
                     tosState = state.tosState,
                     modifier = Modifier
-                        .padding(top = TangemTheme.dimens.spacing16),
+                        .padding(top = 16.dp),
                 )
             }
             if (state.transferFooter != null) {
                 SendingText(
                     footerText = state.transferFooter,
                     modifier = Modifier.padding(
-                        top = TangemTheme.dimens.spacing16,
+                        top = 16.dp,
                     ),
                 )
             }
@@ -157,8 +157,8 @@ internal fun SwapScreenContent(
                             .background(TangemTheme.colors.button.secondary)
                             .clickable { state.onMaxAmountSelected?.invoke() }
                             .padding(
-                                horizontal = TangemTheme.dimens.spacing14,
-                                vertical = TangemTheme.dimens.spacing16,
+                                horizontal = 14.dp,
+                                vertical = 16.dp,
                             ),
                         textAlign = TextAlign.Start,
                     )
@@ -203,7 +203,7 @@ private fun MainInfo(state: SwapStateHolder) {
             },
             onSelectTokenClick = { state.onSelectTokenClick(TokenSelectionDirection.FROM) },
         )
-        val marginCard = TangemTheme.dimens.spacing12
+        val marginCard = 12.dp
         if (state.swapUIMode == SwapUIMode.Simple) {
             TransactionCardSimple(
                 priceImpact = priceImpact,
@@ -224,7 +224,7 @@ private fun MainInfo(state: SwapStateHolder) {
                 onSelectTokenClick = { state.onSelectTokenClick(TokenSelectionDirection.TO) },
             )
         }
-        val marginButton = TangemTheme.dimens.spacing30
+        val marginButton = 30.dp
         SwapButton(
             state,
             modifier = Modifier.constrainAs(button) {
@@ -248,7 +248,7 @@ private fun ProviderTos(tosState: TosState, modifier: Modifier = Modifier) {
         text = annotatedString,
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens.spacing54),
+            .padding(horizontal = 54.dp),
         style = TangemTheme.typography.caption2.copy(textAlign = TextAlign.Center),
         onClick = click,
     )
@@ -319,12 +319,12 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
     if (state.changeCardsButtonState == ChangeCardsButtonState.HIDDEN) {
         // No reverse action in a fixed-direction account flow (Tangem Pay top-up/withdraw via swap) —
         // keep the layout slot but render nothing, matching the existing constraint reference.
-        Spacer(modifier = modifier.size(TangemTheme.dimens.size48))
+        Spacer(modifier = modifier.size(48.dp))
         return
     }
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens.size48)
+            .size(48.dp)
             .dropShadow(
                 shape = CircleShape,
                 shadow = Shadow(
@@ -348,9 +348,9 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
             ChangeCardsButtonState.UPDATE_IN_PROGRESS -> {
                 Box {
                     CircularProgressIndicator(
-                        modifier = Modifier.padding(TangemTheme.dimens.spacing12),
+                        modifier = Modifier.padding(12.dp),
                         color = TangemTheme.colors.icon.primary1,
-                        strokeWidth = TangemTheme.dimens.size2,
+                        strokeWidth = 2.dp,
                     )
                 }
             }
@@ -359,7 +359,7 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
                     painter = painterResource(id = R.drawable.ic_exchange_vertical_24),
                     contentDescription = null,
                     tint = TangemTheme.colors.text.primary1,
-                    modifier = Modifier.padding(TangemTheme.dimens.spacing12),
+                    modifier = Modifier.padding(12.dp),
                 )
             }
             ChangeCardsButtonState.DISABLED -> {
@@ -367,7 +367,7 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
                     painter = painterResource(id = R.drawable.ic_exchange_vertical_24),
                     contentDescription = null,
                     tint = TangemTheme.colors.text.disabled,
-                    modifier = Modifier.padding(TangemTheme.dimens.spacing12),
+                    modifier = Modifier.padding(12.dp),
                 )
             }
             ChangeCardsButtonState.HIDDEN -> Unit
@@ -400,9 +400,9 @@ private fun SwapNotifications(notifications: List<NotificationUM>, onTronBannerS
                         icon = {
                             CircularProgressIndicator(
                                 modifier = Modifier
-                                    .size(TangemTheme.dimens.size16),
+                                    .size(16.dp),
                                 color = TangemTheme.colors.icon.primary1,
-                                strokeWidth = TangemTheme.dimens.size2,
+                                strokeWidth = 2.dp,
                             )
                         },
                     )

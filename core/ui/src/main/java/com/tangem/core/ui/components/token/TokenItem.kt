@@ -34,7 +34,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TokenElementsTestTags
 import kotlinx.collections.immutable.persistentListOf
@@ -65,7 +64,7 @@ fun TokenItem(
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
     composables: TokenItemComposables? = null,
-    itemPaddingValues: PaddingValues = PaddingValues(horizontal = TangemTheme.dimens.spacing12),
+    itemPaddingValues: PaddingValues = PaddingValues(horizontal = 12.dp),
 ) {
     TokenItem(
         state = state,
@@ -102,10 +101,10 @@ fun TokenItem(
     isBalanceHidden: Boolean,
     reorderableTokenListState: ReorderableLazyListState?,
     modifier: Modifier = Modifier,
-    itemPaddingValues: PaddingValues = PaddingValues(horizontal = TangemTheme.dimens.spacing12),
+    itemPaddingValues: PaddingValues = PaddingValues(horizontal = 12.dp),
     composables: TokenItemComposables? = null,
 ) {
-    val betweenRowsMargin = TangemTheme.dimens.spacing2
+    val betweenRowsMargin = 2.dp
 
     CustomContainer(
         state = state,
@@ -117,7 +116,7 @@ fun TokenItem(
             composables.icon.invoke(
                 Modifier
                     .layoutId(layoutId = LayoutId.ICON)
-                    .padding(end = TangemTheme.dimens.spacing12)
+                    .padding(end = 12.dp)
                     .testTag(TokenElementsTestTags.TOKEN_ICON),
             )
         } else {
@@ -125,7 +124,7 @@ fun TokenItem(
                 state = state.iconState,
                 modifier = Modifier
                     .layoutId(layoutId = LayoutId.ICON)
-                    .padding(end = TangemTheme.dimens.spacing12)
+                    .padding(end = 12.dp)
                     .testTag(TokenElementsTestTags.TOKEN_ICON),
             )
         }
@@ -142,7 +141,7 @@ fun TokenItem(
             composables.title.invoke(
                 Modifier
                     .layoutId(layoutId = LayoutId.TITLE)
-                    .padding(end = TangemTheme.dimens.spacing8)
+                    .padding(end = 8.dp)
                     .padding(bottom = betweenRowsMargin)
                     .testTag(TokenElementsTestTags.TOKEN_TITLE),
             )
@@ -151,7 +150,7 @@ fun TokenItem(
                 state = state.titleState,
                 modifier = Modifier
                     .layoutId(layoutId = LayoutId.TITLE)
-                    .padding(end = TangemTheme.dimens.spacing8)
+                    .padding(end = 8.dp)
                     .padding(bottom = betweenRowsMargin)
                     .testTag(TokenElementsTestTags.TOKEN_TITLE),
             )
@@ -170,7 +169,7 @@ fun TokenItem(
             state = state.subtitleState,
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.CRYPTO_PRICE)
-                .padding(end = TangemTheme.dimens.spacing8)
+                .padding(end = 8.dp)
                 .testTag(TokenElementsTestTags.TOKEN_PRICE),
         )
 
@@ -228,12 +227,11 @@ private fun Modifier.tokenClickable(state: TokenItemState): Modifier = composed 
 @Composable
 private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val density = LocalDensity.current
-    val dimens = TangemTheme.dimens
 
     Layout(content = content, modifier = modifier) { measurables, constraints ->
 
         val layoutWidth = constraints.maxWidth
-        val verticalPadding = with(density) { dimens.size15.roundToPx() }
+        val verticalPadding = with(density) { 15.dp.roundToPx() }
         val titleMinWidth = (layoutWidth * TITLE_MIN_WIDTH_COEFFICIENT).toInt()
         val priceChangeMinWidth = (layoutWidth * PRICE_MIN_WIDTH_COEFFICIENT).toInt()
 
@@ -338,7 +336,7 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
 
         val layoutHeight = calculateLayoutHeight(
             state = state,
-            minLayoutHeight = with(density) { dimens.size68.roundToPx() },
+            minLayoutHeight = with(density) { 68.dp.roundToPx() },
             layoutPadding = verticalPadding,
             promoOffset = promoOffset,
             title = title,

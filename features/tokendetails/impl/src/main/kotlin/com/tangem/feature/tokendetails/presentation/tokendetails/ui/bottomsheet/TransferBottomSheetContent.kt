@@ -21,7 +21,7 @@ import com.tangem.core.ui.R as CoreR
 internal fun TransferBottomSheetContent(state: TransferUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         SendActionRow(state = state)
         SwapActionRow(state = state)

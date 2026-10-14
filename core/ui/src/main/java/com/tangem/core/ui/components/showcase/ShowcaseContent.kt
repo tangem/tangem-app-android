@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.showcase.model.ShowcaseItemModel
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -35,7 +36,7 @@ fun ShowcaseContent(
             tint = TangemTheme.colors.icon.primary1,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
-                .size(TangemTheme.dimens.size56),
+                .size(56.dp),
         )
         Text(
             text = headerText.resolveReference(),
@@ -45,19 +46,19 @@ fun ShowcaseContent(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(
-                    start = TangemTheme.dimens.spacing34,
-                    end = TangemTheme.dimens.spacing34,
-                    top = TangemTheme.dimens.spacing28,
+                    start = 34.dp,
+                    end = 34.dp,
+                    top = 28.dp,
                 ),
         )
         Column(
             modifier = Modifier
                 .padding(
-                    start = TangemTheme.dimens.spacing34,
-                    end = TangemTheme.dimens.spacing34,
-                    top = TangemTheme.dimens.spacing28,
+                    start = 34.dp,
+                    end = 34.dp,
+                    top = 28.dp,
                 ),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             repeat(showcaseItems.size) { index ->

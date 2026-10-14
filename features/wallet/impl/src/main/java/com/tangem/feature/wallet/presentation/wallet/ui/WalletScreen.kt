@@ -250,7 +250,7 @@ private fun WalletContent(
             bottom = paddingValues.calculateBottomPadding() +
                 marketsHintHeight +
                 collapsedBodyOverhang +
-                TangemTheme.dimens2.x2,
+                8.dp,
         )
 
         val selectedWalletIndex by rememberUpdatedState(state.selectedWalletIndex)

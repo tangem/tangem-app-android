@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -67,12 +68,12 @@ internal fun TangemPayChangePinScreen(
                 )
             },
         )
-        SpacerH(TangemTheme.dimens2.x4)
+        SpacerH(16.dp)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = TangemTheme.dimens2.x12)
-                .padding(horizontal = TangemTheme.dimens2.x9),
+                .padding(top = 48.dp)
+                .padding(horizontal = 36.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -82,9 +83,9 @@ internal fun TangemPayChangePinScreen(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.testTag(TangemPayTestTags.PIN_SCREEN_DESCRIPTION),
             )
-            SpacerH(TangemTheme.dimens2.x6)
+            SpacerH(24.dp)
             PinCodeSection(state)
-            SpacerH(TangemTheme.dimens2.x6)
+            SpacerH(24.dp)
             AnimatedVisibility(state.submitButtonLoading) {
                 TangemLoader()
             }
@@ -172,7 +173,7 @@ private fun PinCode(
                 contentAlignment = Alignment.Center,
             ) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     repeat(numbersCount) { index ->
@@ -180,8 +181,8 @@ private fun PinCode(
                         val isActive = !readOnly && index == value.length
                         PinDigitBox(
                             modifier = Modifier.size(
-                                width = TangemTheme.dimens2.x14,
-                                height = TangemTheme.dimens2.x16,
+                                width = 56.dp,
+                                height = 64.dp,
                             ),
                             digit = digit,
                             backgroundColor = TangemTheme.colors3.bg.transparent.primary,
