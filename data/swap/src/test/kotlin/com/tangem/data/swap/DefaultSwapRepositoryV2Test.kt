@@ -6,12 +6,6 @@ import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.grow.datasource.express.TangemExpressApi
-import com.tangem.grow.datasource.express.models.request.LeastTokenInfo
-import com.tangem.grow.datasource.express.models.request.PairsRequestBody
-import com.tangem.grow.datasource.express.models.response.*
-import com.tangem.grow.datasource.crypto.DataSignatureVerifier
-import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.models.*
 import com.tangem.domain.express.models.ExpressError
@@ -24,8 +18,12 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapCurrencyStatus
-import com.tangem.domain.swap.models.SwapStatus
 import com.tangem.domain.swap.models.SwapTxType
+import com.tangem.grow.datasource.crypto.DataSignatureVerifier
+import com.tangem.grow.datasource.express.ExpressUtils
+import com.tangem.grow.datasource.express.TangemExpressApi
+import com.tangem.grow.datasource.express.models.request.LeastTokenInfo
+import com.tangem.grow.datasource.express.models.response.*
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -597,57 +595,8 @@ internal class DefaultSwapRepositoryV2Test {
     // region filterYieldSupplyProvider
 
     @Test
-    fun `GIVEN yield active WHEN getPairs THEN any DEX kept with CEX`() = runTest {
+    fun `GIVEN yield active WHEN getPairs THEN non-allowlisted DEX filtered out`() = runTest {
         // Arrange
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED) } returns true
-        val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
-        val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
-        val primarySwapCurrencyStatus = SwapCurrencyStatus(
-            userWallet = userWallet,
-            status = primaryStatus,
-            account = mockk(),
-        )
-        val secondarySwapCurrencyStatus = SwapCurrencyStatus(
-            userWallet = userWallet,
-            status = secondaryStatus,
-            account = mockk(),
-        )
-
-        val swapPair = SwapPair(
-            from = LeastTokenInfo(contractAddress = "0", network = ETH_BACKEND_ID),
-            to = LeastTokenInfo(contractAddress = "0", network = BTC_BACKEND_ID),
-            providers = listOf(
-                SwapPairProvider(providerId = PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
-                SwapPairProvider(providerId = CEX_PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
-            ),
-        )
-
-        coEvery {
-            tangemExpressApi.getPairs(any(), any(), any())
-        } returns ApiResponse.Success(listOf(swapPair))
-
-        coEvery {
-            expressRepository.getProviders(any(), any())
-        } returns listOf(dexProvider, cexProvider)
-
-        // Act
-        val result = repository.getPairs(
-            primarySwapCurrencyStatus = primarySwapCurrencyStatus,
-            secondarySwapCurrencyStatus = secondarySwapCurrencyStatus,
-            filterProviderTypes = emptyList(),
-            swapTxType = SwapTxType.Swap,
-        )
-
-        // Assert
-        assertThat(result).hasSize(2)
-        val providers = result.first().providers
-        assertThat(providers.map { it.providerId }).containsExactly(PROVIDER_ID, CEX_PROVIDER_ID)
-    }
-
-    @Test
-    fun `GIVEN yield active and transfer flag off WHEN getPairs THEN non-allowlisted DEX filtered out`() = runTest {
-        // Arrange
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED) } returns false
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
         val primarySwapCurrencyStatus = SwapCurrencyStatus(
@@ -695,26 +644,31 @@ internal class DefaultSwapRepositoryV2Test {
     }
 
     @Test
-    fun `GIVEN yield active and flag on WHEN getPairs THEN DEX_BRIDGE kept with CEX`() = runTest {
+    fun `GIVEN yield active WHEN getPairs THEN only allowlisted DEX_BRIDGE kept with CEX`() = runTest {
         // Arrange
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED) } returns true
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
-        val primarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
-        val secondarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = secondaryStatus, account = mockk())
+        val primarySwapCurrencyStatus =
+            SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
+        val secondarySwapCurrencyStatus =
+            SwapCurrencyStatus(userWallet = userWallet, status = secondaryStatus, account = mockk())
 
         val bridgeProvider = dexProvider.copy(providerId = BRIDGE_PROVIDER_ID, type = ExpressProviderType.DEX_BRIDGE)
+        val allowedBridgeProvider = bridgeProvider.copy(providerId = ALLOWED_BRIDGE_PROVIDER_ID)
         val swapPair = SwapPair(
             from = LeastTokenInfo(contractAddress = "0", network = ETH_BACKEND_ID),
             to = LeastTokenInfo(contractAddress = "0", network = BTC_BACKEND_ID),
             providers = listOf(
                 SwapPairProvider(providerId = BRIDGE_PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
+                SwapPairProvider(providerId = ALLOWED_BRIDGE_PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
                 SwapPairProvider(providerId = CEX_PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
             ),
         )
 
         coEvery { tangemExpressApi.getPairs(any(), any(), any()) } returns ApiResponse.Success(listOf(swapPair))
-        coEvery { expressRepository.getProviders(any(), any()) } returns listOf(bridgeProvider, cexProvider)
+        coEvery {
+            expressRepository.getProviders(any(), any())
+        } returns listOf(bridgeProvider, allowedBridgeProvider, cexProvider)
 
         // Act
         val result = repository.getPairs(
@@ -724,20 +678,21 @@ internal class DefaultSwapRepositoryV2Test {
             swapTxType = SwapTxType.Swap,
         )
 
-        // Assert — DEX_BRIDGE + CEX both kept
+        // Assert
         assertThat(result).hasSize(2)
         val providers = result.first().providers
-        assertThat(providers.map { it.providerId }).containsExactly(BRIDGE_PROVIDER_ID, CEX_PROVIDER_ID)
+        assertThat(providers.map { it.providerId }).containsExactly(ALLOWED_BRIDGE_PROVIDER_ID, CEX_PROVIDER_ID)
     }
 
     @Test
-    fun `GIVEN yield active and flag on WHEN getPairs THEN ONRAMP provider filtered out`() = runTest {
+    fun `GIVEN yield active WHEN getPairs THEN ONRAMP provider filtered out`() = runTest {
         // Arrange
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED) } returns true
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
-        val primarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
-        val secondarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = secondaryStatus, account = mockk())
+        val primarySwapCurrencyStatus =
+            SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
+        val secondarySwapCurrencyStatus =
+            SwapCurrencyStatus(userWallet = userWallet, status = secondaryStatus, account = mockk())
 
         val onrampProvider = dexProvider.copy(providerId = "onramp-provider", type = ExpressProviderType.ONRAMP)
         val swapPair = SwapPair(
@@ -768,12 +723,14 @@ internal class DefaultSwapRepositoryV2Test {
     }
 
     @Test
-    fun `GIVEN yield inactive and flag on WHEN getPairs THEN all providers kept`() = runTest {
+    fun `GIVEN yield inactive WHEN getPairs THEN all providers kept`() = runTest {
         // Arrange
         val primaryStatus = createCryptoCurrencyStatus(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
-        val primarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
-        val secondarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = secondaryStatus, account = mockk())
+        val primarySwapCurrencyStatus =
+            SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
+        val secondarySwapCurrencyStatus =
+            SwapCurrencyStatus(userWallet = userWallet, status = secondaryStatus, account = mockk())
 
         val swapPair = SwapPair(
             from = LeastTokenInfo(contractAddress = "0", network = ETH_BACKEND_ID),
@@ -873,6 +830,7 @@ internal class DefaultSwapRepositoryV2Test {
         const val CEX_PROVIDER_ID = "cex-provider-1"
         const val BRIDGE_PROVIDER_ID = "bridge-provider-1"
         const val ALLOWED_DEX_PROVIDER_ID = "1inch"
+        const val ALLOWED_BRIDGE_PROVIDER_ID = "okx-cross-chain"
 
         val userWallet: UserWallet = MockUserWalletFactory.create()
 
