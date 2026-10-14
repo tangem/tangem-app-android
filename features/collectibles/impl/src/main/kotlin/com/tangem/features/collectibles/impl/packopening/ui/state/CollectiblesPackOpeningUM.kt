@@ -1,5 +1,6 @@
 package com.tangem.features.collectibles.impl.packopening.ui.state
 
+import android.view.SurfaceView
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
@@ -39,11 +40,16 @@ internal sealed interface CollectiblesPackOpeningUM {
         val onKeepCardClick: () -> Unit,
         val onSellBackClick: () -> Unit,
         val stage: Stage = Stage.Order,
+        val isFullReveal: Boolean = true,
+        val isSkipped: Boolean = false,
         val onPackAnimationFinished: () -> Unit = {},
+        val onRevealTap: () -> Unit = {},
+        val onSurfaceAttached: (SurfaceView) -> Unit = {},
+        val onSurfaceDetached: (SurfaceView) -> Unit = {},
     )
 
-    /** Order: the confirm screen. Launching: the pack is thrown. Reward: the card. */
-    enum class Stage { Order, Launching, Reward }
+    /** Order: the confirm screen. Launching: the pack is thrown. Reveal: the video. Reward: the card. */
+    enum class Stage { Order, Launching, Reveal, Reward }
 
     data class OrderUM(
         val rows: ImmutableList<PriceRowUM>,
