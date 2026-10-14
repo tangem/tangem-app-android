@@ -18,7 +18,6 @@ import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.CollectiblesError
 import com.tangem.domain.collectibles.models.OpenPackRequest
 import com.tangem.domain.collectibles.models.OpenPackStep
-import com.tangem.domain.collectibles.models.OpenedCollectiblePack
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineUseCase
 import com.tangem.domain.collectibles.usecase.OpenCollectiblePackUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -26,10 +25,13 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.collectibles.impl.CollectiblesRoute
+import com.tangem.features.collectibles.impl.createMachine
+import com.tangem.features.collectibles.impl.createOpenedPack
+import com.tangem.features.collectibles.impl.packopening.model.converter.CollectiblesRewardCardConverter
 import com.tangem.features.collectibles.impl.packopening.CollectiblesConfirmOrderBottomSheetConfig
 import com.tangem.features.collectibles.impl.packopening.CollectiblesPackOpeningComponent
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
-import com.tangem.features.collectibles.impl.createMachine
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.Stage
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.collectibles.MockCollectibles
 import io.mockk.clearMocks
@@ -52,11 +54,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CollectiblesPackOpeningModelTest {
 
     private val getMachineUseCase: GetCollectibleGachaMachineUseCase = mockk()
@@ -65,9 +65,7 @@ internal class CollectiblesPackOpeningModelTest {
     private val openCollectiblePackUseCase: OpenCollectiblePackUseCase = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val messageSender: UiMessageSender = mockk(relaxed = true)
-
     private val userWallet = MockUserWalletFactory.create().copy(walletId = USER_WALLET_ID)
-
     private val statusFlow = MutableStateFlow<CollectiblesAccountStatusValue>(onboarded(usdcAmount = "1000"))
 
     private var model: CollectiblesPackOpeningModel? = null
@@ -214,7 +212,38 @@ internal class CollectiblesPackOpeningModelTest {
         verify(exactly = 1) {
             openCollectiblePackUseCase(userWallet, OpenPackRequest.Buy(EXTERNAL_ID, isTurboEnabled = false))
         }
-        assertThat(model.content().isPackOpened).isTrue()
+        assertThat(model.reveal().stage).isEqualTo(Stage.Launching)
+    }
+
+    @Test
+    fun `GIVEN the pack opens WHEN the reveal launches THEN the card is the won one`() = runTest {
+        // Arrange
+        val model = startModel()
+
+        // Act
+        model.content().onApproveClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.reveal().card)
+            .isEqualTo(CollectiblesRewardCardConverter.convert(pack = PACK))
+    }
+
+    @Test
+    fun `GIVEN a purchase not finished WHEN state read THEN there is no card yet`() = runTest {
+        // Arrange
+        every { openCollectiblePackUseCase(any(), any()) } returns flow {
+            emit(OpenPackStep.Opening)
+            awaitCancellation()
+        }
+        val model = startModel()
+
+        // Act
+        model.content().onApproveClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.reveal().card).isNull()
     }
 
     @Test
@@ -256,7 +285,7 @@ internal class CollectiblesPackOpeningModelTest {
                 isEnabled = false,
             ),
         )
-        assertThat(model.content().isPackOpened).isFalse()
+        assertThat(model.reveal().stage).isEqualTo(Stage.Order)
     }
 
     @Test
@@ -275,6 +304,24 @@ internal class CollectiblesPackOpeningModelTest {
 
         // Assert
         verify(exactly = 0) { router.pop() }
+    }
+
+    @Test
+    fun `GIVEN a failed purchase whose flow is still open WHEN back tapped THEN the flow is left`() = runTest {
+        // Arrange
+        every { openCollectiblePackUseCase(any(), any()) } returns flow {
+            emit(OpenPackStep.Failed.PurchaseFailed)
+            awaitCancellation()
+        }
+        val model = startModel()
+        model.content().onApproveClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onBackClick()
+
+        // Assert
+        verify(exactly = 1) { router.pop() }
     }
 
     @Test
@@ -298,8 +345,7 @@ internal class CollectiblesPackOpeningModelTest {
     @Test
     fun `GIVEN a failure before the payment WHEN approve tapped THEN a snackbar is shown`() = runTest {
         // Arrange
-        every { openCollectiblePackUseCase(any(), any()) } returns
-            flowOf(OpenPackStep.Failed.PurchaseFailed)
+        every { openCollectiblePackUseCase(any(), any()) } returns flowOf(OpenPackStep.Failed.PurchaseFailed)
         val message = slot<EventMessage>()
         every { messageSender.send(capture(message)) } returns Unit
         val model = startModel()
@@ -310,6 +356,7 @@ internal class CollectiblesPackOpeningModelTest {
 
         // Assert
         assertThat(message.captured).isInstanceOf(SnackbarMessage::class.java)
+        assertThat(model.reveal().stage).isEqualTo(Stage.Order)
     }
 
     @Test
@@ -354,7 +401,7 @@ internal class CollectiblesPackOpeningModelTest {
         // Assert
         verify(exactly = 1) { openCollectiblePackUseCase(userWallet, OpenPackRequest.Reopen(TX_ID)) }
         verify(exactly = 0) { router.popTo(any<Route>(), any()) }
-        assertThat(model.content().isPackOpened).isTrue()
+        assertThat(model.reveal().stage).isEqualTo(Stage.Launching)
     }
 
     @Test
@@ -431,9 +478,26 @@ internal class CollectiblesPackOpeningModelTest {
         assertThat(model.order().button.isEnabled).isTrue()
     }
 
+    @Test
+    fun `GIVEN the pack is thrown WHEN its animation finishes THEN the card is shown`() = runTest {
+        // Arrange
+        val model = startModel()
+        model.content().onApproveClick()
+        advanceUntilIdle()
+
+        // Act
+        model.reveal().onPackAnimationFinished()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.reveal().stage).isEqualTo(Stage.Reward)
+    }
+
     private fun CollectiblesPackOpeningModel.content() = uiState.value as CollectiblesPackOpeningUM.Content
 
-    private fun CollectiblesPackOpeningModel.order() = content().order
+    private fun CollectiblesPackOpeningModel.reveal() = content().reveal
+
+    private fun CollectiblesPackOpeningModel.order() = (uiState.value as CollectiblesPackOpeningUM.Content).order
 
     private fun onboarded(usdcAmount: String) = CollectiblesAccountStatusValue.Onboarded(
         source = StatusSource.ACTUAL,
@@ -470,19 +534,7 @@ internal class CollectiblesPackOpeningModelTest {
         const val EXTERNAL_ID = "pokemon_1"
         val USER_WALLET_ID = UserWalletId("011")
 
-        val PACK = OpenedCollectiblePack(
-            txId = "tx-id",
-            nftAddress = "nft",
-            imageFrontUrl = null,
-            imageBackUrl = null,
-            rarity = null,
-            gradingCompany = null,
-            gradingId = "123",
-            year = null,
-            set = null,
-            serialNumber = null,
-            insuredValue = null,
-        )
+        val PACK = createOpenedPack(txId = TX_ID)
     }
 }
 
