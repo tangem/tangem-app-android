@@ -29,13 +29,13 @@ data class CollectibleGachaMachine(
 ) {
 
     /**
-     * What the opening animation plays: the full reveal video per app theme, and the short sound used when
+     * What the opening animation plays: the full reveal video per app theme, and the skip sound played when
      * the video is skipped or could not be loaded in time.
      */
     data class RevealAssets(
         val lightVideoUrl: String,
         val darkVideoUrl: String,
-        val shortAudioUrl: String,
+        val skipAudioUrl: String,
     )
 
     /** What one spin costs: the backend sends the price and the fee, not their sum. */
