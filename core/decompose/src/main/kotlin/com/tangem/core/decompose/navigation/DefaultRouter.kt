@@ -87,12 +87,14 @@ internal class DefaultRouter(
             var isCompleted = false
             val complete: (Boolean) -> Unit = { isSuccess ->
                 isCompleted = true
-                onComplete(isSuccess)
+                runCatching { onComplete(isSuccess) }.onFailure { throwable ->
+                    logger.e(messageString = "Navigation completion callback failed", throwable = throwable)
+                }
             }
 
             runCatching { navigation.block(complete) }.onFailure { throwable ->
                 logger.e(messageString = "Navigation failed", throwable = throwable)
-                if (!isCompleted) onComplete(false)
+                if (!isCompleted) complete(false)
             }
         }
 
