@@ -12,6 +12,7 @@ import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.safe.SafeDeployment
 import com.tangem.domain.models.network.Network
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.addHexPrefix
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import kotlinx.coroutines.withContext
@@ -93,9 +94,9 @@ internal class DefaultJointOperationBlockaidGate @Inject constructor(
             add(
                 buildJsonObject {
                     put(key = "from", value = safeAddress)
-                    put(key = "to", value = safeTx.to)
+                    put(key = "to", value = safeTx.to.addHexPrefix())
                     put(key = "value", value = HEX_PREFIX + safeTx.value.toString(HEX_RADIX))
-                    put(key = "data", value = safeTx.data)
+                    put(key = "data", value = safeTx.data.addHexPrefix())
                 },
             )
         }

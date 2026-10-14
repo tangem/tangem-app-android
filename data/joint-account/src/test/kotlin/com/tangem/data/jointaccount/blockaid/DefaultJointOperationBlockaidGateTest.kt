@@ -151,6 +151,33 @@ internal class DefaultJointOperationBlockaidGateTest {
     }
 
     @Test
+    fun `GIVEN unprefixed recipient and empty data WHEN verify the first operation THEN both reach blockaid as hex`() =
+        runTest {
+            // Arrange
+            val dataSlot = slot<TransactionData>()
+            coEvery { blockAidVerifier.verifyTransaction(data = capture(dataSlot)) } returns
+                CheckTransactionResult(
+                    validation = ValidationResult.SAFE,
+                    simulation = SimulationResult.FailedToSimulate,
+                ).right()
+
+            // Act
+            gate.verify(
+                network = network,
+                safeTx = SAFE_TX.copy(to = SAFE_TX.to.removePrefix("0x"), data = ""),
+                chainId = CHAIN_ID,
+                safeAddress = SAFE_ADDRESS,
+                ownerAddress = OWNER,
+                deployment = SafeDeployment.NOT_DEPLOYED,
+            )
+
+            // Assert
+            val params = (dataSlot.captured.params as TransactionParams.Evm).params
+            assertThat(params).contains("\"to\":\"${SAFE_TX.to}\"")
+            assertThat(params).contains("\"data\":\"0x\"")
+        }
+
+    @Test
     fun `GIVEN blockaid transport fails WHEN verify THEN UNAVAILABLE, apart from a verdict it could not give`() = runTest {
         // Arrange
         coEvery { blockAidVerifier.verifyTransaction(data = any()) } returns
