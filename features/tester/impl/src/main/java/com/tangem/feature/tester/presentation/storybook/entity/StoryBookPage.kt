@@ -641,7 +641,32 @@ internal data class TangemModalStory(
     val onInputToggle: () -> Unit,
     val onPresentationChange: (TangemModal.Presentation) -> Unit,
     val onChromePlacementChange: (TangemModal.ChromePlacement) -> Unit,
+    val templates: TangemModalTemplatesState,
+    val onTemplatesChange: (TangemModalTemplatesState) -> Unit,
 ) : DsStoryBookPage
+
+/** Content-template section of [TangemModalStory]: the previewed template, its controls and the opened modals. */
+@Suppress("BooleanPropertyNaming")
+internal data class TangemModalTemplatesState(
+    val template: TangemModalTemplate = TangemModalTemplate.Status,
+    val statusVariant: TangemModalStatus.Variant = TangemModalStatus.Variant.Info,
+    val statusTitleStyle: TangemModalStatus.TitleStyle = TangemModalStatus.TitleStyle.Status,
+    val hasStatusDescription: Boolean = true,
+    val hasStatusCustomAsset: Boolean = false,
+    val hasStatusExtraBottom: Boolean = false,
+    val hasStatusDetails: Boolean = false,
+    val informerVariant: TangemModalInformerVariant = TangemModalInformerVariant.Plain,
+    val hasInformerExtraBottom: Boolean = false,
+    val hasMenuAvatars: Boolean = true,
+    val hasMenuSubtitles: Boolean = true,
+    val openedExample: TangemModalStatusExample? = null,
+)
+
+/** Content templates of a `TangemModal`. */
+internal enum class TangemModalTemplate { Status, Informer, Menu }
+
+/** Figma variants of `TangemModalInformer`. */
+internal enum class TangemModalInformerVariant { Plain, Rich }
 
 @Suppress("BooleanPropertyNaming")
 internal data class TangemShtorkaStory(
@@ -729,26 +754,6 @@ internal data class TangemTabNavigationStory(
         Dark("dark"),
     }
 }
-
-internal data class TangemModalStatusStory(
-    val variant: TangemModalStatus.Variant,
-    val titleStyle: TangemModalStatus.TitleStyle,
-    val hasDescription: Boolean,
-    val hasCustomAsset: Boolean,
-    val hasExtraBottom: Boolean,
-    val hasDetails: Boolean,
-    val openedExample: TangemModalStatusExample?,
-    val isMessageSheetShown: Boolean,
-    val onVariantChange: (TangemModalStatus.Variant) -> Unit,
-    val onTitleStyleChange: (TangemModalStatus.TitleStyle) -> Unit,
-    val onDescriptionToggle: () -> Unit,
-    val onCustomAssetToggle: () -> Unit,
-    val onExtraBottomToggle: () -> Unit,
-    val onDetailsToggle: () -> Unit,
-    val onExampleOpen: (TangemModalStatusExample) -> Unit,
-    val onExampleDismiss: () -> Unit,
-    val onMessageSheetShownChange: (Boolean) -> Unit,
-) : DsStoryBookPage
 
 /** The modal status screens from the DS Figma examples, each recreated in a real modal. */
 internal enum class TangemModalStatusExample(val label: String) {
