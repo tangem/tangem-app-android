@@ -1,5 +1,6 @@
 package com.tangem.domain.transaction.models
 
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
@@ -43,3 +44,6 @@ data class TransactionFeeExtended(
      */
     val nativeFee: TransactionFee? = null,
 )
+
+val TransactionFeeExtended.isGasless: Boolean
+    get() = tronGaslessQuote != null || transactionFee.normal is Fee.Ethereum.TokenCurrency

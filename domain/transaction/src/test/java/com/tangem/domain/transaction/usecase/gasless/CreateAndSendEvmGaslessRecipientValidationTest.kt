@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 
-/** Unit tests for [CreateAndSendGaslessTransactionUseCase.validateTransactionRecipients]. */
-internal class CreateAndSendGaslessRecipientValidationTest {
+/** Unit tests for [CreateAndSendEvmGaslessTransactionUseCase.validateTransactionRecipients]. */
+internal class CreateAndSendEvmGaslessRecipientValidationTest {
 
     private val blockchain = Blockchain.Ethereum
     private val tokenContract = "0xdac17f958d2ee523a2206206994597c13d831ec7"
@@ -45,7 +45,7 @@ internal class CreateAndSendGaslessRecipientValidationTest {
         )
 
         // Act & Assert — no exception
-        CreateAndSendGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
+        CreateAndSendEvmGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
     }
 
     @Test
@@ -58,7 +58,7 @@ internal class CreateAndSendGaslessRecipientValidationTest {
 
         // Act & Assert
         assertThrows<IllegalArgumentException> {
-            CreateAndSendGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
+            CreateAndSendEvmGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
         }
     }
 
@@ -72,7 +72,7 @@ internal class CreateAndSendGaslessRecipientValidationTest {
 
         // Act & Assert
         assertThrows<IllegalArgumentException> {
-            CreateAndSendGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
+            CreateAndSendEvmGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
         }
     }
 
@@ -86,7 +86,7 @@ internal class CreateAndSendGaslessRecipientValidationTest {
 
         // Act & Assert
         assertThrows<IllegalArgumentException> {
-            CreateAndSendGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
+            CreateAndSendEvmGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
         }
     }
 
@@ -100,7 +100,7 @@ internal class CreateAndSendGaslessRecipientValidationTest {
 
         // Act & Assert
         assertThrows<IllegalArgumentException> {
-            CreateAndSendGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
+            CreateAndSendEvmGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
         }
     }
 
@@ -118,7 +118,7 @@ internal class CreateAndSendGaslessRecipientValidationTest {
 
         // Act & Assert
         assertThrows<IllegalArgumentException> {
-            CreateAndSendGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
+            CreateAndSendEvmGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
         }
     }
 
@@ -135,7 +135,7 @@ internal class CreateAndSendGaslessRecipientValidationTest {
         )
 
         // Act & Assert — no exception
-        CreateAndSendGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
+        CreateAndSendEvmGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
     }
 
     @Test
@@ -145,7 +145,7 @@ internal class CreateAndSendGaslessRecipientValidationTest {
 
         // Act & Assert
         assertThrows<IllegalStateException> {
-            CreateAndSendGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
+            CreateAndSendEvmGaslessTransactionUseCase.validateTransactionRecipients(blockchain, txData)
         }
     }
 }
