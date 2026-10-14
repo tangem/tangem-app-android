@@ -5,6 +5,7 @@ import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.test.TangemPayTestTags
+import com.tangem.core.ui.test.TopNavigationTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -36,6 +37,11 @@ class TangemPayBankWithdrawFormPageObject(semanticsProvider: SemanticsNodeIntera
     val continueButton: KNode = child {
         hasText(getResourceString(CoreResR.string.common_continue))
         hasClickAction()
+        hasAnyAncestor(withTestTag(TangemPayTestTags.BANK_WITHDRAW_FORM_SCREEN))
+    }
+
+    val closeButton: KNode = child {
+        hasTestTag(TopNavigationTestTags.CLOSE_BUTTON)
         hasAnyAncestor(withTestTag(TangemPayTestTags.BANK_WITHDRAW_FORM_SCREEN))
     }
 

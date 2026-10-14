@@ -273,6 +273,28 @@ fun BaseTestCase.fillTangemPayNewBankRecipient(
     }
 }
 
+fun BaseTestCase.openTangemPayBankRecipientDetailsStep(transferType: String?, accountType: String) {
+    val amount = "5"
+
+    enterTangemPayBankWithdrawAmount(amount)
+    step("Click on 'Continue' button") { clickTangemPayBankWithdrawAmountContinue() }
+    chooseTangemPayBankWithdrawAccountTypes(transferType, accountType)
+    step("Assert recipient details step is displayed") {
+        awaitSuccess {
+            onTangemPayBankWithdrawFormScreen { field(TangemPayBankWithdrawField.AccountNumber).assertIsDisplayed() }
+        }
+    }
+}
+
+fun BaseTestCase.closeTangemPayBankWithdrawForm() {
+    step("Click on 'Close' button") {
+        onTangemPayBankWithdrawFormScreen { closeButton.performClick() }
+    }
+    step("Assert payment account balance is displayed") {
+        awaitSuccess { onTangemPayMainScreen { balance.assertIsDisplayed() } }
+    }
+}
+
 fun BaseTestCase.fillTangemPayBankRecipientDetails(recipient: TangemPayBankRecipient) {
     step("Assert recipient details step is displayed") {
         awaitSuccess {
