@@ -120,11 +120,18 @@ internal class ResidencyListModel @Inject constructor(
             ),
         )
         checkEligibility(itemId = country.code, countryCode = country.code, regionCode = null) { eligibility ->
-            sendEligibilityCheckResult(eligibility = eligibility, country = country, region = null)
             when {
-                !eligibility.isAvailable -> openRegionUnavailableScreen(eligibility)
-                country.hasRegions -> showRegions(country)
-                else -> continueOnboarding(itemId = country.code)
+                !eligibility.isAvailable -> {
+                    sendAnalyticsEventEligibilityCheckResult(eligibility = eligibility, country = country)
+                    openRegionUnavailableScreen(eligibility)
+                }
+                country.hasRegions -> {
+                    showRegions(country)
+                }
+                else -> {
+                    sendAnalyticsEventEligibilityCheckResult(eligibility = eligibility, country = country)
+                    continueOnboarding(itemId = country.code)
+                }
             }
         }
     }
@@ -137,7 +144,7 @@ internal class ResidencyListModel @Inject constructor(
             ),
         )
         checkEligibility(itemId = region.code, countryCode = country.code, regionCode = region.code) { eligibility ->
-            sendEligibilityCheckResult(eligibility = eligibility, country = country, region = region)
+            sendAnalyticsEventEligibilityCheckResult(eligibility = eligibility, country = country, region = region)
             if (eligibility.isAvailable) {
                 continueOnboarding(itemId = region.code)
             } else {
@@ -146,10 +153,10 @@ internal class ResidencyListModel @Inject constructor(
         }
     }
 
-    private fun sendEligibilityCheckResult(
+    private fun sendAnalyticsEventEligibilityCheckResult(
         eligibility: TangemPayEligibility,
         country: TangemPayCountry,
-        region: TangemPayRegion?,
+        region: TangemPayRegion? = null,
     ) {
         analytics.send(
             TangemPayAnalyticsEvents.Eligibility.EligibilityCheckResult(
