@@ -3,10 +3,29 @@ package com.tangem.features.collectibles.impl.packopening.ui.preview
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.collectibles.models.CollectibleRarity
+import com.tangem.domain.collectibles.models.OpenedCollectiblePack
+import com.tangem.features.collectibles.impl.packopening.model.converter.CollectiblesRewardCardConverter
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
 import kotlinx.collections.immutable.persistentListOf
+import java.math.BigDecimal
 
 internal object CollectiblesPackOpeningPreviewData {
+
+    /** The design's sample pull (Figma `76:11506`). */
+    private val pack = OpenedCollectiblePack(
+        txId = "preview",
+        nftAddress = "",
+        imageFrontUrl = "https://nft-dev.collectorcrypt.com/front/2026090150C5275487",
+        imageBackUrl = "https://nft-dev.collectorcrypt.com/back/2026090150C5275487",
+        rarity = CollectibleRarity.UNCOMMON,
+        gradingCompany = "PSA",
+        gradingId = "00000000",
+        year = "2024",
+        set = "Series One",
+        serialNumber = "216",
+        insuredValue = BigDecimal("62"),
+    )
 
     val content = CollectiblesPackOpeningUM.Content(
         onBackClick = {},
@@ -30,8 +49,12 @@ internal object CollectiblesPackOpeningPreviewData {
                 isEnabled = true,
             ),
         ),
+        reveal = CollectiblesPackOpeningUM.RevealUM(
+            card = CollectiblesRewardCardConverter.convert(pack = pack),
+            onKeepCardClick = {},
+            onSellBackClick = {},
+        ),
         onApproveClick = {},
-        isPackOpened = false,
         isNavigationVisible = true,
     )
 

@@ -405,7 +405,7 @@ internal class DefaultCollectiblesRepositoryTest {
                         year = "2024",
                         set = "Temporal Forces",
                         serialNumber = "218",
-                        insuredValue = 3500L,
+                        insuredValue = BigDecimal("35.00"),
                     ),
                 ),
             )
