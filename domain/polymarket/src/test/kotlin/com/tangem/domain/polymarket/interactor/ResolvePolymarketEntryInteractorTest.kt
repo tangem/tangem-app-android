@@ -205,23 +205,25 @@ internal class ResolvePolymarketEntryInteractorTest {
     inner class ConfirmedOnboarded {
 
         @Test
-        fun `GIVEN a confirmed wallet WHEN withoutPrompting THEN resolves without the backend`() = runTest {
-            // Arrange
-            coEvery { onboardedStore.isOnboardedSync(userWalletId) } returns true
+        fun `GIVEN a confirmed wallet with no stored address WHEN withoutPrompting THEN the backend is not asked`() =
+            runTest {
+                // Arrange
+                coEvery { onboardedStore.isOnboardedSync(userWalletId) } returns true
+                coEvery { deriveAddresses.stored(userWalletId) } returns null
 
-            // Act
-            val actual = useCase.withoutPrompting(userWalletId)
+                // Act
+                val actual = useCase.withoutPrompting(userWalletId)
 
-            // Assert
-            assertThat(actual.getOrNull()).isEqualTo(PolymarketEntry.Onboarded)
-            coVerify(exactly = 0) { getWalletStatus(any()) }
-            coVerify(exactly = 0) { deriveAddresses.stored(any()) }
-        }
+                // Assert
+                assertThat(actual.getOrNull()).isEqualTo(PolymarketEntry.Onboarded)
+                coVerify(exactly = 0) { getWalletStatus(any()) }
+            }
 
         @Test
         fun `GIVEN a confirmed wallet WHEN invoke THEN nothing is derived AND no card session is opened`() = runTest {
             // Arrange
             coEvery { onboardedStore.isOnboardedSync(userWalletId) } returns true
+            coEvery { deriveAddresses.stored(userWalletId) } returns null
 
             // Act
             val actual = useCase(userWalletId)
@@ -230,6 +232,58 @@ internal class ResolvePolymarketEntryInteractorTest {
             assertThat(actual.getOrNull()).isEqualTo(PolymarketEntry.Onboarded)
             coVerify(exactly = 0) { deriveAddresses(any()) }
             coVerify(exactly = 0) { getWalletStatus(any()) }
+        }
+
+        @Test
+        fun `GIVEN a confirmed wallet the backend still reports ready WHEN withoutPrompting THEN Onboarded`() =
+            runTest {
+                // Arrange
+                coEvery { onboardedStore.isOnboardedSync(userWalletId) } returns true
+                coEvery { deriveAddresses.stored(userWalletId) } returns addresses
+                coEvery { getWalletStatus(addresses) } returns PolymarketWalletState(
+                    depositWalletAddress = addresses.depositWalletAddress,
+                    status = PolymarketWalletStatus.READY_TO_TRADE,
+                ).right()
+
+                // Act
+                val actual = useCase.withoutPrompting(userWalletId)
+
+                // Assert
+                assertThat(actual.getOrNull()).isEqualTo(PolymarketEntry.Onboarded)
+                coVerify(exactly = 1) { getWalletStatus(addresses) }
+            }
+
+        @Test
+        fun `GIVEN a confirmed wallet the backend demoted to deployed WHEN withoutPrompting THEN it owes approvals`() =
+            runTest {
+                // Arrange
+                coEvery { onboardedStore.isOnboardedSync(userWalletId) } returns true
+                coEvery { deriveAddresses.stored(userWalletId) } returns addresses
+                coEvery { getWalletStatus(addresses) } returns PolymarketWalletState(
+                    depositWalletAddress = addresses.depositWalletAddress,
+                    status = PolymarketWalletStatus.DEPLOYED,
+                ).right()
+
+                // Act
+                val actual = useCase.withoutPrompting(userWalletId)
+
+                // Assert
+                assertThat(actual.getOrNull()).isEqualTo(PolymarketEntry.Onboard(PolymarketWalletStatus.DEPLOYED))
+                coVerify(exactly = 0) { onboardedStore.clear(any()) }
+            }
+
+        @Test
+        fun `GIVEN a confirmed wallet and the backend unreachable WHEN withoutPrompting THEN Onboarded`() = runTest {
+            // Arrange
+            coEvery { onboardedStore.isOnboardedSync(userWalletId) } returns true
+            coEvery { deriveAddresses.stored(userWalletId) } returns addresses
+            coEvery { getWalletStatus(addresses) } returns PolymarketOnboardingError.Network.left()
+
+            // Act
+            val actual = useCase.withoutPrompting(userWalletId)
+
+            // Assert
+            assertThat(actual.getOrNull()).isEqualTo(PolymarketEntry.Onboarded)
         }
 
         @Test
