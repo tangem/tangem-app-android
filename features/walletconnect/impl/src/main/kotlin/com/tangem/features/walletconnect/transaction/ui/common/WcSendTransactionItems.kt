@@ -40,21 +40,21 @@ internal fun WcSendTransactionItems(
     }
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+            .clip(RoundedCornerShape(14.dp))
             .background(color = TangemTheme.colors.background.action)
             .fillMaxWidth()
             .animateContentSize(),
     ) {
         val itemsModifier = Modifier
             .fillMaxWidth()
-            .padding(TangemTheme.dimens.spacing12)
+            .padding(12.dp)
 
         if (portfolioName != null) {
             WcPortfolioItem(
                 modifier = itemsModifier,
                 portfolioName = portfolioName,
             )
-            DividerWithPadding(start = TangemTheme.dimens.spacing40, end = TangemTheme.dimens.spacing12)
+            DividerWithPadding(start = 40.dp, end = 12.dp)
         }
         WcNetworkItem(
             modifier = itemsModifier,
