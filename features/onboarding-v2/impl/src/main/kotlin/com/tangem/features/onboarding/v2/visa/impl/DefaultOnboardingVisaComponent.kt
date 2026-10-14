@@ -121,9 +121,9 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 ),
                 params = OnboardingVisaWelcomeComponent.Params(
                     childParams = childParams,
-                    onDone = {
+                    onDone = { event ->
                         val activationReadyEvent =
-                            (it as? OnboardingVisaWelcomeComponent.DoneEvent.WelcomeBackDone)?.activationReadyEvent
+                            (event as? OnboardingVisaWelcomeComponent.DoneEvent.WelcomeBackDone)?.activationReadyEvent
 
                         if (activationReadyEvent != null) {
                             model.navigateFromActivationScreen(activationReadyEvent)
@@ -172,9 +172,12 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 ),
                 params = OnboardingVisaOtherWalletComponent.Params(
                     childParams = childParams,
-                    onDone = {
+                    onDone = { activationOrderInfo ->
                         model.stackNavigation.replaceAll(
-                            OnboardingVisaRoute.PinCode(activationOrderInfo = it, pinCodeValidationError = false),
+                            OnboardingVisaRoute.PinCode(
+                                activationOrderInfo = activationOrderInfo,
+                                pinCodeValidationError = false,
+                            ),
                         )
                     },
                 ),
