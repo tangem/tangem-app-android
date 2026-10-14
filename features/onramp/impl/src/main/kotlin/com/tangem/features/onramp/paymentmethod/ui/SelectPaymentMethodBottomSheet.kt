@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.extensions.resourceReference
@@ -31,8 +32,8 @@ internal fun SelectPaymentMethodBottomSheet(config: TangemBottomSheetConfig) {
         content = { contentConfig ->
             SelectPaymentMethodBottomSheetContent(
                 modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing16)
-                    .padding(top = TangemTheme.dimens.spacing12, bottom = TangemTheme.dimens.spacing24)
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 12.dp, bottom = 24.dp)
                     .fillMaxWidth()
                     .wrapContentHeight(),
                 selectedMethodId = contentConfig.selectedMethodId,
@@ -62,12 +63,12 @@ private fun SelectPaymentMethodBottomSheetContent(
                 val itemModifier = Modifier
                     .fillMaxWidth()
                     .selectedBorder(isSelected = isSelected)
-                    .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
+                    .clip(RoundedCornerShape(16.dp))
                     .clickable(onClick = item.onSelect)
                     .padding(
-                        start = TangemTheme.dimens.spacing12,
-                        top = TangemTheme.dimens.spacing10,
-                        bottom = TangemTheme.dimens.spacing10,
+                        start = 12.dp,
+                        top = 10.dp,
+                        bottom = 10.dp,
                     )
                 PaymentMethodItem(
                     modifier = itemModifier,
@@ -84,7 +85,7 @@ private fun PaymentMethodItem(paymentMethod: PaymentMethodUM, isSelected: Boolea
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         PaymentMethodIcon(
             method = paymentMethod.method,

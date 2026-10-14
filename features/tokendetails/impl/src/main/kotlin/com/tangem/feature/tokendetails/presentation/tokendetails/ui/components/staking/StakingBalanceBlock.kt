@@ -12,6 +12,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
@@ -37,14 +38,14 @@ internal fun StakingBalanceBlock(
             .testTag(TokenDetailsScreenTestTags.STAKING_BLOCK),
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.weight(1f),
         ) {
             StakingBalanceTitleRow(
                 isBetaMode = state.isBetaMode,
-                modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing2),
+                modifier = Modifier.padding(vertical = 2.dp),
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = state.fiatValue.orMaskWithStars(isBalanceHidden).resolveReference(),
                     style = TangemTheme.typography.body2,
@@ -85,7 +86,7 @@ internal fun StakingBalanceBlock(
 @Composable
 private fun StakingBalanceTitleRow(isBetaMode: Boolean, modifier: Modifier = Modifier) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = modifier,
     ) {
         Text(
@@ -119,7 +120,7 @@ private fun StakingBalanceBlock_Preview(
         StakingBalanceBlock(
             state = data,
             isBalanceHidden = false,
-            modifier = Modifier.padding(TangemTheme.dimens.spacing16),
+            modifier = Modifier.padding(16.dp),
         )
     }
 }

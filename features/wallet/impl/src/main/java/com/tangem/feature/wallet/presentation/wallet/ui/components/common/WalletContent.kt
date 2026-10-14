@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.notifications
 import com.tangem.common.ui.notifications.notificationsCarousel
 import com.tangem.core.ui.decorations.ProvideRoundedItemGroups
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.tokensListItems2
@@ -49,8 +48,8 @@ internal fun WalletListContent(
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     walletId: String? = null,
 ) {
-    val movableItemModifier = Modifier.padding(horizontal = TangemTheme.dimens2.x3)
-    val itemModifier = movableItemModifier.padding(top = TangemTheme.dimens2.x3)
+    val movableItemModifier = Modifier.padding(horizontal = 12.dp)
+    val itemModifier = movableItemModifier.padding(top = 12.dp)
 
     ProvideRoundedItemGroups {
         LazyColumn(
