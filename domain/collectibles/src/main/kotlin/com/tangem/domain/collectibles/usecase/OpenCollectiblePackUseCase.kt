@@ -62,14 +62,9 @@ class OpenCollectiblePackUseCase @Inject constructor(
 
         // Any outcome may have moved money; refreshed alongside, so the reveal does not wait for it
         coroutineScope {
-            launch { refreshVaultBalance(userWallet) }
+            launch { accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWallet.walletId)) }
             emit(result.fold(ifLeft = { it }, ifRight = { OpenPackStep.Opened(it) }))
         }
-    }
-
-    private suspend fun refreshVaultBalance(userWallet: UserWallet) {
-        accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWallet.walletId))
-            .onLeft { TangemLogger.e("open pack: vault balance refresh failed", it) }
     }
 
     private suspend fun Raise<OpenPackStep.Failed>.buyPack(
