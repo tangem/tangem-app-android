@@ -91,6 +91,25 @@ internal class DefaultRouterTest {
     }
 
     @Test
+    fun `GIVEN completion callback throws WHEN push THEN callback is not retried and error is rethrown`() {
+        // Arrange
+        val callbackError = IllegalStateException("Caller failure")
+        var calls = 0
+        val failingOnComplete: (Boolean) -> Unit = {
+            calls++
+            throw callbackError
+        }
+
+        // Act
+        val actual = runCatching { router.push(RouteB, failingOnComplete) }.exceptionOrNull()
+
+        // Assert
+        assertThat(actual).isSameInstanceAs(callbackError)
+        assertThat(calls).isEqualTo(1)
+        assertThat(stack).containsExactly(RouteA, RouteB).inOrder()
+    }
+
+    @Test
     fun `GIVEN main dispatch needed WHEN push THEN navigation runs only on the main dispatcher`() = runTest {
         // Arrange
         val mainDispatcher = StandardTestDispatcher(testScheduler)
