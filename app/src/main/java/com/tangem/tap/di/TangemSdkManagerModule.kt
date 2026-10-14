@@ -2,6 +2,7 @@ package com.tangem.tap.di
 
 import android.content.Context
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.card.BuildConfig
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -38,6 +39,7 @@ internal class TangemSdkManagerModule {
         tangemPayChallengeTask: TangemPayGenerateAddressAndSignChallengeTask,
         tangemPayMoneyAccountTask: TangemPayGenerateMoneyAccountAddressTask,
         onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
+        analyticsEventHandler: AnalyticsEventHandler,
         analyticsErrorHandler: AnalyticsErrorHandler,
         cardRepository: CardRepository,
         derivationsHelper: DerivationsHelper,
@@ -55,6 +57,7 @@ internal class TangemSdkManagerModule {
                 tangemPayChallengeTask = tangemPayChallengeTask,
                 tangemPayMoneyAccountTask = tangemPayMoneyAccountTask,
                 onboardingV2FeatureToggles = onboardingV2FeatureToggles,
+                analyticsEventHandler = analyticsEventHandler,
                 analyticsErrorHandler = analyticsErrorHandler,
                 cardRepository = cardRepository,
                 derivationsHelper = derivationsHelper,
