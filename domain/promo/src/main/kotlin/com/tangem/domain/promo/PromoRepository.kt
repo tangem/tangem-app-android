@@ -11,6 +11,7 @@ import com.tangem.domain.promo.models.PromoEnrollment
 import com.tangem.domain.promo.models.PromoRegistrationError
 import com.tangem.domain.promo.models.PromoRegistrationResult
 import com.tangem.domain.promo.models.TokenReward
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Backend promo-campaign plumbing (enrollment state and registration).
@@ -47,7 +48,10 @@ interface PromoRepository {
      * app session unless [forceRefresh]. Throws if the fetch fails; a failure never evicts other wallets' entries.
      */
     @Throws(Exception::class)
-    suspend fun getCampaigns(userWallet: UserWallet, forceRefresh: Boolean = false): List<PromoCampaign>
+    suspend fun getCampaignsSync(userWallet: UserWallet, forceRefresh: Boolean = false): List<PromoCampaign>
+
+    /** Emits the cached campaigns of [userWalletId] whenever [getCampaignsSync] stores new ones; never fetches. */
+    fun getCampaigns(userWalletId: UserWalletId): Flow<List<PromoCampaign>>
 
     /**
      * Registers [enrollments] for the campaign [promotionId] (`POST /api/referral/v1/promotion/{id}/registrations`)
