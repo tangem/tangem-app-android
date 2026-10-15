@@ -205,6 +205,7 @@ private fun PromoSelectedTokenItem(
                 when (val icon = selectedAccount.iconState) {
                     is CurrencyIconState.PaymentAccount -> PaymentAccountIcon(size = icon.size)
                     is CurrencyIconState.PredictionAccount -> PredictionAccountResIcon(size = icon.size)
+                    is CurrencyIconState.CollectiblesAccount -> CollectiblesAccountResIcon(size = icon.size)
                     is CurrencyIconState.CryptoPortfolio.Icon -> AccountResIcon(
                         imageVector = icon.imageVector(),
                         color = icon.color,
