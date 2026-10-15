@@ -14,6 +14,7 @@ android {
 dependencies {
     api(projects.domain.mcp)
 
+    implementation(projects.core.local)
     implementation(projects.core.remote)
     implementation(projects.core.utils)
     implementation(projects.domain.models)
