@@ -6,8 +6,8 @@ invariants: `domain/polymarket/CLAUDE.md`.
 ## The contract is a hypothesis
 
 Every documented status code and field shape on this epic has been wrong at least once (a `404` that was a
-`400`, UUPS that was a beacon, a 6-call approvals batch that became 13, a `walletId` whose meaning
-reversed). Read the contract from Notion (`Tangem Wallet / Features / Polymarket Integration`), never from
+`400`, UUPS that was a beacon, a 6-call approvals batch that became 13 and then 17, a `walletId` whose
+meaning reversed). Read the contract from Notion (`Tangem Wallet / Features / Polymarket Integration`), never from
 memory; pages change without notice. Check a page's last-edited date against the date below and update it
 in the same PR as the code.
 
@@ -54,6 +54,9 @@ provider strings and teams in provider order. `dataFetchedAt` dates the backend'
 - **Activity amounts and prices are decimal strings**; market / order / redemption metadata may be absent.
   `reconcile` answers `202 {state: SCANNING, retryAfterSeconds}` — it starts or joins a scan, it does not
   report completion. Cursors are opaque: keep them across retries, reset on filter change, reject cycles.
+- **`CONDITIONAL-V2` is not in Polymarket's OpenAPI** (only `COLLATERAL` / `CONDITIONAL` are) — the V2 shares
+  asset type comes from the migration guide and has not been seen live. The sync before a SELL is best-effort
+  for exactly that reason.
 
 ## Error-mapping decisions
 
@@ -66,7 +69,8 @@ deliberate exceptions:
   despite the failed response.
 
 BFF `/wallet*` `409` means approvals were sent before the deploy finished; `/withdraw*` `409` means the same
-nonce was already submitted — neither is a generic conflict.
+nonce was already submitted; `/positions/redeem/call` `409` means nothing to redeem (claimed elsewhere, or an
+unsupported market version) — none is a generic conflict.
 
 ## Stores
 
