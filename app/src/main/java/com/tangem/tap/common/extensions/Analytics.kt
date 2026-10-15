@@ -84,8 +84,9 @@ fun Analytics.addContext(scanResponse: ScanResponse) {
 }
 
 fun Analytics.addHotWalletContext() {
-    val currentContext = removeParamsInterceptor(LinkedCardContextInterceptor.id()) as? LinkedCardContextInterceptor
-    val newContext = HotWalletContextInterceptor(currentContext)
+    val currentContext = removeParamsInterceptor(LinkedCardContextInterceptor.id())
+        ?: removeParamsInterceptor(HotWalletContextInterceptor.id())
+    val newContext = HotWalletContextInterceptor(parent = currentContext)
 
     addParamsInterceptor(newContext)
 }
