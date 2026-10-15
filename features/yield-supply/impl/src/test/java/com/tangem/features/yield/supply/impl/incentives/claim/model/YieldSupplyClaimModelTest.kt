@@ -510,6 +510,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
                 chainId = CHAIN_ID,
                 userAddress = SOURCE_ADDRESS,
                 transactionHash = TX_HASH,
+                claimedRewards = listOf(owner()),
             )
         }
         assertThat(isSheetDismissed).isTrue()
@@ -590,6 +591,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
                     chainId = CHAIN_ID,
                     userAddress = SOURCE_ADDRESS,
                     transactionHash = TX_HASH,
+                    claimedRewards = listOf(owner()),
                 )
             }
         }
