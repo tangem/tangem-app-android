@@ -4,8 +4,8 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.common.routing.AppRouter
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -50,7 +50,7 @@ class YieldSupplyActiveModelBoostBlockTest {
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk(relaxed = true)
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase = mockk(relaxed = true)
     private val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase = mockk(relaxed = true)
     private val boostStoryPreloader: YieldBoostStoryPreloader = mockk(relaxed = true)
@@ -102,7 +102,7 @@ class YieldSupplyActiveModelBoostBlockTest {
         getUserWalletUseCase = getUserWalletUseCase,
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         urlOpener = urlOpener,
-        appRouter = appRouter,
+        router = router,
         yieldSupplyGetDustMinAmountUseCase = yieldSupplyGetDustMinAmountUseCase,
         getYieldBoostStatusUseCase = getYieldBoostStatusUseCase,
         boostStoryPreloader = boostStoryPreloader,
