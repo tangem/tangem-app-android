@@ -10,6 +10,7 @@ import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.analytics.models.OneTimePerSessionEvent
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import dagger.Lazy
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -261,7 +262,7 @@ internal class DefaultAnalyticsEventHandlerTest {
         handlers = handlers,
         filters = Lazy { filters },
         staticInterceptors = staticInterceptors,
-        dispatcher = StandardTestDispatcher(testScheduler),
+        dispatchers = TestingCoroutineDispatcherProvider(io = StandardTestDispatcher(testScheduler)),
     )
 
     private fun createFilter(
