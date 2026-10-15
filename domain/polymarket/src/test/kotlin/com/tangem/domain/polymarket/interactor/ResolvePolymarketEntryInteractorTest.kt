@@ -1,5 +1,6 @@
 package com.tangem.domain.polymarket.interactor
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -11,6 +12,7 @@ import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketDerivationError
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
+import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
@@ -23,6 +25,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -272,38 +275,59 @@ internal class ResolvePolymarketEntryInteractorTest {
                 coVerify(exactly = 0) { onboardedStore.clear(any()) }
             }
 
-        @Test
-        fun `GIVEN a confirmed wallet and the backend unreachable WHEN withoutPrompting THEN Onboarded`() = runTest {
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a confirmed wallet and a failed recheck WHEN withoutPrompting THEN only a retryable failure falls back`(
+            model: RecheckFailureModel,
+        ) = runTest {
             // Arrange
             coEvery { onboardedStore.isOnboardedSync(userWalletId) } returns true
             coEvery { deriveAddresses.stored(userWalletId) } returns addresses
-            coEvery { getWalletStatus(addresses) } returns PolymarketOnboardingError.Network.left()
+            coEvery { getWalletStatus(addresses) } returns model.error.left()
 
             // Act
             val actual = useCase.withoutPrompting(userWalletId)
 
             // Assert
-            assertThat(actual.getOrNull()).isEqualTo(PolymarketEntry.Onboarded)
+            assertThat(actual).isEqualTo(model.expected)
         }
 
         @Test
-        fun `GIVEN a confirmed wallet the backend knows another deposit wallet for WHEN withoutPrompting THEN fails`() =
+        fun `GIVEN a confirmed wallet and a stalled backend WHEN withoutPrompting THEN Onboarded after the timeout`() =
             runTest {
                 // Arrange
-                val mismatch = PolymarketOnboardingError.AddressMismatch(
-                    expected = addresses.depositWalletAddress,
-                    actual = "0xother",
-                )
                 coEvery { onboardedStore.isOnboardedSync(userWalletId) } returns true
                 coEvery { deriveAddresses.stored(userWalletId) } returns addresses
-                coEvery { getWalletStatus(addresses) } returns mismatch.left()
+                coEvery { getWalletStatus(addresses) } coAnswers { awaitCancellation() }
 
                 // Act
                 val actual = useCase.withoutPrompting(userWalletId)
 
                 // Assert
-                assertThat(actual.leftOrNull()).isEqualTo(mismatch)
+                assertThat(actual.getOrNull()).isEqualTo(PolymarketEntry.Onboarded)
             }
+
+        private fun provideTestModels(): List<RecheckFailureModel> {
+            val mismatch = PolymarketOnboardingError.AddressMismatch(
+                expected = addresses.depositWalletAddress,
+                actual = "0xother",
+            )
+            val invalidRequest = PolymarketOnboardingError.Wallet(cause = PolymarketWalletError.InvalidRequest)
+            return listOf(
+                RecheckFailureModel(error = mismatch, expected = mismatch.left()),
+                RecheckFailureModel(error = invalidRequest, expected = invalidRequest.left()),
+                RecheckFailureModel(
+                    error = PolymarketOnboardingError.Network,
+                    expected = PolymarketEntry.Onboarded.right(),
+                ),
+                RecheckFailureModel(
+                    error = PolymarketOnboardingError.Wallet(
+                        cause = PolymarketWalletError.Unexpected(httpCode = 500, detail = null),
+                    ),
+                    expected = PolymarketEntry.Onboarded.right(),
+                ),
+            )
+        }
 
         @Test
         fun `GIVEN a confirmed wallet whose credentials are gone WHEN withoutPrompting THEN the backend is asked`() =
@@ -385,4 +409,9 @@ internal class ResolvePolymarketEntryInteractorTest {
             coVerify(exactly = 0) { onboardedStore.markOnboarded(any()) }
         }
     }
+
+    internal data class RecheckFailureModel(
+        val error: PolymarketOnboardingError,
+        val expected: Either<PolymarketOnboardingError, PolymarketEntry>,
+    )
 }
