@@ -31,13 +31,13 @@ private class SkipMalformedElementsAdapter(
     override fun fromJson(reader: JsonReader): List<Any> = buildList {
         reader.beginArray()
         while (reader.hasNext()) {
-            // Read the element out of the stream first, so a malformed one leaves the reader at the next element
-            val raw = reader.readJsonValue()
+            // Decode a peeked copy so a malformed element leaves the reader at its start, then step over it
             try {
-                elementAdapter.fromJsonValue(raw)?.let(::add)
+                elementAdapter.fromJson(reader.peekJson())?.let(::add)
             } catch (e: JsonDataException) {
                 TangemLogger.e("Dropped a malformed element at ${reader.path}", e)
             }
+            reader.skipValue()
         }
         reader.endArray()
     }
