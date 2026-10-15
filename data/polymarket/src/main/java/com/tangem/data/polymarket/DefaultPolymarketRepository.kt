@@ -36,6 +36,8 @@ import com.tangem.domain.core.error.DataError
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
+import com.tangem.domain.polymarket.model.PolymarketClobAsset
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketAuthError
@@ -422,7 +424,9 @@ internal class DefaultPolymarketRepository @Inject constructor(
     override suspend fun syncBalanceAllowance(
         ownerAddress: String,
         credentials: PolymarketApiCredentials,
+        asset: PolymarketClobAsset,
     ): Either<PolymarketAuthError, Unit> = withContext(dispatchers.io) {
+        val assetType = asset.toAssetType().getOrElse { return@withContext it.left() }
         val headers = buildL2Headers(
             ownerAddress = ownerAddress,
             credentials = credentials,
@@ -434,12 +438,25 @@ internal class DefaultPolymarketRepository @Inject constructor(
             call = {
                 clobApi.updateBalanceAllowance(
                     headers = headers,
-                    assetType = ASSET_TYPE_COLLATERAL,
+                    assetType = assetType,
                     signatureType = PolymarketContracts.SIGNATURE_TYPE_DEPOSIT_WALLET,
+                    tokenId = (asset as? PolymarketClobAsset.Shares)?.tokenId,
                 ).bind().right()
             },
             onError = { authErrorResolver.resolve(it).left() },
         )
+    }
+
+    private fun PolymarketClobAsset.toAssetType(): Either<PolymarketAuthError, String> = when (this) {
+        PolymarketClobAsset.Collateral -> ASSET_TYPE_COLLATERAL.right()
+        is PolymarketClobAsset.Shares -> when (version) {
+            PolymarketMarketVersion.V1 -> ASSET_TYPE_CONDITIONAL.right()
+            PolymarketMarketVersion.V2 -> ASSET_TYPE_CONDITIONAL_V2.right()
+            PolymarketMarketVersion.UNKNOWN -> PolymarketAuthError.Unknown(
+                httpCode = null,
+                detail = "Market version unknown, shares asset type undecidable",
+            ).left()
+        }
     }
 
     override suspend fun getBalanceAllowance(
@@ -540,6 +557,8 @@ internal class DefaultPolymarketRepository @Inject constructor(
         const val DEFAULT_LIMIT = 20
         const val WALLET_NONCE_TYPE = "WALLET"
         const val ASSET_TYPE_COLLATERAL = "COLLATERAL"
+        const val ASSET_TYPE_CONDITIONAL = "CONDITIONAL"
+        const val ASSET_TYPE_CONDITIONAL_V2 = "CONDITIONAL-V2"
 
         val SYNC_BALANCE_ALLOWANCE_TIMEOUT = 5.seconds
         val ORDER_READ_TIMEOUT = 5.seconds
