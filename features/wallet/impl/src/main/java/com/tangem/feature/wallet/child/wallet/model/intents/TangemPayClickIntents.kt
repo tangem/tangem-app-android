@@ -47,7 +47,7 @@ internal interface TangemPayIntents {
 
     fun onKycProgressClicked(userWalletId: UserWalletId)
 
-    fun onKycRequiredClicked(userWalletId: UserWalletId, customerId: String?)
+    fun onKycRequiredClicked(userWalletId: UserWalletId)
 
     fun onKycRejectedClicked(userWalletId: UserWalletId, customerId: String)
 
@@ -157,19 +157,8 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         uiMessageSender.send(kycInfoBottomSheet)
     }
 
-    override fun onKycRequiredClicked(userWalletId: UserWalletId, customerId: String?) {
-        val bottomSheet = kycRequiredBottomSheet(
-            onContactSupportClick = {
-                modelScope.launch {
-                    sendFeedbackEmailUseCase(type = kycRequiredFeedbackEmailType(userWalletId, customerId))
-                }
-            },
-            onContinueVerificationClick = {
-                router.openTangemPayEligibility(product = TangemPayProduct.PAYMENT_ACCOUNT, userWalletId = userWalletId)
-            },
-        )
-
-        uiMessageSender.send(bottomSheet)
+    override fun onKycRequiredClicked(userWalletId: UserWalletId) {
+        router.openTangemPayEligibility(product = TangemPayProduct.PAYMENT_ACCOUNT, userWalletId = userWalletId)
     }
 
     override fun onKycRejectedOpenProfileClicked(userWalletId: UserWalletId) {
