@@ -48,9 +48,11 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.AllowanceInfo
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.models.isGasless
+import com.tangem.domain.transaction.models.tron.canPayNativeFee
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
@@ -1222,6 +1224,13 @@ internal class SwapInteractorImpl @Inject constructor(
                 fee = extendedFee,
             )
         } else {
+            // A TRX transfer the balance cannot cover is rejected by the node without burning anything.
+            if (fromSwapCurrencyStatus.currency is CryptoCurrency.Token &&
+                isTron(fromSwapCurrencyStatus.currency.network.rawId)
+            ) {
+                checkTronNativeFeeAtDeposit(fromSwapCurrencyStatus = fromSwapCurrencyStatus, txData = txData)
+                    ?.let { return it }
+            }
             sendTransactionUseCase(
                 txData = txData,
                 userWallet = userWallet,
@@ -1685,6 +1694,34 @@ internal class SwapInteractorImpl @Inject constructor(
                 fromCurrencyId = fromSwapCurrencyStatus.currency.id,
                 spenderAddress = spenderAddress,
             ),
+        )
+    }
+
+    /**
+     * The shown fee was quoted earlier against a placeholder address; by now the account's energy or TRX may have
+     * been spent, and a transaction whose TRX cannot cover the burn runs out of energy on-chain.
+     */
+    private suspend fun checkTronNativeFeeAtDeposit(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        txData: TransactionData.Uncompiled,
+    ): SwapTransactionState.Error? {
+        val reestimatedFee = getFeeUseCase(
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            network = fromSwapCurrencyStatus.currency.network,
+            transactionData = txData,
+        ).getOrElse { error ->
+            TangemLogger.e("Tron CEX swap fee re-estimation failed ($error), sending with the quoted fee")
+            return null
+        }
+
+        val nativeStatus = resolveNativeFeeTokenStatus(fromSwapCurrencyStatus)
+            ?.takeIf { it.currency is CryptoCurrency.Coin && it.value.amount != null }
+            ?: return null
+        if (nativeStatus.canPayNativeFee(reestimatedFee)) return null
+
+        TangemLogger.e("Tron CEX swap refused: TRX balance does not cover the fee at the deposit address")
+        return SwapTransactionState.Error.TransactionError(
+            SendTransactionError.DataError("Not enough TRX to pay the network fee"),
         )
     }
 
