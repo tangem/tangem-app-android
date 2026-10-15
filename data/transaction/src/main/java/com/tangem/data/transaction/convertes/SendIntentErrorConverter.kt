@@ -25,7 +25,6 @@ internal class SendIntentErrorConverter @Inject constructor() :
 
         return when (code) {
             TransactionIntentErrorCode.INTENT_NOT_FOUND -> SendIntentError.NotFound(intentId = value.intentId)
-            TransactionIntentErrorCode.INTENT_SESSION_REVOKED -> SendIntentError.SessionRevoked(value.intentId)
             TransactionIntentErrorCode.INTENT_ALREADY_COMPLETED -> SendIntentError.AlreadyCompleted(value.intentId)
             TransactionIntentErrorCode.UNKNOWN,
             null,
