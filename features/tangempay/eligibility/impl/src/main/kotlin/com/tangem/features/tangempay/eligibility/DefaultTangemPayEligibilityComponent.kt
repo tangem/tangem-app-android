@@ -70,6 +70,7 @@ internal class DefaultTangemPayEligibilityComponent @AssistedInject constructor(
                 countryCode = route.countryCode,
                 regionCode = route.regionCode,
                 onSelectAnotherRegionClick = stackNavigation::pop,
+                onCloseClick = router::pop,
             ),
             waitlistComponentFactory = waitlistComponentFactory,
             analytics = analytics,
