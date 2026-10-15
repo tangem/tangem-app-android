@@ -1,4 +1,4 @@
-package com.tangem.features.moneyaccount.main
+package com.tangem.features.moneyaccount.details
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -6,7 +6,7 @@ import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
-internal data class MoneyAccountMainUM(
+internal data class MoneyAccountDetailsUM(
     val title: TextReference,
     val subtitle: TextReference,
     val balance: MoneyAccountBalanceBlockState,
