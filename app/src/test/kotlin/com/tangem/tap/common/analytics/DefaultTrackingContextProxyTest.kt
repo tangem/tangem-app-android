@@ -2,17 +2,19 @@ package com.tangem.tap.common.analytics
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
-import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.api.AnalyticsUserIdHandler
 import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.tap.common.analytics.paramsInterceptor.HotWalletContextInterceptor
 import com.tangem.tap.common.analytics.paramsInterceptor.LinkedCardContextInterceptor
 import io.mockk.clearMocks
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -20,14 +22,14 @@ import org.junit.jupiter.api.TestInstance
 
 internal class DefaultTrackingContextProxyTest {
 
-    private val abTestsManager: ABTestsManager = mockk(relaxed = true)
     private val userIdHandler: AnalyticsUserIdHandler = mockk(relaxed = true)
+    private val observer: TrackingContextProxy.Observer = mockk(relaxed = true)
     private val interceptorHolder = InMemoryParamsInterceptorHolder()
 
     private val proxy = DefaultTrackingContextProxy(
-        abTestsManager = abTestsManager,
         paramsInterceptorHolder = interceptorHolder,
         userIdHandler = userIdHandler,
+        observers = setOf(observer),
     )
 
     private val coldWallet = MockUserWalletFactory.create()
@@ -41,7 +43,7 @@ internal class DefaultTrackingContextProxyTest {
 
     @BeforeEach
     fun reset() {
-        clearMocks(abTestsManager, userIdHandler)
+        clearMocks(userIdHandler, observer)
         interceptorHolder.interceptors.clear()
     }
 
@@ -128,7 +130,7 @@ internal class DefaultTrackingContextProxyTest {
     inner class EraseContext {
 
         @Test
-        fun `GIVEN card context WHEN eraseContext THEN context, user id and ab test properties cleared`() {
+        fun `GIVEN card context WHEN eraseContext THEN context and user id cleared and observers notified`() {
             // Arrange
             proxy.setContext(coldWallet)
 
@@ -138,7 +140,52 @@ internal class DefaultTrackingContextProxyTest {
             // Assert
             assertThat(interceptorHolder.interceptors).isEmpty()
             verify(exactly = 1) { userIdHandler.clearUserId() }
-            verify(exactly = 1) { abTestsManager.removeUserProperties() }
+            verify(exactly = 1) { observer.eraseContext() }
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Observers {
+
+        @Test
+        fun `GIVEN observer WHEN every proxy call made THEN each is forwarded once`() {
+            // Act
+            proxy.setContext(coldWallet.scanResponse)
+            proxy.setContext(coldWallet)
+            proxy.addContext(hotWallet)
+            proxy.setHotWalletContext()
+            proxy.addContext(coldWallet.scanResponse)
+            proxy.addHotWalletContext()
+            proxy.removeContext()
+            proxy.eraseContext()
+
+            // Assert
+            verifyOrder {
+                observer.setContext(coldWallet.scanResponse)
+                observer.setContext(coldWallet)
+                observer.addContext(hotWallet)
+                observer.setHotWalletContext()
+                observer.addContext(coldWallet.scanResponse)
+                observer.addHotWalletContext()
+                observer.removeContext()
+                observer.eraseContext()
+            }
+        }
+
+        @Test
+        fun `GIVEN observer WHEN setContext with wallet THEN analytics context is set before observer is notified`() {
+            // Arrange
+            var interceptorsOnNotify: Set<String>? = null
+            every { observer.setContext(coldWallet) } answers {
+                interceptorsOnNotify = interceptorHolder.interceptors.keys.toSet()
+            }
+
+            // Act
+            proxy.setContext(coldWallet)
+
+            // Assert
+            assertThat(interceptorsOnNotify).containsExactly(LinkedCardContextInterceptor.id())
         }
     }
 
