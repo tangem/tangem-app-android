@@ -67,7 +67,8 @@ internal class DefaultSendIntentRepositoryTest {
         val actual = NetworkJsonFactory.create().decodeFromString<SendIntentResponse>(REQUIRED_FIELDS_ONLY)
 
         // Assert
-        assertThat(listOf(actual.memo, actual.comment, actual.txHash)).containsExactly(null, null, null)
+        assertThat(listOf(actual.memo, actual.comment, actual.txHash, actual.clientId))
+            .containsExactly(null, null, null, null)
     }
 
     @Test
@@ -140,7 +141,6 @@ internal class DefaultSendIntentRepositoryTest {
               "tokenId": "tether",
               "amount": "12.5",
               "createdAt": "2026-09-17T13:05:12Z",
-              "clientId": "string",
               "sessionId": "string"
             }
         """.trimIndent()
