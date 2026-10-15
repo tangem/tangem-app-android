@@ -121,6 +121,30 @@ internal class PolymarketFeedContentTransformerTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class EmptyFeed {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun transformEmptyFeed(model: EmptyFeedModel) {
+            // Act
+            val actual = transform(PolymarketEventsBatchListState(data = emptyList(), status = model.status))
+
+            // Assert
+            assertThat(actual.content).isEqualTo(PolymarketMainUM.ContentUM.Empty)
+        }
+
+        private fun provideTestModels(): List<EmptyFeedModel> = listOf(
+            EmptyFeedModel(status = PaginationStatus.EndOfPagination),
+            EmptyFeedModel(
+                status = PaginationStatus.Paginating(
+                    lastResult = BatchFetchResult.Success(data = batchOf(), empty = true, last = false),
+                ),
+            ),
+        )
+    }
+
     @Test
     fun `GIVEN loaded pages WHEN transform THEN their events are shown in order`() {
         // Arrange
@@ -189,6 +213,8 @@ internal class PolymarketFeedContentTransformerTest {
     }
 
     internal data class InitialLoadingModel(val status: PaginationStatus<PolymarketEventsBatch>)
+
+    internal data class EmptyFeedModel(val status: PaginationStatus<PolymarketEventsBatch>)
 
     internal data class FooterModel(
         val status: PaginationStatus<PolymarketEventsBatch>,

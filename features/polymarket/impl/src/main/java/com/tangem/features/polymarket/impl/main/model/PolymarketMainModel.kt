@@ -199,7 +199,7 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     // Kept for as long as the screen lives: coming back to a tab must not cost a reload.
-    private val feeds = mutableMapOf<Int?, PolymarketCategoryFeed>()
+    private val feeds = mutableMapOf<Int, PolymarketCategoryFeed>()
 
     private val activeFeed = MutableStateFlow<PolymarketCategoryFeed?>(value = null)
 
@@ -304,7 +304,13 @@ internal class PolymarketMainModel @Inject constructor(
             selectedCategoryId = loadedCategories.firstOrNull()?.id
             uiState.update { it.copy(categories = buildTabs(), isCategoriesLoading = false) }
 
-            selectFeed(categoryId = selectedCategoryId, reloadVisited = true)
+            val categoryId = selectedCategoryId
+            if (categoryId == null) {
+                TangemLogger.e("Main: no category to request the feed for, categories answered $result")
+                uiState.update { it.copy(content = PolymarketMainUM.ContentUM.Error(onReloadClick = ::reload)) }
+            } else {
+                selectFeed(categoryId = categoryId, reloadVisited = true)
+            }
         }.saveIn(categoriesJob)
     }
 
@@ -315,7 +321,7 @@ internal class PolymarketMainModel @Inject constructor(
         selectFeed(categoryId = categoryId)
     }
 
-    private fun selectFeed(categoryId: Int?, reloadVisited: Boolean = false) {
+    private fun selectFeed(categoryId: Int, reloadVisited: Boolean = false) {
         activeFeed.value?.poller?.pause()
 
         val visited = feeds[categoryId]
