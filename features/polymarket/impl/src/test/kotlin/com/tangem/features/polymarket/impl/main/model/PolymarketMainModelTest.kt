@@ -207,7 +207,7 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN categories fail WHEN model created THEN the feed runs unfiltered without tabs`() = runTest {
+    fun `GIVEN categories fail WHEN model created THEN the reload prompt is shown and no feed is requested`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
 
@@ -218,10 +218,41 @@ internal class PolymarketMainModelTest {
         // Assert
         assertThat(model.uiState.value.categories).isEmpty()
         assertThat(model.uiState.value.isCategoriesLoading).isFalse()
-        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
-        assertThat(dispatchedActions).containsExactly(
-            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = null)),
-        )
+        assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+        assertThat(dispatchedActions).isEmpty()
+        verify(exactly = 0) { getEventsBatchFlowUseCase(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN no categories served WHEN model created THEN the reload prompt is shown and no feed is requested`() =
+        runTest {
+            // Arrange
+            coEvery { getCategoriesUseCase() } returns emptyList<PolymarketCategory>().right()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.categories).isEmpty()
+            assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+            assertThat(dispatchedActions).isEmpty()
+            verify(exactly = 0) { getEventsBatchFlowUseCase(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN an empty category WHEN its feed ends without events THEN the empty prompt is shown`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        batchState.value = BatchListState(data = emptyList(), status = PaginationStatus.EndOfPagination)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Empty)
     }
 
     @Test
@@ -333,7 +364,7 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN categories were lost too WHEN reload tapped THEN they are requested again`() = runTest {
+    fun `GIVEN categories failed WHEN reload tapped THEN they are requested again and the first one's feed`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returnsMany listOf(
             DataError.NetworkError.NoInternetConnection.left(),
@@ -341,18 +372,18 @@ internal class PolymarketMainModelTest {
         )
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        batchState.value = BatchListState(
-            data = emptyList(),
-            status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
-        )
-        advanceUntilIdle()
 
         // Act
         (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.categories.map { it.id }).containsExactly(1, 2).inOrder()
+        assertThat(model.uiState.value.categories.map { it.id to it.isSelected })
+            .containsExactly(1 to true, 2 to false)
+            .inOrder()
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 1)),
+        )
     }
 
     @Test
@@ -360,11 +391,6 @@ internal class PolymarketMainModelTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
         val model = createModel(testScope = this)
-        advanceUntilIdle()
-        batchState.value = BatchListState(
-            data = emptyList(),
-            status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
-        )
         advanceUntilIdle()
         val categoriesReady = CompletableDeferred<Unit>()
         coEvery { getCategoriesUseCase() } coAnswers {
@@ -472,26 +498,20 @@ internal class PolymarketMainModelTest {
         }
 
     @Test
-    fun `GIVEN the categories keep failing WHEN reload tapped THEN the feed is requested again anyway`() = runTest {
+    fun `GIVEN the categories keep failing WHEN reload tapped THEN the prompt stays and no feed is requested`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        batchState.value = BatchListState(
-            data = emptyList(),
-            status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
-        )
-        advanceUntilIdle()
-        dispatchedActions.clear()
 
         // Act
         (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
         advanceUntilIdle()
 
         // Assert
-        assertThat(dispatchedActions).containsExactly(
-            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = null)),
-        )
+        assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+        assertThat(dispatchedActions).isEmpty()
+        coVerify(exactly = 2) { getCategoriesUseCase() }
     }
 
     @Test
