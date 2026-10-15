@@ -1,6 +1,7 @@
 package com.tangem.domain.polymarket.interactor
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.recover
 import com.tangem.domain.models.wallet.UserWalletId
@@ -16,6 +17,8 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
 import com.tangem.domain.polymarket.usecase.isRetryable
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Decides where a user lands when they open the feature: the feed, or the screen that owes onboarding.
@@ -29,7 +32,8 @@ import com.tangem.utils.logging.TangemLogger
  *
  * A wallet confirmed earlier is still checked against the backend whenever its addresses are stored: the backend
  * can demote a ready wallet (a new approvals set), and only its status sends that user back to onboarding. The
- * local confirmation answers alone only when the read fails transiently or the addresses are not stored; a
+ * local confirmation answers alone only when the read fails transiently or outlasts five seconds,
+ * or the addresses are not stored; a
  * mismatching deposit wallet or a rejected request fails the entry as it does for an unconfirmed wallet.
  * [invoke] may open a card session to derive the owner address; [withoutPrompting] stops short of that instead of
  * paying for a session the user never asked for.
@@ -91,7 +95,10 @@ class ResolvePolymarketEntryInteractor(
             return@either PolymarketEntry.Onboarded
         }
 
-        entryFor(addresses)
+        val recheck = withTimeoutOrNull(CONFIRMED_RECHECK_TIMEOUT) { entryFor(addresses) }
+            ?: PolymarketOnboardingError.Network.left()
+
+        recheck
             .recover { error ->
                 if (!error.isRetryable()) raise(error)
                 TangemLogger.i("Resolve: $userWalletId is confirmed onboarded, recheck unavailable: $error")
@@ -138,5 +145,9 @@ class ResolvePolymarketEntryInteractor(
         status != PolymarketWalletStatus.READY_TO_TRADE -> PolymarketEntry.Onboard(status = status)
         hasCredentials -> PolymarketEntry.Onboarded
         else -> PolymarketEntry.Reconnect
+    }
+
+    private companion object {
+        val CONFIRMED_RECHECK_TIMEOUT = 5.seconds
     }
 }
