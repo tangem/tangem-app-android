@@ -1,8 +1,8 @@
 package com.tangem.domain.polymarket.interactor
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import arrow.core.raise.either
+import arrow.core.recover
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.model.PolymarketAddresses
@@ -14,6 +14,7 @@ import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
+import com.tangem.domain.polymarket.usecase.isRetryable
 import com.tangem.utils.logging.TangemLogger
 
 /**
@@ -28,7 +29,8 @@ import com.tangem.utils.logging.TangemLogger
  *
  * A wallet confirmed earlier is still checked against the backend whenever its addresses are stored: the backend
  * can demote a ready wallet (a new approvals set), and only its status sends that user back to onboarding. The
- * local confirmation answers alone only when the backend cannot be read or the addresses are not stored.
+ * local confirmation answers alone only when the read fails transiently or the addresses are not stored; a
+ * mismatching deposit wallet or a rejected request fails the entry as it does for an unconfirmed wallet.
  * [invoke] may open a card session to derive the owner address; [withoutPrompting] stops short of that instead of
  * paying for a session the user never asked for.
  */
@@ -42,7 +44,7 @@ class ResolvePolymarketEntryInteractor(
 
     suspend operator fun invoke(userWalletId: UserWalletId): Either<PolymarketOnboardingError, PolymarketEntry> =
         either {
-            confirmedEntry(userWalletId)
+            confirmedEntry(userWalletId).bind()
                 ?: entryFor(addresses = deriveAddresses(userWalletId).bind()).bind()
         }
 
@@ -52,7 +54,7 @@ class ResolvePolymarketEntryInteractor(
      */
     suspend fun withoutPrompting(userWalletId: UserWalletId): Either<PolymarketOnboardingError, PolymarketEntry> =
         either {
-            confirmedEntry(userWalletId)?.let { return@either it }
+            confirmedEntry(userWalletId).bind()?.let { return@either it }
 
             val addresses = derivePolymarketAddressesUseCase.stored(userWalletId)
             if (addresses == null) {
@@ -77,20 +79,25 @@ class ResolvePolymarketEntryInteractor(
      * The entry of a wallet already confirmed ready, or `null` when it is not confirmed or has nothing to sign
      * with — either way the backend has to be asked.
      */
-    private suspend fun confirmedEntry(userWalletId: UserWalletId): PolymarketEntry? {
-        if (!polymarketOnboardedStore.isOnboardedSync(userWalletId)) return null
-        if (getPolymarketApiCredentialsUseCase(userWalletId) == null) return null
+    private suspend fun confirmedEntry(
+        userWalletId: UserWalletId,
+    ): Either<PolymarketOnboardingError, PolymarketEntry?> = either {
+        if (!polymarketOnboardedStore.isOnboardedSync(userWalletId)) return@either null
+        if (getPolymarketApiCredentialsUseCase(userWalletId) == null) return@either null
 
         val addresses = derivePolymarketAddressesUseCase.stored(userWalletId)
         if (addresses == null) {
             TangemLogger.i("Resolve: $userWalletId is confirmed onboarded, no stored addresses to recheck")
-            return PolymarketEntry.Onboarded
+            return@either PolymarketEntry.Onboarded
         }
 
-        return entryFor(addresses).getOrElse {
-            TangemLogger.i("Resolve: $userWalletId is confirmed onboarded, recheck unavailable")
-            PolymarketEntry.Onboarded
-        }
+        entryFor(addresses)
+            .recover { error ->
+                if (!error.isRetryable()) raise(error)
+                TangemLogger.i("Resolve: $userWalletId is confirmed onboarded, recheck unavailable: $error")
+                PolymarketEntry.Onboarded
+            }
+            .bind()
     }
 
     private suspend fun entryFor(addresses: PolymarketAddresses): Either<PolymarketOnboardingError, PolymarketEntry> =
