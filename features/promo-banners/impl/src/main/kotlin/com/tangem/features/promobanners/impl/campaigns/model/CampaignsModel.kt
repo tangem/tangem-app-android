@@ -73,7 +73,7 @@ internal class CampaignsModel @Inject constructor(
                 return@launch
             }
 
-            getPromoCampaignsUseCase(userWallet).fold(
+            getPromoCampaignsUseCase.invokeSync(userWallet).fold(
                 ifLeft = { error ->
                     TangemLogger.e("Error getting campaign $campaignId", error)
                     showUnknownError()
