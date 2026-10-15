@@ -15,4 +15,12 @@ interface SendIntentRepository {
      * response that cannot be parsed, is the raw failure of the call.
      */
     suspend fun getSendIntent(intentId: String): Either<Throwable, SendIntent>
+
+    /**
+     * Links [txHash], the transaction sent for the intent [intentId], to it, which completes the intent.
+     *
+     * Reporting the same hash again succeeds. An unknown intent and an intent that already carries another
+     * transaction are a [SendIntentError]; anything else is the raw failure of the call.
+     */
+    suspend fun completeSendIntent(intentId: String, txHash: String): Either<Throwable, Unit>
 }
