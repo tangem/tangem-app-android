@@ -22,6 +22,7 @@ import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.hot.sdk.model.DerivedPublicKeyResponse
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.hot.sdk.model.SignedData
+import com.tangem.hot.sdk.model.UnlockHotWallet
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.sdk.api.TangemSdkManager
 import io.mockk.clearMocks
@@ -370,8 +371,9 @@ internal class DefaultDeriveAndSignSessionTest {
         // Arrange
         val wallet = hotWallet()
         coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-        every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany listOf(null, mockk())
-        coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } returns mockk()
+        val unlock: UnlockHotWallet = mockk()
+        every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany listOf(null, unlock)
+        coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } returns unlock
         coEvery { hotWalletAccessor.derivePublicKeysReusingContextualUnlock(HOT_WALLET_ID, any()) } returns
             derivedResponse()
         coEvery { hotWalletAccessor.signHashesReusingContextualUnlock(HOT_WALLET_ID, any()) } returns signedData()
@@ -422,6 +424,69 @@ internal class DefaultDeriveAndSignSessionTest {
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(TangemSdkError.ExceptionError::class.java)
         verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
+    }
+
+    @Test
+    fun `GIVEN the hot unlock fails after it was stored WHEN run THEN the stored unlock is cleared`() = runTest {
+        // Arrange
+        val wallet = hotWallet()
+        coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
+        every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany listOf(null, mockk())
+        coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } throws IllegalStateException("save failed")
+
+        // Act
+        val actual = sut.run(wallet, SEED_KEY, PATH) { "unreached" }
+
+        // Assert
+        assertThat(actual.leftOrNull()).isInstanceOf(TangemSdkError.ExceptionError::class.java)
+        verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(HOT_WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN another caller replaced the run's unlock WHEN run on hot ends THEN the replacement is left in place`() =
+        runTest {
+            // Arrange
+            val wallet = hotWallet()
+            coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
+            val unlock: UnlockHotWallet = mockk()
+            val replacement: UnlockHotWallet = mockk()
+            every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany listOf(null, replacement)
+            coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } returns unlock
+            coEvery { hotWalletAccessor.derivePublicKeysReusingContextualUnlock(HOT_WALLET_ID, any()) } returns
+                derivedResponse()
+            coEvery { hotWalletAccessor.signHashesReusingContextualUnlock(HOT_WALLET_ID, any()) } returns signedData()
+
+            // Act
+            sut.run(wallet, SEED_KEY, PATH) { sign(listOf(HASH)) }
+
+            // Assert
+            verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
+        }
+
+    @Test
+    fun `GIVEN starting the card session throws WHEN run on cold THEN returns Left instead of throwing`() = runTest {
+        // Arrange
+        val wallet = coldWallet()
+        coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
+        coEvery {
+            tangemSdkManager.runTaskAsync(
+                runnable = any<CardSessionRunnable<Unit>>(),
+                preflightReadFilter = any(),
+                cardId = any(),
+                initialMessage = any(),
+                accessCode = any(),
+                iconScanRes = any(),
+                registerColdWallet = any(),
+            )
+        } throws IllegalStateException("no activity")
+        var isBlockRun = false
+
+        // Act
+        val actual = sut.run(wallet, SEED_KEY, PATH) { isBlockRun = true }
+
+        // Assert
+        assertThat(actual.leftOrNull()).isInstanceOf(TangemSdkError.ExceptionError::class.java)
+        assertThat(isBlockRun).isFalse()
     }
 
     private fun stubCardSession() {
