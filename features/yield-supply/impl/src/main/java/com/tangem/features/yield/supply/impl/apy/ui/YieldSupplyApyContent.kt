@@ -388,7 +388,7 @@ private fun AccentDot(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .padding(4.dp)
-            .size(TangemTheme.dimens.size8)
+            .size(8.dp)
             .background(color = TangemTheme.colors.icon.accent, shape = CircleShape),
     )
 }

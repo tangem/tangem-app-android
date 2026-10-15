@@ -19,6 +19,7 @@ import com.tangem.domain.appsflyer.AppsFlyerDeeplink
 import com.tangem.domain.appsflyer.usecase.GetAppsFlyerDeeplinkUseCase
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
+import com.tangem.domain.card.models.ScanConfig
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
@@ -150,25 +151,32 @@ internal class HomeModel @Inject constructor(
             val analyticsSource = AnalyticsParam.ScreensSources.Intro
 
             scanCardProcessor.scan(
-                analyticsSource = analyticsSource,
-                shouldCheckIsAlreadyActivated = true,
-                onProgressStateChange = { showProgress ->
-                    if (!showProgress) {
-                        delay(HIDE_PROGRESS_DELAY)
-                        setLoading(false)
-                    } else {
-                        setLoading(true)
-                    }
-                },
-                onFailure = { error ->
-                    handleScanError(error)
-                    delay(HIDE_PROGRESS_DELAY)
-                    setLoading(false)
-                },
-                onSuccess = { scanResponse ->
-                    proceedWithScanResponse(scanResponse)
-                },
+                config = ScanConfig(
+                    analyticsSource = analyticsSource,
+                    callback = createScanCallback(),
+                ),
             )
+        }
+    }
+
+    private fun createScanCallback(): ScanConfig.Callback = object : ScanConfig.Callback {
+        override suspend fun onProgressStateChange(showProgress: Boolean) {
+            if (!showProgress) {
+                delay(HIDE_PROGRESS_DELAY)
+                setLoading(false)
+            } else {
+                setLoading(true)
+            }
+        }
+
+        override suspend fun onFailure(error: TangemError) {
+            handleScanError(error)
+            delay(HIDE_PROGRESS_DELAY)
+            setLoading(false)
+        }
+
+        override suspend fun onSuccess(scanResponse: ScanResponse) {
+            proceedWithScanResponse(scanResponse)
         }
     }
 

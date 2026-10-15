@@ -5,7 +5,9 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.entity.PredefinedValues
@@ -13,9 +15,11 @@ import com.tangem.features.send.common.CommonSendRoute
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.send.SendModelTestBase
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Nested
@@ -194,6 +198,87 @@ internal class SendModelTest : SendModelTestBase() {
 
             // Assert
             assertThat(result).isEqualTo(GetFeeError.UnknownError.left())
+        }
+    }
+
+    @Nested
+    inner class LoadFeeExtended {
+
+        private val defaultFee: TransactionFeeExtended = mockk(relaxed = true)
+        private val tokenFee: TransactionFeeExtended = mockk(relaxed = true)
+
+        @Test
+        fun `GIVEN no fee token picked WHEN loadFeeExtended THEN the default fee is resolved`() = runTest {
+            // Arrange
+            val model = createLoadedSendModel()
+            givenDefaultFee(isNativeFeePreferred = false)
+
+            // Act
+            val result = model.loadFeeExtended(maybeToken = null)
+
+            // Assert
+            assertThat(result).isEqualTo(defaultFee.right())
+            coVerify(exactly = 0) { getFeeForTokenUseCase(any(), any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN a fee token picked WHEN loadFeeExtended THEN the fee is quoted in that token`() = runTest {
+            // Arrange
+            val model = createLoadedSendModel()
+            val feeToken: CryptoCurrencyStatus = mockk(relaxed = true)
+            coEvery { getFeeForTokenUseCase(any(), feeToken.currency, any(), any()) } returns tokenFee.right()
+
+            // Act
+            val result = model.loadFeeExtended(maybeToken = feeToken)
+
+            // Assert
+            assertThat(result).isEqualTo(tokenFee.right())
+            coVerify(exactly = 0) { getFeeForGaslessUseCase(any(), any(), any(), any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN coin not preferred over a token fee WHEN loading again THEN token fee is re-evaluated`() =
+            runTest {
+                // Arrange
+                val model = createLoadedSendModel()
+                givenDefaultFee(isNativeFeePreferred = false)
+
+                // Act
+                model.loadFeeExtended(maybeToken = null)
+                model.loadFeeExtended(maybeToken = null)
+
+                // Assert
+                coVerify(exactly = 2) { getFeeForGaslessUseCase(any(), any(), any(), any(), any(), any()) }
+                coVerify(exactly = 0) { getFeeUseCase(any(), any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the coin was preferred over a token fee WHEN loading again THEN the coin fee stays`() = runTest {
+            // Arrange
+            val model = createLoadedSendModel()
+            givenDefaultFee(isNativeFeePreferred = true)
+
+            // Act
+            model.loadFeeExtended(maybeToken = null)
+            model.loadFeeExtended(maybeToken = null)
+
+            // Assert
+            coVerify(exactly = 1) { getFeeForGaslessUseCase(any(), any(), any(), any(), any(), any()) }
+            coVerify(exactly = 1) { getFeeUseCase(any(), any(), any()) }
+        }
+
+        private fun TestScope.createLoadedSendModel(): SendModel {
+            val model = createSendModel(this)
+            advanceUntilIdle()
+            model.predefinedValues = deeplink(amount = "1.0")
+            return model
+        }
+
+        private fun givenDefaultFee(isNativeFeePreferred: Boolean) {
+            coEvery { getFeeForGaslessUseCase(any(), any(), any(), any(), any(), any()) } answers {
+                if (isNativeFeePreferred) arg<() -> Unit>(5).invoke()
+                defaultFee.right()
+            }
         }
     }
 

@@ -2,6 +2,7 @@ package com.tangem.tap
 
 import androidx.hilt.work.HiltWorkerFactory
 import com.tangem.core.abtests.manager.ABTestsManager
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.analytics.paramsinterceptor.SendTransactionSignerInfoInterceptor
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
@@ -19,7 +20,6 @@ import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
 import com.tangem.tap.common.log.TangemLoggingInitializer
-import com.tangem.tap.domain.yield.YieldSupplyClaimOutcomeAnnouncer
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -43,8 +43,6 @@ interface ApplicationEntryPoint {
     fun getOneTimeEventFilter(): OneTimeEventFilter
 
     fun getTangemLoggingInitializer(): TangemLoggingInitializer
-
-    fun getYieldSupplyClaimOutcomeAnnouncer(): YieldSupplyClaimOutcomeAnnouncer
 
     fun getBlockchainExceptionHandler(): BlockchainExceptionHandler
 
@@ -71,4 +69,6 @@ interface ApplicationEntryPoint {
     fun getUserWalletsListRepository(): UserWalletsListRepository
 
     fun getOpenTelemetryMetricsHolder(): OpenTelemetryMetricsHolder
+
+    fun getAnalyticsEventHandler(): AnalyticsEventHandler
 }

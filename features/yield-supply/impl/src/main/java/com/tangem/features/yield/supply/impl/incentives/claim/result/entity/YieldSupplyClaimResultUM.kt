@@ -2,13 +2,16 @@ package com.tangem.features.yield.supply.impl.incentives.claim.result.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.combinedReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.utils.DateTimeFormatters
+import com.tangem.core.ui.utils.toTimeFormat
+import com.tangem.features.yield.supply.impl.R
+import com.tangem.utils.StringsSigns.NEW_LINE
+import com.tangem.utils.StringsSigns.WHITE_SPACE
 
-/**
- * Outcome of a claim the user has already signed.
- *
- * The fees are the ones captured at signing rather than re-read afterwards: the sheet that estimated them is gone
- * by the time the transaction settles, and a second estimate would quote a different block.
- */
 @Immutable
 internal data class YieldSupplyClaimResultUM(
     val status: Status,
@@ -17,18 +20,53 @@ internal data class YieldSupplyClaimResultUM(
     val networkFee: TextReference?,
 ) {
 
+    val title: TextReference
+        get() = status.title(total)
+
     @Immutable
     internal sealed interface Status {
 
-        /** Submitted and not yet mined. */
-        data object Submitted : Status
+        val description: TextReference?
 
-        /**
-         * Mined successfully. Merkl still has to process the claim, so the rewards banner lags behind this by a
-         * few minutes.
-         *
-         * @property timestamp when the confirmation was observed, in epoch milliseconds
-         */
-        data class Confirmed(val timestamp: Long) : Status
+        fun title(total: TextReference): TextReference
+
+        data object Submitted : Status {
+
+            override val description: TextReference =
+                resourceReference(R.string.yield_module_claim_in_progress_description)
+
+            override fun title(total: TextReference): TextReference = combinedReference(
+                resourceReference(R.string.yield_module_claim_in_progress_title),
+                stringReference(NEW_LINE),
+                total,
+            )
+        }
+
+        /** @property timestamp epoch milliseconds */
+        data class Confirmed(val timestamp: Long) : Status {
+
+            override val description: TextReference
+                get() = resourceReference(
+                    id = R.string.send_date_format,
+                    formatArgs = wrappedList(
+                        timestamp.toTimeFormat(DateTimeFormatters.dateFormatter),
+                        timestamp.toTimeFormat(),
+                    ),
+                )
+
+            override fun title(total: TextReference): TextReference = combinedReference(
+                resourceReference(R.string.yield_module_claim_success_toast),
+                stringReference(WHITE_SPACE),
+                total,
+            )
+        }
+
+        data object Failed : Status {
+
+            override val description: TextReference? = null
+
+            override fun title(total: TextReference): TextReference =
+                resourceReference(R.string.yield_module_claim_error_message)
+        }
     }
 }

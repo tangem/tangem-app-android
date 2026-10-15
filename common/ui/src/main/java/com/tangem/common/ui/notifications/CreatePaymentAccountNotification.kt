@@ -64,7 +64,7 @@ fun CreatePaymentAccountNotification(
                 .align(Alignment.CenterStart),
         ) {
             Text(
-                modifier = Modifier.padding(end = TangemTheme.dimens.size32),
+                modifier = Modifier.padding(end = 32.dp),
                 text = title.resolveReference(),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.constantWhite,
