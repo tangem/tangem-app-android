@@ -118,10 +118,6 @@ internal class UpgradeWalletModel @Inject constructor(
             scanCardProcessor.scan(
                 config = ScanConfig(
                     analyticsSource = AnalyticsParam.ScreensSources.Upgrade,
-                    shouldConfirmWalletOwnership = true,
-                    canRequestAccessCodeFromRepository = false,
-                    shouldUpdateCardIdDisplayFormat = true,
-                    shouldTrackScanFails = true,
                     shouldLaunchOnboarding = false,
                     callback = createScanCallback(),
                 ),

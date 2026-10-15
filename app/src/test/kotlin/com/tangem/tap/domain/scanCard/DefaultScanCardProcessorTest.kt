@@ -94,10 +94,10 @@ internal class DefaultScanCardProcessorTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class ScanWithSignInConfig {
+    inner class ScanWithDefaultConfig {
 
         private val callback: ScanConfig.Callback = mockk(relaxed = true)
-        private val config = ScanConfig.signIn(source, callback)
+        private val config = ScanConfig(analyticsSource = source, callback = callback)
 
         @BeforeEach
         fun resetCallback() {
@@ -312,10 +312,18 @@ internal class DefaultScanCardProcessorTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class ScanWithRescanKnownCardConfig {
+    inner class ScanWithKnownCardConfig {
 
         private val callback: ScanConfig.Callback = mockk(relaxed = true)
-        private val config = ScanConfig.rescanKnownCard(source, callback)
+        private val config = ScanConfig(
+            analyticsSource = source,
+            shouldConfirmWalletOwnership = false,
+            canRequestAccessCodeFromRepository = true,
+            shouldUpdateCardIdDisplayFormat = false,
+            shouldTrackScanFails = false,
+            shouldLaunchOnboarding = false,
+            callback = callback,
+        )
 
         @BeforeEach
         fun resetCallback() {

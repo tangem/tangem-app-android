@@ -104,7 +104,10 @@ internal class CreateWalletStartModelTest {
         coVerify {
             scanCardProcessor.scan(
                 config = match {
-                    it == ScanConfig.signIn(AnalyticsParam.ScreensSources.CreateWalletIntro, it.callback)
+                    it == ScanConfig(
+                        analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro,
+                        callback = it.callback,
+                    )
                 },
             )
         }
@@ -128,7 +131,10 @@ internal class CreateWalletStartModelTest {
         coVerify {
             scanCardProcessor.scan(
                 config = match {
-                    it == ScanConfig.signIn(AnalyticsParam.ScreensSources.CreateWalletIntro, it.callback)
+                    it == ScanConfig(
+                        analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro,
+                        callback = it.callback,
+                    )
                 },
             )
         }
@@ -240,7 +246,10 @@ internal class CreateWalletStartModelTest {
         coVerify {
             scanCardProcessor.scan(
                 config = match {
-                    it == ScanConfig.signIn(AnalyticsParam.ScreensSources.CreateWalletIntro, it.callback)
+                    it == ScanConfig(
+                        analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro,
+                        callback = it.callback,
+                    )
                 },
             )
         }
