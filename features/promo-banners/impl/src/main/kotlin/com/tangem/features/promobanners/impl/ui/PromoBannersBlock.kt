@@ -28,7 +28,6 @@ import com.tangem.core.ui.ds2.messagebanner.CloseButton
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.orEmpty
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent.Placeholder
 import com.tangem.features.promobanners.impl.model.PromoBannerNotificationUM
@@ -209,7 +208,7 @@ private fun SmoothHeightPager(
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxWidth(),
-                pageSpacing = TangemTheme.dimens.spacing16,
+                pageSpacing = 16.dp,
             ) { page ->
                 val banner = banners.getOrNull(page) ?: return@HorizontalPager
                 BannerNotification(

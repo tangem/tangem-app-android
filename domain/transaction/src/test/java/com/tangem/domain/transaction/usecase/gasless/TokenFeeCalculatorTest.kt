@@ -14,6 +14,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.domain.transaction.GaslessTransactionRepository
@@ -222,6 +223,9 @@ class TokenFeeCalculatorTest {
             assertNotNull(feeExtended)
             assertEquals(tokenStatus.currency.id, feeExtended.feeTokenId)
             assertTrue(feeExtended.transactionFee is TransactionFee.Single)
+            // Every fee this calculator produces is relayed over EIP-712/7702, and the send step
+            // dispatches on that marker alone.
+            assertEquals(GaslessProtocolData.Evm, feeExtended.gaslessProtocolData)
             // main-tx per-call gas = initialFee.gasLimit * 1.40; no withdraw on the non-yield path
             assertEquals(BigInteger("140000"), feeExtended.mainTransactionGasLimit)
             assertNull(feeExtended.withdrawGasLimit)
@@ -486,7 +490,7 @@ class TokenFeeCalculatorTest {
 
     /**
      * With active yield, when getGasLimit reverts due to zero plain balance
-     * (BlockchainSdkError.Ethereum.InsufficientFundsForOperation wrapped in WrappedThrowable),
+     * (BlockchainSdkError.Ethereum.ExecutionReverted wrapped in WrappedThrowable),
      * calculateTokenFee must use the deterministic FALLBACK_FEE_TRANSFER_GAS_LIMIT (100_000) instead of raising.
      *
      * Expected breakdown:
@@ -515,10 +519,8 @@ class TokenFeeCalculatorTest {
             val nativeStatus = createMockNativeCurrencyStatus(fiatRate = BigDecimal("2000"))
             val initialFee = createMockEIP1559Fee() // gasLimit = 100_000
 
-            // Simulate on-chain estimation reverting with InsufficientFundsForOperation
-            val insufficientFundsException =
-                BlockchainSdkError.Ethereum.InsufficientFundsForOperation("insufficient funds for gas")
-            val wrappedError = BlockchainSdkError.WrappedThrowable(insufficientFundsException)
+            val revertException = BlockchainSdkError.Ethereum.ExecutionReverted(code = 3, message = "execution reverted")
+            val wrappedError = BlockchainSdkError.WrappedThrowable(revertException)
             coEvery { mockWalletManager.getGasLimit(any(), any(), any()) } returns Result.Failure(wrappedError)
             coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
             every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")

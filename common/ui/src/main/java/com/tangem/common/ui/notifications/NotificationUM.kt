@@ -212,6 +212,8 @@ sealed class NotificationUM(val config: NotificationConfig) {
         subtitle: TextReference,
         iconResId: Int = R.drawable.img_attention_20,
         buttonsState: NotificationConfig.ButtonsState? = null,
+        shouldShowArrowIcon: Boolean = false,
+        onClick: (() -> Unit)? = null,
         onCloseClick: (() -> Unit)? = null,
     ) : NotificationUM(
         config = NotificationConfig(
@@ -219,6 +221,8 @@ sealed class NotificationUM(val config: NotificationConfig) {
             subtitle = subtitle,
             iconResId = iconResId,
             buttonsState = buttonsState,
+            shouldShowArrowIcon = shouldShowArrowIcon,
+            onClick = onClick,
             onCloseClick = onCloseClick,
         ),
     ) {

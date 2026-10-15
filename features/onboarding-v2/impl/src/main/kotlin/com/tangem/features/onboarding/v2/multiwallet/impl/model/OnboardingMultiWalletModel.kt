@@ -23,7 +23,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.ui.state.OnboardingMul
 import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import com.tangem.operations.attestation.ArtworkSize
 import com.tangem.operations.backup.BackupService
-import com.tangem.sdk.api.BackupServiceHolder
+import com.tangem.sdk.api.BackupServiceProvider
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -41,7 +41,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     analyticsHandler: AnalyticsEventHandler,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val backupServiceHolder: BackupServiceHolder,
+    private val backupServiceProvider: BackupServiceProvider,
     private val onboardingRepository: OnboardingRepository,
     private val getCardImageUseCase: GetCardImageUseCase,
     private val uiMessageSender: UiMessageSender,
@@ -173,7 +173,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     }
 
     private fun getInitialStartFromFinalize(): FinalizeStage? {
-        val backupService = backupServiceHolder.backupService.get() ?: return null
+        val backupService = backupServiceProvider.backupService
         return when (val state = backupService.currentState) {
             BackupService.State.FinalizingPrimaryCard -> FinalizeStage.ScanPrimaryCard
             is BackupService.State.FinalizingBackupCard -> if (state.index == 1) {
@@ -186,7 +186,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     }
 
     private fun isThreeCardsInit(): Boolean {
-        val backupService = backupServiceHolder.backupService.get() ?: return true
+        val backupService = backupServiceProvider.backupService
         return when (backupService.currentState) {
             BackupService.State.FinalizingPrimaryCard,
             is BackupService.State.FinalizingBackupCard,

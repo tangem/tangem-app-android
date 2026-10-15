@@ -111,7 +111,7 @@ private fun TangemPayCardPageScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(contentPadding)
-                    .padding(bottom = TangemTheme.dimens.spacing16),
+                    .padding(bottom = 16.dp),
             )
         } else {
             // Material buttons inside the scaffold content can't blur the scaffold's own haze source (Haze skips
@@ -126,7 +126,7 @@ private fun TangemPayCardPageScreen(
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = contentPadding.copy(
-                    bottom = contentPadding.calculateBottomPadding() + TangemTheme.dimens.spacing16,
+                    bottom = contentPadding.calculateBottomPadding() + 16.dp,
                 ),
                 verticalArrangement = Arrangement.spacedBy(0.dp),
             ) {

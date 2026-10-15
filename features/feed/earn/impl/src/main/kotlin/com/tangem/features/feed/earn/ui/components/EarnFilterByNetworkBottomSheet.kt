@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,6 +62,9 @@ private fun ColumnScope.Content(content: EarnFilterByNetworkBottomSheetContentUM
     Column(
         modifier = Modifier
             .weight(weight = 1f, fill = false)
+            // TangemModal sizes the card from the content's intrinsic height; a window-tall intrinsic opens the
+            // sheet expanded for any number of networks
+            .height(LocalWindowInfo.current.containerDpSize.height)
             .padding(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -69,7 +73,7 @@ private fun ColumnScope.Content(content: EarnFilterByNetworkBottomSheetContentUM
             variant = TangemTabItem.Variant.Transparent,
         )
 
-        Box {
+        Box(modifier = Modifier.weight(1f)) {
             NetworksBlock(
                 networks = content.networks,
                 hasFooter = content.footer != null,

@@ -98,8 +98,8 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
         state = listState,
         modifier = modifier,
         contentPadding = PaddingValues(
-            top = TangemTheme.dimens.spacing16,
-            bottom = TangemTheme.dimens.spacing16,
+            top = 16.dp,
+            bottom = 16.dp,
         ),
     ) {
         items(
@@ -111,11 +111,11 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
                 is WalletSettingsAccountsUM.Account,
                 is WalletSettingsAccountsUM.JointAccount,
                 is WalletSettingsAccountsUM.Footer,
-                -> Modifier.padding(horizontal = TangemTheme.dimens.spacing16)
+                -> Modifier.padding(horizontal = 16.dp)
                 else -> Modifier.padding(
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
-                    top = TangemTheme.dimens.spacing16,
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 16.dp,
                 )
             }
             val itemModifier = offsetModifier
@@ -172,7 +172,7 @@ private fun ItemsBlock(model: WalletSettingsItemUM.WithItems, modifier: Modifier
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Column(
             modifier = Modifier
@@ -196,7 +196,7 @@ private fun ItemsBlock(model: WalletSettingsItemUM.WithItems, modifier: Modifier
         AnimatedVisibility(visible = description != null) {
             if (description != null) {
                 Text(
-                    modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing12),
+                    modifier = Modifier.padding(horizontal = 12.dp),
                     text = description.resolveReference(),
                     color = TangemTheme.colors3.text.tertiary,
                     style = TangemTheme.typography3.caption.medium,
@@ -216,8 +216,8 @@ private fun CardBlock(model: WalletSettingsItemUM.CardBlock, modifier: Modifier 
     ) {
         Column {
             Row(
-                modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+                modifier = Modifier.padding(all = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CardImage(model.imageState)
@@ -250,10 +250,10 @@ private fun CardBlock(model: WalletSettingsItemUM.CardBlock, modifier: Modifier 
             if (model.additionalBlock != null) {
                 Column {
                     HorizontalDivider(
-                        thickness = TangemTheme.dimens.size0_5,
+                        thickness = 0.5.dp,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = TangemTheme.dimens.spacing12),
+                            .padding(horizontal = 12.dp),
                         color = TangemTheme.colors3.border.secondary,
                     )
 
@@ -276,9 +276,9 @@ private fun SwitchBlock(model: WalletSettingsItemUM.WithSwitch, modifier: Modifi
         colors = walletSettingsBlockCardColors,
     ) {
         Row(
-            modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
+            modifier = Modifier.padding(all = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12, Alignment.Start),
+            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.Start),
         ) {
             Text(
                 modifier = Modifier.weight(1f),
@@ -315,16 +315,16 @@ private fun AccountsHeader(model: WalletSettingsAccountsUM.Header, modifier: Mod
         modifier = modifier
             .background(
                 shape = RoundedCornerShape(
-                    topStart = TangemTheme.dimens.radius16,
-                    topEnd = TangemTheme.dimens.radius16,
+                    topStart = 16.dp,
+                    topEnd = 16.dp,
                 ),
                 color = TangemTheme.colors3.bg.secondary,
             )
             .padding(
-                start = TangemTheme.dimens.spacing12,
-                end = TangemTheme.dimens.spacing12,
-                top = TangemTheme.dimens.spacing12,
-                bottom = TangemTheme.dimens.spacing4,
+                start = 12.dp,
+                end = 12.dp,
+                top = 12.dp,
+                bottom = 4.dp,
             ),
         text = model.text.resolveReference(),
         style = TangemTheme.typography3.subheading.medium,
@@ -377,8 +377,8 @@ private fun AccountsFooter(model: WalletSettingsAccountsUM.Footer, modifier: Mod
         Column(
             modifier = Modifier.background(
                 shape = RoundedCornerShape(
-                    bottomStart = TangemTheme.dimens.radius16,
-                    bottomEnd = TangemTheme.dimens.radius16,
+                    bottomStart = 16.dp,
+                    bottomEnd = 16.dp,
                 ),
                 color = TangemTheme.colors3.bg.secondary,
             ),
@@ -390,10 +390,10 @@ private fun AccountsFooter(model: WalletSettingsAccountsUM.Footer, modifier: Mod
 
                 Column {
                     HorizontalDivider(
-                        thickness = TangemTheme.dimens.size0_5,
+                        thickness = 0.5.dp,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = TangemTheme.dimens.spacing12),
+                            .padding(horizontal = 12.dp),
                         color = TangemTheme.colors3.border.secondary,
                     )
 
@@ -408,7 +408,7 @@ private fun AccountsFooter(model: WalletSettingsAccountsUM.Footer, modifier: Mod
         if (!model.shouldShowDescription) return
         SpacerH8()
         Text(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing12),
+            modifier = Modifier.padding(horizontal = 12.dp),
             text = model.description.resolveReference(),
             color = TangemTheme.colors3.text.tertiary,
             style = TangemTheme.typography3.caption.medium,
@@ -436,7 +436,7 @@ private fun AddAccountRow(model: WalletSettingsAccountsUM.Footer.AddAccountUM, m
             .fillMaxWidth()
             .background(TangemTheme.colors3.bg.secondary)
             .padding(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(

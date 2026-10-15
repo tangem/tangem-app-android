@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -32,6 +33,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_dots_horizontal_20
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.BankSectionUM
@@ -40,7 +42,7 @@ import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.R
 @Composable
 internal fun BankSection(state: BankSectionUM, modifier: Modifier = Modifier) {
     val isAvailable = (state as? BankSectionUM.Content)?.isAvailable != false
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxWidth().testTag(TangemPayTestTags.WITHDRAW_HUB_BANK_SECTION)) {
         HubSectionHeader(
             title = resourceReference(R.string.tangempay_withdraw_hub_bank_section_title),
             subtitle = if (isAvailable) {
@@ -58,6 +60,7 @@ internal fun BankSection(state: BankSectionUM, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxWidth()
                 .alpha(if (isAvailable) 1f else UNAVAILABLE_ALPHA)
+                .testTag(TangemPayTestTags.WITHDRAW_HUB_BANK_LIST)
                 .padding(top = 4.dp, bottom = 12.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -121,6 +124,7 @@ private fun BankActionCard(state: TangemPayWithdrawHubUM.ActionCardUM, isEnabled
             .clip(RoundedCornerShape(ActionCardCornerRadius))
             .background(TangemTheme.colors3.bg.status.infoSubtle)
             .clickableSingle(enabled = isEnabled, role = Role.Button, onClick = state.onClick)
+            .testTag(TangemPayTestTags.WITHDRAW_HUB_BANK_ACTION)
             .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -141,7 +145,7 @@ private fun BankActionCard(state: TangemPayWithdrawHubUM.ActionCardUM, isEnabled
 
 @Composable
 private fun RecentRecipientCard(state: TangemPayWithdrawHubUM.RecentRecipientUM, onClick: (() -> Unit)?) {
-    RecentsCard(onClick = onClick) {
+    RecentsCard(modifier = Modifier.testTag(TangemPayTestTags.WITHDRAW_HUB_RECENT_RECIPIENT), onClick = onClick) {
         RecipientAvatar(initial = state.initial)
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
@@ -164,7 +168,7 @@ private fun RecentRecipientCard(state: TangemPayWithdrawHubUM.RecentRecipientUM,
 
 @Composable
 private fun SeeAllCard(onClick: (() -> Unit)?) {
-    RecentsCard(onClick = onClick) {
+    RecentsCard(modifier = Modifier.testTag(TangemPayTestTags.WITHDRAW_HUB_SEE_ALL), onClick = onClick) {
         SecondaryIconCircle(imageVector = Icons.ic_dots_horizontal_20)
         Text(
             text = resourceReference(R.string.common_see_all).resolveReference(),
@@ -178,7 +182,11 @@ private fun SeeAllCard(onClick: (() -> Unit)?) {
 
 @Composable
 private fun UnableToLoadCard(onRetryClick: (() -> Unit)?) {
-    RecentsCard(isDashed = true, onClick = onRetryClick) {
+    RecentsCard(
+        modifier = Modifier.testTag(TangemPayTestTags.WITHDRAW_HUB_RECENTS_ERROR),
+        isDashed = true,
+        onClick = onRetryClick,
+    ) {
         IconCircle(background = TangemTheme.colors3.bg.inverse) {
             TangemIcon(
                 modifier = Modifier.size(20.dp),
@@ -200,7 +208,7 @@ private fun UnableToLoadCard(onRetryClick: (() -> Unit)?) {
 
 @Composable
 private fun RecipientAvatar(initial: String) {
-    IconCircle(background = TangemTheme.colors3.bg.opaque.secondary) {
+    IconCircle(background = TangemTheme.colors3.bg.transparent.secondary) {
         Text(
             text = initial,
             style = TangemTheme.typography3.body.medium,
