@@ -151,7 +151,7 @@ internal class HomeModel @Inject constructor(
             val analyticsSource = AnalyticsParam.ScreensSources.Intro
 
             scanCardProcessor.scan(
-                config = ScanConfig.signIn(
+                config = ScanConfig(
                     analyticsSource = analyticsSource,
                     callback = createScanCallback(),
                 ),

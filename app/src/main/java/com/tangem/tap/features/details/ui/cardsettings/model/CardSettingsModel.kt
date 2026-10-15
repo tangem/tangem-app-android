@@ -113,8 +113,13 @@ internal class CardSettingsModel @Inject constructor(
 
     private fun scanCard() = modelScope.launch {
         scanCardProcessor.scan(
-            config = ScanConfig.rescanKnownCard(
+            config = ScanConfig(
                 analyticsSource = com.tangem.core.analytics.models.AnalyticsParam.ScreensSources.CardSettings,
+                shouldConfirmWalletOwnership = false,
+                canRequestAccessCodeFromRepository = true,
+                shouldUpdateCardIdDisplayFormat = false,
+                shouldTrackScanFails = false,
+                shouldLaunchOnboarding = false,
                 callback = object : ScanConfig.Callback {
                     override suspend fun onSuccess(scanResponse: ScanResponse) {
                         val scannedUserWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()

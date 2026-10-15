@@ -201,7 +201,7 @@ internal class WelcomeModel @Inject constructor(
     private fun scanCard() {
         modelScope.launch {
             scanCardProcessor.scan(
-                config = ScanConfig.signIn(
+                config = ScanConfig(
                     analyticsSource = AnalyticsParam.ScreensSources.SignIn,
                     callback = createScanCallback(),
                 ),
