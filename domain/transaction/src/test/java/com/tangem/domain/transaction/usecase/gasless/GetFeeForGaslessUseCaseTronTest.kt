@@ -129,7 +129,7 @@ internal class GetFeeForGaslessUseCaseTronTest {
     }
 
     @Test
-    fun `GIVEN sent token covers the compensation WHEN invoke THEN gasless fee`() = runTest {
+    fun `GIVEN sent token covers the compensation and TRX dearer WHEN invoke THEN gasless fee`() = runTest {
         // Act
         val actual = invoke(transferTransaction)
 
@@ -267,10 +267,15 @@ internal class GetFeeForGaslessUseCaseTronTest {
         }
     }
 
+    /** Rates keep the TRX fee dearer in fiat than the USDT compensation. */
     private fun statusOf(currency: CryptoCurrency, balance: BigDecimal): CryptoCurrencyStatus {
+        val rate = if (currency is CryptoCurrency.Coin) TRX_FIAT_RATE else USDT_FIAT_RATE
         return CryptoCurrencyStatus(
             currency = currency,
-            value = mockk<CryptoCurrencyStatus.Loaded> { every { amount } returns balance },
+            value = mockk<CryptoCurrencyStatus.Loaded> {
+                every { amount } returns balance
+                every { fiatRate } returns rate
+            },
         )
     }
 
@@ -279,6 +284,8 @@ internal class GetFeeForGaslessUseCaseTronTest {
         val USDT_SDK_TOKEN = Token(symbol = "USDT", contractAddress = USDT_CONTRACT, decimals = 6)
         val NATIVE_FEE: BigDecimal = BigDecimal("8.0722")
         val COMPENSATION: BigDecimal = BigDecimal("2.75")
+        val TRX_FIAT_RATE: BigDecimal = BigDecimal("0.4")
+        val USDT_FIAT_RATE: BigDecimal = BigDecimal.ONE
 
         val QUOTE = TronGaslessQuote(
             quoteId = "q_1",
