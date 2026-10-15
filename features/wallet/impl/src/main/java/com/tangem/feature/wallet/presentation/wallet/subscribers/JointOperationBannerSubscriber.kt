@@ -6,6 +6,7 @@ import com.tangem.domain.jointaccount.model.JointPendingOperation
 import com.tangem.domain.jointaccount.usecase.GetPendingJointOperationsUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -71,6 +72,7 @@ internal class JointOperationBannerSubscriber @AssistedInject constructor(
             .map { accountList ->
                 accountList.accountStatuses
                     .filterIsInstance<AccountStatus.Joint>()
+                    .filter { it.value is JointAccountStatusValue.Active }
                     .map(AccountStatus.Joint::account)
             }
             .distinctUntilChanged()
