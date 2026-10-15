@@ -89,8 +89,8 @@ class SwapTransferInteractorImpl @Inject constructor(
         val appCurrency = getSelectedAppCurrencyUseCase.unwrap()
         val isBalanceHidden = getBalanceHidingSettingsUseCase.isBalanceHidden().first()
         val isAccountsMode = isAccountsModeEnabledUseCase.invokeSync() ||
-            fromSwapCurrencyStatus.account is Account.Prediction ||
-            toSwapCurrencyStatus.account is Account.Prediction
+            fromSwapCurrencyStatus.account.isEligibleWithAccountsMode() ||
+            toSwapCurrencyStatus.account.isEligibleWithAccountsMode()
         val fromTokenAmountValue = fromTokenAmount.parseBigDecimalOrNull() ?: return createEmptyAmountState(appCurrency)
         val fromTokenAmountFiat = fromSwapCurrencyStatus.status.value.fiatRate.orZero() * fromTokenAmountValue
         val fromTokenBalance = fromSwapCurrencyStatus.status.value.amount.orZero()
@@ -498,4 +498,7 @@ class SwapTransferInteractorImpl @Inject constructor(
             incrementNotificationsShowCountUseCase(cryptoCurrency)
         }
     }
+
+    private fun Account.isEligibleWithAccountsMode(): Boolean =
+        this is Account.Prediction || this is Account.Collectibles
 }
