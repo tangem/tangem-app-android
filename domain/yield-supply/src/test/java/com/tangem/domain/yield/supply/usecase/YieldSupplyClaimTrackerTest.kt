@@ -51,11 +51,32 @@ internal class YieldSupplyClaimTrackerTest {
     }
 
     @Test
-    fun `GIVEN receipt confirms WHEN claim tracked THEN confirmed outcome emitted`() = runTest {
+    fun `GIVEN receipt confirms WHEN Merkl has not reflected it yet THEN confirmed is emitted while still in flight`() =
+        runTest {
+            // Arrange
+            receiptReturns(YieldSupplyTransactionOutcome.Confirmed)
+            rewardsReturn(MockYieldSupply.claimableSummary(claimable = listOf(CLAIMED_REWARD)).right())
+            val tracker = createTracker(testScope = this)
+            val outcomes = collectOutcomes(tracker)
+
+            // Act
+            tracker.track()
+            advanceTimeBy(delayTimeMillis = 10_001)
+            runCurrent()
+
+            // Assert
+            assertThat(outcomes).containsExactly(outcome(YieldSupplyTransactionOutcome.Confirmed))
+            assertThat(tracker.isInFlight()).isTrue()
+        }
+
+    @Test
+    fun `GIVEN receipt reverts WHEN the outcome arrives THEN the claim is already released`() = runTest {
         // Arrange
-        receiptReturns(YieldSupplyTransactionOutcome.Confirmed)
+        receiptReturns(YieldSupplyTransactionOutcome.Reverted)
         val tracker = createTracker(testScope = this)
-        val outcomes = collectOutcomes(tracker)
+        val inFlightOnOutcome = mutableListOf<Boolean>()
+        backgroundScope.launch { tracker.outcomes.collect { inFlightOnOutcome += tracker.isInFlight() } }
+        runCurrent()
 
         // Act
         tracker.track()
@@ -63,7 +84,7 @@ internal class YieldSupplyClaimTrackerTest {
         runCurrent()
 
         // Assert
-        assertThat(outcomes).containsExactly(outcome(YieldSupplyTransactionOutcome.Confirmed))
+        assertThat(inFlightOnOutcome).containsExactly(false)
     }
 
     @Test
@@ -71,6 +92,10 @@ internal class YieldSupplyClaimTrackerTest {
         runTest {
             // Arrange
             receiptReturns(YieldSupplyTransactionOutcome.Confirmed)
+            coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returnsMany listOf(
+                MockYieldSupply.claimableSummary(claimable = listOf(CLAIMED_REWARD)).right(),
+                YieldRewardsSummary.None.right(),
+            )
             val tracker = createTracker(testScope = this)
 
             // Act
@@ -79,6 +104,8 @@ internal class YieldSupplyClaimTrackerTest {
 
             // Assert
             coVerifyOrder {
+                incentivesRepository.invalidateUserCache(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
+                getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
                 incentivesRepository.invalidateUserCache(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
                 getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
             }
