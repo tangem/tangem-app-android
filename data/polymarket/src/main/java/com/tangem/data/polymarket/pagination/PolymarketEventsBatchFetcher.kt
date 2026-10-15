@@ -1,6 +1,5 @@
 package com.tangem.data.polymarket.pagination
 
-import com.tangem.domain.polymarket.error.PolymarketEmptyFeedException
 import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketEventsPage
@@ -21,9 +20,12 @@ import kotlin.time.Duration.Companion.seconds
  * Every page keeps the cursor it was requested with, which is what [PolymarketEventsUpdateFetcher] refreshes by.
  *
  * Failures are retried once, silently, after [retryDelay] — the caller keeps its loader up meanwhile, so a single
- * hiccup never surfaces as an error state. An empty **first** page is retried the same way and, if it stays empty,
- * reported as [PolymarketEmptyFeedException]: an empty category looks exactly like a failed load to the user.
- * An empty **next** page is just the end of the feed.
+ * hiccup never surfaces as an error state.
+ *
+ * An empty page is not a failure, and a page shorter than [batchSize] is not the end: the BFF decides both with
+ * `hasNext` and the cursor. An empty page that has more behind it is followed at once, through up to
+ * [MAX_EMPTY_PAGES_FOLLOWED] empty pages, so what the caller receives either carries events or ends the feed —
+ * the list never has to ask for a page nothing on screen would trigger.
  *
  * @param fetchPage loads a single page: the category to filter by, the cursor of the previous page (`null` for the
  *  first one) and the page size.
@@ -43,7 +45,7 @@ internal class PolymarketEventsBatchFetcher(
     ): BatchFetchResult<PolymarketEventsBatch> {
         lastConfig = requestParams
         nextCursor = null
-        return fetchWithSilentRetry(config = requestParams, cursor = null, isFirstBatch = true)
+        return fetchFollowingEmptyPages(config = requestParams, cursor = null)
     }
 
     override suspend fun fetchNext(
@@ -65,52 +67,54 @@ internal class PolymarketEventsBatchFetcher(
         }
 
         lastConfig = config
-        return fetchWithSilentRetry(config = config, cursor = nextCursor, isFirstBatch = false)
+        return fetchFollowingEmptyPages(config = config, cursor = nextCursor)
+    }
+
+    private suspend fun fetchFollowingEmptyPages(
+        config: PolymarketEventsListConfig,
+        cursor: String?,
+    ): BatchFetchResult<PolymarketEventsBatch> {
+        var requestCursor = cursor
+        var emptyPagesFollowed = 0
+
+        while (true) {
+            val page = fetchWithSilentRetry(config = config, cursor = requestCursor)
+                // A failed request is the pagination's to report, so the batch turns into a retryable error.
+                .getOrElse { throwable -> return BatchFetchResult.Error(throwable) }
+
+            val hasMore = page.hasNext && page.cursor != null
+            val isFollowed = page.events.isEmpty() && hasMore && emptyPagesFollowed < MAX_EMPTY_PAGES_FOLLOWED
+
+            if (!isFollowed) {
+                nextCursor = page.cursor
+                return BatchFetchResult.Success(
+                    data = PolymarketEventsBatch(events = page.events, requestCursor = requestCursor),
+                    empty = page.events.isEmpty(),
+                    last = !hasMore || page.events.isEmpty(),
+                )
+            }
+
+            emptyPagesFollowed++
+            requestCursor = page.cursor
+        }
     }
 
     private suspend fun fetchWithSilentRetry(
         config: PolymarketEventsListConfig,
         cursor: String?,
-        isFirstBatch: Boolean,
-    ): BatchFetchResult<PolymarketEventsBatch> {
-        val firstAttempt = runFetch(config = config, cursor = cursor, isFirstBatch = isFirstBatch)
-        if (firstAttempt is BatchFetchResult.Success) return firstAttempt
+    ): Result<PolymarketEventsPage> {
+        val firstAttempt = runSuspendCatching { fetchPage(config, cursor, batchSize) }
+        if (firstAttempt.isSuccess) return firstAttempt
 
         delay(retryDelay)
 
-        return runFetch(config = config, cursor = cursor, isFirstBatch = isFirstBatch)
-    }
-
-    private suspend fun runFetch(
-        config: PolymarketEventsListConfig,
-        cursor: String?,
-        isFirstBatch: Boolean,
-    ): BatchFetchResult<PolymarketEventsBatch> = runSuspendCatching { fetchPage(config, cursor, batchSize) }
-        .fold(
-            onSuccess = { page -> toBatchResult(page = page, isFirstBatch = isFirstBatch, requestCursor = cursor) },
-            // A failed request is the pagination's to report, so the batch turns into a retryable error.
-            onFailure = { throwable -> BatchFetchResult.Error(throwable) },
-        )
-
-    private fun toBatchResult(
-        page: PolymarketEventsPage,
-        isFirstBatch: Boolean,
-        requestCursor: String?,
-    ): BatchFetchResult<PolymarketEventsBatch> {
-        if (isFirstBatch && page.events.isEmpty()) {
-            return BatchFetchResult.Error(PolymarketEmptyFeedException())
-        }
-
-        nextCursor = page.cursor
-
-        return BatchFetchResult.Success(
-            data = PolymarketEventsBatch(events = page.events, requestCursor = requestCursor),
-            empty = page.events.isEmpty(),
-            last = !page.hasNext || page.cursor == null,
-        )
+        return runSuspendCatching { fetchPage(config, cursor, batchSize) }
     }
 
     private companion object {
         val RETRY_DELAY = 2.seconds
+
+        /** A guard against a feed that keeps promising more and serving nothing; past it the feed is ended. */
+        const val MAX_EMPTY_PAGES_FOLLOWED = 3
     }
 }
