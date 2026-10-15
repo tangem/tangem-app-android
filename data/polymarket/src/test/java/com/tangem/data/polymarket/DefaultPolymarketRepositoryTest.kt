@@ -56,6 +56,8 @@ import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
+import com.tangem.domain.polymarket.model.PolymarketClobAsset
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
@@ -607,17 +609,28 @@ internal class DefaultPolymarketRepositoryTest {
             val headers = slot<Map<String, String>>()
             val assetType = slot<String>()
             val signatureType = slot<Int>()
+            val tokenId = slot<String?>()
             coEvery {
-                clobApi.updateBalanceAllowance(capture(headers), capture(assetType), capture(signatureType))
+                clobApi.updateBalanceAllowance(
+                    capture(headers),
+                    capture(assetType),
+                    capture(signatureType),
+                    captureNullable(tokenId),
+                )
             } returns ApiResponse.Success(Unit)
 
             // Act
-            val result = repository.syncBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+            val result = repository.syncBalanceAllowance(
+                ownerAddress = OWNER,
+                credentials = SYNC_CREDENTIALS,
+                asset = PolymarketClobAsset.Collateral,
+            )
 
             // Assert
             assertThat(result).isEqualTo(Unit.right())
             assertThat(assetType.captured).isEqualTo("COLLATERAL")
             assertThat(signatureType.captured).isEqualTo(3)
+            assertThat(tokenId.captured).isNull()
             assertThat(headers.captured["POLY_ADDRESS"]).isEqualTo(OWNER)
             assertThat(headers.captured["POLY_API_KEY"]).isEqualTo(SYNC_CREDENTIALS.apiKey)
             assertThat(headers.captured["POLY_PASSPHRASE"]).isEqualTo(SYNC_CREDENTIALS.passphrase)
@@ -757,13 +770,70 @@ internal class DefaultPolymarketRepositoryTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SyncSharesBalance {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN shares of a versioned market WHEN syncBalanceAllowance THEN sends the token under its asset type`(
+            model: SharesAssetTypeModel,
+        ) = runTest {
+            // Arrange
+            val assetType = slot<String>()
+            val tokenId = slot<String?>()
+            coEvery {
+                clobApi.updateBalanceAllowance(any(), capture(assetType), any(), captureNullable(tokenId))
+            } returns ApiResponse.Success(Unit)
+
+            // Act
+            val result = repository.syncBalanceAllowance(
+                ownerAddress = OWNER,
+                credentials = SYNC_CREDENTIALS,
+                asset = PolymarketClobAsset.Shares(tokenId = "777", version = model.version),
+            )
+
+            // Assert
+            assertThat(result).isEqualTo(Unit.right())
+            assertThat(assetType.captured).isEqualTo(model.expectedAssetType)
+            assertThat(tokenId.captured).isEqualTo("777")
+        }
+
+        private fun provideTestModels() = listOf(
+            SharesAssetTypeModel(version = PolymarketMarketVersion.V1, expectedAssetType = "CONDITIONAL"),
+            SharesAssetTypeModel(version = PolymarketMarketVersion.V2, expectedAssetType = "CONDITIONAL-V2"),
+        )
+    }
+
+    data class SharesAssetTypeModel(val version: PolymarketMarketVersion, val expectedAssetType: String)
+
+    @Test
+    fun `GIVEN shares of an unknown market version WHEN syncBalanceAllowance THEN fails without calling the api`() =
+        runTest {
+            // Act
+            val result = repository.syncBalanceAllowance(
+                ownerAddress = OWNER,
+                credentials = SYNC_CREDENTIALS,
+                asset = PolymarketClobAsset.Shares(tokenId = "777", version = PolymarketMarketVersion.UNKNOWN),
+            )
+
+            // Assert
+            assertThat(result.leftOrNull()).isInstanceOf(PolymarketAuthError.Unknown::class.java)
+            coVerify(exactly = 0) { clobApi.updateBalanceAllowance(any(), any(), any(), any()) }
+        }
+
     @Test
     fun `GIVEN a 401 WHEN syncBalanceAllowance THEN maps to InvalidSignature`() = runTest {
         // Arrange
-        coEvery { clobApi.updateBalanceAllowance(any(), any(), any()) } returns httpError(Code.UNAUTHORIZED, body = null)
+        coEvery { clobApi.updateBalanceAllowance(any(), any(), any(), any()) } returns
+            httpError(Code.UNAUTHORIZED, body = null)
 
         // Act
-        val result = repository.syncBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+        val result = repository.syncBalanceAllowance(
+            ownerAddress = OWNER,
+            credentials = SYNC_CREDENTIALS,
+            asset = PolymarketClobAsset.Collateral,
+        )
 
         // Assert
         assertThat(result).isEqualTo(PolymarketAuthError.InvalidSignature.left())
@@ -776,14 +846,18 @@ internal class DefaultPolymarketRepositoryTest {
             val credentials = SYNC_CREDENTIALS.copy(secret = "abc+def/==")
 
             // Act
-            val result = repository.syncBalanceAllowance(ownerAddress = OWNER, credentials = credentials)
+            val result = repository.syncBalanceAllowance(
+                ownerAddress = OWNER,
+                credentials = credentials,
+                asset = PolymarketClobAsset.Collateral,
+            )
 
             // Assert
             val error = result.leftOrNull() as? PolymarketAuthError.Unknown
             assertThat(error).isNotNull()
             assertThat(error?.httpCode).isNull()
             assertThat(error?.detail).isNotNull()
-            coVerify(exactly = 0) { clobApi.updateBalanceAllowance(any(), any(), any()) }
+            coVerify(exactly = 0) { clobApi.updateBalanceAllowance(any(), any(), any(), any()) }
         }
 
     @Test
@@ -792,14 +866,18 @@ internal class DefaultPolymarketRepositoryTest {
         val credentials = SYNC_CREDENTIALS.copy(secret = "")
 
         // Act
-        val result = repository.syncBalanceAllowance(ownerAddress = OWNER, credentials = credentials)
+        val result = repository.syncBalanceAllowance(
+            ownerAddress = OWNER,
+            credentials = credentials,
+            asset = PolymarketClobAsset.Collateral,
+        )
 
         // Assert
         val error = result.leftOrNull() as? PolymarketAuthError.Unknown
         assertThat(error).isNotNull()
         assertThat(error?.httpCode).isNull()
         assertThat(error?.detail).isNotNull()
-        coVerify(exactly = 0) { clobApi.updateBalanceAllowance(any(), any(), any()) }
+        coVerify(exactly = 0) { clobApi.updateBalanceAllowance(any(), any(), any(), any()) }
     }
 
     @Test

@@ -11,10 +11,6 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository
-import com.tangem.domain.yield.supply.models.YieldSupplyClaimOutcome
-import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
 import com.tangem.domain.yield.supply.usecase.GetYieldRewardsSummaryUseCase
@@ -32,12 +28,9 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -47,7 +40,6 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.Locale
-import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class YieldSupplyRewardsBannerModelTest {
@@ -55,7 +47,6 @@ internal class YieldSupplyRewardsBannerModelTest {
     private val marketFlowUseCase: YieldSupplyMarketFlowUseCase = mockk()
     private val getRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase = mockk()
     private val claimTracker: YieldSupplyClaimTracker = mockk()
-    private val claimOutcomes = MutableSharedFlow<YieldSupplyClaimOutcome>(extraBufferCapacity = 1)
     private val claimInFlight = MutableStateFlow(false)
 
     private var originalLocale: Locale = Locale.getDefault()
@@ -69,7 +60,6 @@ internal class YieldSupplyRewardsBannerModelTest {
         clearMocks(marketFlowUseCase, getRewardsSummaryUseCase)
         every { marketFlowUseCase(any()) } returns flowOf(market(hasCampaign = true))
         claimInFlight.value = false
-        every { claimTracker.outcomes } returns claimOutcomes
         every { claimTracker.isClaimInFlight(any(), any()) } returns claimInFlight
     }
 
@@ -122,29 +112,22 @@ internal class YieldSupplyRewardsBannerModelTest {
         }
 
     @Test
-    fun `GIVEN a claim just sent and the banner still re-reading WHEN claim clicked THEN no sheet is opened`() =
-        runTest {
-            // Arrange
-            var reads = 0
-            val summary = MockYieldSupply.claimableSummary(claimable = listOf(reward(claimable = "1000"))).right()
-            coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } coAnswers {
-                if (++reads > 1) delay(timeMillis = 1_000)
-                summary
-            }
-            val model = createModel()
-            advanceUntilIdle()
-            claimInFlight.value = true
-            runCurrent()
+    fun `GIVEN a claim in flight WHEN claim clicked THEN no sheet is opened`() = runTest {
+        // Arrange
+        coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
+            MockYieldSupply.claimableSummary(claimable = listOf(reward(claimable = "1000"))).right()
+        claimInFlight.value = true
+        val model = createModel()
+        advanceUntilIdle()
 
-            // Act
-            model.onClaimClick()
+        // Act
+        model.onClaimClick()
 
-            // Assert
-            assertThat(model.uiState.value?.claim).isNotEqualTo(YieldSupplyRewardsBannerUM.Claim.Disabled)
-            assertThat(claimClicks).isEmpty()
+        // Assert
+        assertThat(claimClicks).isEmpty()
 
-            model.onDestroy()
-        }
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN rewards below threshold WHEN model created THEN claim is disabled`() = runTest {
@@ -373,157 +356,39 @@ internal class YieldSupplyRewardsBannerModelTest {
     }
 
     @Test
-    fun `GIVEN a confirmed claim on another module WHEN it is reported THEN the rewards are not read again`() =
+    fun `GIVEN a shown banner WHEN a claim goes in flight THEN the button is disabled without reading the rewards`() =
         runTest {
             // Arrange
             coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
-                MockYieldSupply.claimableSummary(
-                    claimable = listOf(reward(claimable = "1000")),
-                    totalNetUsd = BigDecimal("30.00"),
-                ).right()
+                MockYieldSupply.claimableSummary(claimable = listOf(reward(claimable = "1000"))).right()
             val model = createModel()
             advanceUntilIdle()
 
             // Act
-            claimOutcomes.emit(confirmedOutcome(chainId = OTHER_CHAIN_ID))
-            runCurrent()
-            advanceTimeBy(PAST_CACHE_WINDOW)
+            claimInFlight.value = true
             runCurrent()
 
             // Assert
+            assertThat(model.uiState.value?.claim).isEqualTo(YieldSupplyRewardsBannerUM.Claim.Disabled)
             coVerify(exactly = 1) { getRewardsSummaryUseCase(any(), any()) }
 
             model.onDestroy()
         }
 
     @Test
-    fun `GIVEN a confirmed claim WHEN the rewards did not change THEN they are read again after the cache window`() =
-        runTest {
-            // Arrange
-            coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
-                MockYieldSupply.claimableSummary(
-                    claimable = listOf(reward(claimable = "1000")),
-                    totalNetUsd = BigDecimal("12.34"),
-                ).right()
-            val model = createModel()
-            advanceUntilIdle()
-
-            // Act
-            claimOutcomes.emit(confirmedOutcome())
-            runCurrent()
-            advanceTimeBy(PAST_CACHE_WINDOW)
-            runCurrent()
-
-            // Assert
-            coVerify(exactly = 3) { getRewardsSummaryUseCase(any(), any()) }
-
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN a confirmed claim reported in another address case WHEN it arrives THEN the rewards are read again`() =
-        runTest {
-            // Arrange
-            coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
-                MockYieldSupply.claimableSummary(
-                    claimable = listOf(reward(claimable = "1000")),
-                    totalNetUsd = BigDecimal("12.34"),
-                ).right()
-            val model = createModel()
-            advanceUntilIdle()
-
-            // Act
-            claimOutcomes.emit(confirmedOutcome(userAddress = USER_ADDRESS.uppercase()))
-            runCurrent()
-
-            // Assert
-            coVerify(exactly = 2) { getRewardsSummaryUseCase(any(), any()) }
-
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN a confirmed claim WHEN the rewards cannot be read THEN the banner stays and is read again later`() =
-        runTest {
-            // Arrange
-            val claimable = MockYieldSupply.claimableSummary(
-                claimable = listOf(reward(claimable = "1000")),
-                totalNetUsd = BigDecimal("12.34"),
-            )
-            coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returnsMany listOf(
-                claimable.right(),
-                YieldIncentivesError.Unavailable.left(),
-                YieldRewardsSummary.None.right(),
-            )
-            val model = createModel()
-            advanceUntilIdle()
-            val shown = model.uiState.value
-
-            // Act
-            claimOutcomes.emit(confirmedOutcome())
-            runCurrent()
-            val afterFailedRead = model.uiState.value
-            advanceTimeBy(PAST_CACHE_WINDOW)
-            runCurrent()
-
-            // Assert
-            assertThat(shown).isNotNull()
-            assertThat(afterFailedRead).isEqualTo(shown)
-            coVerify(exactly = 3) { getRewardsSummaryUseCase(any(), any()) }
-            assertThat(model.uiState.value).isNull()
-
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN the claim stops being in flight mid-refresh WHEN confirmed THEN the unchanged rewards are read again`() =
-        runTest {
-            // Arrange
-            val summary = MockYieldSupply.claimableSummary(
-                claimable = listOf(reward(claimable = "1000")),
-                totalNetUsd = BigDecimal("12.34"),
-            ).right()
-            coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } coAnswers {
-                delay(timeMillis = 100)
-                summary
-            }
-            claimInFlight.value = true
-            val model = createModel()
-            advanceUntilIdle()
-
-            // Act
-            claimOutcomes.emit(confirmedOutcome())
-            runCurrent()
-            claimInFlight.value = false
-            advanceTimeBy(delayTimeMillis = 200)
-            runCurrent()
-            advanceTimeBy(PAST_CACHE_WINDOW)
-            runCurrent()
-
-            // Assert
-            coVerify(exactly = 4) { getRewardsSummaryUseCase(any(), any()) }
-
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN a confirmed claim WHEN the rewards are gone THEN no further read is scheduled`() = runTest {
+    fun `GIVEN a claim in flight WHEN it settles THEN the rewards are read again`() = runTest {
         // Arrange
         coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returnsMany listOf(
-            MockYieldSupply.claimableSummary(
-                claimable = listOf(reward(claimable = "1000")),
-                totalNetUsd = BigDecimal("12.34"),
-            ).right(),
+            MockYieldSupply.claimableSummary(claimable = listOf(reward(claimable = "1000"))).right(),
             YieldRewardsSummary.None.right(),
         )
+        claimInFlight.value = true
         val model = createModel()
         advanceUntilIdle()
 
         // Act
-        claimOutcomes.emit(confirmedOutcome())
-        runCurrent()
-        advanceTimeBy(PAST_CACHE_WINDOW)
-        runCurrent()
+        claimInFlight.value = false
+        advanceUntilIdle()
 
         // Assert
         assertThat(model.uiState.value).isNull()
@@ -532,14 +397,29 @@ internal class YieldSupplyRewardsBannerModelTest {
         model.onDestroy()
     }
 
-    private fun confirmedOutcome(chainId: Int = CHAIN_ID, userAddress: String = USER_ADDRESS) =
-        YieldSupplyClaimOutcome(
-            userWalletId = USER_WALLET_ID,
-            cryptoCurrencyId = createToken().id,
-            chainId = chainId,
-            userAddress = userAddress,
-            outcome = YieldSupplyTransactionOutcome.Confirmed,
+    @Test
+    fun `GIVEN a claim in flight WHEN it settles and the rewards cannot be read THEN the banner stays`() = runTest {
+        // Arrange
+        coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returnsMany listOf(
+            MockYieldSupply.claimableSummary(claimable = listOf(reward(claimable = "1000"))).right(),
+            YieldIncentivesError.Unavailable.left(),
         )
+        val model = createModel()
+        advanceUntilIdle()
+        val shown = model.uiState.value
+        claimInFlight.value = true
+        runCurrent()
+
+        // Act
+        claimInFlight.value = false
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(shown).isNotNull()
+        assertThat(model.uiState.value).isEqualTo(shown)
+
+        model.onDestroy()
+    }
 
     private fun TestScope.createModel(
         cryptoCurrencyStatusFlow: MutableStateFlow<CryptoCurrencyStatus> = MutableStateFlow(loadedStatus()),
@@ -598,11 +478,8 @@ internal class YieldSupplyRewardsBannerModelTest {
     private fun createToken(): CryptoCurrency.Token = MockYieldSupply.token(contractAddress = TOKEN_ADDRESS)
 
     private companion object {
-        val PAST_CACHE_WINDOW = (YieldIncentivesRepository.INCENTIVES_CACHE_SECONDS + 1).seconds
         const val CHAIN_ID = 1
-        const val OTHER_CHAIN_ID = 137
         const val TOKEN_ADDRESS = "0xToken"
         const val USER_ADDRESS = "0xUser"
-        val USER_WALLET_ID = UserWalletId("00")
     }
 }
