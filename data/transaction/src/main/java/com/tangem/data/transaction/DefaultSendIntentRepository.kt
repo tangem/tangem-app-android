@@ -47,7 +47,6 @@ internal class DefaultSendIntentRepository(
     private fun logFailure(error: Throwable, message: String) {
         when (error) {
             is SendIntentError.NotFound,
-            is SendIntentError.SessionRevoked,
             is SendIntentError.AlreadyCompleted,
             -> TangemLogger.i(error.message)
             else -> TangemLogger.e(message, error)

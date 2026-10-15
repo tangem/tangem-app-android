@@ -9,9 +9,6 @@ internal enum class TransactionIntentErrorCode {
     @SerialName("INTENT_NOT_FOUND")
     INTENT_NOT_FOUND,
 
-    @SerialName("INTENT_SESSION_REVOKED")
-    INTENT_SESSION_REVOKED,
-
     @SerialName("INTENT_ALREADY_COMPLETED")
     INTENT_ALREADY_COMPLETED,
 
