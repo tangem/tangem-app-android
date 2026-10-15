@@ -9,9 +9,12 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.arrayItemReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackDocument
@@ -20,6 +23,7 @@ import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.model.TangemPayCashback
 import com.tangem.domain.pay.repository.CashbackRepository
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackScreenUM
@@ -33,6 +37,8 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
+import io.mockk.verify
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.joda.time.DateTime
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -49,6 +55,8 @@ internal class TangemPayCashbackModelTest {
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val cashbackRepository: CashbackRepository = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
+    private val isBalanceHidden = MutableStateFlow(false)
 
     @BeforeEach
     fun setup() {
@@ -63,6 +71,7 @@ internal class TangemPayCashbackModelTest {
         mockkObject(DateTimeFormatters)
         every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns "July 1 – 5"
         clearMocks(cashbackRepository)
+        every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHidden
         coEvery { cashbackRepository.getCashbackSummary(any()) } returns CashbackSummary.Disabled.right()
         coEvery { cashbackRepository.getCashbackPromotions(any()) } returns promotions().right()
         coEvery { cashbackRepository.getCashbackAccrualDocs(any()) } returns docs().right()
@@ -287,12 +296,53 @@ internal class TangemPayCashbackModelTest {
         coVerify(exactly = 0) { cashbackRepository.getCashbackHistory(any(), any()) }
     }
 
+    @Test
+    fun `GIVEN content shown WHEN balances get hidden THEN cashback amounts masked`() {
+        // Arrange
+        coEvery { cashbackRepository.getCashbackSummary(any()) } returns enabledSummary().right()
+        coEvery { cashbackRepository.getCashbackHistory(any(), any()) } returns history().right()
+        val model = createModel()
+
+        // Act
+        isBalanceHidden.value = true
+
+        // Assert
+        val content = model.content()
+        assertThat(content.cashback.title).isEqualTo(
+            resourceReference(
+                R.string.tangempay_cashback_earned_title,
+                wrappedList("***", arrayItemReference(R.array.common_month_in, index = 5)),
+            ),
+        )
+        assertThat(content.histogram?.title)
+            .isEqualTo(resourceReference(R.string.tangempay_cashback_total_earned, wrappedList("***")))
+        assertThat(content.histogram?.bars?.map { it.amount })
+            .containsExactly(stringReference("***"), stringReference("***"))
+    }
+
+    @Test
+    fun `GIVEN negative cashback WHEN balances flip THEN negative banner impression sent once`() {
+        // Arrange
+        coEvery { cashbackRepository.getCashbackSummary(any()) } returns
+            enabledSummary(confirmedAmount = BigDecimal("-2.15")).right()
+        coEvery { cashbackRepository.getCashbackHistory(any(), any()) } returns history().right()
+        createModel()
+
+        // Act
+        isBalanceHidden.value = true
+        isBalanceHidden.value = false
+
+        // Assert
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Cashback.NegativeBannerShowed>()) }
+    }
+
     private fun createModel() = TangemPayCashbackModel(
         dispatchers = TestingCoroutineDispatcherProvider(),
         paramsContainer = MutableParamsContainer(TangemPayCashbackComponent.Params(userWalletId = userWalletId)),
         router = router,
         urlOpener = urlOpener,
         cashbackRepository = cashbackRepository,
+        getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
         analytics = analytics,
     )
 
@@ -335,10 +385,13 @@ internal class TangemPayCashbackModelTest {
         CashbackDocument(id = "terms", title = "Full terms of cashback program", url = "https://x/terms.pdf"),
     )
 
-    private fun enabledSummary(payoutCurrency: String? = "USDC") = CashbackSummary.Enabled(
+    private fun enabledSummary(
+        payoutCurrency: String? = "USDC",
+        confirmedAmount: BigDecimal = BigDecimal("32.15"),
+    ) = CashbackSummary.Enabled(
         displayMode = CashbackDisplayMode.FULL,
         cashback = TangemPayCashback(
-            confirmedAmount = BigDecimal("32.15"),
+            confirmedAmount = confirmedAmount,
             totalEarnedAmount = BigDecimal("132.15"),
             currency = "USD",
             payoutCurrency = payoutCurrency,

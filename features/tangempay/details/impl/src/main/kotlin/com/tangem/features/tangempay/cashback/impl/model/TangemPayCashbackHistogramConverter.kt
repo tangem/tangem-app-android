@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.cashback.impl.model
 
 import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -22,6 +23,7 @@ internal class TangemPayCashbackHistogramConverter(
         history: CashbackHistory,
         totalEarnedAmount: BigDecimal?,
         totalCurrency: String?,
+        isBalanceHidden: Boolean,
     ): TangemPayCashbackHistogramUM {
         val total = totalEarnedAmount
             ?: history.months.fold(BigDecimal.ZERO) { acc, month -> acc + month.confirmedAmount }
@@ -32,12 +34,12 @@ internal class TangemPayCashbackHistogramConverter(
         return TangemPayCashbackHistogramUM(
             title = resourceReference(
                 id = R.string.tangempay_cashback_total_earned,
-                formatArgs = wrappedList(total.formatTotal(totalCurrencyCode)),
+                formatArgs = wrappedList(total.formatTotal(totalCurrencyCode).orMaskWithStars(isBalanceHidden)),
             ),
             bars = history.months.mapIndexed { index, month ->
                 TangemPayCashbackHistogramUM.Bar(
                     month = stringReference(dateFormatter.formatShortMonth(month.year, month.month)),
-                    amount = stringReference(month.formatBar()),
+                    amount = stringReference(month.formatBar().orMaskWithStars(isBalanceHidden)),
                     amountValue = month.confirmedAmount.toFloat(),
                     style = when {
                         index != lastIndex -> Style.Regular

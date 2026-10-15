@@ -16,6 +16,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -114,6 +115,9 @@ internal class TangemPayDetailsModelTest {
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository = mockk(relaxed = true)
     private val findActiveBankOfframpOrderUseCase: FindActiveBankOfframpOrderUseCase = mockk()
+    private val cashbackBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk {
+        every { isBalanceHidden() } returns flowOf(false)
+    }
     private val cashbackControllerFactory = object : TangemPayCashbackController.Factory {
         override fun create(scope: CoroutineScope, accountStatus: StateFlow<AccountStatus.Payment>) =
             TangemPayCashbackController(
@@ -123,6 +127,7 @@ internal class TangemPayDetailsModelTest {
                 getCashbackSummaryUseCase = getCashbackSummaryUseCase,
                 getCashbackDeactivationDismissedUseCase = getCashbackDeactivationDismissedUseCase,
                 setCashbackDeactivationDismissedUseCase = setCashbackDeactivationDismissedUseCase,
+                getBalanceHidingSettingsUseCase = cashbackBalanceHidingSettingsUseCase,
                 analytics = analytics,
                 router = router,
             )
