@@ -122,6 +122,31 @@ internal class YieldSupplyRewardsBannerModelTest {
         }
 
     @Test
+    fun `GIVEN a claim just sent and the banner still re-reading WHEN claim clicked THEN no sheet is opened`() =
+        runTest {
+            // Arrange
+            var reads = 0
+            val summary = MockYieldSupply.claimableSummary(claimable = listOf(reward(claimable = "1000"))).right()
+            coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } coAnswers {
+                if (++reads > 1) delay(timeMillis = 1_000)
+                summary
+            }
+            val model = createModel()
+            advanceUntilIdle()
+            claimInFlight.value = true
+            runCurrent()
+
+            // Act
+            model.onClaimClick()
+
+            // Assert
+            assertThat(model.uiState.value?.claim).isNotEqualTo(YieldSupplyRewardsBannerUM.Claim.Disabled)
+            assertThat(claimClicks).isEmpty()
+
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN rewards below threshold WHEN model created THEN claim is disabled`() = runTest {
         // Arrange
         coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
