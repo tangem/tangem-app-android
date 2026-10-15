@@ -554,8 +554,6 @@ private val YIELD_ALLOWED_DEX_PROVIDER_IDS = setOf(
     "1inch",
     "okx-cross-chain",
     "okx-on-chain",
-    "swapkit",
-    "li-fi",
 )
 
 private suspend fun ExpressRepository.getFilteredProviders(
