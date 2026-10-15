@@ -37,12 +37,14 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import java.io.IOException
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -207,6 +209,9 @@ internal class PrepareClaimBeforeWithdrawUseCaseTest {
         SkipModel(reason = "token has no market entry", status = statusOf(token(), BigDecimal.TEN), BigDecimal.TEN) {
             every { marketFlowUseCase(token = any()) } returns flowOf(null)
         },
+        SkipModel(reason = "markets cache cannot be read", status = statusOf(token(), BigDecimal.TEN), BigDecimal.TEN) {
+            every { marketFlowUseCase(token = any()) } returns flow { throw IOException("DataStore read failed") }
+        },
         SkipModel(reason = "incentives unavailable", status = statusOf(token(), BigDecimal.TEN), BigDecimal.TEN) {
             coEvery {
                 getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
@@ -242,6 +247,11 @@ internal class PrepareClaimBeforeWithdrawUseCaseTest {
                 getFeeUseCase(userWallet = any(), network = any(), transactionData = any())
             } returns GetFeeError.UnknownError.left()
         },
+        SkipModel(reason = "claim fee amount is unknown", status = statusOf(token(), BigDecimal.TEN), BigDecimal.TEN) {
+            coEvery {
+                getFeeUseCase(userWallet = any(), network = any(), transactionData = any())
+            } returns TransactionFee.Single(normal = fee(value = null)).right()
+        },
         SkipModel(reason = "a claim on this module is in flight", status = statusOf(token(), BigDecimal.TEN), BigDecimal.TEN) {
             every {
                 claimTracker.isClaimInFlight(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
@@ -269,7 +279,7 @@ internal class PrepareClaimBeforeWithdrawUseCaseTest {
         extras = null,
     )
 
-    private fun fee(value: BigDecimal) = Fee.Ethereum.EIP1559(
+    private fun fee(value: BigDecimal?) = Fee.Ethereum.EIP1559(
         maxFeePerGas = BigInteger.valueOf(1_000_000_000L),
         priorityFee = BigInteger.ONE,
         gasLimit = BigInteger.valueOf(21_000),
