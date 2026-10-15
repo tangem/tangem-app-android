@@ -80,14 +80,14 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             }
 
             val proposalState = buildProposalState(sdkSessionProposal, sdkVerifyContext)
-                .onLeft {
+                .onLeft { error ->
                     analytics.send(
                         WcAnalyticEvents.PairFailed(
-                            errorCode = it.code,
-                            errorMessage = it.message,
+                            errorCode = error.code,
+                            errorMessage = error.message,
                         ),
                     )
-                    emit(WcPairState.Error(it))
+                    emit(WcPairState.Error(error))
                 }
                 .getOrNull() ?: return@flow
             emit(proposalState)
@@ -245,10 +245,10 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
         WcPairState.Proposal(dAppSession)
     }.fold(
         onSuccess = { it.right() },
-        onFailure = {
-            when (it) {
-                is WcPairError -> it.left()
-                else -> WcPairError.Unknown(it.localizedMessage.orEmpty()).left()
+        onFailure = { throwable ->
+            when (throwable) {
+                is WcPairError -> throwable.left()
+                else -> WcPairError.Unknown(throwable.localizedMessage.orEmpty()).left()
             }
         },
     )

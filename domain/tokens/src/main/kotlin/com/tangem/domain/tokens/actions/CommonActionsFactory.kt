@@ -32,13 +32,16 @@ internal class CommonActionsFactory(
      * @param stakingAvailability   the staking availability for the cryptocurrency
      * @param yieldSupplyAvailability the yield supply availability for the cryptocurrency
      * @param shouldShowSwapStories a flag indicating whether to show swap stories
+     * @param isExpressUnreachable  Express assets failed to load and nothing is cached, so swap can't start
      */
+    @Suppress("LongParameterList")
     suspend fun create(
         userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         stakingAvailability: StakingAvailability,
         yieldSupplyAvailability: YieldSupplyAvailability,
         shouldShowSwapStories: Boolean,
+        isExpressUnreachable: Boolean,
     ): Set<ActionState> = coroutineScope {
         val isAddressAvailable = isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)
 
@@ -87,6 +90,7 @@ internal class CommonActionsFactory(
                 userWallet = userWallet,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 shouldShowSwapStories = shouldShowSwapStories,
+                isExpressUnreachable = isExpressUnreachable,
             ).addByReason()
             // endregion
 

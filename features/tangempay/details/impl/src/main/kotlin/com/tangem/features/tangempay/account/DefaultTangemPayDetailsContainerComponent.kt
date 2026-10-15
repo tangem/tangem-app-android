@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.account
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -98,8 +99,8 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
         val childStack by childStack.subscribeAsState()
 
         BackHandler(onBack = router::pop)
-        Children(stack = childStack, animation = stackAnimation()) { child ->
-            child.instance.Content(modifier = modifier)
+        Children(stack = childStack, modifier = modifier, animation = stackAnimation()) { child ->
+            child.instance.Content(modifier = Modifier.fillMaxSize())
         }
     }
 

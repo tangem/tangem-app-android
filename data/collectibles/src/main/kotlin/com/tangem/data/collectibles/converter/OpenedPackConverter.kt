@@ -1,5 +1,6 @@
 package com.tangem.data.collectibles.converter
 
+import com.tangem.data.collectibles.CollectiblesConst.CENTS_SCALE
 import com.tangem.domain.collectibles.models.CollectibleRarity
 import com.tangem.domain.collectibles.models.OpenedCollectiblePack
 import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse
@@ -19,7 +20,7 @@ internal object OpenedPackConverter : Converter<OpenedPackConverter.Input, Opene
             year = year,
             set = set,
             serialNumber = serialNumber,
-            insuredValue = insuredValue,
+            insuredValue = insuredValue?.toBigDecimal()?.movePointLeft(CENTS_SCALE),
         )
     }
 

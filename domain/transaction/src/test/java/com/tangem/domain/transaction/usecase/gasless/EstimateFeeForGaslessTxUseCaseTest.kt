@@ -30,6 +30,7 @@ import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.GaslessFeePlan
+import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import io.mockk.clearMocks
@@ -134,6 +135,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
             assertThat(feeExtended.transactionFee.normal).isInstanceOf(Fee.Ethereum.TokenCurrency::class.java)
             assertThat(feeExtended.gaslessFeePlan).isEqualTo(plan)
             assertThat(feeExtended.withdrawGasLimit).isEqualTo(PADDED_WITHDRAW_GAS)
+            assertThat(feeExtended.isGasless).isTrue()
         }
 
     @Test
@@ -165,6 +167,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
         assertThat(feeExtended).isNotNull()
         assertThat(feeExtended!!.feeTokenId).isEqualTo(nativeCoin.id)
         assertThat(feeExtended.gaslessFeePlan).isNull()
+        assertThat(feeExtended.isGasless).isFalse()
     }
 
     @Test
@@ -195,6 +198,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
         assertThat(feeExtended!!.feeTokenId).isEqualTo(usdc.id)
         assertThat(feeExtended.gaslessFeePlan).isNull()
         assertThat(feeExtended.withdrawGasLimit).isNull()
+        assertThat(feeExtended.isGasless).isTrue()
         coVerify(exactly = 0) {
             resolveGaslessFeePlanUseCase(any(), any(), any(), any(), any())
         }

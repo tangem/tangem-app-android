@@ -10,6 +10,8 @@ import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.model.PolymarketDepositAsset
+import com.tangem.domain.polymarket.usecase.GetPredictionDepositCurrencyStatusesUseCase
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.swap.models.isSwapTargetOnly
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
@@ -44,6 +46,7 @@ internal class InitialCurrenciesResolver @Inject constructor(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val rampStateManager: RampStateManager,
     private val accountUnderlyingCurrencies: AccountUnderlyingCurrencies,
+    private val getPredictionDepositCurrencyStatusesUseCase: GetPredictionDepositCurrencyStatusesUseCase,
 ) {
 
     /**
@@ -76,7 +79,7 @@ internal class InitialCurrenciesResolver @Inject constructor(
      *  into a same-wallet transfer; (b) otherwise the regular most-funded wallet token; (c) otherwise `null`
      *  (falls through to "Choose token"). For [AccountFlow.Withdraw]: the account's most-funded token. For
      *  [AccountFlow.PredictionWithdraw]: the prediction account's collateral. For [AccountFlow.PredictionTopUp]:
-     *  none — the prediction account is target-only, so FROM is already auto-filled from the portfolio.
+     *  the most-funded wallet token the account accepts as a deposit as is, otherwise the portfolio auto-fill.
      * @param initialToCryptoCurrency optional currency to pre-select as TO. It is placed into the TO slot
      *  ONLY if it already exists in the user's crypto portfolio (and the TO slot wasn't filled otherwise);
      *  if the currency is not added to the wallet, the TO slot stays empty.
@@ -219,9 +222,11 @@ internal class InitialCurrenciesResolver @Inject constructor(
         )
         is AccountFlow.Withdraw, is AccountFlow.PredictionWithdraw ->
             mostFundedAccountCurrency(accountFlowAccounts) ?: from
-        is AccountFlow.PredictionTopUp,
-        is AccountFlow.CollectiblesTopUp,
-        -> from
+        is AccountFlow.PredictionTopUp -> resolvePredictionTopUpFromPriority(
+            userWalletId = userWalletId,
+            cryptoCurrencyList = cryptoPortfolioAccounts.values.flatten(),
+        ) ?: from
+        is AccountFlow.CollectiblesTopUp -> from
         null -> from
     }
 
@@ -245,6 +250,21 @@ internal class InitialCurrenciesResolver @Inject constructor(
             cryptoPortfolioAccountsMap = cryptoPortfolioAccounts,
             cryptoCurrencyList = cryptoCurrencyList,
         )
+    }
+
+    /** @return the most-funded wallet token the prediction account accepts as a deposit as is, if any holds funds */
+    private suspend fun resolvePredictionTopUpFromPriority(
+        userWalletId: UserWalletId,
+        cryptoCurrencyList: List<SwapCurrencyStatus>,
+    ): SwapCurrencyStatus? {
+        val depositAssets = getPredictionDepositCurrencyStatusesUseCase(userWalletId).mapNotNull { deposit ->
+            PolymarketDepositAsset.CATALOG.firstOrNull { it.isAssetOf(deposit.currency) }
+        }
+
+        return cryptoCurrencyList
+            .filter { walletToken -> depositAssets.any { it.isAssetOf(walletToken.currency) } }
+            .filter { it.hasBalance }
+            .maxWithOrNull(fundsComparator)
     }
 
     /**

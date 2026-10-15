@@ -43,6 +43,7 @@ import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.core.res.R as CoreResR
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
 import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
@@ -98,7 +99,6 @@ internal class YieldSupplyActiveModel @Inject constructor(
         ),
     )
 
-    /** Set the moment a claim is signed and kept until the user leaves the result sheet behind. */
     val claimResultFlow: StateFlow<YieldSupplyClaimResultUM?>
         field = MutableStateFlow<YieldSupplyClaimResultUM?>(null)
 
@@ -203,41 +203,31 @@ internal class YieldSupplyActiveModel @Inject constructor(
     }
 
     fun onApprove() {
-        activateSheet(YieldSupplyActiveRoute.Approve)
+        slotNavigation.activate(YieldSupplyActiveRoute.Approve)
     }
 
     fun onStopEarning() {
-        activateSheet(YieldSupplyActiveRoute.Exit)
+        slotNavigation.activate(YieldSupplyActiveRoute.Exit)
     }
 
-    /** Dismiss that skips the in-transaction guard of [onDismissClick] — the About APY sheet signs nothing. */
-    fun onAboutApyDismiss() {
+    /**
+     * Skips the in-transaction guard of [onDismissClick]: the About APY sheet signs nothing, and the claim sheet
+     * guards its own dismissal.
+     */
+    fun onUnguardedSheetDismiss() {
         slotNavigation.dismiss()
     }
 
-    fun onClaimRewardsClick() {
-        activateSheet(YieldSupplyActiveRoute.Claim)
+    fun onClaimRewardsClick(chainId: Int, userAddress: String) {
+        slotNavigation.activate(YieldSupplyActiveRoute.Claim(chainId = chainId, userAddress = userAddress))
     }
 
-    /** The claim sheet is not driven by [transactionInProgressFlow]; it vetoes its own dismissal while signing. */
-    fun onClaimDismiss() {
-        slotNavigation.dismiss()
-    }
-
-    /** Replaces the claim sheet with its result; the transaction is followed by the tracker from here on. */
     fun onClaimSubmitted(result: YieldSupplyClaimResultUM) {
+        slotNavigation.dismiss()
         claimResultFlow.update { result }
-        slotNavigation.activate(YieldSupplyActiveRoute.ClaimResult)
-    }
-
-    /** A sheet over the claim result replaces it, so the result is no longer the one a revert may close. */
-    private fun activateSheet(route: YieldSupplyActiveRoute) {
-        claimResultFlow.update { null }
-        slotNavigation.activate(route)
     }
 
     fun onClaimResultDismiss() {
-        slotNavigation.dismiss()
         claimResultFlow.update { null }
     }
 
@@ -246,13 +236,11 @@ internal class YieldSupplyActiveModel @Inject constructor(
         appRouter.pop()
     }
 
-    /**
-     * A claim is signed on one screen and settles on another, so the outcome arrives here rather than in the sheet
-     * that sent it. A reverted claim has no screen of its own: the result sheet goes away and the failure is
-     * reported the same way a rejected submission is.
-     */
     private fun subscribeOnClaimOutcome() {
         yieldSupplyClaimTracker.outcomes
+            // A claim signed on the way out was never put to the user as a transaction of its own, so its failure
+            // would point at the withdrawal they did make
+            .filter { it.origin == YieldSupplyClaimOrigin.ClaimSheet }
             .filter { it.userWalletId == userWalletId && it.cryptoCurrencyId == cryptoCurrency.id }
             .onEach { claimOutcome ->
                 when (claimOutcome.outcome) {
@@ -263,11 +251,15 @@ internal class YieldSupplyActiveModel @Inject constructor(
                             ),
                         )
                     }
-                    // Only the result sheet is closed, and only while it is the one on screen: the outcome can
-                    // arrive minutes later, with the user in the middle of another sheet entirely. The failure
-                    // itself is reported process-wide, so it reaches the user whichever screen they are on.
-                    YieldSupplyTransactionOutcome.Reverted -> {
-                        if (claimResultFlow.value != null) onClaimResultDismiss()
+                    // Shown even when the result was already closed: the user would not learn about it otherwise
+                    YieldSupplyTransactionOutcome.Reverted -> claimResultFlow.update { result ->
+                        result?.copy(status = YieldSupplyClaimResultUM.Status.Failed)
+                            ?: YieldSupplyClaimResultUM(
+                                status = YieldSupplyClaimResultUM.Status.Failed,
+                                total = TextReference.EMPTY,
+                                serviceFee = null,
+                                networkFee = null,
+                            )
                     }
                 }
             }
@@ -276,7 +268,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     private fun onApyInfoClick() {
         val breakdown = uiState.value.apyBreakdown ?: return
-        activateSheet(
+        slotNavigation.activate(
             YieldSupplyActiveRoute.AboutApy(baseApy = breakdown.baseApy, rewardsApr = breakdown.rewardsApr),
         )
     }

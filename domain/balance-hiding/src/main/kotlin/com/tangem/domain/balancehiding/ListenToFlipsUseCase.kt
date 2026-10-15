@@ -18,8 +18,8 @@ class ListenToFlipsUseCase(
         flipDetector.getDeviceFlipFlow().collectLatest {
             val balanceHidingSettings = catch(
                 block = { balanceHidingRepository.getBalanceHidingSettings() },
-                catch = {
-                    send(HideBalancesError.DataError(it).left())
+                catch = { throwable ->
+                    send(HideBalancesError.DataError(throwable).left())
                     return@collectLatest
                 },
             )

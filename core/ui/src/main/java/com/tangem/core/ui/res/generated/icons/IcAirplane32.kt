@@ -1,0 +1,47 @@
+@file:Suppress("all")
+
+package com.tangem.core.ui.res.generated.icons
+
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+/**
+ * Auto-generated from design tokens. Do not edit manually.
+ */
+
+private var _ic_airplane_32: ImageVector? = null
+
+val Icons.ic_airplane_32: ImageVector
+    get() {
+        if (_ic_airplane_32 != null) return _ic_airplane_32!!
+        _ic_airplane_32 = ImageVector.Builder(
+            name = "ic_airplane_32",
+            defaultWidth = 32.dp,
+            defaultHeight = 32.dp,
+            viewportWidth = 32f,
+            viewportHeight = 32f,
+        ).apply {
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M21.9766 4.21312C23.6123 2.59588 26.1298 2.59602 27.7657 4.21312C29.4109 5.8398 29.4109 8.35793 27.7657 9.98461L24.0059 13.7004L26.2012 24.4309C26.4409 25.3211 26.1785 26.4179 25.3262 27.0793L24.4805 27.9172C23.7456 28.6438 22.7566 28.8256 21.9356 28.6633C21.1488 28.5077 20.2854 27.98 19.9268 27.008L17.3409 20.4211L14.9951 22.7414L15.1934 24.8938C15.1976 24.9394 15.2002 24.9856 15.2002 25.0315C15.2002 25.7238 14.9711 26.5341 14.3604 27.1379L12.9151 28.5666C12.5886 28.8894 12.1314 29.0448 11.6758 28.9885C11.2204 28.9322 10.8153 28.6709 10.5772 28.2786L8.01077 24.05L3.73441 21.5139C3.36407 21.2942 3.10649 20.9253 3.0264 20.5022C2.94634 20.0791 3.05204 19.6418 3.31644 19.302L4.63089 17.6125L4.7598 17.467C5.36828 16.8656 6.17823 16.6439 6.86527 16.6438C6.91009 16.6438 6.95538 16.6466 7.00003 16.6506L9.19632 16.8479L11.5078 14.5618L4.75784 12.011C4.71229 11.9937 4.66772 11.974 4.62405 11.9524C3.06064 11.1795 2.33614 8.949 3.83987 7.46215L4.7598 6.55199L4.90335 6.42211C5.2447 6.1373 5.62902 5.98035 5.91995 5.89183C6.27409 5.7841 6.65107 5.72876 6.9971 5.72875C7.09578 5.72875 7.19428 5.73871 7.29105 5.75805L18.2061 7.93969L21.9766 4.21312ZM25.6563 6.34691C25.1892 5.88521 24.553 5.88516 24.086 6.34691L19.7491 10.635C19.3947 10.9853 18.8891 11.1369 18.4004 11.0393L6.89652 8.73754C6.85834 8.74359 6.82262 8.75294 6.793 8.76195H6.79105L6.19827 9.34789L14.7559 12.5832C15.2337 12.7639 15.5873 13.1754 15.6934 13.675C15.7993 14.1746 15.6434 14.6939 15.2803 15.053L10.8116 19.4709C10.4975 19.7813 10.0628 19.9372 9.62308 19.8977L6.84769 19.6477L6.72855 19.801L9.86527 21.6623L10.0176 21.7659C10.1627 21.8781 10.2871 22.0163 10.3828 22.1741L12.1563 25.0969L12.1953 25.0578L11.9434 22.3098C11.9023 21.863 12.0638 21.4212 12.3828 21.1057L16.8506 16.6877C17.2093 16.3331 17.7224 16.183 18.2159 16.2873C18.7093 16.3918 19.1175 16.7368 19.3018 17.2063L22.585 25.5715L23.2403 24.9241L20.9043 13.5071C20.8028 13.0106 20.9591 12.4962 21.3194 12.1399L25.6563 7.8518C26.1139 7.39939 26.1139 6.79932 25.6563 6.34691Z"),
+            )
+        }.build()
+        return _ic_airplane_32!!
+    }
+
+@Composable
+@Preview(showBackground = true)
+private fun IcAirplane32Preview() {
+    Icon(
+        imageVector = Icons.ic_airplane_32,
+        contentDescription = null,
+    )
+}
