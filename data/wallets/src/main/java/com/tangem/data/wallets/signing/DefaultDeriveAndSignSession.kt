@@ -24,6 +24,7 @@ import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.hot.sdk.model.DataToSign
 import com.tangem.hot.sdk.model.DeriveWalletRequest
 import com.tangem.hot.sdk.model.HotWalletId
+import com.tangem.hot.sdk.model.UnlockHotWallet
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.sdk.api.TangemSdkManager
@@ -120,16 +121,21 @@ internal class DefaultDeriveAndSignSession(
             },
         )
 
-        val sessionResult = tangemSdkManager.runTaskAsync(
-            runnable = task,
-            preflightReadFilter = if (cardId == null) {
-                UserWalletIdPreflightReadFilter(expectedUserWallet = userWallet)
-            } else {
-                null
-            },
-            cardId = cardId,
-            registerColdWallet = false,
-        )
+        val sessionResult = runSuspendCatching {
+            tangemSdkManager.runTaskAsync(
+                runnable = task,
+                preflightReadFilter = if (cardId == null) {
+                    UserWalletIdPreflightReadFilter(expectedUserWallet = userWallet)
+                } else {
+                    null
+                },
+                cardId = cardId,
+                registerColdWallet = false,
+            )
+        }.getOrElse { error ->
+            TangemLogger.e("Derive and sign session: starting the card session threw", error)
+            CompletionResult.Failure(error.asTangemSdkError())
+        }
 
         when (sessionResult) {
             is CompletionResult.Success -> outcome.await()
@@ -217,17 +223,25 @@ internal class DefaultDeriveAndSignSession(
 
     private inner class RunScopedUnlock(val hotWalletId: HotWalletId) {
 
-        private val isEstablishedByThisRun = AtomicBoolean(false)
+        private val isRequestedByThisRun = AtomicBoolean(false)
+        private val establishedByThisRun = AtomicReference<UnlockHotWallet?>(null)
 
         suspend fun ensureUnlocked() {
             if (hotWalletAccessor.getContextualUnlock(hotWalletId) != null) return
 
-            hotWalletAccessor.unlockContextual(hotWalletId)
-            isEstablishedByThisRun.set(true)
+            isRequestedByThisRun.set(true)
+            establishedByThisRun.set(hotWalletAccessor.unlockContextual(hotWalletId))
         }
 
         fun clearIfEstablished() {
-            if (isEstablishedByThisRun.get()) hotWalletAccessor.clearContextualUnlock(hotWalletId)
+            if (!isRequestedByThisRun.get()) return
+
+            val current = hotWalletAccessor.getContextualUnlock(hotWalletId) ?: return
+            val established = establishedByThisRun.get()
+            val isRequestUnfinished = established == null
+            if (isRequestUnfinished || current === established) {
+                hotWalletAccessor.clearContextualUnlock(hotWalletId)
+            }
         }
     }
 
