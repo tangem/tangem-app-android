@@ -38,6 +38,8 @@ object TestConstants {
     const val WAIT_UNTIL_TIMEOUT = 20_000L
     const val WAIT_UNTIL_TIMEOUT_LONG = 30_000L
     const val WAIT_UNTIL_TIMEOUT_VERY_LONG = 60_000L
+    // Tangem Pay polls an in-flight card issue order once a minute, and pull-to-refresh does not cut the wait short.
+    const val WAIT_UNTIL_TIMEOUT_TANGEM_PAY_ORDER_POLL = 90_000L
 
     // Hot-wallet creation derives keys for every supported network while the first balance scan is already
     // in flight; on a cold emulator that regularly runs past a minute, so it gets its own ceiling.
