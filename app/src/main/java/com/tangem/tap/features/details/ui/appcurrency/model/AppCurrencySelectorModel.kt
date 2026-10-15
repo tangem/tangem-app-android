@@ -1,10 +1,10 @@
 package com.tangem.tap.features.details.ui.appcurrency.model
 
 import androidx.compose.runtime.Stable
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.appcurrency.GetAvailableCurrenciesUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.SelectAppCurrencyUseCase
@@ -25,7 +25,7 @@ internal class AppCurrencySelectorModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getAvailableCurrenciesUseCase: GetAvailableCurrenciesUseCase,
     private val selectAppCurrencyUseCase: SelectAppCurrencyUseCase,
-    private val router: AppRouter,
+    private val router: Router,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), AppCurrencySelectorIntents {
 
