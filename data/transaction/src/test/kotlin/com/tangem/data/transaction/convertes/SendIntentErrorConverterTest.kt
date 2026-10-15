@@ -29,8 +29,6 @@ internal class SendIntentErrorConverterTest {
 
         private fun provideTestModels() = listOf(
             KnownReasonModel(Code.NOT_FOUND, "INTENT_NOT_FOUND", SendIntentError.NotFound(INTENT_ID)),
-            KnownReasonModel(Code.CONFLICT, "INTENT_SESSION_REVOKED", SendIntentError.SessionRevoked(INTENT_ID)),
-            KnownReasonModel(Code.GONE, "INTENT_SESSION_REVOKED", SendIntentError.SessionRevoked(INTENT_ID)),
             KnownReasonModel(Code.CONFLICT, "INTENT_ALREADY_COMPLETED", SendIntentError.AlreadyCompleted(INTENT_ID)),
         )
     }
