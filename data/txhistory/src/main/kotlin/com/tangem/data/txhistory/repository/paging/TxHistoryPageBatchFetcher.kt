@@ -31,9 +31,9 @@ internal class TxHistoryPageBatchFetcher<TRequestParams : Any, TData : Paginatio
 
         val res = runCatching {
             subFetcher.fetch(request = req, lastResult = null)
-        }.getOrElse {
+        }.getOrElse { throwable ->
             currentCoroutineContext().ensureActive()
-            BatchFetchResult.Error(it)
+            BatchFetchResult.Error(throwable)
         }
 
         lastRequest.value = req
@@ -62,9 +62,9 @@ internal class TxHistoryPageBatchFetcher<TRequestParams : Any, TData : Paginatio
 
         val res = runCatching {
             subFetcher.fetch(request = req, lastResult = lastResult)
-        }.getOrElse {
+        }.getOrElse { throwable ->
             currentCoroutineContext().ensureActive()
-            BatchFetchResult.Error(it)
+            BatchFetchResult.Error(throwable)
         }
 
         lastRequest.value = req

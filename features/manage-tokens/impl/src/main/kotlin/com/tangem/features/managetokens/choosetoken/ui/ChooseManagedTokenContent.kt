@@ -101,7 +101,7 @@ private fun Currencies(
         modifier = modifier.padding(horizontal = 16.dp),
         state = listState,
         contentPadding = PaddingValues(
-            bottom = TangemTheme.dimens.spacing76 + bottomBarHeight,
+            bottom = 76.dp + bottomBarHeight,
         ),
     ) {
         if (notificationUM?.config != null) {
@@ -121,7 +121,7 @@ private fun Currencies(
             item(key = "loading_item") {
                 ProgressIndicator(
                     modifier = Modifier
-                        .padding(vertical = TangemTheme.dimens.spacing16)
+                        .padding(vertical = 16.dp)
                         .fillMaxWidth(),
                 )
             }
@@ -204,11 +204,11 @@ private fun ChooseManagedTokenContent_Preview() {
                     isInitialBatchLoading = false,
                     isNextBatchLoading = false,
                     items = buildList {
-                        repeat(10) {
+                        repeat(10) { index ->
                             add(
                                 CurrencyItemUM.Basic(
                                     id = ManagedCryptoCurrency.ID(
-                                        value = "ID+$it",
+                                        value = "ID+$index",
                                     ),
                                     name = "Bitcoin",
                                     symbol = "BTC",

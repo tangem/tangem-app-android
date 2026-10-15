@@ -124,11 +124,11 @@ internal class NFTReceiveModel @Inject constructor(
             filterNFTAvailableNetworksUseCase(networks, query)
         }
             .onEach { filteredNetworks ->
-                _state.update {
+                _state.update { state ->
                     UpdateDataStateTransformer(
                         networks = filteredNetworks,
                         onNetworkClick = ::onNetworkClick,
-                    ).transform(it)
+                    ).transform(state)
                 }
             }
             .flowOn(dispatchers.default)

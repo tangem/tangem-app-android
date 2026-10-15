@@ -1,9 +1,11 @@
 package com.tangem.data.polymarket.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteFeesResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteRequest
 import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteResponse
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
@@ -60,6 +62,9 @@ internal class PredictionOrderQuoteConverterTest {
                 minOrderAmount = BigDecimal("1"),
                 tickSize = BigDecimal("0.001"),
                 isLive = true,
+                version = PolymarketMarketVersion.V1,
+                exchange = PolymarketContracts.CTF_EXCHANGE,
+                signingDomainVersion = "2",
             ),
         )
     }
@@ -212,5 +217,8 @@ internal class PredictionOrderQuoteConverterTest {
         minOrderAmount = minOrderAmount,
         tickSize = tickSize,
         isLive = isLive,
+        version = "v1",
+        exchange = PolymarketContracts.CTF_EXCHANGE,
+        signingDomainVersion = "2",
     )
 }

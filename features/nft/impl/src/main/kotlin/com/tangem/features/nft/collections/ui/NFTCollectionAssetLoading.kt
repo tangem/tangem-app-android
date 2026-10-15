@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -23,14 +24,14 @@ internal fun NFTCollectionAssetLoading(modifier: Modifier = Modifier) {
         SpacerH12()
         TextShimmer(
             modifier = Modifier
-                .width(TangemTheme.dimens.size86),
+                .width(86.dp),
             style = TangemTheme.typography.subtitle2,
             textSizeHeight = true,
         )
         SpacerH2()
         TextShimmer(
             modifier = Modifier
-                .width(TangemTheme.dimens.size48),
+                .width(48.dp),
             style = TangemTheme.typography.caption2,
             textSizeHeight = true,
         )

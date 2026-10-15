@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.tangem.core.ui.R
@@ -179,13 +180,13 @@ private fun TangemDialog(
                     shape = TangemTheme.shapes.roundedCornersLarge,
                     color = TangemTheme.colors.background.primary,
                 )
-                .padding(vertical = TangemTheme.dimens.spacing24)
+                .padding(vertical = 24.dp)
                 .testTag(BaseDialogTestTags.CONTAINER),
         ) {
             if (title != null) {
                 Text(
                     modifier = Modifier
-                        .padding(horizontal = TangemTheme.dimens.spacing24)
+                        .padding(horizontal = 24.dp)
                         .fillMaxWidth()
                         .testTag(BaseDialogTestTags.TITLE),
                     text = title,
@@ -203,7 +204,7 @@ private fun TangemDialog(
             SpacerH24()
             DialogButtons(
                 modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing24)
+                    .padding(horizontal = 24.dp)
                     .fillMaxWidth(),
                 confirmButton = confirmButton,
                 dismissButton = dismissButton,
@@ -223,7 +224,7 @@ private fun DialogContent(type: DialogType, modifier: Modifier = Modifier) {
             is DialogType.Message -> {
                 Text(
                     modifier = Modifier
-                        .padding(horizontal = TangemTheme.dimens.spacing24)
+                        .padding(horizontal = 24.dp)
                         .fillMaxWidth()
                         .testTag(BaseDialogTestTags.TEXT),
                     text = type.message,
@@ -244,7 +245,7 @@ private fun DialogContent(type: DialogType, modifier: Modifier = Modifier) {
             is DialogType.TextInput -> {
                 OutlineTextField(
                     modifier = Modifier
-                        .padding(horizontal = TangemTheme.dimens.spacing24)
+                        .padding(horizontal = 24.dp)
                         .fillMaxWidth()
                         .testTag(BaseDialogTestTags.TEXT_INPUT_FIELD),
                     value = type.value,
@@ -280,7 +281,7 @@ private fun DialogButtons(
     FlowRow(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(
-            space = TangemTheme.dimens.spacing4,
+            space = 4.dp,
             alignment = Alignment.End,
         ),
     ) {
@@ -350,15 +351,15 @@ private fun SelectorDialogContent(
                         onClick = onClick,
                     )
                     .padding(
-                        vertical = TangemTheme.dimens.spacing16,
-                        horizontal = TangemTheme.dimens.spacing18,
+                        vertical = 16.dp,
+                        horizontal = 18.dp,
                     )
                     .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 RadioButton(
-                    modifier = Modifier.size(TangemTheme.dimens.size24),
+                    modifier = Modifier.size(24.dp),
                     selected = index == selectedItemIndex,
                     onClick = onClick,
                     colors = RadioButtonDefaults.colors(

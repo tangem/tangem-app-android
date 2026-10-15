@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.markets.MarketsListItem
 import com.tangem.common.ui.markets.MarketsListItemPlaceholder
 import com.tangem.core.ui.components.UnableToLoadData
@@ -38,7 +39,7 @@ internal fun LazyListScope.swapMarketsListItems(state: SwapMarketState) {
             },
             style = TangemTheme.typography2.headingSemibold20,
             color = TangemTheme.colors2.text.neutral.primary,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = TangemTheme.dimens.spacing16),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         )
     }
     state.categories?.let { categories ->
@@ -92,11 +93,11 @@ private fun MarketCategoriesRow(categories: SwapMarketCategoriesUM, modifier: Mo
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                top = TangemTheme.dimens.spacing16,
-                bottom = TangemTheme.dimens.spacing8,
+                top = 16.dp,
+                bottom = 8.dp,
             ),
-        contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(
             items = categories.items,
@@ -116,8 +117,8 @@ private fun LoadingErrorItem(onTryAgain: () -> Unit, modifier: Modifier = Modifi
     Box(
         modifier
             .padding(
-                horizontal = TangemTheme.dimens.spacing16,
-                vertical = TangemTheme.dimens.spacing12,
+                horizontal = 16.dp,
+                vertical = 12.dp,
             ),
         contentAlignment = Alignment.Center,
     ) {
@@ -128,7 +129,7 @@ private fun LoadingErrorItem(onTryAgain: () -> Unit, modifier: Modifier = Modifi
 @Composable
 private fun SearchNothingFoundText(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.padding(TangemTheme.dimens.spacing16),
+        modifier = modifier.padding(16.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
