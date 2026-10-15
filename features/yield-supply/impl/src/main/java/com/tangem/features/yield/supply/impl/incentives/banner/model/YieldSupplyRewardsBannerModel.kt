@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.models.normalizeEvmAddress
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository.Companion.INCENTIVES_CACHE_SECONDS
 import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
@@ -14,7 +15,6 @@ import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
 import com.tangem.domain.yield.supply.usecase.GetYieldRewardsSummaryUseCase
-import com.tangem.domain.yield.supply.usecase.RefreshYieldIncentivesUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMarketFlowUseCase
 import com.tangem.features.yield.supply.impl.common.formatter.formatAmount
@@ -54,7 +54,6 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val yieldSupplyMarketFlowUseCase: YieldSupplyMarketFlowUseCase,
     private val getYieldRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase,
-    private val refreshYieldIncentivesUseCase: RefreshYieldIncentivesUseCase,
     private val yieldSupplyClaimTracker: YieldSupplyClaimTracker,
 ) : Model() {
 
@@ -68,10 +67,9 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
     private var isClaimInFlight: Boolean = false
     private var context: BannerContext? = null
 
-    /** What the rewards themselves say, before the claim state is laid over them. */
     private var rewards: YieldSupplyRewardsBannerUM? = null
 
-    /** The market collector and the claim outcome both publish; interleaving them would show a half-read banner. */
+    /** Serializes the market collector and the post-claim refresh. */
     private val publishMutex = Mutex()
 
     init {
@@ -81,8 +79,7 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
                 .first()
             userAddress = address
 
-            // The claim belongs to the module, so the chain the market names is what the in-flight state is read
-            // for: a claim started from another token of the same module disables this banner's button too.
+            // In-flight is per module: a claim from another token of it disables this button too
             yieldSupplyMarketFlowUseCase(params.cryptoCurrency)
                 .flatMapLatest { currentMarket ->
                     val chainId = currentMarket?.chainId ?: return@flatMapLatest flowOf(currentMarket to false)
@@ -101,11 +98,12 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
         subscribeOnClaimOutcome()
     }
 
-    /**
-     * Merkl needs a few minutes to process a settled claim, so the first read after confirmation may still carry
-     * the rewards the user has just claimed. One further read is scheduled past the cache window for that case —
-     * a poll would hammer an endpoint whose own window is the same length.
-     */
+    fun onClaimClick() {
+        val bannerContext = context ?: return
+        params.onClaimClick(bannerContext.chainId, bannerContext.userAddress)
+    }
+
+    /** Merkl may still return the claimed rewards right after confirmation, so an unchanged read is repeated once. */
     private fun subscribeOnClaimOutcome() {
         yieldSupplyClaimTracker.outcomes
             .filter { claimOutcome ->
@@ -113,34 +111,23 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
 
                 bannerContext != null &&
                     claimOutcome.chainId == bannerContext.chainId &&
-                    claimOutcome.userAddress.equals(bannerContext.userAddress, ignoreCase = true) &&
+                    claimOutcome.userAddress.normalizeEvmAddress() == bannerContext.userAddress.normalizeEvmAddress() &&
                     claimOutcome.outcome == YieldSupplyTransactionOutcome.Confirmed
             }
             .onEach { _ ->
-                // Compared without the claim-state overlay on purpose: the tracker clears the in-flight flag just
-                // before it reports the outcome, so the CTA flips at the same moment and would read as a change.
+                // Without the in-flight overlay: the tracker clears it right before the outcome, which is no change
                 val before = rewards
                 val refreshed = publishBanner(keepOnFailure = true)
-                // Only a read that answers and differs shows Merkl has processed the claim; a failed one is retried
-                // past the cache window just like an unchanged one.
                 if (refreshed.fold(ifLeft = { false }, ifRight = { banner -> banner != before })) return@onEach
 
+                // By then the cached read has expired, so this one reaches the network
                 delay(INCENTIVES_CACHE_SECONDS.seconds)
-                context?.let { bannerContext ->
-                    refreshYieldIncentivesUseCase(
-                        chainId = bannerContext.chainId,
-                        userAddress = bannerContext.userAddress,
-                    )
-                }
                 publishBanner()
             }
             .launchIn(modelScope)
     }
 
-    /**
-     * @param keepOnFailure leaves the banner as it is when the rewards cannot be read: right after a claim settles, a
-     * failed read says nothing about the rewards, and clearing the banner would leave no later event to restore it
-     */
+    /** @param keepOnFailure a failed read after a claim says nothing about the rewards, so the banner stays */
     private suspend fun publishBanner(
         keepOnFailure: Boolean = false,
     ): Either<YieldIncentivesError, YieldSupplyRewardsBannerUM?> = publishMutex.withLock {
@@ -174,7 +161,6 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
             TangemLogger.e("Yield rewards banner hidden, the incentives request failed")
     }
 
-    /** A claim the chain has not answered for yet: the rewards are still shown, but they cannot be claimed twice. */
     private fun YieldSupplyRewardsBannerUM.withClaimInFlight(isClaimInFlight: Boolean) = when {
         !isClaimInFlight -> this
         claim == YieldSupplyRewardsBannerUM.Claim.Hidden -> this

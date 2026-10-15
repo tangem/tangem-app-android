@@ -1,7 +1,6 @@
 package com.tangem.sdk.api
 
 import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import arrow.core.Either
 import com.tangem.Message
 import com.tangem.common.CompletionResult
@@ -19,7 +18,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
-import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.visa.model.TangemPayInitialData
 import com.tangem.domain.visa.model.MoneyAccountActivationData
 import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.domain.visa.model.VisaDataForApprove
@@ -146,9 +145,6 @@ interface TangemSdkManager {
     @Suppress("MagicNumber")
     fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?)
 
-    @Deprecated("com.tangem.sdk.api.TangemSdkManager shouldn't returns a string from resources")
-    fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String
-
     fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy)
 
     // region Twin-specific
@@ -157,19 +153,14 @@ interface TangemSdkManager {
         secondCardPublicKey: ByteArray,
         issuerKeyPair: KeyPair,
         cardId: String,
-        initialMessage: Message,
     ): CompletionResult<ScanResponse>
 
-    suspend fun createFirstTwinWallet(cardId: String, initialMessage: Message): CompletionResult<CreateWalletResponse>
+    suspend fun createFirstTwinWallet(cardId: String): CompletionResult<CreateWalletResponse>
 
-    @Suppress("LongParameterList")
     suspend fun createSecondTwinWallet(
         firstPublicKey: String,
         firstCardId: String,
         issuerKeys: KeyPair,
-        preparingMessage: Message,
-        creatingWalletMessage: Message,
-        initialMessage: Message,
     ): CompletionResult<CreateWalletResponse>
 
     fun changeProductType(isRing: Boolean)
@@ -189,9 +180,9 @@ interface TangemSdkManager {
         visaDataForApprove: VisaDataForApprove,
     ): CompletionResult<VisaSignedDataByCustomerWallet>
 
-    suspend fun tangemPayProduceInitialCredentials(
+    suspend fun tangemPayProduceInitialData(
         preflightReadFilter: PreflightReadFilter,
-    ): Either<Throwable, TangemPayInitialCredentials>
+    ): Either<Throwable, TangemPayInitialData>
 
     suspend fun tangemPayProduceMoneyAccountData(
         preflightReadFilter: PreflightReadFilter,

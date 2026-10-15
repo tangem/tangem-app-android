@@ -9,19 +9,8 @@
     <ID>BooleanPropertyNaming:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$val haveSomeUnknownSdkSessions = unknownSdkSessions.isNotEmpty()</ID>
     <ID>CastNullableToNonNullableType:WcEthSendTransactionUseCase.kt$WcEthSendTransactionUseCase$as</ID>
     <ID>CastNullableToNonNullableType:WcEthSignTransactionUseCase.kt$WcEthSignTransactionUseCase$as</ID>
-    <ID>MultilineLambdaItParameter:DefaultWcPairUseCase.kt$DefaultWcPairUseCase${ analytics.send( WcAnalyticEvents.PairFailed( errorCode = it.code, errorMessage = it.message, ), ) emit(WcPairState.Error(it)) }</ID>
-    <ID>MultilineLambdaItParameter:DefaultWcPairUseCase.kt$DefaultWcPairUseCase${ when (it) { is WcPairError -&gt; it.left() else -&gt; WcPairError.Unknown(it.localizedMessage.orEmpty()).left() } }</ID>
-    <ID>MultilineLambdaItParameter:WcEthMessageSignUseCase.kt$LegacySdkHelper${ if (!it.isAscii()) return null Integer.toHexString(it.code) }</ID>
-    <ID>MultilineLambdaItParameter:WcEthMessageSignUseCase.kt$LegacySdkHelper${ val char = it.toInt().toChar() if (char.isAscii()) char else return null }</ID>
-    <ID>MultilineLambdaItParameter:WcEthNetwork.kt$WcEthNetwork${ if (this == WcEthMethodName.AddEthereumChain) { WcEthMethod.AddEthereumChain(rawChain = it).right() } else { WcEthMethod.SwitchEthereumChain(rawChain = it).right() } }</ID>
-    <ID>MultilineLambdaItParameter:WcEthNetwork.kt$WcEthNetwork${ if (this == WcEthMethodName.SignTransaction) { WcEthMethod.SignTransaction(transaction = it).right() } else { WcEthMethod.SendTransaction(transaction = it).right() } }</ID>
-    <ID>MultilineLambdaItParameter:WcPairSdkDelegate.kt$WcPairSdkDelegate${ proposalCallback.cancel() return@coroutineScope it.left() }</ID>
-    <ID>MultilineLambdaItParameter:WcPairSdkDelegate.kt$WcPairSdkDelegate${ store.removePendingApproval(forSave) it.left() }</ID>
-    <ID>MultilineLambdaItParameter:WcSdkSessionConverter.kt$WcSdkSessionConverter${ WcAppMetaDataConverter.convert( value = WcAppMetaDataConverter.Input( originUrl = value.originUrl, peerMetaData = it, ), ) }</ID>
-    <ID>MultilineLambdaItParameter:WcSdkSessionRequestConverter.kt$WcSdkSessionRequestConverter${ WcAppMetaDataConverter.convert( value = WcAppMetaDataConverter.Input( originUrl = value.originUrl, peerMetaData = it, ), ) }</ID>
     <ID>NoNameShadowing:CaipNamespaceDelegate.kt$CaipNamespaceDelegate$optionalNamespaces</ID>
     <ID>NoNameShadowing:CaipNamespaceDelegate.kt$CaipNamespaceDelegate$requiredNamespaces</ID>
-    <ID>NoNameShadowing:DefaultWcRespondService.kt$DefaultWcRespondService$response</ID>
     <ID>NoNameShadowing:WcSolanaNetwork.kt$WcSolanaNetwork$request</ID>
     <ID>NullCheckOnMutableProperty:WcEthSendTransactionUseCase.kt$WcEthSendTransactionUseCase$if (dAppFee != null) return dAppFee</ID>
     <ID>NullCheckOnMutableProperty:WcEthSignTransactionUseCase.kt$WcEthSignTransactionUseCase$if (dAppFee != null) return dAppFee</ID>
@@ -34,7 +23,6 @@
     <ID>UseEmptyCounterpart:WcNetworksConverter.kt$WcNetworksConverter$listOf()</ID>
     <ID>UseEmptyCounterpart:WcSdkSessionConverter.kt$WcSdkSessionConverter$listOf()</ID>
     <ID>UseOrEmpty:AssociateNetworksDelegate.kt$AssociateNetworksDelegate.Companion$proposal.chains ?: listOf()</ID>
-    <ID>UseOrEmpty:DefaultWcRespondService.kt$DefaultWcRespondService$response.result ?: ""</ID>
     <ID>UseOrEmpty:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$storeSession.url ?: sdkSession.metaData?.url ?: ""</ID>
     <ID>UseOrEmpty:WcNetworksConverter.kt$WcNetworksConverter$getAccountStatus(accountId) ?.flattenCurrencies() ?.map { it.currency } ?.filterIsInstance&lt;CryptoCurrency.Coin&gt;() ?.map(CryptoCurrency.Coin::network) ?: emptyList()</ID>
     <ID>UseOrEmpty:WcSdkSessionConverter.kt$WcSdkSessionConverter$session.chains ?: listOf()</ID>

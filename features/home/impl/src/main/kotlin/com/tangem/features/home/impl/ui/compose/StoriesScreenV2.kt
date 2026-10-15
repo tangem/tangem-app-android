@@ -17,7 +17,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.core.ui.res.TangemTheme
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.StoriesScreenTestTags
 import com.tangem.features.home.impl.ui.compose.content.*
@@ -144,10 +144,10 @@ private fun StoriesScreenContentV2(config: StoriesScreenContentV2Config, modifie
                 contentScale = ContentScale.FillHeight,
                 modifier = Modifier
                     .padding(
-                        start = TangemTheme.dimens.spacing16,
-                        top = TangemTheme.dimens.spacing16,
+                        start = 16.dp,
+                        top = 16.dp,
                     )
-                    .height(TangemTheme.dimens.size18)
+                    .height(18.dp)
                     .align(Alignment.Start),
             )
             when (config.currentStory) {
@@ -168,11 +168,11 @@ private fun StoriesScreenContentV2(config: StoriesScreenContentV2Config, modifie
         Column(
             modifier = Modifier
                 .navigationBarsPadding()
-                .padding(bottom = TangemTheme.dimens.spacing16)
-                .padding(horizontal = TangemTheme.dimens.spacing16)
+                .padding(bottom = 16.dp)
+                .padding(horizontal = 16.dp)
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             HomeButtonsV2(
                 modifier = Modifier.fillMaxWidth(),

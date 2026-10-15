@@ -43,14 +43,23 @@ interface TickerSocket {
 }
 ```
 
-**3. Provide it** — the generated factory builds it from a `SocketSpec`:
+**3. Provide it** — in an `internal object` Hilt module of the same `*:datasource` module. The generated
+factory builds it from a `SocketSpec`; mocked builds get the generated fake, because WireMock does not speak
+WebSocket and the real one would connect to production:
 
 ```kotlin
 @Provides
 @Singleton
-fun provideTickerSocket(factory: SocketChannelFactory): TickerSocket =
-    factory.createTickerSocket(SocketSpec(url = "wss://example.com/ws"))
+fun provideTickerSocket(factory: SocketChannelFactory): TickerSocket {
+    if (BuildConfig.MOCK_DATA_SOURCE) return FakeTickerSocket()
+
+    return factory.createTickerSocket(SocketSpec(url = "wss://example.com/ws"))
+}
 ```
+
+The repository takes the interface and is bound with `@Binds` in its `data` module. Its use case is provided
+from `app/di/domain`; if the stream's module there is large, add a small module of its own — one more
+`@Provides` can push it over detekt's `LargeClass`, and CI runs detekt over `:app`.
 
 **4. Collect it** in the repository:
 
@@ -103,6 +112,20 @@ closes `idleTimeout` (5 s) after the last collector leaves.
 - **Fakes:** `FakeXxx` exposes a `MutableSharedFlow` per `@Receive` function, a `xxxSent` list per
   `@Send` function and `sendResult`. The processor rejects names that would clash with those properties or
   their JVM accessors, e.g. `@Receive fun isConnected()`.
+
+## Repository pitfalls reviewers flag
+
+- **Nothing to match → don't collect.** Collecting opens the connection, so when the key set is empty (or no
+  key can ever match) return `emptyFlow()` instead of filtering a live stream down to nothing.
+- **Match ids by value.** A socket may send a numeric id that REST returns as a string, leading zeros
+  included (`"090108924"` vs `90108924`). Parse once, look up by the parsed value, emit the caller's original id.
+- **Dedupe inside the cold flow.** Broadcast servers rebroadcast unchanged state; keep the last value per key in
+  a local map inside `flow { }`, so every collection starts clean. Don't reset it from `state()`: a conflated
+  `StateFlow` is not a reconnect event, and reconnecting is the core's job.
+- **Don't tie the socket to a screen through the spec.** No `idleTimeout = 0` and no resumed-only gating: the
+  collector's scope is the lifetime, and the 5 s tail is deliberate.
+- **Text pings** (`"ping"` as a text frame) need `KeepAlive.ServerSends(text, reply)`; protocol ping frames
+  need nothing — check which one the server sends before adding it.
 
 ## SocketSpec
 

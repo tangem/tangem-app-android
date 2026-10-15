@@ -32,7 +32,7 @@ fun TangemBalanceHeader(
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         AnimatedContent(
             targetState = state,
@@ -73,7 +73,7 @@ fun TangemBalanceHeader(
             }
         }
         Text(
-            modifier = Modifier.padding(vertical = TangemTheme.dimens2.x1),
+            modifier = Modifier.padding(vertical = 4.dp),
             text = label.resolveReference(),
             color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography3.caption.medium,

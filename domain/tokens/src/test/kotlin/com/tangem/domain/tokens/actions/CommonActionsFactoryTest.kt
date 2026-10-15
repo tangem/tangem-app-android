@@ -14,6 +14,7 @@ import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CommonActionsFactoryTest {
@@ -107,18 +109,58 @@ internal class CommonActionsFactoryTest {
         assertThat(actions.filterIsInstance<ActionState.Stake>()).isEmpty()
     }
 
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN multi-currency wallet WHEN create THEN swap reason follows express reachability`(
+        model: SwapReasonModel,
+    ) = runTest {
+        // Arrange
+        every { userWallet.isMultiCurrency } returns true
+        every { cardTypesResolver.isStart2Coin() } returns false
+
+        // Act
+        val actions = createActions(
+            stakingAvailability = StakingAvailability.Unavailable,
+            isExpressUnreachable = model.isExpressUnreachable,
+        )
+
+        // Assert
+        val swapAction = actions.filterIsInstance<ActionState.Swap>().single()
+        assertThat(swapAction.unavailabilityReason).isEqualTo(model.expected)
+    }
+
+    private fun provideTestModels() = listOf(
+        SwapReasonModel(
+            isExpressUnreachable = true,
+            expected = ScenarioUnavailabilityReason.ExpressUnreachable(currency.name),
+        ),
+        SwapReasonModel(
+            isExpressUnreachable = false,
+            expected = ScenarioUnavailabilityReason.None,
+        ),
+    )
+
+    data class SwapReasonModel(
+        val isExpressUnreachable: Boolean,
+        val expected: ScenarioUnavailabilityReason,
+    )
+
     private suspend fun createBuyAction(): ActionState.Buy {
         val actions = createActions(stakingAvailability = StakingAvailability.Unavailable)
         return actions.filterIsInstance<ActionState.Buy>().single()
     }
 
-    private suspend fun createActions(stakingAvailability: StakingAvailability): Set<ActionState> {
+    private suspend fun createActions(
+        stakingAvailability: StakingAvailability,
+        isExpressUnreachable: Boolean = false,
+    ): Set<ActionState> {
         return factory.create(
             userWallet = userWallet,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             stakingAvailability = stakingAvailability,
             yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
             shouldShowSwapStories = false,
+            isExpressUnreachable = isExpressUnreachable,
         )
     }
 }
