@@ -12,7 +12,10 @@ internal sealed interface PromoRegistrationOutcome {
     /** [enrolledWalletIds] includes wallets enrolled before this request. */
     data class Enrolled(val coverage: Coverage, val enrolledWalletIds: List<UserWalletId>) : PromoRegistrationOutcome
 
-    data class AlreadyEnrolled(val payout: PromoRegistrationResult.PromoRegisteredPayout?) : PromoRegistrationOutcome
+    data class AlreadyEnrolled(
+        val coverage: Coverage,
+        val payout: PromoRegistrationResult.PromoRegisteredPayout?,
+    ) : PromoRegistrationOutcome
 
     data object Unavailable : PromoRegistrationOutcome
 
@@ -55,8 +58,16 @@ internal sealed interface PromoRegistrationOutcome {
             val main = resultsByWallet[mainWalletId]
             if (main == null || main.status == PromoRegistrationStatus.Ineligible) return Unavailable
 
+            val statuses = enrollments.map { enrollment -> resultsByWallet[enrollment.userWalletId]?.status }
+
             if (results.none { it.status == PromoRegistrationStatus.Enrolled }) {
-                return AlreadyEnrolled(payout = main.payout)
+                val isEveryWalletAlreadyEnrolled = statuses.all { it == PromoRegistrationStatus.AlreadyEnrolled }
+                val coverage = if (enrollments.size > 1 && isEveryWalletAlreadyEnrolled) {
+                    Coverage.All
+                } else {
+                    Coverage.Partial
+                }
+                return AlreadyEnrolled(coverage = coverage, payout = main.payout)
             }
 
             val enrolledWalletIds = enrollments
@@ -64,7 +75,7 @@ internal sealed interface PromoRegistrationOutcome {
                 .filter { walletId -> resultsByWallet[walletId]?.status?.isInCampaign() == true }
             val coverage = when {
                 enrollments.size == 1 -> Coverage.Single
-                enrolledWalletIds.size == enrollments.size -> Coverage.All
+                statuses.all { it == PromoRegistrationStatus.Enrolled } -> Coverage.All
                 else -> Coverage.Partial
             }
 

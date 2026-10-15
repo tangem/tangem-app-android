@@ -322,6 +322,37 @@ internal class PromoCampaignModelTest {
         }
 
     @Test
+    fun `GIVEN every linked wallet already enrolled WHEN enroll clicked THEN already status without recipient`() =
+        runTest {
+            // Arrange
+            val payout = PromoRegistrationResult.PromoRegisteredPayout(
+                userAddress = "0xUser",
+                tokenAddress = "0xToken",
+                networkId = "ethereum",
+            )
+            coEvery { registerPromoCampaignUseCase(any(), any()) } returns listOf(
+                PromoRegistrationResult(
+                    userWalletId = mainWallet.walletId,
+                    status = PromoRegistrationStatus.AlreadyEnrolled,
+                    payout = payout,
+                ),
+                registered(linkedWallet.walletId, PromoRegistrationStatus.AlreadyEnrolled),
+            ).right()
+            val model = createModel(isPayoutNeeded = false, matchMode = PromoMatchMode.LinkedWallet)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.footer.onButtonClick()
+            advanceUntilIdle()
+
+            // Assert
+            val status = model.statusState.value
+            assertThat(status?.variant).isEqualTo(TangemStatusScreen.Variant.Info)
+            assertThat(status?.details).isNull()
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN linked wallet ineligible WHEN enroll clicked THEN only enrolled wallets listed`() = runTest {
         // Arrange
         coEvery { registerPromoCampaignUseCase(any(), any()) } returns listOf(
