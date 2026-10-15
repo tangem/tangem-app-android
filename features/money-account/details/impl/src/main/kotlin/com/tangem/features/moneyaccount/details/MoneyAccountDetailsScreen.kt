@@ -1,4 +1,4 @@
-package com.tangem.features.moneyaccount.main
+package com.tangem.features.moneyaccount.details
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -56,8 +56,8 @@ private const val UNAVAILABLE_BALANCE_ALPHA = 0.4f
 private val MessageBannerCornerRadius: Dp = 28.dp
 
 @Composable
-internal fun MoneyAccountMainScreen(
-    state: MoneyAccountMainUM,
+internal fun MoneyAccountDetailsScreen(
+    state: MoneyAccountDetailsUM,
     txHistoryComponent: TxHistoryComponent,
     modifier: Modifier = Modifier,
 ) {
@@ -107,7 +107,7 @@ internal fun MoneyAccountMainScreen(
 }
 
 private fun LazyListScope.body(
-    state: MoneyAccountMainUM,
+    state: MoneyAccountDetailsUM,
     listState: LazyListState,
     txHistoryComponent: TxHistoryComponent,
     txHistoryState: TxHistoryItemsUM,
@@ -196,7 +196,7 @@ private fun BalanceUnavailableBanner(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun LazyItemScope.ActionBlock(state: MoneyAccountMainUM, modifier: Modifier = Modifier) {
+private fun LazyItemScope.ActionBlock(state: MoneyAccountDetailsUM, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -224,7 +224,7 @@ private fun LazyItemScope.ActionBlock(state: MoneyAccountMainUM, modifier: Modif
 }
 
 @Composable
-private fun TopBar(state: MoneyAccountMainUM, onHeightChange: (Dp) -> Unit, modifier: Modifier = Modifier) {
+private fun TopBar(state: MoneyAccountDetailsUM, onHeightChange: (Dp) -> Unit, modifier: Modifier = Modifier) {
     val density = LocalDensity.current
     TangemTopBar(
         modifier = modifier
@@ -295,10 +295,10 @@ private fun MenuItem(item: MoneyAccountMenuItemUM, onMenuDismiss: () -> Unit) {
 @Preview(device = Devices.PIXEL_7_PRO)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.PIXEL_7_PRO)
 @Composable
-private fun MoneyAccountMainScreenPreview() {
+private fun MoneyAccountDetailsScreenPreview() {
     TangemThemePreviewRedesign {
-        MoneyAccountMainScreen(
-            state = MoneyAccountMainUM(
+        MoneyAccountDetailsScreen(
+            state = MoneyAccountDetailsUM(
                 title = resourceReference(R.string.virtual_account_title),
                 subtitle = resourceReference(R.string.tangempay_usdc_on_polygon_network),
                 balance = MoneyAccountBalanceBlockState.Content(
@@ -319,10 +319,10 @@ private fun MoneyAccountMainScreenPreview() {
 @Preview(device = Devices.PIXEL_7_PRO)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.PIXEL_7_PRO)
 @Composable
-private fun MoneyAccountMainScreenBalanceUnavailablePreview() {
+private fun MoneyAccountDetailsScreenBalanceUnavailablePreview() {
     TangemThemePreviewRedesign {
-        MoneyAccountMainScreen(
-            state = MoneyAccountMainUM(
+        MoneyAccountDetailsScreen(
+            state = MoneyAccountDetailsUM(
                 title = resourceReference(R.string.virtual_account_title),
                 subtitle = resourceReference(R.string.tangempay_usdc_on_polygon_network),
                 balance = MoneyAccountBalanceBlockState.Unavailable,

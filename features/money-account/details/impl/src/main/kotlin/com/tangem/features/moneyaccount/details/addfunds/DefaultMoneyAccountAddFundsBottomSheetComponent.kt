@@ -1,4 +1,4 @@
-package com.tangem.features.moneyaccount.main.addfunds
+package com.tangem.features.moneyaccount.details.addfunds
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
