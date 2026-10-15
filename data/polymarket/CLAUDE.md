@@ -54,6 +54,9 @@ provider strings and teams in provider order. `dataFetchedAt` dates the backend'
 - **Activity amounts and prices are decimal strings**; market / order / redemption metadata may be absent.
   `reconcile` answers `202 {state: SCANNING, retryAfterSeconds}` — it starts or joins a scan, it does not
   report completion. Cursors are opaque: keep them across retries, reset on filter change, reject cycles.
+- **`CONDITIONAL-V2` is not in Polymarket's OpenAPI** (only `COLLATERAL` / `CONDITIONAL` are) — the V2 shares
+  asset type comes from the migration guide and has not been seen live. The sync before a SELL is best-effort
+  for exactly that reason.
 
 ## Error-mapping decisions
 
