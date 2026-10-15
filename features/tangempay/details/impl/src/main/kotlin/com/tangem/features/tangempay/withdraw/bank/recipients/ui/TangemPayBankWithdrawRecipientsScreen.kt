@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -44,6 +45,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_binoculars_24
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUM
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUM.ContentUM
@@ -55,7 +57,7 @@ internal fun TangemPayBankWithdrawRecipientsScreen(
     modifier: Modifier = Modifier,
 ) {
     TangemTopBarScaffold(
-        modifier = modifier,
+        modifier = modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_RECIPIENTS_SCREEN),
         containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
             TangemTopNavigation(
@@ -111,6 +113,7 @@ private fun RecipientsContent(
 @Composable
 private fun RecipientRow(item: RecipientUM) {
     TangemRow(
+        modifier = Modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_RECIPIENT_ROW),
         verticalAlignment = TangemRowVerticalAlignment.Center,
         onClick = item.onClick,
         startSlot = { RecipientInitial(initial = item.initial) },
@@ -124,7 +127,7 @@ private fun RecipientInitial(initial: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .size(AvatarSize)
-            .background(color = TangemTheme.colors3.bg.opaque.secondary, shape = CircleShape),
+            .background(color = TangemTheme.colors3.bg.transparent.secondary, shape = CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -167,14 +170,15 @@ private fun NoResultsContent(contentPadding: PaddingValues, modifier: Modifier =
         modifier = modifier
             .fillMaxSize()
             .padding(contentPadding)
-            .imePadding(),
+            .imePadding()
+            .testTag(TangemPayTestTags.BANK_WITHDRAW_RECIPIENTS_NO_RESULTS),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .background(color = TangemTheme.colors3.bg.opaque.primary, shape = CircleShape),
+                .background(color = TangemTheme.colors3.bg.transparent.primary, shape = CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

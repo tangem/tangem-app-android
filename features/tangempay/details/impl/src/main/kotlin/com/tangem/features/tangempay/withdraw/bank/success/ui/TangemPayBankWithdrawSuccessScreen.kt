@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -22,6 +23,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.success.state.TangemPayBankWithdrawSuccessUM
 import com.tangem.features.tangempay.withdraw.bank.success.state.TangemPayBankWithdrawSuccessUM.RowUM
@@ -30,7 +32,7 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 internal fun TangemPayBankWithdrawSuccessScreen(state: TangemPayBankWithdrawSuccessUM, modifier: Modifier = Modifier) {
     TangemStatusScreen(
-        modifier = modifier,
+        modifier = modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_SUCCESS_SCREEN),
         variant = TangemStatusScreen.Variant.Info,
         title = state.title,
         description = state.subtitle,

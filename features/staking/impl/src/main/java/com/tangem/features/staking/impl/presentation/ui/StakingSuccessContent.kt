@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
 import com.tangem.common.ui.amountScreen.ui.AmountBlock
@@ -46,9 +47,9 @@ internal fun StakingSuccessContent(
     Column(
         modifier = Modifier
             .background(TangemTheme.colors.background.secondary)
-            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .padding(horizontal = 16.dp)
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         TransactionDoneTitle(
             title = resourceReference(R.string.common_in_progress),
