@@ -1,11 +1,9 @@
 package com.tangem.data.mcp.converter
 
-import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.data.mcp.api.models.response.McpClientResponse
 import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResponse
 import com.tangem.data.mcp.api.models.response.McpSessionResponse
 import com.tangem.utils.logging.TangemLogger
@@ -26,13 +24,6 @@ internal fun McpDeviceVerificationResponse.toDomain(): McpDeviceVerification = M
 
 internal fun McpDeviceVerificationResultResponse.toDomain(): McpDeviceVerificationResult =
     McpDeviceVerificationResult(isSuccess = isSuccess)
-
-internal fun McpClientResponse.toDomain(): McpAgent = McpAgent(
-    clientId = clientId,
-    origin = clientOrigin,
-    name = clientName,
-    iconUrl = clientIconUrl,
-)
 
 internal fun McpSessionResponse.toDomain(): McpSession = McpSession(
     id = id,

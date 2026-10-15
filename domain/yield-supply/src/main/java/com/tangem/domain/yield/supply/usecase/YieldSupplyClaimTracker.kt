@@ -14,22 +14,16 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * Follows a submitted Merkl rewards claim until the chain says what became of it.
+ * Polls on the app scope because the claim sheet is gone before the transaction is mined. A timeout publishes nothing:
+ * the transaction may still land.
  *
- * The sheet is gone by the time the transaction is mined, so the outcome is resolved on an application-wide scope
- * and published to whoever is still on screen. Nothing is published after [MAX_ATTEMPTS] checks: the transaction may
- * still land, and calling it a failure would be a worse answer than saying nothing.
- *
- * A claim names no token and takes every reward the module holds, so an in-flight claim is keyed by the module, not
- * by the token it was started from.
- *
- * Separate from [YieldSupplyPendingTracker] deliberately: that one owns the enter/exit protocol state and would
- * re-announce the module as active, which a claim must not do.
+ * A claim takes every reward of the module, so an in-flight claim is keyed by the module, not by the token.
  */
 class YieldSupplyClaimTracker(
     private val yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
@@ -51,7 +45,7 @@ class YieldSupplyClaimTracker(
         return trackedKeys.map { key in it }.distinctUntilChanged()
     }
 
-    /** Starts following [transactionHash]; a claim already being followed for the same module is left alone. */
+    /** A second claim for a module already in flight is ignored. */
     fun track(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency.Token,
@@ -60,42 +54,41 @@ class YieldSupplyClaimTracker(
         transactionHash: String,
     ) {
         val key = trackedKey(chainId = chainId, userAddress = userAddress)
-        var isAdded = false
-        trackedKeys.update { tracked ->
-            isAdded = key !in tracked
-            tracked + key
-        }
-        if (!isAdded) return
+        if (key in trackedKeys.getAndUpdate { tracked -> tracked + key }) return
 
         coroutineScope.launch {
-            // Released in a finally, so a claim that times out or is cancelled does not stay in flight for the rest
-            // of the process.
-            try {
-                val outcome = awaitOutcome(userWalletId = userWalletId, token = cryptoCurrency, hash = transactionHash)
-                    ?: return@launch
-
-                if (outcome == YieldSupplyTransactionOutcome.Confirmed) {
-                    yieldIncentivesRepository.invalidateUserCache(chainId = chainId, userAddress = userAddress)
-                }
-
-                trackedKeys.update { it - key }
-                outcomes.emit(
-                    YieldSupplyClaimOutcome(
-                        userWalletId = userWalletId,
-                        cryptoCurrencyId = cryptoCurrency.id,
-                        chainId = chainId,
-                        userAddress = userAddress,
-                        outcome = outcome,
-                    ),
-                )
+            // Released before publishing, so listeners see the claim settled when its outcome arrives
+            val outcome = try {
+                awaitOutcome(userWalletId = userWalletId, token = cryptoCurrency, hash = transactionHash)
+                    ?.also { outcome -> invalidateIfConfirmed(outcome, chainId = chainId, userAddress = userAddress) }
             } finally {
                 trackedKeys.update { it - key }
-            }
+            } ?: return@launch
+
+            outcomes.emit(
+                YieldSupplyClaimOutcome(
+                    userWalletId = userWalletId,
+                    cryptoCurrencyId = cryptoCurrency.id,
+                    chainId = chainId,
+                    userAddress = userAddress,
+                    outcome = outcome,
+                ),
+            )
         }
     }
 
     private fun trackedKey(chainId: Int, userAddress: String) =
         TrackedKey(chainId = chainId, userAddress = userAddress.normalizeEvmAddress())
+
+    private suspend fun invalidateIfConfirmed(
+        outcome: YieldSupplyTransactionOutcome,
+        chainId: Int,
+        userAddress: String,
+    ) {
+        if (outcome == YieldSupplyTransactionOutcome.Confirmed) {
+            yieldIncentivesRepository.invalidateUserCache(chainId = chainId, userAddress = userAddress)
+        }
+    }
 
     private suspend fun awaitOutcome(
         userWalletId: UserWalletId,

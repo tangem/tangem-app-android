@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.ds.badge.TangemBadge
@@ -34,13 +35,13 @@ fun TokenRowTitle(titleUM: TangemTokenRowUM.TitleUM, modifier: Modifier = Modifi
         is TangemTokenRowUM.TitleUM.Content -> ContentTitle(titleUM = titleUM, modifier = modifier)
         TangemTokenRowUM.TitleUM.Loading -> TextShimmer(
             style = TangemTheme.typography2.bodySemibold16,
-            modifier = modifier.width(TangemTheme.dimens2.x18),
-            radius = TangemTheme.dimens2.x25,
+            modifier = modifier.width(72.dp),
+            radius = 100.dp,
         )
         TangemTokenRowUM.TitleUM.Placeholder -> TextPlaceholder(
             modifier = modifier,
             textStyle = TangemTheme.typography2.bodySemibold16,
-            width = TangemTheme.dimens2.x22,
+            width = 88.dp,
         )
         TangemTokenRowUM.TitleUM.Empty -> Unit
     }
@@ -50,7 +51,7 @@ fun TokenRowTitle(titleUM: TangemTokenRowUM.TitleUM, modifier: Modifier = Modifi
 private fun ContentTitle(titleUM: TangemTokenRowUM.TitleUM.Content, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens2.x1),
+        horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         /*

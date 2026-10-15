@@ -46,8 +46,8 @@ fun ExpressProvider(
     ) {
         Row(
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing12)
-                .padding(horizontal = TangemTheme.dimens.spacing12)
+                .padding(top = 12.dp)
+                .padding(horizontal = 12.dp)
                 .fillMaxWidth(),
         ) {
             Text(
@@ -70,8 +70,8 @@ fun ExpressProvider(
                 ) {
                     Icon(
                         modifier = Modifier
-                            .size(TangemTheme.dimens.size20)
-                            .padding(end = TangemTheme.dimens.spacing4)
+                            .size(20.dp)
+                            .padding(end = 4.dp)
                             .align(Alignment.CenterVertically),
                         painter = painterResource(id = R.drawable.ic_copy_24),
                         contentDescription = null,

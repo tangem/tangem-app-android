@@ -41,7 +41,7 @@ internal class SendWithSwapSuccessComponent(
             onBackClick = router::pop,
             backIconRes = R.drawable.ic_close_24,
             backgroundColor = TangemTheme.colors.background.tertiary,
-            modifier = Modifier.height(TangemTheme.dimens.size56),
+            modifier = Modifier.height(56.dp),
         )
     }
 

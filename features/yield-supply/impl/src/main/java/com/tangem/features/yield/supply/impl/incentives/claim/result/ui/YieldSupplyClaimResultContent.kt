@@ -31,10 +31,7 @@ import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.Yiel
 import com.tangem.utils.StringsSigns.WHITE_SPACE
 import com.tangem.core.res.R as CoreResR
 
-/**
- * The screen runs on the redesigned palette the template is built from, so it provides it for the legacy fee rows
- * too.
- */
+/** The Yield screen is on the legacy theme, while the status template needs the redesigned palette. */
 @Composable
 internal fun YieldSupplyClaimResultContent(
     state: YieldSupplyClaimResultUM,
@@ -50,29 +47,17 @@ internal fun YieldSupplyClaimResultContent(
             variant = when (status) {
                 is YieldSupplyClaimResultUM.Status.Submitted -> TangemStatusScreen.Variant.Info
                 is YieldSupplyClaimResultUM.Status.Confirmed -> TangemStatusScreen.Variant.Success
+                is YieldSupplyClaimResultUM.Status.Failed -> TangemStatusScreen.Variant.Error
             },
             title = title(status = status, total = state.total),
             description = description(status = status),
-            asset = {
-                TangemStatusIcon(
-                    kind = TangemStatusIcon.Kind.Checkmark,
-                    tint = when (status) {
-                        is YieldSupplyClaimResultUM.Status.Submitted -> TangemTheme.colors3.icon.status.info
-                        is YieldSupplyClaimResultUM.Status.Confirmed -> TangemTheme.colors3.icon.status.success
-                    },
-                    modifier = Modifier.size(ASSET_SIZE),
-                )
-            },
-            details = { Fees(state = state) },
+            asset = { StatusIcon(status = status) },
+            details = { if (status !is YieldSupplyClaimResultUM.Status.Failed) Fees(state = state) },
             footer = { Footer(onGoToTokenClick = onGoToTokenClick, onGoToYieldClick = onGoToYieldClick) },
         )
     }
 }
 
-/**
- * The claimed amount is data, so it is appended rather than interpolated into a translated sentence — gluing it in
- * would fix the English word order for every language.
- */
 private fun title(status: YieldSupplyClaimResultUM.Status, total: TextReference): TextReference = when (status) {
     is YieldSupplyClaimResultUM.Status.Submitted -> combinedReference(
         resourceReference(R.string.yield_module_claim_in_progress_title),
@@ -84,9 +69,10 @@ private fun title(status: YieldSupplyClaimResultUM.Status, total: TextReference)
         stringReference(WHITE_SPACE),
         total,
     )
+    is YieldSupplyClaimResultUM.Status.Failed -> resourceReference(R.string.yield_module_claim_error_message)
 }
 
-private fun description(status: YieldSupplyClaimResultUM.Status): TextReference = when (status) {
+private fun description(status: YieldSupplyClaimResultUM.Status): TextReference? = when (status) {
     is YieldSupplyClaimResultUM.Status.Submitted -> resourceReference(
         R.string.yield_module_claim_in_progress_description,
     )
@@ -97,9 +83,25 @@ private fun description(status: YieldSupplyClaimResultUM.Status): TextReference 
             status.timestamp.toTimeFormat(),
         ),
     )
+    is YieldSupplyClaimResultUM.Status.Failed -> null
 }
 
-/** Plain rows rather than the sheet's card: the template already lays the details block out as its own block. */
+@Composable
+private fun StatusIcon(status: YieldSupplyClaimResultUM.Status) {
+    val modifier = Modifier.size(40.dp)
+    when (status) {
+        is YieldSupplyClaimResultUM.Status.Submitted -> TangemStatusIcon(
+            kind = TangemStatusIcon.Kind.Checkmark,
+            tint = TangemTheme.colors3.icon.status.info,
+            modifier = modifier,
+        )
+        is YieldSupplyClaimResultUM.Status.Confirmed ->
+            TangemStatusIcon(kind = TangemStatusIcon.Kind.Checkmark, modifier = modifier)
+        is YieldSupplyClaimResultUM.Status.Failed ->
+            TangemStatusIcon(kind = TangemStatusIcon.Kind.HeartBroken, modifier = modifier)
+    }
+}
+
 @Composable
 private fun Fees(state: YieldSupplyClaimResultUM) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -148,8 +150,6 @@ private fun Footer(onGoToTokenClick: () -> Unit, onGoToYieldClick: () -> Unit) {
 
 private const val LINE_BREAK = "\n"
 
-private val ASSET_SIZE = 40.dp
-
 @Preview(showBackground = true, widthDp = 402, heightDp = 874)
 @Preview(showBackground = true, widthDp = 402, heightDp = 874, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -178,6 +178,24 @@ private fun YieldSupplyClaimResultConfirmedPreview() {
                 status = YieldSupplyClaimResultUM.Status.Confirmed(timestamp = 1_714_640_460_000L),
                 total = stringReference("$45.50"),
                 serviceFee = stringReference("(15%) $1.40"),
+                networkFee = stringReference("$1.40"),
+            ),
+            onGoToTokenClick = {},
+            onGoToYieldClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 402, heightDp = 874)
+@Preview(showBackground = true, widthDp = 402, heightDp = 874, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun YieldSupplyClaimResultFailedPreview() {
+    TangemThemePreviewRedesign {
+        YieldSupplyClaimResultContent(
+            state = YieldSupplyClaimResultUM(
+                status = YieldSupplyClaimResultUM.Status.Failed,
+                total = stringReference("$45.50"),
+                serviceFee = stringReference("(15%) $1.40"),
                 networkFee = stringReference("$1.40"),
             ),
             onGoToTokenClick = {},
