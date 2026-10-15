@@ -15,6 +15,11 @@ import com.tangem.domain.polymarket.model.PredictionClaimState
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import arrow.core.nonEmptyListOf
+import io.mockk.slot
+import com.tangem.domain.polymarket.model.PredictionClaimBatch
+import com.tangem.domain.polymarket.model.PredictionRedeemCalls
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -41,7 +46,7 @@ internal class SubmitPredictionClaimInteractorTest {
     fun resetMocks() {
         clearMocks(redeemRepository, polymarketRepository, signer)
         nowMillis = NOW_MILLIS
-        coEvery { redeemRepository.getCall(any(), any(), any()) } returns CALL.right()
+        coEvery { redeemRepository.getCalls(any(), any(), any()) } returns CALLS.right()
         coEvery { polymarketRepository.getRelayerNonce(any()) } returns BigInteger.valueOf(9).right()
         coEvery { signer.signRelayedBatch(any(), any()) } returns SIGNATURE.right()
         coEvery { redeemRepository.submit(any(), any()) } returns receipt(PredictionClaimState.CONFIRMED).right()
@@ -62,27 +67,46 @@ internal class SubmitPredictionClaimInteractorTest {
         }
 
     @Test
-    fun `GIVEN the batch WHEN signed THEN it carries exactly the call the backend returned`() = runTest {
+    fun `GIVEN two redeem calls WHEN signed and submitted THEN both travel verbatim and in order`() = runTest {
         // Arrange
-        val params = params()
+        val batch = slot<PredictionClaimBatch>()
+        coEvery { redeemRepository.getCalls(any(), any(), any()) } returns
+            PredictionRedeemCalls(version = PolymarketMarketVersion.V2, calls = nonEmptyListOf(CALL, SECOND_CALL)).right()
+        coEvery { redeemRepository.submit(any(), capture(batch)) } returns
+            receipt(PredictionClaimState.CONFIRMED).right()
 
         // Act
-        interactor.claim(params)
+        interactor.claim(params())
 
         // Assert
         coVerify {
             signer.signRelayedBatch(
                 USER_WALLET_ID,
-                match { it.calls == listOf(CALL) && it.depositWalletAddress == DEPOSIT_WALLET },
+                match { it.calls.toList() == listOf(CALL, SECOND_CALL) && it.depositWalletAddress == DEPOSIT_WALLET },
             )
         }
+        assertThat(batch.captured.calls).containsExactly(CALL, SECOND_CALL).inOrder()
+    }
+
+    @Test
+    fun `GIVEN nothing to redeem WHEN claimed THEN nothing is signed and NothingToRedeem is raised`() = runTest {
+        // Arrange
+        coEvery { redeemRepository.getCalls(any(), any(), any()) } returns
+            PolymarketRedeemError.NothingToRedeem(detail = "already redeemed").left()
+
+        // Act
+        val actual = interactor.claim(params())
+
+        // Assert
+        assertThat(actual).isEqualTo(PredictionClaimFailure.NothingToRedeem(detail = "already redeemed").left())
+        coVerify(exactly = 0) { signer.signRelayedBatch(any(), any()) }
     }
 
     @Test
     fun `GIVEN the call lookup fails WHEN claimed THEN nothing is signed and CallUnavailable is raised`() =
         runTest {
             // Arrange
-            coEvery { redeemRepository.getCall(any(), any(), any()) } returns
+            coEvery { redeemRepository.getCalls(any(), any(), any()) } returns
                 PolymarketRedeemError.NotFound.left()
 
             // Act
@@ -313,5 +337,11 @@ internal class SubmitPredictionClaimInteractorTest {
             value = "0",
             data = "0x01b7037c",
         )
+        val SECOND_CALL = PolymarketApprovalCall(
+            target = "0x12121212006e4cd160d18e3f00711da5c3372600",
+            value = "0",
+            data = "0xd217a3cc",
+        )
+        val CALLS = PredictionRedeemCalls(version = PolymarketMarketVersion.V1, calls = nonEmptyListOf(CALL))
     }
 }

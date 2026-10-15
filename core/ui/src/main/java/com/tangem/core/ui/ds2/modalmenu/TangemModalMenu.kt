@@ -15,8 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
+import com.tangem.core.ui.ds2.modal.TangemModalActionScope
+import com.tangem.core.ui.ds2.modal.TangemModalContentUM
+import com.tangem.core.ui.ds2.modal.tangemModalMenuUM
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
@@ -54,6 +58,32 @@ fun TangemModalMenu(modifier: Modifier = Modifier, content: @Composable ColumnSc
         horizontalAlignment = Alignment.CenterHorizontally,
         content = content,
     )
+}
+
+/**
+ * [TangemModalMenu] rendered from a [TangemModalContentUM.Menu] — for content kept in UI state or built with the
+ * [tangemModalMenuUM] DSL.
+ *
+ * @param state Menu content. See [TangemModalContentUM.Menu].
+ * @param actionScope Receiver of the rows' click actions; lets a row close the modal.
+ * @param modifier Modifier for the root container.
+ */
+@Composable
+fun TangemModalMenu(
+    state: TangemModalContentUM.Menu,
+    actionScope: TangemModalActionScope,
+    modifier: Modifier = Modifier,
+) {
+    TangemModalMenu(modifier = modifier) {
+        state.items.fastForEach { item ->
+            TangemModalMenu.Item(
+                title = item.title,
+                subtitle = item.subtitle,
+                avatar = item.avatar,
+                onClick = { item.onClick(actionScope) },
+            )
+        }
+    }
 }
 
 object TangemModalMenu {
@@ -104,21 +134,23 @@ object TangemModalMenu {
 @Composable
 private fun TangemModalMenuPreview() {
     TangemThemePreviewRedesign {
-        TangemModalMenu(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
-            TangemModalMenu.Item(
-                title = stringReference(value = "Learn more"),
-                subtitle = stringReference(value = "How it works"),
-                avatar = TangemAvatar.UiState.Icon(Icons.ic_info_28, TangemAvatar.Appearance.Info),
-                onClick = {},
-            )
-            TangemModalMenu.Item(
-                title = stringReference(value = "Report a problem"),
-                subtitle = stringReference(value = "We reply within a day"),
-                avatar = TangemAvatar.UiState.Icon(Icons.ic_warning_28, TangemAvatar.Appearance.Warning),
-                onClick = {},
-            )
-            TangemModalMenu.Item(title = stringReference(value = "Without avatar"), onClick = {})
-        }
+        TangemModalMenu(
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
+            actionScope = {},
+            state = tangemModalMenuUM {
+                item {
+                    title = stringReference(value = "Learn more")
+                    subtitle = stringReference(value = "How it works")
+                    avatar = TangemAvatar.UiState.Icon(Icons.ic_info_28, TangemAvatar.Appearance.Info)
+                }
+                item {
+                    title = stringReference(value = "Report a problem")
+                    subtitle = stringReference(value = "We reply within a day")
+                    avatar = TangemAvatar.UiState.Icon(Icons.ic_warning_28, TangemAvatar.Appearance.Warning)
+                }
+                item { title = stringReference(value = "Without avatar") }
+            },
+        )
     }
 }
 // endregion

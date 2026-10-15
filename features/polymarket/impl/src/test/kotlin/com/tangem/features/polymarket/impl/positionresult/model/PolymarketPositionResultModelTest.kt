@@ -158,6 +158,24 @@ internal class PolymarketPositionResultModelTest {
         }
 
     @Test
+    fun `GIVEN nothing left to redeem WHEN the claim returns THEN the claim is hidden and the positions are invalidated`() =
+        runTest {
+            // Arrange
+            val model = createModel()
+            coEvery { claimInteractor.claim(any()) } returns PredictionClaimFailure.NothingToRedeem(detail = null).left()
+
+            // Act
+            model.onActionClick()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.action).isEqualTo(PolymarketPositionResultUM.Action.Dismiss)
+            verify(exactly = 1) { positionsUpdateEmitter.triggerUpdate(WALLET) }
+            verify(exactly = 0) { messageSender.send(any()) }
+            verify(exactly = 0) { router.pop() }
+        }
+
+    @Test
     fun `GIVEN the relayer is unreachable WHEN the claim returns THEN only an alert is shown`() = runTest {
         // Arrange
         val model = createModel()

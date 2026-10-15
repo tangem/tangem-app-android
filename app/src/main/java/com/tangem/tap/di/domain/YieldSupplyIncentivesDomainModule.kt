@@ -74,11 +74,13 @@ internal object YieldSupplyIncentivesDomainModule {
     fun provideYieldSupplyClaimTracker(
         yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
         yieldIncentivesRepository: YieldIncentivesRepository,
+        getYieldRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase,
         appScope: AppCoroutineScope,
     ): YieldSupplyClaimTracker {
         return YieldSupplyClaimTracker(
             yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
             yieldIncentivesRepository = yieldIncentivesRepository,
+            getYieldRewardsSummaryUseCase = getYieldRewardsSummaryUseCase,
             coroutineScope = appScope,
         )
     }
