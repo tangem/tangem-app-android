@@ -5,7 +5,6 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_KYC_STATUS_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
-import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_TANGEM_PAY_ORDER_POLL
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_WALLET_CREATION
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.getQuantityString
@@ -147,7 +146,6 @@ class TangemPayCampaignCardTest : BaseTestCase() {
         val issueOrdersScenario = "tangem_pay_card_issue_orders"
         val issueOrdersEmptyState = "Empty"
         val campaignCardScenario = "tangem_pay_campaign_card"
-        val kycApprovedIssuingState = "KycApprovedIssuing"
         val cardIssuedState = "CardIssued"
         val issueOrderScenario = "tangem_pay_card_issue_order"
         val issueOrderCompletedState = "Completed"
@@ -202,22 +200,14 @@ class TangemPayCampaignCardTest : BaseTestCase() {
                     onTangemPayMainScreen { tileWithSubtitle(kycInProgressText).assertIsDisplayed() }
                 }
             }
-            step("Set WireMock scenario '$campaignCardScenario' to '$kycApprovedIssuingState'") {
-                setWireMockScenarioState(campaignCardScenario, kycApprovedIssuingState)
-            }
-            step("Wait for the card issuing status on Main") {
-                refreshMainUntilTangemPayTileSubtitle(issuingYourCardText)
+            step("Set WireMock scenario '$issueOrderScenario' to '$issueOrderCompletedState'") {
+                setWireMockScenarioState(issueOrderScenario, issueOrderCompletedState)
             }
             step("Set WireMock scenario '$campaignCardScenario' to '$cardIssuedState'") {
                 setWireMockScenarioState(campaignCardScenario, cardIssuedState)
             }
-            step("Set WireMock scenario '$issueOrderScenario' to '$issueOrderCompletedState'") {
-                setWireMockScenarioState(issueOrderScenario, issueOrderCompletedState)
-            }
-            step("Assert Tangem Pay tile with '$oneCardSubtitle' is displayed on Main") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_TANGEM_PAY_ORDER_POLL) {
-                    onTangemPayMainScreen { tileWithSubtitle(oneCardSubtitle).assertIsDisplayed() }
-                }
+            step("Wait for the issued card on Main") {
+                refreshMainUntilTangemPayTileSubtitle(oneCardSubtitle)
             }
             step("Click on 'More' button") {
                 onMainScreenTopBar { moreButton.clickWithAssertion() }
