@@ -149,7 +149,7 @@ private fun PhraseBlock(state: AddExistingWalletImportUM, modifier: Modifier = M
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(TangemTheme.dimens.size142)
+                .height(142.dp)
                 .focusRequester(focusRequester)
                 .testTag(ImportWalletScreenTestTags.PHRASE_TEXT_FIELD),
             value = state.words,
@@ -168,7 +168,7 @@ private fun PhraseBlock(state: AddExistingWalletImportUM, modifier: Modifier = M
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .height(TangemTheme.dimens.size32),
+                .height(32.dp),
         ) {
             if (state.wordsErrorText != null) {
                 Text(
@@ -196,15 +196,15 @@ private fun SuggestionsBlock(
     ) {
         LazyRow(
             modifier = Modifier.padding(bottom = 8.dp),
-            contentPadding = PaddingValues(horizontal = TangemTheme.dimens.size16),
+            contentPadding = PaddingValues(horizontal = 16.dp),
         ) {
             items(suggestionsList.size) { index ->
                 SuggestionButton(
                     modifier = Modifier.rowPadding(
                         index = index,
                         rowSize = suggestionsList.size,
-                        outSide = TangemTheme.dimens.size0,
-                        inSide = TangemTheme.dimens.size4,
+                        outSide = 0.dp,
+                        inSide = 4.dp,
                     ),
                     text = suggestionsList[index],
                     onClick = { onClick(index) },

@@ -14,30 +14,7 @@
     <ID>BooleanPropertyNaming:ManualBackupCheckUM.kt$ManualBackupCheckUM$val completeButtonProgress: Boolean</ID>
     <ID>BooleanPropertyNaming:ManualBackupCheckUM.kt$ManualBackupCheckUM.WordField$val error: Boolean</ID>
     <ID>BooleanPropertyNaming:MobileWalletSetupFinishedContent.kt$var showConfetti by remember { mutableStateOf(false) }</ID>
-    <ID>MultilineLambdaItParameter:HotAccessCodeRequestModel.kt$HotAccessCodeRequestModel${ it.copy( accessCode = accessCode, accessCodeColor = PinTextColor.Primary, ) }</ID>
-    <ID>MultilineLambdaItParameter:HotAccessCodeRequestModel.kt$HotAccessCodeRequestModel${ it.copy( accessCodeColor = PinTextColor.Success, onAccessCodeChange = {}, ) }</ID>
-    <ID>MultilineLambdaItParameter:HotAccessCodeRequestModel.kt$HotAccessCodeRequestModel${ it.copy( accessCodeColor = PinTextColor.WrongCode, onAccessCodeChange = {}, useBiometricVisible = currentRequest.isBiometryButtonVisible(), ) }</ID>
-    <ID>MultilineLambdaItParameter:HotAccessCodeRequestModel.kt$HotAccessCodeRequestModel${ it.copy( isShown = true, accessCode = "", useBiometricVisible = attemptRequest.isBiometryButtonVisible(), onAccessCodeChange = ::onAccessCodeChange, ) }</ID>
-    <ID>MultilineLambdaItParameter:HotAccessCodeRequestModel.kt$HotAccessCodeRequestModel${ it.copy( onAccessCodeChange = {}, useBiometricVisible = false, ) }</ID>
-    <ID>MultilineLambdaItParameter:HotAccessCodeRequestModel.kt$HotAccessCodeRequestModel${ it.copy( wrongAccessCodeText = null, onAccessCodeChange = ::onAccessCodeChange, ) }</ID>
-    <ID>MultilineLambdaItParameter:HotAccessCodeRequestModel.kt$HotAccessCodeRequestModel${ it.copy( wrongAccessCodeText = remainingSecondsToText(attempts.remainingSeconds) ?: resourceReference( R.string.access_code_check_warining_delete, wrappedList(attempts.remainingAttemptsCountBeforeDeletion), ), onAccessCodeChange = ::onAccessCodeChange.takeIf { attempts.remainingSeconds &lt;= 0 } ?: {}, ) }</ID>
-    <ID>MultilineLambdaItParameter:HotAccessCodeRequestModel.kt$HotAccessCodeRequestModel${ it.copy( wrongAccessCodeText = remainingSecondsToText(attempts.remainingSeconds), onAccessCodeChange = ::onAccessCodeChange.takeIf { attempts.remainingSeconds &lt;= 0 } ?: {}, ) }</ID>
-    <ID>MultilineLambdaItParameter:HotAccessCodeRequestModel.kt$HotAccessCodeRequestModel${ it.copy( wrongAccessCodeText = resourceReference( R.string.access_code_check_warining_lock, wrappedList(MAX_FAST_FORWARD_ATTEMPTS - attempts.count), ), onAccessCodeChange = ::onAccessCodeChange, ) }</ID>
-    <ID>MultilineLambdaItParameter:ImportSeedPhraseUiStateBuilder.kt$ImportSeedPhraseUiStateBuilder${ it.copy( importWalletEnabled = false, wordsErrorText = null, ) }</ID>
-    <ID>MultilineLambdaItParameter:ImportSeedPhraseUiStateBuilder.kt$ImportSeedPhraseUiStateBuilder${ it.copy( invalidWords = emptyList&lt;String&gt;().toImmutableList(), wordsErrorText = null, importWalletEnabled = true, ) }</ID>
-    <ID>MultilineLambdaItParameter:ImportSeedPhraseUiStateBuilder.kt$ImportSeedPhraseUiStateBuilder${ it.copy( invalidWords = invalidWords.toImmutableList(), wordsErrorText = resourceReference(R.string.onboarding_seed_mnemonic_wrong_words), importWalletEnabled = false, ) }</ID>
-    <ID>MultilineLambdaItParameter:ImportSeedPhraseUiStateBuilder.kt$ImportSeedPhraseUiStateBuilder${ it.copy( wordsErrorText = resourceReference(R.string.onboarding_seed_mnemonic_invalid_checksum), importWalletEnabled = false, ) }</ID>
-    <ID>MultilineLambdaItParameter:ImportSeedPhraseUiStateBuilder.kt$ImportSeedPhraseUiStateBuilder${ launchInterceptWords(wordsField = it) suggestNextWord(it) updateUiState { state -&gt; state.copy(words = it) } }</ID>
-    <ID>MultilineLambdaItParameter:ImportSeedPhraseUiStateBuilder.kt$ImportSeedPhraseUiStateBuilder${ passphrase = it.text updateUiState { state -&gt; state.copy(passPhrase = it) } }</ID>
-    <ID>MultilineLambdaItParameter:InvalidWordsColorTransformation.kt$InvalidWordsColorTransformation${ if (it == WORD_SEPARATOR) { append(WHITE_SPACE) } else if (wordsToBrush.contains(it)) { append(it.annotate()) } else { append(it) } }</ID>
-    <ID>MultilineLambdaItParameter:ManualBackupCheckModel.kt$ManualBackupCheckModel${ it.copy( words = seedPhrasePrivateInfo.mnemonic.mnemonicComponents.filterIndexed { index, _ -&gt; WORD_FIELD_INDICES.contains(index + 1) }.toImmutableList(), ) }</ID>
-    <ID>MultilineLambdaItParameter:ManualBackupPhraseContent.kt${ EnumeratedTwoColumnGridItem( index = it + 1, mnemonic = "word${it + 1}", ) }</ID>
-    <ID>MultilineLambdaItParameter:ManualBackupPhraseModel.kt$ManualBackupPhraseModel${ it.copy( words = seedPhrasePrivateInfo.mnemonic.mnemonicComponents.mapIndexed { index, s -&gt; EnumeratedTwoColumnGridItem(index + 1, s) }.toImmutableList(), ) }</ID>
-    <ID>MultilineLambdaItParameter:ViewPhraseContent.kt${ EnumeratedTwoColumnGridItem( index = it + 1, mnemonic = "word${it + 1}", ) }</ID>
-    <ID>MultilineLambdaItParameter:ViewPhraseModel.kt$ViewPhraseModel${ it.copy( words = words.mapIndexed { index, s -&gt; EnumeratedTwoColumnGridItem(index + 1, s) }.toImmutableList(), ) }</ID>
     <ID>PropertyUsedBeforeDeclaration:AddExistingWalletImportModel.kt$AddExistingWalletImportModel$uiState</ID>
-    <ID>SuspendFunSwallowedCancellation:AddExistingWalletImportModel.kt$AddExistingWalletImportModel$runCatching</ID>
     <ID>SuspendFunSwallowedCancellation:ManualBackupCheckModel.kt$ManualBackupCheckModel$runCatching</ID>
-    <ID>SuspendFunSwallowedCancellation:ManualBackupPhraseModel.kt$ManualBackupPhraseModel$runCatching</ID>
   </CurrentIssues>
 </SmellBaseline>

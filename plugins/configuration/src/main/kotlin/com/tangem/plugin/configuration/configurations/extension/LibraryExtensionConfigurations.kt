@@ -7,7 +7,7 @@ import com.tangem.plugin.configuration.utils.BuildConfigFieldFactory
 import org.gradle.api.Project
 
 internal fun LibraryExtension.configure(project: Project) {
-    configureCompileSdk()
+    configureSdk()
     configureDefaultConfig()
     configureBuildTypes()
     configurePackagingOptions()
