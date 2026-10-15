@@ -1,4 +1,4 @@
-package com.tangem.features.moneyaccount.main
+package com.tangem.features.moneyaccount.details
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -7,19 +7,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.features.moneyaccount.details.component.MoneyAccountMainComponent
+import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-internal class DefaultMoneyAccountMainComponent @AssistedInject constructor(
+internal class DefaultMoneyAccountDetailsComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
-    @Assisted params: MoneyAccountMainComponent.Params,
+    @Assisted params: MoneyAccountDetailsComponent.Params,
     txHistoryComponentFactory: TxHistoryComponent.Factory,
-) : MoneyAccountMainComponent, AppComponentContext by appComponentContext {
+) : MoneyAccountDetailsComponent, AppComponentContext by appComponentContext {
 
-    private val model: MoneyAccountMainModel = getOrCreateModel(params = params)
+    private val model: MoneyAccountDetailsModel = getOrCreateModel(params = params)
 
     private val txHistoryComponent = txHistoryComponentFactory.create(
         context = child("txHistoryComponent"),
@@ -33,7 +33,7 @@ internal class DefaultMoneyAccountMainComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
-        MoneyAccountMainScreen(
+        MoneyAccountDetailsScreen(
             state = state,
             txHistoryComponent = txHistoryComponent,
             modifier = modifier,
@@ -42,10 +42,10 @@ internal class DefaultMoneyAccountMainComponent @AssistedInject constructor(
     }
 
     @AssistedFactory
-    interface Factory : MoneyAccountMainComponent.Factory {
+    interface Factory : MoneyAccountDetailsComponent.Factory {
         override fun create(
             context: AppComponentContext,
-            params: MoneyAccountMainComponent.Params,
-        ): DefaultMoneyAccountMainComponent
+            params: MoneyAccountDetailsComponent.Params,
+        ): DefaultMoneyAccountDetailsComponent
     }
 }
