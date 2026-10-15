@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.account.cashback
 
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.defaultAmount
@@ -25,9 +26,9 @@ internal class CashbackUMFactory(
     private val onReload: () -> Unit,
 ) {
 
-    fun create(content: CashbackContent): CashbackUM = when (content) {
+    fun create(content: CashbackContent, isBalanceHidden: Boolean): CashbackUM = when (content) {
         CashbackContent.Hidden -> CashbackUM()
-        is CashbackContent.Widget -> CashbackUM(block = createWidget(content.cashback))
+        is CashbackContent.Widget -> CashbackUM(block = createWidget(content.cashback, isBalanceHidden))
         is CashbackContent.MenuEntry -> CashbackUM(menuItem = createMenuItem(content.cashback))
         CashbackContent.DeactivationBanner -> CashbackUM(block = CashbackBlockUM.DeactivatedBanner(onGotIt = onGotIt))
         is CashbackContent.Unavailable -> CashbackUM(
@@ -35,9 +36,11 @@ internal class CashbackUMFactory(
         )
     }
 
-    private fun createWidget(cashback: TangemPayCashback): CashbackBlockUM.Widget {
+    private fun createWidget(cashback: TangemPayCashback, isBalanceHidden: Boolean): CashbackBlockUM.Widget {
         val currency = getJavaCurrencyByCode(cashback.currency)
-        val amount = cashback.confirmedAmount.format { fiat(currency.currencyCode, currency.symbol).defaultAmount() }
+        val amount = cashback.confirmedAmount
+            .format { fiat(currency.currencyCode, currency.symbol).defaultAmount() }
+            .orMaskWithStars(isBalanceHidden)
         return CashbackBlockUM.Widget(
             title = resourceReference(R.string.tangempay_cashback_widget_title, wrappedList(amount, cashback.month())),
             isNegative = cashback.confirmedAmount.isNegative(),
