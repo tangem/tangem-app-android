@@ -7,55 +7,46 @@ import com.tangem.core.analytics.api.*
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.analytics.models.OneTimePerSessionEvent
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import dagger.Lazy
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Dispatches analytics events to every [AnalyticsHandler] on a dedicated single thread.
+ * Dispatches analytics events to every [AnalyticsHandler] one at a time, in send order, off the main thread.
  *
  * [filters] are ordered: the first filter applicable to an event decides whether and to which handlers it is sent.
  * Handlers and filters are resolved lazily: their dependencies (e.g. preferences, app scope) themselves depend on
  * analytics.
  */
 @Singleton
-internal class DefaultAnalyticsEventHandler(
+internal class DefaultAnalyticsEventHandler @Inject constructor(
     private val handlers: Lazy<Set<@JvmSuppressWildcards AnalyticsHandler>>,
     private val filters: Lazy<List<@JvmSuppressWildcards AnalyticsEventFilter>>,
     staticInterceptors: Set<@JvmSuppressWildcards ParamsInterceptor>,
-    dispatcher: CoroutineDispatcher,
+    dispatchers: CoroutineDispatcherProvider,
 ) : AnalyticsEventHandler,
     AnalyticsErrorHandler,
     AnalyticsExceptionHandler,
     AnalyticsUserIdHandler,
     ParamsInterceptorHolder {
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val analyticsDispatcher = dispatchers.io.limitedParallelism(1)
+
     private val analyticsScope = CoroutineScope(
-        SupervisorJob() + dispatcher + CoroutineName(NAME) + FeatureCoroutineExceptionHandler.create(NAME),
+        SupervisorJob() + analyticsDispatcher + CoroutineName(NAME) + FeatureCoroutineExceptionHandler.create(NAME),
     )
 
     private val paramsInterceptors = ConcurrentHashMap(staticInterceptors.associateBy { it.id() })
     private val throttledEventsState = ConcurrentHashMap<String, Long>()
     private val analyticsMutex = Mutex()
-
-    @Inject
-    constructor(
-        handlers: Lazy<Set<@JvmSuppressWildcards AnalyticsHandler>>,
-        filters: Lazy<List<@JvmSuppressWildcards AnalyticsEventFilter>>,
-        staticInterceptors: Set<@JvmSuppressWildcards ParamsInterceptor>,
-    ) : this(
-        handlers = handlers,
-        filters = filters,
-        staticInterceptors = staticInterceptors,
-        dispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher(),
-    )
 
     override fun addParamsInterceptor(interceptor: ParamsInterceptor) {
         paramsInterceptors[interceptor.id()] = interceptor
