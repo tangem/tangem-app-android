@@ -15,6 +15,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.data.mcp.api.McpApi
 import com.tangem.data.mcp.api.models.request.McpDeviceVerificationConsent
 import com.tangem.data.mcp.api.models.response.McpSessionResponse
+import com.tangem.data.mcp.store.McpAgentStore
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -33,6 +34,7 @@ internal class DefaultMcpRepository @Inject constructor(
     private val appScope: AppCoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
     private val mcpClientConverter: McpClientConverter,
+    private val agentStore: McpAgentStore,
 ) : McpRepository {
 
     private val sessions = MutableStateFlow<List<McpSession>>(value = emptyList())
@@ -41,9 +43,12 @@ internal class DefaultMcpRepository @Inject constructor(
     override fun getSessions(): Flow<List<McpSession>> = sessions.onStart { loadSessions(force = false) }
 
     override suspend fun getAgent(clientId: String): McpAgent {
+        agentStore.get(clientId)?.let { return it }
+
         return mcpApi.getClient(clientId = clientId)
             .toEither()
             .map(mcpClientConverter::convert)
+            .onRight { agentStore.store(it) }
             .onLeft { TangemLogger.withTag(TAG).e("Agent $clientId cannot be looked up, treating it as unknown", it) }
             .getOrElse { McpAgent.unknown(clientId) }
     }
