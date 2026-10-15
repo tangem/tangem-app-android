@@ -22,7 +22,7 @@ import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.features.tangempay.eligibility.TangemPayEligibilityComponent
+import com.tangem.features.tangempay.eligibility.EligibilityInnerRoute
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -116,13 +116,18 @@ internal class ResidencyListModelTest {
             coEvery { getRegionsUseCase(USA.code) } returns listOf(TEXAS).right()
             coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns
                 customerInfo(KycStatus.APPROVED).right()
-            val model = createModel(testScope = this, product = TangemPayProduct.BANKING_ACCOUNT)
+            val countriesModel = createModel(testScope = this, product = TangemPayProduct.BANKING_ACCOUNT)
+            val regionsModel = createModel(
+                testScope = this,
+                product = TangemPayProduct.BANKING_ACCOUNT,
+                step = ResidencyListComponent.Step.Regions(countryCode = USA.code, countryName = USA.name),
+            )
             advanceUntilIdle()
 
             // Act
-            model.item(USA.code).onClick()
+            countriesModel.item(USA.code).onClick()
             advanceUntilIdle()
-            model.item(TEXAS.code).onClick()
+            regionsModel.item(TEXAS.code).onClick()
             advanceUntilIdle()
 
             // Assert
@@ -136,7 +141,14 @@ internal class ResidencyListModelTest {
                         state = TEXAS.name,
                     ),
                 )
-            model.onDestroy()
+            verify(exactly = 1) {
+                router.push(
+                    route = EligibilityInnerRoute.Regions(countryCode = USA.code, countryName = USA.name),
+                    onComplete = any(),
+                )
+            }
+            countriesModel.onDestroy()
+            regionsModel.onDestroy()
         }
 
     private fun provideTestModels() = TangemPayProduct.entries.flatMap { product ->
@@ -154,7 +166,11 @@ internal class ResidencyListModelTest {
         )
     }
 
-    private fun createModel(testScope: TestScope, product: TangemPayProduct) = ResidencyListModel(
+    private fun createModel(
+        testScope: TestScope,
+        product: TangemPayProduct,
+        step: ResidencyListComponent.Step = ResidencyListComponent.Step.Countries,
+    ) = ResidencyListModel(
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         router = router,
         getCountriesUseCase = getCountriesUseCase,
@@ -164,7 +180,12 @@ internal class ResidencyListModelTest {
         uiMessageSender = uiMessageSender,
         analytics = analytics,
         paramsContainer = MutableParamsContainer(
-            value = TangemPayEligibilityComponent.Params(product = product, userWalletId = USER_WALLET_ID),
+            value = ResidencyListComponent.Params(
+                product = product,
+                userWalletId = USER_WALLET_ID,
+                step = step,
+                onCloseClick = {},
+            ),
         ),
     )
 
