@@ -11,7 +11,6 @@ import com.tangem.data.account.utils.assignTokens
 import com.tangem.data.account.utils.isJoint
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
-import com.tangem.data.common.account.WalletAccountsSync
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.currency.UserTokensSaver
@@ -43,7 +42,6 @@ import javax.inject.Singleton
  * @property fetchWalletAccountsErrorHandler handles errors during fetching wallet accounts
  * @property defaultWalletAccountsResponseFactory creates [GetWalletAccountsResponse] from [UserTokensResponse]
  * @property walletAccountsETags             the wallet-level ETag of the accounts document
- * @property walletAccountsSync              orders the reads and writes of the document against each other
  * @property dispatchers                     dispatchers
  *
 [REDACTED_AUTHOR]
@@ -60,7 +58,6 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val mainAccountTokensMigration: DefaultMainAccountTokensMigration,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
-    private val walletAccountsSync: WalletAccountsSync,
 ) : WalletAccountsFetcher, WalletAccountsSaver {
 
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
@@ -70,17 +67,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         get() = wallet.totalJointAccounts != null || accounts.any(WalletAccountDTO::isJoint)
 
     override suspend fun fetch(userWalletId: UserWalletId): GetWalletAccountsResponse {
-        return walletAccountsSync.withLock(userWalletId) { fetchLocked(userWalletId) }
-    }
-
-    private suspend fun fetchLocked(userWalletId: UserWalletId): GetWalletAccountsResponse {
         val savedAccountsResponse = getAccountsResponseStore(userWalletId = userWalletId).getSyncOrNull()
-
-        if (savedAccountsResponse != null && !pushEditsAhead(userWalletId, savedAccountsResponse)) {
-            TangemLogger.i("Accounts of $userWalletId hold edits the backend has not taken yet, the read is skipped")
-            return savedAccountsResponse
-        }
-
         val eTag = getRevalidationETag(userWalletId, savedAccountsResponse)
         val fetchResult = fetchWalletAccounts(
             userWalletId = userWalletId,
@@ -125,11 +112,10 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         userWalletId: UserWalletId,
         transform: (GetWalletAccountsResponse?) -> GetWalletAccountsResponse?,
     ) {
-        walletAccountsSync.withLock(userWalletId) {
-            getAccountsResponseStore(userWalletId = userWalletId).updateData {
-                transform(it).applyTokensCompatibility()
-            }
-            walletAccountsSync.markLocalAhead(userWalletId)
+        val store = getAccountsResponseStore(userWalletId = userWalletId)
+
+        store.updateData {
+            transform(it).applyTokensCompatibility()
         }
     }
 
@@ -151,8 +137,8 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         userWalletId: UserWalletId,
         body: SaveWalletAccountsResponse,
         eTag: String? = null,
-    ): GetWalletAccountsResponse? = walletAccountsSync.withLock(userWalletId) {
-        safeApiCall(
+    ): GetWalletAccountsResponse? {
+        return safeApiCall(
             call = {
                 val resolvedETag = eTag ?: getETagForPush(userWalletId)
 
@@ -212,7 +198,6 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 val response = apiResponse.bind().enrichByAccountId().withoutJointAccountsIfDisabled(userWalletId)
 
                 store(userWalletId = userWalletId, response = response)
-                walletAccountsSync.markInSync(userWalletId)
 
                 FetchResult(response)
             },
@@ -233,18 +218,6 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 )
             },
         )
-    }
-
-    /** A read must not replace a local edit not pushed yet; returns whether the copy is in step with the backend */
-    private suspend fun pushEditsAhead(
-        userWalletId: UserWalletId,
-        savedAccountsResponse: GetWalletAccountsResponse,
-    ): Boolean {
-        if (!walletAccountsSync.isLocalAhead(userWalletId)) return true
-
-        userTokensSaver.push(userWalletId = userWalletId, response = savedAccountsResponse.toUserTokensResponse())
-
-        return !walletAccountsSync.isLocalAhead(userWalletId)
     }
 
     /** The saved document stands in for the answer until the request completes, so it is brought to shape first */

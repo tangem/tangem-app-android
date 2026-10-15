@@ -11,7 +11,6 @@ import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
-import com.tangem.data.common.account.WalletAccountsSync
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.account.store.AccountTokenMigrationStore
@@ -43,7 +42,6 @@ internal object AccountDataModule {
         accountConverterFactoryContainer: AccountConverterFactoryContainer,
         @ApplicationContext context: Context,
         dispatchers: CoroutineDispatcherProvider,
-        walletAccountsSync: WalletAccountsSync,
     ): AccountsCRUDRepository {
         return DefaultAccountsCRUDRepository(
             walletAccountsApi = walletAccountsApi,
@@ -55,7 +53,6 @@ internal object AccountDataModule {
             convertersContainer = accountConverterFactoryContainer,
             resources = context.resources,
             dispatchers = dispatchers,
-            walletAccountsSync = walletAccountsSync,
         )
     }
 
