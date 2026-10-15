@@ -7,6 +7,8 @@ import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOutcome
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
+import com.tangem.domain.yield.supply.models.incentives.YieldReward
+import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
 import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -18,16 +20,20 @@ import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import java.math.BigInteger
 
 /**
  * Polls on the app scope because the claim sheet is gone before the transaction is mined. A timeout publishes nothing:
  * the transaction may still land.
  *
- * A claim takes every reward of the module, so an in-flight claim is keyed by the module, not by the token.
+ * A confirmed claim stays in flight until Merkl reflects it, since until then the backend still offers the claimed
+ * rewards. A claim takes every reward of the module, so an in-flight claim is keyed by the module, not by the token.
  */
 class YieldSupplyClaimTracker(
     private val yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
     private val yieldIncentivesRepository: YieldIncentivesRepository,
+    private val getYieldRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase,
     private val coroutineScope: AppCoroutineScope,
 ) {
 
@@ -45,63 +51,66 @@ class YieldSupplyClaimTracker(
         return trackedKeys.map { key in it }.distinctUntilChanged()
     }
 
-    /** A second claim for a module already in flight is ignored. */
+    /**
+     * A second claim for a module already in flight is ignored.
+     *
+     * @param claimedRewards rewards the signed claim pays out; the claim counts as reflected once each of them has less
+     * left to claim
+     */
+    @Suppress("LongParameterList")
     fun track(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency.Token,
         chainId: Int,
         userAddress: String,
         transactionHash: String,
+        claimedRewards: List<YieldReward>,
     ) {
         val key = trackedKey(chainId = chainId, userAddress = userAddress)
         if (key in trackedKeys.getAndUpdate { tracked -> tracked + key }) return
 
+        val claim = TrackedClaim(
+            userWalletId = userWalletId,
+            token = cryptoCurrency,
+            chainId = chainId,
+            userAddress = userAddress,
+            transactionHash = transactionHash,
+            claimedRewards = claimedRewards,
+        )
         coroutineScope.launch {
-            // Released before publishing, so listeners see the claim settled when its outcome arrives
-            val outcome = try {
-                awaitOutcome(userWalletId = userWalletId, token = cryptoCurrency, hash = transactionHash)
-                    ?.also { outcome -> invalidateIfConfirmed(outcome, chainId = chainId, userAddress = userAddress) }
+            // A revert is released before publishing, so listeners see the claim settled when its outcome arrives
+            val reverted = try {
+                withTimeoutOrNull(SETTLEMENT_TIMEOUT_MS) { follow(claim) }
             } finally {
                 trackedKeys.update { it - key }
             } ?: return@launch
 
-            outcomes.emit(
-                YieldSupplyClaimOutcome(
-                    userWalletId = userWalletId,
-                    cryptoCurrencyId = cryptoCurrency.id,
-                    chainId = chainId,
-                    userAddress = userAddress,
-                    outcome = outcome,
-                ),
-            )
+            outcomes.emit(claim.toOutcome(reverted))
         }
+    }
+
+    /** @return the outcome when the claim reverted, null once it is confirmed and reflected or its fate is unknown */
+    private suspend fun follow(claim: TrackedClaim): YieldSupplyTransactionOutcome? {
+        val outcome = awaitOutcome(claim)
+        if (outcome == YieldSupplyTransactionOutcome.Reverted) return outcome
+
+        if (outcome == YieldSupplyTransactionOutcome.Confirmed) outcomes.emit(claim.toOutcome(outcome))
+        awaitReflected(claim)
+
+        return null
     }
 
     private fun trackedKey(chainId: Int, userAddress: String) =
         TrackedKey(chainId = chainId, userAddress = userAddress.normalizeEvmAddress())
 
-    private suspend fun invalidateIfConfirmed(
-        outcome: YieldSupplyTransactionOutcome,
-        chainId: Int,
-        userAddress: String,
-    ) {
-        if (outcome == YieldSupplyTransactionOutcome.Confirmed) {
-            yieldIncentivesRepository.invalidateUserCache(chainId = chainId, userAddress = userAddress)
-        }
-    }
-
-    private suspend fun awaitOutcome(
-        userWalletId: UserWalletId,
-        token: CryptoCurrency.Token,
-        hash: String,
-    ): YieldSupplyTransactionOutcome? {
+    private suspend fun awaitOutcome(claim: TrackedClaim): YieldSupplyTransactionOutcome? {
         repeat(MAX_ATTEMPTS) {
             delay(CHECK_INTERVAL_MS)
 
             val outcome = yieldSupplyTransactionRepository.getTransactionOutcome(
-                userWalletId = userWalletId,
-                cryptoCurrency = token,
-                transactionHash = hash,
+                userWalletId = claim.userWalletId,
+                cryptoCurrency = claim.token,
+                transactionHash = claim.transactionHash,
             )
             if (outcome != null) return outcome
         }
@@ -109,11 +118,57 @@ class YieldSupplyClaimTracker(
         return null
     }
 
+    private suspend fun awaitReflected(claim: TrackedClaim) {
+        while (!isReflected(claim)) delay(REFLECTION_CHECK_INTERVAL_MS)
+    }
+
+    /** A failed read counts as not reflected yet. */
+    private suspend fun isReflected(claim: TrackedClaim): Boolean {
+        yieldIncentivesRepository.invalidateUserCache(chainId = claim.chainId, userAddress = claim.userAddress)
+        val summary = getYieldRewardsSummaryUseCase(chainId = claim.chainId, userAddress = claim.userAddress)
+            .getOrNull()
+            ?: return false
+        if (summary !is YieldRewardsSummary.Claimable) return true
+
+        return claim.claimedRewards.all { claimed ->
+            val remainingAmount = summary.claimable
+                .firstOrNull { reward ->
+                    reward.rewardToken.normalizeEvmAddress() == claimed.rewardToken.normalizeEvmAddress()
+                }
+                ?.claimableAmount
+                ?: BigInteger.ZERO
+
+            remainingAmount < claimed.claimableAmount
+        }
+    }
+
+    private data class TrackedClaim(
+        val userWalletId: UserWalletId,
+        val token: CryptoCurrency.Token,
+        val chainId: Int,
+        val userAddress: String,
+        val transactionHash: String,
+        val claimedRewards: List<YieldReward>,
+    ) {
+
+        fun toOutcome(outcome: YieldSupplyTransactionOutcome) = YieldSupplyClaimOutcome(
+            userWalletId = userWalletId,
+            cryptoCurrencyId = token.id,
+            chainId = chainId,
+            userAddress = userAddress,
+            outcome = outcome,
+        )
+    }
+
     private companion object {
         const val CHECK_INTERVAL_MS = 10_000L
 
         /** Five minutes: long enough for a congested EVM block, short enough not to poll a dropped transaction. */
         const val MAX_ATTEMPTS = 30
+        const val REFLECTION_CHECK_INTERVAL_MS = 15_000L
+
+        /** Six minutes from the submission, mining included; Merkl reflects a claim within a few minutes. */
+        const val SETTLEMENT_TIMEOUT_MS = 360_000L
         const val OUTCOME_BUFFER = 8
     }
 }

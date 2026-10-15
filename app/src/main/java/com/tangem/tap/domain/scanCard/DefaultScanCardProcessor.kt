@@ -1,6 +1,5 @@
 package com.tangem.tap.domain.scanCard
 
-import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
@@ -53,54 +52,6 @@ internal class DefaultScanCardProcessor @Inject constructor(
     private val appCoroutineScope: AppCoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ScanCardProcessor {
-
-    override suspend fun scan(
-        cardId: String?,
-        allowsRequestAccessCodeFromRepository: Boolean,
-        analyticsSource: AnalyticsParam.ScreensSources,
-        shouldCheckIsAlreadyActivated: Boolean,
-    ): CompletionResult<ScanResponse> {
-        return tangemSdkManager.scanProduct(
-            cardId = cardId,
-            allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
-            shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
-            source = analyticsSource,
-        )
-            .doOnFailure { error ->
-                onScanFailure(analyticsSource = analyticsSource, error = error, onFailure = {}, onCancel = {})
-            }
-    }
-
-    @Suppress("LongParameterList")
-    override suspend fun scan(
-        analyticsSource: AnalyticsParam.ScreensSources,
-        shouldCheckIsAlreadyActivated: Boolean,
-        cardId: String?,
-        onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
-        onWalletNotCreated: suspend () -> Unit,
-        onCancel: suspend () -> Unit,
-        onFailure: suspend (error: TangemError) -> Unit,
-        onSuccess: suspend (scanResponse: ScanResponse) -> Unit,
-    ) {
-        val config = ScanConfig(
-            analyticsSource = analyticsSource,
-            cardId = cardId,
-            shouldConfirmWalletOwnership = shouldCheckIsAlreadyActivated,
-            canRequestAccessCodeFromRepository = false,
-            shouldUpdateCardIdDisplayFormat = true,
-            shouldTrackScanFails = true,
-            shouldLaunchOnboarding = true,
-            callback = object : ScanConfig.Callback {
-                override suspend fun onProgressStateChange(showProgress: Boolean) = onProgressStateChange(showProgress)
-                override suspend fun onOnboardingRequired() = onWalletNotCreated()
-                override suspend fun onCardVerificationFailed() = onCancel()
-                override suspend fun onFailure(error: TangemError) = onFailure(error)
-                override suspend fun onSuccess(scanResponse: ScanResponse) = onSuccess(scanResponse)
-            },
-        )
-
-        scan(config)
-    }
 
     override suspend fun scan(config: ScanConfig) {
         val callback = config.callback

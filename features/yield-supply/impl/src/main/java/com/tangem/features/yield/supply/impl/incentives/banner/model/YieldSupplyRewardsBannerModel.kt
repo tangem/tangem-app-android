@@ -1,16 +1,11 @@
 package com.tangem.features.yield.supply.impl.incentives.banner.model
 
 import arrow.core.Either
-import arrow.core.right
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.models.normalizeEvmAddress
-import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository.Companion.INCENTIVES_CACHE_SECONDS
-import com.tangem.domain.yield.supply.models.YieldMarketToken
-import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
@@ -23,31 +18,17 @@ import com.tangem.features.yield.supply.impl.incentives.banner.DefaultYieldSuppl
 import com.tangem.features.yield.supply.impl.incentives.banner.entity.YieldSupplyRewardsBannerUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 import com.tangem.core.res.R as CoreResR
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @ModelScoped
 internal class YieldSupplyRewardsBannerModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -62,96 +43,52 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
     val uiState: StateFlow<YieldSupplyRewardsBannerUM?>
         field = MutableStateFlow<YieldSupplyRewardsBannerUM?>(null)
 
-    private var market: YieldMarketToken? = null
-    private var userAddress: String? = null
     private var isClaimInFlight: Boolean = false
     private var context: BannerContext? = null
-
     private var rewards: YieldSupplyRewardsBannerUM? = null
-
-    /** Serializes the market collector and the post-claim refresh. */
-    private val publishMutex = Mutex()
 
     init {
         modelScope.launch {
             val address = params.cryptoCurrencyStatusFlow
                 .mapNotNull { it.value.networkAddress?.defaultAddress?.value }
                 .first()
-            userAddress = address
 
-            // In-flight is per module: a claim from another token of it disables this button too
-            yieldSupplyMarketFlowUseCase(params.cryptoCurrency)
-                .flatMapLatest { currentMarket ->
-                    val chainId = currentMarket?.chainId ?: return@flatMapLatest flowOf(currentMarket to false)
+            yieldSupplyMarketFlowUseCase(params.cryptoCurrency).collectLatest { market ->
+                val chainId = market?.takeIf { it.campaign?.hasActiveCampaign == true }?.chainId
+                if (chainId == null) {
+                    context = null
+                    rewards = null
+                    uiState.value = null
+                    return@collectLatest
+                }
 
-                    yieldSupplyClaimTracker
-                        .isClaimInFlight(chainId = chainId, userAddress = address)
-                        .map { currentClaimInFlight -> currentMarket to currentClaimInFlight }
+                context = BannerContext(chainId = chainId, userAddress = address)
+                rewards = readRewards(chainId = chainId, userAddress = address).getOrNull()
+
+                // In-flight is per module: a claim from another token of it disables this button too
+                yieldSupplyClaimTracker.isClaimInFlight(chainId = chainId, userAddress = address).collect { inFlight ->
+                    // A failed read after the claim settles says nothing about the rewards, so the banner stays
+                    if (isClaimInFlight && !inFlight) {
+                        readRewards(chainId = chainId, userAddress = address).onRight { rewards = it }
+                    }
+                    isClaimInFlight = inFlight
+                    uiState.value = rewards?.withClaimInFlight(inFlight)
                 }
-                .flowOn(dispatchers.io)
-                .collectLatest { (currentMarket, currentClaimInFlight) ->
-                    market = currentMarket
-                    isClaimInFlight = currentClaimInFlight
-                    publishBanner()
-                }
+            }
         }
-        subscribeOnClaimOutcome()
     }
 
     fun onClaimClick() {
-        // The button is disabled only once the banner is re-read, which may still be in progress
         if (isClaimInFlight) return
         val bannerContext = context ?: return
         params.onClaimClick(bannerContext.chainId, bannerContext.userAddress)
     }
 
-    /** Merkl may still return the claimed rewards right after confirmation, so an unchanged read is repeated once. */
-    private fun subscribeOnClaimOutcome() {
-        yieldSupplyClaimTracker.outcomes
-            .filter { claimOutcome ->
-                val bannerContext = context
-
-                bannerContext != null &&
-                    claimOutcome.chainId == bannerContext.chainId &&
-                    claimOutcome.userAddress.normalizeEvmAddress() == bannerContext.userAddress.normalizeEvmAddress() &&
-                    claimOutcome.outcome == YieldSupplyTransactionOutcome.Confirmed
-            }
-            .onEach { _ ->
-                // Without the in-flight overlay: the tracker clears it right before the outcome, which is no change
-                val before = rewards
-                val refreshed = publishBanner(keepOnFailure = true)
-                if (refreshed.fold(ifLeft = { false }, ifRight = { banner -> banner != before })) return@onEach
-
-                // By then the cached read has expired, so this one reaches the network
-                delay(INCENTIVES_CACHE_SECONDS.seconds)
-                publishBanner()
-            }
-            .launchIn(modelScope)
-    }
-
-    /** @param keepOnFailure a failed read after a claim says nothing about the rewards, so the banner stays */
-    private suspend fun publishBanner(
-        keepOnFailure: Boolean = false,
-    ): Either<YieldIncentivesError, YieldSupplyRewardsBannerUM?> = publishMutex.withLock {
-        val address = userAddress ?: return null.right()
-        val lookup = withContext(dispatchers.io) { resolveBanner(market = market, userAddress = address) }
-        if (lookup.isLeft() && keepOnFailure) return lookup
-
-        val banner = lookup.getOrNull()
-        rewards = banner
-        uiState.update { banner?.withClaimInFlight(isClaimInFlight) }
-
-        lookup
-    }
-
-    private suspend fun resolveBanner(
-        market: YieldMarketToken?,
+    private suspend fun readRewards(
+        chainId: Int,
         userAddress: String,
-    ): Either<YieldIncentivesError, YieldSupplyRewardsBannerUM?> {
-        if (market?.campaign?.hasActiveCampaign != true) return null.right()
-        context = BannerContext(chainId = market.chainId, userAddress = userAddress)
-
-        return getYieldRewardsSummaryUseCase(chainId = market.chainId, userAddress = userAddress)
+    ): Either<YieldIncentivesError, YieldSupplyRewardsBannerUM?> = withContext(dispatchers.io) {
+        getYieldRewardsSummaryUseCase(chainId = chainId, userAddress = userAddress)
             .onLeft(::logHidden)
             .map { summary -> summary.toUM() }
     }
