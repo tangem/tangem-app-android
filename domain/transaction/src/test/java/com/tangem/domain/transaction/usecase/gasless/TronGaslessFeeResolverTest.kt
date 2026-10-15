@@ -115,28 +115,70 @@ internal class TronGaslessFeeResolverTest {
             }
 
         @Test
-        fun `GIVEN token covers the fee WHEN resolveWithAutoFeeToken THEN gasless fee without native estimate`() =
+        fun `GIVEN token covers the fee WHEN resolveWithAutoFeeToken THEN gasless fee is kept`() =
             runTest {
                 // Act
                 val actual = resolve(sentBalance = "3.41", nativeBalance = "50")
 
                 // Assert
                 assertThat(actual).isEqualTo(gaslessFee(GASLESS_FEE).right())
-                assertThat(nativeFeeStub.calls).isEqualTo(0)
+                assertThat(nativeFeeStub.calls).isEqualTo(1)
                 assertThat(nativeFeeStub.preferredCalls).isEqualTo(0)
             }
 
         @Test
-        fun `GIVEN sent token balance unknown WHEN resolveWithAutoFeeToken THEN gasless fee without native estimate`() =
+        fun `GIVEN sent token balance unknown WHEN resolveWithAutoFeeToken THEN gasless fee is kept`() =
             runTest {
                 // Act
                 val actual = resolve(sentBalance = null, nativeBalance = "50")
 
                 // Assert
                 assertThat(actual).isEqualTo(gaslessFee(GASLESS_FEE).right())
-                assertThat(nativeFeeStub.calls).isEqualTo(0)
+                assertThat(nativeFeeStub.calls).isEqualTo(1)
                 assertThat(nativeFeeStub.preferredCalls).isEqualTo(0)
             }
+
+        @Test
+        fun `GIVEN own energy covers the fee and TRX covers it WHEN resolveWithAutoFeeToken THEN native fee`() =
+            runTest {
+                // Arrange
+                nativeFeeStub.reset(tronNativeFee(value = "0.35", remainingEnergy = 70_000, feeEnergy = 65_000).right())
+
+                // Act
+                val actual = resolve(sentBalance = "100", nativeBalance = "50")
+
+                // Assert
+                val expected = tronNativeFee(value = "0.35", remainingEnergy = 70_000, feeEnergy = 65_000)
+                assertThat(actual).isEqualTo(expected.right())
+                coVerify(exactly = 0) { getTronGaslessFeeUseCase(any(), any(), any()) }
+                assertThat(nativeFeeStub.preferredCalls).isEqualTo(0)
+            }
+
+        @Test
+        fun `GIVEN own energy covers the fee and TRX short WHEN resolveWithAutoFeeToken THEN gasless fee is kept`() =
+            runTest {
+                // Arrange
+                nativeFeeStub.reset(tronNativeFee(value = "0.35", remainingEnergy = 70_000, feeEnergy = 65_000).right())
+
+                // Act
+                val actual = resolve(sentBalance = "100", nativeBalance = "0.1")
+
+                // Assert
+                assertThat(actual).isEqualTo(gaslessFee(GASLESS_FEE).right())
+            }
+
+        @Test
+        fun `GIVEN own energy short WHEN resolveWithAutoFeeToken THEN gasless fee is kept`() = runTest {
+            // Arrange
+            nativeFeeStub.reset(tronNativeFee(value = "6.43", remainingEnergy = 10_000, feeEnergy = 65_000).right())
+
+            // Act
+            val actual = resolve(sentBalance = "100", nativeBalance = "50")
+
+            // Assert
+            assertThat(actual).isEqualTo(gaslessFee(GASLESS_FEE).right())
+            assertThat(nativeFeeStub.calls).isEqualTo(1)
+        }
 
         @Test
         fun `GIVEN token balance equals the fee and TRX covers native WHEN resolveWithAutoFeeToken THEN native fee`() =
@@ -315,7 +357,7 @@ internal class TronGaslessFeeResolverTest {
 
             // Assert
             assertThat(actual).isEqualTo(refusal.left())
-            assertThat(nativeFeeStub.calls).isEqualTo(0)
+            assertThat(nativeFeeStub.calls).isEqualTo(1)
             assertThat(nativeFeeStub.preferredCalls).isEqualTo(0)
         }
 
@@ -411,6 +453,17 @@ internal class TronGaslessFeeResolverTest {
 
     private fun nativeFee(value: String) = TransactionFeeExtended(
         transactionFee = TransactionFee.Single(normal = Fee.Common(Amount(BigDecimal(value), Blockchain.Tron))),
+        feeTokenId = trx.id,
+    )
+
+    private fun tronNativeFee(value: String, remainingEnergy: Long, feeEnergy: Long) = TransactionFeeExtended(
+        transactionFee = TransactionFee.Single(
+            normal = Fee.Tron(
+                amount = Amount(BigDecimal(value), Blockchain.Tron),
+                remainingEnergy = remainingEnergy,
+                feeEnergy = feeEnergy,
+            ),
+        ),
         feeTokenId = trx.id,
     )
 
