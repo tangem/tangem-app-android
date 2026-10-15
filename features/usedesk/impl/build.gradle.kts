@@ -30,6 +30,7 @@ dependencies {
     api(projects.domain.feedback)
     api(projects.domain.settings)
     implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -47,6 +48,7 @@ dependencies {
     implementation(deps.lifecycle.runtime.ktx)
 
     /** Other */
+    implementation(deps.arrow.core)
     implementation(deps.decompose)
     implementation(deps.kotlin.coroutines)
 
