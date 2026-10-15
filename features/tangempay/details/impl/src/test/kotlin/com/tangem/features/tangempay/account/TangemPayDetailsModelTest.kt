@@ -77,6 +77,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -88,6 +89,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 import java.util.Currency
 import com.tangem.core.ui.R as CoreUiR
@@ -296,6 +298,25 @@ internal class TangemPayDetailsModelTest {
 
     internal data class NotLoadedStatusModel(val name: String, val status: PaymentAccountStatusValue) {
         override fun toString(): String = name
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN balance hiding setting WHEN status re-emits THEN balance visibility follows the setting`(
+        isBalanceHidden: Boolean,
+    ) = runTest {
+        // Arrange
+        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
+        val model = createModel(testScope = this, statusFlow = statusFlow, isBalanceHidden = isBalanceHidden)
+        advanceUntilIdle()
+
+        // Act
+        statusFlow.value = paymentStatus(loadedStatus(availableForWithdrawal = BigDecimal.TEN))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.isBalanceHidden).isEqualTo(isBalanceHidden)
+        model.onDestroy()
     }
 
     @ParameterizedTest
@@ -974,6 +995,7 @@ internal class TangemPayDetailsModelTest {
         initialRoute: TangemPayDetailsInitialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
         statusEmissions: Int = 1,
         statusFlow: Flow<AccountStatus.Payment>? = null,
+        isBalanceHidden: Boolean = false,
     ): TangemPayDetailsModel {
         val initialStatus = paymentStatus(
             value = statusValue ?: loadedStatus(
@@ -999,7 +1021,7 @@ internal class TangemPayDetailsModelTest {
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             analytics = analytics,
             router = router,
-            getBalanceHidingSettingsUseCase = mockk(relaxed = true),
+            getBalanceHidingSettingsUseCase = mockk { every { isBalanceHidden() } returns flowOf(isBalanceHidden) },
             uiMessageSender = uiMessageSender,
             txHistoryUpdateListener = mockk(relaxed = true),
             tangemPayWithdrawRepository = tangemPayWithdrawRepository,
