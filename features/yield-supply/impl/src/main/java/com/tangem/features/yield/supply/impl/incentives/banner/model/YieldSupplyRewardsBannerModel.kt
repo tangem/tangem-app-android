@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -53,28 +54,35 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
                 .mapNotNull { it.value.networkAddress?.defaultAddress?.value }
                 .first()
 
-            yieldSupplyMarketFlowUseCase(params.cryptoCurrency).collectLatest { market ->
-                val chainId = market?.takeIf { it.campaign?.hasActiveCampaign == true }?.chainId
-                if (chainId == null) {
-                    context = null
-                    rewards = null
-                    uiState.value = null
-                    return@collectLatest
-                }
-
-                context = BannerContext(chainId = chainId, userAddress = address)
-                rewards = readRewards(chainId = chainId, userAddress = address).getOrNull()
-
-                // In-flight is per module: a claim from another token of it disables this button too
-                yieldSupplyClaimTracker.isClaimInFlight(chainId = chainId, userAddress = address).collect { inFlight ->
-                    // A failed read after the claim settles says nothing about the rewards, so the banner stays
-                    if (isClaimInFlight && !inFlight) {
-                        readRewards(chainId = chainId, userAddress = address).onRight { rewards = it }
+            yieldSupplyMarketFlowUseCase(params.cryptoCurrency)
+                .flowOn(dispatchers.io)
+                .collectLatest { market ->
+                    val chainId = market?.takeIf { it.campaign?.hasActiveCampaign == true }?.chainId
+                    if (chainId == null) {
+                        context = null
+                        rewards = null
+                        uiState.value = null
+                        return@collectLatest
                     }
-                    isClaimInFlight = inFlight
-                    uiState.value = rewards?.withClaimInFlight(inFlight)
+
+                    context = BannerContext(chainId = chainId, userAddress = address)
+                    rewards = readRewards(chainId = chainId, userAddress = address).getOrNull()
+                    showRewards(chainId = chainId, userAddress = address)
                 }
+        }
+    }
+
+    private suspend fun showRewards(chainId: Int, userAddress: String) {
+        var wasInFlight = false
+        // In-flight is per module: a claim from another token of it disables this button too
+        yieldSupplyClaimTracker.isClaimInFlight(chainId = chainId, userAddress = userAddress).collect { inFlight ->
+            // A failed read after the claim settles says nothing about the rewards, so the banner stays
+            if (wasInFlight && !inFlight) {
+                readRewards(chainId = chainId, userAddress = userAddress).onRight { rewards = it }
             }
+            wasInFlight = inFlight
+            isClaimInFlight = inFlight
+            uiState.value = rewards?.withClaimInFlight(inFlight)
         }
     }
 
