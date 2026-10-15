@@ -40,11 +40,8 @@ import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
-import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
-import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
-import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.SendComponent
@@ -67,7 +64,7 @@ import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.confirm.model.SendConfirmModel
 import com.tangem.features.send.send.joint.JointSendDelegate
 import com.tangem.features.send.send.model.SendModel
-import com.tangem.features.send.send.model.TronDefaultFeeLoader
+import com.tangem.features.send.send.model.DefaultFeeLoader
 import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.features.send.testDispatcherProvider
 import com.tangem.test.core.TestAppCoroutineScope
@@ -114,8 +111,6 @@ internal abstract class SendModelTestBase {
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     protected val jointSendDelegate: JointSendDelegate = mockk(relaxed = true)
     protected val sendTransactionUseCase: SendTransactionUseCase = mockk(relaxed = true)
-    protected val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk(relaxed = true)
-    protected val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk(relaxed = true)
 
     // SendConfirmModel-specific dependencies
     protected val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase = mockk(relaxed = true)
@@ -133,8 +128,6 @@ internal abstract class SendModelTestBase {
     protected val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase = mockk(relaxed = true)
     protected val currenciesRepository: CurrenciesRepository = mockk(relaxed = true)
     protected val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase = mockk(relaxed = true)
-    protected val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase =
-        mockk(relaxed = true)
     protected val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase = mockk(relaxed = true)
     protected val sendAnalyticHelper: SendAnalyticHelper = mockk(relaxed = true)
     protected val recordTokenTransferFromSendUseCase: RecordTokenTransferFromSendUseCase = mockk(relaxed = true)
@@ -206,17 +199,15 @@ internal abstract class SendModelTestBase {
             getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
             createTransferTransactionUseCase = createTransferTransactionUseCase,
             getFeeUseCase = getFeeUseCase,
-            getFeeForGaslessUseCase = getFeeForGaslessUseCase,
             getFeeForTokenUseCase = getFeeForTokenUseCase,
             getAccountCurrencyStatusUseCase = getAccountCurrencyStatusUseCase,
             isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
             sendAmountUpdateTrigger = sendAmountUpdateTrigger,
             analyticsEventHandler = analyticsEventHandler,
             jointSendDelegate = jointSendDelegate,
-            getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
-            tronDefaultFeeLoader = TronDefaultFeeLoader(
-                getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
-                isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+            defaultFeeLoader = DefaultFeeLoader(
+                getFeeForGaslessUseCase = getFeeForGaslessUseCase,
+                getFeeUseCase = getFeeUseCase,
             ),
         )
     }
@@ -255,7 +246,6 @@ internal abstract class SendModelTestBase {
             manageCryptoCurrenciesUseCase = manageCryptoCurrenciesUseCase,
             currenciesRepository = currenciesRepository,
             createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
-            createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
             isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
             jointSendDelegate = jointSendDelegate,
             recordTokenTransferFromSendUseCase = recordTokenTransferFromSendUseCase,

@@ -38,7 +38,7 @@ internal fun WcEstimatedWalletChangesNotificationItem(
         )
 
         Text(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 12.dp, end = 12.dp, bottom = 14.dp),
             text = description?.resolveReference()

@@ -21,6 +21,7 @@ import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
 import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.hot.sdk.TangemHotSdk
+import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.storage.AndroidSecureStorage
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.sdk.storage.createEncryptedSharedPreferences
@@ -31,7 +32,6 @@ import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysStoreDecor
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultSelectedUserWalletRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsPublicInformationRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsSensitiveInformationRepository
-import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -65,6 +65,7 @@ internal object UserWalletsListRepositoryModule {
         isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
         getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
         walletRegistrationTrigger: Lazy<WalletRegistrationTrigger>,
+        tangemSdkManager: Lazy<TangemSdkManager>,
     ): UserWalletsListRepository {
         val moshi = buildMoshi()
         val secureStorage = buildSecureStorage(applicationContext = applicationContext)
@@ -72,10 +73,10 @@ internal object UserWalletsListRepositoryModule {
         val authenticatedStorage = AuthenticatedStorage(
             secureStorage = UserWalletsKeysStoreDecorator(
                 featureStorage = secureStorage,
-                cardSdkStorageProvider = Provider { tangemSdkManager.secureStorage },
+                cardSdkStorageProvider = Provider { tangemSdkManager.get().secureStorage },
             ),
             keystoreManager = DelegatedKeystoreManager(
-                keystoreManagerProvider = Provider { tangemSdkManager.keystoreManager },
+                keystoreManagerProvider = Provider { tangemSdkManager.get().keystoreManager },
             ),
         )
 
@@ -107,7 +108,7 @@ internal object UserWalletsListRepositoryModule {
             selectedUserWalletRepository = selectedUserWalletRepository,
             passwordRequester = passwordRequester,
             userWalletEncryptionKeysRepository = userWalletEncryptionKeysRepository,
-            tangemSdkManagerProvider = Provider { tangemSdkManager },
+            tangemSdkManagerProvider = Provider { tangemSdkManager.get() },
             appPreferencesStore = appPreferencesStore,
             storePreferencesKeys = storePreferencesKeys,
             savePersistentInformation = ProviderSuspend { true }, // Always save persistent information for now

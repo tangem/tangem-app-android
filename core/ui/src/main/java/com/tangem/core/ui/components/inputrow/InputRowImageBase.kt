@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.SpacerWMax
@@ -76,7 +77,7 @@ fun InputRowImageBase(
                 isGrayscale = isGrayscaleImage,
                 onImageError = onImageError,
                 modifier = Modifier
-                    .size(TangemTheme.dimens.spacing36)
+                    .size(36.dp)
                     .clip(TangemTheme.shapes.roundedCornersXLarge),
             )
             SpacerW12()
@@ -84,7 +85,7 @@ fun InputRowImageBase(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(TangemTheme.dimens.spacing36)
+                    .size(36.dp)
                     .clip(TangemTheme.shapes.roundedCornersXLarge)
                     .background(iconTint.copy(alpha = 0.08f)),
             ) {
@@ -92,7 +93,7 @@ fun InputRowImageBase(
                     painter = rememberVectorPainter(image = ImageVector.vectorResource(id = iconResVector)),
                     tint = iconTint,
                     contentDescription = null,
-                    modifier = Modifier.size(TangemTheme.dimens.size18),
+                    modifier = Modifier.size(18.dp),
                 )
             }
             SpacerW12()
@@ -100,7 +101,7 @@ fun InputRowImageBase(
             Image(
                 painter = painterResource(iconResWebp),
                 contentDescription = null,
-                modifier = Modifier.size(TangemTheme.dimens.size36),
+                modifier = Modifier.size(36.dp),
             )
             SpacerW12()
         }
@@ -118,7 +119,7 @@ fun InputRowImageBase(
                     text = caption.resolveAnnotatedReference(),
                     style = TangemTheme.typography.caption2,
                     color = captionColor,
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing2),
+                    modifier = Modifier.padding(top = 2.dp),
                 )
             }
         }
@@ -143,7 +144,7 @@ private fun RowScope.InputRowEndIcon(iconRes: Int?, tint: Color = TangemTheme.co
             painter = rememberVectorPainter(image = ImageVector.vectorResource(id = icon)),
             tint = tint,
             contentDescription = null,
-            modifier = Modifier.padding(start = TangemTheme.dimens.spacing6),
+            modifier = Modifier.padding(start = 6.dp),
         )
     }
 }
