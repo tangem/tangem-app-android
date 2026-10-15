@@ -35,7 +35,7 @@ import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
-import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
+import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.converters.SwapProviderResolver
 import com.tangem.feature.swap.converters.SwapProviderStateBuilder
 import com.tangem.feature.swap.domain.models.ExpressDataError
@@ -68,7 +68,7 @@ internal class StateBuilder(
     private val isBalanceHiddenProvider: Provider<Boolean>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
-    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    private val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork,
     private val appRouter: AppRouter,
     private val isChooseTokenPulseEnabled: Boolean,
     private val isCustomSlippageEnabled: Boolean = false,
@@ -80,7 +80,7 @@ internal class StateBuilder(
 
     private val notificationsFactory = SwapNotificationsFactory(
         actions = actions,
-        isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+        isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
         appCurrencyProvider = appCurrencyProvider,
         predictionTopUpLimitsProvider = predictionTopUpLimitsProvider,
     )

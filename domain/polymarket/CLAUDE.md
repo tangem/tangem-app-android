@@ -27,11 +27,14 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 3. **Approvals are only really checked on a fresh wallet.** The BFF reads on-chain allowances before it
    validates our batch, so an already-approved deposit wallet answers `READY_TO_TRADE` to *any* batch.
    Test approvals changes on a brand-new wallet.
-4. **The 13-call approvals batch is not pinned by the backend.** It is validated as a set of
-   `{target, selector, spender}` and grew from 6 to 13 without notice (August 2026); the next change breaks
-   the app with a BFF `400` until a release ships.
+4. **The 17-call approvals batch is not pinned by the backend.** It is validated as a set of
+   `{target, selector, spender}` and grew from 6 to 13 without notice (August 2026), then to 17 with the V2
+   exchange (October 2026); the next change breaks the app with a BFF `400` until a release ships.
 5. **Collateral ≠ top-up token.** `COLLATERAL` is pUSD — what orders spend and the CLOB balance reports.
-   Deposits are native USDC on Polygon (`USDC_TOKEN_ADDRESS`); the bridge converts.
+   Deposits are USDC; the bridge converts. The default is native USDC on Polygon (`USDC_TOKEN_ADDRESS`); the
+   swap top-up also takes every `PolymarketDepositAsset.CATALOG` row the bridge lists with the same contract,
+   decimals and a minimum (`PolymarketDepositRequisites.options`, iOS parity). A listed asset outside the
+   catalogue is never offered: a wrong token or chain is lost.
 6. **The region is read by the flow that commits, never supplied by its entry route.** An unreadable region
    never locks a user out of an existing account (browse, withdraw stay open) but refuses what would commit
    them: no new deploy (`UNDETERMINED`), order gate shut as "unknown", not "restricted". Fail-closed edge:
@@ -55,6 +58,13 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
    `(deposit wallet, nonce)`, so resending the same batch returns the same receipt. The record is cleared
    on a terminal receipt or on a rejection of the submit itself (`RelayerRejected`, `InvalidRequest` — the
    relayer recorded nothing), never on an ambiguous error. A double withdrawal is worse than a stuck record.
+10. **The local confirmation is a fallback, not the answer.** The backend can demote a ready wallet to
+    `DEPLOYED` — the V2 approvals set did it to every wallet — so the entry gate re-reads `GET /wallet` whenever
+    the addresses are stored, and `DEPLOYED` sends the user back to the approvals step: one signing session, no
+    deploy, stored credentials kept, and the run is not a new account (no welcome story). The record answers alone only without stored addresses or when the read
+    fails transiently or takes over five seconds; a mismatching deposit wallet or a rejected request fails the
+    entry like any other. `DEPLOYED` never clears the record, `NOT_CREATED` does (as the account status refresh
+    already does) — the Prediction account in the account list hangs on it.
 
 ## Onboarding
 
@@ -63,7 +73,7 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 - Credentials: derive-api-key first, create only on "no key yet".
 - `PolymarketOnboardedStore` mirrors backend reads: `READY_TO_TRADE` records the wallet, `NOT_CREATED`
   withdraws it, any other status leaves it alone. Without stored addresses nothing is asked: the record
-  alone answers `Reconnect`, its absence `Undetermined`.
+  alone answers `Onboarded` with credentials, `Reconnect` without, its absence `Undetermined`.
 
 ## Signing and orders
 
@@ -81,6 +91,10 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 - **Balance**: `syncBalanceAllowance` must precede `getBalanceAllowance` — the CLOB serves a cached figure it
   recomputes only when asked, so a wallet funded after onboarding would report zero forever. The sync is
   best-effort.
+  A SELL refreshes the cache of the shares it spends (`CONDITIONAL` for a V1 market, `CONDITIONAL-V2` for V2,
+  with the token id) right before the order, inside the credentials lock; a failure there is logged and the order
+  is sent anyway, and its `401` drops nothing — only the order's own `401` does.
+
 - **Funding window** (5 s polling instead of 30 s, up to 90 s like iOS) opens only on a send this app made; an
   external transfer's timing is unknown.
 - **Positions value** is kept apart from the account status: it needs only the deposit-wallet address

@@ -1,6 +1,7 @@
 package com.tangem.domain.models.account
 
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.TotalFiatBalance
 import kotlinx.serialization.Serializable
 
 /**
@@ -86,6 +87,24 @@ sealed class JointAccountStatusValue {
          */
         @Serializable
         data object Unavailable : Error() {
+            override val source: StatusSource = StatusSource.ACTUAL
+        }
+
+        /**
+         * The composition the backend states does not verify: this wallet's owner address is not among the members,
+         * or the Safe address does not follow from them. Nothing can be done with the account, and its tokens stay
+         * out of every flow; only the row is shown, so its figures travel here instead of in a token list.
+         *
+         * @property totalMembers members of the account
+         * @property tokensCount  tokens the account holds
+         * @property fiatBalance  what those tokens are worth, kept out of the wallet total
+         */
+        @Serializable
+        data class Compromised(
+            val totalMembers: Int,
+            val tokensCount: Int,
+            val fiatBalance: TotalFiatBalance,
+        ) : Error() {
             override val source: StatusSource = StatusSource.ACTUAL
         }
     }

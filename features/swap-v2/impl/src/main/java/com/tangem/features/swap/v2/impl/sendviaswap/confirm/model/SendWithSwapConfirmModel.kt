@@ -3,7 +3,6 @@ package com.tangem.features.swap.v2.impl.sendviaswap.confirm.model
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
-import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -34,6 +33,7 @@ import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
@@ -593,8 +593,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private fun getSelectedFeeToken(): CryptoCurrency {
         val feeUMV2 = uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Content
         val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
-        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
-        return if (isFeeInTokenCurrency) {
+        // Tron quotes its compensation as Fee.Common, so the fee's own shape cannot answer this.
+        return if (feeExtended?.isGasless == true) {
             feeUMV2.feeExtraInfo.feeCryptoCurrencyStatus.currency
         } else {
             primaryCurrencyStatus.currency

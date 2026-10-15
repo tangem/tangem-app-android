@@ -3,6 +3,7 @@ package com.tangem.domain.polymarket.usecase
 import arrow.core.Either
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PolymarketClobAsset
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 
 /**
@@ -17,6 +18,10 @@ class SyncBalanceAllowanceUseCase(
         ownerAddress: String,
         credentials: PolymarketApiCredentials,
     ): Either<PolymarketOnboardingError, Unit> = polymarketRepository
-        .syncBalanceAllowance(ownerAddress = ownerAddress, credentials = credentials)
+        .syncBalanceAllowance(
+            ownerAddress = ownerAddress,
+            credentials = credentials,
+            asset = PolymarketClobAsset.Collateral,
+        )
         .mapLeft { it.toOnboardingError() }
 }

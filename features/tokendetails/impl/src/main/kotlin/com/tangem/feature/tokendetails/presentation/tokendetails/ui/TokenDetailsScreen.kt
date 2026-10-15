@@ -90,7 +90,7 @@ internal fun TokenDetailsScreen(
 
     val rootBackground = TangemTheme.colors2.surface.level2
     var marketBlockHeight by remember { mutableStateOf(0.dp) }
-    val effectiveBottomPadding = marketBlockHeight + TangemTheme.dimens2.x4
+    val effectiveBottomPadding = marketBlockHeight + 16.dp
 
     CompositionLocalProvider(LocalHazeState provides hazeState) {
         Box(
@@ -196,11 +196,11 @@ private fun TokenDetailsBody(
     val txHistoryState by txHistoryComponent.txHistoryState.collectAsStateWithLifecycle()
     val itemModifier = Modifier
         .fillMaxWidth()
-        .padding(horizontal = TangemTheme.dimens2.x4)
+        .padding(horizontal = 16.dp)
 
     val expressTransactionModifier = Modifier
         .fillMaxWidth()
-        .padding(start = TangemTheme.dimens2.x4, end = TangemTheme.dimens2.x4, top = TangemTheme.dimens2.x4)
+        .padding(start = 16.dp, end = 16.dp, top = 16.dp)
 
     LazyColumn(
         modifier = modifier
@@ -241,13 +241,13 @@ private fun TokenDetailsBody(
                 EarnBlock(
                     state = earnBlock,
                     modifier = itemModifier
-                        .padding(vertical = TangemTheme.dimens2.x3)
+                        .padding(vertical = 12.dp)
                         .testTag(stakingTag),
                 )
             }
         }
         item(key = "yield_supply_block") {
-            yieldSupplyComponent.Content(modifier = itemModifier.padding(vertical = TangemTheme.dimens2.x3))
+            yieldSupplyComponent.Content(modifier = itemModifier.padding(vertical = 12.dp))
         }
         tokenDetailsUM.quickTopUpBlock?.let { quickTopUpBlock ->
             item(key = "quick_top_up_block") {
@@ -264,7 +264,7 @@ private fun TokenDetailsBody(
             item(key = "zero_balance_actions") {
                 ZeroBalanceActionsBlock(
                     state = tokenDetailsUM.zeroBalanceActionsUM,
-                    modifier = itemModifier.padding(vertical = TangemTheme.dimens2.x2),
+                    modifier = itemModifier.padding(vertical = 8.dp),
                 )
             }
         }

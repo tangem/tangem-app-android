@@ -26,7 +26,6 @@ import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -44,7 +43,6 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun YieldSupplyClaimContent(
     state: YieldSupplyClaimUM,
     notificationsComponent: ComposableContentComponent,
-    onRetryClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -53,7 +51,6 @@ internal fun YieldSupplyClaimContent(
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
     ) {
-        // The title and subtitle live in the sheet's own header, which stays put while this block scrolls.
         SpacerH24()
         Text(
             text = state.total.resolveReference(),
@@ -70,9 +67,9 @@ internal fun YieldSupplyClaimContent(
                 RewardGroup(group = group)
             }
 
-            if (state.warning == YieldSupplyClaimUM.Warning.RewardsUnavailable) {
+            state.notification?.let { notification ->
                 Notification(
-                    config = rewardsUnavailableConfig(onRetryClick),
+                    config = notification.config,
                     containerColor = TangemTheme.colors.background.action,
                 )
             }
@@ -99,10 +96,6 @@ internal fun YieldSupplyClaimContent(
     }
 }
 
-/**
- * @param isServiceFeeVisible false while the owner cannot pay the network fee at all: what Tangem would take out of
- * the rewards is noise next to a transaction that cannot be sent.
- */
 @Composable
 private fun FeesCard(
     serviceFee: TextReference?,
@@ -211,8 +204,6 @@ private fun RewardRow(reward: YieldSupplyClaimUM.RewardUM) {
             )
         }
         SpacerWMax()
-        // The USD value leads and the token amount follows it: the claim is read as money first, and an
-        // unroutable reward has no USD value to lead with.
         Column(horizontalAlignment = Alignment.End) {
             reward.fiatAmount?.let { fiat ->
                 Text(
@@ -229,17 +220,6 @@ private fun RewardRow(reward: YieldSupplyClaimUM.RewardUM) {
         }
     }
 }
-
-@Composable
-private fun rewardsUnavailableConfig(onRetryClick: () -> Unit) = NotificationConfig(
-    title = resourceReference(R.string.yield_module_claim_rewards_unavailable_notification_title),
-    subtitle = resourceReference(R.string.yield_module_claim_rewards_unavailable_notification_description),
-    iconResId = R.drawable.ic_alert_24,
-    buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-        text = resourceReference(R.string.common_reload),
-        onClick = onRetryClick,
-    ),
-)
 
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -267,12 +247,12 @@ private fun YieldSupplyClaimContentPreview() {
                 networkFee = stringReference("$2.00"),
                 networkFeeCurrency = stringReference("ETH"),
                 isServiceFeeVisible = true,
-                warning = null,
+                notification = null,
                 isClaimEnabled = true,
                 isClaimInProgress = false,
+                isHoldToConfirmEnabled = false,
             ),
             notificationsComponent = ComposableContentComponent.EMPTY,
-            onRetryClick = {},
         )
     }
 }

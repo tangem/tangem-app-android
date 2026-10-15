@@ -15,9 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.res.TangemColorPalette
-import com.tangem.core.ui.res.TangemTheme
 import kotlinx.coroutines.delay
 
 private const val STORIES_ANIMATION_SPEED_ZERO_DURATION = 3000L
@@ -64,22 +64,22 @@ internal fun StoriesProgressBar(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .padding(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
-                top = TangemTheme.dimens.spacing16,
+                start = 16.dp,
+                end = 16.dp,
+                top = 16.dp,
             ),
     ) {
         for (index in 0..steps) {
             Row(
                 modifier = Modifier
-                    .height(TangemTheme.dimens.size2)
+                    .height(2.dp)
                     .weight(1f)
-                    .clip(RoundedCornerShape(TangemTheme.dimens.radius2))
+                    .clip(RoundedCornerShape(2.dp))
                     .background(TangemColorPalette.White.copy(alpha = .2f)),
             ) {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(TangemTheme.dimens.radius2))
+                        .clip(RoundedCornerShape(2.dp))
                         .background(TangemColorPalette.White)
                         .fillMaxHeight()
                         .let { progressModifier ->
@@ -105,7 +105,7 @@ private fun StoriesProgressBarPreview() {
         modifier = Modifier
             .wrapContentSize()
             .background(TangemColorPalette.Black)
-            .padding(vertical = TangemTheme.dimens.spacing16),
+            .padding(vertical = 16.dp),
     ) {
         StoriesProgressBar(steps = 5, currentStep = 3, paused = false)
     }

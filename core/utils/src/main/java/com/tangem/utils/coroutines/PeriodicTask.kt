@@ -30,17 +30,17 @@ class PeriodicTask<T>(
             // authority here.
             currentCoroutineContext().ensureActive()
             result
-                .onSuccess {
+                .onSuccess { value ->
                     if (!isActive.get()) {
                         return@onSuccess
                     }
-                    onSuccess.invoke(it)
+                    onSuccess.invoke(value)
                 }
-                .onFailure {
+                .onFailure { throwable ->
                     if (!isActive.get()) {
                         return@onFailure
                     }
-                    onError.invoke(it)
+                    onError.invoke(throwable)
                 }
             delay(delay)
         }

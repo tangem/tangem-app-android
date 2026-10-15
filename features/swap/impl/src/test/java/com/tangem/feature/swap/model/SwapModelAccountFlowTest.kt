@@ -4,6 +4,8 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -73,6 +75,7 @@ import com.tangem.feature.swap.router.SwapRoute
 import com.tangem.feature.swap.ui.transfer.SwapTransferNotificationsFactory
 import com.tangem.feature.swap.ui.transfer.SwapTransferStateBuilder
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
+import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.commonfeatures.api.choosetoken.ChooserBlock
 import com.tangem.features.commonfeatures.api.choosetoken.PaymentAccountTokens
 import com.tangem.test.mock.MockAccounts
@@ -936,8 +939,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 every { amount } returns updatedAmount
             },
         )
+        val collateralCurrency = collateral.currency
         val predictionValue = mockk<PredictionAccountStatusValue.Active>(relaxed = true) {
-            every { cryptoCurrencyStatus } returns updatedStatus
+            every { depositStatus(collateralCurrency, any()) } returns updatedStatus
         }
         every { singleAccountStatusSupplier(any()) } returns flowOf(
             AccountStatus.Prediction(account = Account.Prediction(userWalletId), value = predictionValue),
@@ -1028,8 +1032,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                     every { amount } returns updatedAmount
                 },
             )
+            val collateralCurrency = collateral.currency
             val predictionStatusValue = mockk<PredictionAccountStatusValue.Active>(relaxed = true) {
-                every { cryptoCurrencyStatus } returns updatedCollateralStatus
+                every { depositStatus(collateralCurrency, any()) } returns updatedCollateralStatus
             }
             every { singleAccountStatusSupplier(any()) } returns flowOf(
                 AccountStatus.Prediction(account = Account.Prediction(userWalletId), value = predictionStatusValue),
@@ -2269,6 +2274,263 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN a prediction top-up from a deposit token WHEN model constructed THEN TO is that token on its own chain`() =
+        runTest {
+            // Arrange
+            val arbitrumDeposit = tokenStatus(Blockchain.Arbitrum, ARBITRUM_USDC)
+            val depositStatuses = listOf(tokenStatus(Blockchain.Polygon, USDC_CONTRACT_ADDRESS), arbitrumDeposit)
+
+            // Act
+            val model = createPredictionTopUpModel(
+                source = tokenStatus(Blockchain.Arbitrum, ARBITRUM_USDC_CHECKSUM),
+                depositStatuses = depositStatuses,
+            )
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.dataState.toSwapCurrencyStatus?.status).isSameInstanceAs(arbitrumDeposit)
+            assertThat(model.dataState.toSwapCurrencyStatus?.account).isEqualTo(Account.Prediction(userWalletId))
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up from a coin on a deposit chain WHEN model constructed THEN TO stays on that chain`() =
+        runTest {
+            // Arrange
+            val arbitrumDeposit = tokenStatus(Blockchain.Arbitrum, ARBITRUM_USDC)
+            val depositStatuses = listOf(tokenStatus(Blockchain.Polygon, USDC_CONTRACT_ADDRESS), arbitrumDeposit)
+
+            // Act
+            val model = createPredictionTopUpModel(source = coinStatus(Blockchain.Arbitrum), depositStatuses)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.dataState.toSwapCurrencyStatus?.status).isSameInstanceAs(arbitrumDeposit)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up from a chain without a deposit token WHEN model constructed THEN TO is the default`() =
+        runTest {
+            // Arrange
+            val polygonDeposit = tokenStatus(Blockchain.Polygon, USDC_CONTRACT_ADDRESS)
+            val arbitrumDeposit = tokenStatus(Blockchain.Arbitrum, ARBITRUM_USDC)
+
+            // Act
+            val model = createPredictionTopUpModel(
+                source = coinStatus(Blockchain.Bitcoin),
+                depositStatuses = listOf(polygonDeposit, arbitrumDeposit),
+                initialTo = arbitrumDeposit,
+            )
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.dataState.toSwapCurrencyStatus?.status).isSameInstanceAs(polygonDeposit)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN a source on another deposit chain is picked THEN TO and the minimum follow it`() =
+        runTest {
+            // Arrange
+            val polygonDeposit = tokenStatus(Blockchain.Polygon, USDC_CONTRACT_ADDRESS)
+            val arbitrumDeposit = tokenStatus(Blockchain.Arbitrum, ARBITRUM_USDC)
+            val arbitrumCurrency = arbitrumDeposit.currency
+            val model = createPredictionTopUpModel(
+                source = tokenStatus(Blockchain.Polygon, USDC_CONTRACT_ADDRESS),
+                depositStatuses = listOf(polygonDeposit, arbitrumDeposit),
+            )
+            advanceUntilIdle()
+
+            // Act
+            model.chooseFromTokenBridge.onCurrencyChosen.trySend(
+                personalChooseTokenResult(tokenStatus(Blockchain.Arbitrum, ARBITRUM_USDC_CHECKSUM)),
+            )
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.dataState.toSwapCurrencyStatus?.status).isSameInstanceAs(arbitrumDeposit)
+            coVerify { getPredictionTopUpMinimumUseCase(userWalletId, arbitrumCurrency) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN no deposit statuses WHEN a prediction top-up model is constructed THEN TO stays the anchored one`() =
+        runTest {
+            // Arrange
+            val polygonDeposit = tokenStatus(Blockchain.Polygon, USDC_CONTRACT_ADDRESS)
+
+            // Act
+            val model = createPredictionTopUpModel(
+                source = tokenStatus(Blockchain.Arbitrum, ARBITRUM_USDC),
+                depositStatuses = emptyList(),
+                initialTo = polygonDeposit,
+            )
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.dataState.toSwapCurrencyStatus?.status).isSameInstanceAs(polygonDeposit)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up from Solana USDC WHEN model constructed THEN TO is the Solana deposit`() = runTest {
+        // Arrange
+        val solanaDeposit = tokenStatus(Blockchain.Solana, SOLANA_USDC_MINT)
+        val depositStatuses = listOf(tokenStatus(Blockchain.Polygon, USDC_CONTRACT_ADDRESS), solanaDeposit)
+
+        // Act
+        val model = createPredictionTopUpModel(source = tokenStatus(Blockchain.Solana, SOLANA_USDC_MINT), depositStatuses)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.dataState.toSwapCurrencyStatus?.status).isSameInstanceAs(solanaDeposit)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN a source on another deposit chain is picked THEN the transfer gets that chain's minimum`() =
+        runTest {
+            // Arrange
+            val polygonDeposit = tokenStatus(Blockchain.Polygon, USDC_CONTRACT_ADDRESS)
+            val arbitrumDeposit = tokenStatus(Blockchain.Arbitrum, ARBITRUM_USDC)
+            val polygonCurrency = polygonDeposit.currency
+            val arbitrumCurrency = arbitrumDeposit.currency
+            coEvery { getPredictionTopUpMinimumUseCase(userWalletId, polygonCurrency) } returns BigDecimal("2")
+            coEvery { getPredictionTopUpMinimumUseCase(userWalletId, arbitrumCurrency) } returns BigDecimal("7")
+            coEvery { getCurrencyUSDQuoteUseCase(any()) } returns BigDecimal.ONE
+            every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns true
+            stubTransferState()
+            stubTransferStateBuilderPassthrough()
+            val model = createPredictionTopUpModel(
+                source = tokenStatus(Blockchain.Polygon, USDC_CONTRACT_ADDRESS),
+                depositStatuses = listOf(polygonDeposit, arbitrumDeposit),
+            )
+            advanceUntilIdle()
+
+            // Act
+            model.chooseFromTokenBridge.onCurrencyChosen.trySend(
+                personalChooseTokenResult(tokenStatus(Blockchain.Arbitrum, ARBITRUM_USDC_CHECKSUM)),
+            )
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(capturedTopUpLimits().last()?.minimum).isEqualTo(BigDecimal("7"))
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN a source keeping the same deposit is picked THEN the minimum is not read again`() =
+        runTest {
+            // Arrange
+            val polygonDeposit = tokenStatus(Blockchain.Polygon, USDC_CONTRACT_ADDRESS)
+            val polygonCurrency = polygonDeposit.currency
+            val model = createPredictionTopUpModel(
+                source = tokenStatus(Blockchain.Polygon, USDC_CONTRACT_ADDRESS),
+                depositStatuses = listOf(polygonDeposit, tokenStatus(Blockchain.Arbitrum, ARBITRUM_USDC)),
+            )
+            advanceUntilIdle()
+
+            // Act
+            model.chooseFromTokenBridge.onCurrencyChosen.trySend(
+                personalChooseTokenResult(coinStatus(Blockchain.Polygon)),
+            )
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.dataState.toSwapCurrencyStatus?.status).isSameInstanceAs(polygonDeposit)
+            coVerify(exactly = 1) { getPredictionTopUpMinimumUseCase(userWalletId, polygonCurrency) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up switched to another deposit chain WHEN the account balance updates THEN TO keeps that chain`() =
+        runTest {
+            // Arrange
+            val polygonDeposit = tokenStatus(Blockchain.Polygon, USDC_CONTRACT_ADDRESS)
+            val arbitrumDeposit = tokenStatus(Blockchain.Arbitrum, ARBITRUM_USDC)
+            val polygonCurrency = polygonDeposit.currency
+            val arbitrumCurrency = arbitrumDeposit.currency
+            val updatedArbitrum = tokenStatus(Blockchain.Arbitrum, ARBITRUM_USDC)
+            every { updatedArbitrum.currency } returns arbitrumCurrency
+            every { updatedArbitrum.value.amount } returns BigDecimal("12")
+            val predictionValue = mockk<PredictionAccountStatusValue.Active>(relaxed = true) {
+                every { depositStatus(arbitrumCurrency, any()) } returns updatedArbitrum
+                every { depositStatus(polygonCurrency, any()) } returns polygonDeposit
+            }
+            every { singleAccountStatusSupplier(any()) } returns flowOf(
+                AccountStatus.Prediction(account = Account.Prediction(userWalletId), value = predictionValue),
+            )
+            val model = createPredictionTopUpModel(
+                source = tokenStatus(Blockchain.Polygon, USDC_CONTRACT_ADDRESS),
+                depositStatuses = listOf(polygonDeposit, arbitrumDeposit),
+            )
+            advanceUntilIdle()
+
+            // Act
+            model.chooseFromTokenBridge.onCurrencyChosen.trySend(
+                personalChooseTokenResult(tokenStatus(Blockchain.Arbitrum, ARBITRUM_USDC_CHECKSUM)),
+            )
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.dataState.toSwapCurrencyStatus?.status).isSameInstanceAs(updatedArbitrum)
+            model.onDestroy()
+        }
+
+    private fun personalChooseTokenResult(status: CryptoCurrencyStatus): ChooseTokenResult = ChooseTokenResult(
+        currency = status,
+        account = mockk<AccountStatus.Personal>(relaxed = true) {
+            every { account } returns Account.Personal.createMainAccount(userWalletId)
+        },
+        wallet = accountFlowUserWallet(),
+    )
+
+    private suspend fun createPredictionTopUpModel(
+        source: CryptoCurrencyStatus,
+        depositStatuses: List<CryptoCurrencyStatus>,
+        initialTo: CryptoCurrencyStatus = depositStatuses.first(),
+    ): SwapModel {
+        val wallet = accountFlowUserWallet()
+        val from = SwapCurrencyStatus(
+            userWallet = wallet,
+            status = source,
+            account = Account.Personal.createMainAccount(userWalletId),
+        )
+        val to = SwapCurrencyStatus(
+            userWallet = wallet,
+            status = initialTo,
+            account = Account.Prediction(userWalletId),
+        )
+        coEvery {
+            initialCurrenciesResolver.invoke(
+                userWalletId = any(),
+                initialCryptoCurrency = any(),
+                swapCurrencyPosition = any(),
+                accountFlow = any(),
+                initialToCryptoCurrency = any(),
+            )
+        } returns (from to to)
+        coEvery { getPredictionDepositCurrencyStatusesUseCase(userWalletId) } returns depositStatuses
+
+        return createModel(accountFlow = AccountFlow.PredictionTopUp)
+    }
+
+    private fun tokenStatus(blockchain: Blockchain, contractAddress: String): CryptoCurrencyStatus =
+        mockk(relaxed = true) {
+            every { currency } returns mockk<CryptoCurrency.Token>(relaxed = true) {
+                every { network.rawId } returns blockchain.toNetworkId()
+                every { this@mockk.contractAddress } returns contractAddress
+            }
+        }
+
+    private fun coinStatus(blockchain: Blockchain): CryptoCurrencyStatus = mockk(relaxed = true) {
+        every { currency } returns mockk<CryptoCurrency.Coin>(relaxed = true) {
+            every { network.rawId } returns blockchain.toNetworkId()
+        }
+    }
+
     private val polygonCurrencyId: CryptoCurrency.ID = mockk(relaxed = true)
     private val polygonNetworkId: Network.ID = mockk(relaxed = true)
     private val tronCurrencyId: CryptoCurrency.ID = mockk(relaxed = true)
@@ -2340,6 +2602,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         const val OWNER_ADDRESS = "0xOwner"
         const val DEPOSIT_WALLET_ADDRESS = "0xDepositWallet"
         const val USDC_CONTRACT_ADDRESS = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        const val ARBITRUM_USDC = "0xaf88d065e77c8cc2239327c5edb3a432268e5831"
+        const val ARBITRUM_USDC_CHECKSUM = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+        const val SOLANA_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
         const val POLYGON_CHAIN_ID = "137"
         const val NATIVE_ASSET_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
         const val RECIPIENT_ADDRESS = "0xRecipientOnPolygon"

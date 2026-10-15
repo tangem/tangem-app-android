@@ -33,8 +33,7 @@ class AssetsDiscoveryTest : BaseTestCase() {
         const val SCENARIO_STATE_ALREADY_EXISTS = "AlreadyExists"
         const val SCENARIO_STATE_ASSETS_DISCOVERY_REDIRECT = "AssetsDiscoveryRedirect"
         const val SCENARIO_STATE_ASSETS_DISCOVERY_HAPPY_PATH = "AssetsDiscoveryHappyPath"
-        const val SCENARIO_STATE_NON_ZERO_EVM_BALANCES = "NonZeroEvmBalances"
-        const val SCENARIO_STATE_NON_ZERO_EVM_BALANCES_SLOW = "NonZeroEvmBalancesSlow"
+        const val SCENARIO_STATE_NON_ZERO_EVM_BALANCES_DELAYED = "NonZeroEvmBalancesDelayed"
 
         val EXPECTED_DISCOVERED_TOKENS = listOf(
             "Ethereum",
@@ -66,7 +65,10 @@ class AssetsDiscoveryTest : BaseTestCase() {
                 setWireMockScenarioState(CREATE_USER_WALLET_API_SCENARIO, state = SCENARIO_STATE_STARTED)
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, state = SCENARIO_STATE_ASSETS_DISCOVERY_HAPPY_PATH)
                 setWireMockScenarioState(WALLET_TOKENS_API_SCENARIO, state = SCENARIO_STATE_STARTED)
-                setWireMockScenarioState(MORALIS_EVM_TOKEN_BALANCES_API_SCENARIO, state = SCENARIO_STATE_NON_ZERO_EVM_BALANCES)
+                setWireMockScenarioState(
+                    MORALIS_EVM_TOKEN_BALANCES_API_SCENARIO,
+                    state = SCENARIO_STATE_NON_ZERO_EVM_BALANCES_DELAYED,
+                )
             }
         ).run {
             step("Import a new hot wallet from seed phrase") {
@@ -130,7 +132,7 @@ class AssetsDiscoveryTest : BaseTestCase() {
         val tetherTitle = "Tether"
         val ethereumNetworkTitle = "ETHEREUM"
         val accountName = getResourceString(CoreUiR.string.account_main_account_title)
-        val expectedTokensCount = 2
+        val expectedTokensCount = 4
 
         setupHooks(
             additionalBeforeAppLaunchSection = {
@@ -140,7 +142,7 @@ class AssetsDiscoveryTest : BaseTestCase() {
                 setWireMockScenarioState(WALLET_TOKENS_API_SCENARIO, state = SCENARIO_STATE_STARTED)
                 setWireMockScenarioState(
                     MORALIS_EVM_TOKEN_BALANCES_API_SCENARIO,
-                    state = SCENARIO_STATE_NON_ZERO_EVM_BALANCES_SLOW,
+                    state = SCENARIO_STATE_NON_ZERO_EVM_BALANCES_DELAYED,
                 )
             }
         ).run {

@@ -12,18 +12,14 @@
     <ID>BooleanPropertyNaming:TokenDetailsSwapTransactionsStateConverter.kt$TokenDetailsSwapTransactionsStateConverter$val showProviderLink = getShowProviderLink(notification, statusModel)</ID>
     <ID>BooleanPropertyNaming:TokenDetailsSwapTransactionsStateConverter.kt$TokenDetailsSwapTransactionsStateConverter$val showProviderLink = getShowProviderLink(notification, transaction.status)</ID>
     <ID>BooleanPropertyNaming:TokenDetailsTopAppBar.kt$var showDropdownMenu by rememberSaveable { mutableStateOf(false) }</ID>
-    <ID>MultilineLambdaItParameter:ExpressStatusFactory.kt$ExpressStatusFactory${ when (it) { is ExpressTransactionStateUM.OnrampUM -&gt; it.activeStatus.isHidden else -&gt; false } }</ID>
-    <ID>MultilineLambdaItParameter:TokenDetailsTopAppBar.kt${ TangemDropdownItem( item = it, dismissParent = { showDropdownMenu = false }, ) }</ID>
     <ID>NamedArguments:TokenDetailsLoadedBalanceConverter.kt$TokenDetailsLoadedBalanceConverter$formatFiatAmount( status.value, stakingFiatAmount, currentState.selectedBalanceType, appCurrencyProvider(), )</ID>
     <ID>NestedScopeFunctions:TokenDetailsBalanceSelectStateConverter.kt$TokenDetailsBalanceSelectStateConverter$let { cryptoCurrencyStatus.value.fiatRate?.multiply(it) }</ID>
     <ID>NullableBooleanCheck:TokenDetailsSwapTransactionsStateConverter.kt$TokenDetailsSwapTransactionsStateConverter$transaction.status?.hasLongTime ?: false</ID>
     <ID>PropertyUsedBeforeDeclaration:ExpressStatusBottomSheetStateProvider.kt$ExpressStatusBottomSheetStateProvider$network</ID>
     <ID>PropertyUsedBeforeDeclaration:ExpressStatusBottomSheetStateProvider.kt$ExpressStatusBottomSheetStateProvider$token</ID>
-    <ID>SuspendFunSwallowedCancellation:ExchangeStatusFactory.kt$ExchangeStatusFactory$runCatching</ID>
     <ID>UnnecessaryLet:TokenDetailsSkeletonStateConverter.kt$TokenDetailsSkeletonStateConverter$let(::add)</ID>
     <ID>UnnecessaryLet:TokenDetailsStateFactory.kt$TokenDetailsStateFactory$let(::add)</ID>
     <ID>UseEmptyCounterpart:TokenDetailsAnalyticsEvent.kt$TokenDetailsAnalyticsEvent$mapOf()</ID>
     <ID>UseEmptyCounterpart:TokenDetailsAnalyticsEvent.kt$TokenDetailsAnalyticsEvent.Notice$mapOf()</ID>
-    <ID>UseOrEmpty:ExchangeStatusFactory.kt$ExchangeStatusFactory$savedTransactions ?.flatMap { setOf(it.fromCryptoCurrency.id, it.toCryptoCurrency.id) } ?.toSet() ?.getQuotesOrEmpty() ?: emptySet()</ID>
   </CurrentIssues>
 </SmellBaseline>

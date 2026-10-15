@@ -52,17 +52,17 @@ internal fun DynamicAddressesEnableContent(content: DynamicAddressesBottomSheetC
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+            .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
             painter = painterResource(id = CoreR.drawable.ic_dynamic_addresses_bottomsheet_enable_top),
             contentDescription = null,
-            modifier = Modifier.size(TangemTheme.dimens.size44),
+            modifier = Modifier.size(44.dp),
             tint = TangemTheme.colors.icon.accent,
         )
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing12))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Text(
             text = stringResourceSafe(id = R.string.dynamic_addresses),
@@ -71,7 +71,7 @@ internal fun DynamicAddressesEnableContent(content: DynamicAddressesBottomSheetC
             textAlign = TextAlign.Center,
         )
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing8))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = stringResourceSafe(id = R.string.dynamic_addresses_enter_subtitle),
@@ -80,7 +80,7 @@ internal fun DynamicAddressesEnableContent(content: DynamicAddressesBottomSheetC
             textAlign = TextAlign.Center,
         )
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing24))
+        Spacer(modifier = Modifier.height(24.dp))
 
         FeatureItem(
             iconRes = CoreR.drawable.ic_dynamic_addresses_bottomsheet_flash_24,
@@ -88,7 +88,7 @@ internal fun DynamicAddressesEnableContent(content: DynamicAddressesBottomSheetC
             description = stringResourceSafe(id = R.string.dynamic_addresses_enter_features_receving_description),
         )
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
+        Spacer(modifier = Modifier.height(16.dp))
 
         FeatureItem(
             iconRes = CoreR.drawable.ic_dynamic_addresses_bottomsheet_check_24,
@@ -96,7 +96,7 @@ internal fun DynamicAddressesEnableContent(content: DynamicAddressesBottomSheetC
             description = stringResourceSafe(id = R.string.dynamic_addresses_enter_features_privacy_description),
         )
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing24))
+        Spacer(modifier = Modifier.height(24.dp))
 
         PrimaryButtonIconEnd(
             text = stringResourceSafe(id = R.string.dynamic_addresses_enter_main_button_title),
@@ -107,7 +107,7 @@ internal fun DynamicAddressesEnableContent(content: DynamicAddressesBottomSheetC
             enabled = !content.isLoading,
         )
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -118,12 +118,12 @@ internal fun DynamicAddressesDisableWithoutConsolidationContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+            .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         DisableHeader()
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing24))
+        Spacer(modifier = Modifier.height(24.dp))
 
         PrimaryButtonIconEnd(
             text = stringResourceSafe(id = R.string.dynamic_addresses_disable_main_button_title),
@@ -132,7 +132,7 @@ internal fun DynamicAddressesDisableWithoutConsolidationContent(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -145,12 +145,12 @@ internal fun DynamicAddressesDisableWithConsolidationContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+            .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         DisableHeader()
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
+        Spacer(modifier = Modifier.height(16.dp))
 
         DisableFeeBlock(
             feeState = content.feeState,
@@ -158,7 +158,7 @@ internal fun DynamicAddressesDisableWithConsolidationContent(
         )
 
         if (content.feeState is DisableFeeState.Error) {
-            Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing12))
+            Spacer(modifier = Modifier.height(12.dp))
 
             MessageBanner(
                 messageUM = TangemMessageUM(
@@ -183,7 +183,7 @@ internal fun DynamicAddressesDisableWithConsolidationContent(
             )
         }
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing24))
+        Spacer(modifier = Modifier.height(24.dp))
 
         if (content.isHoldToConfirm) {
             HoldToConfirmButton(
@@ -204,7 +204,7 @@ internal fun DynamicAddressesDisableWithConsolidationContent(
             )
         }
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -213,11 +213,11 @@ private fun DisableHeader() {
     Icon(
         painter = painterResource(id = CoreR.drawable.ic_dynamic_addresses_bottomsheet_enable_unavailable),
         contentDescription = null,
-        modifier = Modifier.size(TangemTheme.dimens.size44),
+        modifier = Modifier.size(44.dp),
         tint = TangemTheme.colors.icon.attention,
     )
 
-    Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing12))
+    Spacer(modifier = Modifier.height(12.dp))
 
     Text(
         text = stringResourceSafe(id = R.string.dynamic_addresses_disable_title),
@@ -226,7 +226,7 @@ private fun DisableHeader() {
         textAlign = TextAlign.Center,
     )
 
-    Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing8))
+    Spacer(modifier = Modifier.height(8.dp))
 
     Text(
         text = stringResourceSafe(id = R.string.dynamic_addresses_disable_description),
@@ -246,7 +246,7 @@ private fun DisableFeeBlock(feeState: DisableFeeState, onReadMoreClick: () -> Un
                     color = TangemTheme.colors.background.action,
                     shape = TangemTheme.shapes.roundedCornersXMedium,
                 )
-                .padding(TangemTheme.dimens.spacing12),
+                .padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -259,8 +259,8 @@ private fun DisableFeeBlock(feeState: DisableFeeState, onReadMoreClick: () -> Un
                 is DisableFeeState.Loading -> TextShimmer(
                     style = TangemTheme.typography.body2,
                     modifier = Modifier.size(
-                        width = TangemTheme.dimens.size80,
-                        height = TangemTheme.dimens.spacing16,
+                        width = 80.dp,
+                        height = 16.dp,
                     ),
                 )
                 is DisableFeeState.Content -> Row(
@@ -276,7 +276,7 @@ private fun DisableFeeBlock(feeState: DisableFeeState, onReadMoreClick: () -> Un
                         text = feeState.fiatFormatted,
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
-                        modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                        modifier = Modifier.padding(start = 4.dp),
                     )
                 }
                 is DisableFeeState.Error -> Text(
@@ -287,7 +287,7 @@ private fun DisableFeeBlock(feeState: DisableFeeState, onReadMoreClick: () -> Un
             }
         }
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing8))
+        Spacer(modifier = Modifier.height(8.dp))
         DisableFeeDescription(onReadMoreClick = onReadMoreClick)
     }
 }
@@ -347,17 +347,17 @@ private fun ErrorContent(titleRes: Int, descriptionRes: Int, buttonTextRes: Int,
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+            .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
             painter = painterResource(id = CoreR.drawable.ic_dynamic_addresses_bottomsheet_enable_unavailable),
             contentDescription = null,
-            modifier = Modifier.size(TangemTheme.dimens.size44),
+            modifier = Modifier.size(44.dp),
             tint = TangemTheme.colors.icon.attention,
         )
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing12))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Text(
             text = stringResourceSafe(id = titleRes),
@@ -366,7 +366,7 @@ private fun ErrorContent(titleRes: Int, descriptionRes: Int, buttonTextRes: Int,
             textAlign = TextAlign.Center,
         )
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing8))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = stringResourceSafe(id = descriptionRes),
@@ -375,7 +375,7 @@ private fun ErrorContent(titleRes: Int, descriptionRes: Int, buttonTextRes: Int,
             textAlign = TextAlign.Center,
         )
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing24))
+        Spacer(modifier = Modifier.height(24.dp))
 
         PrimaryButton(
             text = stringResourceSafe(id = buttonTextRes),
@@ -383,7 +383,7 @@ private fun ErrorContent(titleRes: Int, descriptionRes: Int, buttonTextRes: Int,
             modifier = Modifier.fillMaxWidth(),
         )
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -391,12 +391,12 @@ private fun ErrorContent(titleRes: Int, descriptionRes: Int, buttonTextRes: Int,
 private fun FeatureItem(iconRes: Int, title: String, description: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = null,
-            modifier = Modifier.size(TangemTheme.dimens.size24),
+            modifier = Modifier.size(24.dp),
             tint = TangemTheme.colors.icon.accent,
         )
         Column(modifier = Modifier.weight(1f)) {
@@ -405,7 +405,7 @@ private fun FeatureItem(iconRes: Int, title: String, description: String) {
                 style = TangemTheme.typography.subtitle1,
                 color = TangemTheme.colors.text.primary1,
             )
-            Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing4))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = description,
                 style = TangemTheme.typography.body2,

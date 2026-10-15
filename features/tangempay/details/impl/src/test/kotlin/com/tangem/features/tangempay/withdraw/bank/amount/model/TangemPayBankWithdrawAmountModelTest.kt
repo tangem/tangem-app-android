@@ -254,6 +254,25 @@ internal class TangemPayBankWithdrawAmountModelTest {
     }
 
     @Test
+    fun `GIVEN balance below fee WHEN max clicked THEN whole balance with range error`() {
+        // Arrange
+        val options = bankWithdrawOptions(sources = listOf(bankWithdrawSource(fiatBalance = BigDecimal("0.65"))))
+        val model = createModel(options = options)
+
+        // Act
+        model.uiState.value.source.onMaxClick()
+
+        // Assert
+        val state = model.uiState.value
+        assertThat(state.amount.value).isEqualTo("0.65")
+        assertThat(state.amount.error).isEqualTo(
+            resourceReference(R.string.tangempay_withdraw_bank_amount_error_range, wrappedList("$1", "$10,000")),
+        )
+        assertThat(state.isContinueEnabled).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN valid amount WHEN continue clicked THEN result passed to container`() {
         // Arrange
         val model = createModel()

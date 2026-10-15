@@ -7,7 +7,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.ui.components.fastForEach
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.MultiCurrencyAction
@@ -34,7 +33,7 @@ internal fun LazyListScope.lazyActions(
         HorizontalActionChips(
             buttons = actions.map(WalletManageButton::config).toImmutableList(),
             modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
-            contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
+            contentPadding = PaddingValues(horizontal = 16.dp),
         )
     }
 }
@@ -61,7 +60,7 @@ internal fun LazyListScope.actions(
                 .padding(horizontal = 16.dp)
                 .fillMaxWidth()
                 .animateItem(fadeInSpec = null, fadeOutSpec = null),
-            horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
+            horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             actions.fastForEach { action ->

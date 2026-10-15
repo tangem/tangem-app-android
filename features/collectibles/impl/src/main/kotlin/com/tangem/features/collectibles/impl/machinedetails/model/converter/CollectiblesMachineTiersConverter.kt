@@ -4,12 +4,9 @@ import androidx.annotation.StringRes
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.optionalDecimals
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.CollectibleRarity
+import com.tangem.features.collectibles.impl.common.formatter.formatUsd
 import com.tangem.features.collectibles.impl.machinedetails.ui.state.CollectiblesMachineDetailsUM
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.StringsSigns.DOT
@@ -17,7 +14,6 @@ import com.tangem.utils.StringsSigns.PERCENT
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import java.math.BigDecimal
 
 /**
  * Builds the "Pack value and odds" cards.
@@ -75,14 +71,7 @@ internal object CollectiblesMachineTiersConverter :
     }
 
     private fun CollectibleGachaMachine.TierRange.format(): String {
-        return "${start.toFiat()}${StringsSigns.MINUS}${end.toFiat()}"
-    }
-
-    private fun BigDecimal.toFiat(): String = format {
-        fiat(
-            fiatCurrencyCode = AppCurrency.Default.code,
-            fiatCurrencySymbol = AppCurrency.Default.symbol,
-        ).optionalDecimals()
+        return "${start.formatUsd()}${StringsSigns.MINUS}${end.formatUsd()}"
     }
 
     private data class Tier(

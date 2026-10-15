@@ -34,6 +34,7 @@ import io.mockk.coVerifyOrder
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.Runs
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -96,6 +97,7 @@ internal class RunPolymarketOnboardingInteractorTest {
         coEvery { deriveApiCredentials(USER_WALLET_ID, OWNER, L1_SIGNATURE, TIMESTAMP) } returns CREDENTIALS.right()
         coEvery { getApiCredentials(USER_WALLET_ID) } returns null
         coEvery { syncBalanceAllowance(OWNER, CREDENTIALS) } returns Unit.right()
+        coEvery { onboardedStore.isOnboardedSync(any()) } returns false
         coEvery { onboardedStore.markOnboarded(any()) } just Runs
         coEvery { predictionAccountStatusFetcher(any()) } returns Unit.right()
     }
@@ -350,7 +352,27 @@ internal class RunPolymarketOnboardingInteractorTest {
                 awaitComplete()
             }
             coVerify(exactly = 0) { deriveApiCredentials(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { deployDepositWallet(any()) }
+            coVerify(exactly = 1) { signOnboardingDigests(ADDRESSES, NONCE) }
             coVerify(exactly = 1) { submitApprovals(ADDRESSES, SIGNED) }
+        }
+
+    @Test
+    fun `GIVEN a confirmed wallet the backend demoted to deployed WHEN collected THEN Ready as an existing account`() =
+        runTest {
+            // Arrange
+            coEvery { onboardedStore.isOnboardedSync(USER_WALLET_ID) } returns true
+            coEvery { getApiCredentials(USER_WALLET_ID) } returns CREDENTIALS
+            coEvery { getWalletStatus(ADDRESSES) } returnsMany listOf(
+                walletState(PolymarketWalletStatus.DEPLOYED).right(),
+                walletState(PolymarketWalletStatus.READY_TO_TRADE).right(),
+            )
+
+            // Act
+            val actual = useCase(USER_WALLET_ID).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(PolymarketOnboardingProgress.Ready(isNewAccount = false))
         }
 
     @Test
