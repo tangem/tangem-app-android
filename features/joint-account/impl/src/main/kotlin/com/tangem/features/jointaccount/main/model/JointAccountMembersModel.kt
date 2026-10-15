@@ -81,6 +81,10 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private val params = paramsContainer.require<JointAccountMembersComponent.Params>()
 
+    val bottomSheetNavigation: SlotNavigation<MemberCardConfig> = SlotNavigation()
+    val activationConfirmationNavigation: SlotNavigation<ActivationConfirmationConfig> = SlotNavigation()
+    val aboutSignaturesNavigation: SlotNavigation<AboutSignaturesConfig> = SlotNavigation()
+
     private val converterCallbacks = JointAccountToMembersUMConverter.Callbacks(
         onMemberInfoClick = { avatar, name, address ->
             onMemberInfoClick(MemberCardConfig(avatar = avatar, name = name, address = address))
@@ -92,10 +96,6 @@ internal class JointAccountMembersModel @Inject constructor(
         },
         onCloseClick = ::onCloseClick,
     )
-
-    val bottomSheetNavigation: SlotNavigation<MemberCardConfig> = SlotNavigation()
-    val activationConfirmationNavigation: SlotNavigation<ActivationConfirmationConfig> = SlotNavigation()
-    val aboutSignaturesNavigation: SlotNavigation<AboutSignaturesConfig> = SlotNavigation()
 
     val isConfirmingActivation: StateFlow<Boolean>
         field = MutableStateFlow(false)
