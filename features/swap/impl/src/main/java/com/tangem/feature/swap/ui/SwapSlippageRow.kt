@@ -63,17 +63,17 @@ private fun SwapSlippageRow(slippageUM: SwapSlippageUM.Content) {
     ) {
         Text(
             text = stringResourceSafe(R.string.common_slippage),
-            style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.primary,
         )
         SpacerWMax()
         Text(
             text = slippageUM.value.resolveReference(),
-            style = TangemTheme.typography.body2,
+            style = TangemTheme.typography3.body.medium,
             color = if (slippageUM.isHighlighted) {
                 TangemTheme.colors3.text.status.warning
             } else {
-                TangemTheme.colors.text.tertiary
+                TangemTheme.colors3.text.secondary
             },
             modifier = Modifier
                 .padding(end = 4.dp)
@@ -82,7 +82,7 @@ private fun SwapSlippageRow(slippageUM: SwapSlippageUM.Content) {
         Icon(
             imageVector = Icons.ic_chevron_double_vertical_16,
             contentDescription = null,
-            tint = TangemTheme.colors.icon.secondary,
+            tint = TangemTheme.colors3.icon.secondary,
             modifier = Modifier.size(16.dp),
         )
     }
@@ -103,7 +103,8 @@ private fun SwapSlippageAndFeeBlock_Preview() {
                 Text(
                     text = stringResourceSafe(R.string.common_network_fee_title),
                     modifier = modifier.padding(12.dp),
-                    color = TangemTheme.colors.text.primary1,
+                    style = TangemTheme.typography3.body.medium,
+                    color = TangemTheme.colors3.text.primary,
                 )
             },
         )
