@@ -1,27 +1,21 @@
 package com.tangem.data.common.currency
 
-import com.tangem.core.remote.response.ApiResponse
-import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.core.remote.response.ETAG_HEADER
-import com.tangem.data.common.account.WalletAccountsFetcher
-import com.tangem.data.common.account.WalletAccountsSaver
-import com.tangem.data.common.account.WalletAccountsSync
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.wallet.WalletServerBinder
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.WalletType
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsV2Response
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
-import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import com.tangem.utils.retryer.Retryer
-import com.tangem.utils.retryer.RetryerPool
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
@@ -38,9 +32,6 @@ class UserTokensSaverTest {
     private val walletServerBinder: WalletServerBinder = mockk()
     private val eTagsStore: ETagsStore = mockk(relaxUnitFun = true)
     private val jointAccountFeatureToggles: JointAccountFeatureToggles = mockk()
-    private val walletAccountsSaver: WalletAccountsSaver = mockk(relaxUnitFun = true)
-    private val walletAccountsFetcher: WalletAccountsFetcher = mockk()
-    private val retryerPool: RetryerPool = mockk()
 
     private val userTokensSaver: UserTokensSaver = UserTokensSaver(
         tangemTechApi = tangemTechApi,
@@ -48,12 +39,9 @@ class UserTokensSaverTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         addressesEnricher = enricher,
         walletServerBinder = walletServerBinder,
-        pushTokensRetryerPool = retryerPool,
+        pushTokensRetryerPool = mockk(),
         walletAccountsETags = WalletAccountsETags(eTagsStore = eTagsStore),
         jointAccountFeatureToggles = jointAccountFeatureToggles,
-        walletAccountsSync = WalletAccountsSync(),
-        walletAccountsSaver = { walletAccountsSaver },
-        walletAccountsFetcher = { walletAccountsFetcher },
     )
 
     @BeforeEach
@@ -281,74 +269,6 @@ class UserTokensSaverTest {
     }
 
     @Test
-    fun `GIVEN merged list pushed after 412 WHEN push THEN local copy becomes the merged document`() = runTest {
-        // Arrange
-        val userWalletId = UserWalletId("1234567890abcdef")
-        stubUserWallet(userWalletId)
-        every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
-        coEvery {
-            eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts)
-        } returnsMany listOf(STALE_ETAG, FRESH_ETAG)
-
-        val pushedToken = createToken()
-        val peerToken = createToken().copy(id = "polygon", networkId = "polygon")
-        val response = createResponse(tokens = listOf(pushedToken))
-        val fresh = createAccountsV2Response(tokens = listOf(peerToken))
-        coEvery { enricher(userWalletId, response) } returns response
-        coEvery { tangemTechApi.saveTokens(any(), any(), any()) } returnsMany listOf(
-            preconditionFailed(),
-            ApiResponse.Success(data = Unit, headers = mapOf(ETAG_HEADER to listOf(MERGED_ETAG))),
-        )
-        coEvery { tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue) } returns ApiResponse.Success(
-            data = fresh,
-            headers = mapOf(ETAG_HEADER to listOf(FRESH_ETAG)),
-        )
-
-        // Act
-        userTokensSaver.push(userWalletId = userWalletId, response = response)
-
-        // Assert
-        val expected = fresh.toResponse().let { document ->
-            document.copy(
-                accounts = document.accounts.map { it.copy(tokens = listOf(pushedToken, peerToken)) },
-                unassignedTokens = emptyList(),
-            )
-        }
-        coVerifyOrder {
-            walletAccountsSaver.store(userWalletId, expected)
-            eTagsStore.store(userWalletId, ETagsStore.Key.WalletAccounts, MERGED_ETAG)
-        }
-    }
-
-    @Test
-    fun `GIVEN copy edited after a failed push WHEN retried THEN the latest copy is pushed`() = runTest {
-        // Arrange
-        val userWalletId = UserWalletId("1234567890abcdef")
-        stubUserWallet(userWalletId)
-        val retryer = slot<Retryer>()
-        every { retryerPool + capture(retryer) } returns retryerPool
-
-        val failedResponse = createResponse(tokens = listOf(createToken()))
-        val latestCopy = createAccountsV2Response(
-            tokens = listOf(createToken(), createToken().copy(id = "polygon", networkId = "polygon")),
-        ).toResponse()
-        val latestResponse = latestCopy.toUserTokensResponse()
-        coEvery { enricher(userWalletId, any()) } answers { secondArg() }
-        coEvery { walletAccountsFetcher.getSaved(userWalletId) } returns latestCopy
-        coEvery { tangemTechApi.saveTokens(any(), any(), any()) } returnsMany listOf(
-            ApiResponse.Error(ApiResponseError.UnknownException(Exception("API Error"))) as ApiResponse<Unit>,
-            ApiResponse.Success(Unit),
-        )
-        userTokensSaver.pushWithRetryer(userWalletId = userWalletId, response = failedResponse)
-
-        // Act
-        retryer.captured.launch()
-
-        // Assert
-        coVerify(exactly = 1) { tangemTechApi.saveTokens(userWalletId.stringValue, latestResponse, null) }
-    }
-
-    @Test
     fun `GIVEN backend tokens lacking account ids WHEN merging after 412 THEN they take the owning account id`() =
         runTest {
             // Arrange
@@ -502,6 +422,5 @@ class UserTokensSaverTest {
     private companion object {
         const val STALE_ETAG = """{"a":1,"t":1}"""
         const val FRESH_ETAG = """{"a":1,"t":2}"""
-        const val MERGED_ETAG = """{"a":1,"t":3}"""
     }
 }

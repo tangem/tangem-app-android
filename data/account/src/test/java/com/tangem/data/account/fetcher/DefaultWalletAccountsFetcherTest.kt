@@ -4,7 +4,6 @@ import arrow.core.right
 import com.google.common.truth.Truth
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.data.account.api.WalletAccountsApi
 import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.converter.createWalletAccountDTO
@@ -13,10 +12,10 @@ import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
-import com.tangem.data.common.account.WalletAccountsSync
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.currency.UserTokensSaver
+import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
@@ -27,10 +26,7 @@ import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.*
 
@@ -53,7 +49,6 @@ class DefaultWalletAccountsFetcherTest {
     private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory = mockk()
     private val eTagsStore: ETagsStore = mockk(relaxUnitFun = true)
     private val jointAccountFeatureToggles: JointAccountFeatureToggles = mockk()
-    private val walletAccountsSync = WalletAccountsSync()
 
     private val fetcher: DefaultWalletAccountsFetcher = DefaultWalletAccountsFetcher(
         walletAccountsApi = walletAccountsApi,
@@ -65,7 +60,6 @@ class DefaultWalletAccountsFetcherTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         mainAccountTokensMigration = tokensMigration,
         jointAccountFeatureToggles = jointAccountFeatureToggles,
-        walletAccountsSync = walletAccountsSync,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -542,92 +536,6 @@ class DefaultWalletAccountsFetcherTest {
                 )
                 tokensMigration.migrate(userWalletId)
             }
-        }
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class LocalEdits {
-
-        private val localCopy = createGetWalletAccountsResponse(userWalletId)
-        private val fetched = localCopy.copy(wallet = localCopy.wallet.copy(totalAccounts = 2))
-
-        @BeforeEach
-        fun setUp() {
-            accountsResponseStoreFlow.value = localCopy
-            coEvery { accountsResponseStore.updateData(any()) } coAnswers {
-                val transform = firstArg<suspend (GetWalletAccountsResponse?) -> GetWalletAccountsResponse?>()
-                transform(accountsResponseStoreFlow.value).also { accountsResponseStoreFlow.value = it }
-            }
-            coEvery {
-                walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
-            } returns ApiResponse.Success(data = fetched)
-        }
-
-        @AfterEach
-        fun tearDown() {
-            walletAccountsSync.markInSync(userWalletId)
-        }
-
-        @Test
-        fun `GIVEN local edit the backend has not taken WHEN fetch THEN no read and the edit stays`() = runTest {
-            // Arrange
-            walletAccountsSync.markLocalAhead(userWalletId)
-
-            // Act
-            val actual = fetcher.fetch(userWalletId)
-
-            // Assert
-            Truth.assertThat(actual).isEqualTo(localCopy)
-            coVerify(exactly = 1) { userTokensSaver.push(userWalletId, localCopy.toUserTokensResponse()) }
-            coVerify(exactly = 0) { walletAccountsApi.getAccounts(any(), any()) }
-        }
-
-        @Test
-        fun `GIVEN local edit pushed on the way WHEN fetch THEN the backend document is read`() = runTest {
-            // Arrange
-            walletAccountsSync.markLocalAhead(userWalletId)
-            coEvery { userTokensSaver.push(userWalletId, any()) } coAnswers {
-                walletAccountsSync.markInSync(userWalletId)
-            }
-
-            // Act
-            fetcher.fetch(userWalletId)
-
-            // Assert
-            coVerifyOrder {
-                userTokensSaver.push(userWalletId, localCopy.toUserTokensResponse())
-                walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
-            }
-            Truth.assertThat(accountsResponseStoreFlow.value).isEqualTo(fetched)
-        }
-
-        @Test
-        fun `GIVEN read in flight WHEN local edit made THEN it lands on top of the read`() = runTest {
-            // Arrange
-            val responseGate = CompletableDeferred<Unit>()
-            coEvery {
-                walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
-            } coAnswers {
-                responseGate.await()
-                ApiResponse.Success(data = fetched)
-            }
-            val fetch = launch { fetcher.fetch(userWalletId) }
-            runCurrent()
-
-            // Act
-            val edit = launch {
-                fetcher.update(userWalletId) { it?.copy(wallet = it.wallet.copy(totalArchivedAccounts = 1)) }
-            }
-            runCurrent()
-            responseGate.complete(Unit)
-            fetch.join()
-            edit.join()
-
-            // Assert
-            Truth.assertThat(accountsResponseStoreFlow.value)
-                .isEqualTo(fetched.copy(wallet = fetched.wallet.copy(totalArchivedAccounts = 1)))
-            Truth.assertThat(walletAccountsSync.isLocalAhead(userWalletId)).isTrue()
         }
     }
 

@@ -2,8 +2,6 @@ package com.tangem.data.common.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.account.WalletAccountsFetcher
-import com.tangem.data.common.account.WalletAccountsSaver
-import com.tangem.data.common.account.WalletAccountsSync
 import com.tangem.data.common.cache.etag.DefaultETagsStore
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.cache.etag.WalletAccountsETags
@@ -80,9 +78,6 @@ internal object DataCommonModule {
         appScope: AppCoroutineScope,
         walletAccountsETags: WalletAccountsETags,
         jointAccountFeatureToggles: JointAccountFeatureToggles,
-        walletAccountsSync: WalletAccountsSync,
-        walletAccountsSaver: Lazy<WalletAccountsSaver>,
-        walletAccountsFetcher: Lazy<WalletAccountsFetcher>,
     ): UserTokensSaver {
         return UserTokensSaver(
             tangemTechApi = tangemTechApi,
@@ -95,9 +90,6 @@ internal object DataCommonModule {
             walletServerBinder = walletServerBinder,
             walletAccountsETags = walletAccountsETags,
             jointAccountFeatureToggles = jointAccountFeatureToggles,
-            walletAccountsSync = walletAccountsSync,
-            walletAccountsSaver = walletAccountsSaver,
-            walletAccountsFetcher = walletAccountsFetcher,
         )
     }
 

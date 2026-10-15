@@ -1,8 +1,5 @@
 package com.tangem.data.common.currency
 
-import com.tangem.data.common.account.WalletAccountsFetcher
-import com.tangem.data.common.account.WalletAccountsSaver
-import com.tangem.data.common.account.WalletAccountsSync
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.wallet.WalletServerBinder
@@ -11,8 +8,6 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
-import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWallet
@@ -22,7 +17,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.retryer.Retryer
 import com.tangem.utils.retryer.RetryerPool
-import dagger.Lazy
 import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList")
@@ -35,9 +29,6 @@ class UserTokensSaver(
     private val pushTokensRetryerPool: RetryerPool,
     private val walletAccountsETags: WalletAccountsETags,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
-    private val walletAccountsSync: WalletAccountsSync,
-    private val walletAccountsSaver: Lazy<WalletAccountsSaver>,
-    private val walletAccountsFetcher: Lazy<WalletAccountsFetcher>,
 ) {
 
     suspend fun push(
@@ -79,12 +70,6 @@ class UserTokensSaver(
     }
 
     private suspend fun push(userWallet: UserWallet, response: UserTokensResponse, onFailSend: () -> Unit) {
-        walletAccountsSync.withLock(userWalletId = userWallet.walletId) {
-            pushTokens(userWallet = userWallet, response = response, onFailSend = onFailSend)
-        }
-    }
-
-    private suspend fun pushTokens(userWallet: UserWallet, response: UserTokensResponse, onFailSend: () -> Unit) {
         safeApiCall(
             call = {
                 // Both codes are expected flow, not failures, so they are handled before bind() gets to log them
@@ -104,7 +89,6 @@ class UserTokensSaver(
                     mergeAndRetry(userWalletId = userWallet.walletId, response = response, onFailSend = onFailSend)
                 } else {
                     apiResponse.bind()
-                    walletAccountsSync.markInSync(userWallet.walletId)
                 }
             },
             onError = { error ->
@@ -121,7 +105,6 @@ class UserTokensSaver(
     private suspend fun saveTokensWithETag(
         userWalletId: UserWalletId,
         response: UserTokensResponse,
-        shouldRefreshETag: Boolean = true,
     ): ApiResponse<Unit> {
         val apiResponse = tangemTechApi.saveTokens(
             userId = userWalletId.stringValue,
@@ -129,7 +112,7 @@ class UserTokensSaver(
             eTag = getETagOrNull(userWalletId = userWalletId),
         )
 
-        if (shouldRefreshETag && apiResponse is ApiResponse.Success) {
+        if (apiResponse is ApiResponse.Success) {
             refreshETag(userWalletId = userWalletId, apiResponse = apiResponse)
         }
 
@@ -160,42 +143,12 @@ class UserTokensSaver(
                     tokens = response.tokens + remoteTokens.filterNot { it in pushedTokens },
                 )
 
-                val pushResponse = saveTokensWithETag(
-                    userWalletId = userWalletId,
-                    response = merged,
-                    shouldRefreshETag = false,
-                )
-                pushResponse.bind()
-
-                // The copy goes first: the merged list's ETag next to the old copy is the mismatch this avoids
-                storeMerged(userWalletId = userWalletId, fresh = fresh, merged = merged)
-                refreshETag(userWalletId = userWalletId, apiResponse = pushResponse)
-                walletAccountsSync.markInSync(userWalletId)
+                saveTokensWithETag(userWalletId = userWalletId, response = merged).bind()
             },
             onError = { error ->
                 TangemLogger.e("Failed to merge and re-push user tokens after a 412", error)
                 onFailSend()
             },
-        )
-    }
-
-    private suspend fun storeMerged(
-        userWalletId: UserWalletId,
-        fresh: GetWalletAccountsResponse,
-        merged: UserTokensResponse,
-    ) {
-        val accountIds = fresh.accounts.mapTo(hashSetOf()) { it.id }
-        val tokensByAccount = merged.tokens.groupBy { it.accountId }
-
-        walletAccountsSaver.get().store(
-            userWalletId = userWalletId,
-            response = fresh.copy(
-                wallet = fresh.wallet.copy(group = merged.group, sort = merged.sort),
-                accounts = fresh.accounts.map { account ->
-                    account.copy(tokens = tokensByAccount[account.id].orEmpty())
-                },
-                unassignedTokens = merged.tokens.filter { it.accountId !in accountIds },
-            ),
         )
     }
 
@@ -276,23 +229,17 @@ class UserTokensSaver(
         return Retryer(attempt = 3) { iteration ->
             var isSuccess = true
 
-            // An edit saved since the failure is newer than the captured list; read and pushed under one lock
-            walletAccountsSync.withLock(userWalletId) {
-                val latestResponse = walletAccountsFetcher.get().getSaved(userWalletId)?.toUserTokensResponse()
-                    ?: response
+            push(
+                userWalletId = userWalletId,
+                response = response,
+                onFailSend = {
+                    TangemLogger.e(
+                        "Retryer: Failed to push updated tokens on attempt ${iteration + 1} for $userWalletId",
+                    )
 
-                push(
-                    userWalletId = userWalletId,
-                    response = latestResponse,
-                    onFailSend = {
-                        TangemLogger.e(
-                            "Retryer: Failed to push updated tokens on attempt ${iteration + 1} for $userWalletId",
-                        )
-
-                        isSuccess = false
-                    },
-                )
-            }
+                    isSuccess = false
+                },
+            )
 
             isSuccess
         }
