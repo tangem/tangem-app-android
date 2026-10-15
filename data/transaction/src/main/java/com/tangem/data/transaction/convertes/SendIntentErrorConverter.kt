@@ -11,8 +11,8 @@ import javax.inject.Inject
  * Turns a failed intent request into a [SendIntentError] when the service names a known reason, and keeps the raw
  * failure otherwise.
  *
- * The reason is read from the `code` of the error body, not the HTTP status: the contract gives a revoked session
- * both 409 and 410.
+ * The reason is read from the `code` of the error body, not the HTTP status, which a proxy or the gateway may answer
+ * with as well.
  */
 internal class SendIntentErrorConverter @Inject constructor() :
     Converter<SendIntentErrorConverter.Input, Throwable> {
@@ -25,6 +25,7 @@ internal class SendIntentErrorConverter @Inject constructor() :
         return when (code) {
             CODE_NOT_FOUND -> SendIntentError.NotFound(intentId = value.intentId)
             CODE_SESSION_REVOKED -> SendIntentError.SessionRevoked(intentId = value.intentId)
+            CODE_ALREADY_COMPLETED -> SendIntentError.AlreadyCompleted(intentId = value.intentId)
             else -> value.cause
         }
     }
@@ -40,5 +41,6 @@ internal class SendIntentErrorConverter @Inject constructor() :
     private companion object {
         const val CODE_NOT_FOUND = "INTENT_NOT_FOUND"
         const val CODE_SESSION_REVOKED = "INTENT_SESSION_REVOKED"
+        const val CODE_ALREADY_COMPLETED = "INTENT_ALREADY_COMPLETED"
     }
 }

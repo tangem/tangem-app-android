@@ -6,6 +6,7 @@ import com.tangem.core.remote.json.NetworkJsonFactory
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.transaction.api.TransactionIntentApi
+import com.tangem.data.transaction.api.models.ConfirmIntentTransactionRequest
 import com.tangem.data.transaction.api.models.SendIntentResponse
 import com.tangem.data.transaction.convertes.SendIntentConverter
 import com.tangem.data.transaction.convertes.SendIntentErrorConverter
@@ -101,6 +102,72 @@ internal class DefaultSendIntentRepositoryTest {
         assertThat(actual).isEqualTo(Either.Left(failure))
     }
 
+    @Test
+    fun `GIVEN service accepts the hash WHEN completeSendIntent THEN it succeeds`() = runTest {
+        // Arrange
+        stubConfirm(ApiResponse.Success(Unit, code = ApiResponseError.HttpException.Code.NO_CONTENT))
+
+        // Act
+        val actual = repository.completeSendIntent(INTENT_ID, TX_HASH)
+
+        // Assert
+        assertThat(actual).isEqualTo(Either.Right(Unit))
+        coVerify(exactly = 1) {
+            transactionIntentApi.confirmIntentTransaction(INTENT_ID, ConfirmIntentTransactionRequest(txHash = TX_HASH))
+        }
+    }
+
+    @Test
+    fun `GIVEN intent carries another hash WHEN completeSendIntent THEN already completed is reported`() = runTest {
+        // Arrange
+        val failure = ApiResponseError.HttpException(
+            code = ApiResponseError.HttpException.Code.CONFLICT,
+            message = null,
+            errorBody = """{"status":409,"code":"INTENT_ALREADY_COMPLETED"}""",
+        )
+        stubConfirm(ApiResponse.Error(failure) as ApiResponse<Unit>)
+
+        // Act
+        val actual = repository.completeSendIntent(INTENT_ID, TX_HASH)
+
+        // Assert
+        assertThat(actual).isEqualTo(Either.Left(SendIntentError.AlreadyCompleted(INTENT_ID)))
+    }
+
+    @Test
+    fun `GIVEN service answers intent not found WHEN completeSendIntent THEN not found is reported`() = runTest {
+        // Arrange
+        val failure = ApiResponseError.HttpException(
+            code = ApiResponseError.HttpException.Code.NOT_FOUND,
+            message = null,
+            errorBody = """{"status":404,"code":"INTENT_NOT_FOUND"}""",
+        )
+        stubConfirm(ApiResponse.Error(failure) as ApiResponse<Unit>)
+
+        // Act
+        val actual = repository.completeSendIntent(INTENT_ID, TX_HASH)
+
+        // Assert
+        assertThat(actual).isEqualTo(Either.Left(SendIntentError.NotFound(INTENT_ID)))
+    }
+
+    @Test
+    fun `GIVEN request times out WHEN completeSendIntent THEN the raw failure is returned`() = runTest {
+        // Arrange
+        val failure = ApiResponseError.TimeoutException()
+        stubConfirm(ApiResponse.Error(failure) as ApiResponse<Unit>)
+
+        // Act
+        val actual = repository.completeSendIntent(INTENT_ID, TX_HASH)
+
+        // Assert
+        assertThat(actual).isEqualTo(Either.Left(failure))
+    }
+
+    private fun stubConfirm(response: ApiResponse<Unit>) {
+        coEvery { transactionIntentApi.confirmIntentTransaction(INTENT_ID, any()) } returns response
+    }
+
     private fun stubError(cause: ApiResponseError) {
         coEvery {
             transactionIntentApi.getSendIntent(INTENT_ID)
@@ -109,6 +176,7 @@ internal class DefaultSendIntentRepositoryTest {
 
     private companion object {
         const val INTENT_ID = "3f7c2a1e-9b4d-4c6a-8e21-5d0f7a9b1c33"
+        const val TX_HASH = "0x5555555555555555555555555555555555555555555555555555555555555555"
 
         /** The response example of `GET /api/transactions/v1/intents/{intentId}` in the Notion contract. */
         val CONTRACT_EXAMPLE = """
