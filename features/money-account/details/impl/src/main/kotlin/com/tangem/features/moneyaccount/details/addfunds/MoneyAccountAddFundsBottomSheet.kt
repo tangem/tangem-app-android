@@ -1,4 +1,4 @@
-package com.tangem.features.moneyaccount.main.addfunds
+package com.tangem.features.moneyaccount.details.addfunds
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
