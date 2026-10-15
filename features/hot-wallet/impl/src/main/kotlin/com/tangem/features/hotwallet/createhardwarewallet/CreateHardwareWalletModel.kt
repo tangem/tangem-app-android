@@ -106,7 +106,7 @@ internal class CreateHardwareWalletModel @Inject constructor(
             )
 
             scanCardProcessor.scan(
-                config = ScanConfig.signIn(
+                config = ScanConfig(
                     analyticsSource = params.source,
                     callback = createScanCallback(),
                 ),

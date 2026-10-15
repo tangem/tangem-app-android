@@ -193,7 +193,7 @@ internal class CreateWalletStartModel @Inject constructor(
             val analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro
 
             scanCardProcessor.scan(
-                config = ScanConfig.signIn(
+                config = ScanConfig(
                     analyticsSource = analyticsSource,
                     callback = createScanCallback(),
                 ),

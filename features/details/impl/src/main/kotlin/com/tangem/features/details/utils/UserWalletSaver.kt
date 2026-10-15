@@ -150,7 +150,7 @@ internal class UserWalletSaver @Inject constructor(
     private suspend fun scanCard(scope: CoroutineScope) = suspendCancellableCoroutine { continuation ->
         scope.launch {
             scanCardProcessor.scan(
-                config = ScanConfig.signIn(
+                config = ScanConfig(
                     analyticsSource = AnalyticsParam.ScreensSources.Settings,
                     callback = createScanCallback(continuation),
                 ),
