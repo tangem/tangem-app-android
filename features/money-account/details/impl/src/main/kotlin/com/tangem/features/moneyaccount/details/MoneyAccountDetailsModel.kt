@@ -1,6 +1,8 @@
 package com.tangem.features.moneyaccount.details
 
 import androidx.compose.runtime.Stable
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -9,9 +11,8 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.account.MoneyAccountStatusValue
-import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
@@ -31,11 +32,10 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val urlOpener: UrlOpener,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
-    moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory,
 ) : Model() {
 
     private val params = paramsContainer.require<MoneyAccountDetailsComponent.Params>()
-    val currency: CryptoCurrency.Token = moneyAccountCurrencyFactory.create(params.userWalletId)
+    val txHistorySlotNavigation = SlotNavigation<CryptoCurrency.Token>()
     private val stateFactory = MoneyAccountDetailsStateFactory(
         onTermsClick = ::onTermsClick,
         onSupportClick = ::onSupportClick,
@@ -53,6 +53,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
                 when (value) {
                     is MoneyAccountStatusValue.Account -> {
                         currentState = value
+                        txHistorySlotNavigation.activate(value.cryptoCurrency)
                         uiState.update { stateFactory.createAccountState(value) }
                     }
                     else -> router.pop()
@@ -66,6 +67,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     }
 
     fun onExploreClick() {
+        val currency = currentState?.cryptoCurrency ?: return
         modelScope.launch {
             val url = getExploreUrlUseCase(userWalletId = params.userWalletId, currency = currency)
             if (url.isNotBlank()) urlOpener.openUrl(url)
