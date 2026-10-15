@@ -28,6 +28,7 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -51,6 +52,10 @@ internal class PromoBannersBlockModelTest {
     private val enrolledCampaignBanner = createBanner(id = 3, campaignId = ENROLLED_CAMPAIGN_ID)
     private val allBanners = listOf(plainBanner, openCampaignBanner, enrolledCampaignBanner)
 
+    private val openCampaign = createPromoCampaign(id = OPEN_CAMPAIGN_ID, name = OPEN_CAMPAIGN_NAME)
+    private val enrolledCampaign = createPromoCampaign(id = ENROLLED_CAMPAIGN_ID, isAlreadyEnrolled = true)
+    private val campaigns = listOf(openCampaign, enrolledCampaign)
+
     @BeforeEach
     fun setup() {
         clearMocks(
@@ -64,13 +69,10 @@ internal class PromoBannersBlockModelTest {
         every { userWalletsListRepository.selectedUserWallet } returns MutableStateFlow(selectedWallet)
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(selectedWallet, otherWallet))
         coEvery { repository.getCachedBanners(any(), any()) } returns null
-        coEvery { repository.getBanners(any(), any(), any()) } returns allBanners
-        coEvery { getPromoCampaignsUseCase(any(), any()) } returns Either.Right(
-            listOf(
-                createPromoCampaign(id = OPEN_CAMPAIGN_ID, name = OPEN_CAMPAIGN_NAME),
-                createPromoCampaign(id = ENROLLED_CAMPAIGN_ID, isAlreadyEnrolled = true),
-            ),
-        )
+        coEvery { repository.getBannersSync(any(), any(), any()) } returns allBanners
+        every { repository.getBanners(any(), any()) } returns emptyFlow()
+        coEvery { getPromoCampaignsUseCase.invokeSync(any(), any()) } returns Either.Right(campaigns)
+        every { getPromoCampaignsUseCase(any()) } returns emptyFlow()
     }
 
     @Test
@@ -86,8 +88,49 @@ internal class PromoBannersBlockModelTest {
             // Assert
             assertThat(model.uiState.value.banners.map { it.displayId })
                 .containsExactly(plainBanner.id, openCampaignBanner.id).inOrder()
-            coVerify(exactly = 1) { getPromoCampaignsUseCase(selectedWallet, any()) }
-            coVerify(exactly = 1) { getPromoCampaignsUseCase(otherWallet, any()) }
+            coVerify(exactly = 1) { getPromoCampaignsUseCase.invokeSync(selectedWallet, any()) }
+            coVerify(exactly = 1) { getPromoCampaignsUseCase.invokeSync(otherWallet, any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN banners shown WHEN banners cache refreshed THEN block shows the refreshed banners`() = runTest {
+        // Arrange
+        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns false
+        val cachedBanners = MutableStateFlow(allBanners)
+        every { repository.getBanners(SELECTED_WALLET_ID, any()) } returns cachedBanners
+        val model = createModel()
+        advanceUntilIdle()
+        assertThat(model.uiState.value.banners.map { it.displayId })
+            .containsExactlyElementsIn(allBanners.map { it.id }).inOrder()
+
+        // Act
+        cachedBanners.value = listOf(plainBanner)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.banners.map { it.displayId }).containsExactly(plainBanner.id)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN v2 enabled and unchanged banners WHEN campaigns cache drops a campaign THEN its banner hidden`() =
+        runTest {
+            // Arrange
+            every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
+            val cachedCampaigns = MutableStateFlow(campaigns)
+            every { getPromoCampaignsUseCase(selectedWallet) } returns cachedCampaigns
+            val model = createModel()
+            advanceUntilIdle()
+            assertThat(model.uiState.value.banners.map { it.displayId })
+                .containsExactly(plainBanner.id, openCampaignBanner.id).inOrder()
+
+            // Act
+            cachedCampaigns.value = listOf(enrolledCampaign)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.banners.map { it.displayId }).containsExactly(plainBanner.id)
             model.onDestroy()
         }
 
@@ -95,7 +138,7 @@ internal class PromoBannersBlockModelTest {
     fun `GIVEN v2 enabled and campaigns fail WHEN model created THEN only banners without campaign shown`() = runTest {
         // Arrange
         every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
-        coEvery { getPromoCampaignsUseCase(selectedWallet, any()) } returns Either.Left(RuntimeException("network"))
+        coEvery { getPromoCampaignsUseCase.invokeSync(selectedWallet, any()) } returns Either.Left(RuntimeException("network"))
 
         // Act
         val model = createModel()
@@ -120,7 +163,7 @@ internal class PromoBannersBlockModelTest {
         // Assert
         assertThat(model.uiState.value.banners.map { it.displayId })
             .containsExactlyElementsIn(allBanners.map { it.id }).inOrder()
-        coVerify(exactly = 0) { getPromoCampaignsUseCase(any(), any()) }
+        coVerify(exactly = 0) { getPromoCampaignsUseCase.invokeSync(any(), any()) }
         model.onDestroy()
     }
 
@@ -207,7 +250,7 @@ internal class PromoBannersBlockModelTest {
         // Arrange
         every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
         val dismissableBanner = createBanner(id = 4, campaignId = OPEN_CAMPAIGN_ID, isDismissable = true)
-        coEvery { repository.getBanners(any(), any(), any()) } returns listOf(dismissableBanner)
+        coEvery { repository.getBannersSync(any(), any(), any()) } returns listOf(dismissableBanner)
         coEvery { repository.dismissBanner(any(), any()) } just runs
         val model = createModel()
         advanceUntilIdle()
