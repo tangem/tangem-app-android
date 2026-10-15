@@ -287,6 +287,11 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    val issuingCardSheetDescription: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_issuing_your_card_description))
+        useUnmergedTree = true
+    }
+
     val reissueInProgressBanner: KNode = child {
         hasText(
             text = getResourceString(CoreResR.string.tangempay_reissue_card_in_progress),
