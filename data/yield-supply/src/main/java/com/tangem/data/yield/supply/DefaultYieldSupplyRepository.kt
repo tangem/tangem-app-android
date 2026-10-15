@@ -20,6 +20,7 @@ import com.tangem.grow.datasource.yield.models.YieldSupplyMarketTokenDto
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.datasource.local.preferences.utils.get
+import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.grow.datasource.yield.local.YieldMarketsStore
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -246,6 +247,14 @@ internal class DefaultYieldSupplyRepository(
 
     override suspend fun setShouldShowYieldPromoBanner(shouldShow: Boolean) {
         appPreferencesStore.store(growPreferencesKeys.yieldSupplyShouldShowMainPromoKey, shouldShow)
+    }
+
+    override suspend fun isYieldModePromoBottomSheetShown(): Boolean {
+        return appPreferencesStore.getSyncOrDefault(growPreferencesKeys.yieldModePromoBottomSheetShownKey, false)
+    }
+
+    override suspend fun setYieldModePromoBottomSheetShown() {
+        appPreferencesStore.store(growPreferencesKeys.yieldModePromoBottomSheetShownKey, true)
     }
 
     private fun getTokenProtocolStatusKey(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): String =
