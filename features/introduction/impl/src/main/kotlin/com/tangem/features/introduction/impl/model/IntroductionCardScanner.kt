@@ -70,7 +70,7 @@ internal class IntroductionCardScanner @Inject constructor(
         )
 
         scanCardProcessor.scan(
-            config = ScanConfig.signIn(
+            config = ScanConfig(
                 analyticsSource = analyticsSource,
                 callback = createScanCallback(
                     analyticsSource = analyticsSource,
