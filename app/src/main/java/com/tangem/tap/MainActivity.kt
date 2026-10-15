@@ -66,6 +66,7 @@ import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.Lazy
+import dagger.hilt.EntryPoints
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -149,6 +150,10 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         TangemLogger.i("onCreate: data=${intent?.data}, extras=${intent?.extras?.keySet()}")
+        // fields are injected in super.onCreate, and the SDKs must see this activity being created
+        EntryPoints.get(applicationContext, ApplicationEntryPoint::class.java)
+            .getAnalyticsHandlersInitializer()
+            .awaitInitialized()
         // We need to call it before onCreate to prevent unnecessary activity recreation
         installAppTheme()
 
