@@ -382,6 +382,7 @@ internal class ChildFactory @Inject constructor(
                         tag = route.tag,
                         destinationAddress = route.destinationAddress,
                         entryType = route.entryType.toSendEntryType(),
+                        intentId = route.intentId,
                     ),
                     componentFactory = sendComponentFactoryV2,
                 )
