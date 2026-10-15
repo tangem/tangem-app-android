@@ -56,6 +56,7 @@ internal class TangemPayCashbackHistogramConverterTest {
             history = history,
             totalEarnedAmount = BigDecimal("132.15"),
             totalCurrency = "USD",
+            isBalanceHidden = false,
         )
 
         // Assert
@@ -76,7 +77,12 @@ internal class TangemPayCashbackHistogramConverterTest {
         val history = CashbackHistory(months = listOf(month(2, BigDecimal("12.02")), month(3, BigDecimal("44.22"))))
 
         // Act
-        val actual = converter.convert(history = history, totalEarnedAmount = null, totalCurrency = null)
+        val actual = converter.convert(
+            history = history,
+            totalEarnedAmount = null,
+            totalCurrency = null,
+            isBalanceHidden = false,
+        )
 
         // Assert
         assertThat(actual.title)
@@ -89,7 +95,12 @@ internal class TangemPayCashbackHistogramConverterTest {
         val history = CashbackHistory(months = listOf(month(5, BigDecimal.ZERO), month(6, BigDecimal.ZERO)))
 
         // Act
-        val actual = converter.convert(history = history, totalEarnedAmount = BigDecimal.ZERO, totalCurrency = "USD")
+        val actual = converter.convert(
+            history = history,
+            totalEarnedAmount = BigDecimal.ZERO,
+            totalCurrency = "USD",
+            isBalanceHidden = false,
+        )
 
         // Assert
         assertThat(actual.title)
@@ -108,6 +119,7 @@ internal class TangemPayCashbackHistogramConverterTest {
             history = history,
             totalEarnedAmount = BigDecimal("23.95"),
             totalCurrency = "USD",
+            isBalanceHidden = false,
         )
 
         // Assert
@@ -115,6 +127,30 @@ internal class TangemPayCashbackHistogramConverterTest {
             .isEqualTo(resourceReference(R.string.tangempay_cashback_total_earned, wrappedList("$23.95")))
         assertThat(actual.bars.last().style).isEqualTo(Style.HighlightedNegative)
         assertThat(actual.bars.last().amount).isEqualTo(stringReference("-$2.15"))
+    }
+
+    @Test
+    fun `GIVEN balance hidden WHEN convert THEN total and bar amounts masked`() {
+        // Arrange
+        val history = CashbackHistory(months = listOf(month(5, BigDecimal("26.10")), month(6, BigDecimal("32.15"))))
+
+        // Act
+        val actual = converter.convert(
+            history = history,
+            totalEarnedAmount = BigDecimal("132.15"),
+            totalCurrency = "USD",
+            isBalanceHidden = true,
+        )
+
+        // Assert
+        val expected = TangemPayCashbackHistogramUM(
+            title = resourceReference(R.string.tangempay_cashback_total_earned, wrappedList("***")),
+            bars = persistentListOf(
+                bar("May", "***", 26.10f, Style.Regular),
+                bar("Jun", "***", 32.15f, Style.Highlighted),
+            ),
+        )
+        assertThat(actual).isEqualTo(expected)
     }
 
     private fun bar(month: String, amount: String, value: Float, style: Style) =
