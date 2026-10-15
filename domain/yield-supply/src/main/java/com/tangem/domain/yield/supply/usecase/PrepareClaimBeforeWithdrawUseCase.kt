@@ -6,6 +6,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.first
@@ -106,7 +107,8 @@ class PrepareClaimBeforeWithdrawUseCase(
             transactionData = transactionData,
         ).getOrNull()?.normal ?: return skip("the claim fee could not be estimated")
 
-        if (fee.amount.value.orZero() + withdrawalFee > feeCryptoCurrencyStatus.value.amount.orZero()) {
+        val claimFee = fee.amount.value ?: return skip("the claim fee amount is unknown")
+        if (claimFee + withdrawalFee > feeCryptoCurrencyStatus.value.amount.orZero()) {
             return skip("the owner cannot pay for both transactions")
         }
 
@@ -127,10 +129,17 @@ class PrepareClaimBeforeWithdrawUseCase(
 
     /**
      * Bounded on purpose: the markets cache is warm by the time a withdrawal starts, and a cold one must not hold
-     * the withdrawal back — the claim is what waits for the cache, never the principal.
+     * the withdrawal back — the claim is what waits for the cache, never the principal. A cache that cannot be read
+     * at all is treated the same way.
      */
-    private suspend fun resolveChainId(token: CryptoCurrency.Token): Int? = withTimeoutOrNull(RESOLVE_TIMEOUT_MILLIS) {
-        yieldSupplyMarketFlowUseCase(token).mapNotNull { market -> market?.chainId }.firstOrNull()
+    private suspend fun resolveChainId(token: CryptoCurrency.Token): Int? {
+        return runSuspendCatching {
+            withTimeoutOrNull(RESOLVE_TIMEOUT_MILLIS) {
+                yieldSupplyMarketFlowUseCase(token).mapNotNull { market -> market?.chainId }.firstOrNull()
+            }
+        }
+            .onFailure { TangemLogger.e("Claim before withdrawal: the markets cache could not be read", it) }
+            .getOrNull()
     }
 
     private companion object {
