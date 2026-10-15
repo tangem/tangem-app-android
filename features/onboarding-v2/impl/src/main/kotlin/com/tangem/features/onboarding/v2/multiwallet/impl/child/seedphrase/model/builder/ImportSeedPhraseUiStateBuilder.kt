@@ -30,16 +30,16 @@ internal class ImportSeedPhraseUiStateBuilder(
 
     fun getState(): MultiWalletSeedPhraseUM {
         return MultiWalletSeedPhraseUM.Import(
-            wordsChange = {
-                launchInterceptWords(wordsField = it)
-                suggestNextWord(it)
+            wordsChange = { wordsField ->
+                launchInterceptWords(wordsField = wordsField)
+                suggestNextWord(wordsField)
                 updateUiState { state ->
-                    state.copy(words = it)
+                    state.copy(words = wordsField)
                 }
             },
-            passPhraseChange = {
-                passphrase = it.text
-                updateUiState { state -> state.copy(passPhrase = it) }
+            passPhraseChange = { passPhraseValue ->
+                passphrase = passPhraseValue.text
+                updateUiState { state -> state.copy(passPhrase = passPhraseValue) }
             },
             onPassphraseInfoClick = ::showInfoBS,
             createWalletClick = ::onCreateWallet,
@@ -107,8 +107,8 @@ internal class ImportSeedPhraseUiStateBuilder(
     private fun interceptWords(wordsField: TextFieldValue) {
         readyToImport(false)
 
-        updateUiState {
-            it.copy(
+        updateUiState { state ->
+            state.copy(
                 createWalletEnabled = false,
                 wordsErrorText = null,
             )
@@ -120,8 +120,8 @@ internal class ImportSeedPhraseUiStateBuilder(
         val wordsFromText = text.split(" ").filter { it.isNotBlank() }.map { it.trim() }
         val invalidWords = wordsFromText.filterNot { it in mnemonicRepository.words }
         if (invalidWords.isNotEmpty()) {
-            updateUiState {
-                it.copy(
+            updateUiState { state ->
+                state.copy(
                     invalidWords = invalidWords.toImmutableList(),
                     wordsErrorText = resourceReference(R.string.onboarding_seed_mnemonic_wrong_words),
                     createWalletEnabled = false,
@@ -133,8 +133,8 @@ internal class ImportSeedPhraseUiStateBuilder(
         try {
             val mnemonic = mnemonicRepository.generateMnemonic(text)
             importedMnemonic = mnemonic
-            updateUiState {
-                it.copy(
+            updateUiState { state ->
+                state.copy(
                     invalidWords = emptyList<String>().toImmutableList(),
                     wordsErrorText = null,
                     createWalletEnabled = true,
@@ -145,15 +145,15 @@ internal class ImportSeedPhraseUiStateBuilder(
             readyToImport(false)
             val error = ex.mnemonicResult
             if (error is MnemonicErrorResult.InvalidChecksum) {
-                updateUiState {
-                    it.copy(
+                updateUiState { state ->
+                    state.copy(
                         wordsErrorText = resourceReference(R.string.onboarding_seed_mnemonic_invalid_checksum),
                         createWalletEnabled = false,
                     )
                 }
             } else {
-                updateUiState {
-                    it.copy(
+                updateUiState { state ->
+                    state.copy(
                         createWalletEnabled = false,
                         wordsErrorText = null,
                     )

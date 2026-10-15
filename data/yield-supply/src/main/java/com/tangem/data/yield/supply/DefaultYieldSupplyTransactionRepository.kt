@@ -334,10 +334,6 @@ internal class DefaultYieldSupplyTransactionRepository(
         }.logErrorUnlessCancellation().getOrNull()
     }
 
-    /**
-     * @return null while [transactionHash] has not been mined, or while the node cannot say — the two are
-     * indistinguishable here, and both mean the outcome is not knowable yet.
-     */
     private suspend fun findReceipt(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency.Token,

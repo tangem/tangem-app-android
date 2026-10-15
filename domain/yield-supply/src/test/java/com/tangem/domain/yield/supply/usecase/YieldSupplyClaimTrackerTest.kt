@@ -211,10 +211,7 @@ internal class YieldSupplyClaimTrackerTest {
         transactionHash = TX_HASH,
     )
 
-    /**
-     * `advanceUntilIdle` stops at the foreground work, so the collector is drained with an extra `runCurrent` at
-     * the call sites rather than here — the subscription itself must exist before the claim is tracked.
-     */
+    /** Subscribes before the claim is tracked; call sites drain the collector with an extra `runCurrent`. */
     private fun TestScope.collectOutcomes(tracker: YieldSupplyClaimTracker): List<YieldSupplyClaimOutcome> {
         val collected = mutableListOf<YieldSupplyClaimOutcome>()
         backgroundScope.launch { tracker.outcomes.collect(collected::add) }

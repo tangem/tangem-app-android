@@ -82,12 +82,4 @@ internal object YieldSupplyIncentivesDomainModule {
             coroutineScope = appScope,
         )
     }
-
-    @Provides
-    @Singleton
-    fun provideRefreshYieldIncentivesUseCase(
-        yieldIncentivesRepository: YieldIncentivesRepository,
-    ): RefreshYieldIncentivesUseCase {
-        return RefreshYieldIncentivesUseCase(yieldIncentivesRepository)
-    }
 }

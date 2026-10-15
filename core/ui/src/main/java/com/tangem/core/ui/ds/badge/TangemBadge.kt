@@ -202,11 +202,11 @@ enum class TangemBadgeShape {
             Rounded -> when (size) {
                 X4,
                 X6,
-                -> TangemTheme.dimens2.x4
-                X9 -> TangemTheme.dimens2.x25
+                -> 16.dp
+                X9 -> 100.dp
             }
             Default -> when (size) {
-                X4 -> TangemTheme.dimens2.x1
+                X4 -> 4.dp
                 X6,
                 X9,
                 -> 6.dp
@@ -227,9 +227,9 @@ enum class TangemBadgeSize {
     @ReadOnlyComposable
     @Composable
     internal fun toHeightDp() = when (this) {
-        X4 -> TangemTheme.dimens2.x4
-        X6 -> TangemTheme.dimens2.x6
-        X9 -> TangemTheme.dimens2.x9
+        X4 -> 16.dp
+        X6 -> 24.dp
+        X9 -> 36.dp
     }
 
     @ReadOnlyComposable
@@ -255,19 +255,19 @@ enum class TangemBadgeSize {
     @ReadOnlyComposable
     @Composable
     internal fun toContentSize() = when (this) {
-        X4 -> TangemTheme.dimens2.x3
+        X4 -> 12.dp
         X6,
         X9,
-        -> TangemTheme.dimens2.x4
+        -> 16.dp
     }
 
     @ReadOnlyComposable
     @Composable
     internal fun toContentPadding() = when (this) {
-        X4 -> TangemTheme.dimens2.x0_5
+        X4 -> 2.dp
         X6,
         X9,
-        -> TangemTheme.dimens2.x1
+        -> 4.dp
     }
 
     @ReadOnlyComposable

@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.WebViewNavigator
 import com.google.accompanist.web.rememberWebViewNavigator
@@ -45,9 +46,9 @@ import java.nio.charset.StandardCharsets
 internal fun DisclaimerScreen(state: DisclaimerUM) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
     val bottomPadding = if (state.isTosAccepted) {
-        bottomBarHeight + TangemTheme.dimens.size16
+        bottomBarHeight + 16.dp
     } else {
-        bottomBarHeight + TangemTheme.dimens.size64
+        bottomBarHeight + 64.dp
     }
     val backgroundColor = TangemTheme.colors.background.primary
     val (textColor, iconColor) = TangemTheme.colors.text.primary1 to TangemTheme.colors.icon.primary1
@@ -141,7 +142,7 @@ private fun DisclaimerContent(url: String) {
                     color = TangemTheme.colors.icon.informative,
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .padding(TangemTheme.dimens.spacing8),
+                        .padding(8.dp),
                 )
             }
         }
@@ -186,9 +187,9 @@ private fun BoxScope.DisclaimerButton(onAccept: () -> Unit) {
             .align(Alignment.BottomCenter)
             .navigationBarsPadding()
             .padding(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
-                bottom = TangemTheme.dimens.spacing16,
+                start = 16.dp,
+                end = 16.dp,
+                bottom = 16.dp,
             )
             .fillMaxWidth(),
     )

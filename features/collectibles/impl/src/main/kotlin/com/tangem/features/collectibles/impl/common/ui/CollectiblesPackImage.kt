@@ -90,7 +90,7 @@ internal fun CollectiblesPackImageErrorIcon(modifier: Modifier = Modifier) {
             ),
             modifier = Modifier
                 .size(40.dp)
-                .background(color = TangemTheme.colors3.bg.opaque.primary, shape = CircleShape)
+                .background(color = TangemTheme.colors3.bg.transparent.primary, shape = CircleShape)
                 .padding(10.dp)
                 .size(20.dp),
         )
