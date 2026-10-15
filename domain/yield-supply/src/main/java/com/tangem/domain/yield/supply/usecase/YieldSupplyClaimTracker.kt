@@ -79,25 +79,24 @@ class YieldSupplyClaimTracker(
         )
         coroutineScope.launch {
             // A revert is released before publishing, so listeners see the claim settled when its outcome arrives
-            val reverted = try {
-                withTimeoutOrNull(SETTLEMENT_TIMEOUT_MS) { follow(claim) }
+            val isReverted = try {
+                withTimeoutOrNull(SETTLEMENT_TIMEOUT_MS) { isReverted(claim) } == true
             } finally {
                 trackedKeys.update { it - key }
-            } ?: return@launch
+            }
 
-            outcomes.emit(claim.toOutcome(reverted))
+            if (isReverted) outcomes.emit(claim.toOutcome(YieldSupplyTransactionOutcome.Reverted))
         }
     }
 
-    /** @return the outcome when the claim reverted, null once it is confirmed and reflected or its fate is unknown */
-    private suspend fun follow(claim: TrackedClaim): YieldSupplyTransactionOutcome? {
+    private suspend fun isReverted(claim: TrackedClaim): Boolean {
         val outcome = awaitOutcome(claim)
-        if (outcome == YieldSupplyTransactionOutcome.Reverted) return outcome
+        if (outcome == YieldSupplyTransactionOutcome.Reverted) return true
 
         if (outcome == YieldSupplyTransactionOutcome.Confirmed) outcomes.emit(claim.toOutcome(outcome))
         awaitReflected(claim)
 
-        return null
+        return false
     }
 
     private fun trackedKey(chainId: Int, userAddress: String) =
@@ -122,7 +121,6 @@ class YieldSupplyClaimTracker(
         while (!isReflected(claim)) delay(REFLECTION_CHECK_INTERVAL_MS)
     }
 
-    /** A failed read counts as not reflected yet. */
     private suspend fun isReflected(claim: TrackedClaim): Boolean {
         yieldIncentivesRepository.invalidateUserCache(chainId = claim.chainId, userAddress = claim.userAddress)
         val summary = getYieldRewardsSummaryUseCase(chainId = claim.chainId, userAddress = claim.userAddress)
