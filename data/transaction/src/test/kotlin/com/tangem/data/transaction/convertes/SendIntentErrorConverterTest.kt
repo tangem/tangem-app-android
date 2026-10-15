@@ -53,6 +53,7 @@ internal class SendIntentErrorConverterTest {
             httpError(Code.UNAUTHORIZED, problem("UNAUTHORIZED")),
             httpError(Code.INTERNAL_SERVER_ERROR, problem("INTERNAL_ERROR")),
             httpError(Code.NOT_FOUND, "<html><body>404 Not Found</body></html>"),
+            httpError(Code.NOT_FOUND, """{"status":404,"title":"Not Found"}"""),
             httpError(Code.NOT_FOUND, errorBody = null),
             httpError(Code.BAD_GATEWAY, errorBody = ""),
             ApiResponseError.NetworkException(),
