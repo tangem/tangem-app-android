@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
@@ -46,7 +47,7 @@ fun InputRowRecipientDefault(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(TangemTheme.dimens.spacing12),
+                .padding(12.dp),
         ) {
             Text(
                 text = title.resolveReference(),
@@ -55,14 +56,14 @@ fun InputRowRecipientDefault(
             )
             Row(
                 modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing8),
+                    .padding(top = 8.dp),
             ) {
                 IdentIcon(
                     address = value,
                     modifier = Modifier
                         .align(Alignment.CenterVertically)
-                        .clip(RoundedCornerShape(TangemTheme.dimens.radius18))
-                        .size(TangemTheme.dimens.size36)
+                        .clip(RoundedCornerShape(18.dp))
+                        .size(36.dp)
                         .background(TangemTheme.colors.background.tertiary),
                 )
                 Text(
@@ -70,7 +71,7 @@ fun InputRowRecipientDefault(
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.primary1,
                     modifier = Modifier
-                        .padding(start = TangemTheme.dimens.spacing12)
+                        .padding(start = 12.dp)
                         .weight(1f)
                         .align(Alignment.CenterVertically),
                 )

@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.amount.model
 
+import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.isZero
 import java.math.BigDecimal
 
@@ -25,7 +26,13 @@ internal object BankWithdrawAmountValidator {
         else -> Result.Valid
     }
 
-    /** The most the user can send: balance minus the rail fee, capped by [maxAmount], never negative. */
-    fun sendableAmount(maxAmount: BigDecimal, balance: BigDecimal, fee: BigDecimal): BigDecimal =
-        (balance - fee).min(maxAmount).max(BigDecimal.ZERO)
+    /**
+     * What Max fills in: balance minus the rail fee, capped by [maxAmount]. A balance that does not cover the fee is
+     * filled in whole, so the amount error explains why it cannot be sent.
+     */
+    fun maxInputAmount(maxAmount: BigDecimal, balance: BigDecimal, fee: BigDecimal): BigDecimal {
+        val balanceAfterFee = balance - fee
+        val amount = if (balanceAfterFee.isPositive()) balanceAfterFee else balance
+        return amount.min(maxAmount).max(BigDecimal.ZERO)
+    }
 }

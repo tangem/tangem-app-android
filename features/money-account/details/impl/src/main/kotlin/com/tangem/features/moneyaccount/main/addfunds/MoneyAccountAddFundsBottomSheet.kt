@@ -80,28 +80,28 @@ private fun IntroContent(content: MoneyAccountAddFundsUM.Content.Intro, modifier
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens2.x4)
-            .padding(bottom = TangemTheme.dimens2.x4),
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        IntroIcons(modifier = Modifier.padding(top = TangemTheme.dimens2.x4))
+        IntroIcons(modifier = Modifier.padding(top = 16.dp))
         TitleText(
             text = stringReference("Received USD will be converted to USDC by 1:1 rate"),
-            modifier = Modifier.padding(top = TangemTheme.dimens2.x8),
+            modifier = Modifier.padding(top = 32.dp),
         )
         SubtitleText(
             text = stringReference("It might take 1-3 days to receive the money"),
-            modifier = Modifier.padding(top = TangemTheme.dimens2.x2),
+            modifier = Modifier.padding(top = 8.dp),
         )
         InfoNotification(
             title = stringReference("Only ACH and domestic wire transfers are available"),
             subtitle = stringReference("SWIFT won't pass"),
-            modifier = Modifier.padding(top = TangemTheme.dimens2.x6),
+            modifier = Modifier.padding(top = 24.dp),
         )
         TangemButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = TangemTheme.dimens2.x4),
+                .padding(top = 16.dp),
             text = stringReference("Show details"),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
@@ -116,7 +116,7 @@ private fun DetailsContent(content: MoneyAccountAddFundsUM.Content.Details, modi
         modifier = modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(bottom = TangemTheme.dimens2.x4),
+            .padding(bottom = 16.dp),
     ) {
         content.items.forEachIndexed { index, item ->
             CopyableRow(
@@ -130,8 +130,8 @@ private fun DetailsContent(content: MoneyAccountAddFundsUM.Content.Details, modi
             titleTestTag = VirtualAccountRequisitesBottomSheetTestTags.DEPOSIT_LIMIT_TITLE,
             subtitleTestTag = VirtualAccountRequisitesBottomSheetTestTags.DEPOSIT_LIMIT_SUBTITLE,
             modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens2.x4)
-                .padding(top = TangemTheme.dimens2.x3),
+                .padding(horizontal = 16.dp)
+                .padding(top = 12.dp),
         )
         TangemButton(
             text = resourceReference(R.string.common_share),
@@ -140,8 +140,8 @@ private fun DetailsContent(content: MoneyAccountAddFundsUM.Content.Details, modi
             onClick = content.onShareClick,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens2.x4)
-                .padding(top = TangemTheme.dimens2.x4)
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp)
                 .testTag(VirtualAccountRequisitesBottomSheetTestTags.SHARE_BUTTON),
         )
     }
@@ -192,18 +192,18 @@ private fun InfoNotification(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(TangemTheme.dimens2.x4))
+            .clip(RoundedCornerShape(16.dp))
             .background(TangemTheme.colors3.bg.status.infoSubtle)
-            .padding(TangemTheme.dimens2.x4),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens2.x5),
+            modifier = Modifier.size(20.dp),
             imageVector = Icons.ic_info_24,
             contentDescription = null,
             tint = TangemTheme.colors3.icon.status.info,
         )
-        Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x0_5)) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 modifier = Modifier.conditional(
                     condition = titleTestTag.isNotEmpty(),
@@ -230,7 +230,7 @@ private fun InfoNotification(
 private fun IntroIcons(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(-TangemTheme.dimens2.x4),
+        horizontalArrangement = Arrangement.spacedBy(-16.dp),
     ) {
         UsdIcon()
         UsdcIcon()
@@ -241,14 +241,14 @@ private fun IntroIcons(modifier: Modifier = Modifier) {
 private fun UsdIcon(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens2.x20)
+            .size(80.dp)
             .clip(CircleShape)
-            .background(TangemTheme.colors3.bg.opaque.primary)
+            .background(TangemTheme.colors3.bg.transparent.primary)
             .border(width = 1.dp, color = TangemTheme.colors3.border.secondary, shape = CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens2.x8),
+            modifier = Modifier.size(32.dp),
             imageVector = Icons.ic_sign_usd_32,
             contentDescription = null,
             tint = TangemTheme.colors3.icon.primary,
@@ -258,7 +258,7 @@ private fun UsdIcon(modifier: Modifier = Modifier) {
 
 @Composable
 private fun UsdcIcon(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.size(TangemTheme.dimens2.x20)) {
+    Box(modifier = modifier.size(80.dp)) {
         Image(
             modifier = Modifier
                 .fillMaxSize()
@@ -270,17 +270,17 @@ private fun UsdcIcon(modifier: Modifier = Modifier) {
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .size(TangemTheme.dimens2.x6)
+                .size(24.dp)
                 .background(color = TangemTheme.colors3.bg.accent.violet, shape = CircleShape)
                 .border(
-                    width = TangemTheme.dimens2.x0_5,
+                    width = 2.dp,
                     color = TangemTheme.colors3.bg.secondary,
                     shape = CircleShape,
                 ),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                modifier = Modifier.size(TangemTheme.dimens2.x4),
+                modifier = Modifier.size(16.dp),
                 painter = painterResource(CoreUiR.drawable.ic_polygon_22),
                 contentDescription = null,
                 tint = TangemTheme.colors3.icon.inverse,

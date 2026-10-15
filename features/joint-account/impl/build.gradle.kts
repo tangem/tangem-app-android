@@ -39,6 +39,8 @@ dependencies {
     implementation(projects.domain.jointAccount)
     implementation(projects.domain.models)
     implementation(projects.domain.notifications.models)
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.wallets)
 
     /** SDK */

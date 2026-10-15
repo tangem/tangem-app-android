@@ -11,7 +11,6 @@ interface YieldSupplyNotificationsUpdateTrigger {
     /** Flow returns whether there is error notifications */
     val hasErrorFlow: Flow<Boolean>
 
-    /** Whether the balance cannot cover the network fee, the one error the claim sheet treats apart from the rest */
     val cannotCoverFeeFlow: Flow<Boolean>
 
     /** Trigger fee check reload */
@@ -25,7 +24,6 @@ interface YieldSupplyNotificationsUpdateListener {
     /** Trigger return callback with check result */
     suspend fun callbackHasError(hasError: Boolean)
 
-    /** Trigger return callback for [YieldSupplyNotificationsUpdateTrigger.cannotCoverFeeFlow] */
     suspend fun callbackCannotCoverFee(cannotCoverFee: Boolean)
 }
 

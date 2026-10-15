@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -17,7 +18,6 @@ import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
 import com.tangem.domain.yield.supply.usecase.GetYieldRewardsSummaryUseCase
-import com.tangem.domain.yield.supply.usecase.RefreshYieldIncentivesUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMarketFlowUseCase
 import com.tangem.features.yield.supply.impl.incentives.banner.DefaultYieldSupplyRewardsBannerComponent
@@ -54,18 +54,19 @@ internal class YieldSupplyRewardsBannerModelTest {
 
     private val marketFlowUseCase: YieldSupplyMarketFlowUseCase = mockk()
     private val getRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase = mockk()
-    private val incentivesRepository: YieldIncentivesRepository = mockk(relaxUnitFun = true)
     private val claimTracker: YieldSupplyClaimTracker = mockk()
     private val claimOutcomes = MutableSharedFlow<YieldSupplyClaimOutcome>(extraBufferCapacity = 1)
     private val claimInFlight = MutableStateFlow(false)
 
     private var originalLocale: Locale = Locale.getDefault()
+    private val claimClicks = mutableListOf<Pair<Int, String>>()
 
     @BeforeEach
     fun setUp() {
         originalLocale = Locale.getDefault()
         Locale.setDefault(Locale.US)
-        clearMocks(marketFlowUseCase, getRewardsSummaryUseCase, incentivesRepository)
+        claimClicks.clear()
+        clearMocks(marketFlowUseCase, getRewardsSummaryUseCase)
         every { marketFlowUseCase(any()) } returns flowOf(market(hasCampaign = true))
         claimInFlight.value = false
         every { claimTracker.outcomes } returns claimOutcomes
@@ -93,7 +94,7 @@ internal class YieldSupplyRewardsBannerModelTest {
         // Assert
         assertThat(model.uiState.value).isEqualTo(
             YieldSupplyRewardsBannerUM(
-                title = resourceReference(R.string.yield_module_rewards_banner_title, wrappedList("\$30.00")),
+                title = resourceReference(R.string.yield_module_rewards_banner_title, wrappedList(stringReference("\$30.00"))),
                 description = resourceReference(R.string.yield_module_rewards_banner_subtitle),
                 claim = YieldSupplyRewardsBannerUM.Claim.Enabled,
             ),
@@ -101,6 +102,24 @@ internal class YieldSupplyRewardsBannerModelTest {
 
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN recommended rewards WHEN claim clicked THEN the sheet is opened for the market chain and address`() =
+        runTest {
+            // Arrange
+            coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
+                MockYieldSupply.claimableSummary(claimable = listOf(reward(claimable = "1000"))).right()
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            model.onClaimClick()
+
+            // Assert
+            assertThat(claimClicks).containsExactly(CHAIN_ID to USER_ADDRESS)
+
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN rewards below threshold WHEN model created THEN claim is disabled`() = runTest {
@@ -118,7 +137,7 @@ internal class YieldSupplyRewardsBannerModelTest {
         // Assert
         assertThat(model.uiState.value).isEqualTo(
             YieldSupplyRewardsBannerUM(
-                title = resourceReference(R.string.yield_module_rewards_banner_title, wrappedList("\$0.30")),
+                title = resourceReference(R.string.yield_module_rewards_banner_title, wrappedList(stringReference("\$0.30"))),
                 description = resourceReference(R.string.yield_module_rewards_banner_below_threshold_subtitle),
                 claim = YieldSupplyRewardsBannerUM.Claim.Disabled,
             ),
@@ -309,7 +328,6 @@ internal class YieldSupplyRewardsBannerModelTest {
         model.onDestroy()
     }
 
-    /** The claim belongs to the module, so the in-flight state is read for the chain the market names. */
     @Test
     fun `GIVEN a banner WHEN it reads the claim state THEN it asks about the module of its market`() = runTest {
         // Arrange
@@ -373,9 +391,28 @@ internal class YieldSupplyRewardsBannerModelTest {
 
             // Assert
             coVerify(exactly = 3) { getRewardsSummaryUseCase(any(), any()) }
-            coVerify(exactly = 1) {
-                incentivesRepository.invalidateUserCache(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
-            }
+
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a confirmed claim reported in another address case WHEN it arrives THEN the rewards are read again`() =
+        runTest {
+            // Arrange
+            coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
+                MockYieldSupply.claimableSummary(
+                    claimable = listOf(reward(claimable = "1000")),
+                    totalNetUsd = BigDecimal("12.34"),
+                ).right()
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            claimOutcomes.emit(confirmedOutcome(userAddress = USER_ADDRESS.uppercase()))
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 2) { getRewardsSummaryUseCase(any(), any()) }
 
             model.onDestroy()
         }
@@ -439,9 +476,7 @@ internal class YieldSupplyRewardsBannerModelTest {
             runCurrent()
 
             // Assert
-            coVerify(exactly = 1) {
-                incentivesRepository.invalidateUserCache(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
-            }
+            coVerify(exactly = 4) { getRewardsSummaryUseCase(any(), any()) }
 
             model.onDestroy()
         }
@@ -468,7 +503,6 @@ internal class YieldSupplyRewardsBannerModelTest {
         // Assert
         assertThat(model.uiState.value).isNull()
         coVerify(exactly = 2) { getRewardsSummaryUseCase(any(), any()) }
-        coVerify(exactly = 0) { incentivesRepository.invalidateUserCache(any(), any()) }
 
         model.onDestroy()
     }
@@ -489,13 +523,12 @@ internal class YieldSupplyRewardsBannerModelTest {
             DefaultYieldSupplyRewardsBannerComponent.Params(
                 cryptoCurrency = createToken(),
                 cryptoCurrencyStatusFlow = cryptoCurrencyStatusFlow,
-                onClaimClick = {},
+                onClaimClick = { chainId, userAddress -> claimClicks += chainId to userAddress },
             ),
         ),
         dispatchers = createTestingCoroutineDispatcherProvider(),
         yieldSupplyMarketFlowUseCase = marketFlowUseCase,
         getYieldRewardsSummaryUseCase = getRewardsSummaryUseCase,
-        refreshYieldIncentivesUseCase = RefreshYieldIncentivesUseCase(incentivesRepository),
         yieldSupplyClaimTracker = claimTracker,
     )
 

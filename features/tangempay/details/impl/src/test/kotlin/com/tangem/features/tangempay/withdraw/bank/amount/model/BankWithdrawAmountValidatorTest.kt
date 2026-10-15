@@ -6,6 +6,7 @@ import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -30,23 +31,23 @@ internal class BankWithdrawAmountValidatorTest {
         assertThat(actual).isEqualTo(model.expected)
     }
 
-    @Test
-    fun `GIVEN balance below fee WHEN sendableAmount THEN zero`() {
+    @ParameterizedTest
+    @CsvSource("0.50, 1", "1, 1")
+    fun `GIVEN balance not covering fee WHEN maxInputAmount THEN whole balance`(
+        balance: BigDecimal,
+        fee: BigDecimal,
+    ) {
         // Act
-        val actual = BankWithdrawAmountValidator.sendableAmount(
-            maxAmount = maxAmount,
-            balance = BigDecimal("0.50"),
-            fee = BigDecimal("1"),
-        )
+        val actual = BankWithdrawAmountValidator.maxInputAmount(maxAmount = maxAmount, balance = balance, fee = fee)
 
         // Assert
-        assertThat(actual).isEqualTo(BigDecimal.ZERO)
+        assertThat(actual).isEqualTo(balance)
     }
 
     @Test
-    fun `GIVEN balance minus fee within limit WHEN sendableAmount THEN balance minus fee`() {
+    fun `GIVEN balance minus fee within limit WHEN maxInputAmount THEN balance minus fee`() {
         // Act
-        val actual = BankWithdrawAmountValidator.sendableAmount(
+        val actual = BankWithdrawAmountValidator.maxInputAmount(
             maxAmount = maxAmount,
             balance = BigDecimal("2325.55"),
             fee = BigDecimal("1"),
@@ -57,9 +58,9 @@ internal class BankWithdrawAmountValidatorTest {
     }
 
     @Test
-    fun `GIVEN balance minus fee above limit WHEN sendableAmount THEN limit`() {
+    fun `GIVEN balance minus fee above limit WHEN maxInputAmount THEN limit`() {
         // Act
-        val actual = BankWithdrawAmountValidator.sendableAmount(
+        val actual = BankWithdrawAmountValidator.maxInputAmount(
             maxAmount = maxAmount,
             balance = BigDecimal("20000"),
             fee = BigDecimal("1"),

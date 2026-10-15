@@ -368,7 +368,7 @@ private fun resolveColorTokens(variant: TangemFilterItem.Variant, isActive: Bool
             },
         )
         isActive -> activeContent.copy(backgroundColor = colors.bg.inverse)
-        else -> inactiveContent.copy(backgroundColor = colors.bg.opaque.secondary)
+        else -> inactiveContent.copy(backgroundColor = colors.bg.transparent.secondary)
     }
 }
 

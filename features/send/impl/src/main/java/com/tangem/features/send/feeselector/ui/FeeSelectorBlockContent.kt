@@ -117,7 +117,7 @@ private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, isIconShown: Bool
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Text(
             modifier = Modifier
-                .conditionalCompose(isIconShown) { Modifier.padding(start = TangemTheme.dimens.spacing4) }
+                .conditionalCompose(isIconShown) { Modifier.padding(start = 4.dp) }
                 .weight(1f, fill = false)
                 .testTag(FeeSelectorBlockTestTags.TITLE),
             text = stringResourceSafe(R.string.common_network_fee_title),
@@ -152,13 +152,13 @@ private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, isIconShown: Bool
         TangemTooltip(
             text = annotatedReference(annotatedString),
             modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing6)
-                .size(TangemTheme.dimens.size16)
+                .padding(start = 6.dp)
+                .size(16.dp)
                 .clip(CircleShape),
             content = { contentModifier ->
                 Icon(
                     modifier = contentModifier
-                        .size(TangemTheme.dimens.size16)
+                        .size(16.dp)
                         .testTag(FeeSelectorBlockTestTags.TOOLTIP_ICON),
                     painter = painterResource(id = R.drawable.ic_token_info_24),
                     contentDescription = null,
@@ -206,10 +206,10 @@ private fun GetFeeError.warningText(): String? = when (this) {
 @Composable
 private fun FeeLoading() {
     TextShimmer(
-        radius = TangemTheme.dimens.radius3,
+        radius = 3.dp,
         style = TangemTheme.typography.body1,
         modifier = Modifier
-            .width(width = TangemTheme.dimens.size90)
+            .width(width = 90.dp)
             .testTag(FeeSelectorBlockTestTags.FEE_LOADING),
     )
 }
@@ -246,7 +246,7 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
             color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.End,
             modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing4)
+                .padding(start = 4.dp)
                 .testTag(FeeSelectorBlockTestTags.FEE_AMOUNT),
         )
 

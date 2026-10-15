@@ -9,7 +9,7 @@ import org.gradle.api.Project
 import com.android.build.gradle.internal.dsl.BuildType as AndroidBuildType
 
 internal fun AppExtension.configure(project: Project) {
-    configureCompileSdk()
+    configureSdk()
     configureDefaultConfig(project)
     configureBuildFeatures()
     configureBuildTypes()

@@ -22,6 +22,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.TopAppBarButton
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
@@ -80,10 +81,10 @@ internal fun QrScanningContent(
                     targetState = isFlash,
                     transitionSpec = { fadeIn().togetherWith(fadeOut()) },
                     label = "Flash Change",
-                ) {
+                ) { isFlashOn ->
                     TopAppBarButton(
                         button = TopAppBarButtonUM.Icon(
-                            iconRes = if (it) R.drawable.ic_flash_on_24 else R.drawable.ic_flash_off_24,
+                            iconRes = if (isFlashOn) R.drawable.ic_flash_on_24 else R.drawable.ic_flash_off_24,
                             onClicked = {
                                 isFlash = !isFlash
                             },
@@ -117,11 +118,11 @@ private fun Overlay(
     overlayColor: Color = TangemColorPalette.Black.copy(alpha = 0.7f),
 ) {
     val whiteColor = TangemTheme.colors.text.constantWhite
-    val borderWidth = with(LocalDensity.current) { TangemTheme.dimens.spacing4.toPx() }
-    val borderLength = with(LocalDensity.current) { TangemTheme.dimens.size20.toPx() }
+    val borderWidth = with(LocalDensity.current) { 4.dp.toPx() }
+    val borderLength = with(LocalDensity.current) { 20.dp.toPx() }
 
     val textMeasurer = rememberTextMeasurer()
-    val textPadding = with(LocalDensity.current) { TangemTheme.dimens.spacing48.toPx() }
+    val textPadding = with(LocalDensity.current) { 48.dp.toPx() }
     val style = TangemTheme.typography.body1.copy(textAlign = TextAlign.Center)
     val text = message?.resolveReference()
 
@@ -166,14 +167,12 @@ private fun Overlay(
                     ),
                 ),
             )
-            text?.let {
-                val textLayoutResult = text.let {
-                    textMeasurer.measure(
-                        text = it,
-                        style = style,
-                        constraints = Constraints.fixedWidth(squareSize.roundToInt()),
-                    )
-                }
+            if (text != null) {
+                val textLayoutResult = textMeasurer.measure(
+                    text = text,
+                    style = style,
+                    constraints = Constraints.fixedWidth(squareSize.roundToInt()),
+                )
                 drawText(
                     textLayoutResult = textLayoutResult,
                     color = whiteColor,

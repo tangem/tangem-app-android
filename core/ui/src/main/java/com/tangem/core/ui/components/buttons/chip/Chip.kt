@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -27,23 +28,23 @@ fun Chip(text: TextReference, @DrawableRes iconResId: Int, onClick: () -> Unit, 
     Row(
         modifier = modifier
             .defaultMinSize(
-                minWidth = TangemTheme.dimens.size46,
-                minHeight = TangemTheme.dimens.size28,
+                minWidth = 46.dp,
+                minHeight = 28.dp,
             )
-            .clip(RoundedCornerShape(size = TangemTheme.dimens.size100))
+            .clip(RoundedCornerShape(size = 100.dp))
             .clickable(onClick = onClick)
             .background(color = TangemTheme.colors.background.tertiary)
             .padding(
-                horizontal = TangemTheme.dimens.spacing12,
-                vertical = TangemTheme.dimens.spacing6,
+                horizontal = 12.dp,
+                vertical = 6.dp,
             ),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             painter = painterResource(id = iconResId),
             contentDescription = null,
-            modifier = Modifier.size(size = TangemTheme.dimens.size16),
+            modifier = Modifier.size(size = 16.dp),
             tint = TangemTheme.colors.icon.secondary,
         )
 

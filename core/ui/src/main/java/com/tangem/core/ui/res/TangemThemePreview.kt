@@ -14,7 +14,6 @@ import com.tangem.core.ui.windowsize.rememberWindowSizePreview
 fun TangemThemePreview(
     isDark: Boolean? = null,
     typography: TangemTypography = TangemTheme.typography,
-    dimens: TangemDimens = TangemTheme.dimens,
     alwaysShowBottomSheets: Boolean = true,
     rtl: Boolean = false,
     content: @Composable () -> Unit,
@@ -29,7 +28,6 @@ fun TangemThemePreview(
             TangemTheme(
                 isDark = isDarkTheme,
                 typography = typography,
-                dimens = dimens,
                 windowSize = rememberWindowSizePreview(maxWidth, maxHeight),
                 content = content,
             )

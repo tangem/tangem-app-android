@@ -184,7 +184,7 @@ private fun MemberSlot(state: MemberSlotState, modifier: Modifier = Modifier) {
                             width = 1.dp,
                         )
                     MemberSlotState.FILLED -> Modifier
-                        .background(color = TangemTheme.colors3.bg.opaque.primary)
+                        .background(color = TangemTheme.colors3.bg.transparent.primary)
                         .border(
                             color = TangemTheme.colors3.border.primary,
                             shape = CircleShape,

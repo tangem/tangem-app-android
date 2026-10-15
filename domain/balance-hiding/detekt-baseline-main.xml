@@ -2,8 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>MultilineLambdaItParameter:ListenToFlipsUseCase.kt$ListenToFlipsUseCase${ send(HideBalancesError.DataError(it).left()) return@collectLatest }</ID>
-    <ID>NoNameShadowing:ListenToFlipsUseCase.kt$ListenToFlipsUseCase${ send(HideBalancesError.DataError(it).left()) return@collectLatest }</ID>
     <ID>NoNameShadowing:ListenToFlipsUseCase.kt$ListenToFlipsUseCase${ send(HideBalancesError.DataError(it).left()) }</ID>
   </CurrentIssues>
 </SmellBaseline>

@@ -195,8 +195,8 @@ class TokenItemStateConverter(
         ): EarnApyInfo? {
             val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
             if (token != null && yieldModuleApyMap.isNotEmpty()) {
-                val yieldSupplyApy = yieldModuleApyMap.entries.firstOrNull {
-                    it.key.equals(
+                val yieldSupplyApy = yieldModuleApyMap.entries.firstOrNull { entry ->
+                    entry.key.equals(
                         other = token.yieldSupplyKey(),
                         ignoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(token.network.rawId),
                     )

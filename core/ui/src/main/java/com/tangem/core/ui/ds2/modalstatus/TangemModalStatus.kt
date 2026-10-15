@@ -42,6 +42,8 @@ import com.tangem.core.ui.test.ModalStatusTestTags
  * [com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen]; place it in a
  * [com.tangem.core.ui.ds2.modal.TangemModal] with the actions in a footer.
  *
+ * Version: 1.0.1
+ *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10884-41257)
  *
  * Behavior notes:
@@ -86,7 +88,9 @@ fun TangemModalStatus(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -134,7 +138,7 @@ private fun StatusTitle(title: TextReference, description: TextReference?, style
 object TangemModalStatus {
 
     /** Public API surface of [TangemModalStatus]. */
-    val version = DsVersion(major = 1, minor = 0, patch = 0)
+    val version = DsVersion(major = 1, minor = 0, patch = 1)
 
     /** Status mood of the block — drives the default asset's colors and glyph. */
     enum class Variant {
@@ -149,7 +153,7 @@ object TangemModalStatus {
         @ReadOnlyComposable
         @Composable
         internal fun backgroundColor(): Color = when (this) {
-            Neutral -> TangemTheme.colors3.bg.opaque.primary
+            Neutral -> TangemTheme.colors3.bg.transparent.primary
             Success -> TangemTheme.colors3.bg.status.successSubtle
             Error -> TangemTheme.colors3.bg.status.errorSubtle
             Warning -> TangemTheme.colors3.bg.status.warningSubtle

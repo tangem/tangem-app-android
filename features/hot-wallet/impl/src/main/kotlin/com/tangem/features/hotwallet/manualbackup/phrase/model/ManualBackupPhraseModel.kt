@@ -60,8 +60,8 @@ internal class ManualBackupPhraseModel @Inject constructor(
                 .fold(
                     ifLeft = { TangemLogger.e("Error on exporting the seed phrase for a manual backup", it) },
                     ifRight = { seedPhrasePrivateInfo ->
-                        uiState.update {
-                            it.copy(
+                        uiState.update { state ->
+                            state.copy(
                                 words = seedPhrasePrivateInfo.mnemonic.mnemonicComponents.mapIndexed { index, s ->
                                     EnumeratedTwoColumnGridItem(index + 1, s)
                                 }.toImmutableList(),

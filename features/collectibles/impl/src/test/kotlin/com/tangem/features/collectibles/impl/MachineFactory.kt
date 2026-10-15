@@ -7,6 +7,7 @@ import com.tangem.domain.collectibles.models.CollectibleGachaMachineCategories
 import com.tangem.domain.collectibles.models.CollectibleGachaMachineNft
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesBatch
 import com.tangem.domain.collectibles.models.CollectibleRarity
+import com.tangem.domain.collectibles.models.OpenedCollectiblePack
 import com.tangem.pagination.Batch
 import com.tangem.pagination.PaginationStatus
 import java.math.BigDecimal
@@ -149,6 +150,31 @@ internal fun createNft(
     grade = grade,
     frontImageUrl = frontImageUrl,
     backImageUrl = backImageUrl,
+    insuredValue = insuredValue,
+)
+
+internal fun createOpenedPack(
+    txId: String = "tx-id",
+    imageFrontUrl: String? = "https://tangem.com/front.png",
+    imageBackUrl: String? = "https://tangem.com/back.png",
+    rarity: CollectibleRarity? = CollectibleRarity.UNCOMMON,
+    gradingCompany: String? = "PSA",
+    gradingId: String? = "00000000",
+    year: String? = "2024",
+    set: String? = "Series One",
+    serialNumber: String? = "216",
+    insuredValue: BigDecimal? = BigDecimal("62"),
+): OpenedCollectiblePack = OpenedCollectiblePack(
+    txId = txId,
+    nftAddress = "nft",
+    imageFrontUrl = imageFrontUrl,
+    imageBackUrl = imageBackUrl,
+    rarity = rarity,
+    gradingCompany = gradingCompany,
+    gradingId = gradingId,
+    year = year,
+    set = set,
+    serialNumber = serialNumber,
     insuredValue = insuredValue,
 )
 

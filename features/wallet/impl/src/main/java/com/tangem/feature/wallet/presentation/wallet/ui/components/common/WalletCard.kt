@@ -44,7 +44,6 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.feature.wallet.impl.R
-import com.tangem.core.ui.res.TangemDimens
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.MainScreenTestTags
@@ -78,7 +77,7 @@ internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifi
 
     Surface(
         modifier = modifier
-            .defaultMinSize(minHeight = TangemTheme.dimens.size108)
+            .defaultMinSize(minHeight = 108.dp)
             .onSizeChanged { itemSize = it }
             .testTag(MainScreenTestTags.TOTAL_BALANCE_CONTAINER)
             .then(
@@ -90,13 +89,13 @@ internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifi
                         .indication(interactionSource = interactionSource, indication = LocalIndication.current)
                         .pointerInput(true) {
                             detectTapGestures(
-                                onLongPress = {
+                                onLongPress = { offset ->
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     isMenuVisible = true
-                                    pressOffset = DpOffset(x = it.x.toDp(), y = it.y.toDp())
+                                    pressOffset = DpOffset(x = offset.x.toDp(), y = offset.y.toDp())
                                 },
-                                onPress = {
-                                    val press = PressInteraction.Press(it)
+                                onPress = { offset ->
+                                    val press = PressInteraction.Press(offset)
                                     interactionSource.emit(press)
                                     tryAwaitRelease()
                                     interactionSource.emit(PressInteraction.Release(press))
@@ -111,7 +110,7 @@ internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifi
                 .fillMaxWidth()
                 .clip(TangemTheme.shapes.roundedCornersXMedium)
                 .background(TangemTheme.colors.background.primary)
-                .padding(horizontal = TangemTheme.dimens.spacing12),
+                .padding(horizontal = 12.dp),
         ) {
             CardContainer(
                 state = state,
@@ -156,7 +155,7 @@ private fun CardContainer(state: WalletCardState, isBalanceHidden: Boolean, item
                 isBalanceHidden = isBalanceHidden,
                 modifier = Modifier
                     .onSizeChanged { balanceWidth = it.width }
-                    .padding(vertical = TangemTheme.dimens.spacing8),
+                    .padding(vertical = 8.dp),
             )
 
             AdditionalInfo(
@@ -254,7 +253,7 @@ private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: 
             is WalletCardState.Content -> {
                 Text(
                     text = balance,
-                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
+                    modifier = Modifier.defaultMinSize(minHeight = 32.dp),
                     autoSize = TextAutoSize.StepBased(
                         minFontSize = 16.sp,
                         maxFontSize = TangemTheme.typography.h2.fontSize,
@@ -272,10 +271,10 @@ private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: 
                 text = WalletCardState.EMPTY_BALANCE_TEXT.orMaskWithStars(isBalanceHidden),
             )
             is WalletCardState.Loading -> {
-                RectangleShimmer(modifier = Modifier.nonContentBalanceSize(TangemTheme.dimens))
+                RectangleShimmer(modifier = Modifier.nonContentBalanceSize())
             }
             is WalletCardState.LockedContent -> {
-                LockedContent(modifier = Modifier.nonContentBalanceSize(TangemTheme.dimens))
+                LockedContent(modifier = Modifier.nonContentBalanceSize())
             }
         }
     }
@@ -290,10 +289,10 @@ private fun NonContentBalanceText(text: TextReference) {
     )
 }
 
-private fun Modifier.nonContentBalanceSize(dimens: TangemDimens): Modifier {
+private fun Modifier.nonContentBalanceSize(): Modifier {
     return this
-        .padding(vertical = dimens.spacing4)
-        .size(width = dimens.size102, height = dimens.size24)
+        .padding(vertical = 4.dp)
+        .size(width = 102.dp, height = 24.dp)
 }
 
 @Composable
@@ -340,15 +339,15 @@ private fun AdditionalInfo(
                             testTag = MainScreenTestTags.SYNC_PROGRESS_TEXT,
                         )
                         CircularProgressIndicator(
-                            modifier = Modifier.size(TangemTheme.dimens.size16),
+                            modifier = Modifier.size(16.dp),
                             color = TangemTheme.colors.icon.accent,
-                            strokeWidth = TangemTheme.dimens.size2,
+                            strokeWidth = 2.dp,
                         )
                     }
                 }
             }
         } else {
-            RectangleShimmer(modifier = Modifier.nonContentAdditionalInfoSize(dimens = TangemTheme.dimens))
+            RectangleShimmer(modifier = Modifier.nonContentAdditionalInfoSize())
         }
     }
 }
@@ -365,8 +364,8 @@ private fun AdditionalInfoText(text: TextReference, testTag: String = MainScreen
     )
 }
 
-private fun Modifier.nonContentAdditionalInfoSize(dimens: TangemDimens): Modifier {
-    return this.size(width = dimens.size84, height = dimens.size16)
+private fun Modifier.nonContentAdditionalInfoSize(): Modifier {
+    return this.size(width = 84.dp, height = 16.dp)
 }
 
 @Composable
@@ -374,7 +373,7 @@ private fun LockedContent(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
             color = TangemTheme.colors.field.primary,
-            shape = RoundedCornerShape(TangemTheme.dimens.radius6),
+            shape = RoundedCornerShape(6.dp),
         ),
     )
 }
@@ -388,7 +387,7 @@ private fun Image(@DrawableRes id: Int?, modifier: Modifier = Modifier) {
             painter = painterResource(id = imageRes),
             contentDescription = null,
             modifier = Modifier
-                .width(width = TangemTheme.dimens.size120)
+                .width(width = 120.dp)
                 .testTag(MainScreenTestTags.CARD_IMAGE),
             contentScale = ContentScale.FillWidth,
         )

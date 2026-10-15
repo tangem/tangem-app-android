@@ -12,6 +12,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.CircleShimmer
@@ -38,8 +39,8 @@ internal fun ConfirmResidencyBottomSheet(config: TangemBottomSheetConfig, conten
         containerColor = TangemTheme.colors.background.tertiary,
         content = {
             val contentModifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing16)
-                .padding(bottom = TangemTheme.dimens.spacing16)
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp)
                 .fillMaxWidth()
                 .wrapContentHeight()
 
@@ -54,7 +55,7 @@ internal fun ConfirmResidencyBottomSheetContent(model: ConfirmResidencyUM, modif
         Text(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = TangemTheme.dimens.spacing10),
+                .padding(top = 10.dp),
             text = stringResourceSafe(id = R.string.onramp_residency_bottomsheet_title),
             style = TangemTheme.typography.subtitle1,
             color = TangemTheme.colors.text.primary1,
@@ -63,7 +64,7 @@ internal fun ConfirmResidencyBottomSheetContent(model: ConfirmResidencyUM, modif
         CountryContent(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = TangemTheme.dimens.spacing24),
+                .padding(vertical = 24.dp),
             name = model.country,
             flagUrl = model.countryFlagUrl,
             isCountrySupported = model.isCountrySupported,
@@ -76,7 +77,7 @@ internal fun ConfirmResidencyBottomSheetContent(model: ConfirmResidencyUM, modif
         PrimaryButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = TangemTheme.dimens.spacing12),
+                .padding(top = 12.dp),
             text = model.primaryButtonConfig.text.resolveReference(),
             onClick = model.primaryButtonConfig.onClick,
         )
@@ -89,9 +90,9 @@ private fun CountryContent(name: String, flagUrl: String, isCountrySupported: Bo
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val flagSize = with(LocalDensity.current) { TangemTheme.dimens.size36.roundToPx() }
+        val flagSize = with(LocalDensity.current) { 36.dp.roundToPx() }
         SubcomposeAsyncImage(
-            modifier = Modifier.size(TangemTheme.dimens.size36),
+            modifier = Modifier.size(36.dp),
             model = ImageRequest.Builder(LocalContext.current)
                 .size(size = flagSize)
                 .data(flagUrl)
@@ -104,7 +105,7 @@ private fun CountryContent(name: String, flagUrl: String, isCountrySupported: Bo
         )
 
         Text(
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
+            modifier = Modifier.padding(top = 12.dp),
             text = name,
             color = TangemTheme.colors.text.primary1,
             style = TangemTheme.typography.subtitle1,
@@ -113,7 +114,7 @@ private fun CountryContent(name: String, flagUrl: String, isCountrySupported: Bo
 
         if (!isCountrySupported) {
             Text(
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing6),
+                modifier = Modifier.padding(top = 6.dp),
                 text = stringResourceSafe(id = R.string.onramp_residency_bottomsheet_country_not_supported),
                 color = TangemTheme.colors.text.warning,
                 style = TangemTheme.typography.body2,

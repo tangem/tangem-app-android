@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerWMax
@@ -21,6 +22,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_double_vertical_16
+import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.feature.swap.models.states.SwapSlippageUM
 import com.tangem.feature.swap.presentation.R
 
@@ -55,7 +57,8 @@ private fun SwapSlippageRow(slippageUM: SwapSlippageUM.Content) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = slippageUM.onClick)
-            .padding(12.dp),
+            .padding(12.dp)
+            .testTag(SwapTokenScreenTestTags.SLIPPAGE_ROW),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -72,7 +75,9 @@ private fun SwapSlippageRow(slippageUM: SwapSlippageUM.Content) {
             } else {
                 TangemTheme.colors.text.tertiary
             },
-            modifier = Modifier.padding(end = 4.dp),
+            modifier = Modifier
+                .padding(end = 4.dp)
+                .testTag(SwapTokenScreenTestTags.SLIPPAGE_VALUE),
         )
         Icon(
             imageVector = Icons.ic_chevron_double_vertical_16,
