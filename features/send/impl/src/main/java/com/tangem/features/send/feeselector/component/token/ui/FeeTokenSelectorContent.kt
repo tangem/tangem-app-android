@@ -131,7 +131,7 @@ internal fun TokenListContent(state: FeeTokenSelectorUM, modifier: Modifier = Mo
                 TokenItem(
                     modifier = Modifier
                         .selectedBorder(isSelected = state.selectedToken.state.id == item.id)
-                        .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+                        .clip(RoundedCornerShape(14.dp))
                         .background(color = TangemTheme.colors.background.action),
                     state = item,
                     isBalanceHidden = false,
@@ -152,7 +152,7 @@ internal fun TokenListContent(state: FeeTokenSelectorUM, modifier: Modifier = Mo
                     TokenItem(
                         modifier = Modifier
                             .graphicsLayer { alpha = 0.5f }
-                            .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+                            .clip(RoundedCornerShape(14.dp))
                             .background(color = TangemTheme.colors.background.action),
                         state = item,
                         isBalanceHidden = false,

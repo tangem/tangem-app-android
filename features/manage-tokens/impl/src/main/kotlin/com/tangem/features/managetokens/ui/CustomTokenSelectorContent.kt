@@ -73,14 +73,14 @@ internal fun CustomTokenSelectorContent(model: CustomTokenSelectorUM, modifier: 
                     shape = when {
                         model.header !is CustomTokenSelectorUM.HeaderUM.Description && index == 0 -> {
                             RoundedCornerShape(
-                                topStart = TangemTheme.dimens.radius16,
-                                topEnd = TangemTheme.dimens.radius16,
+                                topStart = 16.dp,
+                                topEnd = 16.dp,
                             )
                         }
                         index == lastIndex -> {
                             RoundedCornerShape(
-                                bottomStart = TangemTheme.dimens.radius16,
-                                bottomEnd = TangemTheme.dimens.radius16,
+                                bottomStart = 16.dp,
+                                bottomEnd = 16.dp,
                             )
                         }
                         else -> {
@@ -90,7 +90,7 @@ internal fun CustomTokenSelectorContent(model: CustomTokenSelectorUM, modifier: 
                 )
                 .background(color = TangemTheme.colors.background.primary)
                 .clickable(onClick = { item.onSelectedStateChange(true) })
-                .padding(horizontal = TangemTheme.dimens.spacing4)
+                .padding(horizontal = 4.dp)
 
             when (item) {
                 is CurrencyNetworkUM -> {
@@ -116,7 +116,7 @@ private fun Header(header: CustomTokenSelectorUM.HeaderUM, modifier: Modifier = 
         is CustomTokenSelectorUM.HeaderUM.CustomDerivationButton -> {
             CustomDerivationButton(
                 modifier = modifier
-                    .padding(vertical = TangemTheme.dimens.spacing16)
+                    .padding(vertical = 16.dp)
                     .testTag(AddCustomTokenScreenTestTags.CUSTOM_DERIVATION_BUTTON),
                 enteredDerivationPath = header.value,
                 isSelected = header.value != null,
@@ -126,14 +126,14 @@ private fun Header(header: CustomTokenSelectorUM.HeaderUM, modifier: Modifier = 
         is CustomTokenSelectorUM.HeaderUM.Description -> {
             Column(
                 modifier = modifier,
-                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 AddCustomTokenDescription()
                 Box(
                     modifier = modifier
                         .fillMaxWidth()
-                        .heightIn(min = TangemTheme.dimens.size36)
+                        .heightIn(min = 36.dp)
                         .background(
                             color = TangemTheme.colors.background.primary,
                             shape = TangemTheme.shapes.bottomSheet,
@@ -141,8 +141,8 @@ private fun Header(header: CustomTokenSelectorUM.HeaderUM, modifier: Modifier = 
                 ) {
                     Text(
                         modifier = Modifier
-                            .padding(top = TangemTheme.dimens.spacing12)
-                            .padding(horizontal = TangemTheme.dimens.spacing12),
+                            .padding(top = 12.dp)
+                            .padding(horizontal = 12.dp),
                         text = stringResourceSafe(R.string.add_custom_token_choose_network),
                         style = TangemTheme.typography.subtitle2,
                         color = TangemTheme.colors.text.tertiary,
@@ -151,7 +151,7 @@ private fun Header(header: CustomTokenSelectorUM.HeaderUM, modifier: Modifier = 
             }
         }
         is CustomTokenSelectorUM.HeaderUM.None -> {
-            Spacer(modifier = Modifier.size(TangemTheme.dimens.spacing16))
+            Spacer(modifier = Modifier.size(16.dp))
         }
     }
 }
@@ -192,7 +192,7 @@ private fun CustomDerivationButton(
             .clickable(onClick = onClick),
         title = {
             Column(
-                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
                     text = stringResourceSafe(id = R.string.custom_token_custom_derivation),
@@ -200,7 +200,7 @@ private fun CustomDerivationButton(
                     color = TangemTheme.colors.text.secondary,
                 )
                 Text(
-                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                    modifier = Modifier.padding(bottom = 12.dp),
                     text = enteredDerivationPath
                         ?: stringResourceSafe(id = R.string.custom_token_custom_derivation_title),
                     style = TangemTheme.typography.body2,
@@ -221,7 +221,7 @@ private fun DerivationPathItem(model: DerivationPathUM, modifier: Modifier = Mod
         shape = RectangleShape,
         title = {
             Column(
-                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
                     text = model.networkName.resolveReference(),
@@ -230,7 +230,7 @@ private fun DerivationPathItem(model: DerivationPathUM, modifier: Modifier = Mod
                 )
 
                 Text(
-                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                    modifier = Modifier.padding(bottom = 12.dp),
                     text = model.value,
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.primary1,
@@ -246,7 +246,7 @@ private fun DerivationPathItem(model: DerivationPathUM, modifier: Modifier = Mod
 @Composable
 private fun SelectedIcon(isVisible: Boolean, modifier: Modifier = Modifier) {
     AnimatedVisibility(
-        modifier = modifier.size(TangemTheme.dimens.size24),
+        modifier = modifier.size(24.dp),
         visible = isVisible,
     ) {
         Icon(

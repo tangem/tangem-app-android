@@ -131,15 +131,15 @@ private fun Header() {
             painter = painterResource(R.drawable.ill_businessman_3d),
             contentDescription = null,
             modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing32)
+                .padding(horizontal = 32.dp)
                 .fillMaxWidth()
-                .height(TangemTheme.dimens.size200)
+                .height(200.dp)
                 .testTag(ReferralProgramScreenTestTags.IMAGE),
         )
         SpacerH24()
         Text(
             text = stringResourceSafe(id = R.string.referral_title),
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing50),
+            modifier = Modifier.padding(horizontal = 50.dp),
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
             maxLines = 2,
@@ -173,7 +173,7 @@ private fun ReferralInfo(stateHolder: ReferralStateHolder, onAgreementClick: () 
                 NonParticipateAccountAwardBlock(state.accountAward)
                 SpacerH24()
             } else {
-                Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing44))
+                Spacer(modifier = Modifier.height(44.dp))
             }
             NonParticipateBottomBlock(
                 onAgreementClick = onAgreementClick,
@@ -233,24 +233,24 @@ private fun LoadingCondition(@DrawableRes iconResId: Int) {
 private fun Condition(@DrawableRes iconResId: Int, infoBlock: @Composable () -> Unit) {
     Row(
         modifier = Modifier
-            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .padding(horizontal = 16.dp)
             .testTag(ReferralProgramScreenTestTags.CONDITION_BLOCK),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Box(
             modifier = Modifier
                 .background(
                     color = TangemTheme.colors.button.secondary,
-                    shape = RoundedCornerShape(TangemTheme.dimens.radius16),
+                    shape = RoundedCornerShape(16.dp),
                 )
-                .size(TangemTheme.dimens.size56),
+                .size(56.dp),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 painter = painterResource(id = iconResId),
                 contentDescription = null,
-                modifier = Modifier.size(TangemTheme.dimens.size28),
+                modifier = Modifier.size(28.dp),
                 tint = TangemTheme.colors.icon.primary1,
             )
         }
@@ -329,7 +329,7 @@ private fun InfoForYourFriend(discount: String) {
 
 @Composable
 private fun ConditionInfo(title: String, subtitleContent: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2)) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(
             text = title,
             color = TangemTheme.colors.text.primary1,
@@ -345,18 +345,18 @@ private fun ShimmerInfo() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = TangemTheme.dimens.spacing4),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing10),
+            .padding(top = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         RectangleShimmer(
             modifier = Modifier
-                .width(TangemTheme.dimens.size102)
-                .height(TangemTheme.dimens.size16),
+                .width(102.dp)
+                .height(16.dp),
         )
         RectangleShimmer(
             modifier = Modifier
-                .width(TangemTheme.dimens.size40)
-                .height(TangemTheme.dimens.size12),
+                .width(40.dp)
+                .height(12.dp),
         )
     }
 }
@@ -365,15 +365,15 @@ private fun ShimmerInfo() {
 private fun NonParticipateAccountAwardBlock(accountAward: AccountAward) {
     Column(
         modifier = Modifier
-            .padding(horizontal = TangemTheme.dimens.spacing16)
-            .clip(RoundedCornerShape(TangemTheme.dimens.spacing16))
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(16.dp))
             .background(color = TangemTheme.colors.background.primary),
     ) {
         Text(
             modifier = Modifier.padding(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
-                top = TangemTheme.dimens.spacing12,
+                start = 16.dp,
+                end = 16.dp,
+                top = 12.dp,
             ),
             text = stringResourceSafe(R.string.referral_address_for_rewards),
             style = TangemTheme.typography.subtitle2,

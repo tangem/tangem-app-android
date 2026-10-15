@@ -50,16 +50,16 @@ internal fun TokenActionsContent(state: TokenActionsUM, modifier: Modifier = Mod
     ) {
         TokenItem(
             modifier = Modifier
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+                .clip(RoundedCornerShape(14.dp))
                 .background(color = TangemTheme.colors.background.action),
             state = state.token,
             isBalanceHidden = false,
         )
 
-        SpacerH(TangemTheme.dimens.spacing14)
+        SpacerH(14.dp)
         Column(
             modifier = Modifier
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+                .clip(RoundedCornerShape(14.dp))
                 .background(TangemTheme.colors.background.action),
         ) {
             state.quickActions.actions.fastForEach { actionUM ->
@@ -111,9 +111,9 @@ private fun ActionRow(
                     onClick()
                 },
             )
-            .padding(horizontal = TangemTheme.dimens.spacing12, vertical = TangemTheme.dimens.spacing15),
+            .padding(horizontal = 12.dp, vertical = 15.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         val containerColor = TangemTheme.colors.background.action
         Box(
@@ -132,14 +132,14 @@ private fun ActionRow(
                 },
         ) {
             Icon(
-                modifier = Modifier.requiredSize(TangemTheme.dimens.size16),
+                modifier = Modifier.requiredSize(16.dp),
                 imageVector = ImageVector.vectorResource(id = state.icon),
                 contentDescription = null,
                 tint = TangemTheme.colors.icon.accent,
             )
         }
         Column(
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Text(
                 text = state.title.resolveReference(),

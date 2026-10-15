@@ -33,6 +33,7 @@ import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.GetSharedJointAccountInvitesUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatcher
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.converter.JointAccountToMembersUMConverter
@@ -42,20 +43,20 @@ import com.tangem.features.jointaccount.main.state.JointAccountMembersStateContr
 import com.tangem.features.jointaccount.main.state.transformers.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
 import com.tangem.core.ui.R as CoreUiR
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Stable
 @ModelScoped
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class JointAccountMembersModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -74,6 +75,7 @@ internal class JointAccountMembersModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val stateController: JointAccountMembersStateController,
     private val inviteSharing: JointAccountInviteSharing,
+    private val compromiseWatcher: JointAccountCompromiseWatcher,
 ) : Model() {
 
     private var activationJob: Job? = null
@@ -106,11 +108,15 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private val isResumed = MutableStateFlow(false)
 
-    private val resolvedAccountFlow: Flow<JointAccount?> = jointAccountListSupplier(userWalletId = params.userWalletId)
-        .map { accounts ->
-            accounts.firstOrNull { params.cryptoAccountId == null || it.cryptoAccountId == params.cryptoAccountId }
-        }
-        .distinctUntilChanged()
+    private val resolvedAccountFlow: Flow<JointAccount?> = compromiseWatcher.verified(
+        userWalletId = params.userWalletId,
+        accounts = jointAccountListSupplier(userWalletId = params.userWalletId)
+            .map { accounts ->
+                accounts.firstOrNull { params.cryptoAccountId == null || it.cryptoAccountId == params.cryptoAccountId }
+            }
+            .distinctUntilChanged(),
+        onCompromised = router::pop,
+    )
 
     init {
         stateController.update(UpdateMembersInitialStateTransformer(onCloseClick = ::onCloseClick))

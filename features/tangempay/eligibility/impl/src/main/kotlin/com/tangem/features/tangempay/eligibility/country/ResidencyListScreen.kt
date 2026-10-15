@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,6 +41,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_search_24
+import com.tangem.core.ui.test.TangemPayTestTags
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
@@ -129,6 +131,7 @@ private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
 @Composable
 private fun ResidencyRow(item: ResidencyListUM.ItemUM) {
     TangemRow(
+        modifier = Modifier.testTag(TangemPayTestTags.RESIDENCY_ROW),
         verticalAlignment = TangemRowVerticalAlignment.Center,
         onClick = item.onClick,
         startSlot = item.flagUrl?.let { url -> { ResidencyFlag(flagUrl = url) } },
@@ -157,7 +160,7 @@ private fun ResidencyFlag(flagUrl: String, modifier: Modifier = Modifier) {
         modifier = modifier
             .size(FLAG_SIZE)
             .clip(CircleShape)
-            .background(color = TangemTheme.colors3.bg.opaque.primary),
+            .background(color = TangemTheme.colors3.bg.transparent.primary),
     )
 }
 
@@ -232,7 +235,7 @@ private fun EmptyContent(contentPadding: PaddingValues, modifier: Modifier = Mod
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .background(color = TangemTheme.colors3.bg.opaque.primary, shape = CircleShape),
+                .background(color = TangemTheme.colors3.bg.transparent.primary, shape = CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

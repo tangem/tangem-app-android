@@ -2,7 +2,10 @@ package com.tangem.feature.usedesk
 
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -14,22 +17,33 @@ import androidx.core.content.FileProvider
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.essenty.lifecycle.doOnPause
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
 import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.usedesk.model.UsedeskModel
+import com.tangem.feature.usedesk.visibility.DefaultSupportChatVisibility
+import com.tangem.usedesk.chat_gui.chat.UsedeskChatScreen
+import com.tangem.usedesk.chat_sdk.entity.UsedeskChatConfiguration
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import com.tangem.usedesk.chat_gui.chat.UsedeskChatScreen
-import com.tangem.usedesk.chat_sdk.entity.UsedeskChatConfiguration
 
 internal class DefaultUsedeskComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: UsedeskComponent.Params,
+    supportChatVisibility: DefaultSupportChatVisibility,
+    private val useDeskFeatureToggles: UseDeskFeatureToggles,
 ) : UsedeskComponent, AppComponentContext by appComponentContext {
 
     private val model: UsedeskModel = getOrCreateModel(params)
+
+    init {
+        lifecycle.doOnResume { supportChatVisibility.onResumed() }
+        lifecycle.doOnPause { supportChatVisibility.onPaused() }
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -63,6 +77,7 @@ internal class DefaultUsedeskComponent @AssistedInject constructor(
 
                     val fragment = UsedeskChatScreen.newInstance(
                         usedeskChatConfiguration = configuration,
+                        agentName = AGENT_NAME.takeIf { useDeskFeatureToggles.isSupportChatDeepLinkEnabled },
                         allowedFileExtensions = ALLOWED_FILE_EXTENSIONS,
                         cameraEnabled = false,
                     ).apply {
@@ -118,6 +133,9 @@ internal class DefaultUsedeskComponent @AssistedInject constructor(
     }
 
     private companion object {
+        // Replaces every operator's real name in the chat so personal data isn't exposed
+        const val AGENT_NAME = "Tangem Support Team"
+
         // Allowed attachment types: zip, images (jpg/jpeg/png/gif/webp/heic),
         // videos (mp4/mov/webm). jpeg is added as a synonym for jpg.
         val ALLOWED_FILE_EXTENSIONS = listOf(

@@ -1,6 +1,7 @@
 package com.tangem.domain.polymarket.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
@@ -137,5 +138,8 @@ internal class PredictionOrderQuoteTest {
         minOrderAmount = minOrderAmount,
         tickSize = BigDecimal("0.001"),
         isLive = false,
+        version = PolymarketMarketVersion.V1,
+        exchange = PolymarketContracts.CTF_EXCHANGE,
+        signingDomainVersion = "2",
     )
 }

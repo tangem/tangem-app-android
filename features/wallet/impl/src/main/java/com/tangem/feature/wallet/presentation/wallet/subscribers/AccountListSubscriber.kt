@@ -6,6 +6,7 @@ import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.jointaccount.usecase.GetPendingJointOperationsUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -142,7 +143,12 @@ internal class AccountListSubscriber @AssistedInject constructor(
         }
 
     private fun jointAccountsFlow(): Flow<List<Account.Joint>> = getAccountStatusListFlow()
-        .map { list -> list.accountStatuses.filterIsInstance<AccountStatus.Joint>().map(AccountStatus.Joint::account) }
+        .map { list ->
+            list.accountStatuses
+                .filterIsInstance<AccountStatus.Joint>()
+                .filter { it.value is JointAccountStatusValue.Active }
+                .map(AccountStatus.Joint::account)
+        }
         .distinctUntilChanged()
 
     private fun stakingAvailabilityFlow(): Flow<Map<CryptoCurrency, StakingAvailability>> = getAccountStatusListFlow()

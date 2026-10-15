@@ -80,10 +80,10 @@ internal class SeedPhraseCheckUiStateBuilder(
     }
 
     private fun MultiWalletSeedPhraseUM.GeneratedWordsCheck.allFieldsCorrect(): Boolean {
-        return wordFields.all {
+        return wordFields.all { wordField ->
             checkWordField(
-                word = it.word.text,
-                shownIndex = it.index,
+                word = wordField.word.text,
+                shownIndex = wordField.index,
             )
         }
     }

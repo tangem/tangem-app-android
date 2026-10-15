@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_heart_20
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.utils.dashedBorder
 import com.tangem.features.tangempay.details.impl.R
 
@@ -55,6 +57,7 @@ internal fun LazyListScope.recentsShimmerItems(keyPrefix: String) {
 
 @Composable
 internal fun RecentsCard(
+    modifier: Modifier = Modifier,
     isDashed: Boolean = false,
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
@@ -76,7 +79,7 @@ internal fun RecentsCard(
     }
     val click = if (onClick != null) Modifier.clickableSingle(role = Role.Button, onClick = onClick) else Modifier
     Column(
-        modifier = Modifier
+        modifier = modifier
             .size(width = CardWidth, height = RecentsCardHeight)
             .then(surface)
             .then(click)
@@ -88,7 +91,7 @@ internal fun RecentsCard(
 
 @Composable
 internal fun RecentsEmptyCard() {
-    RecentsCard(isDashed = true) {
+    RecentsCard(modifier = Modifier.testTag(TangemPayTestTags.WITHDRAW_HUB_RECENTS_EMPTY), isDashed = true) {
         SecondaryIconCircle(imageVector = Icons.ic_heart_20)
         Text(
             text = resourceReference(R.string.tangempay_withdraw_hub_recents_empty).resolveReference(),
@@ -102,7 +105,7 @@ internal fun RecentsEmptyCard() {
 
 @Composable
 internal fun SecondaryIconCircle(imageVector: ImageVector) {
-    IconCircle(background = TangemTheme.colors3.bg.opaque.primary) {
+    IconCircle(background = TangemTheme.colors3.bg.transparent.primary) {
         TangemIcon(
             modifier = Modifier.size(20.dp),
             tangemIconUM = TangemIconUM.Icon(

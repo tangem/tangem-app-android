@@ -270,7 +270,7 @@ private fun MessageBannerTextWrapper(
             style = TangemTheme.typography3.body.medium,
             color = TangemTheme.colors3.text.primary,
             textAlign = textAlign,
-            maxLines = 2,
+            maxLines = 3,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.testTag(NotificationTestTags.TITLE),
         )
@@ -457,7 +457,7 @@ private fun TangemMessageBanner.Variant.tokens(): MessageBannerTokens {
     val colors = TangemTheme.colors3
     return when (this) {
         TangemMessageBanner.Variant.Default -> MessageBannerTokens(
-            background = colors.bg.opaque.primary,
+            background = colors.bg.transparent.primary,
             glowRing = TangemGlowRing.Variant.Magic,
         )
         TangemMessageBanner.Variant.Solid -> MessageBannerTokens(

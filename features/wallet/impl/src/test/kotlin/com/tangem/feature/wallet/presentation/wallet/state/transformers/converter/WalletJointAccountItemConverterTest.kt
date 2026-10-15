@@ -15,6 +15,7 @@ import com.tangem.core.ui.res.generated.icons.ic_user_plus_16
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.tokenlist.TokenList
@@ -38,12 +39,14 @@ internal class WalletJointAccountItemConverterTest {
     private val account = MockAccounts.createJointAccount(ownerKeyIndex = 0, userWalletId = userWalletId)
 
     private val clickedAccounts = mutableListOf<Pair<UserWalletId, String>>()
+    private val compromisedClicks = mutableListOf<UserWalletId>()
 
     private val converter = createConverter(accountIdsWithInvites = emptySet())
 
     @BeforeEach
     fun resetClicks() {
         clickedAccounts.clear()
+        compromisedClicks.clear()
     }
 
     private fun createConverter(accountIdsWithInvites: Set<String>) = WalletJointAccountItemConverter(
@@ -51,6 +54,7 @@ internal class WalletJointAccountItemConverterTest {
         userWalletId = userWalletId,
         accountIdsWithInvites = accountIdsWithInvites,
         onAccountClick = { walletId, accountId -> clickedAccounts += walletId to accountId },
+        onCompromisedAccountClick = { walletId -> compromisedClicks += walletId },
     )
 
     @Test
@@ -158,6 +162,46 @@ internal class WalletJointAccountItemConverterTest {
         // Assert
         assertThat(loading.state).isEqualTo(JointAccountMainUM.Loading)
         assertThat(unavailable.state).isEqualTo(JointAccountMainUM.TemporaryUnavailable)
+    }
+
+    @Test
+    fun `GIVEN compromised status WHEN convert THEN a blocked row with the account figures`() {
+        // Arrange
+        val status = createStatus(
+            JointAccountStatusValue.Error.Compromised(
+                totalMembers = 5,
+                tokensCount = 6,
+                fiatBalance = TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
+            ),
+        )
+
+        // Act
+        val state = converter.convert(status).state as JointAccountMainUM.Blocked
+
+        // Assert
+        assertThat(state.title).isEqualTo(stringReference("Joint #0"))
+        assertThat(state.balance).isEqualTo(stringReference(zeroBalance()))
+        assertThat(state.icon).isEqualTo(CryptoPortfolioIconConverter.convert(account.icon))
+        assertThat(state.priceChange).isNull()
+    }
+
+    @Test
+    fun `GIVEN compromised status WHEN row tapped THEN the alert is requested instead of the members screen`() {
+        // Arrange
+        val status = createStatus(
+            JointAccountStatusValue.Error.Compromised(
+                totalMembers = 5,
+                tokensCount = 6,
+                fiatBalance = TotalFiatBalance.Loading,
+            ),
+        )
+
+        // Act
+        (converter.convert(status).state as JointAccountMainUM.Blocked).onClick()
+
+        // Assert
+        assertThat(compromisedClicks).containsExactly(userWalletId)
+        assertThat(clickedAccounts).isEmpty()
     }
 
     @Test

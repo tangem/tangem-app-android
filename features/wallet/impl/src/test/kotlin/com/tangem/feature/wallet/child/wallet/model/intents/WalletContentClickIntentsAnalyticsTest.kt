@@ -43,6 +43,7 @@ internal class WalletContentClickIntentsAnalyticsTest {
             yieldSupplySetShouldShowMainPromoUseCase = mockk(relaxed = true),
             tokenListAnalyticsSender = mockk(relaxed = true),
             uiMessageSender = mockk(relaxed = true),
+            jointAccountCompromisedAlert = mockk(relaxed = true),
         )
         implementor.initialize(router = router, coroutineScope = TestScope())
         return implementor

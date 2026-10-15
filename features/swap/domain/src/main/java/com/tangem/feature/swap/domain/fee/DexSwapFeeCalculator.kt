@@ -8,6 +8,7 @@ import arrow.core.raise.either
 import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
@@ -463,6 +464,9 @@ class DexSwapFeeCalculator(
      * [gasNullError] wraps the thrown [Throwable] as [GetFeeError.DataError]; for the
      * `Either.Left` path it is the original left [GetFeeError].
      *
+     * The fallback is skipped and [gasNullError] raised as-is for [GetFeeError.EstimateOverrideError]
+     * and for an on-chain revert (see [isExecutionReverted]) — both mean the transaction would fail.
+     *
      * Always returns a [TransactionFeeResult.Loaded] (never `LoadedExtended`), matching the
      * legacy exception-catch behaviour.
      */
@@ -471,7 +475,7 @@ class DexSwapFeeCalculator(
         transaction: ExpressTransactionModel.DEX,
         gasNullError: GetFeeError,
     ): TransactionFeeResult {
-        if (gasNullError is GetFeeError.EstimateOverrideError) {
+        if (gasNullError is GetFeeError.EstimateOverrideError || gasNullError.isExecutionReverted()) {
             raise(gasNullError)
         }
 
@@ -482,6 +486,16 @@ class DexSwapFeeCalculator(
             gasLimit = gasLimit,
         ).bind()
         return TransactionFeeResult.Loaded(fee)
+    }
+
+    /**
+     * A revert means the route itself fails on-chain, so pricing it from the Express gas limit would offer a
+     * fee for a transaction that cannot succeed.
+     */
+    private fun GetFeeError.isExecutionReverted(): Boolean {
+        val sdkError = (this as? GetFeeError.DataError)?.cause
+        val unwrapped = (sdkError as? BlockchainSdkError.WrappedThrowable)?.cause ?: sdkError
+        return unwrapped is BlockchainSdkError.Ethereum.ExecutionReverted
     }
 
     private suspend fun Raise<GetFeeError>.getFeeDataForSolanaDexSwap(

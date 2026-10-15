@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.transaction.Fee
@@ -41,17 +42,17 @@ internal fun StakingFeeBlock(feeState: FeeState) {
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
-            .padding(TangemTheme.dimens.spacing12)
+            .padding(12.dp)
             .testTag(StakingSendDetailsScreenTestTags.NETWORK_FEE_BLOCK),
     ) {
         Text(
             text = stringResourceSafe(R.string.common_network_fee_title),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.tertiary,
-            modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing4),
+            modifier = Modifier.padding(bottom = 4.dp),
         )
 
-        Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {
+        Box(modifier = Modifier.padding(top = 8.dp)) {
             when (feeState) {
                 is FeeState.Content -> {
                     val feeAmount = feeState.fee?.amount
@@ -112,10 +113,10 @@ private fun BoxScope.FeeLoading(feeState: FeeState) {
     ) { state ->
         if (state == FeeState.Loading) {
             RectangleShimmer(
-                radius = TangemTheme.dimens.radius3,
+                radius = 3.dp,
                 modifier = Modifier.size(
-                    height = TangemTheme.dimens.size24,
-                    width = TangemTheme.dimens.size90,
+                    height = 24.dp,
+                    width = 90.dp,
                 ),
             )
         }

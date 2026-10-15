@@ -21,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.extensions.TextReference
@@ -62,7 +63,7 @@ fun InputRowDefault(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(TangemTheme.dimens.spacing12),
+                .padding(12.dp),
         ) {
             Column(
                 modifier = Modifier
@@ -75,7 +76,7 @@ fun InputRowDefault(
                         style = TangemTheme.typography.subtitle2,
                         color = titleColor,
                         modifier = Modifier
-                            .padding(bottom = TangemTheme.dimens.spacing8)
+                            .padding(bottom = 8.dp)
                             .testTag(BaseBlockTestTags.BLOCK_TITLE),
                     )
                 }
@@ -94,8 +95,8 @@ fun InputRowDefault(
                     modifier = Modifier
                         .align(CenterVertically)
                         .padding(
-                            top = TangemTheme.dimens.spacing10,
-                            bottom = TangemTheme.dimens.spacing10,
+                            top = 10.dp,
+                            bottom = 10.dp,
                         )
                         .clickable(
                             enabled = onIconClick != null,

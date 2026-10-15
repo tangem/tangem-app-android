@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.res.TangemTheme
@@ -28,12 +29,14 @@ internal fun TangemPayCardPageSettingsButtonsBlock(
 ) {
     if (settings.isEmpty()) return
     Row(
-        modifier = modifier.padding(vertical = TangemTheme.dimens2.x6),
+        modifier = modifier.padding(vertical = 24.dp),
         horizontalArrangement = Arrangement.Center,
     ) {
         settings.fastForEach { setting ->
             TangemPayActionButton(
-                modifier = Modifier.then(if (setting.testTag != null) Modifier.testTag(setting.testTag) else Modifier),
+                modifier = Modifier
+                    .weight(1f)
+                    .then(if (setting.testTag != null) Modifier.testTag(setting.testTag) else Modifier),
                 title = setting.title,
                 icon = TangemIconUM.Icon(iconRes = setting.iconRes),
                 onClick = setting.onClick,

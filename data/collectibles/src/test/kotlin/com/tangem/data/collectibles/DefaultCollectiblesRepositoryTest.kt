@@ -401,12 +401,11 @@ internal class DefaultCollectiblesRepositoryTest {
                         imageBackUrl = "https://back",
                         rarity = CollectibleRarity.COMMON,
                         gradingCompany = "PSA",
-                        grade = "GEM-MT 10",
                         gradingId = "123",
                         year = "2024",
                         set = "Temporal Forces",
                         serialNumber = "218",
-                        insuredValue = 3500L,
+                        insuredValue = BigDecimal("35.00"),
                     ),
                 ),
             )

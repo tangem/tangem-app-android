@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.addfunds.bankTransferOnramp.onboarding
 
 import android.content.res.Configuration
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
@@ -39,8 +38,8 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.assets.il_banking
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_government_28
 import com.tangem.features.tangempay.addfunds.LegalLink
 import com.tangem.features.tangempay.addfunds.TangemPayLegalLinksText
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFees
@@ -49,11 +48,7 @@ import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.isEmpty
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
-private const val GLOW_ALPHA = 0.35f
-private const val GLOW_RADIUS_FACTOR = 1.1f
-private val IllustrationTopPadding = 133.dp
-private val IllustrationBottomPadding = 155.dp
-private val DisclaimerLineHeight = 18.sp
+private val HeaderTintColor = Color(0xFF41ADFB)
 
 @Composable
 internal fun TangemPayBankTransferOnrampOnboardingScreen(
@@ -104,17 +99,22 @@ internal fun TangemPayBankTransferOnrampOnboardingScreen(
 
 @Composable
 private fun Header() {
-    val accentBlue = TangemTheme.colors3.icon.accent.blue
     Column(modifier = Modifier.fillMaxWidth()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(accentBlue, Color.Transparent)))
+                .background(
+                    Brush.verticalGradient(listOf(HeaderTintColor, TangemTheme.colors3.bg.primary.copy(alpha = 0f))),
+                )
                 .statusBarsPadding()
-                .padding(top = IllustrationTopPadding, bottom = IllustrationBottomPadding),
+                .padding(top = 140.dp, bottom = 144.dp),
             contentAlignment = Alignment.Center,
         ) {
-            GovernmentIllustration(color = TangemTheme.colors3.icon.brand)
+            Image(
+                modifier = Modifier.size(148.dp),
+                imageVector = Icons.il_banking,
+                contentDescription = null,
+            )
         }
         Column(
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
@@ -132,28 +132,6 @@ private fun Header() {
             )
         }
     }
-}
-
-@Composable
-private fun GovernmentIllustration(color: Color) {
-    Icon(
-        modifier = Modifier
-            .size(144.dp)
-            .drawBehind {
-                val radius = size.maxDimension * GLOW_RADIUS_FACTOR
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(color.copy(alpha = GLOW_ALPHA), Color.Transparent),
-                        center = center,
-                        radius = radius,
-                    ),
-                    radius = radius,
-                )
-            },
-        imageVector = Icons.ic_government_28,
-        contentDescription = null,
-        tint = color,
-    )
 }
 
 @Composable
@@ -181,7 +159,7 @@ private fun Disclaimer() {
     Text(
         modifier = Modifier.padding(16.dp),
         text = "$swiftWarning. $providerDisclaimer",
-        style = TangemTheme.typography3.caption.medium.copy(lineHeight = DisclaimerLineHeight),
+        style = TangemTheme.typography3.caption.medium.copy(lineHeight = 18.sp),
         color = TangemTheme.colors3.text.secondary,
     )
 }

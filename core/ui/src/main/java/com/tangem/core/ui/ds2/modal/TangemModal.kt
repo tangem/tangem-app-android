@@ -11,9 +11,10 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.rememberScrollState
@@ -73,7 +74,7 @@ import dev.chrisbanes.haze.rememberHazeState
  * Design-system v2 modal bottom sheet: a floating modal-material card with a drag indicator,
  * optional [title] slot and [content], shown above a dimmed scrim.
  *
- * Version: 1.1.0
+ * Version: 1.1.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=8256-1265&m=dev)
  *
@@ -199,7 +200,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
 /** Public namespace of the modal component. */
 object TangemModal {
 
-    val version = DsVersion(major = 1, minor = 1, patch = 0)
+    val version = DsVersion(major = 1, minor = 1, patch = 1)
 
     /**
      * Where the modal is presented.
@@ -644,7 +645,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
                     .conditionalCompose(isMaterial) {
                         drawBehind { drawRect(color = opaqueColor.copy(alpha = morphGeometry.flatten)) }
                     }
-                    .modalCardFill(geometry = morphGeometry)
+                    .modalCardFill(geometry = morphGeometry, imeInsets = WindowInsets.ime)
                     // A focused field anywhere in the card expands it to the full height, iOS
                     // keyboard-detent style; hasFocus aggregates the whole subtree.
                     .onFocusEvent { state -> morphGeometry.isFocused = state.hasFocus },
@@ -713,11 +714,12 @@ internal fun ModalContentColumn(
     val isolatedHazeState = rememberHazeState()
     SideEffect { isolatedHazeState.blurEnabled = outerHazeState.blurEnabled }
 
-    // imePadding sits outside the scroll container, so the scroll viewport ends above the keyboard
-    // and a focused field is brought into the visible part of the card.
+    // The card already ends the content above the keyboard (modalCardFill), outside the scroll container, so the
+    // scroll viewport stops there and a focused field is brought into the visible part of the card. The IME inset
+    // is consumed so content that pads itself for the keyboard doesn't pad a second time.
     val modifier = Modifier
         .hazeSourceTangem(state = hazeState)
-        .imePadding()
+        .consumeWindowInsets(WindowInsets.ime)
     CompositionLocalProvider(LocalHazeState provides isolatedHazeState) {
         Column(
             modifier = if (scrollableContent) modifier.verticalScroll(rememberScrollState()) else modifier,
