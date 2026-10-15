@@ -1870,6 +1870,64 @@ internal class DefaultInitialCurrenciesResolverTest {
     }
 
     @Test
+    fun `GIVEN a funded vault token in the wallet WHEN collectibles top-up THEN it is FROM over a richer token`() =
+        runTest {
+            // Arrange
+            val richStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("500"))
+            val walletUsdc = mockCryptoCurrency(id = mockCurrencyId(SOLANA_NETWORK_ID, SOLANA_USDC_MINT))
+            val walletUsdcStatus = createCurrencyStatus(walletUsdc, fiatAmount = BigDecimal("50"))
+            val vaultCurrency = mockCryptoCurrency(id = mockCurrencyId(SOLANA_NETWORK_ID, SOLANA_USDC_MINT))
+            val vaultStatus = createCurrencyStatus(vaultCurrency, fiatAmount = BigDecimal.ZERO)
+            setupSupplier(
+                listOf(
+                    createCryptoPortfolioAccountStatus(listOf(richStatus, walletUsdcStatus)),
+                    createCollectiblesAccountStatus(vaultStatus),
+                ),
+            )
+            setupAvailabilityForAnyCurrency()
+
+            // Act
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = vaultCurrency,
+                swapCurrencyPosition = CurrencyPosition.TO,
+                accountFlow = AccountFlow.CollectiblesTopUp,
+            )
+
+            // Assert
+            assertThat(from?.status).isSameInstanceAs(walletUsdcStatus)
+            assertThat(to?.status).isSameInstanceAs(vaultStatus)
+        }
+
+    @Test
+    fun `GIVEN an empty vault token in the wallet WHEN collectibles top-up THEN FROM is the most-funded token`() =
+        runTest {
+            // Arrange
+            val richStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("500"))
+            val walletUsdc = mockCryptoCurrency(id = mockCurrencyId(SOLANA_NETWORK_ID, SOLANA_USDC_MINT))
+            val walletUsdcStatus = createCurrencyStatus(walletUsdc, fiatAmount = BigDecimal.ZERO)
+            val vaultCurrency = mockCryptoCurrency(id = mockCurrencyId(SOLANA_NETWORK_ID, SOLANA_USDC_MINT))
+            setupSupplier(
+                listOf(
+                    createCryptoPortfolioAccountStatus(listOf(richStatus, walletUsdcStatus)),
+                    createCollectiblesAccountStatus(createCurrencyStatus(vaultCurrency, fiatAmount = BigDecimal.ZERO)),
+                ),
+            )
+            setupAvailabilityForAnyCurrency()
+
+            // Act
+            val (from, _) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = vaultCurrency,
+                swapCurrencyPosition = CurrencyPosition.TO,
+                accountFlow = AccountFlow.CollectiblesTopUp,
+            )
+
+            // Assert
+            assertThat(from?.status).isSameInstanceAs(richStatus)
+        }
+
+    @Test
     fun `GIVEN a funded deposit token WHEN prediction top-up THEN it is FROM over a richer token`() = runTest {
         // Arrange
         val richCurrency = mockCryptoCurrency()
@@ -2323,5 +2381,7 @@ internal class DefaultInitialCurrenciesResolverTest {
 
     private companion object {
         const val ARBITRUM_USDC_CHECKSUM = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+        const val SOLANA_NETWORK_ID = "solana"
+        const val SOLANA_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
     }
 }
