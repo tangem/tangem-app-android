@@ -33,7 +33,6 @@ import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.modal.TangemModalContentUM
 import com.tangem.core.ui.ds2.modal.tangemModalStatusUM
-import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus.Avatar
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
@@ -212,7 +211,7 @@ private fun StatusTitle(title: TextReference, description: TextReference?, style
                     .fillMaxWidth()
                     .testTag(ModalStatusTestTags.DESCRIPTION),
                 text = description.resolveAnnotatedReference(),
-                style = style.descriptionTextStyle(),
+                style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
             )
@@ -280,13 +279,6 @@ object TangemModalStatus {
         internal fun titleTextStyle(): TextStyle = when (this) {
             Status -> TangemTheme.typography3.heading.small
             Amount -> TangemTheme.typography3.display.medium
-        }
-
-        @ReadOnlyComposable
-        @Composable
-        internal fun descriptionTextStyle(): TextStyle = when (this) {
-            Status -> TangemTheme.typography3.caption.medium
-            Amount -> TangemTheme.typography3.subheading.medium
         }
     }
 
