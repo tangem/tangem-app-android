@@ -46,13 +46,13 @@ fun TangemContextMenuItem(
     }
 
     Row(
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
             .widthIn(min = MIN_WIDTH)
             .clickableSingle(onClick = onClick, enabled = isEnabled)
-            .padding(vertical = TangemTheme.dimens2.x2_5, horizontal = TangemTheme.dimens2.x4)
+            .padding(vertical = 10.dp, horizontal = 16.dp)
             .testTag(PopUpMenuTestTags.BUTTON),
     ) {
         if (icon != null) {
@@ -60,7 +60,7 @@ fun TangemContextMenuItem(
                 imageVector = icon,
                 contentDescription = null,
                 tint = iconTint,
-                modifier = Modifier.size(TangemTheme.dimens2.x6),
+                modifier = Modifier.size(24.dp),
             )
         }
         Text(

@@ -293,7 +293,7 @@ fun ExpandedPortfolioHeader(
 
         if (isCollapsable) {
             Icon(
-                modifier = Modifier.size(TangemTheme.dimens.size16),
+                modifier = Modifier.size(16.dp),
                 painter = painterResource(id = R.drawable.ic_minimize_24),
                 tint = TangemTheme.colors.icon.inactive,
                 contentDescription = null,

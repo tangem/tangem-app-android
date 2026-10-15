@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -25,11 +26,11 @@ internal fun NFTCollectionsEmpty(state: NFTCollectionsUM.Empty, modifier: Modifi
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(TangemTheme.dimens.spacing16),
+            .padding(16.dp),
     ) {
         Column(
             modifier = Modifier
-                .padding(TangemTheme.dimens.spacing16)
+                .padding(16.dp)
                 .align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -39,14 +40,14 @@ internal fun NFTCollectionsEmpty(state: NFTCollectionsUM.Empty, modifier: Modifi
                 tint = TangemTheme.colors.icon.inactive,
             )
             Text(
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing24),
+                modifier = Modifier.padding(top = 24.dp),
                 text = stringResourceSafe(R.string.nft_collections_empty_title),
                 style = TangemTheme.typography.h3,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
             )
             Text(
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
+                modifier = Modifier.padding(top = 8.dp),
                 text = stringResourceSafe(R.string.nft_collections_empty_description),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,

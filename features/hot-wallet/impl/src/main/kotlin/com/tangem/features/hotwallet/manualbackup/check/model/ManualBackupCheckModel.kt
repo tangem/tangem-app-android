@@ -49,8 +49,8 @@ internal class ManualBackupCheckModel @Inject constructor(
             exportSeedPhraseUseCase.invoke(userWallet.hotWalletId).fold(
                 ifLeft = { TangemLogger.e("Error on exporting the seed phrase for a manual backup check", it) },
                 ifRight = { seedPhrasePrivateInfo ->
-                    uiState.update {
-                        it.copy(
+                    uiState.update { state ->
+                        state.copy(
                             words = seedPhrasePrivateInfo.mnemonic.mnemonicComponents.filterIndexed { index, _ ->
                                 WORD_FIELD_INDICES.contains(index + 1)
                             }.toImmutableList(),

@@ -41,8 +41,8 @@ class GetArchivedAccountsUseCase(
             .onRight {
                 subscribeOnArchivedAccounts(userWalletId)
             }
-            .onLeft {
-                send(it.lceError())
+            .onLeft { error ->
+                send(error.lceError())
                 return@channelFlow
             }
     }
@@ -56,8 +56,8 @@ class GetArchivedAccountsUseCase(
         userWalletId: UserWalletId,
     ) {
         runCatching { crudRepository.getArchivedAccounts(userWalletId) }
-            .getOrElse {
-                send(it.lceError())
+            .getOrElse { throwable ->
+                send(throwable.lceError())
                 return
             }
             .distinctUntilChanged()

@@ -16,6 +16,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
@@ -31,7 +32,7 @@ fun SelectorRowItem(
     title: TextReference,
     @DrawableRes iconRes: Int,
     modifier: Modifier = Modifier,
-    paddingValues: PaddingValues = PaddingValues(TangemTheme.dimens.spacing12),
+    paddingValues: PaddingValues = PaddingValues(12.dp),
     preDot: TextReference? = null,
     postDot: TextReference? = null,
     ellipsizeOffset: Int? = null,
@@ -79,7 +80,7 @@ fun SelectorRowItem(
                 text = title.resolveReference(),
                 style = textStyle,
                 color = TangemTheme.colors.text.primary1,
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
+                modifier = Modifier.padding(start = 8.dp),
             )
             if (preDot != null) {
                 SelectorValueContent(
@@ -94,8 +95,8 @@ fun SelectorRowItem(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(TangemTheme.dimens.size1)
-                    .padding(horizontal = TangemTheme.dimens.spacing12)
+                    .height(1.dp)
+                    .padding(horizontal = 12.dp)
                     .background(TangemTheme.colors.stroke.primary)
                     .align(Alignment.BottomCenter),
             )
@@ -123,7 +124,7 @@ private fun RowScope.SelectorValueContent(
         ellipsis = ellipsis,
         modifier = Modifier
             .weight(1f)
-            .padding(start = TangemTheme.dimens.spacing4),
+            .padding(start = 4.dp),
     )
     if (postDot != null) {
         Text(
@@ -131,7 +132,7 @@ private fun RowScope.SelectorValueContent(
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing4),
+            modifier = Modifier.padding(horizontal = 4.dp),
         )
         Text(
             text = postDot.resolveReference(),

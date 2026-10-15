@@ -71,7 +71,7 @@ internal fun ManualBackupPhraseContent(state: ManualBackupPhraseUM, modifier: Mo
 private fun TitleBlock(state: ManualBackupPhraseUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .padding(horizontal = TangemTheme.dimens.size36)
+            .padding(horizontal = 36.dp)
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -103,10 +103,10 @@ private fun Preview() {
         ManualBackupPhraseContent(
             state = ManualBackupPhraseUM(
                 onContinueClick = {},
-                words = List(12) {
+                words = List(12) { index ->
                     EnumeratedTwoColumnGridItem(
-                        index = it + 1,
-                        mnemonic = "word${it + 1}",
+                        index = index + 1,
+                        mnemonic = "word${index + 1}",
                     )
                 }.toImmutableList(),
             ),

@@ -48,7 +48,7 @@ class SwapRatingTest : BaseTestCase() {
     private val feedbackComment = "Great swap experience"
 
     @AllureId("9986")
-    @DisplayName("Swap: rate the swap experience with stars and feedback and see the rating in the status")
+    @DisplayName("Swap: rate the swap experience with stars and feedback, then the rating card hides")
     @Test
     fun checkRateSwapExperienceTest() {
         val swapHistoryTitle = getResourceString(CoreUiR.string.common_swapped)
@@ -140,9 +140,14 @@ class SwapRatingTest : BaseTestCase() {
             step("Click on 'Send feedback' button") {
                 onRatingScreen { sendFeedbackButton.performClick() }
             }
-            step("Assert the rating is shown as already rated (stars disabled) in the status block") {
+            step("Assert the feedback comment field is not displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
-                    onRatingScreen { star(rating).assertIsNotEnabled() }
+                    onRatingScreen { feedbackInput.assertDoesNotExist() }
+                }
+            }
+            step("Assert the rating block is not displayed once the deal is rated") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onRatingScreen { block.assertDoesNotExist() }
                 }
             }
         }

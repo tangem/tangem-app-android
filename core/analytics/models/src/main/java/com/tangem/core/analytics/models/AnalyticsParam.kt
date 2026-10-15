@@ -117,6 +117,7 @@ sealed class AnalyticsParam {
         ColdCreation("Cold Creation"),
         FirstSignIn("First Sign In"),
         MainRequestSheet("Main Request Sheet"),
+        Deeplink("Deeplink"),
     }
 
     sealed class TxSentFrom(val value: String) {

@@ -142,7 +142,7 @@ private fun barHeight(value: Float, maxValue: Float): Dp {
 
 @Composable
 private fun barColor(style: Style): Color = when (style) {
-    Style.Regular -> TangemTheme.colors3.bg.opaque.secondary
+    Style.Regular -> TangemTheme.colors3.bg.transparent.secondary
     Style.Highlighted -> TangemTheme.colors3.bg.brand
     Style.HighlightedNegative -> TangemTheme.colors3.bg.status.error
 }
