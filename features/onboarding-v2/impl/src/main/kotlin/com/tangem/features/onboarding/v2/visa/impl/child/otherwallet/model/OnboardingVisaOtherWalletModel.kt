@@ -56,14 +56,14 @@ internal class OnboardingVisaOtherWalletModel @Inject constructor(
         modelScope.launch {
             while (true) {
                 visaActivationRepository.getActivationRemoteState()
-                    .onLeft {
-                        uiMessageSender.showErrorDialog(it)
-                        analyticsEventHandler.send(VisaAnalyticsEvent.ErrorOnboarding(it))
+                    .onLeft { error ->
+                        uiMessageSender.showErrorDialog(error)
+                        analyticsEventHandler.send(VisaAnalyticsEvent.ErrorOnboarding(error))
                         delay(timeMillis = 60_000)
                     }
-                    .onRight {
-                        if (it is VisaActivationRemoteState.AwaitingPinCode) {
-                            onDone.emit(it.activationOrderInfo)
+                    .onRight { remoteState ->
+                        if (remoteState is VisaActivationRemoteState.AwaitingPinCode) {
+                            onDone.emit(remoteState.activationOrderInfo)
                             return@launch
                         }
                     }

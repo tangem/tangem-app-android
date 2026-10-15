@@ -27,6 +27,11 @@ step 3). The reviewer (`reference/reviewer.md`) checks the diff against the same
   - `TangemPayActionButton` (Payment account): the tagged `Column` carries neither. The clickable is
     the inner `TangemButton`: match it with `withdrawButtonControl` / `addFundsButtonControl`.
 
+  - DS3 `TangemButton` (`core/ui/.../ds2/button`): `OnClick` and `Disabled` sit on the
+    `TangemSurface` above the `BaseButtonTestTags.BUTTON` node, so `assertIsEnabled()` on the tag
+    passes for a disabled button too. Match the surface in the merged tree: `hasText(label)` +
+    `hasClickAction()` + `hasAnyAncestor(<screen tag>)` (see `TangemPayBankWithdrawAmountPageObject`).
+
   On a node with no click action, `assertHasNoClickAction()` passes in both states and proves
   nothing. `TangemHoldToConfirmButton` has no click action but sets `Disabled` when
   `enabled = false`, so `assertIsEnabled()` / `assertIsNotEnabled()` work on it (see `compose-traps.md`).
@@ -43,6 +48,10 @@ step 3). The reviewer (`reference/reviewer.md`) checks the diff against the same
 - **There are two back-button tags.** `TangemTopAppBar` sets `TopAppBarTestTags.CLOSE_BUTTON`, the DS2
   `TangemTopNavigation` sets `TopNavigationTestTags.BACK_BUTTON`, and screens migrate one by one. Use
   `tapBackButton()` (`common/extensions/NavigationExt.kt`), which matches either.
+- **Kakao `hasPosition(i)` is `onAllNodes(matcher)[i]`** (kakao-compose 0.2.3 `NodeProvider`), not the
+  `LazyListItemPosition` semantics. `child { hasTestTag(X); hasPosition(2) }.assertDoesNotExist()` does
+  prove there are fewer than three `X` nodes — but only among the composed ones, so scroll the lazy row
+  to its end first.
 - **Hidden does not mean absent.** A `SubcomposeLayout` or a pager keeps hidden content composed: both
   card faces, both wallet pages on Main. Assert hidden with `assertIsNotDisplayed()`, never
   `assertDoesNotExist()`. A singular matcher on a two-page pager can resolve to the off-screen page and
@@ -89,6 +98,15 @@ step 3). The reviewer (`reference/reviewer.md`) checks the diff against the same
   As of 6.4:
   - Shtorka 2.0 (`TWI_1608`) replaced the markets sheet. Open it through `MainScreenTestTags.MARKETS_SHEET_EXPAND_AREA`.
   - The new transaction history (`AND_15767`) shows swaps in the history, not in the express-status block.
+- **A wait on a Kakao check advances the Compose clock once per 10 s.** `awaitSuccess { node.assertIsDisplayed() }`
+  pumps frames only between passes, and each failing pass spends Kaspresso's 10 s flaky-safety retry.
+  Content gated by a `delay` in `LaunchedEffect` (it runs on the test clock) then shows up minutes late:
+  the hot-wallet unlock dialog (`DefaultHotAccessCodeRequestComponent`, `delay(100)`) took ~55 s instead
+  of ~1 s. Wait for such content with `composeTestRule.waitUntilAtLeastOneExists(matcher, timeout)`.
+- **The hot-wallet unlock dialog shares its tag with the import screen.** The wallet-import access code
+  screen stays composed with the same `HOT_WALLET_ACCESS_CODE_INPUT`, so `accessCodeInput` (position 0)
+  can resolve to the hidden copy. Use `unlockDialogAccessCodeInput` / `unlockDialogAccessCodeInputMatcher`
+  (`HotWalletAccessCodePageObject`, scoped by `isDialog()`).
 - **The token selector remembers expanded accounts for the whole app session**
   (`ChooseTokenExpandedAccountsHolder`). A test that opens the selector twice finds the account already
   expanded the second time, so a second "expand the account" click fails or collapses it. Expand it

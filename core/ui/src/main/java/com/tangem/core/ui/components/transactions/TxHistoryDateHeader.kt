@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
@@ -19,10 +20,10 @@ fun TxHistoryDateHeader(title: String, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                start = TangemTheme.dimens2.x4,
-                end = TangemTheme.dimens2.x4,
-                top = TangemTheme.dimens2.x6,
-                bottom = TangemTheme.dimens2.x3,
+                start = 16.dp,
+                end = 16.dp,
+                top = 24.dp,
+                bottom = 12.dp,
             ),
     )
 }

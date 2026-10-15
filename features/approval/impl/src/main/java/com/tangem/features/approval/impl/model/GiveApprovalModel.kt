@@ -24,6 +24,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AllowanceInfo
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetAllowanceInfoUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -226,8 +227,6 @@ internal class GiveApprovalModel @Inject constructor(
         val feeContent = feeSelectorUM as? FeeSelectorUM.Content ?: return false
         val feeExtended = feeContent.feeExtraInfo.transactionFeeExtended
 
-        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
-
         val transactions = approvalTxList.map { (tx, fee) ->
             tx.copy(
                 fee = when (feeContent.selectedFeeItem) {
@@ -239,7 +238,7 @@ internal class GiveApprovalModel @Inject constructor(
             )
         }
 
-        return if (isFeeInTokenCurrency) {
+        return if (feeExtended?.isGasless == true) {
             createAndSendGaslessTransactionUseCase(
                 userWallet = userWallet,
                 transactionData = transactions.first(),

@@ -34,6 +34,8 @@ dependencies {
 
     api(projects.core.local)
     api(projects.core.remote)
+    api(projects.core.socket)
+    ksp(projects.core.socket.processor)
     api(projects.core.utils)
     api(projects.domain.models)
     implementation(projects.domain.staking.models)
