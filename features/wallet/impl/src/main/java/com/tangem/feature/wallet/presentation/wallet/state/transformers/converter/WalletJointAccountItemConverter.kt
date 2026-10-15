@@ -5,6 +5,8 @@ import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.ds2.util.TangemPriceChange.Direction.Neutral
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.combinedReference
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -15,13 +17,16 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_clock_16
 import com.tangem.core.ui.res.generated.icons.ic_user_plus_16
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
+import com.tangem.domain.models.quote.PriceChange
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.features.jointaccount.main.JointAccountMainUM
+import com.tangem.utils.StringsSigns
 import java.math.BigDecimal
 
 internal class WalletJointAccountItemConverter(
@@ -29,6 +34,7 @@ internal class WalletJointAccountItemConverter(
     private val userWalletId: UserWalletId,
     private val accountIdsWithInvites: Set<String>,
     private val onAccountClick: (UserWalletId, String) -> Unit,
+    private val onCompromisedAccountClick: (UserWalletId) -> Unit,
 ) {
 
     fun convert(value: AccountStatus.Joint): TokensListItemUM2.JointPending {
@@ -36,6 +42,7 @@ internal class WalletJointAccountItemConverter(
         val state = when (val status = value.value) {
             is JointAccountStatusValue.Loading -> JointAccountMainUM.Loading
             is JointAccountStatusValue.Error.Unavailable -> JointAccountMainUM.TemporaryUnavailable
+            is JointAccountStatusValue.Error.Compromised -> compromised(value = value, status = status)
             is JointAccountStatusValue.Pending -> waitingMembers(
                 account = account,
                 subtitle = resourceReference(
@@ -70,6 +77,46 @@ internal class WalletJointAccountItemConverter(
             onClick = { onAccountClick(userWalletId, account.accountId.value) },
         )
     }
+
+    private fun compromised(
+        value: AccountStatus.Joint,
+        status: JointAccountStatusValue.Error.Compromised,
+    ): JointAccountMainUM.Blocked {
+        val account = value.account
+        val balance = (status.fiatBalance as? TotalFiatBalance.Loaded)?.amount?.format {
+            fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+        }
+
+        return JointAccountMainUM.Blocked(
+            title = account.accountName.toUM().value,
+            subtitle = combinedReference(
+                pluralReference(
+                    id = R.plurals.common_tokens_count,
+                    count = status.tokensCount,
+                    formatArgs = wrappedList(status.tokensCount),
+                ),
+                stringReference(" ${StringsSigns.DOT} "),
+                pluralReference(
+                    id = R.plurals.joint_account_members_count,
+                    count = status.totalMembers,
+                    formatArgs = wrappedList(status.totalMembers),
+                ),
+            ),
+            icon = CryptoPortfolioIconConverter.convert(account.icon),
+            balance = stringReference(balance ?: StringsSigns.DASH_SIGN),
+            priceChange = value.priceChangeLce.getOrNull()?.toState(),
+            onClick = { onCompromisedAccountClick(userWalletId) },
+        )
+    }
+
+    private fun PriceChange.toState(): TangemPriceChange.State = TangemPriceChange.State(
+        value = stringReference(value.abs().format { percent() }),
+        direction = when (value.signum()) {
+            1 -> TangemPriceChange.Direction.Up
+            -1 -> TangemPriceChange.Direction.Down
+            else -> Neutral
+        },
+    )
 
     /** Only the creator holds the invites, so their presence on this device marks the creator's row */
     private fun Account.Joint.belongsToCreator(): Boolean = accountId.value in accountIdsWithInvites

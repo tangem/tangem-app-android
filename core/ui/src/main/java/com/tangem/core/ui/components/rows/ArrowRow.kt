@@ -22,11 +22,11 @@ import com.tangem.core.ui.utils.*
 inline fun ArrowRow(
     isLastItem: Boolean,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(all = TangemTheme.dimens.spacing0),
+    contentPadding: PaddingValues = PaddingValues(all = 0.dp),
     content: @Composable() (BoxScope.() -> Unit),
 ) {
     val density = LocalDensity.current.density
-    val defaultRowHeight = TangemTheme.dimens.size0
+    val defaultRowHeight = 0.dp
     var itemHeight by remember { mutableStateOf(defaultRowHeight) }
 
     Row(
@@ -70,21 +70,21 @@ private class ChildArrowScope(
 @Composable
 fun ChildArrow(childHeight: Dp, isLastChild: Boolean) {
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
-    val figureWidth = TangemTheme.dimens.size40
+    val figureWidth = 40.dp
 
     val strokeColor = TangemTheme.colors.stroke.secondary
-    val arrowStrokeWidthDp = TangemTheme.dimens.size1
+    val arrowStrokeWidthDp = 1.dp
 
-    val arrowHeadRadiusDp = TangemTheme.dimens.size1
+    val arrowHeadRadiusDp = 1.dp
 
     val figureRectDp = DpRect(
         origin = DpOffset.Zero,
-        size = DpSize(width = TangemTheme.dimens.size40, height = childHeight),
+        size = DpSize(width = 40.dp, height = childHeight),
     )
 
     val arrowHeadSize = DpSize(
-        width = TangemTheme.dimens.size6,
-        height = TangemTheme.dimens.size6,
+        width = 6.dp,
+        height = 6.dp,
     )
     val arrowHeadRectDp = DpRect(
         origin = DpOffset(
@@ -101,7 +101,7 @@ fun ChildArrow(childHeight: Dp, isLastChild: Boolean) {
     val curvedArrowRectDp = if (isLtr) {
         DpRect(
             top = figureRectDp.top,
-            left = TangemTheme.dimens.size18,
+            left = 18.dp,
             right = figureRectDp.right - arrowHeadRectDp.width,
             bottom = figureRectDp.size.center.y,
         )
@@ -109,7 +109,7 @@ fun ChildArrow(childHeight: Dp, isLastChild: Boolean) {
         DpRect(
             top = figureRectDp.top,
             left = arrowHeadRectDp.width,
-            right = TangemTheme.dimens.size18 + arrowHeadRectDp.width,
+            right = 18.dp + arrowHeadRectDp.width,
             bottom = figureRectDp.size.center.y,
         )
     }

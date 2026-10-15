@@ -78,6 +78,7 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.annotation)
     implementation(deps.androidx.appCompat)
     implementation(deps.arrow.core)

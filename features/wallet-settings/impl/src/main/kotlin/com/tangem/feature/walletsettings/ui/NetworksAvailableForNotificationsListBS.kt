@@ -53,7 +53,7 @@ internal fun NetworksAvailableForNotificationsListBS(
         },
         content = {
             NetworksAvailableForNotificationsListBottomSheetContent(
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                modifier = Modifier.padding(horizontal = 16.dp),
                 state = state,
             )
         },
@@ -91,7 +91,7 @@ private fun ColumnScope.Header() {
         tint = TangemTheme.colors.icon.accent,
         modifier = Modifier
             .align(Alignment.CenterHorizontally)
-            .size(TangemTheme.dimens.size56),
+            .size(56.dp),
     )
     Text(
         text = stringResourceSafe(R.string.push_transactions_notifications_title),
@@ -101,9 +101,9 @@ private fun ColumnScope.Header() {
         modifier = Modifier
             .align(Alignment.CenterHorizontally)
             .padding(
-                start = TangemTheme.dimens.spacing34,
-                end = TangemTheme.dimens.spacing34,
-                top = TangemTheme.dimens.spacing28,
+                start = 34.dp,
+                end = 34.dp,
+                top = 28.dp,
             ),
     )
     Text(
@@ -114,9 +114,9 @@ private fun ColumnScope.Header() {
         modifier = Modifier
             .align(Alignment.CenterHorizontally)
             .padding(
-                start = TangemTheme.dimens.spacing34,
-                end = TangemTheme.dimens.spacing34,
-                top = TangemTheme.dimens.spacing8,
+                start = 34.dp,
+                end = 34.dp,
+                top = 8.dp,
             ),
     )
 }

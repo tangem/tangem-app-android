@@ -199,7 +199,7 @@
     <item quantity="one">%d картка</item>
     <item quantity="few">%d картки</item>
     <item quantity="many">%d карток</item>
-    <item quantity="other">%d картки</item>
+    <item quantity="other">%d карток</item>
   </plurals>
   <string name="auth_wallet_mobile_description">Мобільний гаманець</string>
   <string name="backup_complete_description">Ви успішно створили резервну копію свого гаманця.</string>
@@ -256,7 +256,7 @@
     <item quantity="one">%d токен</item>
     <item quantity="few">%d токени</item>
     <item quantity="many">%d токенів</item>
-    <item quantity="other">%d токени</item>
+    <item quantity="other">%d токенів</item>
   </plurals>
   <string name="card_reset_alert_continue_message">Будь ласка, скиньте налаштування наступного пристрою, щоб продовжити.</string>
   <string name="card_reset_alert_continue_title">Скидання гаманця</string>
@@ -356,7 +356,7 @@
   <string name="common_day">день</string>
   <plurals name="common_days">
     <item quantity="one">%d день</item>
-    <item quantity="few">%d днів</item>
+    <item quantity="few">%d дні</item>
     <item quantity="many">%d днів</item>
     <item quantity="other">%d днів</item>
   </plurals>
@@ -370,7 +370,7 @@
     <item quantity="one">%d день тому</item>
     <item quantity="few">%d дні тому</item>
     <item quantity="many">%d днів тому</item>
-    <item quantity="other">%d дня тому</item>
+    <item quantity="other">%d днів тому</item>
   </plurals>
   <string name="common_delete">Видалити</string>
   <string name="common_disable">Вимкнути</string>
@@ -407,14 +407,14 @@
   <string name="common_go_to_provider">Перейти до провайдера</string>
   <string name="common_go_to_token">Перейти до токена</string>
   <string name="common_go_to_verification">Перейти до верифікації</string>
-  <string name="common_got_it">Зrozуміло</string>
+  <string name="common_got_it">Зрозуміло</string>
   <string name="common_hide">Приховати</string>
   <string name="common_hold_to">Утримуйте, щоб %s</string>
   <string name="common_hour">година</string>
   <plurals name="common_hours">
-    <item quantity="one">година</item>
-    <item quantity="few">години</item>
-    <item quantity="many">годин</item>
+    <item quantity="one">%d година</item>
+    <item quantity="few">%d години</item>
+    <item quantity="many">%d годин</item>
     <item quantity="other">години</item>
   </plurals>
   <plurals name="common_hours_time_ago">
@@ -466,7 +466,7 @@
     <item quantity="one">%d мережа</item>
     <item quantity="few">%d мережі</item>
     <item quantity="many">%d мереж</item>
-    <item quantity="other">%d мережі</item>
+    <item quantity="other">%d мереж</item>
   </plurals>
   <string name="common_neutral">Нейтрально</string>
   <string name="common_new_address">Нова адреса</string>
@@ -597,7 +597,7 @@
   <string name="custom_token_creation_error_token_already_exist_title">Токен вже існує</string>
   <string name="custom_token_creation_error_wrong_decimals">Десяткове число повинно бути дійсним цілим числом, до %d</string>
   <string name="custom_token_custom_derivation">Власна деривація</string>
-  <string name="custom_token_custom_derivation_dynamic_addresses_enabled_error">Увімкнено динамічні адреси. Користувацькі значення \\"change\"\ та\\"index\"\ недоступні.</string>
+  <string name="custom_token_custom_derivation_dynamic_addresses_enabled_error">Увімкнено динамічні адреси. Користувацькі значення \"change\" та \"index\" недоступні.</string>
   <string name="custom_token_custom_derivation_placeholder">Наприклад, m/00\'/0000\'/0\'/0/0</string>
   <string name="custom_token_custom_derivation_title">Введіть власну деривацію</string>
   <string name="custom_token_decimals_input_title">Знаків після коми</string>
@@ -839,8 +839,8 @@
   <string name="give_permission_rows_amount">Кількість %s</string>
   <string name="give_permission_staking_footer">Функція підтвердження необхідна для надання дозволу іншій адресі на використання певної кількості ваших токенів. За задумом, смарт-контракти не можуть отримати доступ до ваших токенів без вашого схвалення. \"Розблоковуючи\" свої токени, ви дозволяєте смарт-контракту StakeKit використовувати їх. Майнери мережі отримують плату за газ (сплачену вами), щоб зафіксувати цю дію в блокчейні. Ви зможете застейкати свій токен після того, як дасте дозвіл.</string>
   <string name="give_permission_staking_subtitle">Щоб продовжити, вам потрібно дозволити смарт-контракту Polygon використовувати ваш %s</string>
-  <string name="give_permission_swap_subtitle" formatted="false">Щоб продовжити, вам потрібно дозволити смарт-контракту %1s використовувати ваш %2s</string>
-  <string name="give_permission_swap_subtitle_v2">Децентралізовані біржі вимагають дозволу на взаємодію з вашим гаманцем. %1s</string>
+  <string name="give_permission_swap_subtitle">Щоб продовжити, вам потрібно дозволити смарт-контракту %1$s використовувати ваш %2$s</string>
+  <string name="give_permission_swap_subtitle_v2">Децентралізовані біржі вимагають дозволу на взаємодію з вашим гаманцем. %1$s</string>
   <string name="give_permission_title">Надати дозвіл</string>
   <string name="give_permission_unlimited">Необмежено</string>
   <string name="hardware_wallet_backup_feature_description">Резервна копія створюється на 2–3 картках Tangem. Зберігайте їх окремо для безпеки — seed-фраза не потрібна.</string>
@@ -1067,6 +1067,7 @@
   <string name="joint_account_invite_load_failed_subtitle">Не вдалося завантажити сторінку запрошення.\nНатисніть, щоб перезавантажити</string>
   <string name="joint_account_invite_members_creator">Творець</string>
   <string name="joint_account_invite_members_invite">Запросити</string>
+  <string name="joint_account_invite_members_invited">Запрошено</string>
   <string name="joint_account_invite_members_member">Учасник</string>
   <string name="joint_account_invite_members_member_info">Про учасника</string>
   <string name="joint_account_invite_members_new_member">Новий учасник</string>
@@ -1085,6 +1086,7 @@
   <string name="joint_account_invite_members_title">Запросіть учасників</string>
   <string name="joint_account_invite_members_to_join">Запросіть учасників до акаунта</string>
   <string name="joint_account_invite_members_waiting_title">Очікуємо на учасників</string>
+  <string name="joint_account_invite_share_title">Запросіть до акаунта %s</string>
   <string name="joint_account_join_confirm_sheet_subtitle">Усі учасники акаунта мають спільний баланс. Інші учасники можуть розпоряджатися коштами без вашого схвалення, якщо зберуть достатньо підписів</string>
   <string name="joint_account_join_confirm_sheet_title">Ви приєднуєтеся до спільного акаунта</string>
   <string name="joint_account_join_invalid_link_subtitle">Перевірте, чи відкрили правильне посилання, або попросіть творця акаунта надіслати його ще раз</string>
@@ -1142,6 +1144,12 @@
   <string name="joint_account_send_sends_automatically_setup_fee">Надішлеться автоматично після збору підписів. Перше надсилання передбачає одноразову комісію за налаштування</string>
   <string name="joint_account_send_setup_fee_note">Перша транзакція в мережі %1$s. До комісії входить разова плата %2$s за налаштування спільного акаунта в блокчейні</string>
   <string name="joint_account_send_signatures_required">Потрібно підписів: %1$s із %2$s</string>
+  <plurals name="joint_account_send_signatures_required_banner">
+    <item quantity="one">Потрібен %1$d підпис</item>
+    <item quantity="few">Потрібні %1$d підписи</item>
+    <item quantity="many">Потрібно %1$d підписів</item>
+    <item quantity="other">Потрібно %1$d підпису</item>
+  </plurals>
   <string name="joint_account_send_slot_busy_subtitle">У цій мережі вже збирають підписи для іншої операції. Дочекайтеся її завершення, перш ніж створювати нову</string>
   <string name="joint_account_send_slot_busy_title">Уже є незавершена операція</string>
   <string name="joint_account_settings_networks_info">Цей акаунт працює лише в підтримуваних мережах.</string>
@@ -1456,7 +1464,7 @@
   <string name="nft_untitled_collection">Безіменна колекція</string>
   <string name="nft_wallet_count">NFTs в %2$d колекціях%1$d</string>
   <plurals name="nft_wallet_count_android">
-    <item quantity="one">%1$d NFT в %2$d колекціi</item>
+    <item quantity="one">%1$d NFT в %2$d колекції</item>
     <item quantity="few">%1$d NFTs в %2$d колекціях</item>
     <item quantity="many">%1$d NFTs в %2$d колекціях</item>
     <item quantity="other">%1$d NFTs в %2$d колекціях</item>
@@ -1621,10 +1629,10 @@
   <string name="onramp_legal_text">Послуга надається зовнішнім провайдером.\nTangem не несе відповідальності.</string>
   <string name="onramp_max_amount_restriction">Сума покупки не може бути більше ніж %s</string>
   <string name="onramp_min_amount_restriction">Сума покупки повинна бути не менше %s</string>
-  <string name="onramp_native_payment_cumulative_limit" formatted="false">Загальна сума транзакцій понад %1s може вимагати верифікації особи через %2s</string>
-  <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">Загальна сума транзакцій, що перевищує еквівалент %1s, може вимагати верифікації особи через %2s</string>
-  <string name="onramp_native_payment_identity_verification">Для транзакцій через Apple Pay може знадобитися верифікація особи в %1s</string>
-  <string name="onramp_native_payment_legal_notice" formatted="false">Натискаючи «Оплатити», ви погоджуєтеся з %1s\'s %2s і %3s.</string>
+  <string name="onramp_native_payment_cumulative_limit">Загальна сума транзакцій понад %1$s може вимагати верифікації особи через %2$s</string>
+  <string name="onramp_native_payment_cumulative_limit_equivalent">Загальна сума транзакцій, що перевищує еквівалент %1$s, може вимагати верифікації особи через %2$s</string>
+  <string name="onramp_native_payment_identity_verification">Для транзакцій через Apple Pay може знадобитися верифікація особи в %1$s</string>
+  <string name="onramp_native_payment_legal_notice">Натискаючи «Оплатити», ви погоджуєтеся з %1$s\'s %2$s і %3$s.</string>
   <string name="onramp_no_available_providers">Для данної валюти немає доступних провайдерів</string>
   <string name="onramp_offer_type_fastet">Найшвидший</string>
   <string name="onramp_pay_with">Оплата з</string>
@@ -1746,7 +1754,7 @@
   <string name="referral_no_expected_awards">Немає майбутніх виплат</string>
   <plurals name="referral_number_of_wallets">
     <item quantity="one">за %d гаманець</item>
-    <item quantity="few">за %d гаманця</item>
+    <item quantity="few">за %d гаманці</item>
     <item quantity="many">за %d гаманців</item>
     <item quantity="other">за %d гаманців</item>
   </plurals>
@@ -1765,7 +1773,7 @@
   <string name="referral_tos_suffix">в реферальній програмі</string>
   <plurals name="referral_wallets_purchased_count">
     <item quantity="one">%d гаманець</item>
-    <item quantity="few">%d гаманця</item>
+    <item quantity="few">%d гаманці</item>
     <item quantity="many">%d гаманців</item>
     <item quantity="other">%d гаманців</item>
   </plurals>
@@ -2012,7 +2020,7 @@
   <string name="staking_notification_minimum_balance_title">Недостатній баланс для стейкінгу</string>
   <string name="staking_notification_minimum_restake_ada_text">Мінімум 3 ADA необхідно для рестейкінгу. Будь ласка поповніть свій баланс.</string>
   <string name="staking_notification_minimum_restake_ada_title">Недостатньо ADA</string>
-  <string name="staking_notification_minimum_stake_ada_text">Мінімальна сума, необхідна для стекінгу, має перевищувати 5 ADA. Будь ласка, поповніть свій баланс, щоб почати cтейкінг.</string>
+  <string name="staking_notification_minimum_stake_ada_text">Мінімальна сума, необхідна для стейкінгу, має перевищувати 5 ADA. Будь ласка, поповніть свій баланс, щоб почати стейкінг.</string>
   <string name="staking_notification_network_error_text">Стейкінг тимчасово недоступний через проблеми в мережі. Будь ласка, спробуйте пізніше.</string>
   <string name="staking_notification_new_validator_funds_transfer">Стейкінг в мережі %1$s з новим валідатором автоматично переведе всі раніше застейкані кошти до цього валідатора</string>
   <string name="staking_notification_restake_rewards_text">Реінвестуйте зароблені винагороди у суму стейкінгу, щоб збільшити потенційний прибуток.</string>
@@ -2022,7 +2030,7 @@
   <string name="staking_notification_ton_account_initialization_title">Активація акаунту</string>
   <string name="staking_notification_ton_activate_account">Щоб почати стейкінг в TON, спочатку здійсніть вихідну транзакцію на будь-яку суму — це активує ваш гаманець.</string>
   <string name="staking_notification_ton_extra_reserve_info">До 0.2 GRAM може знадобитися додатково мережевої комісії для завершення транзакції. Невикористана частина буде повернута.</string>
-  <string name="staking_notification_ton_extra_reserve_is_required">Для виконання операції потребується додатково 0.2 GRAM, крім мережевої комісії. Будь ласка, поповніть баланс.</string>
+  <string name="staking_notification_ton_extra_reserve_is_required">Для виконання операції потрібно додатково 0.2 GRAM, крім мережевої комісії. Будь ласка, поповніть баланс.</string>
   <string name="staking_notification_ton_extra_reserve_title">Потрібен резерв GRAM</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">Ця дія закриє інші позиції або переведе їх у статус виведення, відповідно до правил мережі.</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">Статус позицій</string>
@@ -2163,7 +2171,7 @@
   <string name="swapping_trade_too_large_title">Занадто великий обмін</string>
   <string name="swapping_transfer_action">Переказ</string>
   <string name="swapping_transfer_action_in_progress">Переказ...</string>
-  <string name="tangem_pay_beta_notification_subtitle">Будемо раді вашому зворотньому звʼязку</string>
+  <string name="tangem_pay_beta_notification_subtitle">Будемо раді вашому зворотному звʼязку</string>
   <string name="tangem_pay_beta_notification_title">Tangem Pay у режимі beta</string>
   <string name="tangem_pay_card_details_unable_to_rename_card_title">Не вдалося перейменувати картку</string>
   <string name="tangem_pay_card_frozen">Картку заморожено</string>
@@ -2186,7 +2194,7 @@
   <string name="tangem_pay_freeze_card_unfreeze">Розморозити</string>
   <string name="tangem_pay_get_help">Звернутися до підтримки</string>
   <string name="tangem_pay_history_item_spend_mc_declined_reason">Причина: %s</string>
-  <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s.%s</string>
+  <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s · %s</string>
   <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Інше</string>
   <string name="tangem_pay_pin_code_title">ПІН-код</string>
@@ -2353,7 +2361,7 @@
     <item quantity="one">%d картка</item>
     <item quantity="few">%d картки</item>
     <item quantity="many">%d карток</item>
-    <item quantity="other">%d картки</item>
+    <item quantity="other">%d карток</item>
   </plurals>
   <string name="tangempay_cashback_accruals_calc_description">Ми обробляємо покупки протягом 5 днів після операції та враховуємо лише завершені транзакції</string>
   <string name="tangempay_cashback_accruals_calc_title">Як ми розраховуємо кешбек?</string>
@@ -2436,7 +2444,7 @@
   <string name="tangempay_factory_settings_warning_title">Я розумію, що повністю втрачу доступ до своєї картки Tangem Pay та всіх коштів на ній без можливості відновлення.</string>
   <string name="tangempay_failed_to_issue_card">Не вдалося випустити картку</string>
   <string name="tangempay_failed_to_issue_card_retry_description">Технічна помилка, спробуйте ще раз, натиснувши кнопку нижче</string>
-  <string name="tangempay_failed_to_issue_card_support_description">Технічна помилка, звʼяжіться з підтримки</string>
+  <string name="tangempay_failed_to_issue_card_support_description">Технічна помилка, зверніться до служби підтримки.</string>
   <string name="tangempay_feature_will_be_available_soon">Невдовзі буде доступно</string>
   <string name="tangempay_feature_will_be_available_soon_description">Ви зможете випускати додаткові картки для свого платіжного рахунку</string>
   <string name="tangempay_get_banner_description">Безкоштовна картка Tangem Pay із кешбеком до 2%</string>
@@ -2457,7 +2465,7 @@
   <string name="tangempay_kyc_confirm_cancellation_alert_title">Підтвердити скасування</string>
   <string name="tangempay_kyc_confirm_cancellation_description">Ви впевнені, що хочете припинити верифікацію? Ви зможете повернутися до неї будь-коли.</string>
   <string name="tangempay_kyc_failed_description">Не вдалося підтвердити ваш профіль. Якщо у вас є питання, зверніться у службу підтримки.</string>
-  <string name="tangempay_kyc_failed_title">На жаль, нам не вдалося підтвердити вашу особу </string>
+  <string name="tangempay_kyc_failed_title">На жаль, нам не вдалося підтвердити вашу особу</string>
   <string name="tangempay_kyc_has_failed">Верифікація відхилена</string>
   <string name="tangempay_kyc_in_progress">Верифікація в процесі</string>
   <string name="tangempay_kyc_in_progress_notification_button">Переглянути статус</string>
@@ -2632,7 +2640,7 @@
   <string name="tangempay_topup_swap_title">З вашого Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC у Polygon</string>
   <string name="tangempay_va_account_details">Реквізити рахунку</string>
-  <string name="tangempay_va_available_to_deposit_day">Лимит на день:</string>
+  <string name="tangempay_va_available_to_deposit_day">Ліміт на день:</string>
   <string name="tangempay_va_banking_details_error_description">Спробуйте ще раз або зверніться до служби підтримки, якщо проблема повториться</string>
   <string name="tangempay_va_banking_details_error_title">Не вдалося завантажити банківські реквізити</string>
   <string name="tangempay_va_banner_failed_description">Спробуйте ще раз або зверніться до служби підтримки, якщо проблема не зникне</string>
@@ -3003,7 +3011,7 @@
   <string name="warning_express_active_transaction_title">У вас є активна транзакція</string>
   <string name="warning_express_approval_in_progress_message">Дозвіл обміну триває і незабаром буде завершено</string>
   <string name="warning_express_approval_in_progress_title">Затвердження в процесі</string>
-  <string name="warning_express_dust_message">Мінімальна сума обміну становить - %1$s. Будь ласка, переконайтеся, що залишок на рахунку після обміну буде не менше за %2$s.</string>
+  <string name="warning_express_dust_message">Мінімальна сума обміну становить %1$s. Будь ласка, переконайтеся, що залишок на рахунку після обміну буде не менше за %2$s.</string>
   <string name="warning_express_no_exchangeable_coins_description">У вашому портфелі немає токенів, на які можна обміняти %s. Будь ласка, додайте інший токен, щоб виконати обмін.</string>
   <string name="warning_express_no_exchangeable_coins_title">Немає доступних токенів для обміну</string>
   <string name="warning_express_not_enough_fee_for_token_tx_description">Щоб здійснити транзакцію, вам потрібно внести трохи %1$s %2$s</string>
@@ -3112,7 +3120,7 @@
   <string name="wc_alert_unsupported_network_title">Непідтримувана мережа</string>
   <string name="wc_alert_unsupported_networks_description">Tangem наразі не підтримує необхідну мережу для %s.</string>
   <string name="wc_alert_unsupported_networks_title">Непідтримувані мережі</string>
-  <string name="wc_alert_verified_domain_description">Цей домен пройшов перевірку та вважається безпечним, надійним і вільним від відомих загроз чи підозрілої активності. </string>
+  <string name="wc_alert_verified_domain_description">Цей домен пройшов перевірку та вважається безпечним, надійним і вільним від відомих загроз чи підозрілої активності.</string>
   <string name="wc_alert_verified_domain_title">Верифікований домен</string>
   <string name="wc_alert_wrong_card_description">Обрана не вірна картка або кільце</string>
   <string name="wc_alert_wrong_card_title">Схоже, виникла проблема</string>
@@ -3145,7 +3153,7 @@
   <string name="wc_disconnect_all_alert_title">Відключити всі dApps</string>
   <string name="wc_errors_invalid_domain_subtitle">Спробуйте ще раз з новим URI</string>
   <string name="wc_errors_invalid_domain_title">Недійсний домен dApp</string>
-  <string name="wc_errors_no_blockchains_subtitle">%s не вказує жодних блокчейнів — ні обов\'язкових, ні необов\'язкових. \n Переконайтеся, що ви використали правильний URI</string>
+  <string name="wc_errors_no_blockchains_subtitle">%s не вказує жодних блокчейнів — ні обов\'язкових, ні необов\'язкових.\nПереконайтеся, що ви використали правильний URI</string>
   <string name="wc_errors_no_blockchains_title">Немає мереж</string>
   <string name="wc_errors_proposal_expired_subtitle">Будь ласка, згенеруйте новий URI та спробуйте ще раз</string>
   <string name="wc_errors_proposal_expired_title">Термін для з’єднання минув</string>
@@ -3215,7 +3223,7 @@
   <string name="yield_apy_boost_promo_activate_bonus">Активувати бонус</string>
   <string name="yield_apy_boost_promo_bonus_paid_out_subtitle">Деталі в історії транзакцій</string>
   <string name="yield_apy_boost_promo_bonus_paid_out_title">Бонус режиму дохідності виплачено</string>
-  <string name="yield_apy_boost_promo_days_left_to_unlock">%1$sднів до розблокування бонусу</string>
+  <string name="yield_apy_boost_promo_days_left_to_unlock">%1$s днів до розблокування бонусу</string>
   <string name="yield_apy_boost_promo_eligibility_text">Вам доступний буст APY на 30 днів</string>
   <string name="yield_apy_boost_promo_terms_and_conditions">Діють Умови та Положення</string>
   <string name="yield_apy_boost_story_first_subtitle">Увімкніть режим дохідності вперше та отримайте до 3x доходу за перші 30 днів</string>
@@ -3261,7 +3269,7 @@
   <string name="yield_module_fee_policy_sheet_min_amount_note">Мінімальна сума розраховується з урахуванням поточного збору мережі, щоб вона не перевищувала 4%%, що становить мінімум %1$s (%2$s).</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Мінімальне поповнення</string>
   <string name="yield_module_fee_policy_sheet_title">Політика комісій</string>
-  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem комісію за обслуговування у розмірі 15% від отриманого доходу.</string>
+  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem також стягує комісію за обслуговування у розмірі 15% від отриманого доходу.</string>
   <string name="yield_module_high_fee_error">Ваші кошти будуть автоматично переведені у Aave, як тільки мережеві комісії знизяться або ваш баланс досягне мінімально необхідної суми.</string>
   <string name="yield_module_high_network_fees_notification_description">Комісії наразі вищі чим зазвичай із-за високої активності на ринку. Ви можете продовжити зараз чи повернутися пізніше, коли комісія знизиться.</string>
   <string name="yield_module_high_network_fees_notification_title">Висока мережева комісія</string>

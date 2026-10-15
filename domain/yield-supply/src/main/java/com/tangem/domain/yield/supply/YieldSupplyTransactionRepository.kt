@@ -54,12 +54,7 @@ interface YieldSupplyTransactionRepository : GaslessYieldRepository {
     /** Returns the on-chain version status of the user's yield module for [network]. */
     suspend fun getYieldModuleVersionStatus(userWalletId: UserWalletId, network: Network): YieldModuleVersionStatus
 
-    /**
-     * Resolve what the chain says about the broadcast transaction [transactionHash], whatever it did.
-     *
-     * @return null while the transaction has not been mined yet, so an ambiguous submission stays ambiguous
-     * instead of being reported as a failure.
-     */
+    /** @return null until the outcome is known: not mined yet, or the node cannot tell. */
     suspend fun getTransactionOutcome(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency.Token,

@@ -305,6 +305,15 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    val slippageRow: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.SLIPPAGE_ROW)
+    }
+
+    val slippageValue: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.SLIPPAGE_VALUE)
+        useUnmergedTree = true
+    }
+
     val swapFiatAmount: KNode = child {
         hasTestTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT)
         useUnmergedTree = true

@@ -37,12 +37,7 @@ interface YieldIncentivesRepository {
         userAddress: String,
     ): Either<YieldIncentivesError, List<YieldClaimHistoryItem>>
 
-    /**
-     * Drops the cached incentives and claim history of [userAddress], so the next read goes to the network.
-     *
-     * Called once a claim has settled: the windows exist to spare the backend a poll, not to keep showing rewards
-     * the user has just claimed.
-     */
+    /** Drops the cached incentives and claim history of [userAddress], so the next read goes to the network. */
     suspend fun invalidateUserCache(chainId: Int, userAddress: String)
 
     companion object {

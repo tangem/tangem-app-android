@@ -12,6 +12,7 @@ import coil.ImageLoaderFactory
 import com.tangem.blockchain.common.ExceptionHandler
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.TechAnalyticsEvent
 import com.tangem.core.ui.components.background.northernlights.NorthernLightsCrashGuard
 import com.tangem.core.ui.components.background.northernlights.NorthernLightsCrashGuardPreferences
@@ -40,7 +41,6 @@ import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryAnaly
 import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLoggingInitializer
-import com.tangem.tap.domain.yield.YieldSupplyClaimOutcomeAnnouncer
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -77,9 +77,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
     private val tangemLoggingInitializer: TangemLoggingInitializer
         get() = entryPoint.getTangemLoggingInitializer()
-
-    private val yieldSupplyClaimOutcomeAnnouncer: YieldSupplyClaimOutcomeAnnouncer
-        get() = entryPoint.getYieldSupplyClaimOutcomeAnnouncer()
 
     private val blockchainExceptionHandler: BlockchainExceptionHandler
         get() = entryPoint.getBlockchainExceptionHandler()
@@ -125,6 +122,9 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val openTelemetryMetricsHolder: OpenTelemetryMetricsHolder
         get() = entryPoint.getOpenTelemetryMetricsHolder()
 
+    private val analyticsEventHandler: AnalyticsEventHandler
+        get() = entryPoint.getAnalyticsEventHandler()
+
     // endregion
 
     private val appScope = MainScope()
@@ -169,7 +169,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     }
 
     fun init() {
-        yieldSupplyClaimOutcomeAnnouncer.start()
         if (authFeatureToggles.isBackendAuthenticationEnabled) {
             appScope.launch {
                 // Order matters: registration reads the device public key, so it must wait for
@@ -232,7 +231,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private fun reportShaderCrashIfDetected() {
         if (!NorthernLightsCrashGuard.hasDetectedCrash) return
 
-        Analytics.send(
+        analyticsEventHandler.send(
             TechAnalyticsEvent.ShaderCrashDetected(
                 model = Build.MODEL,
                 manufacturer = Build.MANUFACTURER,

@@ -100,9 +100,8 @@ internal fun OnboardingVisaPinCode(state: OnboardingVisaPinCodeUM, modifier: Mod
 @Composable
 private fun PinCodeSection(state: OnboardingVisaPinCodeUM, modifier: Modifier = Modifier) {
     val focusRequester = remember { FocusRequester() }
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         PinCode(
-            modifier = modifier,
             value = state.pinCode,
             onValueChange = state.onPinCodeChange,
             focusRequester = focusRequester,

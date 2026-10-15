@@ -14,6 +14,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.TextShimmer
@@ -43,12 +44,12 @@ internal fun SelectCountryBottomSheet(config: TangemBottomSheetConfig, content: 
 internal fun OnrampCountryList(state: CountryListUM, modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier.testTag(SelectCountryBottomSheetTestTags.LAZY_LIST),
-        contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
+        contentPadding = PaddingValues(horizontal = 16.dp),
     ) {
         item(key = "search_bar") {
             SearchBar(
                 state = state.searchBarUM,
-                modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing20),
+                modifier = Modifier.padding(bottom = 20.dp),
             )
         }
         when (state) {
@@ -74,7 +75,7 @@ private fun LazyListScope.countryListError(state: CountryListUM.Error) {
                 color = TangemTheme.colors.text.tertiary,
             )
             SecondarySmallButton(
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
+                modifier = Modifier.padding(top = 12.dp),
                 config = SmallButtonConfig(
                     text = resourceReference(id = R.string.try_to_load_data_again_button_title),
                     onClick = state.onRetry,
@@ -89,7 +90,7 @@ private fun LazyListScope.countryListLoading(state: CountryListUM.Loading) {
         items = state.items,
         key = { item -> item.id },
         contentType = { item -> item::class.java },
-        itemContent = { _ -> LoadingCountryItem(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing16)) },
+        itemContent = { _ -> LoadingCountryItem(modifier = Modifier.padding(vertical = 16.dp)) },
     )
 }
 
@@ -104,14 +105,14 @@ private fun LazyListScope.countryListWithContent(state: CountryListUM.Content) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable(onClick = item.onClick)
-                        .padding(vertical = TangemTheme.dimens.spacing16)
+                        .padding(vertical = 16.dp)
                         .testTag(SelectCountryBottomSheetTestTags.COUNTRY_ITEM),
                     state = item,
                 )
                 is CountryItemState.WithContent.Unavailable -> UnavailableCountryItem(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = TangemTheme.dimens.spacing16)
+                        .padding(vertical = 16.dp)
                         .testTag(SelectCountryBottomSheetTestTags.UNAVAILABLE_COUNTRY_ITEM),
                     state = item,
                 )
@@ -122,14 +123,14 @@ private fun LazyListScope.countryListWithContent(state: CountryListUM.Content) {
 
 @Composable
 private fun LoadingCountryItem(modifier: Modifier = Modifier) {
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing12)) {
-        CircleShimmer(modifier = Modifier.size(TangemTheme.dimens.size36))
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(space = 12.dp)) {
+        CircleShimmer(modifier = Modifier.size(36.dp))
         TextShimmer(
             modifier = Modifier
                 .align(Alignment.CenterVertically)
-                .width(width = TangemTheme.dimens.size70),
+                .width(width = 70.dp),
             style = TangemTheme.typography.subtitle2,
-            radius = TangemTheme.dimens.radius4,
+            radius = 4.dp,
         )
     }
 }
@@ -138,12 +139,12 @@ private fun LoadingCountryItem(modifier: Modifier = Modifier) {
 private fun ContentCountryItem(state: CountryItemState.WithContent.Content, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(space = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(
             modifier = Modifier
-                .size(TangemTheme.dimens.size36)
+                .size(36.dp)
                 .testTag(SelectCountryBottomSheetTestTags.COUNTRY_ICON),
             model = state.flagUrl,
             contentDescription = null,
@@ -162,7 +163,7 @@ private fun ContentCountryItem(state: CountryItemState.WithContent.Content, modi
             Icon(
                 painter = painterResource(id = R.drawable.ic_check_24),
                 contentDescription = null,
-                modifier = Modifier.size(TangemTheme.dimens.size24),
+                modifier = Modifier.size(24.dp),
                 tint = TangemTheme.colors.icon.accent,
             )
         }
@@ -174,12 +175,12 @@ private fun ContentCountryItem(state: CountryItemState.WithContent.Content, modi
 private fun UnavailableCountryItem(state: CountryItemState.WithContent.Unavailable, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(space = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(
             modifier = Modifier
-                .size(TangemTheme.dimens.size36)
+                .size(36.dp)
                 .alpha(0.4F)
                 .testTag(SelectCountryBottomSheetTestTags.UNAVAILABLE_COUNTRY_ICON),
             model = state.flagUrl,

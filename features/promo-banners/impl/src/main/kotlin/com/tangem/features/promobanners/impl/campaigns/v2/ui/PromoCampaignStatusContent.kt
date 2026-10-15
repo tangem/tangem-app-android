@@ -85,7 +85,7 @@ private fun EnrolledWalletsDetails(details: PromoCampaignStatusUM.Details.Enroll
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = 280.dp)
-                .background(color = TangemTheme.colors3.bg.opaque.primary, shape = RoundedCornerShape(20.dp))
+                .background(color = TangemTheme.colors3.bg.transparent.primary, shape = RoundedCornerShape(20.dp))
                 .verticalScroll(rememberScrollState())
                 .padding(vertical = 8.dp),
         ) {
@@ -106,7 +106,7 @@ private fun RecipientDetails(details: PromoCampaignStatusUM.Details.Recipient) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = TangemTheme.colors3.bg.opaque.primary, shape = RoundedCornerShape(24.dp)),
+            .background(color = TangemTheme.colors3.bg.transparent.primary, shape = RoundedCornerShape(24.dp)),
     ) {
         Text(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),

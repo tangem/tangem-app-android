@@ -1,15 +1,16 @@
 package com.tangem.features.yield.supply.impl.incentives.claim.entity
 
 import androidx.compose.runtime.Immutable
-import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 /**
- * A fee is `null` while it is still being estimated, which is what the fee rows render a shimmer for.
+ * Fees are `null` while they load, which the fee rows render as a shimmer.
  *
- * @property isClaimInProgress a claim is being prepared and signed; the sheet neither reloads nor closes meanwhile.
+ * @property isClaimInProgress the claim is being signed; the sheet neither reloads nor closes meanwhile
  */
 @Immutable
 internal data class YieldSupplyClaimUM(
@@ -19,28 +20,20 @@ internal data class YieldSupplyClaimUM(
     val networkFee: TextReference?,
     val networkFeeCurrency: TextReference?,
     val isServiceFeeVisible: Boolean,
-    val warning: Warning?,
+    val notification: NotificationUM?,
     val isClaimEnabled: Boolean,
     val isClaimInProgress: Boolean,
+    val isHoldToConfirmEnabled: Boolean,
 ) {
 
-    /**
-     * Rewards sharing one backend destination, headed by what that destination means for the user.
-     *
-     * @property storage account the rewards are credited to, shown only where the destination is the owner's wallet
-     */
+    /** @property storage the user's account; set only for the owner destination */
     @Immutable
     internal data class RewardGroupUM(
         val title: TextReference,
         val rewards: ImmutableList<RewardUM>,
-        val storage: StorageUM? = null,
+        val storage: AccountTitleUM.Account? = null,
     )
 
-    /** Who holds what a group pays out, as the header names it. */
-    @Immutable
-    internal data class StorageUM(val name: TextReference, val icon: AccountIconUM)
-
-    /** @property fiatAmount null for rewards outside the claim total — no USD value is invented for them. */
     @Immutable
     internal data class RewardUM(
         val icon: CurrencyIconState,
@@ -49,9 +42,4 @@ internal data class YieldSupplyClaimUM(
         val amount: TextReference,
         val fiatAmount: TextReference?,
     )
-
-    internal enum class Warning {
-        /** The service did not confirm a claim for these rewards, so the sheet offers a retry and signs nothing. */
-        RewardsUnavailable,
-    }
 }

@@ -40,6 +40,7 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -61,6 +62,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val txHistoryItemsStore: TangemPayTxHistoryItemsStore,
     private val cashbackSummaryStore: CashbackSummaryStore,
     private val customerInfoStore: TangemPayCustomerInfoStore,
+    private val derivationsRepository: DerivationsRepository,
 ) : OnboardingRepository {
 
     override suspend fun validateDeeplink(link: String): Either<VisaApiError, Boolean> {
@@ -84,14 +86,21 @@ internal class DefaultOnboardingRepository @Inject constructor(
     override suspend fun produceInitialData(userWalletId: UserWalletId) {
         withContext(dispatcherProvider.io) {
             val userWallet = getUserWallet(userWalletId)
-            val initialCredentials = authDataSource.produceInitialCredentials(userWallet)
+            val initialData = authDataSource.produceInitialData(userWallet)
                 .fold(
                     ifLeft = { error -> error("Can not produce initial data: ${error.message}") },
                     ifRight = { it },
                 )
             // should storeCheckCustomerWalletResult because we already know this
             tangemPayStorage.storeCheckCustomerWalletResult(userWallet.walletId, true)
-            storeInitialCredentials(userWalletId = userWallet.walletId, initialCredentials = initialCredentials)
+            storeInitialCredentials(
+                userWalletId = userWallet.walletId,
+                initialCredentials = initialData.initialCredentials,
+            )
+            derivationsRepository.storeDerivedKeys(
+                userWalletId = userWallet.walletId,
+                derivedKeys = initialData.moneyAccountDerivedKeys,
+            )
         }
     }
 

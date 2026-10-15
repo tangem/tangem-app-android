@@ -555,6 +555,7 @@ internal class PolymarketOnboardingModelTest {
             PolymarketEntry.Reconnect,
             PolymarketEntry.Undetermined,
             PolymarketEntry.Onboard(status = PolymarketWalletStatus.APPROVALS_IN_PROGRESS),
+            PolymarketEntry.Onboard(status = PolymarketWalletStatus.DEPLOYED),
         )
 
         @ParameterizedTest

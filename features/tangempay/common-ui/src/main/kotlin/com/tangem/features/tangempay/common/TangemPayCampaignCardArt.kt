@@ -94,7 +94,7 @@ private fun CardArtPlaceholder(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors3.bg.opaque.secondary),
+            .background(TangemTheme.colors3.bg.transparent.secondary),
     )
 }
 

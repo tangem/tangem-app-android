@@ -110,11 +110,11 @@ internal class WcEthNetwork(
             -> moshi.fromJson<List<WcEthTransactionParams>>(rawParams)
                 .getOrElse { return it.left() }
                 ?.firstOrNull()
-                ?.let {
+                ?.let { transaction ->
                     if (this == WcEthMethodName.SignTransaction) {
-                        WcEthMethod.SignTransaction(transaction = it).right()
+                        WcEthMethod.SignTransaction(transaction = transaction).right()
                     } else {
-                        WcEthMethod.SendTransaction(transaction = it).right()
+                        WcEthMethod.SendTransaction(transaction = transaction).right()
                     }
                 }
                 ?: return null.right()
@@ -123,11 +123,11 @@ internal class WcEthNetwork(
             -> moshi.fromJson<List<WcEthAddChain>>(rawParams)
                 .getOrElse { return it.left() }
                 ?.firstOrNull()
-                ?.let {
+                ?.let { chain ->
                     if (this == WcEthMethodName.AddEthereumChain) {
-                        WcEthMethod.AddEthereumChain(rawChain = it).right()
+                        WcEthMethod.AddEthereumChain(rawChain = chain).right()
                     } else {
-                        WcEthMethod.SwitchEthereumChain(rawChain = it).right()
+                        WcEthMethod.SwitchEthereumChain(rawChain = chain).right()
                     }
                 }
                 ?: null.right()

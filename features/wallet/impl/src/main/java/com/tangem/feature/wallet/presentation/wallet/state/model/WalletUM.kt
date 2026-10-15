@@ -36,6 +36,12 @@ internal sealed interface WalletUM {
     val collectiblesWalletBlockUM: CollectiblesWalletBlockUM
     val jointOperationBanners: ImmutableList<JointOperationBannerUM>
 
+    /**
+     * Whether the marketing block and the Tangem Pay promo are shown. Read only when they give way to system cards
+     * (TWI-1841); otherwise they are always shown.
+     */
+    val arePromoCardsVisible: Boolean
+
     data class Content(
         override val pullToRefreshConfig: PullToRefreshConfig,
         override val walletsBalanceUM: WalletBalanceUM,
@@ -51,6 +57,8 @@ internal sealed interface WalletUM {
         override val collectiblesWalletBlockUM: CollectiblesWalletBlockUM,
         override val jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf(),
         val areActionsAvailable: Boolean = false,
+        override val arePromoCardsVisible: Boolean = false,
+        val promoCardsCheck: PromoCardsCheck = PromoCardsCheck.OnOpen,
     ) : WalletUM
 
     data class Locked(
@@ -68,5 +76,6 @@ internal sealed interface WalletUM {
         override val polymarketWalletBlockUM: PolymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden
         override val collectiblesWalletBlockUM: CollectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden
         override val jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf()
+        override val arePromoCardsVisible: Boolean = false
     }
 }
