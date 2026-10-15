@@ -287,6 +287,25 @@ internal class ResolvePolymarketEntryInteractorTest {
         }
 
         @Test
+        fun `GIVEN a confirmed wallet the backend knows another deposit wallet for WHEN withoutPrompting THEN fails`() =
+            runTest {
+                // Arrange
+                val mismatch = PolymarketOnboardingError.AddressMismatch(
+                    expected = addresses.depositWalletAddress,
+                    actual = "0xother",
+                )
+                coEvery { onboardedStore.isOnboardedSync(userWalletId) } returns true
+                coEvery { deriveAddresses.stored(userWalletId) } returns addresses
+                coEvery { getWalletStatus(addresses) } returns mismatch.left()
+
+                // Act
+                val actual = useCase.withoutPrompting(userWalletId)
+
+                // Assert
+                assertThat(actual.leftOrNull()).isEqualTo(mismatch)
+            }
+
+        @Test
         fun `GIVEN a confirmed wallet whose credentials are gone WHEN withoutPrompting THEN the backend is asked`() =
             runTest {
                 // Arrange
