@@ -200,7 +200,7 @@ internal class YieldSupplyClaimModel @Inject constructor(
                     },
                 )
             },
-            // The result replaces this sheet in the slot; dismissing would close it
+            // onSubmitted closes this sheet itself
             ifRight = { onClaimSubmitted() },
         )
     }
