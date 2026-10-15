@@ -316,9 +316,10 @@ internal class JointAccountDtoTest {
         }
 
         private fun provideTestModels() = listOf(
-            MalformedModel(operation = operationJson(safeTx = SAFE_TX_JSON.replace(""""value": "1000",""", ""))),
-            MalformedModel(operation = operationJson(safeTx = SAFE_TX_JSON.replace(""""to": "0x1111111111111111111111111111111111111111"""", """"to": null"""))),
-            MalformedModel(operation = operationJson(safeTx = SAFE_TX_JSON.replace(""""operation": 0""", """"operation": "call""""))),
+            MalformedModel(operation = operationJson(safeTx = safeTxJson(without = "value"))),
+            MalformedModel(operation = operationJson(safeTx = safeTxJson("to" to "null"))),
+            MalformedModel(operation = operationJson(safeTx = safeTxJson("operation" to "\"call\""))),
+            MalformedModel(operation = operationJson(safeTx = safeTxJson("operation" to "0.5"))),
             MalformedModel(operation = operationJson(safeTx = "\"0x1234\"")),
             MalformedModel(operation = operationJson(votes = """[{ "vote": "approve" }]""")),
             MalformedModel(operation = "null"),
@@ -327,7 +328,13 @@ internal class JointAccountDtoTest {
 
     data class MalformedModel(val operation: String)
 
-    private fun operationJson(safeTx: String = SAFE_TX_JSON, votes: String = "[]"): String = """
+    private fun safeTxJson(vararg overrides: Pair<String, String>, without: String? = null): String =
+        (SAFE_TX_FIELDS + overrides)
+            .filterKeys { it != without }
+            .entries
+            .joinToString(prefix = "{", postfix = "}") { (name, value) -> "\"$name\": $value" }
+
+    private fun operationJson(safeTx: String = safeTxJson(), votes: String = "[]"): String = """
         {
           "operationId": "3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708",
           "chainId": 137,
@@ -356,20 +363,17 @@ internal class JointAccountDtoTest {
     )
 
     private companion object {
-        @Language("JSON")
-        const val SAFE_TX_JSON = """
-            {
-              "to": "0x1111111111111111111111111111111111111111",
-              "value": "1000",
-              "data": "0x",
-              "operation": 0,
-              "safeTxGas": "112500",
-              "baseGas": "410000",
-              "gasPrice": "60000000000",
-              "gasToken": "0x0000000000000000000000000000000000000000",
-              "refundReceiver": "0x2222222222222222222222222222222222222222",
-              "nonce": "4"
-            }
-        """
+        val SAFE_TX_FIELDS = mapOf(
+            "to" to "\"0x1111111111111111111111111111111111111111\"",
+            "value" to "\"1000\"",
+            "data" to "\"0x\"",
+            "operation" to "0",
+            "safeTxGas" to "\"112500\"",
+            "baseGas" to "\"410000\"",
+            "gasPrice" to "\"60000000000\"",
+            "gasToken" to "\"0x0000000000000000000000000000000000000000\"",
+            "refundReceiver" to "\"0x2222222222222222222222222222222222222222\"",
+            "nonce" to "\"4\"",
+        )
     }
 }
