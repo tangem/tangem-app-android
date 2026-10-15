@@ -99,6 +99,8 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
     }
 
     fun onClaimClick() {
+        // The button is disabled only once the banner is re-read, which may still be in progress
+        if (isClaimInFlight) return
         val bannerContext = context ?: return
         params.onClaimClick(bannerContext.chainId, bannerContext.userAddress)
     }
