@@ -176,6 +176,8 @@ internal object JointAccountDomainModule {
         compositionChecker: SafeCompositionChecker,
         networkReader: JointNetworkReader,
         payloadCodec: JointTransferPayloadCodec,
+        blockaidGate: JointOperationBlockaidGate,
+        ownerAddressResolver: JointOwnerAddressResolver,
     ): CreateJointOperationUseCase {
         return CreateJointOperationUseCase(
             repository = repository,
@@ -186,6 +188,8 @@ internal object JointAccountDomainModule {
             compositionChecker = compositionChecker,
             networkReader = networkReader,
             payloadCodec = payloadCodec,
+            blockaidGate = blockaidGate,
+            ownerAddressResolver = ownerAddressResolver,
         )
     }
 
