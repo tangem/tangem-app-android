@@ -62,7 +62,8 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
     `DEPLOYED` — the V2 approvals set did it to every wallet — so the entry gate re-reads `GET /wallet` whenever
     the addresses are stored, and `DEPLOYED` sends the user back to the approvals step: one signing session, no
     deploy, stored credentials kept. The record answers alone only without stored addresses or when the read
-    fails, and `DEPLOYED` never clears it — the Prediction account in the account list hangs on it.
+    fails transiently; a mismatching deposit wallet or a rejected request fails the entry like any other.
+    `DEPLOYED` never clears the record — the Prediction account in the account list hangs on it.
 
 ## Onboarding
 
