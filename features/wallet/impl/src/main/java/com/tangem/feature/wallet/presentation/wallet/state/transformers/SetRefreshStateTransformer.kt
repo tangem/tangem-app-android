@@ -34,9 +34,13 @@ internal class SetRefreshStateTransformer(
     override fun transform(walletUM: WalletUM): WalletUM {
         return when (walletUM) {
             is WalletUM.Content -> {
+                val wasRefreshing = walletUM.pullToRefreshConfig.isRefreshing
+                val isRefreshFinished = wasRefreshing && !isRefreshing
+
                 walletUM.copy(
                     pullToRefreshConfig = walletUM.pullToRefreshConfig.toUpdatedState(isRefreshing),
                     tokensListUM = walletUM.tokensListUM.toUpdatedState(),
+                    promoCardsCheck = if (isRefreshFinished) PromoCardsCheck.AfterRefresh else walletUM.promoCardsCheck,
                 )
             }
             is WalletUM.Locked -> walletUM

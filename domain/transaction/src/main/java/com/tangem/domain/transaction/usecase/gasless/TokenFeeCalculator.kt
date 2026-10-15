@@ -26,6 +26,7 @@ import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
 import com.tangem.domain.utils.convertToSdkAmount
@@ -195,6 +196,7 @@ internal class TokenFeeCalculator(
             TransactionFeeExtended(
                 transactionFee = TransactionFee.Single(normal = fee),
                 feeTokenId = tokenForPayFee.id,
+                gaslessProtocolData = GaslessProtocolData.Evm,
                 // Per-call gas limits for the v2 gasless meta-tx (bound into the EIP-712 hash).
                 // Main = the user's transaction execution gas; withdraw = the appended yield-withdraw
                 // sub-call gas, present only on the yield path where a batch is built.
@@ -207,11 +209,10 @@ internal class TokenFeeCalculator(
     /**
      * Resolves the fee-transfer gas limit from the on-chain estimation result.
      *
-     * A revert of the probe transfer means the liquid balance does not cover it. Matching
-     * [BlockchainSdkError.Ethereum.InsufficientFundsForOperation] alone misses tokens that revert without a
-     * reason string — USDT reverts with an `INVALID` opcode and arrives as a plain
-     * [BlockchainSdkError.Ethereum.Api] — so any execution error answered by the node is read as "not enough
-     * liquid balance": topped up from the module on the yield path, [GaslessError.NotEnoughFunds] otherwise.
+     * A revert of the probe transfer means the liquid balance does not cover it. The node does not answer it
+     * uniformly — USDT reverts with an `INVALID` opcode under -32000 rather than code 3 — so any execution
+     * error answered by the node ([BlockchainSdkError.Ethereum]) is read as "not enough liquid balance": topped
+     * up from the module on the yield path, [GaslessError.NotEnoughFunds] otherwise.
      * Transport failures still propagate as [GaslessError.DataError].
      */
     private fun Raise<GetFeeError>.resolveFeeTransferGasLimit(

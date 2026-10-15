@@ -12,6 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -19,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountRow
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.account.AccountIconSize
@@ -35,7 +39,6 @@ import com.tangem.core.ui.res.generated.icons.ic_user_plus_16
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.jointaccount.main.JointAccountMainUM
 import com.tangem.utils.StringsSigns.DASH_SIGN
-import com.tangem.core.ui.R as CoreUiR
 
 @Composable
 internal fun JointAccountMainBlockContent(
@@ -83,7 +86,11 @@ private fun JointAccountBlocked(
         title = state.title,
         subtitle = state.subtitle,
         icon = state.icon,
-        balance = state.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
+        balance = buildAnnotatedString {
+            withStyle(SpanStyle(color = TangemTheme.colors3.text.tertiary)) {
+                append(state.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference())
+            }
+        },
         priceChange = state.priceChange,
         onClick = state.onClick,
     )
@@ -260,7 +267,6 @@ private class JointAccountMainPreviewProvider : CollectionPreviewParameterProvid
             icon = previewIcon,
             balance = stringReference("$0.00"),
             priceChange = previewNeutralPriceChange,
-            warning = stringReference("This account is temporarily unavailable"),
             onClick = {},
         ),
         JointAccountMainUM.TemporaryUnavailable,

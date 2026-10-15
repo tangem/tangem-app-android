@@ -33,8 +33,8 @@ internal class WalletWithFundsChecker @Inject constructor(
     }
 
     private fun List<CryptoCurrencyStatus>.hasNonZeroWallets(): Boolean {
-        return any {
-            val amount = it.value.amount ?: return@any false
+        return any { status ->
+            val amount = status.value.amount ?: return@any false
             !amount.isZero()
         }
     }

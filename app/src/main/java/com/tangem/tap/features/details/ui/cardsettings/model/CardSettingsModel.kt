@@ -7,7 +7,7 @@ import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -56,6 +56,7 @@ internal class CardSettingsModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val uiMessageSender: UiMessageSender,
     private val appRouter: AppRouter,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<CardSettingsComponent.Params>()
@@ -186,15 +187,17 @@ internal class CardSettingsModel @Inject constructor(
     private fun handleClickingItem(item: CardInfo) {
         when (item) {
             is CardInfo.ChangeAccessCode -> {
-                Analytics.send(Settings.CardSettings.ButtonChangeUserCode(AnalyticsParam.UserCode.AccessCode))
+                analyticsEventHandler.send(
+                    Settings.CardSettings.ButtonChangeUserCode(AnalyticsParam.UserCode.AccessCode),
+                )
                 changeAccessCode()
             }
             is CardInfo.ResetToFactorySettings -> {
-                Analytics.send(Settings.CardSettings.ButtonFactoryReset())
+                analyticsEventHandler.send(Settings.CardSettings.ButtonFactoryReset())
                 resetWalletToFactorySettings()
             }
             is CardInfo.SecurityMode -> {
-                Analytics.send(Settings.CardSettings.ButtonChangeSecurityMode())
+                analyticsEventHandler.send(Settings.CardSettings.ButtonChangeSecurityMode())
                 appRouter.push(route = AppRoute.DetailsSecurity(userWalletId))
             }
             is CardInfo.AccessCodeRecovery -> {
@@ -238,7 +241,7 @@ internal class CardSettingsModel @Inject constructor(
         val scanResponse = requireNotNull(cardSettingsInteractor.scannedScanResponse.value) { "Scan response is null" }
 
         when (val result = tangemSdkManager.setAccessCode(scanResponse.card.cardId)) {
-            is CompletionResult.Success -> Analytics.send(Settings.CardSettings.UserCodeChanged())
+            is CompletionResult.Success -> analyticsEventHandler.send(Settings.CardSettings.UserCodeChanged())
             is CompletionResult.Failure -> {
                 TangemLogger.e("Failed to change access code: ${result.error}")
             }

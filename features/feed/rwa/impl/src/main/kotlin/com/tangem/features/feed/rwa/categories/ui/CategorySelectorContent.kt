@@ -2,6 +2,10 @@ package com.tangem.features.feed.rwa.categories.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandIn
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,8 +24,9 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
-import com.tangem.core.ui.ds2.fade.TangemFade
+import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.R
@@ -160,29 +165,24 @@ private fun FooterSpacer() {
 private fun Footer(state: CategorySelectorFooterUM, isEnabled: Boolean, modifier: Modifier = Modifier) {
     AnimatedVisibility(
         visible = isEnabled,
+        // the default size transitions clip for good, cutting off the part of the footer fade drawn above it
+        enter = fadeIn() + expandIn(clip = false),
+        exit = shrinkOut(clip = false) + fadeOut(),
         modifier = modifier.fillMaxWidth(),
     ) {
-        Box {
-            TangemFade(
-                position = TangemFade.Position.Bottom,
-                variant = TangemFade.Variant.Hard,
-                modifier = Modifier.matchParentSize(),
-            )
-            Column(
-                modifier = Modifier
-                    .navigationBarsPadding()
-                    .padding(all = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(space = 8.dp),
-            ) {
+        TangemFooter(
+            contentPadding = PaddingValues(all = 16.dp),
+            // inside the feed modal the blur samples the screen behind the sheet, not the list under the footer
+            blurBackground = false,
+        ) {
+            TangemButtonGroup {
                 TangemButton(
-                    modifier = Modifier.fillMaxWidth(),
                     variant = TangemButton.Variant.Secondary,
                     size = TangemButton.Size.X12,
                     text = resourceReference(R.string.common_reset),
                     onClick = state.onReset,
                 )
                 TangemButton(
-                    modifier = Modifier.fillMaxWidth(),
                     variant = TangemButton.Variant.Primary,
                     size = TangemButton.Size.X12,
                     text = resourceReference(R.string.common_apply),

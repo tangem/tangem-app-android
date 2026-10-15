@@ -6,8 +6,9 @@ import com.tangem.plugin.configuration.utils.findPlugin
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 
-internal fun BaseExtension.configureCompileSdk() {
+internal fun BaseExtension.configureSdk() {
     compileSdkVersion(AppConfig.compileSdkVersion)
+    buildToolsVersion(AppConfig.buildToolsVersion)
 }
 
 internal fun BaseExtension.configureCompilerOptions() {

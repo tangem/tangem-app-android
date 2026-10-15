@@ -34,6 +34,7 @@ import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM.Footer.AddAccountUM
 import com.tangem.feature.walletsettings.impl.R
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
+import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
@@ -51,6 +52,7 @@ internal class AccountItemsDelegate @Inject constructor(
     private val accountListSortingSaver: AccountListSortingSaver,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
+    private val jointAccountCompromisedAlert: JointAccountCompromisedAlert,
 ) {
 
     private val userWalletId = paramsContainer.require<WalletSettingsComponent.Params>().userWalletId
@@ -102,8 +104,12 @@ internal class AccountItemsDelegate @Inject constructor(
         fun AccountStatus.Joint.mapJoint(): WalletSettingsAccountsUM {
             val accountItemUM = AccountJointItemUMConverter(
                 onClick = {
-                    analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonOpenExistingAccount())
-                    openAccountDetails(this.account)
+                    if (value is JointAccountStatusValue.Error.Compromised) {
+                        jointAccountCompromisedAlert.show(userWalletId = userWalletId)
+                    } else {
+                        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonOpenExistingAccount())
+                        openAccountDetails(this.account)
+                    }
                 },
                 appCurrency = appCurrency,
                 accountBalance = jointBalance(),
@@ -179,8 +185,9 @@ internal class AccountItemsDelegate @Inject constructor(
         return this.sortedBy { positionByAccountId[it.id] ?: Int.MAX_VALUE }
     }
 
-    private fun AccountStatus.Joint.jointBalance(): TotalFiatBalance = when (value) {
+    private fun AccountStatus.Joint.jointBalance(): TotalFiatBalance = when (val status = value) {
         is JointAccountStatusValue.Loading -> TotalFiatBalance.Loading
+        is JointAccountStatusValue.Error.Compromised -> status.fiatBalance
         is JointAccountStatusValue.Error -> TotalFiatBalance.Failed
         else -> tokenList.totalFiatBalance
     }

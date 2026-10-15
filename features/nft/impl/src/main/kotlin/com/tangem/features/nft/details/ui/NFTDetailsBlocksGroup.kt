@@ -16,6 +16,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.block.information.InformationBlock
@@ -42,8 +43,8 @@ internal fun NFTDetailsBlocksGroup(
     if (items.size > 0) {
         val rowCount = (itemsCount + 1) / 2
         val paddingValues = PaddingValues(
-            horizontal = TangemTheme.dimens.spacing6,
-            vertical = TangemTheme.dimens.spacing8,
+            horizontal = 6.dp,
+            vertical = 8.dp,
         )
         InformationBlock(
             modifier = modifier,
@@ -53,11 +54,11 @@ internal fun NFTDetailsBlocksGroup(
                 )
             },
             action = action,
-            contentHorizontalPadding = TangemTheme.dimens.spacing6,
+            contentHorizontalPadding = 6.dp,
         ) {
             Column(
                 modifier = Modifier
-                    .padding(bottom = TangemTheme.dimens.spacing12),
+                    .padding(bottom = 12.dp),
             ) {
                 repeat(rowCount) { rowIndex ->
                     val item1 = items[rowIndex * 2]
@@ -152,8 +153,8 @@ internal fun NFTDetailsGroupBlock(
             if (showInfoButton) {
                 Icon(
                     modifier = Modifier
-                        .padding(start = TangemTheme.dimens.spacing4)
-                        .size(TangemTheme.dimens.size16),
+                        .padding(start = 4.dp)
+                        .size(16.dp),
                     painter = painterResource(R.drawable.ic_information_24),
                     contentDescription = null,
                     tint = TangemTheme.colors.icon.informative,
@@ -199,7 +200,7 @@ internal fun NFTBlocksGroupAction(
                 onClick = onClick,
             ),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing2),
+        horizontalArrangement = Arrangement.spacedBy(space = 2.dp),
     ) {
         startIcon()
         Text(
@@ -213,7 +214,7 @@ internal fun NFTBlocksGroupAction(
 @Composable
 internal fun NFTBlocksGroupActionIcon(@DrawableRes iconRes: Int, modifier: Modifier = Modifier) {
     Icon(
-        modifier = modifier.size(size = TangemTheme.dimens.size16),
+        modifier = modifier.size(size = 16.dp),
         painter = painterResource(id = iconRes),
         tint = TangemTheme.colors.icon.accent,
         contentDescription = null,
@@ -234,7 +235,7 @@ private fun Preview_NFTDetailsInfoBlock(
                 items = state,
             )
             NFTDetailsBlocksGroup(
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
+                modifier = Modifier.padding(top = 12.dp),
                 title = stringReference("Title"),
                 action = {
                     NFTBlocksGroupAction(
@@ -246,7 +247,7 @@ private fun Preview_NFTDetailsInfoBlock(
                 items = state,
             )
             NFTDetailsBlocksGroup(
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
+                modifier = Modifier.padding(top = 12.dp),
                 title = stringReference("Title"),
                 action = {
                     NFTBlocksGroupAction(

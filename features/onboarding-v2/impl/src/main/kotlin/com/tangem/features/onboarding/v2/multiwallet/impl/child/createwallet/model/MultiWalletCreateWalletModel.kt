@@ -105,9 +105,9 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
 
             when (result) {
                 is CompletionResult.Success -> {
-                    multiWalletState.update {
-                        it.copy(
-                            currentScanResponse = it.currentScanResponse.copy(
+                    multiWalletState.update { state ->
+                        state.copy(
+                            currentScanResponse = state.currentScanResponse.copy(
                                 card = result.data.card,
                                 derivedKeys = result.data.derivedKeys,
                                 primaryCard = result.data.primaryCard,

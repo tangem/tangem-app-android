@@ -202,8 +202,8 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         val words12 = mnemonicRepository.generateMnemonic(MnemonicRepository.MnemonicType.Words12)
         val words24 = mnemonicRepository.generateMnemonic(MnemonicRepository.MnemonicType.Words24)
 
-        state.update {
-            it.copy(
+        state.update { state ->
+            state.copy(
                 generatedWords12 = words12,
                 generatedWords24 = words24,
             )
@@ -354,9 +354,9 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     }
 
     private inline fun <reified T : MultiWalletSeedPhraseUM> updateUiStateSpecific(block: (T) -> T) {
-        _uiState.update {
-            if (it !is T) return@update it
-            block(it)
+        _uiState.update { state ->
+            if (state !is T) return@update state
+            block(state)
         }
     }
 }

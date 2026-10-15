@@ -58,6 +58,9 @@ provider strings and teams in provider order. `dataFetchedAt` dates the backend'
   `400`, as is a cursor from another list or wallet. A `400` on a cursor is `StaleCursor`; the session answers it
   with a fresh first page. The order is the BFF's (open: current value descending, closed: latest first) and is
   not negotiable per request.
+- **`CONDITIONAL-V2` is not in Polymarket's OpenAPI** (only `COLLATERAL` / `CONDITIONAL` are) — the V2 shares
+  asset type comes from the migration guide and has not been seen live. The sync before a SELL is best-effort
+  for exactly that reason.
 
 ## Error-mapping decisions
 

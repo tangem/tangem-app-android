@@ -26,6 +26,7 @@ import com.tangem.domain.polymarket.model.PolymarketChainFamily
 import com.tangem.domain.polymarket.model.PolymarketDepositNetwork
 import com.tangem.domain.polymarket.model.PolymarketDepositRequisites
 import com.tangem.domain.polymarket.model.PolymarketDepositToken
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketAddresses
@@ -64,7 +65,6 @@ import kotlinx.coroutines.test.TestScope
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
-
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
 
@@ -136,7 +136,7 @@ internal abstract class PlacePredictionModelTestBase {
         coEvery { getPriceUseCase(assetId = any(), side = any()) } returns BigDecimal("0.48").right()
         coEvery { checkGeoblockUseCase() } returns false.right()
         coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()
-        coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult().right()
+        coEvery { placeOrderUseCase(any(), any(), any(), any()) } returns createPlaceResult().right()
         coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
             createPosition().right()
     }
@@ -294,6 +294,9 @@ internal abstract class PlacePredictionModelTestBase {
         minOrderAmount = BigDecimal.ONE,
         tickSize = BigDecimal("0.001"),
         isLive = isLive,
+        version = PolymarketMarketVersion.V1,
+        exchange = PolymarketContracts.CTF_EXCHANGE,
+        signingDomainVersion = "2",
     )
 
     protected fun createPosition(size: BigDecimal = BigDecimal("51.234567")): PolymarketPosition.Open =

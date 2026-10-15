@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -27,6 +28,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.common.SelectorInput
 import com.tangem.features.tangempay.common.TextInput
 import com.tangem.features.tangempay.common.TextInputState
@@ -41,7 +43,7 @@ import kotlinx.collections.immutable.ImmutableList
 @Composable
 internal fun TangemPayBankWithdrawFormScreen(state: TangemPayBankWithdrawFormUM, modifier: Modifier = Modifier) {
     TangemTopBarScaffold(
-        modifier = modifier,
+        modifier = modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_FORM_SCREEN),
         containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
             TangemTopNavigation(
@@ -115,6 +117,7 @@ private fun FormField(state: FieldUM) {
     val modifier = Modifier
         .fillMaxWidth()
         .revealAboveFooter(footerHeight = FooterHeight)
+        .testTag(TangemPayTestTags.bankWithdrawFormField(state.field.name))
     when (state) {
         is FieldUM.Text -> TextField(state = state, modifier = modifier)
         is FieldUM.Selector -> SelectorField(state = state, modifier = modifier)

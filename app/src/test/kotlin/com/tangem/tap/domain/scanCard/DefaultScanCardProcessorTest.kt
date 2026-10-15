@@ -1,8 +1,6 @@
 package com.tangem.tap.domain.scanCard
 
 import com.google.common.truth.Truth.assertThat
-import arrow.core.left
-import arrow.core.right
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
@@ -10,6 +8,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -17,7 +16,6 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.card.ScanFailsCounter
 import com.tangem.domain.card.common.util.twinsIsTwinned
 import com.tangem.domain.card.models.ScanConfig
-import com.tangem.domain.card.models.ScanError
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
@@ -30,6 +28,7 @@ import io.mockk.CapturingSlot
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -38,7 +37,6 @@ import io.mockk.runs
 import io.mockk.slot
 import io.mockk.unmockkStatic
 import io.mockk.verify
-import kotlinx.coroutines.async
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -261,6 +259,11 @@ internal class DefaultScanCardProcessorTest {
             // Assert
             assertThat(callbacks.events).containsExactly("progress:true", "progress:false", "cancel").inOrder()
             coVerify(exactly = 1) { sendFeedbackEmailUseCase(FeedbackEmailType.CardAttestationFailed) }
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    match { it is Basic.ButtonSupport && it.params[AnalyticsParam.SOURCE] == source.value },
+                )
+            }
         }
     }
 
@@ -323,19 +326,29 @@ internal class DefaultScanCardProcessorTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class ScanWithSignInConfig {
 
-        private val config = ScanConfig.signIn(source)
+        private val callback: ScanConfig.Callback = mockk(relaxed = true)
+        private val config = ScanConfig.signIn(source, callback)
+
+        @BeforeEach
+        fun resetCallback() {
+            clearMocks(callback)
+        }
 
         @Test
-        fun `GIVEN card with wallet WHEN scan THEN returns scan response and resets fails counter`() = runTest {
+        fun `GIVEN card with wallet WHEN scan THEN success delivered and fails counter reset`() = runTest {
             // Arrange
             val processor = createProcessor()
             stubScanResult(CompletionResult.Success(scanResponse))
 
             // Act
-            val actual = processor.scan(config)
+            processor.scan(config)
+            advanceUntilIdle()
 
             // Assert
-            assertThat(actual).isEqualTo(scanResponse.right())
+            coVerifyOrder {
+                callback.onProgressStateChange(showProgress = true)
+                callback.onSuccess(scanResponse)
+            }
             coVerify(exactly = 1) {
                 tangemSdkManager.scanProduct(
                     cardId = null,
@@ -349,22 +362,48 @@ internal class DefaultScanCardProcessorTest {
             verify(exactly = 1) { trackingContextProxy.setContext(scanResponse) }
             verify(exactly = 1) { tangemSdkManager.changeDisplayedCardIdNumbersCount(null) }
             verify(exactly = 1) { tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse) }
-            verify(exactly = 0) { appRouter.push(any(), any()) }
         }
 
         @Test
-        fun `GIVEN card without wallet WHEN scan THEN opens onboarding and returns wallet not created`() = runTest {
+        fun `GIVEN card id in config WHEN scan THEN scans only that card`() = runTest {
+            // Arrange
+            val processor = createProcessor()
+            stubScanResult(CompletionResult.Success(scanResponse))
+
+            // Act
+            processor.scan(config.copy(cardId = CARD_ID))
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                tangemSdkManager.scanProduct(
+                    cardId = CARD_ID,
+                    messageRes = any(),
+                    allowsRequestAccessCodeFromRepository = any(),
+                    shouldCheckIsAlreadyActivated = any(),
+                    source = source,
+                )
+            }
+        }
+
+        @Test
+        fun `GIVEN card without wallet WHEN scan THEN onboarding required and launched`() = runTest {
             // Arrange
             val processor = createProcessor()
             stubScanResult(CompletionResult.Success(scanResponse))
             coEvery { onboardingHelper.isOnboardingCase(scanResponse) } returns true
 
             // Act
-            val actual = processor.scan(config)
+            processor.scan(config)
+            advanceUntilIdle()
 
             // Assert
-            assertThat(actual).isEqualTo(ScanError.WalletNotCreated.left())
-            verify(exactly = 1) { trackingContextProxy.addContext(scanResponse) }
+            coVerifyOrder {
+                callback.onProgressStateChange(showProgress = true)
+                callback.onOnboardingRequired()
+                callback.onProgressStateChange(showProgress = false)
+            }
+            coVerify(exactly = 0) { callback.onSuccess(any()) }
             verify(exactly = 1) {
                 appRouter.push(
                     AppRoute.Onboarding(scanResponse = scanResponse, mode = AppRoute.Onboarding.Mode.Onboarding),
@@ -374,82 +413,41 @@ internal class DefaultScanCardProcessorTest {
         }
 
         @Test
-        fun `GIVEN twinned card without twins welcome WHEN scan THEN opens twins welcome`() = runTest {
-            // Arrange
-            val processor = createProcessor()
-            stubScanResult(CompletionResult.Success(scanResponse))
-            every { scanResponse.twinsIsTwinned() } returns true
-            coEvery { wasTwinsOnboardingShownUseCase.invokeSync() } returns false
-
-            // Act
-            val actual = processor.scan(config)
-
-            // Assert
-            assertThat(actual).isEqualTo(ScanError.WalletNotCreated.left())
-            verify(exactly = 1) {
-                appRouter.push(
-                    AppRoute.Onboarding(scanResponse = scanResponse, mode = AppRoute.Onboarding.Mode.WelcomeOnlyTwin),
-                    any(),
-                )
-            }
-        }
-
-        @Test
-        fun `GIVEN user cancelled scan WHEN scan THEN returns original error and counts cancellation`() = runTest {
+        fun `GIVEN user cancelled scan WHEN scan THEN failure delivered and counted as cancellation`() = runTest {
             // Arrange
             val processor = createProcessor()
             val error = TangemSdkError.UserCancelled()
             stubScanResult(CompletionResult.Failure(error))
 
             // Act
-            val actual = processor.scan(config)
+            processor.scan(config)
+            advanceUntilIdle()
 
             // Assert
-            assertThat(actual).isEqualTo(ScanError.Failure(error).left())
+            coVerify(exactly = 1) { callback.onFailure(error) }
             verify(exactly = 1) { scanFailsCounter.onScanFailure(isUserCancelled = true, source = source) }
-            verify(exactly = 0) { uiMessageSender.send(any()) }
         }
 
         @Test
-        fun `GIVEN card verification failed WHEN dialog cancelled THEN returns only after dialog is closed`() =
-            runTest {
-                // Arrange
-                val processor = createProcessor()
-                val dialog = captureDialog()
-                stubScanResult(CompletionResult.Failure(TangemSdkError.CardVerificationFailed()))
-
-                // Act
-                val result = async { processor.scan(config) }
-                advanceUntilIdle()
-                val isCompletedWhileDialogShown = result.isCompleted
-                requireNotNull(dialog.captured.secondAction).onClick()
-                advanceUntilIdle()
-
-                // Assert
-                assertThat(isCompletedWhileDialogShown).isFalse()
-                assertThat(result.await()).isEqualTo(ScanError.CardVerificationFailed.left())
-                verify(exactly = 1) {
-                    analyticsEventHandler.send(OnboardingAnalyticsEvent.Error.OfflineAttestationFailed(source))
-                }
-                coVerify(exactly = 0) { sendFeedbackEmailUseCase(any()) }
-            }
-
-        @Test
-        fun `GIVEN card verification failed WHEN support requested THEN opens email and returns`() = runTest {
+        fun `GIVEN attestation dialog WHEN cancel clicked THEN progress hidden and failure reported`() = runTest {
             // Arrange
             val processor = createProcessor()
             val dialog = captureDialog()
             stubScanResult(CompletionResult.Failure(TangemSdkError.CardVerificationFailed()))
+            processor.scan(config)
+            advanceUntilIdle()
 
             // Act
-            val result = async { processor.scan(config) }
-            advanceUntilIdle()
-            dialog.captured.firstAction.onClick()
+            requireNotNull(dialog.captured.secondAction).onClick()
             advanceUntilIdle()
 
             // Assert
-            assertThat(result.await()).isEqualTo(ScanError.CardVerificationFailed.left())
-            coVerify(exactly = 1) { sendFeedbackEmailUseCase(FeedbackEmailType.CardAttestationFailed) }
+            coVerifyOrder {
+                callback.onProgressStateChange(showProgress = true)
+                callback.onProgressStateChange(showProgress = false)
+                callback.onCardVerificationFailed()
+            }
+            coVerify(exactly = 0) { callback.onFailure(any()) }
         }
     }
 
@@ -457,19 +455,27 @@ internal class DefaultScanCardProcessorTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class ScanWithRescanKnownCardConfig {
 
-        private val config = ScanConfig.rescanKnownCard(source)
+        private val callback: ScanConfig.Callback = mockk(relaxed = true)
+        private val config = ScanConfig.rescanKnownCard(source, callback)
+
+        @BeforeEach
+        fun resetCallback() {
+            clearMocks(callback)
+        }
 
         @Test
-        fun `GIVEN successful scan WHEN scan THEN returns scan response without post processing`() = runTest {
+        fun `GIVEN card without wallet WHEN scan THEN success delivered without post processing`() = runTest {
             // Arrange
             val processor = createProcessor()
             stubScanResult(CompletionResult.Success(scanResponse))
+            coEvery { onboardingHelper.isOnboardingCase(scanResponse) } returns true
 
             // Act
-            val actual = processor.scan(config)
+            processor.scan(config)
+            advanceUntilIdle()
 
             // Assert
-            assertThat(actual).isEqualTo(scanResponse.right())
+            coVerify(exactly = 1) { callback.onSuccess(scanResponse) }
             coVerify(exactly = 1) {
                 tangemSdkManager.scanProduct(
                     cardId = null,
@@ -480,23 +486,24 @@ internal class DefaultScanCardProcessorTest {
                 )
             }
             coVerify(exactly = 0) { onboardingHelper.isOnboardingCase(any()) }
+            verify(exactly = 0) { appRouter.push(any(), any()) }
             verify(exactly = 0) { scanFailsCounter.reset() }
             verify(exactly = 0) { tangemSdkManager.changeDisplayedCardIdNumbersCount(any()) }
-            verify(exactly = 0) { trackingContextProxy.setContext(any<ScanResponse>()) }
         }
 
         @Test
-        fun `GIVEN user cancelled scan WHEN scan THEN returns error without counting it`() = runTest {
+        fun `GIVEN user cancelled scan WHEN scan THEN failure delivered without counting it`() = runTest {
             // Arrange
             val processor = createProcessor()
             val error = TangemSdkError.UserCancelled()
             stubScanResult(CompletionResult.Failure(error))
 
             // Act
-            val actual = processor.scan(config)
+            processor.scan(config)
+            advanceUntilIdle()
 
             // Assert
-            assertThat(actual).isEqualTo(ScanError.Failure(error).left())
+            coVerify(exactly = 1) { callback.onFailure(error) }
             verify(exactly = 0) { scanFailsCounter.onScanFailure(any(), any()) }
         }
     }

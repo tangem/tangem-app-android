@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -43,8 +44,8 @@ internal fun NFTCollection(state: NFTCollectionUM, modifier: Modifier = Modifier
                 .clickable(onClick = state.onExpandClick)
                 .testTag(NFTCollectionsScreenTestTags.COLLECTION_ITEM)
                 .padding(
-                    vertical = TangemTheme.dimens.spacing16,
-                    horizontal = TangemTheme.dimens.spacing12,
+                    vertical = 16.dp,
+                    horizontal = 12.dp,
                 ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -68,7 +69,7 @@ internal fun NFTCollection(state: NFTCollectionUM, modifier: Modifier = Modifier
             Icon(
                 modifier = Modifier
                     .rotate(rotation)
-                    .size(TangemTheme.dimens.size24),
+                    .size(24.dp),
                 painter = painterResource(id = R.drawable.ic_chevron_24),
                 tint = if (isExpanded) {
                     TangemTheme.colors.icon.primary1
@@ -87,7 +88,7 @@ private fun RowScope.Text(state: NFTCollectionUM) {
         modifier = Modifier
             .weight(1f)
             .padding(
-                horizontal = TangemTheme.dimens.spacing12,
+                horizontal = 12.dp,
             ),
     ) {
         Text(
@@ -100,7 +101,7 @@ private fun RowScope.Text(state: NFTCollectionUM) {
         )
         Text(
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing2),
+                .padding(top = 2.dp),
             text = state.description.resolveReference(),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,

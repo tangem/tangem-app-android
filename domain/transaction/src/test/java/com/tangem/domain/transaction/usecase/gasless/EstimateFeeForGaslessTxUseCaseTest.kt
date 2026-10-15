@@ -30,6 +30,7 @@ import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.GaslessFeePlan
+import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import io.mockk.clearMocks
@@ -48,7 +49,7 @@ import java.math.BigInteger
  * [REDACTED_TASK_KEY] — regression coverage for the CEX-swap gasless fee path.
  *
  * The token being swapped sits in a yield module, so the plain EOA balance is zero and the on-chain
- * fee-transfer probe reverts with `InsufficientFundsForOperation`. The use case must still resolve a
+ * fee-transfer probe reverts. The use case must still resolve a
  * token fee (topped up by an appended withdraw) instead of raising `NotEnoughFunds` and hiding the fee
  * block — that is what [GetFeeForGaslessUseCase] already does for the Send flow.
  */
@@ -105,7 +106,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
                 yieldSupplyStatus = yieldStatus,
             )
             // The plain-balance probe reverts: nothing is liquid on the EOA.
-            coEvery { walletManager.getGasLimit(any(), FEE_RECEIVER, any()) } returns insufficientFundsFailure()
+            coEvery { walletManager.getGasLimit(any(), FEE_RECEIVER, any()) } returns revertedEstimateFailure()
             val plan = mockk<GaslessFeePlan.TokenPayWithYieldWithdraw>()
             coEvery {
                 resolveGaslessFeePlanUseCase(
@@ -134,6 +135,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
             assertThat(feeExtended.transactionFee.normal).isInstanceOf(Fee.Ethereum.TokenCurrency::class.java)
             assertThat(feeExtended.gaslessFeePlan).isEqualTo(plan)
             assertThat(feeExtended.withdrawGasLimit).isEqualTo(PADDED_WITHDRAW_GAS)
+            assertThat(feeExtended.isGasless).isTrue()
         }
 
     @Test
@@ -145,7 +147,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
             tokenBalance = SWAP_AMOUNT + BigDecimal("5"),
             yieldSupplyStatus = yieldStatus,
         )
-        coEvery { walletManager.getGasLimit(any(), FEE_RECEIVER, any()) } returns insufficientFundsFailure()
+        coEvery { walletManager.getGasLimit(any(), FEE_RECEIVER, any()) } returns revertedEstimateFailure()
         coEvery {
             resolveGaslessFeePlanUseCase(any(), any(), any(), any(), any())
         } returns Either.Left(GetFeeError.GaslessError.YieldBalanceUnavailable)
@@ -165,6 +167,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
         assertThat(feeExtended).isNotNull()
         assertThat(feeExtended!!.feeTokenId).isEqualTo(nativeCoin.id)
         assertThat(feeExtended.gaslessFeePlan).isNull()
+        assertThat(feeExtended.isGasless).isFalse()
     }
 
     @Test
@@ -195,6 +198,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
         assertThat(feeExtended!!.feeTokenId).isEqualTo(usdc.id)
         assertThat(feeExtended.gaslessFeePlan).isNull()
         assertThat(feeExtended.withdrawGasLimit).isNull()
+        assertThat(feeExtended.isGasless).isTrue()
         coVerify(exactly = 0) {
             resolveGaslessFeePlanUseCase(any(), any(), any(), any(), any())
         }
@@ -305,9 +309,9 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
         effectiveProtocolBalance = effectiveProtocolBalance,
     )
 
-    private fun insufficientFundsFailure() = Result.Failure(
+    private fun revertedEstimateFailure() = Result.Failure(
         BlockchainSdkError.WrappedThrowable(
-            BlockchainSdkError.Ethereum.InsufficientFundsForOperation("insufficient funds for transfer"),
+            BlockchainSdkError.Ethereum.ExecutionReverted(code = 3, message = "execution reverted"),
         ),
     )
 

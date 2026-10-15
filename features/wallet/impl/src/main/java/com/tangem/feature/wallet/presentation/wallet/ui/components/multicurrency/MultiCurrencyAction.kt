@@ -22,7 +22,7 @@ import com.tangem.core.ui.res.TangemTheme
 internal fun MultiCurrencyAction(config: ActionButtonConfig, modifier: Modifier = Modifier) {
     ActionBaseButton(
         config = config,
-        shape = RoundedCornerShape(size = TangemTheme.dimens.radius12),
+        shape = RoundedCornerShape(size = 12.dp),
         content = { contentModifier ->
             ActionButtonContent(
                 config = config,

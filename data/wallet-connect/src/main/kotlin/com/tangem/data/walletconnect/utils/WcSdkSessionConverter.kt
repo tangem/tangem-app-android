@@ -10,11 +10,11 @@ internal object WcSdkSessionConverter : Converter<WcSdkSessionConverter.Input, W
         return WcSdkSession(
             topic = value.session.topic,
             appMetaData = value.session.metaData
-                ?.let {
+                ?.let { metaData ->
                     WcAppMetaDataConverter.convert(
                         value = WcAppMetaDataConverter.Input(
                             originUrl = value.originUrl,
-                            peerMetaData = it,
+                            peerMetaData = metaData,
                         ),
                     )
                 }

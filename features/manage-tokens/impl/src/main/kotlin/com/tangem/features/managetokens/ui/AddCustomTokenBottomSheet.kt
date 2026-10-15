@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.TangemTopAppBarHeight
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
@@ -37,7 +38,7 @@ internal fun AddCustomTokenBottomSheet(config: TangemBottomSheetConfig, content:
         containerColor = TangemTheme.colors.background.secondary,
         content = {
             val contentModifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing16)
+                .padding(horizontal = 16.dp)
                 .fillMaxSize()
 
             content(contentModifier)

@@ -158,9 +158,9 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     private fun prepareAndStartOnboardingProcess() {
         modelScope.launch(dispatchers.main) {
-            getSelectedUserWallet()?.requireColdWallet()?.let {
+            getSelectedUserWallet()?.requireColdWallet()?.let { coldWallet ->
                 router.openOnboardingScreen(
-                    scanResponse = it.scanResponse,
+                    scanResponse = coldWallet.scanResponse,
                     continueBackup = true,
                 )
             }

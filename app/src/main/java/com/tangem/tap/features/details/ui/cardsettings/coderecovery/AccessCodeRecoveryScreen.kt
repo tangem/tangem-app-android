@@ -5,8 +5,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.DetailsRadioButtonElement
 import com.tangem.tap.features.details.ui.common.ScreenTitle
@@ -27,12 +27,12 @@ fun AccessCodeRecoveryOptions(state: AccessCodeRecoveryScreenState) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(bottom = TangemTheme.dimens.spacing28),
+            .padding(bottom = 28.dp),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         ScreenTitle(
             titleRes = R.string.card_settings_access_code_recovery_title,
-            Modifier.padding(bottom = TangemTheme.dimens.spacing36),
+            Modifier.padding(bottom = 36.dp),
         )
 
         DetailsRadioButtonElement(
@@ -54,7 +54,7 @@ fun AccessCodeRecoveryOptions(state: AccessCodeRecoveryScreenState) {
             title = stringResourceSafe(id = R.string.common_save_changes),
             enabled = state.isSaveChangesEnabled,
             onClick = { state.onSaveChangesClick() },
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing20),
+            modifier = Modifier.padding(horizontal = 20.dp),
         )
     }
 }

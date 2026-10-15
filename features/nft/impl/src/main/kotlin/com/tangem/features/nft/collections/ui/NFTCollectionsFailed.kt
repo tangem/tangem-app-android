@@ -11,10 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.nft.collections.entity.NFTCollectionsUM
 import com.tangem.features.nft.impl.R
@@ -25,7 +25,7 @@ internal fun NFTCollectionsFailed(state: NFTCollectionsUM.Failed, modifier: Modi
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(TangemTheme.dimens.spacing16),
+            .padding(16.dp),
     ) {
         UnableToLoadData(
             modifier = Modifier

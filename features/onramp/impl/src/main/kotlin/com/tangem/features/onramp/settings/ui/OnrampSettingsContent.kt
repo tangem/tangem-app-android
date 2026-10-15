@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import coil.compose.AsyncImage
 import com.tangem.core.ui.components.SpacerWMax
@@ -46,7 +47,7 @@ internal fun OnrampSettingsContent(state: OnrampSettingsUM, modifier: Modifier =
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
-                    .padding(horizontal = TangemTheme.dimens.spacing16),
+                    .padding(horizontal = 16.dp),
                 items = state.items,
             )
         },
@@ -70,16 +71,16 @@ private fun Content(items: ImmutableList<OnrampSettingsItemUM>, modifier: Modifi
 private fun ResidenceSection(state: OnrampSettingsItemUM.Residence, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(
             modifier = Modifier
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
+                .clip(RoundedCornerShape(16.dp))
                 .background(TangemTheme.colors.background.primary)
                 .clickable(onClick = state.onClick)
-                .padding(TangemTheme.dimens.spacing12)
+                .padding(12.dp)
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -89,7 +90,7 @@ private fun ResidenceSection(state: OnrampSettingsItemUM.Residence, modifier: Mo
             )
             SpacerWMax()
             AsyncImage(
-                modifier = Modifier.size(TangemTheme.dimens.size20),
+                modifier = Modifier.size(20.dp),
                 model = state.flagUrl,
                 contentDescription = null,
             )
