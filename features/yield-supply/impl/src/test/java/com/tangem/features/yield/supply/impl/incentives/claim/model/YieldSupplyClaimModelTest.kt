@@ -36,6 +36,7 @@ import com.tangem.domain.yield.supply.usecase.BuildYieldClaimTransactionUseCase
 import com.tangem.domain.yield.supply.usecase.GetFreshYieldClaimCalldataUseCase
 import com.tangem.domain.yield.supply.usecase.GetYieldRewardsSummaryUseCase
 import com.tangem.domain.yield.supply.usecase.ValidateYieldClaimCalldataUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.incentives.claim.YieldSupplyClaimComponent
 import com.tangem.features.yield.supply.impl.incentives.claim.entity.YieldSupplyClaimNotificationUM
@@ -47,6 +48,8 @@ import com.tangem.test.mock.MockAccounts
 import com.tangem.test.mock.yield.MockYieldSupply
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.StringsSigns.NON_BREAKING_SPACE
+import io.mockk.called
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -84,6 +87,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk {
         coEvery { invokeSync() } returns false
     }
+    private val claimTracker: YieldSupplyClaimTracker = mockk(relaxed = true)
 
     private var originalLocale: Locale = Locale.getDefault()
     private var isSheetDismissed = false
@@ -93,6 +97,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         originalLocale = Locale.getDefault()
         Locale.setDefault(Locale.US)
         isSheetDismissed = false
+        clearMocks(claimTracker)
 
         coEvery {
             getBalanceNotEnoughForFeeWarningUseCase(fee = any(), userWalletId = any(), tokenStatus = any(), feeStatus = any())
@@ -488,6 +493,49 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
     }
 
     @Test
+    fun `GIVEN a sent claim WHEN confirmed THEN the claim is followed and the sheet closes`() = runTest {
+        // Arrange
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.onClaimClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            claimTracker.track(
+                userWalletId = userWalletId,
+                cryptoCurrency = token,
+                chainId = CHAIN_ID,
+                userAddress = SOURCE_ADDRESS,
+                transactionHash = TX_HASH,
+            )
+        }
+        assertThat(isSheetDismissed).isTrue()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN sending fails WHEN confirmed THEN no claim is followed`() = runTest {
+        // Arrange
+        coEvery { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) } returns
+            SendTransactionError.UnknownError().left()
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.onClaimClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify { claimTracker wasNot called }
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN a claim in flight WHEN reloaded THEN the prepared payload is not replaced under it`() = runTest {
         // Arrange
         coEvery { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) } coAnswers {
@@ -514,7 +562,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN a claim being sent WHEN the sheet is closed THEN the transaction completes without dismissing again`() =
+    fun `GIVEN a claim being sent WHEN the sheet is closed THEN the claim is still followed without dismissing again`() =
         runTest {
             // Arrange
             var isSendCompleted = false
@@ -535,6 +583,15 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
             // Assert
             assertThat(isSendCompleted).isTrue()
             assertThat(isSheetDismissed).isFalse()
+            verify(exactly = 1) {
+                claimTracker.track(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = token,
+                    chainId = CHAIN_ID,
+                    userAddress = SOURCE_ADDRESS,
+                    transactionHash = TX_HASH,
+                )
+            }
         }
 
     @Test
@@ -671,6 +728,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         sendTransactionUseCase = sendTransactionUseCase,
+        yieldSupplyClaimTracker = claimTracker,
         yieldSupplyNotificationsUpdateTrigger = notificationsUpdateTrigger,
         yieldSupplyAlertFactory = alertFactory,
         getAccountCurrencyStatusUseCase = getAccountCurrencyStatusUseCase,
