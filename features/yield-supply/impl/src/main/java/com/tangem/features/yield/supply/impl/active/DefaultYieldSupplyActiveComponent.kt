@@ -1,5 +1,6 @@
 package com.tangem.features.yield.supply.impl.active
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
@@ -35,7 +36,7 @@ import com.tangem.features.yield.supply.impl.chart.DefaultYieldSupplyChartCompon
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
 import com.tangem.features.yield.supply.impl.incentives.banner.DefaultYieldSupplyRewardsBannerComponent
 import com.tangem.features.yield.supply.impl.incentives.claim.YieldSupplyClaimComponent
-import com.tangem.features.yield.supply.impl.incentives.claim.result.YieldSupplyClaimResultComponent
+import com.tangem.features.yield.supply.impl.incentives.claim.result.ui.YieldSupplyClaimResultContent
 import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyApproveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import dagger.assisted.Assisted
@@ -93,52 +94,62 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
+        val claimResult by model.claimResultFlow.collectAsStateWithLifecycle()
+        val result = claimResult
+        if (result != null) {
+            BackHandler(onBack = model::onClaimResultDismiss)
+            YieldSupplyClaimResultContent(
+                state = result,
+                onGoToTokenClick = model::onGoToTokenClick,
+                onGoToYieldClick = model::onClaimResultDismiss,
+                modifier = modifier,
+            )
+            return
+        }
+
         val state by model.uiState.collectAsStateWithLifecycle()
         val isBalanceHidden by model.balanceHiddenFlow.collectAsStateWithLifecycle()
         val slotState by bottomSheetSlot.subscribeAsState()
 
-        // The claim result draws itself full-bleed over the screen, so the slot is stacked rather than placed after.
-        Box(modifier = modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .background(TangemTheme.colors.background.tertiary)
-                    .fillMaxSize()
-                    .systemBarsPadding(),
-            ) {
-                YieldSupplyActiveTitle(onCloseClick = appRouter::pop)
+        Column(
+            modifier = Modifier
+                .background(TangemTheme.colors.background.tertiary)
+                .fillMaxSize()
+                .systemBarsPadding(),
+        ) {
+            YieldSupplyActiveTitle(onCloseClick = appRouter::pop)
 
-                Box(modifier = Modifier.weight(1f)) {
-                    YieldSupplyActiveContent(
-                        state = state,
-                        isBalanceHidden = isBalanceHidden,
-                        chartComponent = chartComponent,
-                        marketingBannerComponent = marketingBannerComponent,
-                        rewardsBannerComponent = rewardsBannerComponent,
-                        onReadMoreClick = model::onReadMoreClick,
-                    )
+            Box(modifier = Modifier.weight(1f)) {
+                YieldSupplyActiveContent(
+                    state = state,
+                    isBalanceHidden = isBalanceHidden,
+                    chartComponent = chartComponent,
+                    marketingBannerComponent = marketingBannerComponent,
+                    rewardsBannerComponent = rewardsBannerComponent,
+                    onReadMoreClick = model::onReadMoreClick,
+                )
 
-                    Fade(
-                        backgroundColor = TangemTheme.colors.background.tertiary,
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                    )
-                }
-
-                SecondaryButton(
-                    text = stringResourceSafe(R.string.yield_module_stop_earning),
-                    onClick = model::onStopEarning,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            start = 16.dp,
-                            end = 16.dp,
-                            bottom = 16.dp,
-                        )
-                        .testTag(YieldSupplyTestTags.STOP_EARNING_BUTTON),
+                Fade(
+                    backgroundColor = TangemTheme.colors.background.tertiary,
+                    modifier = Modifier.align(Alignment.BottomCenter),
                 )
             }
 
-            slotState.child?.instance?.BottomSheet()
+            SecondaryButton(
+                text = stringResourceSafe(R.string.yield_module_stop_earning),
+                onClick = model::onStopEarning,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        bottom = 16.dp,
+                    )
+                    .testTag(YieldSupplyTestTags.STOP_EARNING_BUTTON),
+            )
         }
+
+        slotState.child?.instance?.BottomSheet()
     }
 
     private fun createChild(
@@ -158,25 +169,18 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
             params = YieldSupplyAboutApyComponent.Params(
                 baseApy = route.baseApy,
                 rewardsApr = route.rewardsApr,
-                onDismiss = model::onAboutApyDismiss,
+                onDismiss = model::onUnguardedSheetDismiss,
             ),
         )
-        YieldSupplyActiveRoute.Claim -> YieldSupplyClaimComponent(
+        is YieldSupplyActiveRoute.Claim -> YieldSupplyClaimComponent(
             appComponentContext = factoryContext,
             params = YieldSupplyClaimComponent.Params(
                 userWallet = model.userWallet,
                 cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
+                chainId = route.chainId,
+                userAddress = route.userAddress,
                 onSubmitted = model::onClaimSubmitted,
-                onDismiss = model::onClaimDismiss,
-            ),
-        )
-        YieldSupplyActiveRoute.ClaimResult -> YieldSupplyClaimResultComponent(
-            appComponentContext = factoryContext,
-            params = YieldSupplyClaimResultComponent.Params(
-                state = model.claimResultFlow,
-                onGoToTokenClick = model::onGoToTokenClick,
-                onGoToYieldClick = model::onClaimResultDismiss,
-                onDismiss = model::onClaimResultDismiss,
+                onDismiss = model::onUnguardedSheetDismiss,
             ),
         )
         YieldSupplyActiveRoute.Approve -> YieldSupplyApproveComponent(

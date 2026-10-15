@@ -75,11 +75,13 @@ internal object YieldSupplyIncentivesDomainModule {
     fun provideYieldSupplyClaimTracker(
         yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
         yieldIncentivesRepository: YieldIncentivesRepository,
+        getYieldRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase,
         appScope: AppCoroutineScope,
     ): YieldSupplyClaimTracker {
         return YieldSupplyClaimTracker(
             yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
             yieldIncentivesRepository = yieldIncentivesRepository,
+            getYieldRewardsSummaryUseCase = getYieldRewardsSummaryUseCase,
             coroutineScope = appScope,
         )
     }
@@ -104,13 +106,5 @@ internal object YieldSupplyIncentivesDomainModule {
             getFeeUseCase = getFeeUseCase,
             yieldSupplyClaimTracker = yieldSupplyClaimTracker,
         )
-    }
-
-    @Provides
-    @Singleton
-    fun provideRefreshYieldIncentivesUseCase(
-        yieldIncentivesRepository: YieldIncentivesRepository,
-    ): RefreshYieldIncentivesUseCase {
-        return RefreshYieldIncentivesUseCase(yieldIncentivesRepository)
     }
 }

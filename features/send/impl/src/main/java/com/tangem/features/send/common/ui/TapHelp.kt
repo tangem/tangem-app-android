@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.R
@@ -35,7 +36,7 @@ internal fun LazyListScope.tapHelp(isDisplay: Boolean, modifier: Modifier = Modi
                 modifier = modifier
                     .fillMaxWidth()
                     .animateItem()
-                    .padding(top = TangemTheme.dimens.spacing20),
+                    .padding(top = 20.dp),
             ) {
                 val background = TangemTheme.colors.button.secondary
                 Icon(
@@ -52,8 +53,8 @@ internal fun LazyListScope.tapHelp(isDisplay: Boolean, modifier: Modifier = Modi
                         .clip(TangemTheme.shapes.roundedCornersXMedium)
                         .background(background)
                         .padding(
-                            horizontal = TangemTheme.dimens.spacing14,
-                            vertical = TangemTheme.dimens.spacing12,
+                            horizontal = 14.dp,
+                            vertical = 12.dp,
                         ),
                 )
             }

@@ -41,7 +41,7 @@ class TangemPayMultichainDepositTest : BaseTestCase() {
     private val smartContractOrderType = "SMART_CONTRACT_ISSUE_RAIN"
 
     @AllureId("11366")
-    @DisplayName("Tangem Pay: 'Add funds' lists bank transfer, then swap, then receive")
+    @DisplayName("Tangem Pay: 'Add funds' lists swap, then receive, then bank transfer")
     @Test
     fun addFundsOptionsOrderTest() {
         val eligibilityPaeraCustomerState = "PaeraCustomer"
@@ -66,33 +66,33 @@ class TangemPayMultichainDepositTest : BaseTestCase() {
             }
             step("Open Tangem Pay payment account") { openTangemPay() }
             step("Open the 'Add funds' bottom sheet") { openTangemPayAddFunds() }
-            step("Assert 'From a bank account' is displayed as the first option") {
+            step("Assert 'From your Tangem Wallet' is displayed as the first option") {
                 onTangemPayAddFundsSheet {
                     optionAt(index = 0).assertTextContainsSafe(
-                        getResourceString(CoreResR.string.tangempay_topup_bank_transfer_title),
-                    )
-                    optionAt(index = 0).assertTextContainsSafe(
-                        getResourceString(CoreResR.string.tangempay_topup_bank_transfer_body),
-                    )
-                }
-            }
-            step("Assert 'From your Tangem Wallet' is displayed as the second option") {
-                onTangemPayAddFundsSheet {
-                    optionAt(index = 1).assertTextContainsSafe(
                         getResourceString(CoreResR.string.tangempay_topup_swap_title),
                     )
-                    optionAt(index = 1).assertTextContainsSafe(
+                    optionAt(index = 0).assertTextContainsSafe(
                         getResourceString(CoreResR.string.tangempay_topup_swap_body),
                     )
                 }
             }
-            step("Assert 'From another wallet or exchange' is displayed as the third option") {
+            step("Assert 'From another wallet or exchange' is displayed as the second option") {
                 onTangemPayAddFundsSheet {
-                    optionAt(index = 2).assertTextContainsSafe(
+                    optionAt(index = 1).assertTextContainsSafe(
                         getResourceString(CoreResR.string.tangempay_topup_receive_title),
                     )
-                    optionAt(index = 2).assertTextContainsSafe(
+                    optionAt(index = 1).assertTextContainsSafe(
                         getResourceString(CoreResR.string.tangempay_topup_receive_body_multichain),
+                    )
+                }
+            }
+            step("Assert 'From a bank account' is displayed as the third option") {
+                onTangemPayAddFundsSheet {
+                    optionAt(index = 2).assertTextContainsSafe(
+                        getResourceString(CoreResR.string.tangempay_topup_bank_transfer_title),
+                    )
+                    optionAt(index = 2).assertTextContainsSafe(
+                        getResourceString(CoreResR.string.tangempay_topup_bank_transfer_body),
                     )
                 }
             }

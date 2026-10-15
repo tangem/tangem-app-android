@@ -2,6 +2,7 @@ package com.tangem.tests.tangempay
 
 import androidx.test.InstrumentationRegistry.getTargetContext
 import com.tangem.common.BaseTestCase
+import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.extensions.bringAppToForeground
 import com.tangem.common.extensions.collapseAppByHomeButton
@@ -22,7 +23,13 @@ import org.junit.Test
 @HiltAndroidTest
 class TangemPayAddToWalletTest : BaseTestCase() {
 
+    override val featureToggleOverrides = mapOf(
+        FeatureToggles.TWI_1062_GOOGLE_WALLET_BUTTON_ALWAYS_SHOWN.rawName to false,
+    )
+
     private val eligibilityState = "PaeraCustomer"
+    private val walletStatusKey = "uitest.tangempay.google_wallet_card_status"
+    private val walletStatusUnsupported = "unsupported"
 
     private val expectedBannerTitle = getResourceString(
         CoreResR.string.tangempay_card_details_open_wallet_notification_title,
@@ -42,7 +49,10 @@ class TangemPayAddToWalletTest : BaseTestCase() {
     @DisplayName("Tangem Pay: 'Add to Google Pay' banner opens the guide with card requisites and instruction")
     @Test
     fun addToWalletBannerOpensGooglePayGuideTest() {
-        setupHooks().run {
+        setupHooks(
+            additionalBeforeSection = { System.setProperty(walletStatusKey, walletStatusUnsupported) },
+            additionalAfterSection = { System.clearProperty(walletStatusKey) },
+        ).run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
             }
@@ -81,7 +91,10 @@ class TangemPayAddToWalletTest : BaseTestCase() {
     fun dismissedAddToWalletBannerStaysHiddenTest() {
         val packageName = getTargetContext().packageName
 
-        setupHooks().run {
+        setupHooks(
+            additionalBeforeSection = { System.setProperty(walletStatusKey, walletStatusUnsupported) },
+            additionalAfterSection = { System.clearProperty(walletStatusKey) },
+        ).run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
             }

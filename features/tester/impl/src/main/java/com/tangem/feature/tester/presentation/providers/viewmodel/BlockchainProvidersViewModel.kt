@@ -84,9 +84,9 @@ internal class BlockchainProvidersViewModel @Inject constructor(
                         ),
                         searchBar = state.searchBar.copy(query = query),
                         blockchainProviders = blockchainProviderTypes
-                            .filter {
-                                it.key.fullName.contains(other = query, ignoreCase = true) ||
-                                    it.key.currency.contains(other = query, ignoreCase = true)
+                            .filter { entry ->
+                                entry.key.fullName.contains(other = query, ignoreCase = true) ||
+                                    entry.key.currency.contains(other = query, ignoreCase = true)
                             }
                             .toProvidersUM(),
                     )
@@ -96,9 +96,7 @@ internal class BlockchainProvidersViewModel @Inject constructor(
     }
 
     private fun Map<Blockchain, List<ProviderType>>.toProvidersUM(): ImmutableList<ProvidersUM> {
-        return map {
-            val (blockchain, providers) = it
-
+        return map { (blockchain, providers) ->
             ProvidersUM(
                 blockchainId = blockchain.id,
                 blockchainName = blockchain.fullName,
@@ -129,8 +127,8 @@ internal class BlockchainProvidersViewModel @Inject constructor(
             .providers.changeItemOrder(prev, current)
 
         viewModelScope.launch {
-            _state.update {
-                it.copyProvidersUM(blockchainId = id) {
+            _state.update { state ->
+                state.copyProvidersUM(blockchainId = id) {
                     copy(providers = providers.toImmutableList())
                 }
             }
@@ -189,8 +187,8 @@ internal class BlockchainProvidersViewModel @Inject constructor(
     }
 
     private fun onPublicProviderUrlChange(id: String, url: String) {
-        _state.update {
-            it.copyProvidersUM(blockchainId = id) {
+        _state.update { state ->
+            state.copyProvidersUM(blockchainId = id) {
                 copy(
                     addPublicProviderDialog = addPublicProviderDialog.copy(
                         hasError = !PatternsCompat.WEB_URL.matcher(url).matches(),
@@ -218,11 +216,11 @@ internal class BlockchainProvidersViewModel @Inject constructor(
         update: ProvidersUM.() -> ProvidersUM,
     ): BlockchainProvidersUM {
         return copy(
-            blockchainProviders = _state.value.blockchainProviders.map {
-                if (it.blockchainId == blockchainId) {
-                    it.update()
+            blockchainProviders = _state.value.blockchainProviders.map { providersUM ->
+                if (providersUM.blockchainId == blockchainId) {
+                    providersUM.update()
                 } else {
-                    it
+                    providersUM
                 }
             }
                 .toImmutableList(),
