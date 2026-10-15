@@ -6,8 +6,8 @@ invariants: `domain/polymarket/CLAUDE.md`.
 ## The contract is a hypothesis
 
 Every documented status code and field shape on this epic has been wrong at least once (a `404` that was a
-`400`, UUPS that was a beacon, a 6-call approvals batch that became 13, a `walletId` whose meaning
-reversed). Read the contract from Notion (`Tangem Wallet / Features / Polymarket Integration`), never from
+`400`, UUPS that was a beacon, a 6-call approvals batch that became 13 and then 17, a `walletId` whose
+meaning reversed). Read the contract from Notion (`Tangem Wallet / Features / Polymarket Integration`), never from
 memory; pages change without notice. Check a page's last-edited date against the date below and update it
 in the same PR as the code.
 
