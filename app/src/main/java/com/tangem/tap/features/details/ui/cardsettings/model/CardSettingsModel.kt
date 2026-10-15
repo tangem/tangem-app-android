@@ -5,11 +5,11 @@ import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.card.CardTypesResolver
@@ -55,7 +55,7 @@ internal class CardSettingsModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val onboardingRepository: OnboardingRepository,
     private val uiMessageSender: UiMessageSender,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
@@ -205,10 +205,10 @@ internal class CardSettingsModel @Inject constructor(
             }
             is CardInfo.SecurityMode -> {
                 analyticsEventHandler.send(Settings.CardSettings.ButtonChangeSecurityMode())
-                appRouter.push(route = AppRoute.DetailsSecurity(userWalletId))
+                router.push(route = AppRoute.DetailsSecurity(userWalletId))
             }
             is CardInfo.AccessCodeRecovery -> {
-                appRouter.push(AppRoute.AccessCodeRecovery)
+                router.push(AppRoute.AccessCodeRecovery)
             }
             else -> {}
         }
@@ -220,7 +220,7 @@ internal class CardSettingsModel @Inject constructor(
         }
 
         if (scanResponse.cardTypesResolver.isTangemTwins()) {
-            appRouter.push(
+            router.push(
                 AppRoute.Onboarding(
                     scanResponse = scanResponse,
                     mode = AppRoute.Onboarding.Mode.RecreateWalletTwin,
@@ -231,7 +231,7 @@ internal class CardSettingsModel @Inject constructor(
 
             modelScope.launch {
                 val hasTangemPay = onboardingRepository.hasTangemPayInWallet(userWalletId).getOrNull() == true
-                appRouter.push(
+                router.push(
                     route = AppRoute.ResetToFactory(
                         userWalletId = userWalletId,
                         cardId = card.cardId,
@@ -263,6 +263,6 @@ internal class CardSettingsModel @Inject constructor(
 
     private fun onBackClick() {
         cardSettingsInteractor.clear()
-        appRouter.pop()
+        router.pop()
     }
 }
