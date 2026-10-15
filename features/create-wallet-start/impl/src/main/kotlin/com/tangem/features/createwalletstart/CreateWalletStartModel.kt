@@ -3,7 +3,6 @@ package com.tangem.features.createwalletstart
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -57,7 +56,6 @@ internal class CreateWalletStartModel @Inject constructor(
     private val scanCardProcessor: ScanCardProcessor,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val settingsRepository: SettingsRepository,
-    private val appRouter: AppRouter,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
@@ -245,7 +243,7 @@ internal class CreateWalletStartModel @Inject constructor(
                                 source = AnalyticsParam.ScreensSources.Intro,
                             ),
                         ).onRight {
-                            appRouter.replaceAll(AppRoute.Wallet)
+                            router.replaceAll(AppRoute.Wallet)
                         }
                     }
                 }
@@ -263,7 +261,7 @@ internal class CreateWalletStartModel @Inject constructor(
                 } else {
                     AppRoute.Wallet
                 }
-                appRouter.replaceAll(route)
+                router.replaceAll(route)
             },
         )
     }
