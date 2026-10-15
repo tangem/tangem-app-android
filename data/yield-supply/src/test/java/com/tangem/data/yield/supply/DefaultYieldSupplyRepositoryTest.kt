@@ -18,6 +18,7 @@ import com.tangem.grow.datasource.yield.models.YieldTokenChartResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.datasource.local.preferences.utils.get
+import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.grow.datasource.yield.local.YieldMarketsStore
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -611,6 +612,48 @@ internal class DefaultYieldSupplyRepositoryTest {
 
             // Assert
             coVerify { appPreferencesStore.store(growPreferencesKeys.yieldSupplyShouldShowMainPromoKey, false) }
+        } finally {
+            unmockkStatic("com.tangem.datasource.local.preferences.utils.PreferencesDataStoreExtKt")
+        }
+    }
+    // endregion
+
+    // region yield mode promo preference
+    @Test
+    fun `GIVEN stored flag WHEN isYieldModePromoBottomSheetShown THEN returns it`() = runTest {
+        // Arrange
+        mockkStatic("com.tangem.datasource.local.preferences.utils.PreferencesDataStoreExtKt")
+        try {
+            coEvery {
+                appPreferencesStore.getSyncOrDefault(growPreferencesKeys.yieldModePromoBottomSheetShownKey, false)
+            } returns true
+
+            // Act
+            val result = repository.isYieldModePromoBottomSheetShown()
+
+            // Assert
+            assertThat(result).isTrue()
+        } finally {
+            unmockkStatic("com.tangem.datasource.local.preferences.utils.PreferencesDataStoreExtKt")
+        }
+    }
+
+    @Test
+    fun `GIVEN the bottom sheet was shown WHEN setYieldModePromoBottomSheetShown THEN stores true`() = runTest {
+        // Arrange
+        mockkStatic("com.tangem.datasource.local.preferences.utils.PreferencesDataStoreExtKt")
+        try {
+            coEvery {
+                appPreferencesStore.store(growPreferencesKeys.yieldModePromoBottomSheetShownKey, true)
+            } returns Unit
+
+            // Act
+            repository.setYieldModePromoBottomSheetShown()
+
+            // Assert
+            coVerify(exactly = 1) {
+                appPreferencesStore.store(growPreferencesKeys.yieldModePromoBottomSheetShownKey, true)
+            }
         } finally {
             unmockkStatic("com.tangem.datasource.local.preferences.utils.PreferencesDataStoreExtKt")
         }
