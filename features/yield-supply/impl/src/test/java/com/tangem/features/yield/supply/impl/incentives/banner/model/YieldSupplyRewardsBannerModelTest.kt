@@ -376,6 +376,31 @@ internal class YieldSupplyRewardsBannerModelTest {
         }
 
     @Test
+    fun `GIVEN a claim in flight WHEN the market updates THEN the button stays disabled and clicks are ignored`() =
+        runTest {
+            // Arrange
+            val markets = MutableStateFlow(market(hasCampaign = true))
+            every { marketFlowUseCase(any()) } returns markets
+            coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns
+                MockYieldSupply.claimableSummary(claimable = listOf(reward(claimable = "1000"))).right()
+            claimInFlight.value = true
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            markets.value = markets.value.copy(apy = BigDecimal("5.0"))
+            runCurrent()
+            model.onClaimClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value?.claim).isEqualTo(YieldSupplyRewardsBannerUM.Claim.Disabled)
+            assertThat(claimClicks).isEmpty()
+
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN a claim in flight WHEN it settles THEN the rewards are read again`() = runTest {
         // Arrange
         coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returnsMany listOf(
