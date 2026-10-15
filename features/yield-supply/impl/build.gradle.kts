@@ -17,6 +17,8 @@ dependencies {
     implementation(projects.features.marketing.api)
 
     /** Core */
+    implementation(projects.core.abTests)
+    implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.res)
     implementation(projects.core.ui)
