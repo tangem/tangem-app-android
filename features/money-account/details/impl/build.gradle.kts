@@ -39,13 +39,13 @@ dependencies {
 
     /** Other */
     implementation(deps.kotlin.immutable.collections)
+    implementation(tangemDeps.blockchain)
 
     /** DI */
     implementation(deps.hilt.android)
     implementation(deps.androidx.appCompat)
     implementation(deps.haze)
     implementation(deps.kotlin.coroutines)
-    implementation(deps.kotlin.serialization.core)
     implementation(deps.lifecycle.compose)
     implementation(deps.lifecycle.runtime.ktx)
     kapt(deps.hilt.kapt)
