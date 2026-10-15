@@ -659,7 +659,9 @@ internal data class TangemModalTemplatesState(
     val hasInformerExtraBottom: Boolean = false,
     val hasMenuAvatars: Boolean = true,
     val hasMenuSubtitles: Boolean = true,
+    val isTemplateMessageShown: Boolean = false,
     val openedExample: TangemModalStatusExample? = null,
+    val openedMessage: MessageModalSample? = null,
 )
 
 /** Content templates of a `TangemModal`. */
@@ -763,6 +765,14 @@ internal enum class TangemModalStatusExample(val label: String) {
     PredictionAmount(label = "Prediction amount + rows"),
     PaymentCompleted(label = "Payment completed"),
     PredictionLoss(label = "Prediction loss + recipient"),
+}
+
+/** `MessageModal`s built with the `messageModalUM` DSL, one per content template plus the legacy grammar. */
+internal enum class MessageModalSample(val label: String) {
+    Status(label = "MessageModal: status"),
+    Informer(label = "MessageModal: informer"),
+    Menu(label = "MessageModal: menu"),
+    Legacy(label = "MessageModal: legacy infoBlock grammar"),
 }
 
 internal data class TangemStatusScreenStory(
