@@ -6,10 +6,6 @@ sealed class SendIntentError(override val message: String) : Throwable(message) 
     /** The service does not tell an unknown intent from an intent raised for another wallet. */
     data class NotFound(val intentId: String) : SendIntentError("Intent $intentId not found or of another wallet")
 
-    /** The owner revoked the session of the agent that raised the intent. */
-    data class SessionRevoked(val intentId: String) :
-        SendIntentError("Session of the agent behind intent $intentId is revoked")
-
     /** The intent already carries the hash of another transaction. */
     data class AlreadyCompleted(val intentId: String) :
         SendIntentError("Intent $intentId is already completed with another transaction")
