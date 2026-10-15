@@ -22,6 +22,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
+import com.tangem.domain.card.models.ScanConfig
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
@@ -81,16 +82,7 @@ internal class CreateWalletStartModelTest {
         coEvery { coldUserWalletBuilder.build() } returns testColdWallet
         every { onboardingV2FeatureToggles.isAddressSyncEnabled } returns false
         coEvery {
-            scanCardProcessor.scan(
-                analyticsSource = any(),
-                shouldCheckIsAlreadyActivated = any(),
-                cardId = any(),
-                onProgressStateChange = any(),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any()
-            )
+            scanCardProcessor.scan(config = any())
         } just Runs
     }
 
@@ -111,14 +103,12 @@ internal class CreateWalletStartModelTest {
         }
         coVerify {
             scanCardProcessor.scan(
-                analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro,
-                shouldCheckIsAlreadyActivated = true,
-                cardId = null,
-                onProgressStateChange = any(),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any()
+                config = match {
+                    it == ScanConfig(
+                        analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro,
+                        callback = it.callback,
+                    )
+                },
             )
         }
     }
@@ -140,14 +130,12 @@ internal class CreateWalletStartModelTest {
         }
         coVerify {
             scanCardProcessor.scan(
-                analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro,
-                shouldCheckIsAlreadyActivated = true,
-                cardId = null,
-                onProgressStateChange = any(),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any()
+                config = match {
+                    it == ScanConfig(
+                        analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro,
+                        callback = it.callback,
+                    )
+                },
             )
         }
     }
@@ -257,14 +245,12 @@ internal class CreateWalletStartModelTest {
         verify { cardSdkConfigRepository.setAccessCodeRequestPolicy(isBiometricsRequestPolicy = true) }
         coVerify {
             scanCardProcessor.scan(
-                analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro,
-                shouldCheckIsAlreadyActivated = true,
-                cardId = null,
-                onProgressStateChange = any(),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any()
+                config = match {
+                    it == ScanConfig(
+                        analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro,
+                        callback = it.callback,
+                    )
+                },
             )
         }
     }
@@ -273,19 +259,9 @@ internal class CreateWalletStartModelTest {
     fun `GIVEN NfcFeatureIsUnavailable WHEN handleScanError THEN nfcFeatureUnavailable dialog sent`() = runTest {
         val error = TangemSdkError.NfcFeatureIsUnavailable()
         coEvery {
-            scanCardProcessor.scan(
-                analyticsSource = any(),
-                shouldCheckIsAlreadyActivated = any(),
-                cardId = any(),
-                onProgressStateChange = any(),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any()
-            )
+            scanCardProcessor.scan(config = any())
         } coAnswers {
-            val onFailure = arg<suspend (TangemError) -> Unit>(6)
-            onFailure.invoke(error)
+            firstArg<ScanConfig>().callback.onFailure(error)
         }
 
         val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
@@ -301,19 +277,9 @@ internal class CreateWalletStartModelTest {
     fun `GIVEN generic TangemSdkError WHEN handleScanError THEN no dialog sent`() = runTest {
         val error: TangemSdkError = mockk(relaxed = true)
         coEvery {
-            scanCardProcessor.scan(
-                analyticsSource = any(),
-                shouldCheckIsAlreadyActivated = any(),
-                cardId = any(),
-                onProgressStateChange = any(),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any()
-            )
+            scanCardProcessor.scan(config = any())
         } coAnswers {
-            val onFailure = arg<suspend (TangemError) -> Unit>(6)
-            onFailure.invoke(error)
+            firstArg<ScanConfig>().callback.onFailure(error)
         }
 
         val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
@@ -329,19 +295,9 @@ internal class CreateWalletStartModelTest {
     fun `GIVEN non-sdk TangemError WHEN handleScanError THEN no dialog sent`() = runTest {
         val error: TangemError = mockk(relaxed = true)
         coEvery {
-            scanCardProcessor.scan(
-                analyticsSource = any(),
-                shouldCheckIsAlreadyActivated = any(),
-                cardId = any(),
-                onProgressStateChange = any(),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any()
-            )
+            scanCardProcessor.scan(config = any())
         } coAnswers {
-            val onFailure = arg<suspend (TangemError) -> Unit>(6)
-            onFailure.invoke(error)
+            firstArg<ScanConfig>().callback.onFailure(error)
         }
 
         val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
@@ -357,19 +313,9 @@ internal class CreateWalletStartModelTest {
     fun `GIVEN builder returns null WHEN proceedWithScanResponse THEN saveWalletUseCase not called`() = runTest {
         coEvery { coldUserWalletBuilder.build() } returns null
         coEvery {
-            scanCardProcessor.scan(
-                analyticsSource = any(),
-                shouldCheckIsAlreadyActivated = any(),
-                cardId = any(),
-                onProgressStateChange = any(),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any()
-            )
+            scanCardProcessor.scan(config = any())
         } coAnswers {
-            val onSuccess = arg<suspend (ScanResponse) -> Unit>(7)
-            onSuccess.invoke(testScanResponse)
+            firstArg<ScanConfig>().callback.onSuccess(testScanResponse)
         }
 
         val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
@@ -396,19 +342,9 @@ internal class CreateWalletStartModelTest {
                 )
             } returns Unit.right()
             coEvery {
-                scanCardProcessor.scan(
-                    analyticsSource = any(),
-                    shouldCheckIsAlreadyActivated = any(),
-                    cardId = any(),
-                    onProgressStateChange = any(),
-                    onWalletNotCreated = any(),
-                    onCancel = any(),
-                    onFailure = any(),
-                    onSuccess = any()
-                )
+                scanCardProcessor.scan(config = any())
             } coAnswers {
-                val onSuccess = arg<suspend (ScanResponse) -> Unit>(7)
-                onSuccess.invoke(testScanResponse)
+                firstArg<ScanConfig>().callback.onSuccess(testScanResponse)
             }
 
             val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
@@ -435,19 +371,9 @@ internal class CreateWalletStartModelTest {
             saveWalletUseCase(userWallet = any(), canOverride = any(), analyticsSource = any())
         } returns SaveWalletError.DataError(messageId = 0).left()
         coEvery {
-            scanCardProcessor.scan(
-                analyticsSource = any(),
-                shouldCheckIsAlreadyActivated = any(),
-                cardId = any(),
-                onProgressStateChange = any(),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any()
-            )
+            scanCardProcessor.scan(config = any())
         } coAnswers {
-            val onSuccess = arg<suspend (ScanResponse) -> Unit>(7)
-            onSuccess.invoke(testScanResponse)
+            firstArg<ScanConfig>().callback.onSuccess(testScanResponse)
         }
 
         val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
@@ -468,19 +394,9 @@ internal class CreateWalletStartModelTest {
                 saveWalletUseCase(userWallet = any(), canOverride = any(), analyticsSource = any())
             } returns Unit.right()
             coEvery {
-                scanCardProcessor.scan(
-                    analyticsSource = any(),
-                    shouldCheckIsAlreadyActivated = any(),
-                    cardId = any(),
-                    onProgressStateChange = any(),
-                    onWalletNotCreated = any(),
-                    onCancel = any(),
-                    onFailure = any(),
-                    onSuccess = any()
-                )
+                scanCardProcessor.scan(config = any())
             } coAnswers {
-                val onSuccess = arg<suspend (ScanResponse) -> Unit>(7)
-                onSuccess.invoke(testScanResponse)
+                firstArg<ScanConfig>().callback.onSuccess(testScanResponse)
             }
 
             val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
@@ -500,19 +416,9 @@ internal class CreateWalletStartModelTest {
                 saveWalletUseCase(userWallet = any(), canOverride = any(), analyticsSource = any())
             } returns Unit.right()
             coEvery {
-                scanCardProcessor.scan(
-                    analyticsSource = any(),
-                    shouldCheckIsAlreadyActivated = any(),
-                    cardId = any(),
-                    onProgressStateChange = any(),
-                    onWalletNotCreated = any(),
-                    onCancel = any(),
-                    onFailure = any(),
-                    onSuccess = any()
-                )
+                scanCardProcessor.scan(config = any())
             } coAnswers {
-                val onSuccess = arg<suspend (ScanResponse) -> Unit>(7)
-                onSuccess.invoke(testScanResponse)
+                firstArg<ScanConfig>().callback.onSuccess(testScanResponse)
             }
 
             val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
