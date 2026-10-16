@@ -5,10 +5,10 @@ package com.tangem.domain.polymarket.model
  *
  * @property id category id used to filter the events feed (`GET /events?category=<id>`)
  * @property label localized display name
- * @property iconUrl optional category icon
+ * @property icon design-system icon to draw, `null` when the BFF sends none or a key this build does not know
  */
 data class PolymarketCategory(
     val id: Int,
     val label: String,
-    val iconUrl: String?,
+    val icon: PolymarketCategoryIcon?,
 )

@@ -49,6 +49,7 @@ import com.tangem.grow.datasource.polymarket.relayer.models.PolymarketNonceRespo
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketCategory
+import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
 import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketSearchConfig
@@ -167,29 +168,41 @@ internal class DefaultPolymarketRepositoryTest {
             }
     }
 
-    @Test
-    fun `GIVEN categories response WHEN getCategories THEN maps to domain categories`() = runTest {
-        // Arrange
-        coEvery { api.getCategories(locale = null) } returns ApiResponse.Success(
-            PolymarketCategoriesResponse(
-                categories = listOf(
-                    PolymarketCategoryDto(id = 1, label = "Trending", icon = "https://img/trending.png"),
-                    PolymarketCategoryDto(id = 2, label = "Sport", icon = null),
-                ),
-            ),
-        )
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetCategoryIcon {
 
-        // Act
-        val result = repository.getCategories()
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an icon key WHEN getCategories THEN maps it to the category icon`(model: CategoryIconModel) =
+            runTest {
+                // Arrange
+                coEvery { api.getCategories(locale = null) } returns ApiResponse.Success(
+                    PolymarketCategoriesResponse(
+                        categories = listOf(PolymarketCategoryDto(id = 7, label = "Label", icon = model.key)),
+                    ),
+                )
 
-        // Assert
-        assertThat(result).isEqualTo(
-            listOf(
-                PolymarketCategory(id = 1, label = "Trending", iconUrl = "https://img/trending.png"),
-                PolymarketCategory(id = 2, label = "Sport", iconUrl = null),
-            ).right(),
+                // Act
+                val result = repository.getCategories()
+
+                // Assert
+                assertThat(result).isEqualTo(
+                    listOf(PolymarketCategory(id = 7, label = "Label", icon = model.expected)).right(),
+                )
+            }
+
+        private fun provideTestModels() = PolymarketCategoryIcon.entries.map { icon ->
+            CategoryIconModel(key = icon.key, expected = icon)
+        } + listOf(
+            CategoryIconModel(key = "astrology", expected = null),
+            CategoryIconModel(key = "Politics", expected = null),
+            CategoryIconModel(key = "https://cdn.example.com/icons/politics.svg", expected = null),
+            CategoryIconModel(key = null, expected = null),
         )
     }
+
+    data class CategoryIconModel(val key: String?, val expected: PolymarketCategoryIcon?)
 
     @Test
     fun `GIVEN network exception WHEN getCategories THEN returns left no internet`() = runTest {

@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.main.model.converter
 
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
+import com.tangem.features.polymarket.impl.main.ui.tabIcon
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -20,6 +21,7 @@ internal class PolymarketCategoryTabUMConverter(
             PolymarketCategoryTabUM(
                 id = category.id,
                 label = category.label,
+                icon = category.icon?.tabIcon,
                 isSelected = category.id == value.selectedCategoryId,
                 onClick = { onCategoryClick(category.id) },
             )
