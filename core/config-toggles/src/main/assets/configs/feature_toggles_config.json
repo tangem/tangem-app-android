@@ -182,5 +182,9 @@
     {
         "name": "TWI_1762_YIELD_MODE_PROMO_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1690_QR_SCAN_DEEPLINKS_ENABLED",
+        "version": "6.6"
     }
 ]
