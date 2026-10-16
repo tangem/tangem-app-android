@@ -106,9 +106,9 @@ internal class MultiWalletBackupModel @Inject constructor(
         return MultiWalletBackupUM(
             title = resourceReference(R.string.onboarding_title_no_backup_cards),
             bodyText = resourceReference(R.string.onboarding_subtitle_no_backup_cards),
-            finalizeButtonEnabled = false,
-            addBackupButtonEnabled = true,
-            addBackupButtonLoading = false,
+            isFinalizeButtonEnabled = false,
+            isAddBackupButtonEnabled = true,
+            isAddBackupButtonLoading = false,
             onAddBackupClick = ::addBackupCardWithService,
             onFinalizeButtonClick = ::onFinalizeClick,
         )
@@ -122,7 +122,7 @@ internal class MultiWalletBackupModel @Inject constructor(
                     st.copy(
                         title = resourceReference(R.string.onboarding_title_no_backup_cards),
                         bodyText = resourceReference(R.string.onboarding_subtitle_no_backup_cards),
-                        addBackupButtonEnabled = true,
+                        isAddBackupButtonEnabled = true,
                     )
                 }
                 1 -> {
@@ -133,8 +133,8 @@ internal class MultiWalletBackupModel @Inject constructor(
                     st.copy(
                         title = resourceReference(R.string.onboarding_title_one_backup_card),
                         bodyText = resourceReference(R.string.onboarding_subtitle_one_backup_card),
-                        addBackupButtonEnabled = true,
-                        finalizeButtonEnabled = true,
+                        isAddBackupButtonEnabled = true,
+                        isFinalizeButtonEnabled = true,
                     )
                 }
                 2 -> {
@@ -145,11 +145,11 @@ internal class MultiWalletBackupModel @Inject constructor(
                     st.copy(
                         title = resourceReference(R.string.onboarding_title_two_backup_cards),
                         bodyText = resourceReference(R.string.onboarding_subtitle_two_backup_cards),
-                        addBackupButtonEnabled = false,
-                        finalizeButtonEnabled = true,
+                        isAddBackupButtonEnabled = false,
+                        isFinalizeButtonEnabled = true,
                     )
                 }
-                else -> st.copy(addBackupButtonEnabled = false)
+                else -> st.copy(isAddBackupButtonEnabled = false)
             }
         }
     }
@@ -187,7 +187,7 @@ internal class MultiWalletBackupModel @Inject constructor(
 
     private fun addBackupCardWithService() {
         _uiState.update { st ->
-            st.copy(addBackupButtonLoading = true)
+            st.copy(isAddBackupButtonLoading = true)
         }
 
         backupService.addBackupCard { result ->
@@ -195,7 +195,7 @@ internal class MultiWalletBackupModel @Inject constructor(
             cardSdkConfigRepository.sdk.config.filter.cardIdFilter = null
 
             _uiState.update { st ->
-                st.copy(addBackupButtonLoading = false)
+                st.copy(isAddBackupButtonLoading = false)
             }
 
             when (result) {

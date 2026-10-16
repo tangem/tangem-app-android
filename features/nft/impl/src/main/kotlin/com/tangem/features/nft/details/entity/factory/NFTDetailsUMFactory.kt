@@ -69,7 +69,7 @@ internal class NFTDetailsUMFactory(
                             NFTAssetUM.Rarity.Content(
                                 rank = rarity.rank,
                                 label = rarity.label,
-                                showDivider = hasSalePrice || hasDescription,
+                                shouldShowDivider = hasSalePrice || hasDescription,
                                 onLabelClick = {
                                     onRegularInfoBlockClick(
                                         resourceReference(R.string.nft_details_rarity_label),
@@ -93,10 +93,10 @@ internal class NFTDetailsUMFactory(
                 NFTAssetUM.BlockItem(
                     title = stringReference(trait.name),
                     value = trait.value,
-                    showInfoButton = false,
+                    shouldShowInfoButton = false,
                 )
             }.toImmutableList(),
-            showAllTraitsButton = traits.size > MAX_TRAITS_COUNT,
+            shouldShowAllTraitsButton = traits.size > MAX_TRAITS_COUNT,
             baseInfoItems = buildBaseInfoItems(),
         )
     }
@@ -135,7 +135,7 @@ internal class NFTDetailsUMFactory(
             NFTAssetUM.BlockItem(
                 title = resourceReference(R.string.nft_details_token_standard),
                 value = contractType,
-                showInfoButton = true,
+                shouldShowInfoButton = true,
                 onBlockClick = {
                     onRegularInfoBlockClick(
                         resourceReference(R.string.nft_details_token_standard),
@@ -147,7 +147,7 @@ internal class NFTDetailsUMFactory(
                 title = resourceReference(R.string.nft_details_contract_address),
                 value = id.tokenAddress,
                 valueTextEllipsis = TextEllipsis.Middle,
-                showInfoButton = true,
+                shouldShowInfoButton = true,
                 onBlockClick = {
                     onRegularInfoBlockClick(
                         resourceReference(R.string.nft_details_contract_address),
@@ -162,7 +162,7 @@ internal class NFTDetailsUMFactory(
                 title = resourceReference(R.string.nft_details_token_id),
                 value = id.tokenId.toString(),
                 valueTextEllipsis = TextEllipsis.Middle,
-                showInfoButton = true,
+                shouldShowInfoButton = true,
                 onBlockClick = {
                     onRegularInfoBlockClick(
                         resourceReference(R.string.nft_details_token_id),
@@ -173,7 +173,7 @@ internal class NFTDetailsUMFactory(
             NFTAssetUM.BlockItem(
                 title = resourceReference(R.string.nft_details_chain),
                 value = network.name,
-                showInfoButton = true,
+                shouldShowInfoButton = true,
                 onBlockClick = {
                     onRegularInfoBlockClick(
                         resourceReference(R.string.nft_details_chain),
@@ -187,7 +187,7 @@ internal class NFTDetailsUMFactory(
                 title = resourceReference(R.string.nft_details_token_address),
                 value = id.tokenAddress,
                 valueTextEllipsis = TextEllipsis.Middle,
-                showInfoButton = true,
+                shouldShowInfoButton = true,
                 onBlockClick = {
                     onRegularInfoBlockClick(
                         resourceReference(R.string.nft_details_token_address),
@@ -201,7 +201,7 @@ internal class NFTDetailsUMFactory(
             NFTAssetUM.BlockItem(
                 title = resourceReference(R.string.nft_details_chain),
                 value = network.name,
-                showInfoButton = true,
+                shouldShowInfoButton = true,
                 onBlockClick = {
                     onRegularInfoBlockClick(
                         resourceReference(R.string.nft_details_chain),
@@ -215,7 +215,7 @@ internal class NFTDetailsUMFactory(
                 title = resourceReference(R.string.nft_details_token_address),
                 value = id.tokenAddress,
                 valueTextEllipsis = TextEllipsis.Middle,
-                showInfoButton = true,
+                shouldShowInfoButton = true,
                 onBlockClick = {
                     onRegularInfoBlockClick(
                         resourceReference(R.string.nft_details_token_address),
@@ -229,7 +229,7 @@ internal class NFTDetailsUMFactory(
             NFTAssetUM.BlockItem(
                 title = resourceReference(R.string.nft_details_chain),
                 value = network.name,
-                showInfoButton = true,
+                shouldShowInfoButton = true,
                 onBlockClick = {
                     onRegularInfoBlockClick(
                         resourceReference(R.string.nft_details_chain),

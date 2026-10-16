@@ -64,7 +64,7 @@ class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
         requireNotNull(last)
 
         val req = if (lastResult is BatchFetchResult.Success) {
-            if (lastResult.last && overrideRequestParams == null) {
+            if (lastResult.isLast && overrideRequestParams == null) {
                 return BatchFetchResult.Error(EndOfPaginationException())
             }
 

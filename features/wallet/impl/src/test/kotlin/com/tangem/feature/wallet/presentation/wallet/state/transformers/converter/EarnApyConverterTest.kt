@@ -253,7 +253,7 @@ internal class EarnApyConverterTest {
         address = address,
         status = Yield.Validator.ValidatorStatus.ACTIVE,
         name = "validator-$address",
-        preferred = preferred,
+        isPreferred = preferred,
         isStrategicPartner = false,
         rewardInfo = RewardInfo(rate = BigDecimal(rate), type = type),
     )

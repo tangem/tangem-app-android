@@ -11,7 +11,7 @@ internal object PendingActionConstraintsConverter :
         return PendingActionConstraints(
             type = StakingActionTypeConverter.convert(value.type),
             amountArg = PendingAction.PendingActionArgs.Amount(
-                required = value.amountArg.required,
+                isRequired = value.amountArg.required,
                 minimum = value.amountArg.minimum,
                 maximum = value.amountArg.maximum,
             ),

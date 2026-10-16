@@ -285,7 +285,7 @@ class PolymarketPositionsSession internal constructor(
                     BatchAction.UpdateBatches(
                         keys = keys,
                         updateRequest = PolymarketPositionsUpdateRequest(config),
-                        async = true,
+                        isAsync = true,
                     ),
                 )
             }

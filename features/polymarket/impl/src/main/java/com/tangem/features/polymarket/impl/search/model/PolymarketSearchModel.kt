@@ -84,7 +84,7 @@ internal class PolymarketSearchModel @Inject constructor(
                 is PaginationStatus.Paginating -> {
                     val lastResult = status.lastResult
                     // A failed page is worth another attempt as the user keeps scrolling; a last one is not.
-                    val canLoadMore = lastResult !is BatchFetchResult.Success || !lastResult.last
+                    val canLoadMore = lastResult !is BatchFetchResult.Success || !lastResult.isLast
                     if (canLoadMore) actionsFlow.emit(BatchAction.LoadMore())
                 }
                 else -> Unit

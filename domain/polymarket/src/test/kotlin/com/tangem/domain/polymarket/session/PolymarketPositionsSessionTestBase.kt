@@ -122,7 +122,7 @@ internal abstract class PolymarketPositionsSessionTestBase {
                     val positions = if (hasNext) {
                         requests += updateRequest.config to batch.key
                         when (val result = fetch(batch.key)) {
-                            is BatchFetchResult.Success -> result.data.also { hasNext = !result.last }
+                            is BatchFetchResult.Success -> result.data.also { hasNext = !result.isLast }
                             is BatchFetchResult.Error -> throw result.throwable
                         }
                     } else {

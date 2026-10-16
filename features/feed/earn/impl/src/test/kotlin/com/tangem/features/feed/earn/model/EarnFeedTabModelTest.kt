@@ -410,7 +410,7 @@ internal class EarnFeedTabModelTest {
             ),
         ),
         status = PaginationStatus.Paginating(
-            lastResult = BatchFetchResult.Success(data = emptyList<Nothing>(), empty = false, last = false),
+            lastResult = BatchFetchResult.Success(data = emptyList<Nothing>(), isEmpty = false, isLast = false),
         ),
     )
 

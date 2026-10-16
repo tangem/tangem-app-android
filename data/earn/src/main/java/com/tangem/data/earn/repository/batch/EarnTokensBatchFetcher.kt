@@ -54,7 +54,7 @@ internal class EarnTokensBatchFetcher(
             IllegalStateException("fetchFirst must be called"),
         )
 
-        if (lastResult is BatchFetchResult.Success && lastResult.last && overrideRequestParams == null) {
+        if (lastResult is BatchFetchResult.Success && lastResult.isLast && overrideRequestParams == null) {
             return BatchFetchResult.Error(EndOfPaginationException())
         }
 
@@ -117,8 +117,8 @@ internal class EarnTokensBatchFetcher(
 
         val batchResult = BatchFetchResult.Success(
             data = items,
-            empty = items.isEmpty(),
-            last = isLast,
+            isEmpty = items.isEmpty(),
+            isLast = isLast,
         )
 
         return PageLoadResult(

@@ -69,7 +69,7 @@ internal class YieldConverterTest {
         val actual = YieldConverter.convert(yieldDTO)
 
         // Assert
-        assertThat(actual.validators.single().preferred).isFalse()
+        assertThat(actual.validators.single().isPreferred).isFalse()
     }
 
     @Test

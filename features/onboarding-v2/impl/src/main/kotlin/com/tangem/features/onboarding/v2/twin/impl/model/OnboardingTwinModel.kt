@@ -84,7 +84,7 @@ internal class OnboardingTwinModel @Inject constructor(
             Mode.RecreateWallet -> {
                 OnboardingTwinUM.ResetWarning(
                     onAcceptClick = { toggle ->
-                        update<OnboardingTwinUM.ResetWarning> { it.copy(acceptToggle = toggle) }
+                        update<OnboardingTwinUM.ResetWarning> { it.copy(isAcceptToggled = toggle) }
                     },
                     onContinueClick = {
                         navigateToFirstScan()
@@ -117,10 +117,10 @@ internal class OnboardingTwinModel @Inject constructor(
 
     fun onBack() {
         val state = _uiState.value
-        val twinningInProgress = state is OnboardingTwinUM.ScanCard &&
+        val isTwinningInProgress = state is OnboardingTwinUM.ScanCard &&
             (state.step == OnboardingTwinUM.ScanCard.Step.Second || state.step == OnboardingTwinUM.ScanCard.Step.Third)
 
-        if (twinningInProgress) {
+        if (isTwinningInProgress) {
             uiMessageSender.send(TwinProcessNotCompleted)
         } else {
             uiMessageSender.send(
