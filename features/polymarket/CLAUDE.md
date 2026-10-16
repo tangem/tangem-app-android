@@ -98,3 +98,5 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 
 BUY / WITHDRAW are outgoing, SELL / DEPOSIT / REDEEM incoming, a lost redemption shows a dash. Search and
 CSV are inert placeholders.
+
+Activity details use `TangemModal`; outcome price appears only when an order provides it.

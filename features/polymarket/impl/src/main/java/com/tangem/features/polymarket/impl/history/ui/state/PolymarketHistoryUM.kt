@@ -15,6 +15,8 @@ internal data class PolymarketHistoryUM(
     val tabs: ImmutableList<TangemTabItemUM> = persistentListOf(),
     val filterKey: String = "ALL",
     val pullToRefreshConfig: PullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+    val details: PolymarketActivityDetailsUM? = null,
+    val onDismissDetails: () -> Unit = {},
 ) {
 
     @Immutable

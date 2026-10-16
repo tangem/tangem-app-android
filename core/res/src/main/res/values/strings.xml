@@ -1917,7 +1917,11 @@
   <string name="prediction_history_bought">Bought</string>
   <string name="prediction_history_download_csv">Download .csv</string>
   <string name="prediction_history_empty">You don\'t have any operations yet</string>
+  <string name="prediction_history_fees">Fees</string>
   <string name="prediction_history_funds_added">Funds Added</string>
+  <string name="prediction_history_go_to_predict">Go to Predict</string>
+  <string name="prediction_history_notional_gross">Notional Gross</string>
+  <string name="prediction_history_price">Price</string>
   <string name="prediction_history_redeemed">Redeemed</string>
   <string name="prediction_history_sold">Sold</string>
   <string name="prediction_history_title">History</string>

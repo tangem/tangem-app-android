@@ -83,6 +83,7 @@ internal fun PolymarketHistoryScreen(state: PolymarketHistoryUM, modifier: Modif
                 }
             }
         }
+        PolymarketActivityDetailsSheet(state = state.details, onDismiss = state.onDismissDetails)
     }
 }
 
