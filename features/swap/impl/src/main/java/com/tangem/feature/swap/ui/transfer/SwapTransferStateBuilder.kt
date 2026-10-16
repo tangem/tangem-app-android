@@ -5,10 +5,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
-import com.tangem.common.ui.account.toUM
-import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -24,7 +21,6 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
@@ -35,6 +31,7 @@ import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.SwapButton.Mode
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
+import com.tangem.feature.swap.ui.accountCardTitle
 import com.tangem.feature.swap.ui.SwapAmountScreenClickIntents
 import com.tangem.feature.swap.ui.swapSuccessNavigation
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
@@ -262,7 +259,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
             val accountTitleUM = if (isInsufficientBalance) {
                 AccountTitleUM.Text(resourceReference(R.string.swapping_insufficient_funds))
             } else {
-                getCardAccountTitle(
+                accountCardTitle(
                     account = swapCurrencyStatus.account,
                     isAccountsMode = isAccountsMode,
                     isFromCard = true,
@@ -281,7 +278,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
             )
         } else {
             TransactionCardType.ReadOnly(
-                accountTitleUM = getCardAccountTitle(
+                accountTitleUM = accountCardTitle(
                     account = swapCurrencyStatus.account,
                     isAccountsMode = isAccountsMode,
                     isFromCard = false,
@@ -289,26 +286,6 @@ internal class SwapTransferStateBuilder @Inject constructor(
             )
         }
         return type
-    }
-
-    private fun getCardAccountTitle(account: Account?, isAccountsMode: Boolean, isFromCard: Boolean): AccountTitleUM {
-        val (prefix, placeholder) = if (isFromCard) {
-            R.string.swapping_from_account_title to R.string.swapping_from_title_v2
-        } else {
-            R.string.swapping_to_account_title to R.string.swapping_to_title
-        }
-        return when {
-            account == null || !isAccountsMode -> AccountTitleUM.Text(resourceReference(placeholder))
-            account is Account.Prediction -> AccountTitleUM.Account.prediction(prefixText = resourceReference(prefix))
-            account is Account.Collectibles -> AccountTitleUM.Account.collectibles(
-                prefixText = resourceReference(prefix),
-            )
-            else -> AccountTitleUM.Account(
-                prefixText = resourceReference(prefix),
-                name = account.accountName.toUM().value,
-                icon = account.toIconUM(),
-            )
-        }
     }
 
     private fun getFormattedFiatAmount(appCurrency: AppCurrency, amount: BigDecimal?): TextReference {
@@ -327,16 +304,6 @@ internal class SwapTransferStateBuilder @Inject constructor(
             R.string.common_balance,
             wrappedList(value.amount.format { crypto(currency.symbol, currency.decimals) }),
         )
-    }
-
-    private fun Account.toIconUM(): AccountIconUM {
-        return when (this) {
-            is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(icon)
-            is Account.Payment -> AccountIconUM.Payment
-            is Account.Money -> AccountIconUM.Money
-            is Account.Prediction -> AccountIconUM.Prediction
-            is Account.Collectibles -> AccountIconUM.Collectibles
-        }
     }
 
     /**
@@ -531,12 +498,12 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 providerIcon = "",
                 rate = TextReference.EMPTY,
                 fee = fee?.let { formatFeeForSuccess(transferState = transferState, fee = it) },
-                fromTitle = getCardAccountTitle(
+                fromTitle = accountCardTitle(
                     account = fromSwapCurrencyStatus.account,
                     isAccountsMode = transferState.isAccountsMode,
                     isFromCard = true,
                 ),
-                toTitle = getCardAccountTitle(
+                toTitle = accountCardTitle(
                     account = toSwapCurrencyStatus.account,
                     isAccountsMode = transferState.isAccountsMode,
                     isFromCard = false,
@@ -589,12 +556,12 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 providerIcon = "",
                 rate = TextReference.EMPTY,
                 fee = fee?.let { formatFeeForSuccess(transferState = transferState, fee = it) },
-                fromTitle = getCardAccountTitle(
+                fromTitle = accountCardTitle(
                     account = fromSwapCurrencyStatus.account,
                     isAccountsMode = transferState.isAccountsMode,
                     isFromCard = true,
                 ),
-                toTitle = getCardAccountTitle(
+                toTitle = accountCardTitle(
                     account = toSwapCurrencyStatus.account,
                     isAccountsMode = transferState.isAccountsMode,
                     isFromCard = false,

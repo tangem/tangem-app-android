@@ -64,6 +64,7 @@ dependencies {
     implementation(projects.domain.markets.models)
     implementation(projects.domain.mcp)
     implementation(projects.domain.mcp.models)
+    implementation(projects.domain.moneyAccount)
     implementation(projects.domain.polymarket)
     implementation(projects.domain.quotes)
     implementation(projects.domain.stories.models)

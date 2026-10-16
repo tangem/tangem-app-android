@@ -72,6 +72,20 @@ internal class MoneyAccountAddFundsOptionsModelTest {
         }
 
     @Test
+    fun `GIVEN swap option WHEN clicked THEN listener notified`() = runTest {
+        // Arrange
+        val model = createModel(depositAddress = DEPOSIT_ADDRESS)
+
+        // Act
+        model.uiState.value.items.first { it.title == resourceReference(R.string.tangempay_topup_swap_title) }
+            .onClick?.invoke()
+
+        // Assert
+        verify(exactly = 1) { listener.onSwapClick() }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN receive option WHEN clicked THEN listener receives the deposit address`() = runTest {
         // Arrange
         val model = createModel(depositAddress = DEPOSIT_ADDRESS)
@@ -158,6 +172,7 @@ internal class MoneyAccountAddFundsOptionsModelTest {
         OptionsModel(
             depositAddress = DEPOSIT_ADDRESS,
             expectedTitles = listOf(
+                resourceReference(R.string.tangempay_topup_swap_title),
                 resourceReference(R.string.tangempay_topup_receive_title),
                 resourceReference(R.string.tangempay_topup_bank_transfer_title),
             ),
