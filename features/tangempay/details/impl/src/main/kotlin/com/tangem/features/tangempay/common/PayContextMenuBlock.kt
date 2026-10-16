@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.ds.contextmenu.TangemContextMenu
 import com.tangem.core.ui.ds.image.TangemIcon
@@ -81,7 +82,7 @@ internal fun PayContextMenuBlock(
 @Composable
 private fun PayContextMenuItem(item: TangemPayDropDownItemUM, onMenuDismiss: () -> Unit) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
@@ -97,13 +98,13 @@ private fun PayContextMenuItem(item: TangemPayDropDownItemUM, onMenuDismiss: () 
                     )
                 },
             )
-            .padding(vertical = TangemTheme.dimens2.x3, horizontal = TangemTheme.dimens2.x4),
+            .padding(vertical = 12.dp, horizontal = 16.dp),
     ) {
         TangemIcon(
-            modifier = Modifier.size(TangemTheme.dimens2.x5),
+            modifier = Modifier.size(20.dp),
             tangemIconUM = item.icon,
         )
-        Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x0_5)) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = item.title.resolveReference(),
                 style = TangemTheme.typography3.body.medium,

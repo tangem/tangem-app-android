@@ -35,6 +35,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
@@ -468,13 +469,12 @@ class SwapTransferInteractorImpl @Inject constructor(
         transactionFeeResult: TransactionFeeResult,
         txData: TransactionData,
     ): Either<SendTransactionError, String> {
-        val isFeeInTokenCurrency = transactionFeeResult is TransactionFeeResult.LoadedExtended &&
-            transactionFeeResult.fee.transactionFee.normal is Fee.Ethereum.TokenCurrency
-        return if (isFeeInTokenCurrency) {
+        val extendedFee = (transactionFeeResult as? TransactionFeeResult.LoadedExtended)?.fee
+        return if (extendedFee?.isGasless == true) {
             createAndSendGaslessTransactionUseCase(
                 transactionData = txData,
                 userWallet = userWallet,
-                fee = transactionFeeResult.fee,
+                fee = extendedFee,
             )
         } else {
             sendTransactionUseCase(

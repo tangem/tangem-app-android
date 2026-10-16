@@ -4,13 +4,13 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.markets.tokenselector.UserAssetEntrySectionsConverter
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -78,7 +78,7 @@ internal class EarnFeedSearchTabModel @Inject constructor(
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val walletIconUMConverter: WalletIconUMConverter,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val appRouter: AppRouter,
+    private val router: Router,
     addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
 ) : Model() {
 
@@ -95,7 +95,7 @@ internal class EarnFeedSearchTabModel @Inject constructor(
     private val addToPortfolioLauncher = EarnAddToPortfolioLauncher(
         addToPortfolioManagerFactory = addToPortfolioManagerFactory,
         analyticsEventHandler = analyticsEventHandler,
-        appRouter = appRouter,
+        router = router,
         modelScope = modelScope,
         showSheet = { source, manager ->
             bottomSheetNavigation.activate(
@@ -329,7 +329,7 @@ internal class EarnFeedSearchTabModel @Inject constructor(
         analyticsEventHandler.send(
             EarnSearchAnalyticsEvent.PortfolioItemClicked(entry.currencyStatus.currency.symbol),
         )
-        appRouter.push(
+        router.push(
             AppRoute.CurrencyDetails(
                 userWalletId = entry.userWalletId,
                 currency = entry.currencyStatus.currency,

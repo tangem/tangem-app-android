@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -66,7 +67,7 @@ fun TangemTopBar(
             {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x5),
+                    horizontalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
                     endActions.forEach { action ->
                         TangemTopBarActionContent(actionUM = action, type = type)
@@ -109,7 +110,7 @@ fun TangemTopBar(
             Box(modifier = Modifier.layoutId(SLOT_START)) {
                 AnimatedContent(
                     targetState = startContent != null,
-                    modifier = Modifier.size(TangemTheme.dimens2.x11),
+                    modifier = Modifier.size(44.dp),
                     label = "Start Content Visibility",
                 ) { isVisible ->
                     if (isVisible) {
@@ -121,8 +122,8 @@ fun TangemTopBar(
                 AnimatedContent(
                     targetState = endContent != null,
                     modifier = Modifier
-                        .height(TangemTheme.dimens2.x11)
-                        .widthIn(min = TangemTheme.dimens2.x11),
+                        .height(44.dp)
+                        .widthIn(min = 44.dp),
                     label = "End Content Visibility",
                 ) { isVisible ->
                     if (isVisible) {
@@ -133,7 +134,7 @@ fun TangemTopBar(
             Column(
                 modifier = Modifier.layoutId(SLOT_TITLE),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x0_5),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 TangemTopBarTitle(title = title, titleIconRes = titleIconRes)
                 AnimatedVisibility(
@@ -228,7 +229,7 @@ fun TangemTopBar(
         if (reserveSlotSpace || startContent != null) {
             AnimatedContent(
                 targetState = startContent != null,
-                modifier = Modifier.size(TangemTheme.dimens2.x11),
+                modifier = Modifier.size(44.dp),
                 label = "Start Content Visibility",
             ) { isVisible ->
                 if (isVisible) {
@@ -243,8 +244,8 @@ fun TangemTopBar(
             AnimatedContent(
                 targetState = endContent != null,
                 modifier = Modifier
-                    .height(TangemTheme.dimens2.x11)
-                    .widthIn(min = TangemTheme.dimens2.x11),
+                    .height(44.dp)
+                    .widthIn(min = 44.dp),
                 label = "End Content Visibility",
             ) { isVisible ->
                 if (isVisible) {
@@ -266,7 +267,7 @@ private fun TangemTopBarTitle(title: TextReference?, @DrawableRes titleIconRes: 
         if (title != null) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(
-                    space = TangemTheme.dimens2.x1,
+                    space = 4.dp,
                     alignment = Alignment.CenterHorizontally,
                 ),
                 verticalAlignment = Alignment.CenterVertically,
@@ -282,7 +283,7 @@ private fun TangemTopBarTitle(title: TextReference?, @DrawableRes titleIconRes: 
                         imageVector = ImageVector.vectorResource(id = wrappedTitleIconRes),
                         contentDescription = null,
                         tint = TangemTheme.colors2.graphic.neutral.primary,
-                        modifier = Modifier.size(TangemTheme.dimens2.x4),
+                        modifier = Modifier.size(16.dp),
                     )
                 }
 
@@ -317,7 +318,7 @@ private fun TangemTopBar_Preview(@PreviewParameter(PreviewProvider::class) param
             startContent = params.startActionUM?.let { { TangemTopBarActionContent(it) } },
             endContent = if (params.endActions.isNotEmpty()) {
                 {
-                    Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x5)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                         params.endActions.forEach { action ->
                             TangemTopBarActionContent(action)
                         }

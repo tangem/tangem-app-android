@@ -142,7 +142,7 @@ private fun SegmentedControlContent(items: ImmutableList<TangemSegmentedControl.
         modifier = modifier
             .width(IntrinsicSize.Max)
             .clip(CircleShape)
-            .background(TangemTheme.colors3.bg.opaque.primary)
+            .background(TangemTheme.colors3.bg.transparent.primary)
             .padding(ContainerPadding),
     ) {
         pillBounds?.let { bounds ->

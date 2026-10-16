@@ -48,9 +48,9 @@ internal class NFTDetailsUMFactory(
         val description = description?.takeIf { it.isNotEmpty() } ?: nftCollection.description
         return NFTAssetUM(
             name = name.orEmpty(),
-            media = media?.imageUrl?.let {
+            media = media?.imageUrl?.let { url ->
                 NFTAssetUM.Media.Content(
-                    url = it,
+                    url = url,
                 )
             } ?: NFTAssetUM.Media.Empty,
             topInfo = when {
@@ -89,10 +89,10 @@ internal class NFTDetailsUMFactory(
                     )
                 }
             },
-            traits = traits.take(MAX_TRAITS_COUNT).map {
+            traits = traits.take(MAX_TRAITS_COUNT).map { trait ->
                 NFTAssetUM.BlockItem(
-                    title = stringReference(it.name),
-                    value = it.value,
+                    title = stringReference(trait.name),
+                    value = trait.value,
                     showInfoButton = false,
                 )
             }.toImmutableList(),

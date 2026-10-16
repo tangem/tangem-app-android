@@ -26,7 +26,7 @@ internal fun ShowcaseItem(@DrawableRes iconRes: Int, title: TextReference, subti
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = TangemTheme.dimens.spacing20),
+                .padding(start = 20.dp),
             verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             Text(

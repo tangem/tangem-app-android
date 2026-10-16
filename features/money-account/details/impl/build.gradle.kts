@@ -20,10 +20,15 @@ dependencies {
     implementation(projects.core.utils)
 
     /** Domain */
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
+    implementation(projects.domain.moneyAccount)
+    implementation(projects.domain.wallets)
 
     /** Features */
     implementation(projects.features.moneyAccount.details.api)
+    implementation(projects.features.txhistory.api)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -34,13 +39,14 @@ dependencies {
 
     /** Other */
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
+    implementation(tangemDeps.blockchain)
 
     /** DI */
     implementation(deps.hilt.android)
     implementation(deps.androidx.appCompat)
     implementation(deps.haze)
     implementation(deps.kotlin.coroutines)
-    implementation(deps.kotlin.serialization.core)
     implementation(deps.lifecycle.compose)
     implementation(deps.lifecycle.runtime.ktx)
     kapt(deps.hilt.kapt)

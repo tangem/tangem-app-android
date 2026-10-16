@@ -2,8 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>MultilineLambdaItParameter:PreviewUserWalletListComponent.kt$PreviewUserWalletListComponent${ it.copy( balance = UserWalletItemUM.Balance.Loaded( value = "1.000 BTC", isFlickering = true, ), ) }</ID>
-    <ID>MultilineLambdaItParameter:UserWalletSaver.kt$UserWalletSaver${ val message = it.message if (!message.isNullOrEmpty()) { messageSender.send(SnackbarMessage(message)) } }</ID>
     <ID>UnnecessaryLet:ItemsBuilder.kt$ItemsBuilder$let(::add)</ID>
   </CurrentIssues>
 </SmellBaseline>

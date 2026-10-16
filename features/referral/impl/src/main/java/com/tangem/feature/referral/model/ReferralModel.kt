@@ -177,7 +177,10 @@ internal class ReferralModel @Inject constructor(
             val lastInfoState = uiState.referralInfoState
             uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
             modelScope.launch {
-                val accountId = requireNotNull(portfolioSelectorController.selectedAccountSync)
+                val accountId = portfolioSelectorController.selectedAccountSync ?: run {
+                    uiState = uiState.copy(referralInfoState = lastInfoState)
+                    return@launch
+                }
                 runCatching { referralInteractor.startReferral(accountId) }
                     .onSuccess { referral ->
                         analyticsEventHandler.send(ReferralEvents.ParticipateSuccessful())

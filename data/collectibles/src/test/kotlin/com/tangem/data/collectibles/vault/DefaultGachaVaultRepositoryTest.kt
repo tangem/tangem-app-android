@@ -550,6 +550,7 @@ internal class DefaultGachaVaultRepositoryTest {
         @BeforeEach
         fun resetMocks() {
             clearMocks(walletManagersFacade, networkProvider, walletManager, hotDelegate)
+            coEvery { hotDelegate.getPublicKeyOrNull(any()) } returns DELEGATE
             coEvery { networkProvider.create(userWallet) } returns network.right()
             coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns walletManager
         }
@@ -599,6 +600,19 @@ internal class DefaultGachaVaultRepositoryTest {
         }
 
         @Test
+        fun `GIVEN the hot delegate is not provisioned WHEN sendPurchasePack THEN nothing is sent`() = runTest {
+            // Arrange
+            coEvery { hotDelegate.getPublicKeyOrNull(any()) } returns null
+
+            // Act
+            val actual = sendPurchasePack()
+
+            // Assert
+            assertThat(actual).isEqualTo(CollectiblesAccountError.DelegateNotProvisioned.left())
+            coVerify(exactly = 0) { walletManager.sendPurchasePack(any(), any(), any(), any(), any()) }
+        }
+
+        @Test
         fun `GIVEN no wallet manager WHEN sendPurchasePack THEN nothing is sent`() = runTest {
             // Arrange
             coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns null
@@ -613,7 +627,6 @@ internal class DefaultGachaVaultRepositoryTest {
 
         private suspend fun sendPurchasePack() = repository.sendPurchasePack(
             userWallet = userWallet,
-            hotDelegate = DELEGATE,
             amount = AMOUNT,
             feeAmount = FEE_AMOUNT,
             memo = MEMO,

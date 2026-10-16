@@ -1,8 +1,6 @@
 package com.tangem.tap.domain.sdk.impl
 
-import android.content.res.Resources
 import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import arrow.core.Either
 import com.tangem.Message
 import com.tangem.common.CompletionResult
@@ -15,7 +13,6 @@ import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.services.InMemoryStorage
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.res.getStringSafe
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.jointaccount.model.JointAccountSignResult
@@ -23,7 +20,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
-import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.visa.model.TangemPayInitialData
 import com.tangem.domain.visa.model.MoneyAccountActivationData
 import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.domain.visa.model.VisaDataForApprove
@@ -41,9 +38,7 @@ import com.tangem.tap.domain.tasks.jointaccount.JointAccountSignTask
 import com.tangem.tap.foregroundActivityObserver
 
 @Suppress("TooManyFunctions")
-class MockTangemSdkManager(
-    private val resources: Resources,
-) : TangemSdkManager {
+class MockTangemSdkManager : TangemSdkManager {
 
     private var userCodeRequestPolicyInternal: UserCodeRequestPolicy = UserCodeRequestPolicy.Default
 
@@ -195,23 +190,13 @@ class MockTangemSdkManager(
         // intentionally do nothing
     }
 
-    @Deprecated("TangemSdkManager shouldn't returns a string from resources")
-    override fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String {
-        val args = formatArgs.toSet().filterNotNull().toTypedArray()
-
-        return resources.getStringSafe(stringResId, *args)
-    }
-
     override fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy) {
         userCodeRequestPolicyInternal = policy
     }
 
     // region Twin-specific
 
-    override suspend fun createFirstTwinWallet(
-        cardId: String,
-        initialMessage: Message,
-    ): CompletionResult<CreateWalletResponse> {
+    override suspend fun createFirstTwinWallet(cardId: String): CompletionResult<CreateWalletResponse> {
         return MockProvider.createFirstTwinWallet()
     }
 
@@ -219,9 +204,6 @@ class MockTangemSdkManager(
         firstPublicKey: String,
         firstCardId: String,
         issuerKeys: KeyPair,
-        preparingMessage: Message,
-        creatingWalletMessage: Message,
-        initialMessage: Message,
     ): CompletionResult<CreateWalletResponse> {
         return MockProvider.createSecondTwinWallet()
     }
@@ -234,7 +216,6 @@ class MockTangemSdkManager(
         secondCardPublicKey: ByteArray,
         issuerKeyPair: KeyPair,
         cardId: String,
-        initialMessage: Message,
     ): CompletionResult<ScanResponse> {
         return MockProvider.finalizeTwin()
     }
@@ -256,9 +237,9 @@ class MockTangemSdkManager(
         error("Not implemented")
     }
 
-    override suspend fun tangemPayProduceInitialCredentials(
+    override suspend fun tangemPayProduceInitialData(
         preflightReadFilter: PreflightReadFilter,
-    ): Either<Throwable, TangemPayInitialCredentials> {
+    ): Either<Throwable, TangemPayInitialData> {
         error("Not implemented")
     }
 

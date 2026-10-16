@@ -15,6 +15,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.actions.ActionButton
 import com.tangem.core.ui.extensions.resolveReference
@@ -34,14 +35,14 @@ fun EmptyTransactionBlockLegacy(state: EmptyTransactionsBlockState, modifier: Mo
         modifier = modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(color = TangemTheme.colors.background.primary)
-            .padding(vertical = TangemTheme.dimens.spacing24)
+            .padding(vertical = 24.dp)
             .testTag(EmptyTransactionBlockTestTags.BLOCK),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
             modifier = Modifier
-                .size(TangemTheme.dimens.size64)
+                .size(64.dp)
                 .testTag(EmptyTransactionBlockTestTags.ICON),
             painter = painterResource(id = state.iconRes),
             tint = TangemTheme.colors.icon.inactive,
@@ -50,7 +51,7 @@ fun EmptyTransactionBlockLegacy(state: EmptyTransactionsBlockState, modifier: Mo
 
         Text(
             modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing32)
+                .padding(horizontal = 32.dp)
                 .testTag(EmptyTransactionBlockTestTags.TEXT),
             textAlign = TextAlign.Center,
             text = state.text.resolveReference(),
@@ -60,7 +61,7 @@ fun EmptyTransactionBlockLegacy(state: EmptyTransactionsBlockState, modifier: Mo
 
         Buttons(
             modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing18)
+                .padding(horizontal = 18.dp)
                 .testTag(EmptyTransactionBlockTestTags.EXPLORE_BUTTON),
             state = state.buttonsState,
         )
@@ -84,7 +85,7 @@ private fun SingleButton(state: EmptyTransactionsBlockState.ButtonsState.SingleB
 private fun PairButtons(state: EmptyTransactionsBlockState.ButtonsState.PairButtons, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         ActionButton(
             modifier = Modifier.weight(1F),

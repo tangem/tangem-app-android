@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.ds.image.TangemIcon
@@ -28,8 +29,8 @@ fun SingleUserAssetItem(shouldUsePriceBlock: Boolean, item: UserAssetItemUM.Sing
             TangemIcon(
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.HEAD)
-                    .padding(end = TangemTheme.dimens2.x3)
-                    .size(TangemTheme.dimens2.x10),
+                    .padding(end = 12.dp)
+                    .size(40.dp),
                 tangemIconUM = item.icon,
             )
 
@@ -83,7 +84,7 @@ private fun PriceBlock(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         if (fiatRate != null) {
             Text(

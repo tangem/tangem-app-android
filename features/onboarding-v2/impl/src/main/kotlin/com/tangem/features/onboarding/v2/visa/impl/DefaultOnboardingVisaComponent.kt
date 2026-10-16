@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.visa.impl
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -120,9 +121,9 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 ),
                 params = OnboardingVisaWelcomeComponent.Params(
                     childParams = childParams,
-                    onDone = {
+                    onDone = { event ->
                         val activationReadyEvent =
-                            (it as? OnboardingVisaWelcomeComponent.DoneEvent.WelcomeBackDone)?.activationReadyEvent
+                            (event as? OnboardingVisaWelcomeComponent.DoneEvent.WelcomeBackDone)?.activationReadyEvent
 
                         if (activationReadyEvent != null) {
                             model.navigateFromActivationScreen(activationReadyEvent)
@@ -171,9 +172,12 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 ),
                 params = OnboardingVisaOtherWalletComponent.Params(
                     childParams = childParams,
-                    onDone = {
+                    onDone = { activationOrderInfo ->
                         model.stackNavigation.replaceAll(
-                            OnboardingVisaRoute.PinCode(activationOrderInfo = it, pinCodeValidationError = false),
+                            OnboardingVisaRoute.PinCode(
+                                activationOrderInfo = activationOrderInfo,
+                                pinCodeValidationError = false,
+                            ),
                         )
                     },
                 ),
@@ -224,9 +228,10 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
 
         Children(
             stack = stackState,
+            modifier = modifier,
             animation = stackAnimation(slide()),
         ) {
-            it.instance.Content(modifier)
+            it.instance.Content(Modifier.fillMaxSize())
         }
     }
 

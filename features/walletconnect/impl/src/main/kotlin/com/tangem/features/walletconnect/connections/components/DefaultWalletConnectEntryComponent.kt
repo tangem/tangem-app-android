@@ -1,6 +1,7 @@
 package com.tangem.features.walletconnect.connections.components
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -38,8 +39,8 @@ internal class DefaultWalletConnectEntryComponent @AssistedInject constructor(
         val childStack by contentStack.subscribeAsState()
 
         BackHandler(onBack = router::pop)
-        Children(stack = childStack, animation = stackAnimation()) { child ->
-            child.instance.Content(modifier = modifier)
+        Children(stack = childStack, modifier = modifier, animation = stackAnimation()) { child ->
+            child.instance.Content(modifier = Modifier.fillMaxSize())
         }
     }
 

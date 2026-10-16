@@ -363,12 +363,12 @@ internal class CollectiblesMachineDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN the pack is open WHEN back clicked THEN the screen is popped`() = runModelTest {
+    fun `GIVEN the pack is open WHEN close clicked THEN the screen is popped`() = runModelTest {
         // Arrange
         val model = startModel()
 
         // Act
-        model.uiState.value.onBackClick()
+        model.uiState.value.onCloseClick()
 
         // Assert
         verify(exactly = 1) { router.pop() }

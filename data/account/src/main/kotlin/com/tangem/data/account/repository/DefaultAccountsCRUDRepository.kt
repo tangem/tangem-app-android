@@ -112,11 +112,11 @@ internal class DefaultAccountsCRUDRepository(
 
                 apiResponse.bind()
             },
-            onError = {
-                if (it is HttpException && it.code == HttpException.Code.NOT_MODIFIED) {
+            onError = { exception ->
+                if (exception is HttpException && exception.code == HttpException.Code.NOT_MODIFIED) {
                     null
                 } else {
-                    throw it
+                    throw exception
                 }
             },
         )

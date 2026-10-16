@@ -85,7 +85,7 @@ internal class TangemPayHotSdkManagerTest {
     }
 
     @Test
-    fun `GIVEN password prompt dismissed WHEN produceInitialCredentials THEN returns Left without throwing`() =
+    fun `GIVEN password prompt dismissed WHEN produceInitialData THEN returns Left without throwing`() =
         runTest {
             // Arrange
             val error = TangemSdkError.UserCancelled()
@@ -93,7 +93,7 @@ internal class TangemPayHotSdkManagerTest {
             coEvery { hotWalletAccessor.unlockContextual(hotWalletId) } throws error
 
             // Act
-            val actual = manager.produceInitialCredentials(hotWallet = hotWallet)
+            val actual = manager.produceInitialData(hotWallet = hotWallet)
 
             // Assert
             assertThat(actual).isEqualTo(Either.Left(error))

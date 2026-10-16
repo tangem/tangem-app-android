@@ -25,6 +25,7 @@ import com.tangem.domain.swap.models.SwapTxType
 import com.tangem.domain.swap.usecase.GetSwapDataUseCase
 import com.tangem.domain.swap.usecase.SwapTransactionSentUseCase
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
@@ -260,6 +261,7 @@ internal class SwapTransactionSenderTest {
         val feeExtended = TransactionFeeExtended(
             transactionFee = TransactionFee.Single(normal = tokenFee),
             feeTokenId = fromStatus.currency.id,
+            gaslessProtocolData = GaslessProtocolData.Evm,
         )
         val txData = uncompiledTx()
         stubSwapData(cexSwapData().right())

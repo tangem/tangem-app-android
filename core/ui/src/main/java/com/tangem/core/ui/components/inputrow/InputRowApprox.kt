@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
@@ -53,7 +54,7 @@ fun InputRowApprox(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .padding(TangemTheme.dimens.spacing12)
+                .padding(12.dp)
                 .fillMaxWidth(),
         ) {
             InputRowApproxItem(
@@ -69,8 +70,8 @@ fun InputRowApprox(
                 tint = TangemTheme.colors.text.tertiary,
                 modifier = Modifier
                     .padding(
-                        horizontal = TangemTheme.dimens.spacing8,
-                        vertical = TangemTheme.dimens.spacing10,
+                        horizontal = 8.dp,
+                        vertical = 10.dp,
                     ),
             )
             InputRowApproxItem(
@@ -99,12 +100,12 @@ private fun InputRowApproxItem(
         CurrencyIcon(
             state = iconState,
             modifier = Modifier
-                .size(TangemTheme.dimens.size36),
+                .size(36.dp),
         )
         Column(
             modifier = Modifier
                 .padding(
-                    start = TangemTheme.dimens.spacing12,
+                    start = 12.dp,
                 ),
         ) {
             EllipsisText(
@@ -119,7 +120,7 @@ private fun InputRowApproxItem(
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
                     modifier = Modifier
-                        .padding(top = TangemTheme.dimens.spacing2),
+                        .padding(top = 2.dp),
                 )
             }
         }

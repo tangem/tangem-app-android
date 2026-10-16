@@ -37,6 +37,9 @@ interface YieldIncentivesRepository {
         userAddress: String,
     ): Either<YieldIncentivesError, List<YieldClaimHistoryItem>>
 
+    /** Drops the cached incentives and claim history of [userAddress], so the next read goes to the network. */
+    suspend fun invalidateUserCache(chainId: Int, userAddress: String)
+
     companion object {
         const val MIN_APR_HISTORY_DAYS = 1
         const val MAX_APR_HISTORY_DAYS = 90

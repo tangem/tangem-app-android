@@ -1,6 +1,7 @@
 package com.tangem.domain.transaction.usecase.gasless
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
@@ -8,16 +9,14 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.common.TransactionSigner
-import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
-import com.tangem.domain.card.models.TwinKey
-import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.models.network.Network
+import com.tangem.domain.account.status.utils.CryptoCurrencyOperations.getCryptoCurrency
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.mapToGaslessSendError
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
@@ -36,19 +35,25 @@ class CreateAndSendTronGaslessTransactionUseCase(
     private val transactionRepository: TransactionRepository,
     private val walletManagersFacade: WalletManagersFacade,
     private val tronGaslessTransactionRepository: TronGaslessTransactionRepository,
-    private val cardSdkConfigRepository: CardSdkConfigRepository,
-    private val getHotWalletSigner: (UserWallet.Hot) -> TransactionSigner,
+    private val singleAccountListSupplier: SingleAccountListSupplier,
+    private val gaslessSignerProvider: GaslessSignerProvider,
 ) {
 
     suspend operator fun invoke(
         userWallet: UserWallet,
-        network: Network,
         transactionData: TransactionData,
         fee: TransactionFeeExtended,
     ): Either<SendTransactionError, String> = either {
         catch(
             block = {
-                val quotedFee = fee.tronGaslessQuote ?: error("Tron gasless quote is missing")
+                val quotedFee = (fee.gaslessProtocolData as? GaslessProtocolData.Tron)?.quote
+                    ?: error("Tron gasless quote is missing")
+
+                // Resolved as in the EVM flow, so both send paths agree on the account the fee token comes from.
+                val network = singleAccountListSupplier.getSyncOrNull(userWalletId = userWallet.walletId)
+                    .getCryptoCurrency(currencyId = fee.feeTokenId, network = null)
+                    .getOrElse { error("Token for fee not found") }
+                    .network
                 val original = transactionData.requireUncompiled()
                 if (original.amount.type !is AmountType.Token) error("Tron gasless requires a token transfer")
 
@@ -88,7 +93,7 @@ class CreateAndSendTronGaslessTransactionUseCase(
                     userWalletId = userWallet.walletId,
                     network = network,
                     transactionDataList = listOf(compensationTx, original),
-                    signer = getSigner(userWallet),
+                    signer = gaslessSignerProvider(userWallet),
                 ) ?: error("Tron gasless signing failed")
                 require(signed.size == 2) { "Expected 2 signed transactions, got ${signed.size}" }
 
@@ -138,20 +143,5 @@ class CreateAndSendTronGaslessTransactionUseCase(
             raise(SendTransactionError.GaslessFeeIncreased)
         }
         return refreshed
-    }
-
-    private fun getSigner(userWallet: UserWallet): TransactionSigner {
-        return when (userWallet) {
-            is UserWallet.Cold -> {
-                val card = userWallet.scanResponse.card
-                val isCardNotBackedUp = card.backupStatus?.isActive != true && !card.isTangemTwins
-                cardSdkConfigRepository.getCommonSigner(
-                    cardId = card.cardId.takeIf { isCardNotBackedUp },
-                    twinKey = TwinKey.getOrNull(scanResponse = userWallet.scanResponse),
-                    userWalletId = userWallet.walletId,
-                )
-            }
-            is UserWallet.Hot -> getHotWalletSigner(userWallet)
-        }
     }
 }

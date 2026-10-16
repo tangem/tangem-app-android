@@ -65,10 +65,10 @@ internal class MoneyAccountMainBlockConverter(
 
     private fun MoneyAccountStatusValue.Account.toUM(userWalletId: UserWalletId): MoneyAccountMainUM {
         return MoneyAccountMainUM.Content(
-            subtitle = balance?.let { balance ->
+            subtitle = balance?.let {
                 resourceReference(
                     id = R.string.money_account_main_status_active,
-                    formatArgs = wrappedList(balance.cryptoCurrency.network.name),
+                    formatArgs = wrappedList(cryptoCurrency.network.name),
                 )
             } ?: TextReference.EMPTY,
             balance = balance?.toUM(source),
