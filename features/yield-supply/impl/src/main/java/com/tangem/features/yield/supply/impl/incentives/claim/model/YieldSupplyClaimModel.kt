@@ -26,6 +26,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.incentives.YieldClaimCalldata
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.usecase.BuildYieldClaimTransactionUseCase
@@ -228,6 +229,7 @@ internal class YieldSupplyClaimModel @Inject constructor(
             userAddress = params.userAddress,
             transactionHash = transactionHash,
             claimedRewards = claimedRewards,
+            origin = YieldSupplyClaimOrigin.ClaimSheet,
         )
     }
 

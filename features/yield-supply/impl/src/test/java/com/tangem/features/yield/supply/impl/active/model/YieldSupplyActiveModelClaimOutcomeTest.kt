@@ -5,6 +5,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.yield.supply.models.YieldBoostStatus
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOutcome
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
@@ -143,6 +144,24 @@ internal class YieldSupplyActiveModelClaimOutcomeTest : YieldSupplyActiveModelTe
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN a claim made on the way out WHEN it reverts THEN no failure is shown`() = runTest {
+        // Arrange
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        claimOutcomes.emit(
+            outcome(YieldSupplyTransactionOutcome.Reverted).copy(origin = YieldSupplyClaimOrigin.Withdrawal),
+        )
+        runCurrent()
+
+        // Assert
+        assertThat(model.claimResultFlow.value).isNull()
+
+        model.onDestroy()
+    }
+
     private fun submittedResult() = YieldSupplyClaimResultUM(
         status = YieldSupplyClaimResultUM.Status.Submitted,
         total = stringReference("$45.50"),
@@ -156,6 +175,7 @@ internal class YieldSupplyActiveModelClaimOutcomeTest : YieldSupplyActiveModelTe
         chainId = CHAIN_ID,
         userAddress = USER_ADDRESS,
         outcome = outcome,
+        origin = YieldSupplyClaimOrigin.ClaimSheet,
     )
 
     private fun TestScope.createModel() = createModel(dispatchers = createTestingCoroutineDispatcherProvider())
