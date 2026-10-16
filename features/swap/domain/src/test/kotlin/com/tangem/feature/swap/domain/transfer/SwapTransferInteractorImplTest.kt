@@ -251,6 +251,49 @@ internal class SwapTransferInteractorImplTest {
         }
 
     @Test
+    fun `GIVEN accounts mode off and the Collectibles account as destination WHEN updateTransfer THEN accounts mode is on`() =
+        runTest {
+            // Arrange
+            val fromCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = FROM_RAW_CURRENCY_ID,
+                decimals = FROM_DECIMALS,
+                amount = BigDecimal("1.6"),
+            )
+            val toCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = TO_RAW_CURRENCY_ID,
+                decimals = TO_DECIMALS,
+                account = mockk<Account.Collectibles>(),
+            )
+            every { getSelectedAppCurrencyUseCase() } returns flowOf(AppCurrency.Default.right())
+            every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
+            coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
+            coEvery {
+                getCurrencyCheckUseCase(
+                    userWalletId = any(),
+                    currencyStatus = any(),
+                    feeCurrencyStatus = any(),
+                    amount = any(),
+                    fee = any(),
+                    feeCurrencyBalanceAfterTransaction = any(),
+                    recipientAddress = any(),
+                )
+            } returns buildCurrencyCheck()
+            coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns false.right()
+
+            // Act
+            val result = sut.updateTransfer(
+                fromSwapCurrencyStatus = fromCurrencyStatus,
+                toSwapCurrencyStatus = toCurrencyStatus,
+                fromTokenAmount = "1",
+                feePaidCurrencyStatus = null,
+                fee = null,
+            )
+
+            // Assert
+            assertThat((result as SwapState.Transfer).isAccountsMode).isTrue()
+        }
+
+    @Test
     fun `GIVEN insufficient amount WHEN updateTransfer THEN return state with insufficient amount`() = runTest {
         val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
         val userWallet: UserWallet = mockk(relaxed = true)
