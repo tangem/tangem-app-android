@@ -3,12 +3,10 @@ package com.tangem.common.routing
 import kotlin.reflect.KClass
 
 /**
- * Interface for a router in the application.
- * It provides methods for navigating through the application.
+ * Navigates the root stack from code outside the component tree (deep link handlers, app-level singletons).
  *
- * Same as [com.tangem.core.decompose.navigation.Router] but without Decompose dependency.
- *
- * ***Must be removed after Decompose migration.***
+ * Inside components and models inject [com.tangem.core.decompose.navigation.Router] instead: it follows the
+ * component hierarchy, so nested stacks and slots receive their own navigation.
  */
 interface AppRouter {
 

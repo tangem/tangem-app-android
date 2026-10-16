@@ -25,7 +25,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
-import com.tangem.core.ui.res.TangemTheme
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun ProvideRoundedItemGroups(content: @Composable () -> Unit) {
@@ -38,15 +38,15 @@ fun Modifier.roundedShapeItemDecoration(
     currentIndex: Int,
     lastIndex: Int,
     addDefaultPadding: Boolean = true,
-    radius: Dp = TangemTheme.dimens.radius16,
+    radius: Dp = 16.dp,
     backgroundColor: Color? = null,
     groupKey: Any? = null,
 ): Modifier = composed {
-    val modifier = if (addDefaultPadding) this.padding(horizontal = TangemTheme.dimens.spacing16) else this
+    val modifier = if (addDefaultPadding) this.padding(horizontal = 16.dp) else this
 
     val applyTopPadding: @Composable Modifier.() -> Modifier = {
         if (addDefaultPadding && currentIndex == 0) {
-            padding(top = TangemTheme.dimens.spacing12)
+            padding(top = 12.dp)
         } else {
             this
         }

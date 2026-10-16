@@ -46,8 +46,8 @@ object MockAccounts {
         return buildList {
             add(Account.Personal.createMainAccount(userWalletId))
 
-            repeat(count - 1) {
-                val account = createAccount(derivationIndex = it + 1, userWalletId = userWalletId)
+            repeat(count - 1) { index ->
+                val account = createAccount(derivationIndex = index + 1, userWalletId = userWalletId)
 
                 add(account)
             }

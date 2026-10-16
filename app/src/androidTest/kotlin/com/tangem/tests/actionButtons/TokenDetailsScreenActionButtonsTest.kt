@@ -20,6 +20,7 @@ import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onAddFundsBottomSheet
 import com.tangem.screens.onDialog
 import com.tangem.screens.onMainScreen
+import com.tangem.screens.onOperationIsUnavailableDialog
 import com.tangem.screens.onSendScreen
 import com.tangem.screens.onSwapStoriesScreen
 import com.tangem.screens.onSwapTokenScreen

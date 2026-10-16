@@ -14,7 +14,8 @@ sealed interface PolymarketOnboardingProgress {
 
     /**
      * Terminal: the wallet is onboarded and the credentials are stored.
-     * [isNewAccount] is false when the backend already reported READY_TO_TRADE at the start of this run.
+     * [isNewAccount] is false when the backend already reported READY_TO_TRADE at the start of this run, or when
+     * the wallet had been confirmed onboarded before it (a re-approval after the backend demoted it).
      */
     data class Ready(val isNewAccount: Boolean) : PolymarketOnboardingProgress
 

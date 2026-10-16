@@ -33,6 +33,7 @@ import com.tangem.features.yield.supply.impl.active.ui.YieldSupplyActiveTitle
 import com.tangem.features.yield.supply.impl.apy.about.YieldSupplyAboutApyComponent
 import com.tangem.features.yield.supply.impl.chart.DefaultYieldSupplyChartComponent
 import com.tangem.features.yield.supply.impl.incentives.banner.DefaultYieldSupplyRewardsBannerComponent
+import com.tangem.features.yield.supply.impl.incentives.claim.YieldSupplyClaimComponent
 import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyApproveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import dagger.assisted.Assisted
@@ -151,7 +152,17 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
             params = YieldSupplyAboutApyComponent.Params(
                 baseApy = route.baseApy,
                 rewardsApr = route.rewardsApr,
-                onDismiss = model::onAboutApyDismiss,
+                onDismiss = model::onUnguardedSheetDismiss,
+            ),
+        )
+        is YieldSupplyActiveRoute.Claim -> YieldSupplyClaimComponent(
+            appComponentContext = factoryContext,
+            params = YieldSupplyClaimComponent.Params(
+                userWallet = model.userWallet,
+                cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
+                chainId = route.chainId,
+                userAddress = route.userAddress,
+                onDismiss = model::onUnguardedSheetDismiss,
             ),
         )
         YieldSupplyActiveRoute.Approve -> YieldSupplyApproveComponent(

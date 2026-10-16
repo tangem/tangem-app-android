@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.swap.ExchangeIntentRepository
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.SwapTransactionRepository
@@ -104,4 +105,12 @@ internal object SwapDomainModule {
     @Provides
     @Singleton
     fun provideCalculateAmountUseCase(): CalculateAmountUseCase = CalculateAmountUseCase()
+
+    @Provides
+    @Singleton
+    fun provideGetExchangeIntentUseCase(exchangeIntentRepository: ExchangeIntentRepository): GetExchangeIntentUseCase {
+        return GetExchangeIntentUseCase(
+            exchangeIntentRepository = exchangeIntentRepository,
+        )
+    }
 }
