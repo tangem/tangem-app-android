@@ -14,6 +14,7 @@ import com.tangem.datasource.local.preferences.utils.getJsonSyncOrNull
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.setJson
 import com.tangem.datasource.local.preferences.utils.store
+import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawState
 import com.tangem.domain.visa.model.TangemPayAuthTokens
@@ -270,6 +271,29 @@ internal class DefaultTangemPayStorage @Inject constructor(
         return appPreferencesStore.get(key = spendPreferencesKeys.getHideOnboardingKey(userWalletId), default = false)
     }
 
+    override suspend fun storeCustomerResidency(userWalletId: UserWalletId, residency: TangemPayCustomerResidency) {
+        appPreferencesStore.editData { preferences ->
+            preferences.setJson(
+                key = spendPreferencesKeys.getCustomerResidencyKey(userWalletId),
+                json = json,
+                serializer = TangemPayCustomerResidency.serializer(),
+                value = residency,
+            )
+        }
+    }
+
+    override suspend fun getCustomerResidency(userWalletId: UserWalletId): TangemPayCustomerResidency? {
+        return appPreferencesStore.getJsonSyncOrNull(
+            key = spendPreferencesKeys.getCustomerResidencyKey(userWalletId),
+            json = json,
+            deserializer = TangemPayCustomerResidency.serializer(),
+        )
+    }
+
+    override suspend fun clearCustomerResidency(userWalletId: UserWalletId) {
+        appPreferencesStore.editData { it.remove(spendPreferencesKeys.getCustomerResidencyKey(userWalletId)) }
+    }
+
     override suspend fun storeTangemPayEligibility(eligibility: Set<String>) {
         withContext(dispatcherProvider.io) {
             appPreferencesStore.store(
@@ -317,6 +341,7 @@ internal class DefaultTangemPayStorage @Inject constructor(
             preferences.remove(spendPreferencesKeys.getCheckCustomerByWalletId(userWalletId))
             preferences.remove(spendPreferencesKeys.getCustomerWalletAddressKey(userWalletId))
             preferences.remove(spendPreferencesKeys.getHideOnboardingKey(userWalletId))
+            preferences.remove(spendPreferencesKeys.getCustomerResidencyKey(userWalletId))
             preferences.remove(spendPreferencesKeys.paymentAccountRecents(userWalletId))
             // Both withdraw stores live inside a single preference holding a map, so the wallet's entry is
             // removed from it rather than the key itself.
