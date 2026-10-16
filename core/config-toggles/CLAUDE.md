@@ -21,6 +21,10 @@ features by app version; the JSON config is the source of truth and the
     development.
   - `"X.Y"` (e.g. `5.40`) → ON in prod from that app version onward
     (`currentVersion >= localVersion`, see `VersionAvailabilityContract`).
+- **CI build post:** `.github/scripts/list_build_capabilities.py` lists the
+  enabled toggles and mainnet blockchains of a build for the Slack build
+  notification. It re-implements the version rules above (for both configs) —
+  change both together.
 
 ## Naming convention (ENFORCED by a test)
 

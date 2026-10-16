@@ -225,6 +225,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                     onSendTransaction = {
                         innerRouter.replaceAll(CommonSendRoute.ConfirmSuccess)
                     },
+                    onCloseFlow = router::pop,
                     analyticsSendSource = model.analyticsSendSource,
                 ),
                 feeSelectorComponentFactory = feeSelectorComponentFactory,

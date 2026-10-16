@@ -26,8 +26,6 @@ import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.increaseGasLimitBy
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
-import com.tangem.domain.yield.supply.usecase.PrepareClaimBeforeWithdrawUseCase
-import com.tangem.domain.yield.supply.usecase.YieldPreClaim
 import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
@@ -72,7 +70,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val yieldSupplyRepository: YieldSupplyRepository,
     private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
     private val appsFlyerRepository: AppsFlyerRepository,
-    private val prepareClaimBeforeWithdrawUseCase: PrepareClaimBeforeWithdrawUseCase,
+    private val yieldSupplyWithdrawalClaimPreparer: YieldSupplyWithdrawalClaimPreparer,
     private val yieldSupplyClaimTracker: YieldSupplyClaimTracker,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
@@ -212,7 +210,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         // incentives backend must cost the user a moment, not their exit. The signature itself is not bounded —
         // that is the user reaching for their card.
         val preparedClaim = withTimeoutOrNull(PREPARE_CLAIM_TIMEOUT_MILLIS) {
-            prepareClaimBeforeWithdrawUseCase(
+            yieldSupplyWithdrawalClaimPreparer.prepare(
                 userWallet = userWallet,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
@@ -238,6 +236,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                     chainId = claim.chainId,
                     userAddress = claim.userAddress,
                     transactionHash = transactionHash,
+                    claimedRewards = claim.claimedRewards,
                     origin = YieldSupplyClaimOrigin.Withdrawal,
                 )
             },

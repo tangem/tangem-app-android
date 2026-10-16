@@ -170,10 +170,10 @@ internal class UpdateWalletManagerResultFactory {
     ): Set<UpdateWalletManagerResult.CryptoCurrencyTransaction> {
         val unconfirmedTransactions = recentTransactions.filter { it.status == TransactionStatus.Unconfirmed }
 
-        return unconfirmedTransactions.mapNotNullTo(hashSetOf()) {
+        return unconfirmedTransactions.mapNotNullTo(hashSetOf()) { transaction ->
             createCurrencyTransaction(
                 txHistoryItemConverter = txHistoryItemConverter,
-                data = it,
+                data = transaction,
             )
         }
     }
