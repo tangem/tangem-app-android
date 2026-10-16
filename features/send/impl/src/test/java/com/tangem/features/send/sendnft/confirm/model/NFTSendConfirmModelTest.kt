@@ -263,6 +263,33 @@ internal class NFTSendConfirmModelTest {
         }
 
         @Test
+        fun `GIVEN successful send WHEN the success button is clicked THEN success is triggered and the flow is closed`() =
+            runTest {
+                // Arrange
+                val onCloseFlow = mockk<() -> Unit>(relaxed = true)
+                val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+                every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+                val sut = buildModel(
+                    paramsContainer = MutableParamsContainer(defaultParams().copy(onCloseFlow = onCloseFlow)),
+                )
+                advanceUntilIdle()
+                resultFlow.tryEmit(true)
+                advanceUntilIdle()
+                assertThat(sut.uiState.value.confirmUM).isInstanceOf(ConfirmUM.Success::class.java)
+
+                // Act
+                sut.primaryButtonUM().onClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerifyOrder {
+                    nftSendSuccessTrigger.triggerSuccessNFTSend()
+                    onCloseFlow.invoke()
+                }
+                verify(exactly = 1) { onCloseFlow.invoke() }
+            }
+
+        @Test
         fun `GIVEN transaction creation fails WHEN verifyAndSend THEN show generic error and do NOT send`() = runTest {
             // Arrange
             val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
