@@ -2,18 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>BooleanPropertyNaming:AccessCodeModel.kt$AccessCodeModel$var buttonClicked = false</ID>
-    <ID>BooleanPropertyNaming:AddExistingWalletImportUM.kt$AddExistingWalletImportUM$val importWalletEnabled: Boolean</ID>
-    <ID>BooleanPropertyNaming:AddExistingWalletImportUM.kt$AddExistingWalletImportUM$val importWalletProgress: Boolean</ID>
-    <ID>BooleanPropertyNaming:AddExistingWalletImportUM.kt$AddExistingWalletImportUM$val readyToImport: Boolean</ID>
-    <ID>BooleanPropertyNaming:CreateMobileWalletUM.kt$CreateMobileWalletUM$val createButtonLoading: Boolean</ID>
-    <ID>BooleanPropertyNaming:HotAccessCodeRequestUM.kt$HotAccessCodeRequestUM$val useBiometricVisible: Boolean = true</ID>
-    <ID>BooleanPropertyNaming:HotWalletStepperComponent.kt$HotWalletStepperComponent.StepperUM$val showBackButton: Boolean</ID>
-    <ID>BooleanPropertyNaming:HotWalletStepperComponent.kt$HotWalletStepperComponent.StepperUM$val showSkipButton: Boolean</ID>
-    <ID>BooleanPropertyNaming:ManualBackupCheckUM.kt$ManualBackupCheckUM$val completeButtonEnabled: Boolean</ID>
-    <ID>BooleanPropertyNaming:ManualBackupCheckUM.kt$ManualBackupCheckUM$val completeButtonProgress: Boolean</ID>
-    <ID>BooleanPropertyNaming:ManualBackupCheckUM.kt$ManualBackupCheckUM.WordField$val error: Boolean</ID>
-    <ID>BooleanPropertyNaming:MobileWalletSetupFinishedContent.kt$var showConfetti by remember { mutableStateOf(false) }</ID>
     <ID>PropertyUsedBeforeDeclaration:AddExistingWalletImportModel.kt$AddExistingWalletImportModel$uiState</ID>
     <ID>SuspendFunSwallowedCancellation:ManualBackupCheckModel.kt$ManualBackupCheckModel$runCatching</ID>
   </CurrentIssues>
