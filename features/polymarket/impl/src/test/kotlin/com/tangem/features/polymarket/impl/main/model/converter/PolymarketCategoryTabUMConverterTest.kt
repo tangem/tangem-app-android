@@ -2,6 +2,8 @@ package com.tangem.features.polymarket.impl.main.model.converter
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PolymarketCategory
+import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
+import com.tangem.features.polymarket.impl.main.ui.tabIcon
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -27,6 +29,17 @@ internal class PolymarketCategoryTabUMConverterTest {
         // Assert
         assertThat(actual.map { it.id to it.label })
             .containsExactly(1 to "Trending", 2 to "Sport")
+            .inOrder()
+    }
+
+    @Test
+    fun `GIVEN categories with and without an icon WHEN convert THEN only the known one gets a tab icon`() {
+        // Act
+        val actual = converter.convert(input(selectedCategoryId = 1))
+
+        // Assert
+        assertThat(actual.map { it.id to it.icon })
+            .containsExactly(1 to PolymarketCategoryIcon.TRENDING.tabIcon, 2 to null)
             .inOrder()
     }
 
@@ -75,8 +88,8 @@ internal class PolymarketCategoryTabUMConverterTest {
 
     private fun input(selectedCategoryId: Int?) = PolymarketCategoryTabUMConverter.Input(
         categories = listOf(
-            PolymarketCategory(id = 1, label = "Trending", iconUrl = null),
-            PolymarketCategory(id = 2, label = "Sport", iconUrl = null),
+            PolymarketCategory(id = 1, label = "Trending", icon = PolymarketCategoryIcon.TRENDING),
+            PolymarketCategory(id = 2, label = "Sport", icon = null),
         ),
         selectedCategoryId = selectedCategoryId,
     )
