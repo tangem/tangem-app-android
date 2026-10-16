@@ -5,7 +5,6 @@ import com.tangem.core.analytics.api.AnalyticsUserIdHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.core.analytics.models.AppsFlyerOnlyEvent
-import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.utils.logging.TangemLogger
 
 class AppsFlyerAnalyticsHandler(
@@ -49,24 +48,5 @@ class AppsFlyerAnalyticsHandler(
 
     companion object {
         const val ID = "AppsFlyer"
-    }
-
-    internal class Builder(
-        private val appsFlyerClientFactory: AppsFlyerClient.Factory,
-    ) : AnalyticsHandlerBuilder {
-
-        init {
-            TangemLogger.withTag("AppsFlyer").i("AppsFlyer Analytics Handler Builder created")
-        }
-
-        override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler = AppsFlyerAnalyticsHandler(
-            client = if (data.logConfig.isAppsflyerLogEnabled) {
-                TangemLogger.withTag("AppsFlyer").i("AppsFlyer log enabled, mock client created")
-                AppsFlyerLogClient()
-            } else {
-                TangemLogger.withTag("AppsFlyer").i("AppsFlyer log disabled, real client created")
-                appsFlyerClientFactory.create(apiKey = data.config.appsFlyerApiKey)
-            },
-        )
     }
 }

@@ -129,10 +129,18 @@ class YieldSupplyClaimTracker(
         val summary = getYieldRewardsSummaryUseCase(chainId = claim.chainId, userAddress = claim.userAddress)
             .getOrNull()
             ?: return false
-        if (summary !is YieldRewardsSummary.Claimable) return true
+        // A deferred summary can still list the claimed amounts: losing the recommendation does not mean Merkl
+        // processed the claim
+        val claimable = when (summary) {
+            is YieldRewardsSummary.Claimable -> summary.claimable
+            is YieldRewardsSummary.Deferred -> summary.claimable
+            YieldRewardsSummary.None,
+            is YieldRewardsSummary.PendingOnly,
+            -> return true
+        }
 
         return claim.claimedRewards.all { claimed ->
-            val remainingAmount = summary.claimable
+            val remainingAmount = claimable
                 .firstOrNull { reward ->
                     reward.rewardToken.normalizeEvmAddress() == claimed.rewardToken.normalizeEvmAddress()
                 }
