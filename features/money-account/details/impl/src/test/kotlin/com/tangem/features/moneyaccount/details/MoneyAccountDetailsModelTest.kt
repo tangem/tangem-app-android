@@ -3,6 +3,7 @@ package com.tangem.features.moneyaccount.details
 import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -52,7 +53,9 @@ import java.math.BigDecimal
 internal class MoneyAccountDetailsModelTest {
 
     private val userWalletId = UserWalletId("1234567890ABCDEF")
-    private val token: CryptoCurrency.Token = mockk()
+    private val token: CryptoCurrency.Token = mockk {
+        every { id } returns mockk { every { value } returns "token/USDC" }
+    }
 
     private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier = mockk()
     private val router: Router = mockk(relaxed = true)
@@ -222,6 +225,44 @@ internal class MoneyAccountDetailsModelTest {
             }
             model.onDestroy()
         }
+
+    @Test
+    fun `GIVEN options sheet WHEN swap clicked THEN swap opens with the account token as TO`() = runTest {
+        // Arrange
+        val model = createModel(activeAccount(balance = balance()))
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+        advanceUntilIdle()
+        model.uiState.value.onAddFundsClick()
+
+        // Act
+        model.onSwapClick()
+
+        // Assert
+        assertThat(openedSheets.last()).isNull()
+        val expectedRoute = AppRoute.Swap(
+            userWalletId = userWalletId,
+            fromCryptoCurrency = token,
+            screenSource = "MoneyAccount",
+            fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
+            accountFlow = AppRoute.Swap.AccountFlow.MoneyTopUp,
+        )
+        verify(exactly = 1) { router.push(expectedRoute, any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN account without balance WHEN swap clicked THEN swap not opened`() = runTest {
+        // Arrange
+        val model = createModel(activeAccount(balance = null))
+        advanceUntilIdle()
+
+        // Act
+        model.onSwapClick()
+
+        // Assert
+        verify(exactly = 0) { router.push(any(), any()) }
+        model.onDestroy()
+    }
 
     @ParameterizedTest
     @MethodSource("provideNonAccountStatuses")

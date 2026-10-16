@@ -26,6 +26,7 @@ internal class MoneyAccountAddFundsOptionsModel @Inject constructor(
 
     private val converter = MoneyAccountAddFundsOptionsUMConverter(
         depositAddress = params.depositAddress,
+        onSwapClick = params.listener::onSwapClick,
         onReceiveClick = params.listener::onReceiveClick,
         onBankTransferClick = ::loadBankingDetails,
     )
