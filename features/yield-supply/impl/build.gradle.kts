@@ -59,6 +59,7 @@ dependencies {
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.feedback)
     implementation(projects.domain.marketing.models)
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
     implementation(projects.common)
     implementation(projects.domain.account)
