@@ -4,15 +4,21 @@ import arrow.core.Either
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.promo.models.PromoCampaign
+import kotlinx.coroutines.flow.Flow
 
 class GetPromoCampaignsUseCase(
     private val repository: PromoRepository,
 ) {
 
-    suspend operator fun invoke(
+    /** Later campaigns of [userWallet], e.g. refreshed after a registration; the current ones come from [invokeSync]. */
+    operator fun invoke(userWallet: UserWallet): Flow<List<PromoCampaign>> = repository.getCampaigns(
+        userWallet.walletId,
+    )
+
+    suspend fun invokeSync(
         userWallet: UserWallet,
         forceRefresh: Boolean = false,
     ): Either<Throwable, List<PromoCampaign>> = Either.catch {
-        repository.getCampaigns(userWallet, forceRefresh)
+        repository.getCampaignsSync(userWallet, forceRefresh)
     }
 }

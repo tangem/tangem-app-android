@@ -4,7 +4,6 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.common.ui.markets.tokenselector.TokenSelectorEntry
@@ -12,6 +11,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.domain.markets.FetchCoinIndicatorsUseCase
@@ -61,7 +61,7 @@ internal class TokenSummaryModelTest {
     private val ethereumSymbol = ethereum.symbol
     private val ethereumNetwork = ethereum.network.name
 
-    private val appRouter: AppRouter = mockk(relaxUnitFun = true)
+    private val router: Router = mockk(relaxUnitFun = true)
     private val messageSender: UiMessageSender = mockk(relaxUnitFun = true)
     private val fetchCoinIndicatorsUseCase: FetchCoinIndicatorsUseCase = mockk()
     private val getCoinIndicatorsUpdatesUseCase: GetCoinIndicatorsUpdatesUseCase = mockk()
@@ -86,7 +86,7 @@ internal class TokenSummaryModelTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(analyticsEventHandler, appRouter, answers = false)
+        clearMocks(analyticsEventHandler, router, answers = false)
         swapHoldingsState.value = SwapHoldingsState.Loading
         coEvery { fetchCoinIndicatorsUseCase(any(), any()) } returns Unit.right()
         every { getCoinIndicatorsUpdatesUseCase() } returns MutableStateFlow(emptyMap())
@@ -207,7 +207,7 @@ internal class TokenSummaryModelTest {
                     fromCryptoCurrency = ethereum,
                     screenSource = AnalyticsParam.ScreensSources.ForYou.value,
                 )
-                verify { appRouter.push(route = expected, onComplete = any()) }
+                verify { router.push(route = expected, onComplete = any()) }
             }
 
         @Test
@@ -350,7 +350,7 @@ internal class TokenSummaryModelTest {
                 default = testDispatcher,
                 single = testDispatcher,
             ),
-            appRouter = appRouter,
+            router = router,
             messageSender = messageSender,
             fetchCoinIndicatorsUseCase = fetchCoinIndicatorsUseCase,
             addToPortfolioManagerFactory = addToPortfolioManagerFactory,

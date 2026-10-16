@@ -28,14 +28,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentDataType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDataType
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
@@ -54,7 +59,7 @@ import com.tangem.core.ui.res.generated.icons.ic_control_circle_24_filled
  * with a checkmark. Unlike [TangemCheckbox], this control is round (border-radius/full) and
  * boolean-only — it has no indeterminate state.
  *
- * Version: 1.0.0
+ * Version: 1.0.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=3671-5693)
  *
@@ -107,6 +112,11 @@ fun TangemCheckmark(
             }
             .semantics(mergeDescendants = true) {
                 if (!isEnabled) disabled()
+                if (onCheckedChange == null) {
+                    role = Role.Checkbox
+                    toggleableState = ToggleableState(checked)
+                    contentDataType = ContentDataType.Toggle
+                }
                 contentDescription?.let { this.contentDescription = it }
             }
             .conditionalCompose(onCheckedChange != null) {
@@ -178,7 +188,7 @@ fun TangemCheckmark(
 /** Public API surface of [TangemCheckmark]. */
 object TangemCheckmark {
 
-    val version = DsVersion(major = 1, minor = 0, patch = 0)
+    val version = DsVersion(major = 1, minor = 0, patch = 1)
 }
 
 @Preview(name = "Light", showBackground = true)

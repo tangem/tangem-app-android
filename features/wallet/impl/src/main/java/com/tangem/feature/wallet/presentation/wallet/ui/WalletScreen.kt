@@ -406,7 +406,7 @@ private fun WalletContent(
                                         contentPadding = contentPadding,
                                         tangemPayComponent = tangemPayComponent,
                                         promoBannersBlockComponent = promoBannersBlockComponent?.takeIf {
-                                            !isHideMarketingWhileSystemEnabled || currentWallet.arePromoCardsVisible
+                                            !isHideMarketingWhileSystemEnabled || currentWallet.isMarketingBlockVisible
                                         },
                                         walletId = currentWalletId,
                                         moneyAccountComponent = moneyAccountComponent,
