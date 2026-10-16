@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.decompose.router.slot.navigate
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -98,6 +99,21 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         )
     }
 
+    override fun onSwapClick() {
+        val account = currentState ?: return
+        if (account.balance == null) return
+        bottomSheetNavigation.dismiss()
+        router.push(
+            AppRoute.Swap(
+                userWalletId = params.userWalletId,
+                fromCryptoCurrency = account.cryptoCurrency,
+                screenSource = SWAP_SCREEN_SOURCE,
+                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
+                accountFlow = AppRoute.Swap.AccountFlow.MoneyTopUp,
+            ),
+        )
+    }
+
     override fun onReceiveClick(depositAddress: String) {
         val currency = currentState?.cryptoCurrency ?: return
         bottomSheetNavigation.dismiss()
@@ -158,6 +174,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     }
 
     private companion object {
+        const val SWAP_SCREEN_SOURCE = "MoneyAccount"
         const val TERMS_OF_USE_URL = "https://tangem.com/docs/en/virtual-account-terms.pdf"
     }
 }
