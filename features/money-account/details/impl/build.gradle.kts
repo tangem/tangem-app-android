@@ -13,6 +13,8 @@ android {
 
 dependencies {
     /** Core */
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
@@ -28,6 +30,7 @@ dependencies {
 
     /** Features */
     implementation(projects.features.moneyAccount.details.api)
+    implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.txhistory.api)
 
     /** Compose */
@@ -50,4 +53,7 @@ dependencies {
     implementation(deps.lifecycle.compose)
     implementation(deps.lifecycle.runtime.ktx)
     kapt(deps.hilt.kapt)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }
