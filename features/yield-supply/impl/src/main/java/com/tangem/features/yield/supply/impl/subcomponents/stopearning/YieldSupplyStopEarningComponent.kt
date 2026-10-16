@@ -130,15 +130,10 @@ internal class YieldSupplyStopEarningComponent(
         )
     }
 
-    /**
-     * @param wasClaimOffered the claim sheet was already put to the owner before this withdrawal, so the rewards
-     * are theirs to decide on and the withdrawal no longer claims them on its own
-     */
     data class Params(
         val userWallet: UserWallet,
         val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         val callback: ModelCallback,
-        val wasClaimOffered: Boolean,
     )
 
     interface ModelCallback {

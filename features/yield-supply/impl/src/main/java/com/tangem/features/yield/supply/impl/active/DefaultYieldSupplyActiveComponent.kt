@@ -162,7 +162,6 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
                 userWallet = model.userWallet,
                 cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
                 callback = model,
-                wasClaimOffered = model.wasClaimOfferedBeforeWithdrawal,
             ),
         )
         is YieldSupplyActiveRoute.AboutApy -> YieldSupplyAboutApyComponent(
