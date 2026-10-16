@@ -17,6 +17,7 @@ import com.tangem.features.polymarket.impl.history.PolymarketHistoryComponent
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM.Content
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM.NextPage
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -24,6 +25,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -39,6 +41,7 @@ internal class PolymarketHistoryModel @Inject constructor(
     private val params = paramsContainer.require<PolymarketHistoryComponent.Params>()
     private val session = createSession(params.userWalletId)
     private val converter = PolymarketActivityUMConverter()
+    private val detailsConverter = PolymarketActivityDetailsConverter()
     private val searchPlaceholder = TangemSearch.State(
         placeholderText = resourceReference(R.string.common_search),
         query = "",
@@ -49,18 +52,26 @@ internal class PolymarketHistoryModel @Inject constructor(
     )
 
     val uiState: StateFlow<PolymarketHistoryUM>
-        field = MutableStateFlow(PolymarketHistoryUM(content = Content.Loading, onBackClick = ::onBackClick))
+        field = MutableStateFlow(
+            PolymarketHistoryUM(
+                content = Content.Loading,
+                onBackClick = ::onBackClick,
+                onDismissDetails = ::dismissDetails,
+            ),
+        )
 
     init {
         modelScope.launch {
             session.state.collectLatest { state ->
-                uiState.value = PolymarketHistoryUM(
-                    content = content(state),
-                    onBackClick = ::onBackClick,
-                    tabs = tabs(state.filter),
-                    filterKey = state.filter.toString(),
-                    pullToRefreshConfig = PullToRefreshConfig(state.isRefreshing) { session.refresh() },
-                )
+                val content = content(state)
+                uiState.update {
+                    it.copy(
+                        content = content,
+                        tabs = tabs(state.filter),
+                        filterKey = state.filter.toString(),
+                        pullToRefreshConfig = PullToRefreshConfig(state.isRefreshing) { session.refresh() },
+                    )
+                }
             }
         }
     }
@@ -72,7 +83,7 @@ internal class PolymarketHistoryModel @Inject constructor(
     private suspend fun content(state: PolymarketActivityState): Content {
         if (state.items.isEmpty()) return emptyContent(state)
         return Content.Data(
-            groups = withContext(dispatchers.default) { converter.convert(state.items) },
+            groups = withContext(dispatchers.default) { converter.convert(state.items, ::openDetails) },
             search = searchPlaceholder,
             onDownloadCsvClick = {},
             nextPage = nextPage(state),
@@ -126,5 +137,26 @@ internal class PolymarketHistoryModel @Inject constructor(
 
     private fun onBackClick() {
         router.pop()
+    }
+
+    private fun openDetails(activity: PolymarketActivity) {
+        val openPrediction = activity.market?.event?.eventId?.takeIf(String::isNotBlank)?.let { eventId ->
+            {
+                dismissDetails()
+                router.push(
+                    PolymarketRoute.EventDetails(
+                        eventId = eventId,
+                        userWalletId = params.userWalletId,
+                        marketId = activity.market?.marketId,
+                        assetId = activity.order?.assetId,
+                    ),
+                )
+            }
+        }
+        uiState.update { it.copy(details = detailsConverter.convert(activity, openPrediction)) }
+    }
+
+    private fun dismissDetails() {
+        uiState.update { it.copy(details = null) }
     }
 }

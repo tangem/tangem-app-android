@@ -14,6 +14,7 @@ import com.tangem.domain.polymarket.usecase.CreatePolymarketActivitySessionUseCa
 import com.tangem.features.polymarket.impl.history.PolymarketHistoryComponent
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM.Content
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM.NextPage
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.PaginationStatus
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.every
@@ -99,7 +100,7 @@ internal class PolymarketHistoryModelTest {
     }
 
     @Test
-    fun `GIVEN loaded history WHEN search and CSV are tapped THEN placeholders do not change state or load data`() = runTest {
+    fun `GIVEN loaded history WHEN search is tapped THEN the placeholder does not change state or load data`() = runTest {
         // Arrange
         val model = createModel()
         state.value = PolymarketActivityState(listOf(createHistoryActivity()), status = PaginationStatus.EndOfPagination)
@@ -110,7 +111,6 @@ internal class PolymarketHistoryModelTest {
         // Act
         content.search.onQueryChange("event")
         content.search.onActiveChange(true)
-        content.onDownloadCsvClick()
         runCurrent()
 
         // Assert
@@ -118,6 +118,30 @@ internal class PolymarketHistoryModelTest {
         verify(exactly = 0) { session.loadMore() }
         verify(exactly = 0) { session.refresh() }
     }
+
+    @Test
+    fun `GIVEN open details WHEN history refreshes THEN retains details and navigates to the same outcome`() = runTest {
+        // Arrange
+        val model = createModel()
+        state.value = PolymarketActivityState(listOf(historyTrade()), status = PaginationStatus.EndOfPagination)
+        runCurrent()
+
+        // Act
+        val content = model.uiState.value.content as Content.Data
+        requireNotNull(content.groups.single().activities.single().onClick).invoke()
+        val details = requireNotNull(model.uiState.value.details)
+        state.value = state.value.copy(isRefreshing = true)
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.details).isSameInstanceAs(details)
+        requireNotNull(details.onGoToPrediction).invoke()
+        assertThat(model.uiState.value.details).isNull()
+        verify(exactly = 1) {
+            router.push(PolymarketRoute.EventDetails("event", wallet, "market", "asset"))
+        }
+    }
+
 
     private fun TestScope.createModel(): PolymarketHistoryModel {
         every { createSession(wallet) } returns session
