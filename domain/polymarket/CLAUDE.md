@@ -83,6 +83,13 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   is chosen by `isNegRisk`. The signed order is re-validated against the draft, the deposit wallet, the
   market and the quote age (60 s) before it is sent.
 - SELL: `makerAmount = shares`, `takerAmount = collateral`; BUY the reverse.
+- A claim signs only redeem calls the BFF served, and only after `PredictionRedeemCallValidator` accepted
+  them against the position: one adapter `redeemPositions` call on the root collection of the condition for
+  V1 (the only redeem function either adapter exposes; at most one index set per outcome, nothing after
+  them), one Router `redeem` per held outcome naming the position's asset id for V2, `value` zero
+  everywhere, addresses compared ignoring case.
+  The position's `version` decides which rules apply; a position that arrived without one is re-read, and
+  one still without it, or `UNKNOWN`, is never signed. A refusal reaches the user as the generic claim error.
 
 ## Funds
 

@@ -52,7 +52,7 @@ internal class CashbackUMFactoryTest {
     @Test
     fun `GIVEN hidden content WHEN create THEN neither block nor menu item`() {
         // Act
-        val actual = factory.create(CashbackContent.Hidden)
+        val actual = factory.create(content = CashbackContent.Hidden, isBalanceHidden = false)
 
         // Assert
         assertThat(actual).isEqualTo(CashbackUM())
@@ -64,7 +64,7 @@ internal class CashbackUMFactoryTest {
         val content = CashbackContent.Widget(cashback())
 
         // Act
-        val actual = factory.create(content)
+        val actual = factory.create(content = content, isBalanceHidden = false)
 
         // Assert
         val expected = CashbackUM(
@@ -89,7 +89,7 @@ internal class CashbackUMFactoryTest {
         val content = CashbackContent.Widget(cashback(confirmedAmount = model.amount))
 
         // Act
-        val actual = factory.create(content)
+        val actual = factory.create(content = content, isBalanceHidden = false)
 
         // Assert
         val expected = CashbackUM(
@@ -106,12 +106,34 @@ internal class CashbackUMFactoryTest {
     }
 
     @Test
+    fun `GIVEN balance hidden WHEN create widget THEN amount masked`() {
+        // Arrange
+        val content = CashbackContent.Widget(cashback())
+
+        // Act
+        val actual = factory.create(content = content, isBalanceHidden = true)
+
+        // Assert
+        val expected = CashbackUM(
+            block = CashbackBlockUM.Widget(
+                title = resourceReference(
+                    id = R.string.tangempay_cashback_widget_title,
+                    formatArgs = wrappedList("***", "June"),
+                ),
+                isNegative = false,
+                onClick = onWidgetClick,
+            ),
+        )
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
     fun `GIVEN menu entry content WHEN create THEN menu item with month and no block`() {
         // Arrange
         val content = CashbackContent.MenuEntry(cashback())
 
         // Act
-        val actual = factory.create(content)
+        val actual = factory.create(content = content, isBalanceHidden = false)
 
         // Assert
         val actualTint = (actual.menuItem?.icon as TangemIconUM.Icon).tint
@@ -131,7 +153,7 @@ internal class CashbackUMFactoryTest {
     @Test
     fun `GIVEN deactivation banner content WHEN create THEN deactivated banner block`() {
         // Act
-        val actual = factory.create(CashbackContent.DeactivationBanner)
+        val actual = factory.create(content = CashbackContent.DeactivationBanner, isBalanceHidden = false)
 
         // Assert
         assertThat(actual).isEqualTo(CashbackUM(block = CashbackBlockUM.DeactivatedBanner(onGotIt = onGotIt)))
@@ -141,7 +163,7 @@ internal class CashbackUMFactoryTest {
     @ValueSource(booleans = [false, true])
     fun `GIVEN unavailable content WHEN create THEN error block reloading while retrying`(isRetrying: Boolean) {
         // Act
-        val actual = factory.create(CashbackContent.Unavailable(isRetrying = isRetrying))
+        val actual = factory.create(content = CashbackContent.Unavailable(isRetrying = isRetrying), isBalanceHidden = false)
 
         // Assert
         val expected = CashbackUM(block = CashbackBlockUM.Error(onReload = onReload, isReloading = isRetrying))
