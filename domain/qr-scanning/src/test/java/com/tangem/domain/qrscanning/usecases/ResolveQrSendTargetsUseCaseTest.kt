@@ -143,10 +143,25 @@ internal class ResolveQrSendTargetsUseCaseTest {
         verify { qrScanningEventsRepository.classify(RECIPIENT, listOf(jointCurrency)) }
     }
 
+    @Test
+    fun `GIVEN classified deep link WHEN resolve THEN deep link target`() = runTest {
+        // Arrange
+        coEvery { multiAccountListSupplier.getSyncOrNull(Unit) } returns null
+        coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+        every { qrScanningEventsRepository.classify(DEEP_LINK, any()) } returns ClassifiedQrContent.DeepLink(DEEP_LINK)
+
+        // Act
+        val actual = useCase(DEEP_LINK)
+
+        // Assert
+        assertThat(actual).isEqualTo(QrSendTarget.DeepLink(DEEP_LINK))
+    }
+
     private companion object {
         const val ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
         const val DEAD_ADDRESS = "0x000000000000000000000000000000000000dEaD"
         const val RECIPIENT = "0xfc9013965447f804042a03ae4b98130a8c300a2f"
         const val USDT_CONTRACT = "0xdac17f958d2ee523a2206206994597c13d831ec7"
+        const val DEEP_LINK = "tangem://promo?promo_code=TEST123"
     }
 }

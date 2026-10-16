@@ -12,6 +12,7 @@ import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.core.navigation.notifications.SystemNotificationsStateProvider
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.account.models.AccountList
@@ -143,6 +144,7 @@ internal class WalletModel @Inject constructor(
     private val mcpRequestService: McpRequestService,
     private val mcpFeatureToggles: McpFeatureToggles,
     private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
+    private val deeplinkLauncher: DeeplinkLauncher,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val uiMessageSender: UiMessageSender,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
@@ -913,6 +915,7 @@ internal class WalletModel @Inject constructor(
                     mcpRequestService.request(McpRequest.Pair(userCode = target.userCode))
                 }
             }
+            is QrSendTarget.DeepLink -> deeplinkLauncher.launch(target.uri)
             is QrSendTarget.Single -> {
                 innerWalletRouter.openSend(
                     userWalletId = target.userWalletId,
