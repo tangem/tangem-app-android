@@ -6,6 +6,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.domain.models.account.BankCredentials
+import com.tangem.domain.models.wallet.UserWalletId
 
 internal class MoneyAccountAddFundsOptionsComponent(
     appComponentContext: AppComponentContext,
@@ -25,6 +27,7 @@ internal class MoneyAccountAddFundsOptionsComponent(
     }
 
     data class Params(
+        val userWalletId: UserWalletId,
         val depositAddress: String?,
         val listener: MoneyAccountAddFundsOptionsListener,
     )
@@ -32,5 +35,7 @@ internal class MoneyAccountAddFundsOptionsComponent(
 
 internal interface MoneyAccountAddFundsOptionsListener {
     fun onReceiveClick(depositAddress: String)
+    fun onBankDetailsLoaded(bankCredentials: BankCredentials)
+    fun onBankingDetailsLoadFailed()
     fun onDismissAddFunds()
 }

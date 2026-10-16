@@ -1,6 +1,7 @@
 package com.tangem.features.moneyaccount.details
 
 import androidx.compose.runtime.Stable
+import arrow.core.Either
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
@@ -16,10 +17,13 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.features.moneyaccount.details.addfunds.options.MoneyAccountAddFundsOptionsListener
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
@@ -40,6 +44,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val analytics: AnalyticsEventHandler,
+    private val getMoneyAccountBankCredentialsUseCase: GetMoneyAccountBankCredentialsUseCase,
 ) : Model(), MoneyAccountAddFundsOptionsListener {
 
     private val params = paramsContainer.require<MoneyAccountDetailsComponent.Params>()
@@ -67,7 +72,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
                         txHistorySlotNavigation.activate(value.cryptoCurrency)
                         uiState.update { stateFactory.createAccountState(value) }
                     }
-                    else -> router.pop()
+                    else -> if (currentState == null) router.pop()
                 }
             }
             .launchIn(modelScope)
@@ -108,10 +113,32 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         bottomSheetNavigation.activate(MoneyAccountDetailsNavigation.Receive(config))
     }
 
+    override fun onBankingDetailsLoadFailed() {
+        analytics.send(MoneyAccountAnalyticsEvents.DetailsLoadFailed())
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(MoneyAccountDetailsNavigation.BankDetailsError)
+    }
+
     override fun onDismissAddFunds() {
         bottomSheetNavigation.navigate { config ->
             config.takeUnless { it is MoneyAccountDetailsNavigation.AddFundsOptions }
         }
+    }
+
+    suspend fun retryBankCredentials(): Either<VisaApiError, BankCredentials> {
+        analytics.send(MoneyAccountAnalyticsEvents.DetailsRetryTapped())
+        return getMoneyAccountBankCredentialsUseCase(params.userWalletId)
+    }
+
+    override fun onBankDetailsLoaded(bankCredentials: BankCredentials) {
+        bottomSheetNavigation.dismiss()
+        router.push(MoneyAccountDetailsRoute.BankDetails(bankCredentials))
+    }
+
+    fun onBankDetailsSupportClick() {
+        analytics.send(MoneyAccountAnalyticsEvents.DetailsErrorSupportTapped())
+        bottomSheetNavigation.dismiss()
+        onSupportClick()
     }
 
     private fun onTermsClick() {
