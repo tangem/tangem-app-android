@@ -1134,6 +1134,7 @@ internal class TokenDetailsModel @Inject constructor(
                                 is SendTransactionError.CreateAccountUnderfunded,
                                 is SendTransactionError.TangemSdkError,
                                 is SendTransactionError.DemoCardError,
+                                is SendTransactionError.GaslessFeeIncreased,
                                 -> null
                                 is SendTransactionError.DataError -> error.message
                                 is SendTransactionError.BlockchainSdkError -> error.message
@@ -1178,6 +1179,7 @@ internal class TokenDetailsModel @Inject constructor(
                             is SendTransactionError.CreateAccountUnderfunded,
                             is SendTransactionError.TangemSdkError,
                             is SendTransactionError.DemoCardError,
+                            is SendTransactionError.GaslessFeeIncreased,
                             -> null
                             is SendTransactionError.DataError -> error.message
                             is SendTransactionError.BlockchainSdkError -> error.message

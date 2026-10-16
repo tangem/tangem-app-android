@@ -16,6 +16,8 @@ import com.tangem.utils.logging.TangemLogger
 /**
  * @property promoCardsBalanceState how far the balance behind the notifications has loaded; set only when the promo
  * cards give way to system cards (TWI-1841)
+ * @property hasJointOperations whether the wallet has pending joint operations, whose banners are system cards;
+ * `null` until they are known. Read only with [promoCardsBalanceState]
  */
 internal class SetWarningsTransformer(
     userWalletId: UserWalletId,
@@ -27,6 +29,7 @@ internal class SetWarningsTransformer(
         description = "Make it non-null and drop the branch that sets the notifications as they are",
     )
     private val promoCardsBalanceState: NotificationsBalanceState? = null,
+    private val hasJointOperations: Boolean?,
 ) : WalletStateTransformer(userWalletId) {
 
     override fun transform(prevState: WalletState): WalletState {
@@ -61,40 +64,61 @@ internal class SetWarningsTransformer(
 
     /**
      * The promo cards hide as soon as a system card is shown, but come back only at a due [PromoCardsCheck].
+     * "Get your first crypto" hides only the marketing block: a new user still sees the Tangem Pay promo, above it.
      * The Tangem Pay promo is dropped from the list rather than from the UI, so its shown event is not sent.
      */
     private fun setNotificationsHidingPromoCards(
         walletUM: WalletUM.Content,
         balanceState: NotificationsBalanceState,
     ): WalletUM.Content {
-        val hasSystemCard = notifications.any { it.isSystemCard() } ||
+        val systemNotifications = notifications.filter { it.isSystemCard() }
+        val shouldHideTangemPayPromo = systemNotifications.any { it !is WalletNotificationUM.AddFunds } ||
             notificationsCarousel.isNotEmpty() ||
-            walletUM.jointOperationBanners.isNotEmpty()
+            hasJointOperations == true
+        val shouldHideMarketingBlock = shouldHideTangemPayPromo || systemNotifications.isNotEmpty()
 
         val isCheckDue = when (walletUM.promoCardsCheck) {
             PromoCardsCheck.None -> false
-            PromoCardsCheck.OnOpen -> balanceState >= NotificationsBalanceState.Resolved
+            PromoCardsCheck.OnOpen -> balanceState >= NotificationsBalanceState.Resolved && hasJointOperations != null
             PromoCardsCheck.AfterRefresh -> balanceState == NotificationsBalanceState.Settled
         }
 
-        val arePromoCardsVisible = !hasSystemCard && (isCheckDue || walletUM.arePromoCardsVisible)
+        val isMarketingBlockVisible = !shouldHideMarketingBlock && (isCheckDue || walletUM.isMarketingBlockVisible)
+        val isTangemPayPromoVisible = !shouldHideTangemPayPromo && (isCheckDue || walletUM.isTangemPayPromoVisible)
 
         return walletUM.copy(
-            notifications = if (arePromoCardsVisible) {
-                notifications
+            notifications = if (isTangemPayPromoVisible) {
+                getNotificationsWithTangemPayPromoAboveAddFunds()
             } else {
                 notifications.filterNot { it is WalletNotificationUM.TangemPayPromo }.toImmutableList()
             },
             notificationsCarousel = notificationsCarousel,
-            arePromoCardsVisible = arePromoCardsVisible,
+            isMarketingBlockVisible = isMarketingBlockVisible,
+            isTangemPayPromoVisible = isTangemPayPromoVisible,
             promoCardsCheck = if (isCheckDue) PromoCardsCheck.None else walletUM.promoCardsCheck,
         )
     }
 
-    /** Everything but the Tangem Pay cards: its promo is a promo card, its account warnings stay out of the rule */
+    /**
+     * Everything but the Tangem Pay cards and the developer card: the promo is a promo card, the account warnings
+     * stay out of the rule, and the developer card is on every test card, where it would leave no promo to check
+     */
     private fun WalletNotificationUM.isSystemCard(): Boolean {
         return this !is WalletNotificationUM.TangemPayPromo &&
             this !is WalletNotificationUM.TangemPayRefreshNeeded &&
-            this !is WalletNotificationUM.TangemPayUnreachable
+            this !is WalletNotificationUM.TangemPayUnreachable &&
+            this !is WalletNotificationUM.DevCard
+    }
+
+    /** The notifications are sorted by type, which puts the promo below "Get your first crypto" */
+    private fun getNotificationsWithTangemPayPromoAboveAddFunds(): ImmutableList<WalletNotificationUM> {
+        val tangemPayPromo = notifications.firstOrNull { it is WalletNotificationUM.TangemPayPromo }
+        val otherNotifications = notifications.filterNot { it is WalletNotificationUM.TangemPayPromo }
+        val addFundsIndex = otherNotifications.indexOfFirst { it is WalletNotificationUM.AddFunds }
+        if (tangemPayPromo == null || addFundsIndex == -1) return notifications
+
+        return otherNotifications.toMutableList()
+            .apply { add(addFundsIndex, tangemPayPromo) }
+            .toImmutableList()
     }
 }
