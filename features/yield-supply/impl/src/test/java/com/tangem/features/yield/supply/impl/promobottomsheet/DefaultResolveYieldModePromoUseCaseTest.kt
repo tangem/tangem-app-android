@@ -10,8 +10,8 @@ import com.tangem.domain.models.earn.EarnYieldOffers
 import com.tangem.domain.models.network.Network
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoOffer
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoResolution
-import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoVariant
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.earn.MockEarn
 import com.tangem.test.mock.yield.MockYieldSupply
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -31,29 +31,43 @@ internal class DefaultResolveYieldModePromoUseCaseTest {
     fun `GIVEN eligible tokens WHEN invoke THEN offers the highest APY and the Earn top row`() {
         // Arrange
         val statuses = listOf(MockYieldSupply.loadedStatus(usdt), MockYieldSupply.loadedStatus(usdc))
-        val yieldApys = mapOf(usdt.yieldSupplyKey() to BigDecimal("3.10"), usdc.yieldSupplyKey() to BigDecimal("6.12"))
+        val yieldSupplyApy = mapOf(
+            usdt.yieldSupplyKey() to BigDecimal("3.10"),
+            usdc.yieldSupplyKey() to BigDecimal("6.12"),
+        )
         val earnOffers = EarnYieldOffers(
             total = 36,
-            best = MockYieldSupply.earnToken(apy = "0.1316", networkId = "arbitrum-one", tokenSymbol = "GHO"),
+            best = MockEarn.yieldToken(apy = "0.1316", networkId = "arbitrum-one", tokenSymbol = "GHO"),
         )
 
         // Act
-        val actual = useCase(statuses = statuses, yieldApys = yieldApys, earnOffers = earnOffers)
+        val actual = useCase(statuses = statuses, yieldSupplyApy = yieldSupplyApy, earnOffers = earnOffers)
 
         // Assert
         val expected = YieldModePromoResolution.Ready(
-            userMaxApy = YieldModePromoOffer(
-                apy = BigDecimal("6.12"),
-                tokensCount = 36,
-                tokenSymbol = "USDC",
-                blockchain = "Ethereum",
-            ),
-            globalMaxApy = YieldModePromoOffer(
-                apy = BigDecimal("13.16"),
-                tokensCount = 36,
-                tokenSymbol = "GHO",
-                blockchain = "Arbitrum One",
-            ),
+            userMaxApy = offer(apy = "6.12", tokenSymbol = "USDC"),
+            globalMaxApy = offer(apy = "13.16", tokenSymbol = "GHO", blockchain = "Arbitrum One"),
+        )
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN APYs with more decimals WHEN invoke THEN both offers round them half up to two`() {
+        // Arrange
+        val yieldSupplyApy = mapOf(usdt.yieldSupplyKey() to BigDecimal("3.3550"))
+        val earnOffers = EarnYieldOffers(total = 36, best = MockEarn.yieldToken(apy = "0.240300"))
+
+        // Act
+        val actual = useCase(
+            statuses = listOf(MockYieldSupply.loadedStatus(usdt)),
+            yieldSupplyApy = yieldSupplyApy,
+            earnOffers = earnOffers,
+        )
+
+        // Assert
+        val expected = YieldModePromoResolution.Ready(
+            userMaxApy = offer(apy = "3.36", tokenSymbol = "USDT"),
+            globalMaxApy = offer(apy = "24.03", tokenSymbol = "USDT"),
         )
         assertThat(actual).isEqualTo(expected)
     }
@@ -62,50 +76,53 @@ internal class DefaultResolveYieldModePromoUseCaseTest {
     @ProvideTestModels
     fun `GIVEN equal APYs WHEN invoke THEN the tie-break picks the candidate`(model: TieBreakModel) {
         // Arrange
-        val yieldApys = model.statuses.associate { status ->
-            (status.currency as CryptoCurrency.Token).yieldSupplyKey() to BigDecimal("5.00")
+        val yieldSupplyApy = model.statuses.associate { status ->
+            (status.currency as CryptoCurrency.Token).yieldSupplyKey() to BigDecimal("5")
         }
 
         // Act
-        val actual = useCase(statuses = model.statuses, yieldApys = yieldApys, earnOffers = earnOffers())
+        val actual = useCase(statuses = model.statuses, yieldSupplyApy = yieldSupplyApy, earnOffers = earnOffers())
 
         // Assert
-        assertThat(actual.userMaxApy()?.tokenSymbol).isEqualTo(model.expectedSymbol)
+        assertThat(actual).isEqualTo(ready(userMaxApy = model.expected))
     }
 
     @Test
     fun `GIVEN one token in two accounts WHEN invoke THEN their balances are summed`() {
         // Arrange
-        val secondAccountUsdt = MockYieldSupply.token(contractAddress = "0xA0", symbol = "USDT", network = cardNetwork)
         val statuses = listOf(
             MockYieldSupply.loadedStatus(usdt, amount = BigDecimal.ZERO, fiatAmount = BigDecimal.ZERO),
-            MockYieldSupply.loadedStatus(secondAccountUsdt, amount = BigDecimal("2"), fiatAmount = BigDecimal("2")),
+            MockYieldSupply.loadedStatus(usdtInCardAccount, amount = BigDecimal("2"), fiatAmount = BigDecimal("2")),
         )
 
         // Act
-        val actual = useCase(statuses = statuses, yieldApys = apyOf(usdt), earnOffers = earnOffers())
+        val actual = useCase(statuses = statuses, yieldSupplyApy = apyOf(usdt), earnOffers = earnOffers())
 
         // Assert
-        assertThat(actual.userMaxApy()?.tokenSymbol).isEqualTo("USDT")
+        assertThat(actual).isEqualTo(ready(userMaxApy = offer(apy = "5.00", tokenSymbol = "USDT")))
     }
 
     @ParameterizedTest
     @MethodSource("provideNoEligibleTokenModels")
     fun `GIVEN no eligible position WHEN invoke THEN no eligible token`(model: NoEligibleModel) {
         // Act
-        val actual = useCase(statuses = model.statuses, yieldApys = model.yieldApys, earnOffers = model.earnOffers)
+        val actual = useCase(
+            statuses = model.statuses,
+            yieldSupplyApy = model.yieldSupplyApy,
+            earnOffers = model.earnOffers,
+        )
 
         // Assert
         assertThat(actual).isEqualTo(YieldModePromoResolution.NoEligibleToken)
     }
 
     @ParameterizedTest
-    @MethodSource("provideWaitingModels")
-    fun `GIVEN a matched token still loading WHEN invoke THEN waiting`(model: WaitingModel) {
+    @MethodSource("provideStillLoadingStatuses")
+    fun `GIVEN a token still loading WHEN invoke THEN waiting`(stillLoading: CryptoCurrencyStatus) {
         // Act
         val actual = useCase(
-            statuses = listOf(model.status, MockYieldSupply.loadedStatus(usdc)),
-            yieldApys = apyOf(usdt) + apyOf(usdc),
+            statuses = listOf(MockYieldSupply.loadedStatus(usdt), stillLoading),
+            yieldSupplyApy = apyOf(usdt),
             earnOffers = earnOffers(),
         )
 
@@ -113,28 +130,13 @@ internal class DefaultResolveYieldModePromoUseCaseTest {
         assertThat(actual).isEqualTo(YieldModePromoResolution.Waiting)
     }
 
-    @Test
-    fun `GIVEN an unmatched token still loading WHEN invoke THEN it does not hold the decision`() {
-        // Arrange
-        val statuses = listOf(
-            CryptoCurrencyStatus(usdc, CryptoCurrencyStatus.Loading),
-            MockYieldSupply.loadedStatus(usdt),
-        )
-
-        // Act
-        val actual = useCase(statuses = statuses, yieldApys = apyOf(usdt), earnOffers = earnOffers())
-
-        // Assert
-        assertThat(actual.userMaxApy()?.tokenSymbol).isEqualTo("USDT")
-    }
-
     @ParameterizedTest
-    @MethodSource("provideDataNotReadyModels")
+    @MethodSource("provideUnusableTopRows")
     fun `GIVEN no usable Earn top row WHEN invoke THEN data not ready`(best: EarnToken?) {
         // Act
         val actual = useCase(
             statuses = listOf(MockYieldSupply.loadedStatus(usdt)),
-            yieldApys = apyOf(usdt),
+            yieldSupplyApy = apyOf(usdt),
             earnOffers = EarnYieldOffers(total = 36, best = best),
         )
 
@@ -145,31 +147,21 @@ internal class DefaultResolveYieldModePromoUseCaseTest {
     @Test
     fun `GIVEN an Earn top row on an unknown network WHEN invoke THEN the network id names the blockchain`() {
         // Arrange
-        val earnOffers = EarnYieldOffers(total = 36, best = MockYieldSupply.earnToken(networkId = "unknown-chain"))
+        val earnOffers = EarnYieldOffers(total = 36, best = MockEarn.yieldToken(networkId = "unknown-chain"))
 
         // Act
         val actual = useCase(
             statuses = listOf(MockYieldSupply.loadedStatus(usdt)),
-            yieldApys = apyOf(usdt),
+            yieldSupplyApy = apyOf(usdt),
             earnOffers = earnOffers,
         )
 
         // Assert
-        val ready = actual as YieldModePromoResolution.Ready
-        assertThat(ready.globalMaxApy.blockchain).isEqualTo("unknown-chain")
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideVariantModels")
-    fun `GIVEN a ready resolution WHEN offerFor THEN the variant picks its arm`(model: VariantModel) {
-        // Arrange
-        val ready = YieldModePromoResolution.Ready(userMaxApy = userOffer, globalMaxApy = globalOffer)
-
-        // Act
-        val actual = ready.offerFor(model.variant)
-
-        // Assert
-        assertThat(actual).isEqualTo(model.expected)
+        val expected = YieldModePromoResolution.Ready(
+            userMaxApy = offer(apy = "5.00", tokenSymbol = "USDT"),
+            globalMaxApy = offer(apy = "9.20", tokenSymbol = "USDT", blockchain = "unknown-chain"),
+        )
+        assertThat(actual).isEqualTo(expected)
     }
 
     private fun provideTestModels() = listOf(
@@ -178,7 +170,7 @@ internal class DefaultResolveYieldModePromoUseCaseTest {
                 MockYieldSupply.loadedStatus(usdt, fiatAmount = BigDecimal("10")),
                 MockYieldSupply.loadedStatus(usdc, fiatAmount = BigDecimal("20")),
             ),
-            expectedSymbol = "USDC",
+            expected = offer(apy = "5.00", tokenSymbol = "USDC"),
         ),
         TieBreakModel(
             statuses = listOf(
@@ -187,11 +179,11 @@ internal class DefaultResolveYieldModePromoUseCaseTest {
                 ),
                 MockYieldSupply.loadedStatus(MockYieldSupply.token(contractAddress = "0xF0", symbol = "ETH_USDT")),
             ),
-            expectedSymbol = "ETH_USDT",
+            expected = offer(apy = "5.00", tokenSymbol = "ETH_USDT"),
         ),
         TieBreakModel(
             statuses = listOf(MockYieldSupply.loadedStatus(usdc), MockYieldSupply.loadedStatus(usdt)),
-            expectedSymbol = "USDT",
+            expected = offer(apy = "5.00", tokenSymbol = "USDT"),
         ),
     )
 
@@ -199,106 +191,87 @@ internal class DefaultResolveYieldModePromoUseCaseTest {
         NoEligibleModel(
             statuses = listOf(
                 MockYieldSupply.loadedStatus(usdt),
-                MockYieldSupply.loadedStatus(usdc, yieldSupplyStatus = MockYieldSupply.yieldSupplyStatus()),
+                MockYieldSupply.loadedStatus(usdc, yieldSupplyStatus = MockYieldSupply.activeYieldSupplyStatus()),
             ),
-            yieldApys = apyOf(usdt),
         ),
-        NoEligibleModel(statuses = listOf(MockYieldSupply.loadedStatus(usdt)), yieldApys = emptyMap()),
+        NoEligibleModel(statuses = listOf(MockYieldSupply.loadedStatus(usdt)), yieldSupplyApy = emptyMap()),
         NoEligibleModel(
             statuses = listOf(MockYieldSupply.loadedStatus(MockYieldSupply.coin())),
-            yieldApys = mapOf("${MockYieldSupply.NETWORK_ID}_${MockYieldSupply.NETWORK_ID}" to BigDecimal("5")),
+            yieldSupplyApy = mapOf("${MockYieldSupply.NETWORK_ID}_${MockYieldSupply.NETWORK_ID}" to BigDecimal("5")),
         ),
         NoEligibleModel(
             statuses = listOf(
-                MockYieldSupply.loadedStatus(
-                    MockYieldSupply.token(contractAddress = "0xA0", network = MockYieldSupply.network(
-                        derivationPath = Network.DerivationPath.Joint("m/44'/60'/0'/0/0"),
-                    )),
-                ),
+                MockYieldSupply.loadedStatus(MockYieldSupply.token(contractAddress = "0xA0", network = jointNetwork)),
             ),
-            yieldApys = apyOf(usdt),
         ),
         NoEligibleModel(
             statuses = listOf(MockYieldSupply.loadedStatus(usdt)),
-            yieldApys = mapOf(usdt.yieldSupplyKey() to BigDecimal.ZERO),
+            yieldSupplyApy = mapOf(usdt.yieldSupplyKey() to BigDecimal.ZERO),
         ),
-        NoEligibleModel(
-            statuses = listOf(MockYieldSupply.loadedStatus(usdt, amount = BigDecimal.ZERO)),
-            yieldApys = apyOf(usdt),
-        ),
+        NoEligibleModel(statuses = listOf(MockYieldSupply.loadedStatus(usdt, amount = BigDecimal.ZERO))),
         NoEligibleModel(
             statuses = listOf(
                 MockYieldSupply.loadedStatus(usdt, amount = BigDecimal("100")),
                 CryptoCurrencyStatus(
-                    MockYieldSupply.token(contractAddress = "0xA0", network = cardNetwork),
+                    usdtInCardAccount,
                     CryptoCurrencyStatus.Unreachable(priceChange = null, fiatRate = null, networkAddress = null),
                 ),
             ),
-            yieldApys = apyOf(usdt),
         ),
         NoEligibleModel(
             statuses = listOf(
                 MockYieldSupply.loadedStatus(usdt, amount = BigDecimal("100"), networkSource = StatusSource.ONLY_CACHE),
             ),
-            yieldApys = apyOf(usdt),
         ),
         NoEligibleModel(
             statuses = listOf(MockYieldSupply.loadedStatus(usdt)),
-            yieldApys = apyOf(usdt),
             earnOffers = EarnYieldOffers(total = 0, best = null),
         ),
     )
 
-    private fun provideWaitingModels() = listOf(
-        WaitingModel(status = CryptoCurrencyStatus(usdt, CryptoCurrencyStatus.Loading)),
-        WaitingModel(status = MockYieldSupply.loadedStatus(usdt, networkSource = StatusSource.CACHE)),
+    private fun provideStillLoadingStatuses() = listOf(
+        CryptoCurrencyStatus(usdtInCardAccount, CryptoCurrencyStatus.Loading),
+        MockYieldSupply.loadedStatus(usdtInCardAccount, networkSource = StatusSource.CACHE),
+        CryptoCurrencyStatus(usdc, CryptoCurrencyStatus.Loading),
+        MockYieldSupply.loadedStatus(
+            usdc,
+            yieldSupplyStatus = MockYieldSupply.activeYieldSupplyStatus(),
+            networkSource = StatusSource.CACHE,
+        ),
     )
 
-    private fun provideDataNotReadyModels() = listOf(
-        null,
-        MockYieldSupply.earnToken(apy = "0"),
-        MockYieldSupply.earnToken(apy = "n/a"),
+    private fun provideUnusableTopRows() = listOf(null, MockEarn.yieldToken(apy = "0"))
+
+    private fun apyOf(token: CryptoCurrency.Token) = mapOf(token.yieldSupplyKey() to BigDecimal("5"))
+
+    private fun earnOffers() = EarnYieldOffers(total = 36, best = MockEarn.yieldToken())
+
+    private fun ready(userMaxApy: YieldModePromoOffer) = YieldModePromoResolution.Ready(
+        userMaxApy = userMaxApy,
+        globalMaxApy = offer(apy = "9.20", tokenSymbol = "USDT"),
     )
 
-    private fun provideVariantModels() = listOf(
-        VariantModel(variant = YieldModePromoVariant.USER_MAX_APY, expected = userOffer),
-        VariantModel(variant = YieldModePromoVariant.GLOBAL_MAX_APY, expected = globalOffer),
-        VariantModel(variant = YieldModePromoVariant.CONTROL, expected = null),
-    )
-
-    private fun apyOf(token: CryptoCurrency.Token) = mapOf(token.yieldSupplyKey() to BigDecimal("5.00"))
-
-    private fun earnOffers() = EarnYieldOffers(total = 36, best = MockYieldSupply.earnToken())
-
-    private fun YieldModePromoResolution.userMaxApy() = (this as? YieldModePromoResolution.Ready)?.userMaxApy
-
-    internal data class TieBreakModel(val statuses: List<CryptoCurrencyStatus>, val expectedSymbol: String)
+    internal data class TieBreakModel(val statuses: List<CryptoCurrencyStatus>, val expected: YieldModePromoOffer)
 
     internal data class NoEligibleModel(
         val statuses: List<CryptoCurrencyStatus>,
-        val yieldApys: Map<String, BigDecimal>,
-        val earnOffers: EarnYieldOffers = EarnYieldOffers(total = 36, best = MockYieldSupply.earnToken()),
+        val yieldSupplyApy: Map<String, BigDecimal> = mapOf(
+            MockYieldSupply.token(contractAddress = "0xA0").yieldSupplyKey() to BigDecimal("5"),
+        ),
+        val earnOffers: EarnYieldOffers = EarnYieldOffers(total = 36, best = MockEarn.yieldToken()),
     )
-
-    internal data class WaitingModel(val status: CryptoCurrencyStatus)
-
-    internal data class VariantModel(val variant: YieldModePromoVariant, val expected: YieldModePromoOffer?)
 
     private companion object {
         val cardNetwork = MockYieldSupply.network(derivationPath = Network.DerivationPath.Card("m/44'/60'/1'/0/0"))
+        val jointNetwork = MockYieldSupply.network(derivationPath = Network.DerivationPath.Joint("m/44'/60'/0'/0/0"))
         val arbitrumNetwork = MockYieldSupply.network(id = "arbitrum-one", name = "Arbitrum One")
+        val usdtInCardAccount = MockYieldSupply.token(contractAddress = "0xA0", symbol = "USDT", network = cardNetwork)
 
-        val userOffer = YieldModePromoOffer(
-            apy = BigDecimal("6.12"),
+        fun offer(apy: String, tokenSymbol: String, blockchain: String = "Ethereum") = YieldModePromoOffer(
+            apy = BigDecimal(apy),
             tokensCount = 36,
-            tokenSymbol = "USDC",
-            blockchain = "Ethereum",
-        )
-        val globalOffer = YieldModePromoOffer(
-            apy = BigDecimal("9.2"),
-            tokensCount = 36,
-            tokenSymbol = "USDT",
-            blockchain = "Ethereum",
+            tokenSymbol = tokenSymbol,
+            blockchain = blockchain,
         )
     }
 }

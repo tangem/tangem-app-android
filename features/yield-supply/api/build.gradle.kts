@@ -15,6 +15,9 @@ dependencies {
     api(projects.core.ui)
     api(projects.core.analytics.models)
 
+    /** Serialization */
+    api(deps.kotlin.serialization.core)
+
     /** Domain */
     api(projects.domain.models)
     api(projects.domain.tokens.models)
