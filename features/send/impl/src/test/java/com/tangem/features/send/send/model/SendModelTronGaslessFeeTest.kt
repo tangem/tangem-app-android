@@ -1,5 +1,6 @@
 package com.tangem.features.send.send.model
 
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Amount
@@ -11,6 +12,7 @@ import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.features.send.api.entity.PredefinedValues
@@ -43,6 +45,7 @@ internal class SendModelTronGaslessFeeTest : SendModelTestBase() {
         coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns gaslessFee().right()
         coEvery { getFeeForGaslessUseCase(any(), any(), any(), any()) } returns nativeFee().right()
         stubBalances(sentBalance = BigDecimal("100"))
+        stubQuotedAmount(amount = "1.0")
     }
 
     private fun stubBalances(sentBalance: BigDecimal) {
@@ -99,6 +102,7 @@ internal class SendModelTronGaslessFeeTest : SendModelTestBase() {
         runTest {
             // Arrange
             stubBalances(sentBalance = BigDecimal("5"))
+            stubQuotedAmount(amount = "5.0")
             val sendModel = createSendModel(this)
             advanceUntilIdle()
             sendModel.predefinedValues = deeplink(amount = "5.0")
@@ -110,6 +114,33 @@ internal class SendModelTronGaslessFeeTest : SendModelTestBase() {
             assertThat(result.getOrNull()).isEqualTo(gaslessFee())
             coVerify(exactly = 0) { getFeeForGaslessUseCase(any(), any(), any(), any()) }
         }
+
+    @Test
+    fun `GIVEN reduced amount re-quote fails WHEN loadFeeExtended THEN gasless quote kept without native fallback`() =
+        runTest {
+            // Arrange
+            stubBalances(sentBalance = BigDecimal("5"))
+            stubQuotedAmount(amount = "5.0")
+            coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns true.right()
+            coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns
+                gaslessFee().right() andThen GetFeeError.UnknownError.left()
+            val sendModel = createSendModel(this)
+            advanceUntilIdle()
+            sendModel.predefinedValues = deeplink(amount = "5.0")
+
+            // Act
+            val result = sendModel.loadFeeExtended(maybeToken = null)
+
+            // Assert
+            assertThat(result.getOrNull()).isEqualTo(gaslessFee())
+            coVerify(exactly = 2) { getTronGaslessFeeUseCase(any(), any(), sentUsdt) }
+            coVerify(exactly = 0) { getFeeForGaslessUseCase(any(), any(), any(), any()) }
+        }
+
+    private fun stubQuotedAmount(amount: String) {
+        every { gaslessQuote.quotedAmountRaw } returns
+            BigDecimal(amount).movePointRight(sentUsdt.decimals).toBigInteger()
+    }
 
     override fun defaultSendParams() = super.defaultSendParams().copy(currency = sentUsdt)
 
