@@ -271,9 +271,23 @@ internal class YieldSupplyActiveModel @Inject constructor(
         claimResultFlow.update { null }
     }
 
+    /**
+     * Yield Mode is also opened from the main screen, Markets, For You and a deep link, so the token screen is not
+     * always the one beneath it.
+     */
     fun onGoToTokenClick() {
         onClaimResultDismiss()
-        appRouter.pop()
+        // Matched by wallet and currency: the route in the stack may carry a navigation action or a market block flag
+        val tokenRoute = appRouter.stack.lastOrNull { route ->
+            route is AppRoute.CurrencyDetails &&
+                route.userWalletId == userWalletId &&
+                route.currency.id == cryptoCurrency.id
+        }
+        if (tokenRoute != null) {
+            appRouter.popTo(tokenRoute)
+        } else {
+            appRouter.replaceCurrent(AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = cryptoCurrency))
+        }
     }
 
     private fun subscribeOnClaimOutcome() {
