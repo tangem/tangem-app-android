@@ -166,6 +166,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 analyticsSendSource = model.analyticsSendSource,
                 accountFlow = model.accountFlow,
                 isAccountModeFlow = model.isAccountModeFlow,
+                onExitFlow = router::pop,
             ),
         )
     }
@@ -212,6 +213,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 isAccountModeFlow = model.isAccountModeFlow,
                 analyticsSendSource = model.analyticsSendSource,
                 swapDirection = SwapDirection.Direct,
+                onExitFlow = router::pop,
             ),
         )
     }
