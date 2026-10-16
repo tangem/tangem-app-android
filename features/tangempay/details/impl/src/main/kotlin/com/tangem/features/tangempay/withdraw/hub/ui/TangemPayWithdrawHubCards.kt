@@ -105,7 +105,7 @@ internal fun RecentsEmptyCard() {
 
 @Composable
 internal fun SecondaryIconCircle(imageVector: ImageVector) {
-    IconCircle(background = TangemTheme.colors3.bg.opaque.primary) {
+    IconCircle(background = TangemTheme.colors3.bg.transparent.primary) {
         TangemIcon(
             modifier = Modifier.size(20.dp),
             tangemIconUM = TangemIconUM.Icon(

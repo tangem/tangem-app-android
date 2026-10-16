@@ -11,7 +11,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.push
+import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -72,10 +72,10 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
                 params = OnrampMainComponent.Params(
                     userWalletId = params.userWalletId,
                     cryptoCurrency = params.cryptoCurrency,
-                    openSettings = { navigation.push(OnrampChild.Settings) },
+                    openSettings = { navigation.pushNew(OnrampChild.Settings) },
                     source = params.source,
                     openRedirectPage = { quote ->
-                        navigation.push(
+                        navigation.pushNew(
                             OnrampChild.RedirectPage(
                                 quote = quote,
                                 cryptoCurrency = params.cryptoCurrency,

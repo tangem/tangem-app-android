@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
@@ -82,8 +83,8 @@ fun ShowcaseButtons(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
+                    start = 16.dp,
+                    end = 16.dp,
                 ),
         )
         SecondaryButton(
@@ -92,10 +93,10 @@ fun ShowcaseButtons(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
-                    top = TangemTheme.dimens.spacing12,
-                    bottom = TangemTheme.dimens.spacing16,
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 12.dp,
+                    bottom = 16.dp,
                 ),
         )
         if (hint != null) {
@@ -106,9 +107,9 @@ fun ShowcaseButtons(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        start = TangemTheme.dimens.spacing16,
-                        end = TangemTheme.dimens.spacing16,
-                        bottom = TangemTheme.dimens.spacing12,
+                        start = 16.dp,
+                        end = 16.dp,
+                        bottom = 12.dp,
                     ),
             )
         }

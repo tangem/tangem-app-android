@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -28,7 +29,7 @@ fun Notifier(
 ) {
     Box(
         modifier = modifier
-            .heightIn(TangemTheme.dimens.size32)
+            .heightIn(32.dp)
             .background(
                 color = backgroundColor,
                 shape = TangemTheme.shapes.roundedCorners8,
@@ -37,7 +38,7 @@ fun Notifier(
         Text(
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(horizontal = TangemTheme.dimens.size10),
+                .padding(horizontal = 10.dp),
             text = text,
             color = textColor,
             style = TangemTheme.typography.button,

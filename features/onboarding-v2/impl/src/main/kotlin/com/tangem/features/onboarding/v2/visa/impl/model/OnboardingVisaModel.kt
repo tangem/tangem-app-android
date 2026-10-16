@@ -214,8 +214,8 @@ internal class OnboardingVisaModel @Inject constructor(
 
         // TODO [REDACTED_TASK_KEY] [Hot Wallet] Visa 1.0 flow. Hot wallet as a customer wallet
         return wallets.filterIsInstance<UserWallet.Cold>().firstOrNull { wallet ->
-            wallet.scanResponse.card.wallets.any {
-                val derivedKey = it.derivedKeys[VisaUtilities.visaDefaultDerivationPath] ?: return@any false
+            wallet.scanResponse.card.wallets.any { cardWallet ->
+                val derivedKey = cardWallet.derivedKeys[VisaUtilities.visaDefaultDerivationPath] ?: return@any false
 
                 VisaWalletPublicKeyUtility.validateExtendedPublicKey(
                     targetAddress = targetAddress,
