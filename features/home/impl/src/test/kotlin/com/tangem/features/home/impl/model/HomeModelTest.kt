@@ -12,6 +12,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.appsflyer.AppsFlyerDeeplink
 import com.tangem.domain.appsflyer.usecase.GetAppsFlyerDeeplinkUseCase
 import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.card.models.ScanConfig
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
@@ -50,7 +51,7 @@ internal class HomeModelTest {
     private val homeFeatureToggles: HomeFeatureToggles = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
-    private val progressSlot = slot<suspend (Boolean) -> Unit>()
+    private val configSlot = slot<ScanConfig>()
 
     @BeforeEach
     fun setUp() {
@@ -59,16 +60,7 @@ internal class HomeModelTest {
         every { getUserCountryUseCase.invoke() } returns emptyFlow()
         coEvery { settingsRepository.shouldSaveAccessCodes() } returns false
         coEvery {
-            scanCardProcessor.scan(
-                analyticsSource = any(),
-                shouldCheckIsAlreadyActivated = any(),
-                cardId = any(),
-                onProgressStateChange = capture(progressSlot),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any(),
-            )
+            scanCardProcessor.scan(config = capture(configSlot))
         } just Runs
     }
 
@@ -157,13 +149,13 @@ internal class HomeModelTest {
         val initialConfig = model.uiState.value.storiesConfig
 
         // Act + Assert — loading on
-        progressSlot.captured.invoke(true)
+        configSlot.captured.callback.onProgressStateChange(true)
         advanceUntilIdle()
         assertThat(model.uiState.value.isScanInProgress).isTrue()
         assertThat(model.uiState.value.storiesConfig).isSameInstanceAs(initialConfig)
 
         // Act + Assert — loading off
-        progressSlot.captured.invoke(false)
+        configSlot.captured.callback.onProgressStateChange(false)
         advanceUntilIdle()
         assertThat(model.uiState.value.isScanInProgress).isFalse()
         assertThat(model.uiState.value.storiesConfig).isSameInstanceAs(initialConfig)

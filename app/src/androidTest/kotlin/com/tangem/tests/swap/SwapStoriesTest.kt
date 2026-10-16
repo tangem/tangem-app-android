@@ -4,8 +4,10 @@ import androidx.compose.ui.test.longClick
 import androidx.test.InstrumentationRegistry.getTargetContext
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
+import com.tangem.common.extensions.clickWhenEnabled
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.restartApp
+import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
@@ -13,6 +15,7 @@ import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @HiltAndroidTest
@@ -330,6 +333,103 @@ class SwapStoriesTest : BaseTestCase() {
             }
             step("Open 'Swap' screen without stories") {
                 openSwapScreen(from = SwapEntryPoint.TokenActionsBottomSheet, storiesExist = false)
+            }
+        }
+    }
+
+    @AllureId("5453")
+    @DisplayName("Swap stories: view stories from 'Main' screen")
+    @Test
+    fun viewSwapStoriesFromMainScreenTest() {
+        setupHooks().run {
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on 'Swap' button on 'Main' screen") {
+                onMainScreen { swapButton.performClick() }
+            }
+            step("Assert 'Stories' screen is displayed") {
+                onSwapStoriesScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { container.assertIsDisplayed() }
+                }
+            }
+            step("View stories to the end") {
+                viewSwapStoriesToEnd()
+            }
+            step("Assert 'Swap' screen title is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { title.assertIsDisplayed() }
+                }
+            }
+            step("Click on 'Close' button") {
+                onSwapTokenScreen { closeButton.performClick() }
+            }
+            step("Assert 'Main' screen is displayed") {
+                onMainScreen { screenContainer.assertIsDisplayed() }
+            }
+            step("Open 'Swap' screen without stories") {
+                openSwapScreen(from = SwapEntryPoint.MainScreen, storiesExist = false)
+            }
+        }
+    }
+
+    @AllureId("5454")
+    @DisplayName("Swap stories: view stories from 'Token details' screen")
+    @Test
+    fun viewSwapStoriesFromTokenDetailsScreenTest() {
+        val tokenName = "Ethereum"
+        val storiesEndpoint = "/v1/stories/first-time-swap-v2"
+        var storiesRequestsBeforeLaunch = 0
+
+        setupHooks(
+            additionalBeforeAppLaunchSection = {
+                storiesRequestsBeforeLaunch = getWireMockRequestCount("GET", storiesEndpoint)
+            },
+        ).run {
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Assert '$storiesEndpoint' is requested on app launch") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    assertTrue(
+                        "App launch should request $storiesEndpoint",
+                        getWireMockRequestCount("GET", storiesEndpoint) > storiesRequestsBeforeLaunch,
+                    )
+                }
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenName'") {
+                openTokenDetailsFromTokenList(tokenName)
+            }
+            step("Click on 'Swap' button on 'Token details' screen") {
+                onTokenDetailsScreen { swapButton.clickWhenEnabled() }
+            }
+            step("Assert 'Stories' screen is displayed") {
+                onSwapStoriesScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { container.assertIsDisplayed() }
+                }
+            }
+            step("View stories to the end") {
+                viewSwapStoriesToEnd()
+            }
+            step("Assert 'Swap' screen title is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { title.assertIsDisplayed() }
+                }
+            }
+            step("Click on 'Close' button") {
+                onSwapTokenScreen { closeButton.performClick() }
+            }
+            step("Assert 'Token details' screen is displayed") {
+                onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
+            }
+            step("Open 'Swap' screen without stories") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false)
             }
         }
     }

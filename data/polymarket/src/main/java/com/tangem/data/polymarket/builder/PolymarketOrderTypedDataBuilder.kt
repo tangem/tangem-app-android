@@ -36,7 +36,7 @@ object PolymarketOrderTypedDataBuilder {
     fun domainSeparator(isNegRisk: Boolean): ByteArray = concat(
         DOMAIN_TYPE.toByteArray().toKeccak(),
         PolymarketContracts.EXCHANGE_DOMAIN_NAME.toByteArray().toKeccak(),
-        PolymarketContracts.EXCHANGE_DOMAIN_VERSION.toByteArray().toKeccak(),
+        PolymarketContracts.EXCHANGE_DOMAIN_VERSION_V2.toByteArray().toKeccak(),
         word(BigInteger.valueOf(PolymarketContracts.CHAIN_ID)),
         addressWord(exchangeAddress(isNegRisk)),
     ).toKeccak()
@@ -80,7 +80,7 @@ object PolymarketOrderTypedDataBuilder {
 
     private fun orderDomain(isNegRisk: Boolean): JSONObject = JSONObject().apply {
         put("name", PolymarketContracts.EXCHANGE_DOMAIN_NAME)
-        put("version", PolymarketContracts.EXCHANGE_DOMAIN_VERSION)
+        put("version", PolymarketContracts.EXCHANGE_DOMAIN_VERSION_V2)
         put("chainId", PolymarketContracts.CHAIN_ID)
         put("verifyingContract", exchangeAddress(isNegRisk))
     }

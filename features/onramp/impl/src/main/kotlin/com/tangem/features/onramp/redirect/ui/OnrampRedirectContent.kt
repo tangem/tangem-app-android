@@ -13,6 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.RectangleShimmer
@@ -41,7 +42,7 @@ internal fun OnrampRedirectContent(state: OnrampRedirectUM, modifier: Modifier =
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
-                    .padding(horizontal = TangemTheme.dimens.spacing16),
+                    .padding(horizontal = 16.dp),
                 state = state,
             )
         },
@@ -57,13 +58,13 @@ private fun Content(state: OnrampRedirectUM, modifier: Modifier = Modifier) {
     ) {
         LogoBlock(providerImageUrl = state.providerImageUrl)
         Text(
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing24),
+            modifier = Modifier.padding(top = 24.dp),
             text = state.title.resolveReference(),
             style = TangemTheme.typography.h3,
             color = TangemTheme.colors.text.primary1,
         )
         Text(
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
+            modifier = Modifier.padding(top = 12.dp),
             text = state.subtitle.resolveReference(),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.secondary,
@@ -76,15 +77,15 @@ private fun Content(state: OnrampRedirectUM, modifier: Modifier = Modifier) {
 private fun LogoBlock(providerImageUrl: String, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             modifier = Modifier
-                .size(TangemTheme.dimens.size64)
+                .size(64.dp)
                 .clip(TangemTheme.shapes.roundedCorners8)
                 .background(TangemTheme.colors.background.primary)
-                .padding(vertical = TangemTheme.dimens.spacing8, horizontal = TangemTheme.dimens.spacing12),
+                .padding(vertical = 8.dp, horizontal = 12.dp),
             painter = painterResource(id = R.drawable.ic_tangem_24),
             tint = TangemTheme.colors.icon.primary1,
             contentDescription = null,
@@ -92,14 +93,14 @@ private fun LogoBlock(providerImageUrl: String, modifier: Modifier = Modifier) {
         LoadingDots()
         SubcomposeAsyncImage(
             modifier = Modifier
-                .size(size = TangemTheme.dimens.size64)
+                .size(size = 64.dp)
                 .clip(TangemTheme.shapes.roundedCorners8),
             model = ImageRequest.Builder(context = LocalContext.current)
                 .data(providerImageUrl)
                 .crossfade(enable = true)
                 .allowHardware(false)
                 .build(),
-            loading = { RectangleShimmer(radius = TangemTheme.dimens.radius8) },
+            loading = { RectangleShimmer(radius = 8.dp) },
             contentDescription = null,
         )
     }
@@ -109,24 +110,24 @@ private fun LogoBlock(providerImageUrl: String, modifier: Modifier = Modifier) {
 private fun LoadingDots(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
-                .size(TangemTheme.dimens.size6)
+                .size(6.dp)
                 .clip(CircleShape)
                 .background(color = TangemTheme.colors.icon.accent.copy(alpha = 0.75F)),
         )
         Box(
             modifier = Modifier
-                .size(TangemTheme.dimens.size6)
+                .size(6.dp)
                 .clip(CircleShape)
                 .background(color = TangemTheme.colors.icon.accent.copy(alpha = 0.45F)),
         )
         Box(
             modifier = Modifier
-                .size(TangemTheme.dimens.size8)
+                .size(8.dp)
                 .clip(CircleShape)
                 .background(color = TangemTheme.colors.icon.accent),
         )

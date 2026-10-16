@@ -64,7 +64,7 @@ fun TokenActionRow(
     val accentColor = accentColor(isEnabled)
     TangemRowContainer(
         modifier = modifier
-            .clip(RoundedCornerShape(TangemTheme.dimens2.x5))
+            .clip(RoundedCornerShape(20.dp))
             .background(color = TangemTheme.colors2.surface.level3)
             .clickableWithHaptic(
                 onClick = onClick,
@@ -95,7 +95,7 @@ private fun LeadingIcon(@DrawableRes iconRes: Int, accentColor: Color) {
     Box(
         modifier = Modifier
             .layoutId(TangemRowLayoutId.HEAD)
-            .padding(end = TangemTheme.dimens2.x3)
+            .padding(end = 12.dp)
             .size(40.dp)
             .background(
                 color = accentColor.copy(alpha = ACTION_BACKGROUND_ALPHA),
@@ -117,7 +117,7 @@ private fun Tail(content: @Composable () -> Unit) {
     Box(
         modifier = Modifier
             .layoutId(TangemRowLayoutId.TAIL)
-            .padding(start = TangemTheme.dimens2.x2)
+            .padding(start = 8.dp)
             .size(24.dp),
         contentAlignment = Alignment.Center,
     ) {

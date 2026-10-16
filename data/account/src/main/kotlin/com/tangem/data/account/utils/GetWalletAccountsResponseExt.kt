@@ -44,8 +44,8 @@ internal fun List<WalletAccountDTO>.assignTokens(
             val existingAccountIds = map(WalletAccountDTO::id).toSet()
             val unexistingAccountIds = enrichedTokensByAccountId.keys - existingAccountIds
 
-            val customTokens = unexistingAccountIds.flatMap {
-                enrichedTokensByAccountId[it].orEmpty().map { token ->
+            val customTokens = unexistingAccountIds.flatMap { accountId ->
+                enrichedTokensByAccountId[accountId].orEmpty().map { token ->
                     // Tokens from unexisting accounts should be copied to the main account
                     token.copy(accountId = accountDTO.id)
                 }

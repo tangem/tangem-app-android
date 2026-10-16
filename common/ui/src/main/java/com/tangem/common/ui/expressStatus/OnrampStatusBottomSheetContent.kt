@@ -21,7 +21,7 @@ import com.tangem.core.ui.res.TangemTheme
 fun OnrampStatusBottomSheetContent(state: ExpressTransactionStateUM.OnrampUM, isExpressShareButtonEnabled: Boolean) {
     Column(
         modifier = Modifier
-            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .padding(horizontal = 16.dp)
             .verticalScroll(rememberScrollState()),
     ) {
         SpacerH10()

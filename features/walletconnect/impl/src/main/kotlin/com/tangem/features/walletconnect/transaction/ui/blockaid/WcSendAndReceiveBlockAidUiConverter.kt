@@ -58,13 +58,18 @@ internal class WcSendAndReceiveBlockAidUiConverter :
             spendAllowance = (value.result.simulation as? SimulationResult.Success)?.data?.let { data ->
                 when (data) {
                     is SimulationData.SendAndReceive, SimulationData.NoWalletChangesDetected -> null
-                    is SimulationData.Approve -> value.approvedAmount?.let {
-                        spendAllowanceUMConverter.convert(
-                            WcSpendAllowanceUMConverter.Input(
-                                approvedAmount = it,
-                                onLearnMoreClick = value.onApproveLearnMoreClick,
-                            ),
-                        )
+                    is SimulationData.Approve -> {
+                        val approvedAmount = value.approvedAmount
+                        if (approvedAmount != null) {
+                            spendAllowanceUMConverter.convert(
+                                WcSpendAllowanceUMConverter.Input(
+                                    approvedAmount = approvedAmount,
+                                    onLearnMoreClick = value.onApproveLearnMoreClick,
+                                ),
+                            )
+                        } else {
+                            null
+                        }
                     }
                 }
             },

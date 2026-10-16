@@ -115,7 +115,7 @@ private fun Content(
         val focusRequester = remember { FocusRequester() }
 
         OutlineTextFieldWithIcon(
-            modifier = modifier
+            modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .focusRequester(focusRequester)
                 .fillMaxWidth(),
