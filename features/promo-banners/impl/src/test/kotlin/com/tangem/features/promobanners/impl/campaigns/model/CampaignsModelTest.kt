@@ -72,7 +72,7 @@ internal class CampaignsModelTest {
         // Arrange
         every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
         val campaign = createPromoCampaign(name = "whale")
-        coEvery { getPromoCampaignsUseCase(userWallet, any()) } returns
+        coEvery { getPromoCampaignsUseCase.invokeSync(userWallet, any()) } returns
             Either.Right(listOf(createPromoCampaign(name = "other"), campaign))
         val model = createModel(campaignFlow = flowOf(CampaignRequest(campaignId = "whale", userWalletId = userWalletId)))
         val openedSheets = mutableListOf<CampaignsBottomSheetConfig?>()
@@ -92,7 +92,7 @@ internal class CampaignsModelTest {
         // Arrange
         every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
         val campaign = createPromoCampaign(name = "whale", id = 42)
-        coEvery { getPromoCampaignsUseCase(userWallet, any()) } returns
+        coEvery { getPromoCampaignsUseCase.invokeSync(userWallet, any()) } returns
             Either.Right(listOf(createPromoCampaign(name = "other", id = 7), campaign))
         val model = createModel(campaignFlow = flowOf(CampaignRequest(campaignId = "42", userWalletId = userWalletId)))
         val openedSheets = mutableListOf<CampaignsBottomSheetConfig?>()
@@ -111,7 +111,7 @@ internal class CampaignsModelTest {
         // Arrange
         every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
         val matchedById = createPromoCampaign(name = "whale", id = 42)
-        coEvery { getPromoCampaignsUseCase(userWallet, any()) } returns
+        coEvery { getPromoCampaignsUseCase.invokeSync(userWallet, any()) } returns
             Either.Right(listOf(createPromoCampaign(name = "42", id = 7), matchedById))
         val model = createModel(campaignFlow = flowOf(CampaignRequest(campaignId = "42", userWalletId = userWalletId)))
         val openedSheets = mutableListOf<CampaignsBottomSheetConfig?>()
@@ -131,7 +131,7 @@ internal class CampaignsModelTest {
             // Arrange
             every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
             val campaign = createPromoCampaign(name = "whale", isAlreadyEnrolled = true)
-            coEvery { getPromoCampaignsUseCase(userWallet, any()) } returns Either.Right(listOf(campaign))
+            coEvery { getPromoCampaignsUseCase.invokeSync(userWallet, any()) } returns Either.Right(listOf(campaign))
             val model = createModel(
                 campaignFlow = flowOf(CampaignRequest(campaignId = "whale", userWalletId = userWalletId)),
             )
@@ -155,7 +155,7 @@ internal class CampaignsModelTest {
     fun `GIVEN v2 enabled and campaign missing WHEN emitted THEN v2 not found sheet opened`() = runTest {
         // Arrange
         every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
-        coEvery { getPromoCampaignsUseCase(userWallet, any()) } returns Either.Right(listOf(createPromoCampaign("other")))
+        coEvery { getPromoCampaignsUseCase.invokeSync(userWallet, any()) } returns Either.Right(listOf(createPromoCampaign("other")))
         val model = createModel(campaignFlow = flowOf(CampaignRequest(campaignId = "whale", userWalletId = userWalletId)))
         val openedSheets = mutableListOf<CampaignsBottomSheetConfig?>()
         model.bottomSheetNavigation.subscribe { event -> openedSheets += event.transformer(null) }
@@ -172,7 +172,7 @@ internal class CampaignsModelTest {
     fun `GIVEN v2 enabled and campaigns fail WHEN emitted THEN error message sent and nothing opened`() = runTest {
         // Arrange
         every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
-        coEvery { getPromoCampaignsUseCase(userWallet, any()) } returns Either.Left(RuntimeException("network"))
+        coEvery { getPromoCampaignsUseCase.invokeSync(userWallet, any()) } returns Either.Left(RuntimeException("network"))
         val model = createModel(campaignFlow = flowOf(CampaignRequest(campaignId = "whale", userWalletId = userWalletId)))
         val openedSheets = mutableListOf<CampaignsBottomSheetConfig?>()
         model.bottomSheetNavigation.subscribe { event -> openedSheets += event.transformer(null) }
@@ -203,7 +203,7 @@ internal class CampaignsModelTest {
 
             // Assert
             verify(exactly = 1) { messageSender.send(any()) }
-            coVerify(exactly = 0) { getPromoCampaignsUseCase(any(), any()) }
+            coVerify(exactly = 0) { getPromoCampaignsUseCase.invokeSync(any(), any()) }
             assertThat(openedSheets).isEmpty()
             model.onDestroy()
         }
@@ -221,7 +221,7 @@ internal class CampaignsModelTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 0) { getPromoCampaignsUseCase(any(), any()) }
+        coVerify(exactly = 0) { getPromoCampaignsUseCase.invokeSync(any(), any()) }
         coVerify(exactly = 1) { getPromoCampaignStateUseCase.invoke(any(), any(), any()) }
         model.onDestroy()
     }
