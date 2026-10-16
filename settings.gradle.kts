@@ -177,6 +177,45 @@ if (properties.getProperty("blockchainSdk.local").toBoolean()) {
     }
 }
 
+// Optional local composite build for the Card SDK.
+// Enable it from local.properties (which is git-ignored, so it never reaches CI/develop):
+//
+//   cardSdk.local=true
+//   cardSdk.path=../tangem-sdk-android   # optional, this is the default
+//
+// When enabled, com.tangem.tangem-sdk-kotlin:* is resolved from local sources instead of the
+// published Maven artifact (tangemCardSdk in gradle/tangem_dependencies.toml). A local Hot SDK
+// build picks it up too.
+if (properties.getProperty("cardSdk.local").toBoolean()) {
+    val cardSdkPath = properties.getProperty("cardSdk.path") ?: "../tangem-sdk-android"
+    println("Card SDK: using local composite build from '$cardSdkPath'")
+    includeBuild(cardSdkPath) {
+        dependencySubstitution {
+            substitute(module("com.tangem.tangem-sdk-kotlin:core")).using(project(":tangem-sdk-core"))
+            substitute(module("com.tangem.tangem-sdk-kotlin:android")).using(project(":tangem-sdk-android"))
+        }
+    }
+}
+
+// Optional local composite build for the Hot SDK.
+// Enable it from local.properties (which is git-ignored, so it never reaches CI/develop):
+//
+//   hotSdk.local=true
+//   hotSdk.path=../tangem-hot-sdk-kotlin   # optional, this is the default
+//
+// When enabled, com.tangem.tangem-hot-sdk-kotlin:* is resolved from local sources instead of the
+// published Maven artifact (tangemHotSdk in gradle/tangem_dependencies.toml).
+if (properties.getProperty("hotSdk.local").toBoolean()) {
+    val hotSdkPath = properties.getProperty("hotSdk.path") ?: "../tangem-hot-sdk-kotlin"
+    println("Hot SDK: using local composite build from '$hotSdkPath'")
+    includeBuild(hotSdkPath) {
+        dependencySubstitution {
+            substitute(module("com.tangem.tangem-hot-sdk-kotlin:core")).using(project(":core"))
+            substitute(module("com.tangem.tangem-hot-sdk-kotlin:android")).using(project(":android"))
+        }
+    }
+}
+
 // Optional local composite build for the Usedesk SDK fork.
 // Enable it from local.properties (which is git-ignored, so it never reaches CI/develop):
 //
