@@ -174,6 +174,7 @@ internal fun buildSwapCurrencyStatus(
     userWalletId: UserWalletId = UserWalletId(stringValue = "deadbeef"),
     yieldSupplyActive: Boolean = false,
     yieldSupplyAllowedToSpend: Boolean = true,
+    fiatRate: BigDecimal = BigDecimal.ONE,
 ): SwapCurrencyStatus {
     val networkId = mockk<Network.ID>(relaxed = true) {
         every { rawId } returns Network.RawID(networkRawId)
@@ -223,6 +224,7 @@ internal fun buildSwapCurrencyStatus(
         every { this@mockk.networkAddress } returns networkAddress
         every { this@mockk.pendingTransactions } returns emptySet()
         every { this@mockk.yieldSupplyStatus } returns maybeYield
+        every { this@mockk.fiatRate } returns fiatRate
     }
 
     val cryptoCurrencyStatus = CryptoCurrencyStatus(

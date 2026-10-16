@@ -111,6 +111,32 @@ internal class DefaultTrackingContextProxyTest {
         }
 
         @Test
+        fun `GIVEN hot context WHEN addHotWalletContext and removeContext THEN hot context restored`() {
+            // Arrange
+            proxy.setContext(hotWallet)
+            val hotContext = interceptorHolder.interceptors.getValue(HotWalletContextInterceptor.id())
+
+            // Act
+            proxy.addHotWalletContext()
+            proxy.removeContext()
+
+            // Assert
+            assertThat(interceptorHolder.interceptors).containsExactly(HotWalletContextInterceptor.id(), hotContext)
+        }
+
+        @Test
+        fun `GIVEN no previous context WHEN addHotWalletContext and removeContext THEN no context remains`() {
+            // Arrange
+            proxy.addHotWalletContext()
+
+            // Act
+            proxy.removeContext()
+
+            // Assert
+            assertThat(interceptorHolder.interceptors).isEmpty()
+        }
+
+        @Test
         fun `GIVEN no previous context WHEN addContext and removeContext THEN no context remains`() {
             // Arrange
             proxy.addContext(coldWallet.scanResponse)

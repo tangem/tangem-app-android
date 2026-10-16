@@ -4,7 +4,6 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.CardIdDisplayFormat
-import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -17,6 +16,7 @@ import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.common.util.getBackupCardsCount
+import com.tangem.domain.card.models.ScanConfig
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
@@ -114,18 +114,25 @@ internal class CardSettingsModel @Inject constructor(
 
     private fun scanCard() = modelScope.launch {
         scanCardProcessor.scan(
-            analyticsSource = com.tangem.core.analytics.models.AnalyticsParam.ScreensSources.CardSettings,
-            shouldCheckIsAlreadyActivated = false,
-            allowsRequestAccessCodeFromRepository = true,
+            config = ScanConfig(
+                analyticsSource = com.tangem.core.analytics.models.AnalyticsParam.ScreensSources.CardSettings,
+                shouldConfirmWalletOwnership = false,
+                canRequestAccessCodeFromRepository = true,
+                shouldUpdateCardIdDisplayFormat = false,
+                shouldTrackScanFails = false,
+                shouldLaunchOnboarding = false,
+                callback = object : ScanConfig.Callback {
+                    override suspend fun onSuccess(scanResponse: ScanResponse) {
+                        val scannedUserWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
+                        if (userWalletId == scannedUserWalletId || scannedUserWalletId == null) {
+                            cardSettingsInteractor.initialize(scanResponse)
+                        } else {
+                            uiMessageSender.send(Dialogs.wrongWalletTapped())
+                        }
+                    }
+                },
+            ),
         )
-            .doOnSuccess { scanResponse ->
-                val scannedUserWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
-                if (userWalletId == scannedUserWalletId || scannedUserWalletId == null) {
-                    cardSettingsInteractor.initialize(scanResponse)
-                } else {
-                    uiMessageSender.send(Dialogs.wrongWalletTapped())
-                }
-            }
     }
 
     private fun updateCardDetails(scanResponse: ScanResponse) {

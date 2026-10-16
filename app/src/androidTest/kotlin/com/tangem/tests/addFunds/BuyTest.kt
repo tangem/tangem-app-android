@@ -3,12 +3,15 @@ package com.tangem.tests.addFunds
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onAddTokenBottomSheet
+import com.tangem.screens.onDialog
 import com.tangem.screens.onAddFundsBottomSheet
 import com.tangem.screens.onBuyTokenDetailsScreen
+import com.tangem.screens.onChooseTokenBottomSheet
 import com.tangem.screens.onMainScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
@@ -81,6 +84,91 @@ class BuyTest : BaseTestCase() {
             }
             step("Verify token $token in Wallet list") {
                 flakySafely { onAddFundsBottomSheet { userTokenWithTitle(token).assertIsDisplayed() } }
+            }
+        }
+    }
+
+    @AllureId("589")
+    @DisplayName("Buy. Market Pulse block. Tokens display")
+    @Test
+    fun buyMarketPulseBlockDisplaysTopTokensTest() {
+        val marketTokens = listOf("Bitcoin", "Ethereum", "Tether", "XRP", "BNB")
+
+        setupHooks().run {
+            step("Open 'Main' screen") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on 'Add Funds' button") {
+                onMainScreen { addFundsButton.clickWithAssertion() }
+            }
+            step("Assert 'Choose token' title is displayed") {
+                onChooseTokenBottomSheet { title.assertIsDisplayed() }
+            }
+            step("Assert 'Market Pulse' title is displayed") {
+                flakySafely { onAddFundsBottomSheet { marketPulseTitle.assertIsDisplayed() } }
+            }
+            step("Assert the market block shows exactly the first ${marketTokens.size} tokens: $marketTokens") {
+                flakySafely { onAddFundsBottomSheet { assertMarketBlockTokens(marketTokens) } }
+            }
+        }
+    }
+
+    @AllureId("588")
+    @DisplayName("Buy. Tokens availability. Tokens are unavailable for purchase")
+    @Test
+    fun buyUnsupportedTokenShowsNotSupportedBannerTest() {
+        val userTokensScenarioName = "user_tokens_api"
+        val userTokensState = "USDT"
+        val token = "Tether"
+
+        setupHooks().run {
+            step("Set WireMock scenario '$userTokensScenarioName' to '$userTokensState'") {
+                setWireMockScenarioState(userTokensScenarioName, userTokensState)
+            }
+            step("Open 'Main' screen") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on 'Add Funds' button") {
+                onMainScreen { addFundsButton.clickWithAssertion() }
+            }
+            step("Assert 'Choose token' title is displayed") {
+                onChooseTokenBottomSheet { title.assertIsDisplayed() }
+            }
+            step("Assert search bar is displayed") {
+                onChooseTokenBottomSheet { searchBar.assertIsDisplayed() }
+            }
+            step("Assert $token is displayed in Wallet list") {
+                flakySafely { onAddFundsBottomSheet { userTokenWithTitle(token).assertIsDisplayed() } }
+            }
+            step("Click on $token in Wallet list") {
+                onAddFundsBottomSheet { userTokenWithTitle(token).clickWithAssertion() }
+            }
+            step("Assert 'Swap' button is displayed") {
+                flakySafely { onAddFundsBottomSheet { swapButton.assertIsDisplayed() } }
+            }
+            step("Assert 'Receive' button is displayed") {
+                onAddFundsBottomSheet { receiveButton.assertIsDisplayed() }
+            }
+            step("Assert 'Buy' button is displayed") {
+                onAddFundsBottomSheet { buyTokenButton.assertIsDisplayed() }
+            }
+            step("Click on 'Buy' button") {
+                onAddFundsBottomSheet { buyTokenButton.clickWithAssertion() }
+            }
+            step("Click on 'Confirm' button in 'Dialog'") {
+                onDialog { confirmButton.clickWithAssertion() }
+            }
+            step("Assert '$token is not supported' banner title is displayed") {
+                flakySafely { onBuyTokenDetailsScreen { tokenNotSupportedTitle(token).assertIsDisplayed() } }
+            }
+            step("Assert 'token is not supported' banner subtitle is displayed") {
+                onBuyTokenDetailsScreen { tokenNotSupportedSubtitle.assertIsDisplayed() }
             }
         }
     }

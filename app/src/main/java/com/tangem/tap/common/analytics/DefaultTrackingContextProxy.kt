@@ -86,10 +86,7 @@ internal class DefaultTrackingContextProxy(
     }
 
     override fun addHotWalletContext() {
-        val currentContext = paramsInterceptorHolder.removeParamsInterceptor(LinkedCardContextInterceptor.id())
-            as? LinkedCardContextInterceptor
-
-        paramsInterceptorHolder.addParamsInterceptor(HotWalletContextInterceptor(parent = currentContext))
+        paramsInterceptorHolder.addParamsInterceptor(HotWalletContextInterceptor(parent = removeCurrentContext()))
     }
 
     /** Removes the current context and restores its parent, if any. */

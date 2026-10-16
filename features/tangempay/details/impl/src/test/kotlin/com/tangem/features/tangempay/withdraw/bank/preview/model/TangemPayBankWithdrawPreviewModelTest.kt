@@ -38,6 +38,7 @@ import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWi
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.Summary
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.utils.StringsSigns.THREE_STARS
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -47,6 +48,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -103,6 +105,16 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         assertThat(state.recipientCards.map { it.rows.size }).containsExactly(2, 7, 5).inOrder()
         assertThat(state.isSendEnabled).isTrue()
         assertThat(state.isSending).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN balance hidden WHEN model created THEN source balance masked`() {
+        // Act
+        val model = createModel(isBalanceHidden = true)
+
+        // Assert
+        assertThat(summary(model).transfer?.amount?.balance).isEqualTo(THREE_STARS)
         model.onDestroy()
     }
 
@@ -824,7 +836,10 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         destination = offrampDestination(),
     )
 
-    private fun createModel(draft: BankWithdrawDraft = completeDraft()): TangemPayBankWithdrawPreviewModel =
+    private fun createModel(
+        draft: BankWithdrawDraft = completeDraft(),
+        isBalanceHidden: Boolean = false,
+    ): TangemPayBankWithdrawPreviewModel =
         TangemPayBankWithdrawPreviewModel(
             paramsContainer = MutableParamsContainer(
                 TangemPayBankWithdrawPreviewComponent.Params(
@@ -843,6 +858,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
             cancelBankOfframpOrderUseCase = cancelBankOfframpOrderUseCase,
             getUserWalletUseCase = getUserWalletUseCase,
             analytics = analytics,
+            getBalanceHidingSettingsUseCase = mockk { every { isBalanceHidden() } returns flowOf(isBalanceHidden) },
         )
 
     private companion object {
