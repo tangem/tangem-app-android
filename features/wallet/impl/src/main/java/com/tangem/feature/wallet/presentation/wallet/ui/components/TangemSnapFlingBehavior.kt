@@ -99,10 +99,8 @@ class TangemSnapFlingBehavior(
         initialVelocity: Float,
         onAnimationStep: (remainingScrollOffset: Float) -> Unit,
     ): AnimationResult<Float, AnimationVector1D> {
-        val initialOffset =
-            with(snapLayoutInfoProvider) { density.calculateApproachOffset(initialVelocity) }.let {
-                abs(it) * sign(initialVelocity) // ensure offset sign is correct
-            }
+        val approachOffset = with(snapLayoutInfoProvider) { density.calculateApproachOffset(initialVelocity) }
+        val initialOffset = abs(approachOffset) * sign(initialVelocity) // ensure offset sign is correct
         var remainingScrollOffset = initialOffset
 
         onAnimationStep(remainingScrollOffset) // First Scroll Offset
