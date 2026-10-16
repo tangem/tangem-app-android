@@ -46,6 +46,9 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TestTimeSource
+import kotlin.time.TimeMark
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase() {
@@ -462,6 +465,55 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
         }
 
         @Test
+        fun `GIVEN a claim prepared too long ago WHEN withdrawing THEN nothing is sent and the claim is prepared again`() =
+            runTest {
+                // Arrange
+                val clock = TestTimeSource()
+                val preparedAt = clock.markNow()
+                clock += 3.minutes
+                coEvery {
+                    withdrawalClaimPreparer.prepare(userWallet = any(), cryptoCurrencyStatus = any())
+                } returns readyPreClaim(preparedAt = preparedAt)
+                val model = createModel()
+                advanceUntilIdle()
+
+                // Act
+                model.onClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 0) {
+                    sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
+                }
+                coVerify(exactly = 2) {
+                    withdrawalClaimPreparer.prepare(userWallet = any(), cryptoCurrencyStatus = any())
+                }
+                verify { callback.onTransactionProgress(false) }
+
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN the fee currency is not found WHEN the fee loads THEN the withdrawal goes without the claim`() =
+            runTest {
+                // Arrange
+                coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns null.right()
+
+                // Act
+                val model = createModel()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 0) {
+                    withdrawalClaimPreparer.prepare(userWallet = any(), cryptoCurrencyStatus = any())
+                }
+                val content = model.uiState.value.yieldSupplyFeeUM as YieldSupplyFeeUM.Content
+                assertThat(content.transactionDataList).hasSize(1)
+
+                model.onDestroy()
+            }
+
+        @Test
         fun `GIVEN the claim is gone on a fee reload WHEN withdrawing THEN only the withdrawal is sent`() = runTest {
             // Arrange
             val model = createModel()
@@ -495,12 +547,13 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
             return sent.captured
         }
 
-        private fun readyPreClaim() = YieldPreClaim.Ready(
+        private fun readyPreClaim(preparedAt: TimeMark = TestTimeSource().markNow()) = YieldPreClaim.Ready(
             transactionData = claimTransaction,
             chainId = CHAIN_ID,
             userAddress = SOURCE_ADDRESS,
             token = token,
             claimedRewards = listOf(MockYieldSupply.reward()),
+            preparedAt = preparedAt,
         )
     }
 

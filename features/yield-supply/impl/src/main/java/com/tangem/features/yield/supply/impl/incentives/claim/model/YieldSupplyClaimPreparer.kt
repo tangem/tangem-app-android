@@ -11,6 +11,7 @@ import com.tangem.domain.yield.supply.usecase.ValidateYieldClaimCalldataUseCase
 import com.tangem.domain.yield.supply.usecase.YieldClaimValidationContext
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.minutes
 
 internal class YieldSupplyClaimPreparer @Inject constructor(
     private val getYieldRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase,
@@ -65,5 +66,10 @@ internal class YieldSupplyClaimPreparer @Inject constructor(
             TangemLogger.e("Yield claim rejected before signing: $error")
             null
         }
+    }
+
+    companion object {
+        /** Shorter than the Merkl proof rollover; bound to the proof, not to the fee the owner already accepted. */
+        val PREPARATION_VALIDITY = 2.minutes
     }
 }
