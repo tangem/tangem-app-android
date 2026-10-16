@@ -20,6 +20,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ComponentContext
@@ -52,6 +53,7 @@ import com.tangem.features.feed.nav.FeedScreenFactory
 import com.tangem.features.feed.nav.FeedTabId
 import com.tangem.features.feed.nav.FeedTabSet
 import com.tangem.features.feed.ui.v2.FeedSearchBarHeader
+import com.tangem.features.feed.ui.v2.onEachTouch
 import com.tangem.features.feed.v2.FeedEntryController
 import com.tangem.features.feed.v2.FeedEntryRequest
 import com.tangem.features.feed.v2.FeedV2Component
@@ -133,7 +135,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
 
     init {
         componentScope.launch {
-            searchBarController.activationRequests.collect(::onSearchActivationRequest)
+            searchBarController.searchScreenRequests.collect(::onSearchScreenRequest)
         }
         componentScope.launch {
             feedEntryController.pendingEntry.filterNotNull().collect(::onEntryRequested)
@@ -144,13 +146,13 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
         stack.subscribe(lifecycle) { stackState ->
             // presence on the stack, not "is active": tapping a search result pushes a screen on top of
             // search, and deactivation drops the query — the user would come back to an empty search
-            searchBarController.setActive(
-                isActive = stackState.items.any { it.configuration is FeedRoute.Search },
+            searchBarController.setSearchScreenShown(
+                isShown = stackState.items.any { it.configuration is FeedRoute.Search },
             )
             val active = stackState.active.configuration
             isSheetBlurEnabled.value = active is FeedHomeRoute || active is FeedRoute.Search
         }
-        lifecycle.doOnDestroy { searchBarController.setActive(isActive = false) }
+        lifecycle.doOnDestroy(searchBarController::reset)
     }
 
     @Composable
@@ -183,7 +185,6 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
                 if (screen == null) {
                     FeedSearchBarHeader(
                         searchBarController = searchBarController,
-                        sheetExpansion = sheetExpansion,
                         onExpandSheet = onExpandSheet,
                         modifier = Modifier,
                     )
@@ -207,6 +208,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     ) {
         val stackState by stack.subscribeAsState()
         val expandSheet by rememberUpdatedState(onExpandSheet)
+        val keyboardController = LocalSoftwareKeyboardController.current
 
         LaunchedEffect(Unit) {
             expandSheetRequests.receiveAsFlow().collect { expandSheet() }
@@ -221,7 +223,9 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
 
         Children(
             stack = stackState,
-            modifier = modifier.dropWhenNoRoom(minRoom = contentPadding.calculateTopPadding() + 8.dp),
+            modifier = modifier
+                .dropWhenNoRoom(minRoom = contentPadding.calculateTopPadding() + 8.dp)
+                .onEachTouch { keyboardController?.hide() },
             animation = stackAnimation(slide()),
         ) { child ->
             child.instance.Content(
@@ -265,13 +269,13 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
         feedEntryController.consumeEntry()
     }
 
-    private fun onSearchActivationRequest(isActive: Boolean) {
+    private fun onSearchScreenRequest(isShown: Boolean) {
         val isSearchActive = stack.value.active.configuration is FeedRoute.Search
         when {
-            isActive && !isSearchActive -> feedRouter.push(
+            isShown && !isSearchActive -> feedRouter.push(
                 route = FeedRoute.Search(source = AnalyticsParam.ScreensSources.Markets.value),
             )
-            !isActive && isSearchActive -> stackNavigation.pop()
+            !isShown && isSearchActive -> stackNavigation.pop()
         }
     }
 

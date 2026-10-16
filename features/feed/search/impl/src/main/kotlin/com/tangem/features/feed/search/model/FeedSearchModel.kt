@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -71,9 +70,8 @@ internal class FeedSearchModel @Inject constructor(
     init {
         analyticsEventHandler.send(FeedSearchAnalyticsEvent.SearchScreenOpened(params.source))
 
-        // once per screen, on the first typed character: the bar opens empty, so drop its initial value
-        query.drop(1)
-            .filter(String::isNotEmpty)
+        // once per screen; the screen opens on the first typed character, so its initial query counts
+        query.filter(String::isNotEmpty)
             .take(1)
             .onEach { analyticsEventHandler.send(FeedSearchAnalyticsEvent.SearchStarted()) }
             .launchIn(modelScope)
