@@ -58,6 +58,7 @@ import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardSkeleton
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBar
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBarClearance
 import com.tangem.features.polymarket.impl.common.ui.PolymarketNextPageLoader
+import com.tangem.features.polymarket.impl.common.ui.PolymarketEmptyListPrompt
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
@@ -298,6 +299,13 @@ private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM, ske
     when (content) {
         is PolymarketMainUM.ContentUM.Loading -> items(count = skeletonCount, key = { it }) {
             PolymarketEventCardSkeleton(modifier = Modifier.padding(horizontal = 16.dp))
+        }
+        is PolymarketMainUM.ContentUM.Empty -> item(key = KEY_STATUS) {
+            PolymarketEmptyListPrompt(
+                text = resourceReference(R.string.prediction_main_empty_events),
+                modifier = Modifier.height(180.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+            )
         }
         is PolymarketMainUM.ContentUM.Error -> item(key = KEY_STATUS) {
             PolymarketReloadPrompt(
@@ -543,6 +551,37 @@ private fun PolymarketMainScreenErrorPreview() {
                 balance = previewPredictionBalance(BigDecimal("1234.56")),
                 categories = previewCategories(),
                 content = PolymarketMainUM.ContentUM.Error(onReloadClick = {}),
+                pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+            ),
+            positions = null,
+            onBackClick = {},
+            onSearchClick = {},
+            onHistoryClick = {},
+            onSupportChatClick = {},
+            onLoadMore = {},
+            onVisibleEventsChange = {},
+            onScrollIdle = { _, _ -> },
+            onScrollPositionRestore = {},
+        )
+    }
+}
+
+@Preview(name = "Empty Light", showBackground = true, widthDp = 360, heightDp = 800)
+@Preview(
+    name = "Empty Dark",
+    showBackground = true,
+    widthDp = 360,
+    heightDp = 800,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+private fun PolymarketMainScreenEmptyPreview() {
+    TangemThemePreviewRedesign {
+        PolymarketMainScreen(
+            state = PolymarketMainUM(
+                balance = previewPredictionBalance(BigDecimal("1234.56")),
+                categories = previewCategories(),
+                content = PolymarketMainUM.ContentUM.Empty,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),
             positions = null,
