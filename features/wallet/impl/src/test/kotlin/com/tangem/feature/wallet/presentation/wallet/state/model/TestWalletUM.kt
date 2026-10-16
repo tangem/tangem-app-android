@@ -15,8 +15,8 @@ internal fun createWalletContentUM(
     isRefreshing: Boolean = false,
     notifications: ImmutableList<WalletNotificationUM> = persistentListOf(),
     notificationsCarousel: ImmutableList<WalletNotificationUM> = persistentListOf(),
-    jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf(),
-    arePromoCardsVisible: Boolean = false,
+    isMarketingBlockVisible: Boolean = false,
+    isTangemPayPromoVisible: Boolean = false,
     promoCardsCheck: PromoCardsCheck = PromoCardsCheck.OnOpen,
 ): WalletUM.Content = WalletUM.Content(
     pullToRefreshConfig = PullToRefreshConfig(isRefreshing = isRefreshing, onRefresh = PULL_TO_REFRESH_CALLBACK),
@@ -31,8 +31,8 @@ internal fun createWalletContentUM(
     moneyAccountMainUM = MoneyAccountMainUM.Empty,
     polymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden,
     collectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden,
-    jointOperationBanners = jointOperationBanners,
-    arePromoCardsVisible = arePromoCardsVisible,
+    isMarketingBlockVisible = isMarketingBlockVisible,
+    isTangemPayPromoVisible = isTangemPayPromoVisible,
     promoCardsCheck = promoCardsCheck,
 )
 
