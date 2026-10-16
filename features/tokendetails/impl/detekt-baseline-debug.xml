@@ -2,24 +2,9 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>BooleanPropertyNaming:ExchangeUM.kt$ExchangeUM$val showProviderLink: Boolean</ID>
-    <ID>BooleanPropertyNaming:TokenDetailsActionButton.kt$TokenDetailsActionButton.Buy$val dimContent: Boolean</ID>
-    <ID>BooleanPropertyNaming:TokenDetailsActionButton.kt$TokenDetailsActionButton.Sell$val dimContent: Boolean</ID>
-    <ID>BooleanPropertyNaming:TokenDetailsActionButton.kt$TokenDetailsActionButton.Send$val dimContent: Boolean</ID>
-    <ID>BooleanPropertyNaming:TokenDetailsActionButton.kt$TokenDetailsActionButton.Swap$val dimContent: Boolean</ID>
-    <ID>BooleanPropertyNaming:TokenDetailsActionButton.kt$TokenDetailsActionButton.Swap$val showBadge: Boolean</ID>
-    <ID>BooleanPropertyNaming:TokenDetailsNotification.kt$TokenDetailsNotification.NetworkFeeWithBuyButton$val mergeFeeNetworkName: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:TokenDetailsSwapTransactionsStateConverter.kt$TokenDetailsSwapTransactionsStateConverter$val showProviderLink = getShowProviderLink(notification, statusModel)</ID>
-    <ID>BooleanPropertyNaming:TokenDetailsSwapTransactionsStateConverter.kt$TokenDetailsSwapTransactionsStateConverter$val showProviderLink = getShowProviderLink(notification, transaction.status)</ID>
-    <ID>BooleanPropertyNaming:TokenDetailsTopAppBar.kt$var showDropdownMenu by rememberSaveable { mutableStateOf(false) }</ID>
     <ID>NamedArguments:TokenDetailsLoadedBalanceConverter.kt$TokenDetailsLoadedBalanceConverter$formatFiatAmount( status.value, stakingFiatAmount, currentState.selectedBalanceType, appCurrencyProvider(), )</ID>
     <ID>NestedScopeFunctions:TokenDetailsBalanceSelectStateConverter.kt$TokenDetailsBalanceSelectStateConverter$let { cryptoCurrencyStatus.value.fiatRate?.multiply(it) }</ID>
-    <ID>NullableBooleanCheck:TokenDetailsSwapTransactionsStateConverter.kt$TokenDetailsSwapTransactionsStateConverter$transaction.status?.hasLongTime ?: false</ID>
     <ID>PropertyUsedBeforeDeclaration:ExpressStatusBottomSheetStateProvider.kt$ExpressStatusBottomSheetStateProvider$network</ID>
     <ID>PropertyUsedBeforeDeclaration:ExpressStatusBottomSheetStateProvider.kt$ExpressStatusBottomSheetStateProvider$token</ID>
-    <ID>UnnecessaryLet:TokenDetailsSkeletonStateConverter.kt$TokenDetailsSkeletonStateConverter$let(::add)</ID>
-    <ID>UnnecessaryLet:TokenDetailsStateFactory.kt$TokenDetailsStateFactory$let(::add)</ID>
-    <ID>UseEmptyCounterpart:TokenDetailsAnalyticsEvent.kt$TokenDetailsAnalyticsEvent$mapOf()</ID>
-    <ID>UseEmptyCounterpart:TokenDetailsAnalyticsEvent.kt$TokenDetailsAnalyticsEvent.Notice$mapOf()</ID>
   </CurrentIssues>
 </SmellBaseline>
