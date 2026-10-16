@@ -74,9 +74,11 @@ dependencies {
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.datetime)
+    implementation(deps.jodatime)
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.annotation)
     implementation(deps.androidx.appCompat)
     implementation(deps.arrow.core)

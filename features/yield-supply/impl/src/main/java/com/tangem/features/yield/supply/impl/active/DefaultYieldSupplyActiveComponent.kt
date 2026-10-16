@@ -1,5 +1,6 @@
 package com.tangem.features.yield.supply.impl.active
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
@@ -32,8 +33,10 @@ import com.tangem.features.yield.supply.impl.active.ui.YieldSupplyActiveContent
 import com.tangem.features.yield.supply.impl.active.ui.YieldSupplyActiveTitle
 import com.tangem.features.yield.supply.impl.apy.about.YieldSupplyAboutApyComponent
 import com.tangem.features.yield.supply.impl.chart.DefaultYieldSupplyChartComponent
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
 import com.tangem.features.yield.supply.impl.incentives.banner.DefaultYieldSupplyRewardsBannerComponent
 import com.tangem.features.yield.supply.impl.incentives.claim.YieldSupplyClaimComponent
+import com.tangem.features.yield.supply.impl.incentives.claim.result.ui.YieldSupplyClaimResultContent
 import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyApproveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import dagger.assisted.Assisted
@@ -53,6 +56,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
         appComponentContext = child("chartComponent"),
         params = DefaultYieldSupplyChartComponent.Params(
             cryptoCurrency = model.cryptoCurrencyStatusFlow.value.currency as CryptoCurrency.Token,
+            initialPeriod = YieldSupplyChartPeriod.ThreeMonths,
         ),
     )
 
@@ -90,6 +94,19 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
+        val claimResult by model.claimResultFlow.collectAsStateWithLifecycle()
+        val result = claimResult
+        if (result != null) {
+            BackHandler(onBack = model::onClaimResultDismiss)
+            YieldSupplyClaimResultContent(
+                state = result,
+                onGoToTokenClick = model::onGoToTokenClick,
+                onGoToYieldClick = model::onClaimResultDismiss,
+                modifier = modifier,
+            )
+            return
+        }
+
         val state by model.uiState.collectAsStateWithLifecycle()
         val isBalanceHidden by model.balanceHiddenFlow.collectAsStateWithLifecycle()
         val slotState by bottomSheetSlot.subscribeAsState()
@@ -162,6 +179,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
                 cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
                 chainId = route.chainId,
                 userAddress = route.userAddress,
+                onSubmitted = model::onClaimSubmitted,
                 onDismiss = model::onUnguardedSheetDismiss,
             ),
         )

@@ -41,6 +41,7 @@ import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.incentives.claim.YieldSupplyClaimComponent
 import com.tangem.features.yield.supply.impl.incentives.claim.entity.YieldSupplyClaimNotificationUM
 import com.tangem.features.yield.supply.impl.incentives.claim.entity.YieldSupplyClaimUM
+import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
 import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -91,12 +92,14 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
 
     private var originalLocale: Locale = Locale.getDefault()
     private var isSheetDismissed = false
+    private val submittedResults = mutableListOf<YieldSupplyClaimResultUM>()
 
     @BeforeEach
     fun setUp() {
         originalLocale = Locale.getDefault()
         Locale.setDefault(Locale.US)
         isSheetDismissed = false
+        submittedResults.clear()
         clearMocks(claimTracker)
 
         coEvery {
@@ -346,7 +349,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
             }
             coVerify(exactly = 1) { getFreshClaimCalldataUseCase(chainId = CHAIN_ID, userAddress = SOURCE_ADDRESS) }
             assertThat(sentTransaction.captured).isEqualTo(uncompiledTx().copy(fee = ethFee(BigDecimal("2"))))
-            assertThat(isSheetDismissed).isTrue()
+            assertThat(submittedResults).hasSize(1)
 
             model.onDestroy()
         }
@@ -391,7 +394,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
 
         // Assert
         assertThat(sentTransactions()).containsExactly(uncompiledTx().copy(fee = ethFee(BigDecimal("3"))))
-        assertThat(isSheetDismissed).isTrue()
+        assertThat(submittedResults).hasSize(1)
 
         model.onDestroy()
     }
@@ -493,33 +496,43 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN a sent claim WHEN confirmed THEN the claim is followed and the sheet closes`() = runTest {
-        // Arrange
-        val model = createModel()
-        advanceUntilIdle()
+    fun `GIVEN a sent claim WHEN confirmed THEN the signed figures are handed over and the claim is followed`() =
+        runTest {
+            // Arrange
+            val model = createModel()
+            advanceUntilIdle()
+            val state = model.uiState.value
 
-        // Act
-        model.onClaimClick()
-        advanceUntilIdle()
+            // Act
+            model.onClaimClick()
+            advanceUntilIdle()
 
-        // Assert
-        verify(exactly = 1) {
-            claimTracker.track(
-                userWalletId = userWalletId,
-                cryptoCurrency = token,
-                chainId = CHAIN_ID,
-                userAddress = SOURCE_ADDRESS,
-                transactionHash = TX_HASH,
-                claimedRewards = listOf(owner()),
+            // Assert
+            assertThat(isSheetDismissed).isFalse()
+            assertThat(submittedResults).containsExactly(
+                YieldSupplyClaimResultUM(
+                    status = YieldSupplyClaimResultUM.Status.Submitted,
+                    total = state.total,
+                    serviceFee = state.serviceFee,
+                    networkFee = state.networkFee,
+                ),
             )
-        }
-        assertThat(isSheetDismissed).isTrue()
+            verify(exactly = 1) {
+                claimTracker.track(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = token,
+                    chainId = CHAIN_ID,
+                    userAddress = SOURCE_ADDRESS,
+                    transactionHash = TX_HASH,
+                    claimedRewards = listOf(owner()),
+                )
+            }
 
-        model.onDestroy()
-    }
+            model.onDestroy()
+        }
 
     @Test
-    fun `GIVEN sending fails WHEN confirmed THEN no claim is followed`() = runTest {
+    fun `GIVEN sending fails WHEN confirmed THEN nothing is handed over and no claim is followed`() = runTest {
         // Arrange
         coEvery { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) } returns
             SendTransactionError.UnknownError().left()
@@ -531,6 +544,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         advanceUntilIdle()
 
         // Assert
+        assertThat(submittedResults).isEmpty()
         verify { claimTracker wasNot called }
 
         model.onDestroy()
@@ -557,7 +571,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
         assertThat(isClaimInProgress).isTrue()
         coVerify(exactly = 1) { getFreshClaimCalldataUseCase(chainId = CHAIN_ID, userAddress = SOURCE_ADDRESS) }
         coVerify(exactly = 1) { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) }
-        assertThat(isSheetDismissed).isTrue()
+        assertThat(submittedResults).hasSize(1)
 
         model.onDestroy()
     }
@@ -715,6 +729,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
                 cryptoCurrencyStatusFlow = cryptoCurrencyStatusFlow,
                 chainId = CHAIN_ID,
                 userAddress = SOURCE_ADDRESS,
+                onSubmitted = { submittedResults += it },
                 onDismiss = { isSheetDismissed = true },
             ),
         ),
