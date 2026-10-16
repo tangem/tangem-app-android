@@ -42,7 +42,6 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
-import com.tangem.domain.polymarket.usecase.GetPredictionTopUpMinimumUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
@@ -360,12 +359,6 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetPredictionTopUpMinimumUseCase(
-        requisitesStore: PredictionDepositRequisitesStore,
-    ): GetPredictionTopUpMinimumUseCase = GetPredictionTopUpMinimumUseCase(requisitesStore = requisitesStore)
-
-    @Provides
-    @Singleton
     fun provideSubmitPredictionWithdrawalInteractor(
         bridgeRepository: PolymarketBridgeRepository,
         withdrawRepository: PolymarketWithdrawRepository,
@@ -387,10 +380,12 @@ internal object PolymarketDomainModule {
     fun provideSubmitPredictionClaimInteractor(
         redeemRepository: PolymarketRedeemRepository,
         polymarketRepository: PolymarketRepository,
+        positionsRepository: PolymarketPositionsRepository,
         signer: PolymarketTypedDataSigner,
     ): SubmitPredictionClaimInteractor = SubmitPredictionClaimInteractor(
         redeemRepository = redeemRepository,
         polymarketRepository = polymarketRepository,
+        positionsRepository = positionsRepository,
         signer = signer,
     )
 }

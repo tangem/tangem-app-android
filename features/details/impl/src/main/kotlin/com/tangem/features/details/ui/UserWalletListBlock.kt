@@ -137,19 +137,19 @@ private fun AddWalletButton(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(all = TangemTheme.dimens.spacing12),
+                .padding(all = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             AnimatedContent(
-                modifier = Modifier.size(TangemTheme.dimens.size36),
+                modifier = Modifier.size(36.dp),
                 targetState = isInProgress,
                 label = "Add wallet progress",
             ) { isInProgress ->
                 if (isInProgress) {
                     CircularProgressIndicator(
                         modifier = Modifier
-                            .size(TangemTheme.dimens.size24)
+                            .size(24.dp)
                             .padding(4.dp),
                         color = TangemTheme.colors.icon.accent,
                     )

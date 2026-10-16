@@ -99,11 +99,11 @@ internal class TokenListStateConverter(
             val tokenList: TokenList = this.tokenList
             val account: Account.CryptoPortfolio = this.account
             val isExtend = params.expandedAccounts.contains(account.accountId)
-            val onItemClick: (Account.CryptoPortfolio) -> Unit = {
+            val onItemClick: (Account.CryptoPortfolio) -> Unit = { clickedAccount ->
                 if (isExtend) {
-                    clickIntents.onAccountCollapseClick(it)
+                    clickIntents.onAccountCollapseClick(clickedAccount)
                 } else {
-                    clickIntents.onAccountExpandClick(it)
+                    clickIntents.onAccountExpandClick(clickedAccount)
                 }
             }
             val converter = AccountCryptoPortfolioItemStateConverter(

@@ -65,7 +65,7 @@ internal fun SelectProviderBottomSheetContent(state: SelectPaymentAndProviderUM,
             textAlign = TextAlign.Center,
         )
         PaymentMethodBlock(
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing20, bottom = TangemTheme.dimens.spacing16),
+            modifier = Modifier.padding(top = 20.dp, bottom = 16.dp),
             state = state.selectedPaymentMethod.paymentMethod,
             isClickEnabled = state.isPaymentMethodClickEnabled,
             onPaymentMethodClick = state.onPaymentMethodClick,
@@ -86,16 +86,16 @@ private fun PaymentMethodBlock(
 ) {
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
+            .clip(RoundedCornerShape(16.dp))
             .border(
-                width = TangemTheme.dimens.size1,
+                width = 1.dp,
                 color = TangemTheme.colors.stroke.secondary,
-                shape = RoundedCornerShape(TangemTheme.dimens.radius16),
+                shape = RoundedCornerShape(16.dp),
             )
             .clickable(enabled = isClickEnabled, onClick = onPaymentMethodClick)
-            .padding(all = TangemTheme.dimens.spacing12),
+            .padding(all = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         PaymentMethodIcon(method = state)
         Column(modifier = Modifier.weight(1F)) {
@@ -114,7 +114,7 @@ private fun PaymentMethodBlock(
         }
         Icon(
             modifier = Modifier
-                .size(TangemTheme.dimens.size24)
+                .size(24.dp)
                 .testTag(SelectProviderBottomSheetTestTags.PAYMENT_METHOD_EXPAND_BUTTON),
             painter = painterResource(id = R.drawable.ic_chevron_24),
             contentDescription = null,
@@ -155,14 +155,14 @@ private fun AvailableProviderItem(state: ProviderListItemUM.Available.Content, m
         modifier = modifier
             .selectedBorder(isSelected = state.isSelected)
             .clickable(onClick = state.onClick)
-            .padding(all = TangemTheme.dimens.spacing12)
+            .padding(all = 12.dp)
             .testTag(SelectProviderBottomSheetTestTags.AVAILABLE_PROVIDER_ITEM),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         SubcomposeAsyncImage(
             modifier = Modifier
-                .size(size = TangemTheme.dimens.size40)
+                .size(size = 40.dp)
                 .clip(TangemTheme.shapes.roundedCorners8)
                 .testTag(SelectProviderBottomSheetTestTags.AVAILABLE_PROVIDER_NAME),
             model = ImageRequest.Builder(context = LocalContext.current)
@@ -170,7 +170,7 @@ private fun AvailableProviderItem(state: ProviderListItemUM.Available.Content, m
                 .crossfade(enable = true)
                 .allowHardware(false)
                 .build(),
-            loading = { RectangleShimmer(radius = TangemTheme.dimens.radius8) },
+            loading = { RectangleShimmer(radius = 8.dp) },
             contentDescription = null,
         )
         Text(
@@ -229,14 +229,14 @@ private fun UnavailableProviderItem(
     Row(
         modifier = modifier
             .selectedBorder(isSelected = isSelected)
-            .padding(all = TangemTheme.dimens.spacing12)
+            .padding(all = 12.dp)
             .testTag(SelectProviderBottomSheetTestTags.UNAVAILABLE_PROVIDER_ITEM),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         SubcomposeAsyncImage(
             modifier = Modifier
-                .size(size = TangemTheme.dimens.size40)
+                .size(size = 40.dp)
                 .clip(TangemTheme.shapes.roundedCorners8)
                 .alpha(UNAVAILABLE_ALPHA),
             model = ImageRequest.Builder(context = LocalContext.current)
@@ -244,7 +244,7 @@ private fun UnavailableProviderItem(
                 .crossfade(enable = true)
                 .allowHardware(false)
                 .build(),
-            loading = { RectangleShimmer(radius = TangemTheme.dimens.radius8) },
+            loading = { RectangleShimmer(radius = 8.dp) },
             contentDescription = null,
         )
         Column(modifier = Modifier.weight(1F)) {
@@ -282,7 +282,7 @@ private fun OnrampMoreProviders() {
         color = TangemTheme.colors.icon.informative,
         modifier = Modifier
             .padding(top = 4.dp, bottom = 24.dp)
-            .padding(horizontal = TangemTheme.dimens.spacing56)
+            .padding(horizontal = 56.dp)
             .testTag(SelectProviderBottomSheetTestTags.MORE_PROVIDERS_TEXT),
         textAlign = TextAlign.Center,
     )

@@ -1,5 +1,6 @@
 package com.tangem.domain.account.status.producer
 
+import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
@@ -48,6 +49,10 @@ import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SingleAccountStatusListProducerSpecialAccountsTest {
+
+    private val jointAccountCompositionVerifier: JointAccountCompositionVerifier = mockk {
+        coEvery { isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any()) } returns true
+    }
 
     private val currency: CryptoCurrency = MockCryptoCurrencyFactory().cardano
     private val userWallet: UserWallet = MockUserWalletFactory.create()
@@ -227,6 +232,7 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
             userWalletsListRepository = mockk<UserWalletsListRepository> {
                 every { userWallets } returns MutableStateFlow(listOf(wallet))
             },
+            jointAccountCompositionVerifier = jointAccountCompositionVerifier,
             singleJointAccountListSupplier = mockk<SingleJointAccountListSupplier> {
                 every { this@mockk.invoke(userWalletId = any()) } returns flowOf(emptyList())
             },

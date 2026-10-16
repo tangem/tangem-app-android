@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerWMax
@@ -21,6 +22,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_double_vertical_16
+import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.feature.swap.models.states.SwapSlippageUM
 import com.tangem.feature.swap.presentation.R
 
@@ -55,29 +57,32 @@ private fun SwapSlippageRow(slippageUM: SwapSlippageUM.Content) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = slippageUM.onClick)
-            .padding(12.dp),
+            .padding(12.dp)
+            .testTag(SwapTokenScreenTestTags.SLIPPAGE_ROW),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = stringResourceSafe(R.string.common_slippage),
-            style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.primary,
         )
         SpacerWMax()
         Text(
             text = slippageUM.value.resolveReference(),
-            style = TangemTheme.typography.body2,
+            style = TangemTheme.typography3.body.medium,
             color = if (slippageUM.isHighlighted) {
                 TangemTheme.colors3.text.status.warning
             } else {
-                TangemTheme.colors.text.tertiary
+                TangemTheme.colors3.text.secondary
             },
-            modifier = Modifier.padding(end = 4.dp),
+            modifier = Modifier
+                .padding(end = 4.dp)
+                .testTag(SwapTokenScreenTestTags.SLIPPAGE_VALUE),
         )
         Icon(
             imageVector = Icons.ic_chevron_double_vertical_16,
             contentDescription = null,
-            tint = TangemTheme.colors.icon.secondary,
+            tint = TangemTheme.colors3.icon.secondary,
             modifier = Modifier.size(16.dp),
         )
     }
@@ -98,7 +103,8 @@ private fun SwapSlippageAndFeeBlock_Preview() {
                 Text(
                     text = stringResourceSafe(R.string.common_network_fee_title),
                     modifier = modifier.padding(12.dp),
-                    color = TangemTheme.colors.text.primary1,
+                    style = TangemTheme.typography3.body.medium,
+                    color = TangemTheme.colors3.text.primary,
                 )
             },
         )

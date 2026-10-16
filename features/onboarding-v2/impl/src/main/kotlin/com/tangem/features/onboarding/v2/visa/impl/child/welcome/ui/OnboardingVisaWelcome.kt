@@ -121,7 +121,7 @@ fun Artwork(modifier: Modifier = Modifier) {
         Image(
             painter = painterResource(R.drawable.img_card_visa),
             contentDescription = null,
-            modifier = modifier
+            modifier = Modifier
                 .align(Alignment.Center)
                 .onSizeChanged { cardHeightPx = it.height }
                 .widthIn(max = 512.dp)

@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -56,7 +57,7 @@ private fun ResetCardView(state: ResetCardScreenState) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState) // set scrollState after fillMaxSize
-            .padding(horizontal = TangemTheme.dimens.spacing20),
+            .padding(horizontal = 20.dp),
     ) {
         Title()
         SpacerH24()
@@ -90,7 +91,7 @@ private fun AlertImage() {
         painter = painterResource(id = R.drawable.img_alert_80),
         contentDescription = null,
         modifier = Modifier
-            .size(TangemTheme.dimens.size80)
+            .size(80.dp)
             .testTag(ResetCardScreenTestTags.ATTENTION_IMAGE),
     )
 }
@@ -132,8 +133,8 @@ private fun ConditionCheckBox(checkedState: Boolean, onCheckedChange: (Boolean) 
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = { onCheckedChange.invoke(!checkedState) })
-            .padding(vertical = TangemTheme.dimens.size16),
-        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing16),
+            .padding(vertical = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(space = 16.dp),
     ) {
         IconToggleButton(
             checked = checkedState,

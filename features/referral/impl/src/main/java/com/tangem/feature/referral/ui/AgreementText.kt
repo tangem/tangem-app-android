@@ -15,6 +15,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -27,12 +28,12 @@ internal fun AgreementText(@StringRes firstPartResId: Int, onClick: () -> Unit) 
         text = agreementText,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens.spacing54),
+            .padding(horizontal = 54.dp),
         style = TangemTheme.typography.caption2.copy(textAlign = TextAlign.Center),
         maxLines = 2,
-        onClick = {
+        onClick = { offset ->
             val clickableSpanStyle = requireNotNull(agreementText.spanStyles.getOrNull(1))
-            if (it in clickableSpanStyle.start..clickableSpanStyle.end) {
+            if (offset in clickableSpanStyle.start..clickableSpanStyle.end) {
                 onClick()
             }
         },

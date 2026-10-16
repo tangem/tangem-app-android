@@ -45,7 +45,9 @@ internal class YieldSupplyActiveModelClaimOfferTest : YieldSupplyActiveModelTest
         advanceUntilIdle()
 
         // Assert
-        assertThat(slot.configuration).isEqualTo(YieldSupplyActiveRoute.Claim)
+        assertThat(slot.configuration).isEqualTo(
+            YieldSupplyActiveRoute.Claim(chainId = MockYieldSupply.market().chainId, userAddress = USER_ADDRESS),
+        )
         assertThat(model.wasClaimOfferedBeforeWithdrawal).isTrue()
 
         model.onDestroy()

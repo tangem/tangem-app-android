@@ -21,10 +21,10 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.collectibles.api.CollectiblesEntryComponent
-import com.tangem.features.collectibles.impl.confirmorder.CollectiblesConfirmOrderComponent
 import com.tangem.features.collectibles.impl.machinedetails.CollectiblesMachineDetailsComponent
 import com.tangem.features.collectibles.impl.main.CollectiblesMainComponent
 import com.tangem.features.collectibles.impl.onboarding.CollectiblesOnboardingComponent
+import com.tangem.features.collectibles.impl.packopening.CollectiblesPackOpeningComponent
 import com.tangem.features.collectibles.impl.stories.CollectiblesStoriesComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -38,7 +38,7 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
     private val storiesComponentFactory: CollectiblesStoriesComponent.Factory,
     private val mainComponentFactory: CollectiblesMainComponent.Factory,
     private val machineDetailsComponentFactory: CollectiblesMachineDetailsComponent.Factory,
-    private val confirmOrderComponentFactory: CollectiblesConfirmOrderComponent.Factory,
+    private val packOpeningComponentFactory: CollectiblesPackOpeningComponent.Factory,
 ) : CollectiblesEntryComponent, AppComponentContext by context {
 
     private val stackNavigation = StackNavigation<CollectiblesRoute>()
@@ -112,9 +112,9 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
                 context = childContext,
                 params = CollectiblesMachineDetailsComponent.Params(externalId = route.externalId),
             )
-            is CollectiblesRoute.ConfirmOrder -> confirmOrderComponentFactory.create(
+            is CollectiblesRoute.ConfirmOrder -> packOpeningComponentFactory.create(
                 context = childContext,
-                params = CollectiblesConfirmOrderComponent.Params(
+                params = CollectiblesPackOpeningComponent.Params(
                     userWalletId = params.userWalletId,
                     externalId = route.externalId,
                     isTurboEnabled = route.isTurboEnabled,

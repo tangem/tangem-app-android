@@ -18,6 +18,8 @@ sealed class SendTransactionError {
 
     data class UnknownError(val ex: Exception? = null) : SendTransactionError()
 
+    data object GaslessFeeIncreased : SendTransactionError()
+
     fun getAnalyticsDescription(): String {
         return when (this) {
             is DemoCardError -> "DemoCardError"
@@ -28,6 +30,7 @@ sealed class SendTransactionError {
             is CreateAccountUnderfunded -> "CreateAccountUnderfunded"
             is TangemSdkError -> "TangemSdkError: code $code"
             is UnknownError -> "UnknownError"
+            is GaslessFeeIncreased -> "GaslessFeeIncreased"
         }
     }
 

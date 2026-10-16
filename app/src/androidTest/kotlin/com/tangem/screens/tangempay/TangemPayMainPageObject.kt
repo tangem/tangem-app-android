@@ -122,6 +122,11 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
     val accountClosedBannerMessage: KNode =
         bannerMessage(CoreResR.string.tangempay_account_deactivated_message_subtitle)
 
+    val bankTransferRequestSentMessage: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_bank_transfer_request_sent))
+        useUnmergedTree = true
+    }
+
     // The deactivated screen shows no other message banner, so the start icon belongs to the account-closed one.
     val accountClosedBannerIcon: KNode = child {
         hasTestTag(NotificationTestTags.START_ICON)
@@ -279,6 +284,11 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
             text = getResourceString(CoreResR.string.tangempay_reissue_card_in_progress_description),
             substring = true,
         )
+        useUnmergedTree = true
+    }
+
+    val issuingCardSheetDescription: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_issuing_your_card_description))
         useUnmergedTree = true
     }
 

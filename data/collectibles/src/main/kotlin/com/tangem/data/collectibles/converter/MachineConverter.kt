@@ -30,7 +30,7 @@ internal object MachineConverter : Converter<MachineDTO, CollectibleGachaMachine
     private fun MachineDTO.OpenPackMediaDTO.toDomain() = CollectibleGachaMachine.RevealAssets(
         lightVideoUrl = videoLight,
         darkVideoUrl = videoDark,
-        shortAudioUrl = skipAnimationAudio,
+        skipAudioUrl = skipAnimationAudio,
     )
 
     private fun MachineDTO.MachineOddsDTO.toDomain() = CollectibleGachaMachine.Odds(

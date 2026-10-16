@@ -8,11 +8,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.tangempay.eligibility.TangemPayEligibilityComponent
+import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.wallet.UserWalletId
 
 internal class ResidencyListComponent(
     appComponentContext: AppComponentContext,
-    params: TangemPayEligibilityComponent.Params,
+    params: Params,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: ResidencyListModel = getOrCreateModel(params)
@@ -24,5 +25,17 @@ internal class ResidencyListComponent(
         ResidencyListScreen(state = state, modifier = modifier)
 
         BackHandler(onBack = state.onBackClick ?: state.onCloseClick)
+    }
+
+    data class Params(
+        val product: TangemPayProduct,
+        val userWalletId: UserWalletId,
+        val step: Step,
+        val onCloseClick: () -> Unit,
+    )
+
+    sealed interface Step {
+        data object Countries : Step
+        data class Regions(val countryCode: String, val countryName: String) : Step
     }
 }

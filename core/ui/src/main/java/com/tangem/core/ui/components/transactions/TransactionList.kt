@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
@@ -120,11 +121,11 @@ private fun LazyListScope.contentItems(
 fun PendingTxsBlock(pendingTxs: ImmutableList<TransactionState>, isBalanceHidden: Boolean) {
     Column(
         modifier = Modifier
-            .padding(top = TangemTheme.dimens.spacing12)
-            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .padding(top = 12.dp)
+            .padding(horizontal = 16.dp)
             .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
             .background(color = TangemTheme.colors.background.primary),
-        verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
+        verticalArrangement = Arrangement.spacedBy(space = 8.dp),
         horizontalAlignment = Alignment.Start,
     ) {
         pendingTxs.fastForEach { Transaction(state = it, isBalanceHidden = isBalanceHidden) }
@@ -137,7 +138,7 @@ private fun LazyListScope.nonContentItem(state: EmptyTransactionsBlockState, mod
             state = state,
             modifier = modifier
                 .animateItem(fadeInSpec = null, fadeOutSpec = null)
-                .padding(horizontal = TangemTheme.dimens.spacing16, vertical = TangemTheme.dimens.spacing12)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
                 .fillMaxWidth(),
         )
     }

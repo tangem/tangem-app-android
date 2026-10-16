@@ -21,6 +21,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.TangemPayEntryPoint
@@ -47,7 +48,7 @@ internal interface TangemPayIntents {
 
     fun onKycProgressClicked(userWalletId: UserWalletId)
 
-    fun onKycRequiredClicked(userWalletId: UserWalletId, customerId: String?)
+    fun onKycRequiredClicked(userWalletId: UserWalletId)
 
     fun onKycRejectedClicked(userWalletId: UserWalletId, customerId: String)
 
@@ -76,6 +77,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : BaseWalletClickIntents(), TangemPayIntents {
 
@@ -99,6 +101,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
             produceInitialDataTangemPay.invoke(userWallet.walletId)
                 .onRight {
                     paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWallet.walletId))
+                    moneyAccountStatusFetcher.invoke(userWallet.walletId)
                 }
                 .onLeft {
                     stateHolder.update(
@@ -157,19 +160,8 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         uiMessageSender.send(kycInfoBottomSheet)
     }
 
-    override fun onKycRequiredClicked(userWalletId: UserWalletId, customerId: String?) {
-        val bottomSheet = kycRequiredBottomSheet(
-            onContactSupportClick = {
-                modelScope.launch {
-                    sendFeedbackEmailUseCase(type = kycRequiredFeedbackEmailType(userWalletId, customerId))
-                }
-            },
-            onContinueVerificationClick = {
-                router.openTangemPayEligibility(product = TangemPayProduct.PAYMENT_ACCOUNT, userWalletId = userWalletId)
-            },
-        )
-
-        uiMessageSender.send(bottomSheet)
+    override fun onKycRequiredClicked(userWalletId: UserWalletId) {
+        router.openTangemPayEligibility(product = TangemPayProduct.PAYMENT_ACCOUNT, userWalletId = userWalletId)
     }
 
     override fun onKycRejectedOpenProfileClicked(userWalletId: UserWalletId) {

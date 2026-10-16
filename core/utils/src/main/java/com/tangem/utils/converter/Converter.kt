@@ -13,9 +13,9 @@ interface Converter<I : Any?, O : Any?> {
     }
 
     fun convertListIgnoreErrors(input: Collection<I>, onError: ((Throwable) -> Unit)? = null): List<O> {
-        return input.mapNotNull {
+        return input.mapNotNull { item ->
             try {
-                convert(it)
+                convert(item)
             } catch (throwable: Throwable) {
                 onError?.invoke(throwable)
                 null

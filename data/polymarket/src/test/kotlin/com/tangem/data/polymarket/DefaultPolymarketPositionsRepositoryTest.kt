@@ -13,6 +13,7 @@ import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketPositionsPage
+import com.tangem.domain.polymarket.model.PolymarketPositionsPageRequest
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.grow.datasource.polymarket.PolymarketApi
 import com.tangem.grow.datasource.polymarket.data.PolymarketDataApi
@@ -76,11 +77,11 @@ internal class DefaultPolymarketPositionsRepositoryTest {
         )
 
         // Act
-        val result = repository.getOpenPositions(addresses, limit = 3, offset = 20)
+        val result = repository.getOpenPositions(addresses, PolymarketPositionsPageRequest.First(limit = 3))
 
         // Assert
-        assertThat(result).isEqualTo(Either.Right(PolymarketPositionsPage(listOf(expected), hasNext = true)))
-        coVerify(exactly = 1) { api.getPositions(WALLET_ID, DEPOSIT_ADDRESS, 3, 20) }
+        assertThat(result).isEqualTo(Either.Right(PolymarketPositionsPage(listOf(expected), nextCursor = "cursor-1")))
+        coVerify(exactly = 1) { api.getPositions(WALLET_ID, DEPOSIT_ADDRESS, limit = 3, cursor = null) }
     }
 
     @Test
@@ -104,11 +105,11 @@ internal class DefaultPolymarketPositionsRepositoryTest {
         )
 
         // Act
-        val result = repository.getClosedPositions(addresses, limit = 10, offset = 30)
+        val result = repository.getClosedPositions(addresses, PolymarketPositionsPageRequest.Next(cursor = "cursor-1"))
 
         // Assert
-        assertThat(result).isEqualTo(Either.Right(PolymarketPositionsPage(listOf(expected), hasNext = false)))
-        coVerify(exactly = 1) { api.getClosedPositions(WALLET_ID, DEPOSIT_ADDRESS, 10, 30) }
+        assertThat(result).isEqualTo(Either.Right(PolymarketPositionsPage(listOf(expected), nextCursor = null)))
+        coVerify(exactly = 1) { api.getClosedPositions(WALLET_ID, DEPOSIT_ADDRESS, limit = null, cursor = "cursor-1") }
     }
 
     @Test
@@ -129,14 +130,43 @@ internal class DefaultPolymarketPositionsRepositoryTest {
     fun `GIVEN an empty portfolio WHEN reading positions THEN the result is empty and successful`() = runTest {
         // Arrange
         coEvery { api.getPositions(any(), any(), any(), any()) } returns ApiResponse.Success(
-            moshi.adapter(PolymarketPositionsResponse::class.java).fromJson("""{"positions":[],"hasNext":false}""")!!,
+            moshi.adapter(PolymarketPositionsResponse::class.java).fromJson("""{"positions":[]}""")!!,
         )
 
         // Act
-        val result = repository.getOpenPositions(addresses, limit = 3, offset = 0)
+        val result = repository.getOpenPositions(addresses, PolymarketPositionsPageRequest.First(limit = 3))
 
         // Assert
-        assertThat(result).isEqualTo(Either.Right(PolymarketPositionsPage(emptyList<PolymarketPosition.Open>(), false)))
+        assertThat(result).isEqualTo(Either.Right(PolymarketPositionsPage(emptyList<PolymarketPosition.Open>(), null)))
+    }
+
+    @Test
+    fun `GIVEN the list refuses a cursor WHEN reading the next page THEN the failure asks for a fresh first page`() =
+        runTest {
+            // Arrange
+            @Suppress("UNCHECKED_CAST")
+            coEvery { api.getPositions(any(), any(), any(), any()) } returns
+                ApiResponse.Error(badRequest()) as ApiResponse<PolymarketPositionsResponse>
+
+            // Act
+            val result = repository.getOpenPositions(addresses, PolymarketPositionsPageRequest.Next(cursor = "stale"))
+
+            // Assert
+            assertThat(result).isEqualTo(Either.Left(PolymarketPositionsError.StaleCursor))
+        }
+
+    @Test
+    fun `GIVEN a bad request WHEN reading the first page THEN the failure is not a stale cursor`() = runTest {
+        // Arrange
+        @Suppress("UNCHECKED_CAST")
+        coEvery { api.getPositions(any(), any(), any(), any()) } returns
+            ApiResponse.Error(badRequest()) as ApiResponse<PolymarketPositionsResponse>
+
+        // Act
+        val result = repository.getOpenPositions(addresses, PolymarketPositionsPageRequest.First(limit = 3))
+
+        // Assert
+        assertThat(result).isEqualTo(Either.Left(PolymarketPositionsError.Unknown(httpCode = 400, detail = "Bad cursor")))
     }
 
     @ParameterizedTest
@@ -149,7 +179,7 @@ internal class DefaultPolymarketPositionsRepositoryTest {
                 ApiResponse.Error(model.apiError) as ApiResponse<PolymarketPositionsResponse>
 
             // Act
-            val result = repository.getOpenPositions(addresses, limit = 3, offset = 0)
+            val result = repository.getOpenPositions(addresses, PolymarketPositionsPageRequest.First(limit = 3))
 
             // Assert
             assertThat(result).isEqualTo(Either.Left(model.expected))
@@ -216,7 +246,7 @@ internal class DefaultPolymarketPositionsRepositoryTest {
             ApiResponse.Success(closedResponse(closedAt = "not a date"))
 
         // Act
-        val result = repository.getClosedPositions(addresses, limit = 3, offset = 0)
+        val result = repository.getClosedPositions(addresses, PolymarketPositionsPageRequest.First(limit = 3))
 
         // Assert
         assertThat(result.leftOrNull()).isInstanceOf(PolymarketPositionsError.Unknown::class.java)
@@ -243,7 +273,7 @@ internal class DefaultPolymarketPositionsRepositoryTest {
                 "outcome":"Over","size":"123456789.123456789123456789","avgPrice":"0.3157","curPrice":"0.5",
                 "initialValue":"10","currentValue":"20","cashPnl":"10","percentPnl":"100","realizedPnl":"12.34",
                 "totalBought":"5","redeemable":false,"negRisk":true,"acceptingOrders":false,"live":false,
-                "resolutionStatus":"UNKNOWN"}],"hasNext":true}
+                "resolutionStatus":"UNKNOWN"}],"nextCursor":"cursor-1"}
             """.trimIndent(),
         )!!
 
@@ -252,9 +282,15 @@ internal class DefaultPolymarketPositionsRepositoryTest {
             """
                 {"positions":[{"conditionId":"condition","assetId":"asset","title":"Will it happen?",
                 "outcome":"No","outcomeIndex":1,"avgPrice":"0.5","curPrice":"0","totalBought":"10",
-                "realizedPnl":"2.75","closedAt":"$closedAt","status":"LOST"}],"hasNext":false}
+                "realizedPnl":"2.75","closedAt":"$closedAt","status":"LOST"}]}
             """.trimIndent(),
         )!!
+
+    private fun badRequest() = ApiResponseError.HttpException(
+        code = ApiResponseError.HttpException.Code.BAD_REQUEST,
+        message = "Bad request",
+        errorBody = "Bad cursor",
+    )
 
     private fun createPositionsValueResponse(value: BigDecimal) = PolymarketPositionsValueResponse(
         data = PolymarketPositionsValueResponse.Data(value = value),

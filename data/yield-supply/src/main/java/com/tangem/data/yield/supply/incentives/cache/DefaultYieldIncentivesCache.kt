@@ -31,7 +31,6 @@ internal class DefaultYieldIncentivesCache(
             val generation = guard.withLock { generations.getOrDefault(key, 0L) }
             fetch().onRight { value ->
                 guard.withLock {
-                    // A fetch that left before an invalidation answers for the state it discarded, so it is not kept.
                     if (generations.getOrDefault(key, 0L) == generation) {
                         entries[key] = Entry(value = value, storedAtMillis = currentTimeMillis())
                     }
@@ -44,8 +43,7 @@ internal class DefaultYieldIncentivesCache(
         guard.withLock {
             entries.remove(key)
             generations[key] = generations.getOrDefault(key, 0L) + 1
-            // The fetch in flight keeps its own lock; a read after the invalidation starts a fresh one instead of
-            // queueing behind a request that already answers for the past.
+            // A read after invalidation starts its own fetch instead of waiting on the stale one
             keyLocks.remove(key)
         }
     }

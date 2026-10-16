@@ -33,16 +33,16 @@ import com.tangem.features.tangempay.details.impl.R
 
 @Composable
 internal fun TangemPayDailyLimitBlock(state: TangemPayDailyLimitBlockState, modifier: Modifier = Modifier) {
-    CurrentLimitBlock(state, modifier.padding(top = TangemTheme.dimens2.x2))
+    CurrentLimitBlock(state, modifier.padding(top = 8.dp))
 }
 
 @Composable
 private fun CurrentLimitBlock(state: TangemPayDailyLimitBlockState, modifier: Modifier = Modifier) {
     TangemRowContainer(
         modifier = modifier
-            .clip(RoundedCornerShape(TangemTheme.dimens2.x6))
+            .clip(RoundedCornerShape(24.dp))
             .background(color = TangemTheme.colors3.bg.secondary),
-        contentPadding = PaddingValues(TangemTheme.dimens2.x4),
+        contentPadding = PaddingValues(16.dp),
     ) {
         LimitHeadIcon(
             modifier = Modifier.layoutId(TangemRowLayoutId.HEAD),
@@ -51,14 +51,14 @@ private fun CurrentLimitBlock(state: TangemPayDailyLimitBlockState, modifier: Mo
 
         TitleLimit(
             modifier = Modifier
-                .padding(start = TangemTheme.dimens2.x3)
+                .padding(start = 12.dp)
                 .layoutId(TangemRowLayoutId.START_TOP),
             state = state,
         )
 
         SubtitleLimit(
             modifier = Modifier
-                .padding(start = TangemTheme.dimens2.x3)
+                .padding(start = 12.dp)
                 .layoutId(TangemRowLayoutId.START_BOTTOM),
             state = state,
         )
@@ -67,7 +67,7 @@ private fun CurrentLimitBlock(state: TangemPayDailyLimitBlockState, modifier: Mo
             is TangemPayDailyLimitBlockState.Content -> {
                 TangemButton(
                     modifier = Modifier
-                        .padding(start = TangemTheme.dimens2.x3)
+                        .padding(start = 12.dp)
                         .layoutId(TangemRowLayoutId.TAIL)
                         .testTag(TangemPayTestTags.DAILY_LIMIT_CHANGE_BUTTON),
                     variant = TangemButton.Variant.Secondary,
@@ -79,7 +79,7 @@ private fun CurrentLimitBlock(state: TangemPayDailyLimitBlockState, modifier: Mo
             is TangemPayDailyLimitBlockState.Error -> {
                 TangemButton(
                     modifier = Modifier
-                        .padding(start = TangemTheme.dimens2.x3)
+                        .padding(start = 12.dp)
                         .layoutId(TangemRowLayoutId.TAIL),
                     iconStart = TangemIconUM.Icon(imageVector = Icons.ic_arrow_refresh_32),
                     variant = TangemButton.Variant.Secondary,
@@ -90,7 +90,7 @@ private fun CurrentLimitBlock(state: TangemPayDailyLimitBlockState, modifier: Mo
             TangemPayDailyLimitBlockState.Loading -> {
                 TangemShimmer(
                     modifier = Modifier
-                        .padding(start = TangemTheme.dimens2.x3)
+                        .padding(start = 12.dp)
                         .layoutId(TangemRowLayoutId.TAIL)
                         .size(width = 64.dp, height = 40.dp),
                     radius = 20.dp,
@@ -104,7 +104,7 @@ private fun CurrentLimitBlock(state: TangemPayDailyLimitBlockState, modifier: Mo
 private fun LimitHeadIcon(state: TangemPayDailyLimitBlockState, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens2.x10)
+            .size(40.dp)
             .background(
                 color = when (state) {
                     is TangemPayDailyLimitBlockState.Content,

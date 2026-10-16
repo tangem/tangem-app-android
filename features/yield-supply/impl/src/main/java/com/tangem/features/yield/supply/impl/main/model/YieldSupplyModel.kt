@@ -1,9 +1,9 @@
 package com.tangem.features.yield.supply.impl.main.model
 
 import arrow.core.getOrElse
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -53,7 +53,7 @@ internal class YieldSupplyModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventsHandler: AnalyticsEventHandler,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
@@ -187,7 +187,7 @@ internal class YieldSupplyModel @Inject constructor(
     }
 
     override fun onLearnMoreClick() {
-        appRouter.push(
+        router.push(
             AppRoute.Stories(
                 storyId = StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id,
                 nextScreen = buildYieldEntryRoute(),
@@ -199,7 +199,7 @@ internal class YieldSupplyModel @Inject constructor(
 
     private fun navigateToYieldSupplyEntry() {
         val route = buildYieldEntryRoute() ?: return
-        appRouter.push(route)
+        router.push(route)
     }
 
     private fun buildYieldEntryRoute(): AppRoute.YieldSupplyEntry? {

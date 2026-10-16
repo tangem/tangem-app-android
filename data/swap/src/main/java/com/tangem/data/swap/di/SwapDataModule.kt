@@ -10,6 +10,7 @@ import com.tangem.data.swap.DefaultSwapErrorResolver
 import com.tangem.data.swap.DefaultSwapRepositoryV2
 import com.tangem.data.swap.DefaultSwapTransactionRepository
 import com.tangem.data.swap.converter.ExchangeIntentConverter
+import com.tangem.data.swap.converter.ExpressRateTypeConverter
 import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
@@ -100,7 +101,7 @@ internal object SwapDataModule {
     ): ExchangeIntentRepository {
         return DefaultExchangeIntentRepository(
             tangemExpressApi = tangemExpressApi,
-            exchangeIntentConverter = ExchangeIntentConverter(),
+            exchangeIntentConverter = ExchangeIntentConverter(rateTypeConverter = ExpressRateTypeConverter()),
             expressErrorResolver = expressErrorResolver,
         )
     }

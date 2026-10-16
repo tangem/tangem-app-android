@@ -11,8 +11,7 @@ import com.tangem.core.ui.extensions.TextReference
  *
  * Full UI parity with a crypto-account row (icon, title, subtitle, fiat balance and price change),
  * but built on the new design system (DS3: `TangemRow`, `colors3` / `typography3`). Joint-specific
- * differences are limited to the subtitle text and the extra content below the row (invite banner /
- * blocked warning).
+ * differences are limited to the subtitle text and the extra content below the row (invite banner).
  */
 @Immutable
 sealed interface JointAccountMainUM {
@@ -55,15 +54,14 @@ sealed interface JointAccountMainUM {
     )
 
     /**
-     * Blocked — the account stays visible with its balance, but operations are unavailable and a
-     * permanent warning is shown.
+     * Blocked — the composition does not verify: the row stays with a dimmed balance, it cannot be expanded, and a
+     * tap shows an alert instead of opening anything.
      *
      * @property title       account name.
      * @property subtitle    token and member counts.
      * @property icon        account icon.
      * @property balance     total fiat balance of the account.
      * @property priceChange price-change indicator under the balance; `null` hides it.
-     * @property warning     permanent warning message rendered below the row.
      * @property onClick     tap on the row.
      */
     data class Blocked(
@@ -72,7 +70,6 @@ sealed interface JointAccountMainUM {
         val icon: AccountIconUM,
         val balance: TextReference,
         val priceChange: TangemPriceChange.State?,
-        val warning: TextReference,
         val onClick: () -> Unit,
     ) : JointAccountMainUM
 

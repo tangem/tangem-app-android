@@ -59,9 +59,9 @@ internal class DefaultYieldSupplyRepository(
     }
 
     /**
-     * The plain markets say which tokens offer Yield Mode at all; the incentives are an overlay on top of them. The
-     * incentives service answers only for the chains and tokens it knows, and [YieldMarketsStore.store] replaces its
-     * contents wholesale, so a short payload driving the list would drop Yield Mode from everything it left out.
+     * The plain markets are the base of the list and the incentives are an overlay on top of them. The incentives
+     * service answers only for the chains and tokens it knows, and [YieldMarketsStore.store] replaces its contents
+     * wholesale, so a short payload driving the list would drop Yield Mode from everything it left out.
      */
     override suspend fun updateMarkets(): List<YieldMarketToken> = withContext(dispatchers.io) {
         // The service validates the whole list and answers 400 when one chain is off it, so a testnet the SDK still
@@ -82,6 +82,7 @@ internal class DefaultYieldSupplyRepository(
     /**
      * Where both lists describe the same token the incentivised row wins, since it is the same row plus the campaign
      * fields. Tokens the incentives service does not know keep their plain row, and the plain ordering is preserved.
+     * A token only the incentives service knows is appended after the plain rows.
      */
     private fun List<YieldSupplyMarketTokenDto>.overlaidWith(
         incentivised: List<YieldSupplyMarketTokenDto>,

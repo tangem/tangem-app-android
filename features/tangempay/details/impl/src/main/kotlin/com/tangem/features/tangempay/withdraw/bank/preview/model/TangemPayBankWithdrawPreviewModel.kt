@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.wallet.isColdWallet
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
@@ -54,6 +55,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     private val cancelBankOfframpOrderUseCase: CancelBankOfframpOrderUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val analytics: AnalyticsEventHandler,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawPreviewComponent.Params>()
@@ -69,7 +71,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
         ),
     )
 
-    private val state = MutableStateFlow(PreviewState(isColdWallet = resolveIsColdWallet()))
+    private val state = MutableStateFlow(PreviewState(isColdWallet = resolveIsColdWallet(), isBalanceHidden = true))
 
     private val sendJobHolder = JobHolder()
 
@@ -89,6 +91,9 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     init {
         combine(params.draft, state) { draft, previewState -> umFactory.create(draft = draft, state = previewState) }
             .onEach { uiState.value = it }
+            .launchIn(modelScope)
+        getBalanceHidingSettingsUseCase.isBalanceHidden()
+            .onEach { isBalanceHidden -> state.update { it.copy(isBalanceHidden = isBalanceHidden) } }
             .launchIn(modelScope)
         analytics.send(TangemPayAnalyticsEvents.Offramp.ConfirmationScreenOpened())
     }

@@ -2,6 +2,7 @@ package com.tangem.screens.tangempay
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TangemPayBankRoute
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.test.SendScreenTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
@@ -9,6 +10,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasAnyDescendant as withAnyDescendant
 import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
 
@@ -35,6 +37,54 @@ class TangemPayBankWithdrawAmountPageObject(semanticsProvider: SemanticsNodeInte
 
     val tokenSheetTitle: KNode = child {
         hasText(getResourceString(CoreResR.string.common_choose_network))
+        useUnmergedTree = true
+    }
+
+    val maxButton: KNode = child {
+        hasText(getResourceString(CoreResR.string.send_max_amount))
+        hasClickAction()
+        hasAnyAncestor(withTestTag(TangemPayTestTags.BANK_WITHDRAW_AMOUNT_SCREEN))
+    }
+
+    val routeSheetTitle: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_withdraw_bank_select_route))
+        useUnmergedTree = true
+    }
+
+    fun amountError(text: String): KNode = child {
+        hasText(text)
+        hasAnyAncestor(withTestTag(TangemPayTestTags.BANK_WITHDRAW_AMOUNT_SCREEN))
+        useUnmergedTree = true
+    }
+
+    val routeSelector: KNode = child {
+        hasTestTag(TangemPayTestTags.BANK_WITHDRAW_ROUTE_ROW)
+        hasAnyAncestor(withTestTag(TangemPayTestTags.BANK_WITHDRAW_AMOUNT_SCREEN))
+        useUnmergedTree = true
+    }
+
+    fun routeRow(route: TangemPayBankRoute): KNode = child {
+        hasTestTag(TangemPayTestTags.BANK_WITHDRAW_ROUTE_ROW)
+        hasAnyAncestor(withTestTag(TangemPayTestTags.BANK_WITHDRAW_AMOUNT_SCREEN))
+        hasAnyDescendant(withText(route.title))
+        hasAnyDescendant(withText(route.eta))
+        hasAnyDescendant(withText(route.fee))
+        useUnmergedTree = true
+    }
+
+    fun routeOption(route: TangemPayBankRoute): KNode = child {
+        hasTestTag(TangemPayTestTags.BANK_WITHDRAW_ROUTE_OPTION)
+        hasAnyDescendant(withText(route.title))
+        hasAnyDescendant(withText(route.eta))
+        hasAnyDescendant(withText(route.fee))
+        useUnmergedTree = true
+    }
+
+    fun routeOptionCheckmark(route: TangemPayBankRoute): KNode = child {
+        isToggleable()
+        hasAnyAncestor(
+            withTestTag(TangemPayTestTags.BANK_WITHDRAW_ROUTE_OPTION) and withAnyDescendant(withText(route.title)),
+        )
         useUnmergedTree = true
     }
 
