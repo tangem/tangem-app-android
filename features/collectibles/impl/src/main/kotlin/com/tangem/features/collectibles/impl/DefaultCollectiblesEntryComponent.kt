@@ -1,12 +1,15 @@
 package com.tangem.features.collectibles.impl
 
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.StackAnimator
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimator
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
@@ -15,12 +18,13 @@ import com.tangem.common.routing.entity.CollectiblesStartRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
+import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.collectibles.api.CollectiblesEntryComponent
-import com.tangem.features.collectibles.impl.confirmorder.CollectiblesConfirmOrderComponent
 import com.tangem.features.collectibles.impl.machinedetails.CollectiblesMachineDetailsComponent
 import com.tangem.features.collectibles.impl.main.CollectiblesMainComponent
 import com.tangem.features.collectibles.impl.onboarding.CollectiblesOnboardingComponent
+import com.tangem.features.collectibles.impl.packopening.CollectiblesPackOpeningComponent
 import com.tangem.features.collectibles.impl.stories.CollectiblesStoriesComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -34,7 +38,7 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
     private val storiesComponentFactory: CollectiblesStoriesComponent.Factory,
     private val mainComponentFactory: CollectiblesMainComponent.Factory,
     private val machineDetailsComponentFactory: CollectiblesMachineDetailsComponent.Factory,
-    private val confirmOrderComponentFactory: CollectiblesConfirmOrderComponent.Factory,
+    private val packOpeningComponentFactory: CollectiblesPackOpeningComponent.Factory,
 ) : CollectiblesEntryComponent, AppComponentContext by context {
 
     private val stackNavigation = StackNavigation<CollectiblesRoute>()
@@ -58,6 +62,9 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
         },
     )
 
+    private val CollectiblesRoute.isModalFlow: Boolean
+        get() = this is CollectiblesRoute.MachineDetails || this is CollectiblesRoute.ConfirmOrder
+
     private fun resolveStartRoute(): CollectiblesRoute = when (params.startRoute) {
         CollectiblesStartRoute.Onboarding -> CollectiblesRoute.Onboarding(params.userWalletId)
         CollectiblesStartRoute.Main -> CollectiblesRoute.Main(params.userWalletId)
@@ -70,11 +77,25 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
         Children(
             stack = childStack,
             modifier = modifier,
-            animation = stackAnimation { slide() },
+            animation = stackAnimation { child, otherChild, _ ->
+                selectAnimator(route = child.configuration, otherRoute = otherChild.configuration)
+            },
         ) { child ->
-            child.instance.Content(Modifier.fillMaxSize())
+            // Screens animate together: a shared haze state would blur the screen underneath into this one
+            ProvideHaze {
+                child.instance.Content(Modifier.fillMaxSize())
+            }
         }
     }
+
+    /** Machine details and its confirm order form one modal flow: it slides up over the screen it was opened from. */
+    private fun selectAnimator(route: CollectiblesRoute, otherRoute: CollectiblesRoute): StackAnimator = when {
+        route.isModalFlow == otherRoute.isModalFlow -> slide()
+        route.isModalFlow -> slide(orientation = Orientation.Vertical)
+        else -> stayInPlace()
+    }
+
+    private fun stayInPlace(): StackAnimator = stackAnimator { _, _, content -> content(Modifier) }
 
     private fun createChild(route: CollectiblesRoute, childContext: AppComponentContext): ComposableContentComponent {
         return when (route) {
@@ -91,9 +112,9 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
                 context = childContext,
                 params = CollectiblesMachineDetailsComponent.Params(externalId = route.externalId),
             )
-            is CollectiblesRoute.ConfirmOrder -> confirmOrderComponentFactory.create(
+            is CollectiblesRoute.ConfirmOrder -> packOpeningComponentFactory.create(
                 context = childContext,
-                params = CollectiblesConfirmOrderComponent.Params(
+                params = CollectiblesPackOpeningComponent.Params(
                     userWalletId = params.userWalletId,
                     externalId = route.externalId,
                     isTurboEnabled = route.isTurboEnabled,

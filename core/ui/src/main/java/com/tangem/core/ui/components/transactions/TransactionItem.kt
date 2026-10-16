@@ -237,7 +237,7 @@ private fun StatusCircle(icon: TxIcon, status: Status, modifier: Modifier = Modi
 
 private val Status.backgroundColor: Color
     @Composable get() = when (this) {
-        is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.bg.opaque.secondary
+        is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.bg.transparent.secondary
         is Status.Unconfirmed -> TangemTheme.colors3.bg.status.infoSubtle
         is Status.Failed -> TangemTheme.colors3.bg.status.errorSubtle
     }

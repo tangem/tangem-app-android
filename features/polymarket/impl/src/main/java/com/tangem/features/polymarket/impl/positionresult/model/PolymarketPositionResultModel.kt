@@ -109,6 +109,13 @@ internal class PolymarketPositionResultModel @Inject constructor(
                     else -> showError(R.string.prediction_claim_error_generic)
                 }
             }
+            is PredictionClaimFailure.NothingToRedeem -> {
+                TangemLogger.i(
+                    "The backend has nothing to redeem for the position, hiding the claim: ${failure.detail}",
+                )
+                positionsUpdateEmitter.triggerUpdate(params.userWalletId)
+                uiState.update { it.copy(action = PolymarketPositionResultUM.Action.Dismiss) }
+            }
             PredictionClaimFailure.CallUnavailable,
             PredictionClaimFailure.NonceUnavailable,
             PredictionClaimFailure.Expired,

@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.domain.di
 
 import com.tangem.core.abtests.manager.ABTestsManager
+import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.transaction.usecase.CreateTransactionDataExtrasUseCase
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
@@ -99,6 +100,7 @@ internal class SwapDomainModule {
         getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
         createTransferTransactionUseCase: CreateTransferTransactionUseCase,
         isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
+        getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
         swapFeatureToggles: SwapFeatureToggles,
         @SwapSendGasLimit patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
     ): CexSwapFeeCalculator = CexSwapFeeCalculator(
@@ -108,6 +110,7 @@ internal class SwapDomainModule {
         getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
         createTransferTransactionUseCase = createTransferTransactionUseCase,
         isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+        getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidCryptoCurrencyStatusSyncUseCase,
         swapFeatureToggles = swapFeatureToggles,
         patchEthGasLimitForSwap = patchEthGasLimitForSwap,
     )

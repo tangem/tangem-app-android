@@ -94,8 +94,8 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
     }
 
     private fun onAccessCodeFirstChange(textFieldValue: TextFieldValue) {
-        _uiState.update {
-            it.copy(
+        _uiState.update { state ->
+            state.copy(
                 accessCodeFirst = textFieldValue,
                 accessCodeSecond = TextFieldValue(),
                 atLeastMinCharsError = false,
@@ -104,8 +104,8 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
     }
 
     private fun onAccessCodeSecondChange(textFieldValue: TextFieldValue) {
-        _uiState.update {
-            it.copy(
+        _uiState.update { state ->
+            state.copy(
                 accessCodeSecond = textFieldValue,
                 codesNotMatchError = false,
             )
@@ -159,8 +159,8 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
             val challengeToSign = visaAuthRemoteDataSource.getCardAuthChallenge(
                 cardId = activationInput.cardId,
                 cardPublicKey = activationInput.cardPublicKey,
-            ).getOrElse {
-                onError(it)
+            ).getOrElse { error ->
+                onError(error)
                 return@launch
             }
 
@@ -181,8 +181,8 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
             }
 
             visaActivationRepository.activateCard(resultData.signedActivationData)
-                .onLeft {
-                    onError(it)
+                .onLeft { error ->
+                    onError(error)
                     return@launch
                 }
 

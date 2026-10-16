@@ -3,7 +3,7 @@ package com.tangem.tap.features.details.ui.cardsettings.coderecovery.model
 import androidx.compose.runtime.Stable
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRouter
-import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.card.common.util.cardTypesResolver
@@ -26,6 +26,7 @@ internal class AccessCodeRecoveryModel @Inject constructor(
     private val tangemSdkManager: TangemSdkManager,
     private val cardSettingsInteractor: CardSettingsInteractor,
     private val appRouter: AppRouter,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val scannedScanResponse = cardSettingsInteractor.scannedScanResponse.value
@@ -56,7 +57,7 @@ internal class AccessCodeRecoveryModel @Inject constructor(
         tangemSdkManager
             .setAccessCodeRecoveryEnabled(scannedScanResponse.card.cardId, isEnabled)
             .doOnSuccess {
-                Analytics.send(
+                analyticsEventHandler.send(
                     Settings.CardSettings.AccessCodeRecoveryChanged(
                         AnalyticsParam.AccessCodeRecoveryStatus.from(isEnabled),
                     ),

@@ -163,11 +163,11 @@ class JointOperationVerifier(
         )
 
         /**
-         * Creation caps `gasPrice` at ×2 of the network price. The ceiling here is deliberately far above that:
-         * an operation collecting signatures for hours carries the price of the moment it was built, and the
-         * decision on a risen price is to execute it as is. What this rejects is an absurd value, not drift.
+         * Creation prices `gasPrice` at ×2 of the network price. An operation collecting signatures for hours
+         * carries the price of the moment it was built, so the ceiling leaves room for the network price to halve
+         * meanwhile; anything above it is refused.
          */
-        val GAS_PRICE_CEILING_MULTIPLIER: BigInteger = BigInteger.valueOf(20)
+        val GAS_PRICE_CEILING_MULTIPLIER: BigInteger = BigInteger.valueOf(4)
 
         /** `refundReceiver` of this value is not a recipient but an instruction to pay `tx.origin` */
         const val ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"

@@ -83,6 +83,13 @@ interface TangemExpressApi {
         @Query("txId") txId: String,
     ): ApiResponse<ExchangeItemResponse>
 
+    /** Reads the exchange intent an MCP agent stored, and the exchanges the user sent from it. */
+    @GET("exchange-intent")
+    suspend fun getExchangeIntent(
+        @Header("user-id") userWalletId: String,
+        @Query("intentId") intentId: String,
+    ): ApiResponse<ExchangeIntentResponse>
+
     @POST("exchange-sent")
     suspend fun exchangeSent(
         @Header("user-id") userWalletId: String,

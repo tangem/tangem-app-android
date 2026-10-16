@@ -93,7 +93,7 @@ private fun TokenSelectorContent(
     }
 
     Box(modifier = modifier.fillMaxWidth()) {
-        val bottomFadeReserve = if (embedded) 0.dp else TangemTheme.dimens2.x10
+        val bottomFadeReserve = if (embedded) 0.dp else 40.dp
         val bottomListPadding = bottomFadeReserve + scrollBottomInset
         val topFadeColor = TangemTheme.colors2.surface.level2.copy(alpha = .95f)
         LazyColumn(
@@ -102,8 +102,8 @@ private fun TokenSelectorContent(
                 .hazeSourceTangem(state = hazeState, 1f)
                 .topFade(height = topBarHeight, color = topFadeColor, solidStop = .6f),
             contentPadding = PaddingValues(
-                start = TangemTheme.dimens2.x4,
-                end = TangemTheme.dimens2.x4,
+                start = 16.dp,
+                end = 16.dp,
                 top = topContentPadding,
                 bottom = bottomListPadding,
             ),
@@ -146,11 +146,11 @@ private fun TokenSelectorSheetTopBar(
                 contentDescription = null,
                 tint = TangemTheme.colors2.graphic.neutral.primary,
                 modifier = Modifier
-                    .size(TangemTheme.dimens2.x11)
+                    .size(44.dp)
                     .clip(CircleShape)
                     .hazeEffectTangem(state = hazeState) { blurRadius = 8.dp }
                     .clickableSingle(onClick = onDismiss)
-                    .padding(TangemTheme.dimens2.x2_5),
+                    .padding(10.dp),
             )
         },
     )

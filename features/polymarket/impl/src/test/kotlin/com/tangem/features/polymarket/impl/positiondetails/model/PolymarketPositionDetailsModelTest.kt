@@ -10,17 +10,17 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPosition
-import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketMarket
-import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
-import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketConst
+import com.tangem.features.polymarket.impl.createPolymarketEvent
+import com.tangem.features.polymarket.impl.createPolymarketMarket
+import com.tangem.features.polymarket.impl.createPolymarketOutcome
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
 import com.tangem.features.polymarket.impl.positiondetails.PolymarketPositionDetailsComponent
@@ -540,52 +540,29 @@ internal class PolymarketPositionDetailsModelTest {
         ).also(models::add)
     }
 
-    private fun createEvent(markets: List<PolymarketMarket> = emptyList()) = PolymarketEvent(
+    private fun createEvent(markets: List<PolymarketMarket> = emptyList()) = createPolymarketEvent(
         id = "event",
         slug = "event",
         title = "Loaded event",
         description = "",
         rulesUrl = "",
         iconUrl = "https://example.com/event.png",
-        imageUrl = null,
-        status = PolymarketStatus.ACTIVE,
-        startDate = null,
-        endDate = null,
         volume = BigDecimal("6300000"),
-        volume24h = null,
-        liquidity = null,
         totalMarketsCount = 0,
-        isNegRisk = false,
-        isLive = false,
-        displayMode = PolymarketDisplayMode.PLAIN_MARKETS,
         markets = markets,
     )
 
     private fun createMarket(
         assetId: String = position.id.assetId,
         isAcceptingOrders: Boolean = true,
-    ) = PolymarketMarket(
+    ) = createPolymarketMarket(
         id = "market-from-event",
-        conditionId = null,
         eventId = "event",
         title = "Will the event happen?",
         slug = "market",
         description = "",
-        groupItemTitle = null,
-        iconUrl = null,
-        imageUrl = null,
-        status = PolymarketStatus.ACTIVE,
-        isNegRisk = false,
         isAcceptingOrders = isAcceptingOrders,
-        startDate = null,
-        endDate = null,
-        startDateIso = null,
-        endDateIso = null,
-        volume = null,
-        volume24h = null,
-        liquidity = null,
-        orderIndex = 0,
-        outcomes = listOf(PolymarketOutcome(assetId = assetId, title = "Yes", probability = null)),
+        outcomes = listOf(createPolymarketOutcome(assetId = assetId)),
     )
 
     internal data class UnsellableModel(val position: PolymarketPosition.Open)

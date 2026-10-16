@@ -3,6 +3,7 @@ package com.tangem.features.introduction.impl.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -14,6 +15,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.loader.TangemLoader
+import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
@@ -39,9 +41,10 @@ internal fun WalletOptionCard(option: WalletOptionUM, modifier: Modifier = Modif
             )
         },
         // The design carries no trailing element; the loader is the exception, since a row that is working
-        // has to say so.
-        endSlot = if (option.isLoading) {
-            { TangemLoader(color = TangemTheme.colors3.icon.secondary) }
+        // has to say so. A row that can start loading keeps the loader's place empty while idle, so the spinner
+        // coming in does not rewrap the subtitle and grow the sheet.
+        endSlot = if (option.isLoading || option.isLoaderSpaceReserved) {
+            { OptionLoader(isVisible = option.isLoading) }
         } else {
             null
         },
@@ -51,11 +54,20 @@ internal fun WalletOptionCard(option: WalletOptionUM, modifier: Modifier = Modif
 private const val DISABLED_CONTENT_ALPHA = 0.4f
 
 @Composable
+private fun OptionLoader(isVisible: Boolean) {
+    if (isVisible) {
+        TangemLoader(color = TangemTheme.colors3.icon.secondary, size = TangemLoaderSize.X24)
+    } else {
+        Spacer(modifier = Modifier.size(24.dp))
+    }
+}
+
+@Composable
 private fun OptionIcon(icon: WalletOptionUM.Icon) {
     Box(
         modifier = Modifier
             .size(40.dp)
-            .background(color = TangemTheme.colors3.bg.opaque.primary, shape = CircleShape),
+            .background(color = TangemTheme.colors3.bg.transparent.primary, shape = CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         when (icon) {
