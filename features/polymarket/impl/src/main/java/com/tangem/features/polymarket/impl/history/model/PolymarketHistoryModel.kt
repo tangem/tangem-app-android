@@ -64,8 +64,8 @@ internal class PolymarketHistoryModel @Inject constructor(
         modelScope.launch {
             session.state.collectLatest { state ->
                 val content = content(state)
-                uiState.update {
-                    it.copy(
+                uiState.update { currentState ->
+                    currentState.copy(
                         content = content,
                         tabs = tabs(state.filter),
                         filterKey = state.filter.toString(),
@@ -140,19 +140,21 @@ internal class PolymarketHistoryModel @Inject constructor(
     }
 
     private fun openDetails(activity: PolymarketActivity) {
-        val openPrediction = activity.market?.event?.eventId?.takeIf(String::isNotBlank)?.let { eventId ->
-            {
-                dismissDetails()
-                router.push(
-                    PolymarketRoute.EventDetails(
-                        eventId = eventId,
-                        userWalletId = params.userWalletId,
-                        marketId = activity.market?.marketId,
-                        assetId = activity.order?.assetId,
-                    ),
-                )
+        val openPrediction = activity.market?.event?.eventId
+            ?.takeIf(String::isNotBlank)
+            ?.let { eventId ->
+                {
+                    dismissDetails()
+                    router.push(
+                        PolymarketRoute.EventDetails(
+                            eventId = eventId,
+                            userWalletId = params.userWalletId,
+                            marketId = activity.market?.marketId,
+                            assetId = activity.order?.assetId,
+                        ),
+                    )
+                }
             }
-        }
         uiState.update { it.copy(details = detailsConverter.convert(activity, openPrediction)) }
     }
 
