@@ -26,10 +26,12 @@ dependencies {
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
     implementation(projects.domain.moneyAccount)
+    implementation(projects.domain.visa.models)
     implementation(projects.domain.wallets)
 
     /** Features */
     implementation(projects.features.moneyAccount.details.api)
+    implementation(projects.features.tangempay.details.api)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.txhistory.api)
 
@@ -41,12 +43,14 @@ dependencies {
     implementation(deps.decompose.ext.compose)
 
     /** Other */
+    implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization.core)
     implementation(tangemDeps.blockchain)
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.appCompat)
     implementation(deps.haze)
     implementation(deps.kotlin.coroutines)
@@ -56,4 +60,5 @@ dependencies {
 
     /** Tests */
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
 }
