@@ -396,20 +396,44 @@ internal class DefaultDeriveAndSignSessionTest {
     }
 
     @Test
-    fun `GIVEN an unlock established elsewhere WHEN run on hot THEN it is left in place`() = runTest {
+    fun `GIVEN an unlock established elsewhere WHEN run on hot THEN asks once and leaves it in place`() = runTest {
         // Arrange
         val wallet = hotWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns storedDerivedKey()
-        every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returns mockk()
+        coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
+        val unlock: UnlockHotWallet = mockk()
+        every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returns unlock
+        coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } returns unlock
+        coEvery { hotWalletAccessor.derivePublicKeysReusingContextualUnlock(HOT_WALLET_ID, any()) } returns
+            derivedResponse()
         coEvery { hotWalletAccessor.signHashesReusingContextualUnlock(HOT_WALLET_ID, any()) } returns signedData()
 
         // Act
-        sut.run(wallet, SEED_KEY, PATH) { sign(listOf(HASH)) }
+        val actual = sut.run(wallet, SEED_KEY, PATH) { sign(listOf(HASH)) }
 
         // Assert
-        coVerify(exactly = 0) { hotWalletAccessor.unlockContextual(any<HotWalletId>()) }
+        assertThat((actual.getOrNull() as CompletionResult.Success).data).containsExactly(SIG)
+        coVerify(exactly = 1) { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) }
         verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
     }
+
+    @Test
+    fun `GIVEN an unlock established elsewhere and the prompt is cancelled WHEN run on hot THEN nothing is signed`() =
+        runTest {
+            // Arrange
+            val wallet = hotWallet()
+            coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns storedDerivedKey()
+            every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returns mockk()
+            coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } throws TangemSdkError.UserCancelled()
+
+            // Act
+            val actual = sut.run(wallet, SEED_KEY, PATH) { sign(listOf(HASH)) }
+
+            // Assert
+            val failure = actual.getOrNull() as CompletionResult.Failure
+            assertThat(failure.error).isInstanceOf(TangemSdkError.UserCancelled::class.java)
+            coVerify(exactly = 0) { hotWalletAccessor.signHashesReusingContextualUnlock(any(), any()) }
+            verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
+        }
 
     @Test
     fun `GIVEN the block throws before signing WHEN run on hot THEN returns Left and no unlock is cleared`() = runTest {
