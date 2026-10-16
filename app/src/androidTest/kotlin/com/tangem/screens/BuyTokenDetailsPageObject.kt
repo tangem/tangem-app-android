@@ -46,6 +46,21 @@ class BuyTokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProv
         hasText(getResourceString(R.string.warning_button_refresh))
     }
 
+    fun tokenNotSupportedTitle(tokenName: String): KNode = child {
+        hasText(getResourceString(OnrampImplR.string.onramp_token_is_not_supported_banner_title, tokenName))
+        useUnmergedTree = true
+    }
+
+    val tokenNotSupportedSubtitle: KNode = child {
+        hasText(getResourceString(OnrampImplR.string.onramp_token_is_not_supported_banner_subtitle))
+        useUnmergedTree = true
+    }
+
+    val regionRestrictionAmountError: KNode = child {
+        hasText(getResourceString(R.string.express_onramp_restrictions_amount_error))
+        useUnmergedTree = true
+    }
+
     val fiatCurrencyIcon: KNode = child {
         hasTestTag(BuyTokenDetailsScreenTestTags.FIAT_CURRENCY_ICON)
         useUnmergedTree = true

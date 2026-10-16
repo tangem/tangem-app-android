@@ -7,7 +7,13 @@ import kotlinx.serialization.Serializable
 internal sealed class EligibilityInnerRoute : Route {
 
     @Serializable
-    data object Residency : EligibilityInnerRoute()
+    class Countries : EligibilityInnerRoute()
+
+    @Serializable
+    data class Regions(
+        val countryCode: String,
+        val countryName: String,
+    ) : EligibilityInnerRoute()
 
     @Serializable
     data class RegionUnavailable(
