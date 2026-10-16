@@ -2,7 +2,6 @@ package com.tangem.feature.swap.model
 
 import com.tangem.common.TangemSiteUrlBuilder
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWarningNotification
@@ -10,6 +9,7 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachable
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -128,7 +128,7 @@ internal class SwapNotificationsFactory(
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         swapFee: SwapFee?,
         feeError: GetFeeError?,
-        appRouter: AppRouter,
+        router: Router,
         isHighNetworkFee: Boolean = false,
         lowSlippage: TextReference? = null,
     ): ImmutableList<NotificationUM> {
@@ -145,7 +145,7 @@ internal class SwapNotificationsFactory(
                 quoteModel = quoteModel,
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                 swapFee = swapFee,
-                appRouter = appRouter,
+                router = router,
             )
             maybeAddTransactionInProgressWarning(quoteModel)
             maybeAddPriceImpactNotification(quoteModel.priceImpact)
@@ -356,7 +356,7 @@ internal class SwapNotificationsFactory(
         quoteModel: SwapState.QuotesLoadedState,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         swapFee: SwapFee?,
-        appRouter: AppRouter,
+        router: Router,
     ) {
         if (feeCryptoCurrencyStatus == null) return
         val fromSwapCurrency = quoteModel.fromTokenInfo.swapCurrencyStatus
@@ -393,8 +393,8 @@ internal class SwapNotificationsFactory(
                         feeCurrency = feeCryptoCurrencyStatus.currency,
                         currencyName = insufficientFee.feeCurrencyName ?: fromCurrency.network.name,
                         currencySymbol = insufficientFee.feeCurrencySymbol ?: fromCurrency.network.currencySymbol,
-                        onConfirmClick = if (!appRouter.stack.contains(route)) {
-                            { appRouter.push(route) }
+                        onConfirmClick = if (!router.contains(route)) {
+                            { router.push(route) }
                         } else {
                             null
                         },
