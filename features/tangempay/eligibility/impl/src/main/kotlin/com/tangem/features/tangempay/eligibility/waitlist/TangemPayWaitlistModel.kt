@@ -11,6 +11,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.pay.model.TangemPayWaitlistEntry
 import com.tangem.domain.pay.usecase.JoinTangemPayWaitlistUseCase
@@ -39,7 +40,6 @@ internal class TangemPayWaitlistModel @Inject constructor(
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayWaitlistComponent.Params>()
-
     private val idempotencyKey = UUID.randomUUID().toString()
 
     val uiState: StateFlow<TangemPayWaitlistUM>
@@ -125,12 +125,21 @@ internal class TangemPayWaitlistModel @Inject constructor(
             state.copy(
                 isSaveInProgress = false,
                 isSaveEnabled = state.email.isNotBlank(),
-                emailError = when (error) {
-                    is VisaApiError.WaitlistInvalidEmail -> {
-                        resourceReference(R.string.common_error_email_incorrect_format)
-                    }
-                    else -> resourceReference(R.string.common_something_went_wrong)
-                },
+            )
+        }
+        when (error) {
+            is VisaApiError.WaitlistInvalidEmail -> {
+                uiState.update { state ->
+                    state.copy(
+                        emailError = resourceReference(R.string.common_error_email_incorrect_format),
+                    )
+                }
+            }
+            else -> uiMessageSender.send(
+                DialogMessage(
+                    title = resourceReference(R.string.common_something_went_wrong),
+                    message = resourceReference(R.string.common_try_again_later),
+                ),
             )
         }
     }
