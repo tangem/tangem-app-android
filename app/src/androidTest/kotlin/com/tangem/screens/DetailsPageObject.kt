@@ -33,6 +33,12 @@ class DetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         useUnmergedTree = true
     }
 
+    fun walletItemAt(index: Int): KNode = child {
+        hasTestTag(DetailsScreenTestTags.USER_WALLET_ITEM)
+        hasPosition(index)
+        useUnmergedTree = true
+    }
+
     val addWalletButton: KNode = child {
         hasTestTag(DetailsScreenTestTags.ADD_WALLET_BUTTON)
     }

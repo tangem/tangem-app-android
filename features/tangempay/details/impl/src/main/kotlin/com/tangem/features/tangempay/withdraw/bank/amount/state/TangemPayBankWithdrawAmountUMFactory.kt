@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.withdraw.bank.amount.state
 
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.pay.model.bankofframp.BankRail
@@ -34,6 +35,7 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         draft: BankWithdrawDraft,
         selection: AmountSelection,
         sheet: AmountSheet?,
+        isBalanceHidden: Boolean,
     ): TangemPayBankWithdrawAmountUM {
         return TangemPayBankWithdrawAmountUM(
             header = BankWithdrawHeaderFactory.create(
@@ -42,10 +44,14 @@ internal class TangemPayBankWithdrawAmountUMFactory(
                 onCloseClick = callbacks.onCloseClick,
             ),
             amount = createAmountField(selection = selection),
-            source = createSourceRow(source = selection.source, currency = selection.currency),
+            source = createSourceRow(
+                source = selection.source,
+                currency = selection.currency,
+                isBalanceHidden = isBalanceHidden,
+            ),
             route = createRouteRow(selection = selection, isRailLocked = draft.isRailLocked),
             isContinueEnabled = selection.isContinueEnabled,
-            sheet = createSheet(sheet = sheet, selection = selection),
+            sheet = createSheet(sheet = sheet, selection = selection, isBalanceHidden = isBalanceHidden),
             onBackClick = callbacks.onBackClick,
             onContinueClick = callbacks.onContinueClick,
         )
@@ -74,17 +80,25 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         Result.NotEnoughFunds -> resourceReference(R.string.tangempay_withdraw_bank_amount_not_enough_funds)
     }
 
-    private fun createSourceRow(source: BankWithdrawSource, currency: Currency): SourceRowUM = SourceRowUM(
+    private fun createSourceRow(
+        source: BankWithdrawSource,
+        currency: Currency,
+        isBalanceHidden: Boolean,
+    ): SourceRowUM = SourceRowUM(
         icon = iconConverter.convert(source.token),
         symbol = source.token.symbol,
-        subtitle = createSourceSubtitle(source = source, currency = currency),
+        subtitle = createSourceSubtitle(source = source, currency = currency, isBalanceHidden = isBalanceHidden),
         onMaxClick = callbacks.onMaxClick,
         onClick = callbacks.onSourceClick,
     )
 
-    private fun createSourceSubtitle(source: BankWithdrawSource, currency: Currency): TextReference {
+    private fun createSourceSubtitle(
+        source: BankWithdrawSource,
+        currency: Currency,
+        isBalanceHidden: Boolean,
+    ): TextReference {
         val trailing: Any = if (source.isAvailable) {
-            source.fiatBalance.formatFiat(currency)
+            source.fiatBalance.formatFiat(currency).orMaskWithStars(isBalanceHidden)
         } else {
             resourceReference(R.string.tangempay_withdraw_bank_offramp_unavailable)
         }
@@ -102,36 +116,41 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         onClick = callbacks.onRouteClick.takeIf { selection.destinations.size > 1 && !isRailLocked },
     )
 
-    private fun createSheet(sheet: AmountSheet?, selection: AmountSelection): SheetUM = when (sheet) {
-        null -> SheetUM.Hidden
-        AmountSheet.TOKENS -> SheetUM.Tokens(
-            items = selection.sources.map { source ->
-                TokenItemUM(
-                    id = source.id,
-                    icon = iconConverter.convert(source.token),
-                    symbol = source.token.symbol,
-                    subtitle = createSourceSubtitle(source = source, currency = selection.currency),
-                    isAvailable = source.isAvailable,
-                    isSelected = source.id == selection.source.id,
-                    onClick = { callbacks.onSourceSelected(source.id) },
-                )
-            }.toImmutableList(),
-            onDismiss = callbacks.onSheetDismiss,
-        )
-        AmountSheet.ROUTES -> SheetUM.Routes(
-            items = selection.destinations.map { destination ->
-                RouteItemUM(
-                    rail = destination.rail,
-                    title = destination.toTitleReference(),
-                    eta = destination.eta.toTextReference(),
-                    fee = destination.fee.toText(),
-                    isSelected = destination.rail == selection.destination.rail,
-                    onClick = { callbacks.onRouteSelected(destination.rail) },
-                )
-            }.toImmutableList(),
-            onDismiss = callbacks.onSheetDismiss,
-        )
-    }
+    private fun createSheet(sheet: AmountSheet?, selection: AmountSelection, isBalanceHidden: Boolean): SheetUM =
+        when (sheet) {
+            null -> SheetUM.Hidden
+            AmountSheet.TOKENS -> SheetUM.Tokens(
+                items = selection.sources.map { source ->
+                    TokenItemUM(
+                        id = source.id,
+                        icon = iconConverter.convert(source.token),
+                        symbol = source.token.symbol,
+                        subtitle = createSourceSubtitle(
+                            source = source,
+                            currency = selection.currency,
+                            isBalanceHidden = isBalanceHidden,
+                        ),
+                        isAvailable = source.isAvailable,
+                        isSelected = source.id == selection.source.id,
+                        onClick = { callbacks.onSourceSelected(source.id) },
+                    )
+                }.toImmutableList(),
+                onDismiss = callbacks.onSheetDismiss,
+            )
+            AmountSheet.ROUTES -> SheetUM.Routes(
+                items = selection.destinations.map { destination ->
+                    RouteItemUM(
+                        rail = destination.rail,
+                        title = destination.toTitleReference(),
+                        eta = destination.eta.toTextReference(),
+                        fee = destination.fee.toText(),
+                        isSelected = destination.rail == selection.destination.rail,
+                        onClick = { callbacks.onRouteSelected(destination.rail) },
+                    )
+                }.toImmutableList(),
+                onDismiss = callbacks.onSheetDismiss,
+            )
+        }
 
     data class Callbacks(
         val onBackClick: () -> Unit,
