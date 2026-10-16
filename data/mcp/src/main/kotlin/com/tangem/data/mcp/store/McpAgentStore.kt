@@ -20,8 +20,8 @@ private const val TAG = "MCP"
 /**
  * Agents the authorization server has described, kept across app restarts by `clientId`.
  *
- * Reading and writing never throw: the store only saves a request to the server, so a storage failure
- * must not cost the owner the agent's description.
+ * Storage failures must not block agent lookup: reads return `null` and writes are best-effort.
+ * Coroutine cancellation still propagates.
  */
 internal class McpAgentStore @Inject constructor(
     private val appPreferencesStore: AppPreferencesStore,
@@ -29,7 +29,7 @@ internal class McpAgentStore @Inject constructor(
     private val converter: McpAgentEntityConverter,
 ) {
 
-    suspend fun get(clientId: String): McpAgent? {
+    suspend fun getOrNull(clientId: String): McpAgent? {
         return runSuspendCatching { appPreferencesStore.getJsonSyncOrNull(MCP_AGENTS_KEY, json, SERIALIZER) }
             .onFailure { TangemLogger.withTag(TAG).e("Stored agents cannot be read", it) }
             .getOrNull()
