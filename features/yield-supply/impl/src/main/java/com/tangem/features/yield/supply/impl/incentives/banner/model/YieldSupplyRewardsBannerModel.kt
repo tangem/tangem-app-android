@@ -18,12 +18,21 @@ import com.tangem.features.yield.supply.impl.incentives.banner.DefaultYieldSuppl
 import com.tangem.features.yield.supply.impl.incentives.banner.entity.YieldSupplyRewardsBannerUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
@@ -54,35 +63,63 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
                 .mapNotNull { it.value.networkAddress?.defaultAddress?.value }
                 .first()
 
-            yieldSupplyMarketFlowUseCase(params.cryptoCurrency)
+            val campaignChainIds = yieldSupplyMarketFlowUseCase(params.cryptoCurrency)
+                .map { market -> market?.takeIf { it.campaign?.hasActiveCampaign == true }?.chainId }
                 .flowOn(dispatchers.io)
-                .collectLatest { market ->
-                    val chainId = market?.takeIf { it.campaign?.hasActiveCampaign == true }?.chainId
+                .shareIn(scope = this, started = SharingStarted.Eagerly, replay = 1)
+
+            // Restarting on every market update would drop the claim observation mid-flight, so only a chain change
+            // restarts; a market update of the same chain just reads the rewards again
+            campaignChainIds
+                .distinctUntilChanged()
+                .collectLatest { chainId ->
+                    rewards = null
                     if (chainId == null) {
                         context = null
-                        rewards = null
                         uiState.value = null
                         return@collectLatest
                     }
 
                     context = BannerContext(chainId = chainId, userAddress = address)
-                    rewards = readRewards(chainId = chainId, userAddress = address).getOrNull()
-                    showRewards(chainId = chainId, userAddress = address)
+                    showRewards(
+                        chainId = chainId,
+                        userAddress = address,
+                        marketUpdates = campaignChainIds.filter { it == chainId },
+                    )
                 }
         }
     }
 
-    private suspend fun showRewards(chainId: Int, userAddress: String) {
-        var wasInFlight = false
-        // In-flight is per module: a claim from another token of it disables this button too
-        yieldSupplyClaimTracker.isClaimInFlight(chainId = chainId, userAddress = userAddress).collect { inFlight ->
-            // A failed read after the claim settles says nothing about the rewards, so the banner stays
-            if (wasInFlight && !inFlight) {
-                readRewards(chainId = chainId, userAddress = userAddress).onRight { rewards = it }
+    private suspend fun showRewards(chainId: Int, userAddress: String, marketUpdates: Flow<Int?>) = coroutineScope {
+        val claimInFlight = yieldSupplyClaimTracker.isClaimInFlight(chainId = chainId, userAddress = userAddress)
+
+        launch {
+            claimInFlight.collect { inFlight ->
+                isClaimInFlight = inFlight
+                publishBanner()
             }
+        }
+
+        // The newest trigger wins, so a stale read cannot overwrite a fresher one. A failed read says nothing about
+        // the rewards, so whatever is shown stays and the next market update retries
+        merge(marketUpdates, claimInFlight.settlements())
+            .collectLatest {
+                readRewards(chainId = chainId, userAddress = userAddress).onRight { read ->
+                    rewards = read
+                    publishBanner()
+                }
+            }
+    }
+
+    private fun publishBanner() {
+        uiState.value = rewards?.withClaimInFlight(isClaimInFlight)
+    }
+
+    private fun Flow<Boolean>.settlements(): Flow<Unit> = flow {
+        var wasInFlight = false
+        collect { inFlight ->
+            if (wasInFlight && !inFlight) emit(Unit)
             wasInFlight = inFlight
-            isClaimInFlight = inFlight
-            uiState.value = rewards?.withClaimInFlight(inFlight)
         }
     }
 

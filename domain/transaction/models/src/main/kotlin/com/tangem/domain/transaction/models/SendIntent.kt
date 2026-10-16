@@ -5,7 +5,8 @@ import java.math.BigDecimal
 /** A transfer an AI agent asked the wallet to make, as the Transaction Service holds it. */
 data class SendIntent(
     val id: String,
-    val clientId: String,
+    /** The agent that raised the intent; the service may not know it. */
+    val clientId: String?,
     val sessionId: String,
     /**
 

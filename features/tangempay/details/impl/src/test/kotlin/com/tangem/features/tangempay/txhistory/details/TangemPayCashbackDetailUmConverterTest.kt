@@ -48,6 +48,20 @@ internal class TangemPayCashbackDetailUmConverterTest {
         assertThat(result).isEqualTo(model.expected)
     }
 
+    @ParameterizedTest
+    @MethodSource("provideHiddenBalanceModels")
+    fun `GIVEN balance hidden WHEN convert loaded cashback THEN only the amount is masked`(model: CashbackRowModel) {
+        // Act
+        val result = convert(
+            cashback = model.cashback,
+            loadState = TransactionLoadState.Loaded,
+            isBalanceHidden = true,
+        )
+
+        // Assert
+        assertThat(result).isEqualTo(model.expected)
+    }
+
     @Test
     fun `GIVEN fetch in flight WHEN convert THEN row is Loading`() {
         val result = convert(cashback = null, loadState = TransactionLoadState.Loading)
@@ -77,10 +91,12 @@ internal class TangemPayCashbackDetailUmConverterTest {
         transaction: TangemPayTxHistoryItem = spendTransaction(),
         cashback: TangemPayTxHistoryItem.Cashback?,
         loadState: TransactionLoadState,
+        isBalanceHidden: Boolean = false,
     ): CashbackDetailUM? = TangemPayCashbackDetailUmConverter.convert(
         transaction = transaction,
         cashback = cashback,
         loadState = loadState,
+        isBalanceHidden = isBalanceHidden,
         onRefreshClick = {},
     )
 
@@ -152,6 +168,24 @@ internal class TangemPayCashbackDetailUmConverterTest {
             expected = null,
         ),
         CashbackRowModel(cashback = null, expected = null),
+    )
+
+    private fun provideHiddenBalanceModels() = listOf(
+        CashbackRowModel(
+            cashback = cashback(status = Status.ESTIMATED, amount = BigDecimal("1.70")),
+            expected = CashbackDetailUM.Content(value = stringReference("***"), subvalue = null),
+        ),
+        CashbackRowModel(
+            cashback = cashback(status = Status.CONFIRMED, amount = BigDecimal("-0.80")),
+            expected = CashbackDetailUM.Content(
+                value = stringReference("***"),
+                subvalue = resourceReference(R.string.tangem_pay_transaction_details_cashback_refund),
+            ),
+        ),
+        CashbackRowModel(
+            cashback = cashback(status = Status.EXCLUDED, amount = ZERO, exclusionReason = Reason.MCC_EXCLUDED),
+            expected = excluded(R.string.tangem_pay_transaction_details_cashback_mcc_excluded),
+        ),
     )
 
     private fun excluded(subvalueRes: Int) = CashbackDetailUM.Content(

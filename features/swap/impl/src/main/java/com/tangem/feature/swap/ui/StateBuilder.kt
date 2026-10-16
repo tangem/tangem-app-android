@@ -1400,6 +1400,9 @@ internal class StateBuilder(
         return when {
             account == null || !isAccountsModeProvider() -> AccountTitleUM.Text(resourceReference(placeholder))
             account is Account.Prediction -> AccountTitleUM.Account.prediction(prefixText = resourceReference(prefix))
+            account is Account.Collectibles -> AccountTitleUM.Account.collectibles(
+                prefixText = resourceReference(prefix),
+            )
             else -> AccountTitleUM.Account(
                 prefixText = resourceReference(prefix),
                 name = account.accountName.toUM().value,

@@ -1,6 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import com.tangem.common.ui.tokens.rendersActionAsEnabled
+import com.tangem.common.ui.tokens.rendersSwapAsEnabled
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
@@ -52,7 +53,7 @@ internal class TokenDetailsActionButtonsConverter(
                     }
                     is TokenActionsState.ActionState.Swap -> {
                         TokenDetailsActionButton.Swap(
-                            dimContent = !action.unavailabilityReason.rendersActionAsEnabled(),
+                            dimContent = !action.unavailabilityReason.rendersSwapAsEnabled(),
                             onClick = { clickIntents.onSwapClick(action.unavailabilityReason) },
                             showBadge = action.shouldShowBadge,
                         )
