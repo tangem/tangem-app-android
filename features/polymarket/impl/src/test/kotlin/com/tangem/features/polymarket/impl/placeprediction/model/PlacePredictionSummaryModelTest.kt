@@ -11,6 +11,7 @@ import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.interactor.PredictionSignRequest
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
@@ -128,7 +129,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
             // Assert
             coVerify(exactly = 1) { signOrderInteractor(request = any()) }
-            coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
+            coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any(), PolymarketMarketVersion.V1) }
 
             model.onDestroy()
         }
@@ -143,7 +144,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
             var submitWhilePosting: SubmitUM? = null
-            coEvery { placeOrderUseCase(any(), any(), any()) } answers {
+            coEvery { placeOrderUseCase(any(), any(), any(), any()) } answers {
                 submitWhilePosting = model.uiState.value.submit
                 createPlaceResult().right()
             }
@@ -173,7 +174,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
 
-            coEvery { placeOrderUseCase(any(), any(), any()) } returns
+            coEvery { placeOrderUseCase(any(), any(), any(), any()) } returns
                 createPlaceResult(takingAmount = BigDecimal(filledShares)).right()
 
             // Act
@@ -196,7 +197,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
-            coEvery { placeOrderUseCase(any(), any(), any()) } returns
+            coEvery { placeOrderUseCase(any(), any(), any(), any()) } returns
                 PredictionPlaceOrderError.NoLiquidity(detail = "no orders found to match with FAK order").left()
 
             // Act
@@ -219,7 +220,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
-            coEvery { placeOrderUseCase(any(), any(), any()) } returns
+            coEvery { placeOrderUseCase(any(), any(), any(), any()) } returns
                 PredictionPlaceOrderError.Ambiguous(detail = "the exchange never answered").left()
 
             // Act
@@ -278,7 +279,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 // Assert
                 assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
                 verify(exactly = 0) { messageSender.send(any()) }
-                coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any()) }
+                coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any(), any()) }
 
                 model.onDestroy()
             }
@@ -304,7 +305,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
             // Assert
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
-            coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any()) }
+            coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any(), any()) }
             verify { messageSender.send(any()) }
 
             model.onDestroy()
@@ -320,7 +321,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 amountModel.onAmountChange(value = "10")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
                 val model = createSummaryModel(testScope = this, amountModel = amountModel)
-                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                coEvery { placeOrderUseCase(any(), any(), any(), any()) } returns
                     PredictionPlaceOrderError.NoLiquidity(detail = "no orders found to match with FAK order").left()
 
                 // Act
@@ -347,7 +348,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 amountModel.onAmountChange(value = "10")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
                 val model = createSummaryModel(testScope = this, amountModel = amountModel)
-                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                coEvery { placeOrderUseCase(any(), any(), any(), any()) } returns
                     PredictionPlaceOrderError.Unauthorized(detail = "Unauthorized/Invalid api key").left()
                 amountModel.onPause()
 
@@ -371,7 +372,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
-            coEvery { placeOrderUseCase(any(), any(), any()) } returns
+            coEvery { placeOrderUseCase(any(), any(), any(), any()) } returns
                 createPlaceResult(takingAmount = BigDecimal.ZERO).right()
             amountModel.onPause()
 
@@ -397,7 +398,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 amountModel.onAmountChange(value = "10")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
                 val model = createSummaryModel(testScope = this, amountModel = amountModel)
-                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                coEvery { placeOrderUseCase(any(), any(), any(), any()) } returns
                     PredictionPlaceOrderError.Ambiguous(detail = "timeout").left()
                 val dialog = slot<DialogMessage>()
                 every { messageSender.send(capture(dialog)) } returns Unit
@@ -417,7 +418,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 assertThat(dialog.captured.secondAction).isNotNull()
                 verify(exactly = 1) { messageSender.send(any<DialogMessage>()) }
                 verify(exactly = 0) { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }
-                coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
+                coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any(), any()) }
                 coVerify(exactly = 0) { sendFeedbackEmailUseCase(any()) }
 
                 // Act
@@ -442,7 +443,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 amountModel.onAmountChange(value = "10")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
                 val model = createSummaryModel(testScope = this, amountModel = amountModel)
-                coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
+                coEvery { placeOrderUseCase(any(), any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
                 var submitWhileWaiting: SubmitUM? = null
                 coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID) } answers {
                     submitWhileWaiting = model.uiState.value.submit
@@ -484,7 +485,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 amountModel.onAmountChange(value = "10")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
                 val model = createSummaryModel(testScope = this, amountModel = amountModel)
-                coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
+                coEvery { placeOrderUseCase(any(), any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
                 coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID) } returns
                     DelayedPredictionOrderOutcome.Failed(detail = "ORDER_STATUS_CANCELED")
                 amountModel.onPause()
@@ -511,7 +512,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 amountModel.onAmountChange(value = "10")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
                 val model = createSummaryModel(testScope = this, amountModel = amountModel)
-                coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
+                coEvery { placeOrderUseCase(any(), any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
                 coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID) } returns
                     DelayedPredictionOrderOutcome.Unconfirmed
                 amountModel.onPause()
@@ -524,7 +525,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
                 verify(exactly = 1) { messageSender.send(any()) }
                 verify(exactly = 0) { router.replaceAll(any<PlacePredictionRoute.Status>(), onComplete = any()) }
-                coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
+                coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any(), any()) }
 
                 model.onDestroy()
             }
@@ -538,7 +539,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
-            coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
+            coEvery { placeOrderUseCase(any(), any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
             coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID) } coAnswers {
                 delay(timeMillis = 30_000)
                 DelayedPredictionOrderOutcome.Unconfirmed
@@ -666,7 +667,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
-            coEvery { placeOrderUseCase(any(), any(), any()) } coAnswers {
+            coEvery { placeOrderUseCase(any(), any(), any(), any()) } coAnswers {
                 // Act
                 model.onCloseClick()
                 model.onBackClick()
@@ -730,7 +731,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
             // Assert
             coVerify(exactly = 0) { signOrderInteractor(request = any()) }
-            coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any()) }
+            coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any(), any()) }
 
             model.onDestroy()
         }
@@ -804,7 +805,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
             val slot = FakeSlotHost(model.feeSheetNavigation)
-            coEvery { placeOrderUseCase(any(), any(), any()) } coAnswers {
+            coEvery { placeOrderUseCase(any(), any(), any(), any()) } coAnswers {
                 // Act
                 model.onFeeClick()
                 createPlaceResult().right()
@@ -886,7 +887,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 val model = createSummaryModel(testScope = this, amountModel = amountModel)
                 val request = slot<PredictionSignRequest>()
                 coEvery { signOrderInteractor(request = capture(request)) } returns SIGNED_ORDER.right()
-                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                coEvery { placeOrderUseCase(any(), any(), any(), any()) } returns
                     createPlaceResult(makingAmount = BigDecimal(filledShares)).right()
 
                 clearMocks(positionsRepository, getBalanceInteractor, answers = false)
