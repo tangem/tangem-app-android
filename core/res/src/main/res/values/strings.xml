@@ -1915,6 +1915,7 @@
   <string name="prediction_fee_sheet_sell_description">Selling %1$s shares at %2$s¢ each. Final shares count (and corresponding %3$s amount executed) may vary within your %4$s slippage limit, depending on what this market can match.</string>
   <string name="prediction_fee_sheet_total">Total</string>
   <string name="prediction_history_bought">Bought</string>
+  <string name="prediction_history_deposited">Deposited</string>
   <string name="prediction_history_download_csv">Download .csv</string>
   <string name="prediction_history_empty">You don\'t have any operations yet</string>
   <string name="prediction_history_fees">Fees</string>
