@@ -1191,14 +1191,26 @@
   <string name="joint_account_invite_invalid_subtitle">Check that you opened the correct link, or ask the account creator to send it again</string>
   <string name="joint_account_invite_invalid_title">Invitation link isn\'t valid</string>
   <string name="joint_account_invite_load_failed_subtitle">Failed to load invite page.\nTap to reload</string>
+  <string name="joint_account_invite_members_about_signatures_description">Every transaction from this account needs approval from %1$s of %2$s members. Each member signs with their own wallet. The transaction is sent only after it collects enough signatures.</string>
+  <string name="joint_account_invite_members_about_signatures_title">About signatures</string>
+  <string name="joint_account_invite_members_approvals_value">Any %1$s of %2$s</string>
   <string name="joint_account_invite_members_creator">Creator</string>
   <string name="joint_account_invite_members_invite">Invite</string>
   <string name="joint_account_invite_members_invited">Invited</string>
+  <string name="joint_account_invite_members_joined_progress">%1$s of %2$s members joined</string>
   <string name="joint_account_invite_members_member">Member</string>
+  <string name="joint_account_invite_members_member_number">Member %1$d</string>
   <string name="joint_account_invite_members_member_info">Member info</string>
   <string name="joint_account_invite_members_new_member">New member</string>
   <string name="joint_account_invite_members_not_invited">Not invited</string>
   <string name="joint_account_invite_members_other_members">Other members</string>
+  <string name="joint_account_invite_members_required_approvals">Required approvals</string>
+  <string name="joint_account_invite_members_resend">Resend</string>
+  <plurals name="joint_account_invite_members_still_need_to_join">
+    <item quantity="one">%d member still needs to join</item>
+    <item quantity="other">%d members still need to join</item>
+  </plurals>
+  <string name="joint_account_invite_members_verify_account">Verify account</string>
   <string name="joint_account_invite_members_safety_first_point_subtitle">Anyone who opens it can join and sign. Send it only to the right person — never post it publicly</string>
   <string name="joint_account_invite_members_safety_first_point_title">The link is like a key</string>
   <string name="joint_account_invite_members_safety_second_point_subtitle">Every member can approve transactions with the others. Only invite people you trust</string>
@@ -1211,6 +1223,7 @@
   <string name="joint_account_invite_members_subtitle">%1$s of %2$s joined, including you</string>
   <string name="joint_account_invite_members_title">Invite members</string>
   <string name="joint_account_invite_members_to_join">Invite members to join</string>
+  <string name="joint_account_invite_members_waiting_to_join">Waiting to join</string>
   <string name="joint_account_invite_members_waiting_title">Waiting for members</string>
   <string name="joint_account_invite_share_title">Invite to %s</string>
   <string name="joint_account_join_confirm_sheet_subtitle">This account has its own shared balance, separate from your personal funds. Members can manage the funds together, and some transactions may be approved without you.</string>

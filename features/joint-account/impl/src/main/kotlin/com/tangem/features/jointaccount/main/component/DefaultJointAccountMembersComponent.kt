@@ -16,6 +16,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
+import com.tangem.features.jointaccount.main.entity.AboutSignaturesConfig
 import com.tangem.features.jointaccount.main.entity.ActivationConfirmationConfig
 import com.tangem.features.jointaccount.main.entity.MemberCardConfig
 import com.tangem.features.jointaccount.main.model.JointAccountMembersModel
@@ -39,20 +40,20 @@ internal class DefaultJointAccountMembersComponent @AssistedInject constructor(
         childFactory = ::memberCardChild,
     )
 
-    private val shareSafelySlot = childSlot(
-        source = model.shareSafelyNavigation,
-        serializer = null,
-        handleBackButton = false,
-        key = "shareSafelySlot",
-        childFactory = { _, componentContext -> shareSafelyChild(componentContext) },
-    )
-
     private val activationConfirmationSlot = childSlot(
         source = model.activationConfirmationNavigation,
         serializer = null,
         handleBackButton = false,
         key = "activationConfirmationSlot",
         childFactory = ::activationConfirmationChild,
+    )
+
+    private val aboutSignaturesSlot = childSlot(
+        source = model.aboutSignaturesNavigation,
+        serializer = null,
+        handleBackButton = false,
+        key = "aboutSignaturesSlot",
+        childFactory = ::aboutSignaturesChild,
     )
 
     init {
@@ -64,14 +65,14 @@ internal class DefaultJointAccountMembersComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         val memberCard by memberCardSlot.subscribeAsState()
-        val shareSafely by shareSafelySlot.subscribeAsState()
         val activationConfirmation by activationConfirmationSlot.subscribeAsState()
+        val aboutSignatures by aboutSignaturesSlot.subscribeAsState()
 
         JointAccountMembersScreen(state = state, modifier = modifier)
 
         memberCard.child?.instance?.BottomSheet()
-        shareSafely.child?.instance?.BottomSheet()
         activationConfirmation.child?.instance?.BottomSheet()
+        aboutSignatures.child?.instance?.BottomSheet()
     }
 
     private fun memberCardChild(
@@ -88,12 +89,6 @@ internal class DefaultJointAccountMembersComponent @AssistedInject constructor(
         ),
     )
 
-    private fun shareSafelyChild(componentContext: ComponentContext): ComposableBottomSheetComponent =
-        ShareSafelyComponent(
-            appComponentContext = childByContext(componentContext),
-            params = ShareSafelyComponent.Params(onDismiss = model.shareSafelyNavigation::dismiss),
-        )
-
     private fun activationConfirmationChild(
         config: ActivationConfirmationConfig,
         componentContext: ComponentContext,
@@ -104,6 +99,18 @@ internal class DefaultJointAccountMembersComponent @AssistedInject constructor(
             isConfirming = model.isConfirmingActivation,
             onConfirmClick = { model.onConfirmActivationClick(cryptoAccountId = config.cryptoAccountId) },
             onDismiss = model.activationConfirmationNavigation::dismiss,
+        ),
+    )
+
+    private fun aboutSignaturesChild(
+        config: AboutSignaturesConfig,
+        componentContext: ComponentContext,
+    ): ComposableBottomSheetComponent = AboutSignaturesComponent(
+        appComponentContext = childByContext(componentContext),
+        params = AboutSignaturesComponent.Params(
+            threshold = config.threshold,
+            total = config.total,
+            onDismiss = model.aboutSignaturesNavigation::dismiss,
         ),
     )
 
