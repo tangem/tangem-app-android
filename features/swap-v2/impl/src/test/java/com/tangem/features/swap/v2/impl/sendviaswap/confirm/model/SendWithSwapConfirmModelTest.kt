@@ -534,7 +534,7 @@ internal class SendWithSwapConfirmModelTest {
             accountFlow = MutableStateFlow<Account?>(null),
             isAccountModeFlow = MutableStateFlow(false),
             callback = callback,
-            onExitFlow = {},
+            onCloseFlow = {},
         )
         return SendWithSwapConfirmModel(
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),

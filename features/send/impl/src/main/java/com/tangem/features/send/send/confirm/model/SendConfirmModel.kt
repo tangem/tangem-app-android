@@ -573,7 +573,7 @@ internal class SendConfirmModel @Inject constructor(
             ifLeft = { error ->
                 alertFactory.getSendTransactionErrorState(
                     error = error,
-                    popBack = params.onExitFlow,
+                    popBack = params.onCloseFlow,
                     onFailedTxEmailClick = ::onFailedTxEmailClick,
                 )
                 analyticsEventHandler.send(
@@ -736,7 +736,7 @@ internal class SendConfirmModel @Inject constructor(
             isHoldToConfirm = isHoldToConfirm,
             onClick = {
                 when (confirmUM) {
-                    is ConfirmUM.Success -> params.onExitFlow()
+                    is ConfirmUM.Success -> params.onCloseFlow()
                     is ConfirmUM.Content -> if (confirmUM.isSending) {
                         return@NavigationButton
                     } else {

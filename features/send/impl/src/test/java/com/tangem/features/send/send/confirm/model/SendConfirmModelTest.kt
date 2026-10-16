@@ -557,11 +557,11 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         @Test
         fun `GIVEN a sent operation WHEN the success button is clicked THEN the whole flow is closed`() = runTest {
             // Arrange
-            val onExitFlow: () -> Unit = mockk(relaxed = true)
+            val onCloseFlow: () -> Unit = mockk(relaxed = true)
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
             coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
             coEvery { jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any()) } returns Unit.right()
-            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = {}, onExitFlow = onExitFlow))
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = {}, onCloseFlow = onCloseFlow))
             advanceUntilIdle()
             sut.onSendClick()
             advanceUntilIdle()
@@ -571,7 +571,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             sut.primaryButtonUM(successUM).onClick()
 
             // Assert
-            verify(exactly = 1) { onExitFlow() }
+            verify(exactly = 1) { onCloseFlow() }
         }
 
         @Test
@@ -895,7 +895,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         /** Confirm starts empty so the model builds the real Content with the signatures itself */
         private fun jointConfirmParams(
             onSendTransaction: () -> Unit,
-            onExitFlow: () -> Unit = {},
+            onCloseFlow: () -> Unit = {},
             enteredAmount: BigDecimal = BigDecimal.ONE,
             transactionFeeExtended: TransactionFeeExtended? = null,
             feeCryptoCurrencyStatus: CryptoCurrencyStatus = loadedFeeStatus,
@@ -913,7 +913,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             ).copy(
                 accountFlow = MutableStateFlow(jointAccount),
                 onSendTransaction = onSendTransaction,
-                onExitFlow = onExitFlow,
+                onCloseFlow = onCloseFlow,
             ),
         )
     }
