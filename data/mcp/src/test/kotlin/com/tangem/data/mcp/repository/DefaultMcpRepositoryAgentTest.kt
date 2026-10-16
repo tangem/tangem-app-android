@@ -98,7 +98,7 @@ internal class DefaultMcpRepositoryAgentTest {
 
         // Assert
         assertThat(actual).isEqualTo(McpAgent.unknown(CLIENT_ID))
-        assertThat(createStore().get(CLIENT_ID)).isNull()
+        assertThat(createStore().getOrNull(CLIENT_ID)).isNull()
     }
 
     @Test
@@ -158,7 +158,8 @@ internal class DefaultMcpRepositoryAgentTest {
         // Assert
         assertThat(actual).isEqualTo(AGENT)
         val store = createStore()
-        assertThat(listOf(store.get(CLIENT_ID), store.get("other-client"))).containsExactly(AGENT, otherAgent)
+        assertThat(listOf(store.getOrNull(CLIENT_ID), store.getOrNull("other-client")))
+            .containsExactly(AGENT, otherAgent)
     }
 
     @Test
@@ -174,7 +175,7 @@ internal class DefaultMcpRepositoryAgentTest {
 
         // Assert
         assertThat(actual).isEqualTo(AGENT)
-        assertThat(createStore().get(CLIENT_ID)).isEqualTo(AGENT)
+        assertThat(createStore().getOrNull(CLIENT_ID)).isEqualTo(AGENT)
     }
 
     @Test
