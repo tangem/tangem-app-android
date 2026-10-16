@@ -166,8 +166,8 @@ internal class DefaultPolymarketRepository @Inject constructor(
         return when (response) {
             is ApiResponse.Success -> BatchFetchResult.Success(
                 data = response.data.events.map(PolymarketEventConverter::convert),
-                empty = response.data.events.isEmpty(),
-                last = !response.data.hasNext,
+                isEmpty = response.data.events.isEmpty(),
+                isLast = !response.data.hasNext,
             )
             is ApiResponse.Error -> throw response.cause
         }

@@ -129,6 +129,6 @@ internal class EarnListStateManagerTest {
             ),
         )
 
-        val successResult = BatchFetchResult.Success(data = emptyList<Nothing>(), empty = true, last = false)
+        val successResult = BatchFetchResult.Success(data = emptyList<Nothing>(), isEmpty = true, isLast = false)
     }
 }
