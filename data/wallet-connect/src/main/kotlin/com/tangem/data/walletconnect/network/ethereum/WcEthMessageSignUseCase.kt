@@ -104,8 +104,8 @@ object LegacySdkHelper {
 
     fun hexToAscii(hex: String): String? {
         return try {
-            hex.removePrefix(HEX_PREFIX).hexToBytes().map {
-                val char = it.toInt().toChar()
+            hex.removePrefix(HEX_PREFIX).hexToBytes().map { byte ->
+                val char = byte.toInt().toChar()
                 if (char.isAscii()) char else return null
             }.joinToString("")
         } catch (exception: Exception) {
@@ -114,9 +114,9 @@ object LegacySdkHelper {
     }
 
     private fun String.asciiToHex(): String? {
-        return map {
-            if (!it.isAscii()) return null
-            Integer.toHexString(it.code)
+        return map { character ->
+            if (!character.isAscii()) return null
+            Integer.toHexString(character.code)
         }.joinToString("")
     }
 }

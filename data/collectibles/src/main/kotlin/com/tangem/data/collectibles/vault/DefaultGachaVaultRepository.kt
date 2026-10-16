@@ -300,19 +300,20 @@ internal class DefaultGachaVaultRepository @Inject constructor(
 
     override suspend fun sendPurchasePack(
         userWallet: UserWallet,
-        hotDelegate: HotDelegatePublicKey,
         amount: Long,
         feeAmount: Long,
         memo: String,
     ): Either<CollectiblesAccountError, String> = withContext(dispatchers.io) {
         either {
+            val accountId = AccountId.forCollectiblesAccount(userWalletId = userWallet.walletId)
+            val delegate = hotDelegate.getPublicKeyOrNull(accountId)
+                ?: raise(CollectiblesAccountError.DelegateNotProvisioned)
             val network = networkProvider.create(userWallet).mapLeft { it.asFailure() }.bind()
             val walletManager = vaultWalletManager(userWalletId = userWallet.walletId, network = network)
                 .mapLeft { error -> error.toVaultFailure(userWallet) }
                 .bind()
 
             var signingFailure: CollectiblesAccountError? = null
-            val accountId = AccountId.forCollectiblesAccount(userWalletId = userWallet.walletId)
             val signer: suspend (ByteArray) -> Result<ByteArray> = { message ->
                 this@DefaultGachaVaultRepository.hotDelegate.sign(accountId, message).fold(
                     ifLeft = { error ->
@@ -324,7 +325,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
             }
 
             walletManager.sendPurchasePack(
-                hotDelegate = hotDelegate.base58,
+                hotDelegate = delegate.base58,
                 amount = amount,
                 feeAmount = feeAmount,
                 memo = memo,

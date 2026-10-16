@@ -59,9 +59,9 @@ internal fun TokenDetailsTopAppBar(config: TokenDetailsTopAppBarConfig) {
                 modifier = Modifier.background(TangemTheme.colors.background.primary),
                 onDismissRequest = { showDropdownMenu = false },
                 content = {
-                    config.tokenDetailsAppBarMenuConfig?.items?.fastForEach {
+                    config.tokenDetailsAppBarMenuConfig?.items?.fastForEach { item ->
                         TangemDropdownItem(
-                            item = it,
+                            item = item,
                             dismissParent = { showDropdownMenu = false },
                         )
                     }

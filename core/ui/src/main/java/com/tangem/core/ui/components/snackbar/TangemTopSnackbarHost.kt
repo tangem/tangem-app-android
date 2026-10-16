@@ -16,9 +16,9 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.AccessibilityManager
 import androidx.compose.ui.platform.LocalAccessibilityManager
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.core.ui.res.TangemTheme
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -37,7 +37,7 @@ import kotlin.coroutines.resume
  *         modifier = Modifier
  *             .align(Alignment.TopCenter)
  *             .statusBarsPadding()
- *             .padding(top = TangemTheme.dimens.spacing8),
+ *             .padding(top = 8.dp),
  *     )
  * }
  * ```
@@ -62,7 +62,7 @@ fun TangemTopSnackbarHost(hostState: TangemTopSnackbarHostState, modifier: Modif
     ) { snackbar ->
         TangemTopSnackbar(
             snackbarMessage = snackbar,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+            modifier = Modifier.padding(horizontal = 16.dp),
         )
     }
 }

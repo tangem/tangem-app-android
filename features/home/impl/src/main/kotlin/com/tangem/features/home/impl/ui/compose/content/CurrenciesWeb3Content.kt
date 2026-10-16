@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.res.TangemColorPalette
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.home.impl.ui.compose.HorizontalSlidingImage
 import com.tangem.core.ui.R
 import com.tangem.core.ui.utils.dpSize
@@ -115,7 +114,7 @@ internal fun BoxWithGradient(content: @Composable () -> Unit) {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .height(TangemTheme.dimens.size164 + bottomInsetsPx.dp)
+                .height(164.dp + bottomInsetsPx.dp)
                 .background(BottomGradient),
         )
     }

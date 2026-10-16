@@ -23,7 +23,7 @@ import com.tangem.features.onboarding.v2.impl.R
 internal fun RefreshButton(isRefreshing: Boolean, onRefreshBalanceClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens.size48)
+            .size(48.dp)
             .shadow(elevation = 2.dp, shape = CircleShape)
             .background(TangemTheme.colors.background.action)
             .clickable(
@@ -35,16 +35,16 @@ internal fun RefreshButton(isRefreshing: Boolean, onRefreshBalanceClick: () -> U
     ) {
         if (isRefreshing) {
             CircularProgressIndicator(
-                modifier = Modifier.padding(TangemTheme.dimens.spacing12),
+                modifier = Modifier.padding(12.dp),
                 color = TangemTheme.colors.icon.primary1,
-                strokeWidth = TangemTheme.dimens.size2,
+                strokeWidth = 2.dp,
             )
         } else {
             Icon(
                 painter = painterResource(id = R.drawable.ic_refresh_24),
                 contentDescription = null,
                 tint = TangemTheme.colors.text.primary1,
-                modifier = Modifier.padding(TangemTheme.dimens.spacing12),
+                modifier = Modifier.padding(12.dp),
             )
         }
     }

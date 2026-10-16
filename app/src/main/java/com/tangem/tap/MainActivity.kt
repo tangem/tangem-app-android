@@ -13,7 +13,6 @@ import android.view.WindowManager
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -31,7 +30,6 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import com.appsflyer.AppsFlyerLib
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
 import com.tangem.common.routing.deeplink.PushDeeplinkPolicy
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -43,29 +41,20 @@ import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
 import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
-import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
-import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
-import com.tangem.domain.wallets.usecase.ClearAllHotWalletContextualUnlockUseCase
 import com.tangem.domain.wallets.usecase.SendPendingWalletCardsBackupUseCase
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.google.auth.GoogleAuthActivityResultBridge
-import com.tangem.operations.backup.BackupService
-import com.tangem.sdk.api.BackupServiceHolder
-import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.spend.pushProvisioning.PushProvisioningActivityBridge
 import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.analytics.events.Push
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
-import com.tangem.tap.domain.walletregistration.withBackupColdWalletRegistration
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.routing.component.RoutingComponent
@@ -74,8 +63,6 @@ import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.tap.routing.utils.DeepLinkFeatureToggles
 import com.tangem.tap.routing.utils.DeeplinkSource
 import com.tangem.utils.coroutines.AppCoroutineScope
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.Lazy
@@ -83,17 +70,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
-import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
-
-lateinit var tangemSdkManager: TangemSdkManager
-lateinit var backupService: BackupService
-internal var lockUserWalletsTimer: LockUserWalletsTimer? = null
-    private set
-
-private val coroutineContext: CoroutineContext
-    get() = SupervisorJob() + Dispatchers.IO + FeatureCoroutineExceptionHandler.create("scope")
-val scope = CoroutineScope(coroutineContext)
 
 @Suppress("LargeClass")
 @AndroidEntryPoint
@@ -102,15 +79,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     /** Router for opening tester menu */
     @Inject
     lateinit var cardSdkOwner: CardSdkOwner
-
-    @Inject
-    lateinit var cardSdkConfigRepository: CardSdkConfigRepository
-
-    @Inject
-    lateinit var injectedTangemSdkManager: TangemSdkManager
-
-    @Inject
-    lateinit var settingsRepository: SettingsRepository
 
     @Inject
     lateinit var sendUnsubmittedHashesUseCase: SendUnsubmittedHashesUseCase
@@ -126,25 +94,16 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     internal lateinit var appRouterConfig: AppRouterConfig
 
     @Inject
-    internal lateinit var appRouter: AppRouter
-
-    @Inject
     internal lateinit var routingComponentFactory: RoutingComponent.Factory
 
     @Inject
     lateinit var cardRepository: CardRepository
 
     @Inject
-    lateinit var backupServiceHolder: BackupServiceHolder
-
-    @Inject
     lateinit var setGoogleServicesAvailabilityUseCase: SetGoogleServicesAvailabilityUseCase
 
     @Inject
     lateinit var setGooglePayAvailabilityUseCase: SetGooglePayAvailabilityUseCase
-
-    @Inject
-    lateinit var dispatchers: CoroutineDispatcherProvider
 
     @Inject
     internal lateinit var defaultDeviceFlipDetector: DefaultDeviceFlipDetector
@@ -160,15 +119,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var backgroundScanIntentHandler: BackgroundScanIntentHandler
-
-    @Inject
-    internal lateinit var userWalletsListRepository: UserWalletsListRepository
-
-    @Inject
-    internal lateinit var clearAllHotWalletContextualUnlockUseCase: ClearAllHotWalletContextualUnlockUseCase
-
-    @Inject
-    internal lateinit var passwordRequester: HotWalletPasswordRequester
 
     @Inject
     internal lateinit var googleAuthActivityResultBridge: Lazy<GoogleAuthActivityResultBridge>
@@ -187,6 +137,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var appScope: AppCoroutineScope
+
+    @Inject
+    internal lateinit var lockUserWalletsTimer: LockUserWalletsTimer
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -270,7 +223,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         val userInteractionTracker = object : UserInteractionTracker {
             override fun onUserInteraction() {
-                lockUserWalletsTimer?.restart()
+                lockUserWalletsTimer.restart()
             }
         }
 
@@ -287,45 +240,13 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     private fun installActivityDependencies() {
         cardSdkOwner.register(activity = this)
-        tangemSdkManager = injectedTangemSdkManager
 
-        backupServiceHolder.createAndSetService(
-            tangemSdk = cardSdkConfigRepository.sdk,
-            activity = this,
-            primaryCardRunnableDecorator = { primaryCard, finalization ->
-                tangemSdkManager.withBackupColdWalletRegistration(primaryCard, finalization)
-            },
-        )
-        backupService = requireNotNull(backupServiceHolder.backupService.get()) // will be deleted eventually
-
-        lockUserWalletsTimer = LockUserWalletsTimer(
-            context = this,
-            settingsRepository = settingsRepository,
-            // Rethrows like the former global main scope: a failure must not leave the wallets unlocked
-            coroutineScope = appScope +
-                dispatchers.main +
-                FeatureCoroutineExceptionHandler.create(from = "lockUserWalletsTimer"),
-            userWalletsListRepository = userWalletsListRepository,
-            clearAllHotWalletContextualUnlockUseCase = clearAllHotWalletContextualUnlockUseCase,
-            passwordRequester = passwordRequester,
-            appRouter = appRouter,
-        )
+        lockUserWalletsTimer.attach(owner = this)
 
         pushProvisioningActivityBridge.attach(activity = this)
 
         if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
-            // registerForActivityResult unregisters itself on destroy; the bridge is the only holder
-            val bridge = googleAuthActivityResultBridge.get()
-            bridge.registerLauncher(
-                launcher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
-                    bridge.onResult(it)
-                },
-            )
-            bridge.registerIntentLauncher(
-                launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-                    bridge.onResult(it)
-                },
-            )
+            googleAuthActivityResultBridge.get().attach(registry = activityResultRegistry, lifecycle = lifecycle)
         }
     }
 
@@ -387,7 +308,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     override fun onDestroy() {
         TangemLogger.i("onDestroy")
         if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
-            googleAuthActivityResultBridge.get().unregisterLauncher()
+            googleAuthActivityResultBridge.get().detach(registry = activityResultRegistry)
         }
         pushProvisioningActivityBridge.detach(activity = this)
         // workaround: kill process when activity destroy to avoid state when lock() wallets
@@ -454,7 +375,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     override fun onUserInteraction() {
         super.onUserInteraction()
 
-        lockUserWalletsTimer?.restart()
+        lockUserWalletsTimer.restart()
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {

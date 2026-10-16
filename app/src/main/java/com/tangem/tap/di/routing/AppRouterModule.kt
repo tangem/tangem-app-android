@@ -5,7 +5,6 @@ import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.tap.routing.ProxyAppRouter
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.configurator.MutableAppRouterConfig
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,15 +17,8 @@ internal object AppRouterModule {
 
     @Provides
     @Singleton
-    fun provideAppRouter(
-        config: AppRouterConfig,
-        dispatchers: CoroutineDispatcherProvider,
-        analyticsExceptionHandler: AnalyticsExceptionHandler,
-    ): AppRouter = ProxyAppRouter(
-        config = config,
-        dispatchers = dispatchers,
-        analyticsExceptionHandler = analyticsExceptionHandler,
-    )
+    fun provideAppRouter(config: AppRouterConfig, analyticsExceptionHandler: AnalyticsExceptionHandler): AppRouter =
+        ProxyAppRouter(config = config, analyticsExceptionHandler = analyticsExceptionHandler)
 
     @Provides
     @Singleton

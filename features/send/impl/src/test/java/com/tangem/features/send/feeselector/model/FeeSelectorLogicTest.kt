@@ -20,7 +20,7 @@ import com.tangem.domain.transaction.models.AvailableFeeTokens
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
-import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
+import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeExtraInfo
@@ -85,7 +85,7 @@ internal class FeeSelectorLogicTest {
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk(relaxed = true)
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk(relaxed = true)
     private val getAvailableFeeTokensUseCase: GetAvailableFeeTokensUseCase = mockk(relaxed = true)
-    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk(relaxed = true)
+    private val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork = mockk(relaxed = true)
 
     private val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee> = mockk()
     private val onLoadFeeExtended: suspend (CryptoCurrencyStatus?) -> Either<GetFeeError, TransactionFeeExtended> =
@@ -105,7 +105,7 @@ internal class FeeSelectorLogicTest {
         every { feeSelectorReloadListener.reloadTriggerFlow } returns reloadTriggerFlow
         every { feeSelectorReloadListener.loadingStateTriggerFlow } returns emptyFlow()
         every { feeSelectorCheckReloadListener.checkReloadTriggerFlow } returns checkReloadTriggerFlow
-        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
         every { isFeeApproximateUseCase(any(), any()) } returns false
     }
 
@@ -461,7 +461,7 @@ internal class FeeSelectorLogicTest {
         nativeFeeCurrency: Boolean = false,
     ): FeeSelectorLogic {
         val currencyStatus = if (gaslessEnabled) tokenStatus else coinStatus
-        every { isGaslessFeeSupportedForNetwork(any()) } returns gaslessEnabled
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns gaslessEnabled
         val params = FeeSelectorParams.FeeSelectorBlockParams(
             state = FeeSelectorUM.Loading,
             userWalletId = testUserWalletId,
@@ -479,7 +479,7 @@ internal class FeeSelectorLogicTest {
 
     /** A Tron token transfer. */
     private fun TestScope.buildTronModel(isTronGaslessSupported: Boolean = false): FeeSelectorLogic {
-        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
         val params = FeeSelectorParams.FeeSelectorBlockParams(
             state = FeeSelectorUM.Loading,
             userWalletId = testUserWalletId,
@@ -509,7 +509,7 @@ internal class FeeSelectorLogicTest {
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         getUserWalletUseCase = getUserWalletUseCase,
         getAvailableFeeTokensUseCase = getAvailableFeeTokensUseCase,
-        isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+        isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
     )
 
     private fun contentState(

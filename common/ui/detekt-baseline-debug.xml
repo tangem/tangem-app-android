@@ -8,11 +8,9 @@
     <ID>BooleanPropertyNaming:GiveTxPermissionState.kt$CancelPermissionButton$val enabled: Boolean</ID>
     <ID>BooleanPropertyNaming:NotificationUM.kt$NotificationUM.Error.ExceedsBalance$val mergeFeeNetworkName: Boolean = false</ID>
     <ID>BooleanPropertyNaming:NotificationsFactory.kt$NotificationsFactory$val showNotification = sendingAmount + feeAmount &gt; balance - minimumRequirement.orZero()</ID>
-    <ID>MultilineLambdaItParameter:TokenItemStateConverter.kt$TokenItemStateConverter.Companion${ it.key.equals( other = token.yieldSupplyKey(), ignoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(token.network.rawId), ) }</ID>
     <ID>NoNameShadowing:NavigationButtonsBlock.kt$navigationUM</ID>
     <ID>NoNameShadowing:UserWalletItem.kt$balance</ID>
     <ID>NullableBooleanCheck:TokenItemStateConverter.kt$TokenItemStateConverter.Companion$cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive ?: false</ID>
-    <ID>ReusedModifierInstance:AddTokenContent.kt$AddButton( modifier = modifier.fillMaxWidth(), state = state.button, )</ID>
     <ID>UnnecessaryEventHandlerParameter:SendDoneButtons.kt$onShareClick: (String) -&gt; Unit</ID>
     <ID>UnnecessaryLet:TokenItemStateConverter.kt$TokenItemStateConverter.Companion$let(::add)</ID>
   </CurrentIssues>

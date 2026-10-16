@@ -2,6 +2,7 @@ package com.tangem.tap
 
 import androidx.hilt.work.HiltWorkerFactory
 import com.tangem.core.abtests.manager.ABTestsManager
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.analytics.paramsinterceptor.SendTransactionSignerInfoInterceptor
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
@@ -68,4 +69,6 @@ interface ApplicationEntryPoint {
     fun getUserWalletsListRepository(): UserWalletsListRepository
 
     fun getOpenTelemetryMetricsHolder(): OpenTelemetryMetricsHolder
+
+    fun getAnalyticsEventHandler(): AnalyticsEventHandler
 }

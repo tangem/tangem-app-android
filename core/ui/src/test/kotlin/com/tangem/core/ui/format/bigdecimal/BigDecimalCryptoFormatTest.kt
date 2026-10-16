@@ -388,6 +388,46 @@ internal class BigDecimalCryptoFormatTest {
             .isEqualTo("0.00".addSymbolWithSpaceLeft(symbol))
     }
 
+    @Test
+    fun `any decimals amount ignoring symbol position puts the symbol after the amount`() {
+        val formatted = BigDecimal("1234.5").format {
+            crypto(symbol = symbol, decimals = 18, ignoreSymbolPosition = true, locale = testLocale)
+                .anyDecimals(maxDecimals = 8, minDecimals = 2)
+        }
+
+        Truth.assertThat(formatted).isEqualTo("1,234.50\u00A0$symbol")
+    }
+
+    @Test
+    fun `any decimals amount ignoring symbol position alter locale`() {
+        val formatted = BigDecimal("1234.5").format {
+            crypto(symbol = symbol, decimals = 18, ignoreSymbolPosition = true, locale = testLocale2)
+                .anyDecimals(maxDecimals = 8, minDecimals = 2)
+        }
+
+        Truth.assertThat(formatted).isEqualTo("1.234,50\u00A0$symbol")
+    }
+
+    @Test
+    fun `any decimals amount ignoring symbol position rounds up`() {
+        val formatted = BigDecimal("1.000000001").format {
+            crypto(symbol = symbol, decimals = 18, ignoreSymbolPosition = true, locale = testLocale)
+                .anyDecimals(maxDecimals = 8, minDecimals = 2, roundingMode = RoundingMode.UP)
+        }
+
+        Truth.assertThat(formatted).isEqualTo("1.00000001\u00A0$symbol")
+    }
+
+    @Test
+    fun `any decimals amount ignoring symbol position keeps its lower sign`() {
+        val formatted = BigDecimal("0.000000001").format {
+            crypto(symbol = symbol, decimals = 18, ignoreSymbolPosition = true, locale = testLocale)
+                .anyDecimals(maxDecimals = 8, minDecimals = 2, canBeLower = true)
+        }
+
+        Truth.assertThat(formatted).isEqualTo("<0.00000001\u00A0$symbol")
+    }
+
     // === fee ===
 
     @Test

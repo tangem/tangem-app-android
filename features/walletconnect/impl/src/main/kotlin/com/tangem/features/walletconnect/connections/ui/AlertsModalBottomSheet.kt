@@ -49,9 +49,9 @@ private fun Content(alert: AlertsComponent.AlertType, modifier: Modifier = Modif
     Column(modifier = modifier) {
         ContentContainer(
             modifier = Modifier
-                .heightIn(min = TangemTheme.dimens.size180)
+                .heightIn(min = 180.dp)
                 .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens.spacing16)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 32.dp),
             alert = alert,
         )
@@ -66,13 +66,13 @@ private fun ContentContainer(alert: AlertsComponent.AlertType, modifier: Modifie
         AlertContentTitle(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = TangemTheme.dimens.spacing24),
+                .padding(top = 24.dp),
             alert = alert,
         )
         AlertContentDescription(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = TangemTheme.dimens.spacing8),
+                .padding(top = 8.dp),
             alert = alert,
         )
     }
@@ -82,8 +82,8 @@ private fun ContentContainer(alert: AlertsComponent.AlertType, modifier: Modifie
 @Composable
 private fun ButtonsContainer(alert: AlertsComponent.AlertType, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.padding(all = TangemTheme.dimens.spacing16),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        modifier = modifier.padding(all = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         val buttonsModifier = Modifier.fillMaxWidth()
         when (alert) {
@@ -134,13 +134,13 @@ private fun AlertIcon(alert: AlertsComponent.AlertType, modifier: Modifier = Mod
     }
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens.size56)
+            .size(56.dp)
             .clip(CircleShape)
             .background(color.copy(alpha = 0.1F)),
         contentAlignment = Alignment.Center,
         content = {
             Icon(
-                modifier = Modifier.size(TangemTheme.dimens.size32),
+                modifier = Modifier.size(32.dp),
                 painter = painterResource(drawableId),
                 contentDescription = null,
                 tint = iconTint,

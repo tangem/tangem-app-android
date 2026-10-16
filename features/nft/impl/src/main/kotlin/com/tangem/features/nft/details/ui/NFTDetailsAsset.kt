@@ -10,11 +10,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.bottomFade
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.nft.details.entity.NFTAssetUM
 import com.tangem.features.nft.impl.R
@@ -34,20 +34,20 @@ internal fun NFTDetailsAsset(
         WindowInsets.systemBars.getBottom(density = this).toDp()
     }
 
-    val bottomPadding = TangemTheme.dimens.spacing76 + bottomBarHeight
+    val bottomPadding = 76.dp + bottomBarHeight
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .bottomFade(),
     ) {
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .verticalScroll(scrollState)
                 .padding(
-                    start = TangemTheme.dimens.spacing16,
-                    top = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
+                    start = 16.dp,
+                    top = 16.dp,
+                    end = 16.dp,
                     bottom = bottomPadding,
                 )
                 .fillMaxSize(),
@@ -59,13 +59,13 @@ internal fun NFTDetailsAsset(
             )
             NFTDetailsInfoGroup(
                 modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing12),
+                    .padding(top = 12.dp),
                 state = state.topInfo,
                 onReadMoreClick = onReadMoreClick,
             )
             NFTDetailsBlocksGroup(
                 modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing12),
+                    .padding(top = 12.dp),
                 items = state.traits,
                 title = resourceReference(R.string.nft_details_traits),
                 action = if (state.showAllTraitsButton) {
@@ -82,7 +82,7 @@ internal fun NFTDetailsAsset(
             )
             NFTDetailsBlocksGroup(
                 modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing12),
+                    .padding(top = 12.dp),
                 items = state.baseInfoItems,
                 title = resourceReference(R.string.nft_details_base_information),
                 action = {

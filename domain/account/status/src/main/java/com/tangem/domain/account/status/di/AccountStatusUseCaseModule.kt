@@ -1,8 +1,6 @@
 package com.tangem.domain.account.status.di
 
-import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.account.repository.AccountsCRUDRepository
-import com.tangem.domain.account.status.polling.WalletAccountsPollingCoordinator
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.*
@@ -25,7 +23,6 @@ import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.staking.utils.StakingCleaner
 import com.tangem.domain.tokens.BalanceFetchingOperations
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
@@ -182,22 +179,6 @@ internal object AccountStatusUseCaseModule {
         return CryptoCurrencyBalanceFetcher(
             balanceFetchingOperations = balanceFetchingOperations,
             parallelUpdatingScope = appScope,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideWalletAccountsPollingCoordinator(
-        singleAccountListFetcher: SingleAccountListFetcher,
-        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-        cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
-        appScope: AppCoroutineScope,
-    ): WalletAccountsPollingCoordinator {
-        return WalletAccountsPollingCoordinator(
-            fetcher = singleAccountListFetcher,
-            currenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            balanceFetcher = cryptoCurrencyBalanceFetcher,
-            appScope = appScope,
         )
     }
 

@@ -6,6 +6,7 @@ import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
+import com.tangem.domain.polymarket.model.PolymarketClobAsset
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventError
@@ -121,7 +122,7 @@ interface PolymarketRepository {
     ): Either<PolymarketWalletError, PolymarketWalletStatus>
 
     /**
-     * Relay the fully-signed 13-approval [batch] (BFF `POST /wallet/approvals`). The deposit wallet must
+     * Relay the fully-signed 17-approval [batch] (BFF `POST /wallet/approvals`). The deposit wallet must
      * be deployed first (otherwise the BFF responds 409).
      */
     suspend fun submitApprovals(batch: PolymarketApprovalsBatch): Either<PolymarketWalletError, PolymarketWalletStatus>
@@ -157,12 +158,13 @@ interface PolymarketRepository {
 
     /**
      * Refresh the CLOB's cached collateral balance and allowance for the owner's deposit wallet
-     * (`GET clob.polymarket.com/balance-allowance/update`). Authenticated with the L2 HMAC headers derived
-     * from [credentials]; changes no on-chain or backend state.
+     * (`GET clob.polymarket.com/balance-allowance/update`) for [asset]. Authenticated with the L2 HMAC headers
+     * derived from [credentials]; changes no on-chain or backend state.
      */
     suspend fun syncBalanceAllowance(
         ownerAddress: String,
         credentials: PolymarketApiCredentials,
+        asset: PolymarketClobAsset,
     ): Either<PolymarketAuthError, Unit>
 
     /**

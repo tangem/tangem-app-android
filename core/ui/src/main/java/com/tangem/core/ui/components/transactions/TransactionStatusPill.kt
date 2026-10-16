@@ -261,7 +261,7 @@ private fun LeadingIcon(kind: PillKind, status: Status) {
 @Composable
 @ReadOnlyComposable
 private fun Status.backgroundColor(): Color = when (this) {
-    is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.bg.opaque.secondary
+    is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.bg.transparent.secondary
     is Status.Unconfirmed -> TangemTheme.colors3.bg.status.infoSubtle
     is Status.Failed -> TangemTheme.colors3.bg.status.errorSubtle
 }

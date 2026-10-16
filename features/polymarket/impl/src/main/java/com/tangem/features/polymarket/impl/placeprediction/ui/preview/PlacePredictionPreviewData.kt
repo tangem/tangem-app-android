@@ -1,6 +1,8 @@
 package com.tangem.features.polymarket.impl.placeprediction.ui.preview
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderSide
@@ -190,6 +192,9 @@ private fun previewSignableQuote(
     minOrderAmount = BigDecimal.ONE,
     tickSize = BigDecimal("0.01"),
     isLive = false,
+    version = PolymarketMarketVersion.V1,
+    exchange = PolymarketContracts.CTF_EXCHANGE,
+    signingDomainVersion = "2",
 )
 
 private const val PLACED_AT = 1_787_000_000_000L

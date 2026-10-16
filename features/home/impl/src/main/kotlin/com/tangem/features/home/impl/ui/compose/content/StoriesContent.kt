@@ -89,7 +89,7 @@ internal fun StoriesWeb3(isPaused: Boolean, stepDuration: Int) {
             )
         },
         bottomContent = {
-            SpacerH(TangemTheme.dimens.spacing70)
+            SpacerH(70.dp)
             StoriesWeb3Content(paused = isPaused, duration = stepDuration)
         },
     )
@@ -138,7 +138,7 @@ private fun SplitContent(topContent: @Composable () -> Unit, bottomContent: @Com
 
 @Composable
 private fun TopContent(titleText: String, subtitleText: String) {
-    SpacerH(TangemTheme.dimens.spacing36)
+    SpacerH(36.dp)
     StoriesTitleText(text = titleText)
     SpacerH16()
     StoriesSubtitleText(subtitleText = subtitleText)
