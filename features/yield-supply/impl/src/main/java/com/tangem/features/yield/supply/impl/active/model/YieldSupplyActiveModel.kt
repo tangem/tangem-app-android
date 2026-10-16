@@ -61,6 +61,7 @@ import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.Clock
 import javax.inject.Inject
 
@@ -219,7 +220,8 @@ internal class YieldSupplyActiveModel @Inject constructor(
      */
     fun onStopEarning() {
         modelScope.launch {
-            val claimRoute = claimRouteBeforeWithdrawal()
+            // A stalled incentives backend must not keep the user from the withdrawal
+            val claimRoute = withTimeoutOrNull(OFFER_CLAIM_TIMEOUT_MILLIS) { claimRouteBeforeWithdrawal() }
             if (claimRoute != null) {
                 wasClaimOfferedBeforeWithdrawal = true
                 slotNavigation.activate(claimRoute)
@@ -530,5 +532,6 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     private companion object {
         const val AAVEV3_PREFIX = "a"
+        const val OFFER_CLAIM_TIMEOUT_MILLIS = 3_000L
     }
 }
