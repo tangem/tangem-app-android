@@ -65,7 +65,6 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
             withdrawalClaimPreparer.prepare(
                 userWallet = any(),
                 cryptoCurrencyStatus = any(),
-                feeCryptoCurrencyStatus = any(),
                 withdrawalFee = any(),
             )
         } returns YieldPreClaim.Skip
@@ -267,7 +266,6 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
                 withdrawalClaimPreparer.prepare(
                     userWallet = any(),
                     cryptoCurrencyStatus = any(),
-                    feeCryptoCurrencyStatus = any(),
                     withdrawalFee = any(),
                 )
             } returns readyPreClaim()
@@ -316,7 +314,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
             // Assert
             val sent = sentTransactions()
             assertThat(sent).hasSize(1)
-            coVerify(exactly = 0) { withdrawalClaimPreparer.prepare(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { withdrawalClaimPreparer.prepare(any(), any(), any()) }
             verify { callback.onStopEarningTransactionSent() }
 
             model.onDestroy()
@@ -339,7 +337,6 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
                     withdrawalClaimPreparer.prepare(
                         userWallet = any(),
                         cryptoCurrencyStatus = any(),
-                        feeCryptoCurrencyStatus = any(),
                         withdrawalFee = capture(withdrawalFee),
                     )
                 }
@@ -357,7 +354,6 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
                 withdrawalClaimPreparer.prepare(
                     userWallet = any(),
                     cryptoCurrencyStatus = any(),
-                    feeCryptoCurrencyStatus = any(),
                     withdrawalFee = any(),
                 )
             } coAnswers {
@@ -408,7 +404,6 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
                     withdrawalClaimPreparer.prepare(
                         userWallet = any(),
                         cryptoCurrencyStatus = any(),
-                        feeCryptoCurrencyStatus = any(),
                         withdrawalFee = any(),
                     )
                 } returns YieldPreClaim.Skip
