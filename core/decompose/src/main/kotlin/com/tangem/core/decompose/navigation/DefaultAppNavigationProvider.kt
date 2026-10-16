@@ -7,7 +7,15 @@ internal class DefaultAppNavigationProvider : AppNavigationProvider, InstanceKee
 
     private var navigation: StackNavigation<Route>? = null
 
+    @Volatile
+    override var stack: List<Route> = emptyList()
+        private set
+
     override fun getOrCreate(): StackNavigation<Route> {
         return navigation ?: StackNavigation<Route>().also { navigation = it }
+    }
+
+    override fun updateStack(stack: List<Route>) {
+        this.stack = stack
     }
 }

@@ -36,4 +36,6 @@ internal class WcRouter(
     override fun popTo(routeClass: KClass<out Route>, onComplete: (Boolean) -> Unit) {
         /** Not allowed */
     }
+
+    override fun contains(route: Route): Boolean = false
 }

@@ -17,7 +17,6 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
@@ -168,7 +167,6 @@ internal class SwapModel @Inject constructor(
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     chooseTokenBridgeFactory: ChooseTokenBridge.Factory,
     private val router: Router,
-    private val appRouter: AppRouter,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsErrorEventHandler: AnalyticsErrorHandler,
@@ -308,7 +306,7 @@ internal class SwapModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isAccountsModeProvider = Provider { isAccountsMode },
         isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
-        appRouter = appRouter,
+        router = router,
         isChooseTokenPulseEnabled = swapFeatureToggles.isChooseTokenPulseEnabled,
         isCustomSlippageEnabled = swapFeatureToggles.isCustomSlippageEnabled,
         predictionTopUpLimitsProvider = Provider { predictionTopUpLimits },
@@ -532,7 +530,7 @@ internal class SwapModel @Inject constructor(
             currency = fromCurrency,
             screenSource = ScreensSources.Swap,
         ) ?: return false
-        appRouter.push(route)
+        router.push(route)
         return true
     }
 
@@ -2667,7 +2665,7 @@ internal class SwapModel @Inject constructor(
                     currency = cryptoCurrency,
                 )
 
-                appRouter.push(route)
+                router.push(route)
             },
             onRetryClick = {
                 startLoadingQuotesFromLastState()
@@ -3027,7 +3025,7 @@ internal class SwapModel @Inject constructor(
             toSwapCurrencyStatus = toSwapCurrencyStatus,
             requirement = requirement,
             onAssociateClick = {
-                appRouter.push(
+                router.push(
                     AppRoute.CurrencyDetails(
                         userWalletId = toSwapCurrencyStatus.userWalletId,
                         currency = toSwapCurrencyStatus.currency,

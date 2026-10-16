@@ -6,11 +6,11 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -61,7 +61,7 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class NotificationsModelTest {
 
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase = mockk(relaxed = true)
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase = mockk(relaxed = true)
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase =
@@ -85,7 +85,7 @@ internal class NotificationsModelTest {
     @BeforeEach
     fun setUp() {
         clearMocks(
-            appRouter,
+            router,
             isAmountSubtractAvailableUseCase,
             getCurrencyCheckUseCase,
             getBalanceNotEnoughForFeeWarningUseCase,
@@ -212,7 +212,7 @@ internal class NotificationsModelTest {
         return NotificationsModel(
             paramsContainer = MutableParamsContainer(params),
             dispatchers = testScope.testDispatcherProvider(),
-            appRouter = appRouter,
+            router = router,
             isAmountSubtractAvailableUseCase = isAmountSubtractAvailableUseCase,
             getCurrencyCheckUseCase = getCurrencyCheckUseCase,
             getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,

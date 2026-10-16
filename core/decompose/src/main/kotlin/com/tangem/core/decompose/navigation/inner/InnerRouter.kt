@@ -7,6 +7,7 @@ import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.utils.logging.TangemLogger
 import kotlin.reflect.KClass
 
 /**
@@ -15,6 +16,7 @@ import kotlin.reflect.KClass
  * @param stackNavigation The stack navigation instance.
  * @param popCallback The callback to pop the route.
  * @param fallBackRouter The fallback router.
+ * @param currentStack The current routes of [stackNavigation]; without it [Router.contains] returns `false` for them.
  * @return The router.
  */
 @Suppress("FunctionName")
@@ -23,6 +25,7 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
     fallBackRouter: Router = router,
     noinline popCallback: ((onComplete: (Boolean) -> Unit) -> Unit) =
         { onComplete -> stackNavigation.pop(onComplete) },
+    noinline currentStack: (() -> List<T>)? = null,
 ): Router = object : Router {
 
     override fun push(route: Route, onComplete: (Boolean) -> Unit) {
@@ -86,5 +89,16 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
         } else {
             fallBackRouter.popTo(routeClass, onComplete)
         }
+    }
+
+    override fun contains(route: Route): Boolean {
+        if (route !is T) return fallBackRouter.contains(route)
+
+        val stack = currentStack?.invoke()
+        if (stack == null) {
+            TangemLogger.e("InnerRouter of ${T::class.simpleName} can't check its stack: no currentStack passed")
+        }
+
+        return stack?.contains(route) == true
     }
 }

@@ -62,6 +62,8 @@ internal class DefaultRouter(
         )
     }
 
+    override fun contains(route: Route): Boolean = route in navigationProvider.stack
+
     private fun popTo(predicate: (Route) -> Boolean, onComplete: (isSuccess: Boolean) -> Unit) {
         navigateSafely(onComplete) { complete ->
             navigate(

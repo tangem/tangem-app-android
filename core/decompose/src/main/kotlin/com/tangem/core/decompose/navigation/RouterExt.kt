@@ -9,3 +9,12 @@ package com.tangem.core.decompose.navigation
 inline fun <reified R : Route> Router.popTo(noinline onComplete: (isSuccess: Boolean) -> Unit = {}) {
     popTo(R::class, onComplete)
 }
+
+/**
+ * Pops back to the [route] if it is in the navigation stack, otherwise opens it in place of the current route.
+ *
+ * @param route The route to open.
+ */
+fun Router.popToOrReplaceCurrent(route: Route) {
+    popTo(route) { isFound -> if (!isFound) replaceCurrent(route) }
+}
