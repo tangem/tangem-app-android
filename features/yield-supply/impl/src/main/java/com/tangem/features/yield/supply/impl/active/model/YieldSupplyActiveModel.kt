@@ -45,9 +45,10 @@ import com.tangem.core.res.R as CoreResR
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
-import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
 import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
+import com.tangem.features.yield.supply.impl.incentives.claim.model.YieldSupplyClaimPreparer
 import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
+import com.tangem.features.yield.supply.impl.subcomponents.stopearning.model.YieldSupplyWithdrawalClaimBatching
 import com.tangem.features.yield.supply.impl.common.formatter.formatApy
 import com.tangem.features.yield.supply.impl.active.model.transformers.YieldSupplyActiveFeeContentTransformer
 import com.tangem.features.yield.supply.impl.active.model.transformers.YieldSupplyActiveMinAmountTransformer
@@ -60,6 +61,7 @@ import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.Clock
@@ -73,7 +75,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val analyticsHandler: AnalyticsEventHandler,
     private val yieldSupplyGetProtocolBalanceUseCase: YieldSupplyGetProtocolBalanceUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
-    private val getYieldRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase,
+    private val yieldSupplyClaimPreparer: YieldSupplyClaimPreparer,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
     private val yieldSupplyGetCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase,
     private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
@@ -112,9 +114,10 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val userWalletId = params.userWalletId
     private val cryptoCurrency = cryptoCurrencyStatusFlow.value.currency
 
-    /** Read by the withdrawal sheet: once the owner has been asked, it stops claiming on their behalf. */
-    var wasClaimOfferedBeforeWithdrawal = false
-        private set
+    private var wasClaimOfferedBeforeWithdrawal = false
+
+    private var stopEarningDecision: Job? = null
+
     private var appCurrency = AppCurrency.Default
 
     val marketingRequest: Flow<MarketingBannerRequest?> = flowOf(
@@ -214,12 +217,22 @@ internal class YieldSupplyActiveModel @Inject constructor(
     }
 
     /**
-     * The first withdrawal attempt with claimable rewards opens the claim sheet instead: the withdrawal deactivates
-     * the module the rewards sit on, and taking them is the owner's decision, not a transaction to slip in under a
-     * tap on Stop earning. Offered once — a second tap goes through to the withdrawal whatever they chose.
+     * Where the claim cannot ride the withdrawal batch, the first withdrawal attempt with claimable rewards opens the
+     * claim sheet instead: the withdrawal deactivates the module the rewards sit on. Offered once — a second tap goes
+     * through to the withdrawal whatever the owner chose.
      */
     fun onStopEarning() {
-        modelScope.launch {
+        if (YieldSupplyWithdrawalClaimBatching.isSupported(cryptoCurrency.network)) {
+            slotNavigation.activate(YieldSupplyActiveRoute.Exit)
+        } else {
+            offerClaimBeforeWithdrawal()
+        }
+    }
+
+    private fun offerClaimBeforeWithdrawal() {
+        if (stopEarningDecision?.isActive == true) return
+
+        stopEarningDecision = modelScope.launch {
             // A stalled incentives backend must not keep the user from the withdrawal
             val claimRoute = withTimeoutOrNull(OFFER_CLAIM_TIMEOUT_MILLIS) { claimRouteBeforeWithdrawal() }
             if (claimRoute != null) {
@@ -246,8 +259,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
             .firstOrNull()
         if (isClaimInFlight != false) return null
 
-        val summary = getYieldRewardsSummaryUseCase(chainId = chainId, userAddress = userAddress).getOrNull()
-        if (summary !is YieldRewardsSummary.Claimable) return null
+        yieldSupplyClaimPreparer.loadRecommendedRewards(chainId = chainId, userAddress = userAddress) ?: return null
 
         return YieldSupplyActiveRoute.Claim(chainId = chainId, userAddress = userAddress)
     }
