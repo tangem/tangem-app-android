@@ -33,7 +33,6 @@ internal class YieldSupplyActiveModelClaimOutcomeTest : YieldSupplyActiveModelTe
     fun `GIVEN a submitted claim WHEN it is confirmed THEN the result turns into a confirmed one`() = runTest {
         // Arrange
         val model = createModel()
-        val slot = FakeSlotHost(model.slotNavigation)
         advanceUntilIdle()
         model.onClaimSubmitted(submittedResult())
 
@@ -44,16 +43,14 @@ internal class YieldSupplyActiveModelClaimOutcomeTest : YieldSupplyActiveModelTe
         // Assert
         assertThat(model.claimResultFlow.value?.status)
             .isInstanceOf(YieldSupplyClaimResultUM.Status.Confirmed::class.java)
-        assertThat(slot.configuration).isEqualTo(YieldSupplyActiveRoute.ClaimResult)
 
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN a submitted claim WHEN it reverts THEN the result sheet is closed`() = runTest {
+    fun `GIVEN a submitted claim WHEN it reverts THEN the result turns into a failed one`() = runTest {
         // Arrange
         val model = createModel()
-        val slot = FakeSlotHost(model.slotNavigation)
         advanceUntilIdle()
         model.onClaimSubmitted(submittedResult())
 
@@ -62,11 +59,48 @@ internal class YieldSupplyActiveModelClaimOutcomeTest : YieldSupplyActiveModelTe
         runCurrent()
 
         // Assert
-        assertThat(model.claimResultFlow.value).isNull()
-        assertThat(slot.configuration).isNull()
+        assertThat(model.claimResultFlow.value)
+            .isEqualTo(submittedResult().copy(status = YieldSupplyClaimResultUM.Status.Failed))
 
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN the result already closed WHEN the claim reverts THEN the failure is shown`() = runTest {
+        // Arrange
+        val model = createModel()
+        advanceUntilIdle()
+        model.onClaimSubmitted(submittedResult())
+        model.onClaimResultDismiss()
+
+        // Act
+        claimOutcomes.emit(outcome(YieldSupplyTransactionOutcome.Reverted))
+        runCurrent()
+
+        // Assert
+        assertThat(model.claimResultFlow.value?.status).isEqualTo(YieldSupplyClaimResultUM.Status.Failed)
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the claim sheet open WHEN the claim is submitted THEN the sheet is replaced by the result`() =
+        runTest {
+            // Arrange
+            val model = createModel()
+            val slot = FakeSlotHost(model.slotNavigation)
+            advanceUntilIdle()
+            model.onClaimRewardsClick(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
+
+            // Act
+            model.onClaimSubmitted(submittedResult())
+
+            // Assert
+            assertThat(slot.configuration).isNull()
+            assertThat(model.claimResultFlow.value).isEqualTo(submittedResult())
+
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN a claim of another token WHEN it is confirmed THEN this result is left alone`() = runTest {
@@ -94,7 +128,7 @@ internal class YieldSupplyActiveModelClaimOutcomeTest : YieldSupplyActiveModelTe
     }
 
     @Test
-    fun `GIVEN another sheet open WHEN a claim reverts THEN that sheet is left alone`() = runTest {
+    fun `GIVEN another sheet open WHEN a claim reverts THEN the failure is shown and the sheet is kept`() = runTest {
         // Arrange
         val model = createModel()
         val slot = FakeSlotHost(model.slotNavigation)
@@ -107,26 +141,25 @@ internal class YieldSupplyActiveModelClaimOutcomeTest : YieldSupplyActiveModelTe
         runCurrent()
 
         // Assert
+        assertThat(model.claimResultFlow.value?.status).isEqualTo(YieldSupplyClaimResultUM.Status.Failed)
         assertThat(slot.configuration).isEqualTo(YieldSupplyActiveRoute.Exit)
 
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN a sheet opened over the result WHEN the claim reverts THEN that sheet is left alone`() = runTest {
+    fun `GIVEN a claim made on the way out WHEN it reverts THEN no failure is shown`() = runTest {
         // Arrange
         val model = createModel()
-        val slot = FakeSlotHost(model.slotNavigation)
         advanceUntilIdle()
-        model.onClaimSubmitted(submittedResult())
-        model.onApprove()
 
         // Act
-        claimOutcomes.emit(outcome(YieldSupplyTransactionOutcome.Reverted))
+        claimOutcomes.emit(
+            outcome(YieldSupplyTransactionOutcome.Reverted).copy(origin = YieldSupplyClaimOrigin.Withdrawal),
+        )
         runCurrent()
 
         // Assert
-        assertThat(slot.configuration).isEqualTo(YieldSupplyActiveRoute.Approve)
         assertThat(model.claimResultFlow.value).isNull()
 
         model.onDestroy()

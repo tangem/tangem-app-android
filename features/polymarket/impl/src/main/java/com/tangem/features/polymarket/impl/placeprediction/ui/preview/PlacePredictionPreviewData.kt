@@ -149,8 +149,14 @@ private fun previewQuote(status: PredictionQuoteStatus = PredictionQuoteStatus.F
     expected = BigDecimal("4705.88"),
     feeTotal = BigDecimal("1.4"),
     total = BigDecimal("4001.4"),
-    signable = SignableQuoteUM(quote = previewSignableQuote(status = status), receivedAtMillis = PLACED_AT),
+    signable = SignableQuoteUM(
+        quote = previewSignableQuote(status = status),
+        receivedAtMillis = PLACED_AT,
+        assetId = PREVIEW_ASSET_ID,
+    ),
 )
+
+private const val PREVIEW_ASSET_ID = "preview-asset"
 
 private fun previewSell(): OrderSideUM.Sell = OrderSideUM.Sell(
     position = SellPositionUM.Held(available = BigDecimal("51.23")),
@@ -167,6 +173,7 @@ private fun previewSellQuote(status: PredictionQuoteStatus = PredictionQuoteStat
         signable = SignableQuoteUM(
             quote = previewSignableQuote(status = status, side = PredictionOrderSide.SELL),
             receivedAtMillis = PLACED_AT,
+            assetId = PREVIEW_ASSET_ID,
         ),
     )
 

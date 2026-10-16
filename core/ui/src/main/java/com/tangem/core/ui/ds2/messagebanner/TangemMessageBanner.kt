@@ -457,7 +457,7 @@ private fun TangemMessageBanner.Variant.tokens(): MessageBannerTokens {
     val colors = TangemTheme.colors3
     return when (this) {
         TangemMessageBanner.Variant.Default -> MessageBannerTokens(
-            background = colors.bg.opaque.primary,
+            background = colors.bg.transparent.primary,
             glowRing = TangemGlowRing.Variant.Magic,
         )
         TangemMessageBanner.Variant.Solid -> MessageBannerTokens(

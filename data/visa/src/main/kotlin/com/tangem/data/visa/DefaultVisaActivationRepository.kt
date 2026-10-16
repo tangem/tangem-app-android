@@ -71,10 +71,10 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
                     cardWalletAddress = request.cardWalletAddress,
                 ),
             ).getOrThrow()
-        }.map {
+        }.map { response ->
             VisaDataToSignByCardWallet(
                 request = request,
-                hashToSign = it.result.hash,
+                hashToSign = response.result.hash,
             )
         }
     }
@@ -93,10 +93,10 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
                     customerWalletAddress = request.customerWalletAddress,
                 ),
             ).getOrThrow()
-        }.map {
+        }.map { response ->
             VisaDataToSignByCustomerWallet(
                 request = request,
-                hashToSign = it.result.hash,
+                hashToSign = response.result.hash,
             )
         }
     }

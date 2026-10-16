@@ -90,7 +90,7 @@ internal class TangemPayMainBlockConverterTest {
     }
 
     @Test
-    fun `GIVEN KYC required WHEN convert THEN block click opens KYC required sheet`() {
+    fun `GIVEN KYC required WHEN convert THEN block click opens KYC required flow`() {
         // Arrange
         val userWalletId = UserWalletId("011")
         val status = AccountStatus.Payment(
@@ -104,7 +104,7 @@ internal class TangemPayMainBlockConverterTest {
         // Assert
         assertThat(result).isInstanceOf(TangemPayMainUM.ActionRequired::class.java)
         (result as TangemPayMainUM.ActionRequired).onClick()
-        verify(exactly = 1) { tangemPayIntents.onKycRequiredClicked(userWalletId, "customer") }
+        verify(exactly = 1) { tangemPayIntents.onKycRequiredClicked(userWalletId) }
     }
 
     private fun paymentAccount(value: PaymentAccountStatusValue): AccountStatus.Payment {

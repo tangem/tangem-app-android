@@ -18,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.*
 import com.tangem.common.ui.R
 import com.tangem.common.ui.expressStatus.state.buildExpressStatusSubtitle
@@ -55,12 +56,12 @@ internal fun ExpressStatusItem(
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.primary)
             .clickable { onClick() }
-            .padding(TangemTheme.dimens.spacing12)
+            .padding(12.dp)
             .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM),
     ) {
         val (titleRef, subtitleRef, iconRef, infoIconRef, swapIconRef, fromRef, toRef, fromIconRef, toIconRef) =
             createRefs()
-        val padding6 = TangemTheme.dimens.spacing6
+        val padding6 = 6.dp
 
         Text(
             text = title.resolveReference(),
@@ -93,7 +94,7 @@ internal fun ExpressStatusItem(
             state = fromTokenIconState,
             shouldDisplayNetwork = false,
             modifier = Modifier
-                .size(TangemTheme.dimens.size20)
+                .size(20.dp)
                 .constrainAs(fromIconRef) {
                     start.linkTo(parent.start)
                     top.linkTo(subtitleRef.bottom, padding6)
@@ -121,7 +122,7 @@ internal fun ExpressStatusItem(
             contentDescription = null,
             tint = TangemTheme.colors.icon.informative,
             modifier = Modifier
-                .size(TangemTheme.dimens.size12)
+                .size(12.dp)
                 .constrainAs(swapIconRef) {
                     start.linkTo(fromRef.end, padding6)
                     top.linkTo(subtitleRef.bottom, padding6)
@@ -134,7 +135,7 @@ internal fun ExpressStatusItem(
             state = toTokenIconState,
             shouldDisplayNetwork = false,
             modifier = Modifier
-                .size(TangemTheme.dimens.size20)
+                .size(20.dp)
                 .constrainAs(toIconRef) {
                     start.linkTo(swapIconRef.end, padding6)
                     top.linkTo(subtitleRef.bottom, padding6)
@@ -163,7 +164,7 @@ internal fun ExpressStatusItem(
             contentDescription = null,
             tint = infoIconTint ?: TangemTheme.colors.icon.informative,
             modifier = Modifier
-                .size(TangemTheme.dimens.size20)
+                .size(20.dp)
                 .constrainAs(infoIconRef) {
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
@@ -180,7 +181,7 @@ internal fun ExpressStatusItem(
             contentDescription = null,
             tint = TangemTheme.colors.icon.informative,
             modifier = Modifier
-                .size(TangemTheme.dimens.size24)
+                .size(24.dp)
                 .constrainAs(iconRef) {
                     end.linkTo(parent.end)
                     top.linkTo(parent.top)

@@ -2,6 +2,8 @@ package com.tangem.feature.swap
 
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
@@ -19,6 +21,7 @@ import com.tangem.domain.models.quote.PriceChange
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.usecase.GetPredictionDepositCurrencyStatusesUseCase
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.account.AccountUnderlyingCurrencies
@@ -41,6 +44,7 @@ internal class DefaultInitialCurrenciesResolverTest {
     private val singleAccountStatusListSupplier = mockk<SingleAccountStatusListSupplier>()
     private val rampStateManager = mockk<RampStateManager>()
     private val accountUnderlyingCurrencies = mockk<AccountUnderlyingCurrencies>()
+    private val getPredictionDepositCurrencyStatusesUseCase = mockk<GetPredictionDepositCurrencyStatusesUseCase>()
 
     private val userWalletId = UserWalletId("0011")
     private val userWallet = mockk<UserWallet> {
@@ -52,6 +56,7 @@ internal class DefaultInitialCurrenciesResolverTest {
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         rampStateManager = rampStateManager,
         accountUnderlyingCurrencies = accountUnderlyingCurrencies,
+        getPredictionDepositCurrencyStatusesUseCase = getPredictionDepositCurrencyStatusesUseCase,
     )
 
     private var uniqueIndex = 0
@@ -60,6 +65,7 @@ internal class DefaultInitialCurrenciesResolverTest {
     fun setup() {
         coEvery { getUserWalletUseCase(userWalletId) } returns userWallet.right()
         coEvery { accountUnderlyingCurrencies.get(any()) } returns emptyList()
+        coEvery { getPredictionDepositCurrencyStatusesUseCase(any()) } returns emptyList()
     }
 
     // region no initial currency
@@ -1864,6 +1870,128 @@ internal class DefaultInitialCurrenciesResolverTest {
     }
 
     @Test
+    fun `GIVEN a funded vault token in the wallet WHEN collectibles top-up THEN it is FROM over a richer token`() =
+        runTest {
+            // Arrange
+            val richStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("500"))
+            val walletUsdc = mockCryptoCurrency(id = mockCurrencyId(SOLANA_NETWORK_ID, SOLANA_USDC_MINT))
+            val walletUsdcStatus = createCurrencyStatus(walletUsdc, fiatAmount = BigDecimal("50"))
+            val vaultCurrency = mockCryptoCurrency(id = mockCurrencyId(SOLANA_NETWORK_ID, SOLANA_USDC_MINT))
+            val vaultStatus = createCurrencyStatus(vaultCurrency, fiatAmount = BigDecimal.ZERO)
+            setupSupplier(
+                listOf(
+                    createCryptoPortfolioAccountStatus(listOf(richStatus, walletUsdcStatus)),
+                    createCollectiblesAccountStatus(vaultStatus),
+                ),
+            )
+            setupAvailabilityForAnyCurrency()
+
+            // Act
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = vaultCurrency,
+                swapCurrencyPosition = CurrencyPosition.TO,
+                accountFlow = AccountFlow.CollectiblesTopUp,
+            )
+
+            // Assert
+            assertThat(from?.status).isSameInstanceAs(walletUsdcStatus)
+            assertThat(to?.status).isSameInstanceAs(vaultStatus)
+        }
+
+    @Test
+    fun `GIVEN an empty vault token in the wallet WHEN collectibles top-up THEN FROM is the most-funded token`() =
+        runTest {
+            // Arrange
+            val richStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("500"))
+            val walletUsdc = mockCryptoCurrency(id = mockCurrencyId(SOLANA_NETWORK_ID, SOLANA_USDC_MINT))
+            val walletUsdcStatus = createCurrencyStatus(walletUsdc, fiatAmount = BigDecimal.ZERO)
+            val vaultCurrency = mockCryptoCurrency(id = mockCurrencyId(SOLANA_NETWORK_ID, SOLANA_USDC_MINT))
+            setupSupplier(
+                listOf(
+                    createCryptoPortfolioAccountStatus(listOf(richStatus, walletUsdcStatus)),
+                    createCollectiblesAccountStatus(createCurrencyStatus(vaultCurrency, fiatAmount = BigDecimal.ZERO)),
+                ),
+            )
+            setupAvailabilityForAnyCurrency()
+
+            // Act
+            val (from, _) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = vaultCurrency,
+                swapCurrencyPosition = CurrencyPosition.TO,
+                accountFlow = AccountFlow.CollectiblesTopUp,
+            )
+
+            // Assert
+            assertThat(from?.status).isSameInstanceAs(richStatus)
+        }
+
+    @Test
+    fun `GIVEN a funded deposit token WHEN prediction top-up THEN it is FROM over a richer token`() = runTest {
+        // Arrange
+        val richCurrency = mockCryptoCurrency()
+        val richStatus = createCurrencyStatus(richCurrency, fiatAmount = BigDecimal("500"))
+        val arbitrumUsdc = mockToken(Blockchain.Arbitrum, ARBITRUM_USDC_CHECKSUM)
+        val arbitrumUsdcStatus = createCurrencyStatus(arbitrumUsdc, fiatAmount = BigDecimal("50"))
+        val collateral = mockCryptoCurrency()
+        val collateralStatus = createCurrencyStatus(collateral, fiatAmount = BigDecimal.ZERO)
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(listOf(richStatus, arbitrumUsdcStatus)),
+                createPredictionAccountStatus(collateralStatus),
+            ),
+        )
+        setupAvailabilityForAnyCurrency()
+        coEvery { getPredictionDepositCurrencyStatusesUseCase(userWalletId) } returns listOf(
+            createCurrencyStatus(mockToken(Blockchain.Arbitrum, ARBITRUM_USDC_CHECKSUM.lowercase()), BigDecimal.ZERO),
+        )
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = collateral,
+            swapCurrencyPosition = CurrencyPosition.TO,
+            accountFlow = AccountFlow.PredictionTopUp,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(arbitrumUsdcStatus)
+        assertThat(to?.status).isSameInstanceAs(collateralStatus)
+    }
+
+    @Test
+    fun `GIVEN no funded deposit token WHEN prediction top-up THEN FROM is the most-funded token`() = runTest {
+        // Arrange
+        val richCurrency = mockCryptoCurrency()
+        val richStatus = createCurrencyStatus(richCurrency, fiatAmount = BigDecimal("500"))
+        val arbitrumUsdc = mockToken(Blockchain.Arbitrum, ARBITRUM_USDC_CHECKSUM)
+        val arbitrumUsdcStatus = createCurrencyStatus(arbitrumUsdc, fiatAmount = BigDecimal.ZERO)
+        val collateral = mockCryptoCurrency()
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(listOf(richStatus, arbitrumUsdcStatus)),
+                createPredictionAccountStatus(createCurrencyStatus(collateral, fiatAmount = BigDecimal.ZERO)),
+            ),
+        )
+        setupAvailabilityForAnyCurrency()
+        coEvery { getPredictionDepositCurrencyStatusesUseCase(userWalletId) } returns listOf(
+            createCurrencyStatus(mockToken(Blockchain.Arbitrum, ARBITRUM_USDC_CHECKSUM.lowercase()), BigDecimal.ZERO),
+        )
+
+        // Act
+        val (from, _) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = collateral,
+            swapCurrencyPosition = CurrencyPosition.TO,
+            accountFlow = AccountFlow.PredictionTopUp,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(richStatus)
+    }
+
+    @Test
     fun `GIVEN the prediction collateral WHEN it is the initial currency THEN it lands as TO with a portfolio FROM`() =
         runTest {
             // Arrange
@@ -2113,6 +2241,12 @@ internal class DefaultInitialCurrenciesResolverTest {
         every { this@mockk.id } returns id
     }
 
+    private fun mockToken(blockchain: Blockchain, contractAddress: String): CryptoCurrency.Token = mockk(relaxed = true) {
+        every { id } returns mockCurrencyId()
+        every { network.rawId } returns blockchain.toNetworkId()
+        every { this@mockk.contractAddress } returns contractAddress
+    }
+
     private fun mockCurrencyId(
         rawNetworkId: String = "net-${uniqueIndex++}",
         contractAddress: String = "contract-${uniqueIndex++}",
@@ -2244,4 +2378,10 @@ internal class DefaultInitialCurrenciesResolverTest {
     }
 
     // endregion
+
+    private companion object {
+        const val ARBITRUM_USDC_CHECKSUM = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+        const val SOLANA_NETWORK_ID = "solana"
+        const val SOLANA_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    }
 }

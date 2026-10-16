@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
@@ -37,10 +38,10 @@ fun CardWithIcon(
     additionalContent: @Composable () -> Unit = {},
 ) {
     Surface(
-        shape = RoundedCornerShape(TangemTheme.dimens.radius12),
+        shape = RoundedCornerShape(12.dp),
         color = TangemTheme.colors.background.primary,
-        tonalElevation = TangemTheme.dimens.elevation2,
-        shadowElevation = TangemTheme.dimens.elevation2,
+        tonalElevation = 2.dp,
+        shadowElevation = 2.dp,
     ) {
         IconWithTitleAndDescription(
             title = title,
@@ -77,8 +78,8 @@ internal fun IconWithTitleAndDescription(
             .wrapContentHeight()
             .fillMaxWidth()
             .padding(
-                horizontal = TangemTheme.dimens.spacing16,
-                vertical = TangemTheme.dimens.spacing12,
+                horizontal = 16.dp,
+                vertical = 12.dp,
             ),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
@@ -89,8 +90,8 @@ internal fun IconWithTitleAndDescription(
                     color = iconBackground,
                     shape = CircleShape,
                 )
-                .height(TangemTheme.dimens.size40)
-                .width(TangemTheme.dimens.size40),
+                .height(40.dp)
+                .width(40.dp),
             contentAlignment = Alignment.Center,
         ) {
             icon()

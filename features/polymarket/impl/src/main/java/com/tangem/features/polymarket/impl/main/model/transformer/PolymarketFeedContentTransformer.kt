@@ -40,11 +40,13 @@ internal class PolymarketFeedContentTransformer(
         }
     }
 
-    private fun toContent(footer: PolymarketFeedFooterUM): PolymarketMainUM.ContentUM.Content {
+    private fun toContent(footer: PolymarketFeedFooterUM): PolymarketMainUM.ContentUM {
         // The keyset cursor can serve an event twice; duplicate keys would crash the list.
         val events = batchListState.data
             .flatMap { batch -> batch.data.events }
             .distinctBy(PolymarketEvent::id)
+        if (events.isEmpty()) return PolymarketMainUM.ContentUM.Empty
+
         return PolymarketMainUM.ContentUM.Content(
             events = eventUMConverter.convertList(events).toImmutableList(),
             footer = footer,

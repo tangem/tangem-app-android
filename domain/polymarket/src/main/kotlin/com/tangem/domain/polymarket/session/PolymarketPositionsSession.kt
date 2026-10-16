@@ -3,11 +3,13 @@ package com.tangem.domain.polymarket.session
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.converter.PolymarketPositionStatusConverter
+import com.tangem.domain.polymarket.error.PolymarketPositionsReadException
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.flow.PredictionPositionsUpdateListener
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchAction
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
+import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketPositionsListConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import com.tangem.domain.polymarket.model.PolymarketPositionsState
@@ -37,7 +39,12 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** One list visit. Pausing retains pages; disposal permanently ends the session. Call controls on the owning scope. */
+/**
+ * One list visit. Pausing retains pages; disposal permanently ends the session. Call controls on the owning scope.
+ *
+ * A cursor the BFF refuses is recovered from once per user action by reloading the list from its first page behind
+ * the rows on screen; a second refusal in a row is shown as the page error it is, so a broken list cannot loop.
+ */
 class PolymarketPositionsSession internal constructor(
     private val userWalletId: UserWalletId,
     private val tab: PolymarketPositionsTab,
@@ -56,12 +63,14 @@ class PolymarketPositionsSession internal constructor(
     private var appliedRevision: Long = updateListener.currentRevision(userWalletId)
     private val request = MutableStateFlow(Request())
     private var isDisposed = false
+    private var hasRecoveredCursor = false
     private var requestMore: (() -> Unit)? = null
     private var refreshLoadedPages: (() -> Unit)? = null
     private var cancelUpdates: (() -> Unit)? = null
 
     fun resume(scope: CoroutineScope) {
         if (isDisposed) return
+        hasRecoveredCursor = false
         val wasResumed = request.value.isResumed
         request.update { it.copy(isResumed = true) }
         this.scope = scope
@@ -115,6 +124,7 @@ class PolymarketPositionsSession internal constructor(
 
     fun selectFilter(filter: PolymarketPositionsFilter) {
         if (isDisposed || request.value.filter == filter) return
+        hasRecoveredCursor = false
         request.update { it.copy(filter = filter, targetCount = PAGE_SIZE) }
         if (state.value.refreshError != null || state.value.isRefreshing) {
             if (request.value.isResumed) load(isRefreshing = state.value.isRefreshing)
@@ -125,6 +135,7 @@ class PolymarketPositionsSession internal constructor(
 
     fun retry() {
         if (!request.value.isResumed) return
+        hasRecoveredCursor = false
         when (val status = state.value.status) {
             is PaginationStatus.InitialLoadingError -> load()
             is PaginationStatus.Paginating -> if (status.lastResult is BatchFetchResult.Error) requestMore?.invoke()
@@ -134,6 +145,7 @@ class PolymarketPositionsSession internal constructor(
 
     fun refresh() {
         if (isDisposed || !request.value.isResumed || state.value.isRefreshing) return
+        hasRecoveredCursor = false
         request.update { it.copy(targetCount = PAGE_SIZE) }
         load(isRefreshing = true)
     }
@@ -214,6 +226,7 @@ class PolymarketPositionsSession internal constructor(
         retained: PolymarketPositionsState?,
     ) {
         if (batch.status == PaginationStatus.None || state.value.refreshError != null) return
+        if (recoverStaleCursor((batch.status as? PaginationStatus.Paginating)?.lastResult)) return
         val positions = withContext(dispatchers.default) {
             batch.data.flatMap { it.data }.distinctBy { it.id }.filter { position ->
                 selection.filter == PolymarketPositionsFilter.ALL ||
@@ -282,11 +295,23 @@ class PolymarketPositionsSession internal constructor(
     private fun CoroutineScope.logRefreshFailures(batchFlow: PolymarketPositionsBatchFlow) {
         batchFlow.updateResults
             .onEach { (_, result) ->
-                if (result is BatchUpdateResult.Error) {
+                if (result is BatchUpdateResult.Error && !recoverStaleCursor(result.throwable)) {
                     TangemLogger.e("Failed to refresh Polymarket positions: ${result.throwable}")
                 }
             }
             .launchIn(this)
+    }
+
+    private fun recoverStaleCursor(result: BatchFetchResult<List<PolymarketPosition>>?): Boolean =
+        recoverStaleCursor((result as? BatchFetchResult.Error)?.throwable)
+
+    private fun recoverStaleCursor(throwable: Throwable?): Boolean {
+        val isStale = (throwable as? PolymarketPositionsReadException)?.error == PolymarketPositionsError.StaleCursor
+        if (!isStale || hasRecoveredCursor || !request.value.isResumed) return false
+        hasRecoveredCursor = true
+        TangemLogger.i("Polymarket positions cursor refused, reloading the list from the first page")
+        scope?.launch { load(isRefreshing = true) }
+        return true
     }
 
     private companion object {

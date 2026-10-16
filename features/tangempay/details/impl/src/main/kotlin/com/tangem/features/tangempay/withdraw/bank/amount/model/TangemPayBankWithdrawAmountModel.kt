@@ -8,6 +8,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawAmountComponent
@@ -33,6 +34,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val analytics: AnalyticsEventHandler,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawAmountComponent.Params>()
@@ -66,14 +68,25 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
                 draft = params.draft.value,
                 selection = currentSelection(),
                 sheet = state.value.sheet,
+                isBalanceHidden = true,
             ),
         )
 
     init {
-        combine(params.draft, params.options, state) { draft, options, amountState ->
+        combine(
+            flow = params.draft,
+            flow2 = params.options,
+            flow3 = state,
+            flow4 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
+        ) { draft, options, amountState, isBalanceHidden ->
             val selection = amountState.resolve(draft = draft, options = options)
             trackInsufficientFunds(selection.validation)
-            umFactory.create(draft = draft, selection = selection, sheet = amountState.sheet)
+            umFactory.create(
+                draft = draft,
+                selection = selection,
+                sheet = amountState.sheet,
+                isBalanceHidden = isBalanceHidden,
+            )
         }
             .onEach { uiState.value = it }
             .launchIn(modelScope)
@@ -97,7 +110,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
 
     private fun onMaxClick() {
         val selection = currentSelection()
-        val max = selection.sendableAmount
+        val max = selection.maxInputAmount
         val value = if (max.isZero()) {
             ""
         } else {

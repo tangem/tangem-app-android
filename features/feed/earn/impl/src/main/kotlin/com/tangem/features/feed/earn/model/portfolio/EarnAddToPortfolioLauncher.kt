@@ -1,8 +1,8 @@
 package com.tangem.features.feed.earn.model.portfolio
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -34,7 +34,7 @@ import kotlinx.coroutines.job
 internal class EarnAddToPortfolioLauncher(
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val modelScope: CoroutineScope,
     private val showSheet: (source: EarnSource, manager: AddToPortfolioManager) -> Unit,
     private val dismissSheet: () -> Unit,
@@ -101,7 +101,7 @@ internal class EarnAddToPortfolioLauncher(
     }
 
     private fun openCurrencyDetails(result: AddToPortfolioManager.Result) {
-        appRouter.push(
+        router.push(
             AppRoute.CurrencyDetails(
                 userWalletId = result.wallet.walletId,
                 currency = result.addedCurrency.currency,

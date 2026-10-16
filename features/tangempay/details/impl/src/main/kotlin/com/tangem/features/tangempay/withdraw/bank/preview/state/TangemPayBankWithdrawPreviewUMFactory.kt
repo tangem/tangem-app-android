@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.withdraw.bank.preview.state
 import androidx.annotation.StringRes
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
@@ -49,7 +50,11 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
                 step = TangemPayBankWithdrawInnerRoute.Preview,
                 onCloseClick = callbacks.onCloseClick,
             ),
-            transfer = createTransfer(draft = draft, isSending = state.isSending),
+            transfer = createTransfer(
+                draft = draft,
+                isSending = state.isSending,
+                isBalanceHidden = state.isBalanceHidden,
+            ),
             recipientCards = draft.recipientDetails()?.let { details ->
                 createRecipientCards(
                     details = details,
@@ -66,7 +71,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
         )
     }
 
-    private fun createTransfer(draft: BankWithdrawDraft, isSending: Boolean): TransferUM? {
+    private fun createTransfer(draft: BankWithdrawDraft, isSending: Boolean, isBalanceHidden: Boolean): TransferUM? {
         val amount = draft.amount ?: return null
         val source = draft.source ?: return null
         val destination = draft.destination ?: return null
@@ -75,7 +80,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
         val fee = destination.fee.toText()
         return TransferUM(
             amount = AmountCardUM(
-                balance = source.fiatBalance.formatFiat(currency),
+                balance = source.fiatBalance.formatFiat(currency).orMaskWithStars(isBalanceHidden),
                 amount = amount.formatFiat(currency),
                 icon = iconConverter.convert(source.token),
                 symbol = source.token.symbol,

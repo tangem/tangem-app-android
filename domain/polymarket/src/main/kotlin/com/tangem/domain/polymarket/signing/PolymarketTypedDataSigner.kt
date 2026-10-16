@@ -30,7 +30,7 @@ interface PolymarketTypedDataSigner {
 
     /**
      * Signs a single `Batch` envelope — the same structure `POST /wallet/approvals` uses, with one call
-     * instead of thirteen.
+     * instead of seventeen.
      *
      * @return the formatted `r+s+v` signature
      */

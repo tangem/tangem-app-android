@@ -28,8 +28,8 @@ sealed class TechAnalyticsEvent(
         event = "Keyboard Identifier",
         params = buildMap {
             put("Id", id)
-            packageName?.let {
-                put("Package", it)
+            packageName?.let { appPackage ->
+                put("Package", appPackage)
                 put("GPUrl", "https://play.google.com/store/apps/details?id=$packageName")
             }
             put("isTrusted", isTrusted.toString())

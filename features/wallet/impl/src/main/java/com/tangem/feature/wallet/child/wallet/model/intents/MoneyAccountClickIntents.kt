@@ -197,7 +197,7 @@ internal class MoneyAccountClickIntentsImplementor @Inject constructor(
     }
 
     override fun onMoneyAccountClicked(userWalletId: UserWalletId) {
-        router.openMoneyAccountMain(userWalletId = userWalletId)
+        router.openMoneyAccountDetails(userWalletId = userWalletId)
     }
 
     private fun hideMoneyAccount(userWalletId: UserWalletId) {

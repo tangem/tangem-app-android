@@ -202,9 +202,9 @@ internal class GetMoneyAccountEligibilityUseCaseTest {
         ),
         MoneyAccountStatusValue.Account.Deactivated(
             source = StatusSource.ACTUAL,
+            cryptoCurrency = mockk(),
             balance = null,
             customerId = CUSTOMER_ID,
-            productInstanceId = PRODUCT_INSTANCE_ID,
         ),
         MoneyAccountStatusValue.Onboarding.Issuing(
             source = StatusSource.ACTUAL,
@@ -229,9 +229,9 @@ internal class GetMoneyAccountEligibilityUseCaseTest {
 
     private fun activeStatus() = MoneyAccountStatusValue.Account.Active(
         source = StatusSource.ACTUAL,
+        cryptoCurrency = mockk(),
         balance = null,
         customerId = CUSTOMER_ID,
-        productInstanceId = PRODUCT_INSTANCE_ID,
     )
 
     private fun mockStatus(wallet: UserWallet, status: MoneyAccountStatusValue) {
@@ -253,6 +253,5 @@ internal class GetMoneyAccountEligibilityUseCaseTest {
 
     private companion object {
         const val CUSTOMER_ID = "customer_id"
-        const val PRODUCT_INSTANCE_ID = "product_instance_id"
     }
 }

@@ -2,6 +2,8 @@ package com.tangem.tap.di.analytics
 
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.AppInstanceIdProvider
+import com.tangem.core.analytics.api.AnalyticsUserIdHandler
+import com.tangem.core.analytics.api.ParamsInterceptorHolder
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.tap.common.analytics.DefaultTrackingContextProxy
@@ -20,8 +22,15 @@ internal object AnalyticsModule {
 
     @Provides
     @Singleton
-    fun provideAnalyticsContextProxy(abtestsManager: ABTestsManager): TrackingContextProxy =
-        DefaultTrackingContextProxy(abtestsManager)
+    fun provideAnalyticsContextProxy(
+        abtestsManager: ABTestsManager,
+        paramsInterceptorHolder: ParamsInterceptorHolder,
+        userIdHandler: AnalyticsUserIdHandler,
+    ): TrackingContextProxy = DefaultTrackingContextProxy(
+        abTestsManager = abtestsManager,
+        paramsInterceptorHolder = paramsInterceptorHolder,
+        userIdHandler = userIdHandler,
+    )
 
     @Provides
     @Singleton

@@ -3,7 +3,6 @@ package com.tangem.features.createwalletstart
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -24,6 +23,7 @@ import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.analytics.IntroductionProcess.CreateWalletIntroScreenOpened.ScreenType
+import com.tangem.domain.card.models.ScanConfig
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
@@ -56,7 +56,6 @@ internal class CreateWalletStartModel @Inject constructor(
     private val scanCardProcessor: ScanCardProcessor,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val settingsRepository: SettingsRepository,
-    private val appRouter: AppRouter,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
@@ -192,25 +191,32 @@ internal class CreateWalletStartModel @Inject constructor(
             val analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro
 
             scanCardProcessor.scan(
-                analyticsSource = analyticsSource,
-                shouldCheckIsAlreadyActivated = true,
-                onProgressStateChange = { showProgress ->
-                    if (!showProgress) {
-                        delay(HIDE_PROGRESS_DELAY)
-                        setLoading(false)
-                    } else {
-                        setLoading(true)
-                    }
-                },
-                onFailure = { error ->
-                    handleScanError(error)
-                    delay(HIDE_PROGRESS_DELAY)
-                    setLoading(false)
-                },
-                onSuccess = { scanResponse ->
-                    proceedWithScanResponse(scanResponse)
-                },
+                config = ScanConfig(
+                    analyticsSource = analyticsSource,
+                    callback = createScanCallback(),
+                ),
             )
+        }
+    }
+
+    private fun createScanCallback(): ScanConfig.Callback = object : ScanConfig.Callback {
+        override suspend fun onProgressStateChange(showProgress: Boolean) {
+            if (!showProgress) {
+                delay(HIDE_PROGRESS_DELAY)
+                setLoading(false)
+            } else {
+                setLoading(true)
+            }
+        }
+
+        override suspend fun onFailure(error: TangemError) {
+            handleScanError(error)
+            delay(HIDE_PROGRESS_DELAY)
+            setLoading(false)
+        }
+
+        override suspend fun onSuccess(scanResponse: ScanResponse) {
+            proceedWithScanResponse(scanResponse)
         }
     }
 
@@ -237,7 +243,7 @@ internal class CreateWalletStartModel @Inject constructor(
                                 source = AnalyticsParam.ScreensSources.Intro,
                             ),
                         ).onRight {
-                            appRouter.replaceAll(AppRoute.Wallet)
+                            router.replaceAll(AppRoute.Wallet)
                         }
                     }
                 }
@@ -255,7 +261,7 @@ internal class CreateWalletStartModel @Inject constructor(
                 } else {
                     AppRoute.Wallet
                 }
-                appRouter.replaceAll(route)
+                router.replaceAll(route)
             },
         )
     }

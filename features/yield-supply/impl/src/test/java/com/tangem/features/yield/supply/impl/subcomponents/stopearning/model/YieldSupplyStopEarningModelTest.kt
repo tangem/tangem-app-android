@@ -14,14 +14,13 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.yield.supply.YieldSupplyError
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
-import com.tangem.domain.yield.supply.usecase.PrepareClaimBeforeWithdrawUseCase
-import com.tangem.domain.yield.supply.usecase.YieldPreClaim
 import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
+import com.tangem.test.mock.yield.MockYieldSupply
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -52,7 +51,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
 
     private val stopEarningUseCase: YieldSupplyStopEarningUseCase = mockk()
     private val deactivateUseCase: YieldSupplyDeactivateUseCase = mockk()
-    private val prepareClaimUseCase: PrepareClaimBeforeWithdrawUseCase = mockk()
+    private val withdrawalClaimPreparer: YieldSupplyWithdrawalClaimPreparer = mockk()
     private val claimTracker: YieldSupplyClaimTracker = mockk(relaxed = true)
     private val callback: YieldSupplyStopEarningComponent.ModelCallback = mockk(relaxed = true)
 
@@ -63,7 +62,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
         coEvery { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) } returns "0xhash".right()
         coEvery { deactivateUseCase(any(), any()) } returns true.right()
         coEvery {
-            prepareClaimUseCase(
+            withdrawalClaimPreparer.prepare(
                 userWallet = any(),
                 cryptoCurrencyStatus = any(),
                 feeCryptoCurrencyStatus = any(),
@@ -251,7 +250,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
             clearMocks(
                 stopEarningUseCase,
                 deactivateUseCase,
-                prepareClaimUseCase,
+                withdrawalClaimPreparer,
                 claimTracker,
                 callback,
                 pendingTracker,
@@ -265,7 +264,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
             } returns "0xhash".right()
             coEvery { deactivateUseCase(any(), any()) } returns true.right()
             coEvery {
-                prepareClaimUseCase(
+                withdrawalClaimPreparer.prepare(
                     userWallet = any(),
                     cryptoCurrencyStatus = any(),
                     feeCryptoCurrencyStatus = any(),
@@ -295,6 +294,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
                     chainId = CHAIN_ID,
                     userAddress = SOURCE_ADDRESS,
                     transactionHash = "0xhash",
+                    claimedRewards = listOf(MockYieldSupply.reward()),
                     origin = YieldSupplyClaimOrigin.Withdrawal,
                 )
 
@@ -316,7 +316,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
             // Assert
             val sent = sentTransactions()
             assertThat(sent).hasSize(1)
-            coVerify(exactly = 0) { prepareClaimUseCase(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { withdrawalClaimPreparer.prepare(any(), any(), any(), any()) }
             verify { callback.onStopEarningTransactionSent() }
 
             model.onDestroy()
@@ -336,7 +336,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
 
                 // Assert
                 coVerify {
-                    prepareClaimUseCase(
+                    withdrawalClaimPreparer.prepare(
                         userWallet = any(),
                         cryptoCurrencyStatus = any(),
                         feeCryptoCurrencyStatus = any(),
@@ -354,7 +354,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
         fun `GIVEN the claim preparation stalls WHEN withdrawing THEN the withdrawal still goes out`() = runTest {
             // Arrange
             coEvery {
-                prepareClaimUseCase(
+                withdrawalClaimPreparer.prepare(
                     userWallet = any(),
                     cryptoCurrencyStatus = any(),
                     feeCryptoCurrencyStatus = any(),
@@ -397,7 +397,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
             assertThat(withdrawal).isNotEqualTo(claimTransaction)
             verify { callback.onStopEarningTransactionSent() }
             coVerify { pendingTracker.addPending(userWalletId, any(), any()) }
-            verify(exactly = 0) { claimTracker.track(any(), any(), any(), any(), any(), any()) }
+            verify(exactly = 0) { claimTracker.track(any(), any(), any(), any(), any(), any(), any()) }
 
             stopEarningModel.onDestroy()
         }
@@ -405,7 +405,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
         private fun provideTestModels() = listOf(
             PreClaimFailureModel(reason = "the claim could not be prepared") {
                 coEvery {
-                    prepareClaimUseCase(
+                    withdrawalClaimPreparer.prepare(
                         userWallet = any(),
                         cryptoCurrencyStatus = any(),
                         feeCryptoCurrencyStatus = any(),
@@ -437,6 +437,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
             chainId = CHAIN_ID,
             userAddress = SOURCE_ADDRESS,
             token = token,
+            claimedRewards = listOf(MockYieldSupply.reward()),
         )
     }
 
@@ -470,7 +471,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
         yieldSupplyRepository = yieldSupplyRepository,
         yieldSupplyPendingTracker = pendingTracker,
         appsFlyerRepository = appsFlyerRepository,
-        prepareClaimBeforeWithdrawUseCase = prepareClaimUseCase,
+        yieldSupplyWithdrawalClaimPreparer = withdrawalClaimPreparer,
         yieldSupplyClaimTracker = claimTracker,
     )
 

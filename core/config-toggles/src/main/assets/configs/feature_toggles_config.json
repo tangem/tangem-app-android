@@ -29,7 +29,7 @@
     },
     {
         "name": "AND_18021_WALLETCONNECT_ON_DEMAND_INIT_ENABLED",
-        "version": "undefined"
+        "version": "6.5"
     },
     {
         "name": "TWI_1326_YIELD_DEX_TRANSFER_ENABLED",
@@ -137,11 +137,11 @@
     },
     {
         "name": "TWI_1062_GOOGLE_WALLET_PUSH_PROVISIONING_ENABLED",
-        "version": "6.5"
+        "version": "undefined"
     },
     {
         "name": "TWI_1062_GOOGLE_WALLET_BUTTON_ALWAYS_SHOWN",
-        "version": "6.5"
+        "version": "undefined"
     },
     {
         "name": "TWI_1357_HARDWARE_UPGRADE_STORIES_AB_ENABLED",
@@ -165,6 +165,14 @@
     },
     {
         "name": "TWI_1700_POLYMARKET_PHASE_TWO_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED",
+        "version": "6.5"
+    },
+    {
+        "name": "TWI_1760_SUPPORT_CHAT_DEEPLINK_ENABLED",
         "version": "undefined"
     }
 ]

@@ -256,10 +256,10 @@ internal fun TangemButton.Variant.tokens(): ColorTokens {
             focusRingColor = TangemTheme.colors3.interaction.focusRing.brand,
         )
         TangemButton.Variant.Secondary -> ColorTokens(
-            backgroundColor = TangemTheme.colors3.bg.opaque.primary,
+            backgroundColor = TangemTheme.colors3.bg.transparent.primary,
             textColor = TangemTheme.colors3.text.primary,
             iconTint = TangemTheme.colors3.icon.primary,
-            disabledBackgroundColor = TangemTheme.colors3.bg.opaque.primary,
+            disabledBackgroundColor = TangemTheme.colors3.bg.transparent.primary,
             disabledTextColor = TangemTheme.colors3.text.primary,
             disabledIconTint = TangemTheme.colors3.icon.primary,
             focusRingColor = TangemTheme.colors3.interaction.focusRing.brand,

@@ -114,7 +114,7 @@ fun PortfolioSelectRowV2(
                 contentAlignment = Alignment.Center,
             ) {
                 AccountIcon(
-                    modifier = Modifier.padding(end = TangemTheme.dimens2.x3),
+                    modifier = Modifier.padding(end = 12.dp),
                     name = state.name,
                     icon = state.icon,
                     size = AccountIconSize.Default,
@@ -124,11 +124,11 @@ fun PortfolioSelectRowV2(
             Box(
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.HEAD)
-                    .padding(end = TangemTheme.dimens2.x3),
+                    .padding(end = 12.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 CardImage(
-                    modifier = Modifier.size(TangemTheme.dimens2.x10),
+                    modifier = Modifier.size(40.dp),
                     imageState = state.imageState,
                 )
             }
@@ -161,7 +161,7 @@ fun PortfolioSelectRowV2(
             Icon(
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.TAIL)
-                    .size(TangemTheme.dimens2.x5),
+                    .size(20.dp),
                 painter = painterResource(id = R.drawable.ic_select_choice_20),
                 contentDescription = null,
                 tint = TangemTheme.colors2.graphic.neutral.secondary,

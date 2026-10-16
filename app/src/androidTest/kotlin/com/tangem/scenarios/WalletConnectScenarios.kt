@@ -80,9 +80,6 @@ fun BaseTestCase.checkWalletConnectScreen(withConnections: Boolean) {
         step("Assert 'More' button is displayed") {
             onWalletConnectScreen { moreButton.assertIsDisplayed() }
         }
-        step("Assert wallet name is displayed") {
-            onWalletConnectScreen { walletName.assertIsDisplayed() }
-        }
         step("Assert app icon is displayed") {
             onWalletConnectScreen { appIcon.assertIsDisplayed() }
         }
@@ -93,9 +90,6 @@ fun BaseTestCase.checkWalletConnectScreen(withConnections: Boolean) {
             onWalletConnectScreen { appUrl.assertIsDisplayed() }
         }
     } else {
-        step("Assert wallet name is not displayed") {
-            onWalletConnectScreen { walletName.assertIsNotDisplayed() }
-        }
         step("Assert app icon is not displayed") {
             onWalletConnectScreen { appIcon.assertIsNotDisplayed() }
         }

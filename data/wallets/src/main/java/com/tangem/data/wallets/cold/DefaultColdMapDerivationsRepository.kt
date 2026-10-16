@@ -45,9 +45,9 @@ internal class DefaultColdMapDerivationsRepository @Inject constructor(
     ): UserWallet.Cold = withContext(dispatchers.io) {
         derivePublicKeysByNetworks(
             userWallet = userWallet,
-            networks = networkIds.mapNotNull {
+            networks = networkIds.mapNotNull { networkId ->
                 networkFactory.create(
-                    blockchain = Blockchain.fromNetworkId(it.value) ?: return@mapNotNull null,
+                    blockchain = Blockchain.fromNetworkId(networkId.value) ?: return@mapNotNull null,
                     extraDerivationPath = null,
                     userWallet = userWallet,
                 )

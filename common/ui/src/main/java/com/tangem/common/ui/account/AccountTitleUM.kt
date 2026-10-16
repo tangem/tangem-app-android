@@ -41,6 +41,14 @@ sealed interface AccountTitleUM {
                 )
             }
 
+            fun collectibles(prefixText: TextReference = TextReference.EMPTY): Account {
+                return Account(
+                    prefixText = prefixText,
+                    name = resourceReference(R.string.collectibles_main_title),
+                    icon = AccountIconUM.Collectibles,
+                )
+            }
+
             fun moneyAccount(prefixText: TextReference = TextReference.EMPTY): Account {
                 return Account(
                     prefixText = prefixText,

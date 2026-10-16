@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
@@ -28,11 +29,11 @@ fun TxHistoryGroupTitle(config: TxHistoryItemState.GroupTitle, modifier: Modifie
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
             .padding(
-                vertical = TangemTheme.dimens.spacing8,
-                horizontal = TangemTheme.dimens.spacing12,
+                vertical = 8.dp,
+                horizontal = 12.dp,
             )
             .fillMaxWidth()
-            .heightIn(min = TangemTheme.dimens.size24),
+            .heightIn(min = 24.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
         Text(

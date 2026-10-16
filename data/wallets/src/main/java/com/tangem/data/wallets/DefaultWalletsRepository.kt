@@ -6,6 +6,7 @@ import arrow.core.right
 import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.data.wallets.converters.UserWalletRemoteInfoConverter
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.common.response.fold
 import com.tangem.datasource.api.common.response.getOrThrow
@@ -23,6 +24,8 @@ import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.models.PromoCodeActivation
+import com.tangem.domain.wallets.models.PromoPayout
 import com.tangem.domain.wallets.models.UserWalletRemoteInfo
 import com.tangem.domain.wallets.models.WalletSyncResult
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
@@ -256,23 +259,33 @@ internal class DefaultWalletsRepository(
     override suspend fun activatePromoCode(
         userWalletId: UserWalletId,
         promoCode: String,
-        bitcoinAddress: String,
-    ): Either<ActivatePromoCodeError, String> = withContext(dispatchers.io) {
+        address: String,
+        payout: PromoPayout?,
+    ): Either<ActivatePromoCodeError, PromoCodeActivation> = withContext(dispatchers.io) {
         tangemTechApi.activatePromoCode(
             body = PromocodeActivationBody(
                 promoCode = promoCode,
-                address = bitcoinAddress,
+                address = address,
                 walletId = userWalletId.stringValue,
+                paymentNetwork = payout?.networkId,
+                paymentCurrency = payout?.currencySymbol,
             ),
         ).fold(
-            onSuccess = { it.status.right() },
+            onSuccess = { response ->
+                PromoCodeActivation(programId = response.promoProgram?.id).right()
+            },
             onError = { apiResponseError ->
                 val error = when (apiResponseError) {
                     is HttpException -> when (apiResponseError.code) {
                         HttpException.Code.NOT_FOUND -> ActivatePromoCodeError.InvalidPromoCode
                         HttpException.Code.CONFLICT -> ActivatePromoCodeError.PromocodeAlreadyUsed
+                        HttpException.Code.BAD_REQUEST -> ActivatePromoCodeError.InvalidRequest
+                        HttpException.Code.UNPROCESSABLE_ENTITY -> ActivatePromoCodeError.CampaignExpired
                         else -> ActivatePromoCodeError.ActivationFailed
                     }
+                    is ApiResponseError.NetworkException,
+                    is ApiResponseError.TimeoutException,
+                    -> ActivatePromoCodeError.NetworkError
                     else -> ActivatePromoCodeError.ActivationFailed
                 }
 

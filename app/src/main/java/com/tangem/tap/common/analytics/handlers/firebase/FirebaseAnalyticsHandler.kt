@@ -6,7 +6,6 @@ import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.core.analytics.api.AnalyticsUserIdHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
-import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.converters.AnalyticsErrorConverter
 
 class FirebaseAnalyticsHandler(
@@ -44,13 +43,5 @@ class FirebaseAnalyticsHandler(
 
     companion object {
         const val ID = "Firebase"
-    }
-
-    class Builder : AnalyticsHandlerBuilder {
-        override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler? = when {
-            !data.isDebug -> FirebaseClient()
-            data.isDebug && data.logConfig.isFirebaseLogEnabled -> FirebaseLogClient()
-            else -> null
-        }?.let { FirebaseAnalyticsHandler(it) }
     }
 }
