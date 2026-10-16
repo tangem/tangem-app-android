@@ -29,6 +29,7 @@ import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayEligibilityType
+import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
@@ -154,6 +155,18 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean {
         return tangemPayStorage.isTangemPayDeactivated(userWalletId)
+    }
+
+    override suspend fun storeCustomerResidency(userWalletId: UserWalletId, residency: TangemPayCustomerResidency) {
+        tangemPayStorage.storeCustomerResidency(userWalletId, residency)
+    }
+
+    override suspend fun getCustomerResidency(userWalletId: UserWalletId): TangemPayCustomerResidency? {
+        return tangemPayStorage.getCustomerResidency(userWalletId)
+    }
+
+    override suspend fun clearCustomerResidency(userWalletId: UserWalletId) {
+        tangemPayStorage.clearCustomerResidency(userWalletId)
     }
 
     override suspend fun clearOrderId(userWalletId: UserWalletId) {
