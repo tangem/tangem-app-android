@@ -3025,6 +3025,7 @@
   <string name="tangempay_remove_account_alert_title">Remove account?</string>
   <string name="tangempay_residency_all_country">Change country</string>
   <string name="tangempay_residency_all_state">Select another state</string>
+  <string name="tangempay_residency_search_empty">No results. Try to change request</string>
   <string name="tangempay_residency_suggested_country">Suggested country</string>
   <string name="tangempay_residency_suggested_state">Suggested state</string>
   <string name="tangempay_residency_title_country">Country of residence</string>
