@@ -41,6 +41,7 @@ import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionInProgressTransformer
 import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionReadyTransformer
+import com.tangem.features.yield.supply.impl.incentives.claim.model.YieldSupplyClaimPreparer
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
@@ -162,6 +163,12 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         }
         // Read on the same frame as the fee content: both are written together when the fee loads
         val claim = withdrawalClaim?.takeIf { claimIndex != -1 }
+        if (claim != null && claim.preparedAt.elapsedNow() >= YieldSupplyClaimPreparer.PREPARATION_VALIDITY) {
+            uiState.update(YieldSupplyTransactionReadyTransformer)
+            params.callback.onTransactionProgress(false)
+            onFeeReload()
+            return
+        }
 
         modelScope.launch(dispatchers.default) {
             sendTransactionUseCase(
@@ -279,12 +286,11 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
 
     private suspend fun onLoadFee() = coroutineScope {
         // The fee check of the notifications reads this status, and the balance may have moved since the last load
-        feeCryptoCurrencyStatusFlow.update {
-            getFeePaidCryptoCurrencyStatusSyncUseCase(
-                userWalletId = userWallet.walletId,
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
-            ).getOrNull() ?: cryptoCurrencyStatus
-        }
+        val feeStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
+            userWalletId = userWallet.walletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+        ).getOrNull()
+        feeCryptoCurrencyStatusFlow.update { feeStatus ?: cryptoCurrencyStatus }
         if (cryptoCurrency !is CryptoCurrency.Token || uiState.value.isTransactionSending) return@coroutineScope
 
         val exitTransitionData = yieldSupplyStopEarningUseCase(
@@ -297,7 +303,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
             it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
         }
 
-        val preparedClaim = async { prepareWithdrawalClaim() }
+        val preparedClaim = async { prepareWithdrawalClaim(isFeeCurrencyKnown = feeStatus != null) }
 
         getFeeUseCase(
             transactionData = exitTransitionData,
@@ -346,7 +352,9 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         )
     }
 
-    private suspend fun prepareWithdrawalClaim(): YieldPreClaim {
+    /** Without the fee currency the combined fee would be weighed against the withdrawn token, not what pays it. */
+    private suspend fun prepareWithdrawalClaim(isFeeCurrencyKnown: Boolean): YieldPreClaim {
+        if (!isFeeCurrencyKnown) return YieldPreClaim.Skip
         if (!YieldSupplyWithdrawalClaimBatching.isSupported(cryptoCurrency.network)) return YieldPreClaim.Skip
 
         return yieldSupplyWithdrawalClaimPreparer.prepare(

@@ -55,6 +55,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import java.io.IOException
 import java.math.BigDecimal
 import java.math.BigInteger
+import kotlin.time.TestTimeSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class YieldSupplyWithdrawalClaimPreparerTest {
@@ -71,6 +72,8 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         every { walletId } returns UserWalletId("abcdef012345")
     }
 
+    private val clock = TestTimeSource()
+
     private val preparer = YieldSupplyWithdrawalClaimPreparer(
         yieldSupplyGetTokenStatusUseCase = getTokenStatusUseCase,
         yieldSupplyClaimPreparer = YieldSupplyClaimPreparer(
@@ -81,6 +84,7 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         buildYieldClaimTransactionUseCase = buildClaimTransactionUseCase,
         getFeeUseCase = getFeeUseCase,
         yieldSupplyClaimTracker = claimTracker,
+        timeSource = clock,
     )
 
     @BeforeEach
@@ -132,6 +136,7 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
                 userAddress = USER_ADDRESS,
                 token = token(),
                 claimedRewards = listOf(reward()),
+                preparedAt = clock.markNow(),
             ),
         )
     }
@@ -159,6 +164,7 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
                     userAddress = USER_ADDRESS,
                     token = token(),
                     claimedRewards = listOf(reward()),
+                    preparedAt = clock.markNow(),
                 ),
             )
         }
