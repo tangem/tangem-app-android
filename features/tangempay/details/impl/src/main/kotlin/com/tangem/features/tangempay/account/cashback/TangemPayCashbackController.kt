@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.account.cashback
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.pay.usecase.GetCashbackDeactivationDismissedUseCase
@@ -42,6 +43,7 @@ internal class TangemPayCashbackController @AssistedInject constructor(
     private val getCashbackSummaryUseCase: GetCashbackSummaryUseCase,
     getCashbackDeactivationDismissedUseCase: GetCashbackDeactivationDismissedUseCase,
     private val setCashbackDeactivationDismissedUseCase: SetCashbackDeactivationDismissedUseCase,
+    getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val analytics: AnalyticsEventHandler,
     private val router: Router,
 ) {
@@ -77,9 +79,12 @@ internal class TangemPayCashbackController @AssistedInject constructor(
         onReload = ::refresh,
     )
 
-    val state: StateFlow<CashbackUM> = visibleContent
-        .map { visible -> umFactory.create(visible ?: CashbackContent.Hidden) }
-        .stateIn(scope, SharingStarted.Eagerly, CashbackUM())
+    val state: StateFlow<CashbackUM> = combine(
+        visibleContent,
+        getBalanceHidingSettingsUseCase.isBalanceHidden(),
+    ) { visible, isBalanceHidden ->
+        umFactory.create(content = visible ?: CashbackContent.Hidden, isBalanceHidden = isBalanceHidden)
+    }.stateIn(scope, SharingStarted.Eagerly, CashbackUM())
 
     init {
         sendImpressions()

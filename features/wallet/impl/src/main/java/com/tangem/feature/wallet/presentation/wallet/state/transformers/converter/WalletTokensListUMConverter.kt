@@ -52,6 +52,7 @@ internal class WalletTokensListUMConverter(
             userWalletId = selectedWallet.walletId,
             accountIdsWithInvites = accountIdsWithInvites,
             onAccountClick = clickIntents::onJointAccountClick,
+            onCompromisedAccountClick = clickIntents::onCompromisedJointAccountClick,
         )
     }
 

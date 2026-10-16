@@ -25,6 +25,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.models.YieldSupplyEnterOutcome
+import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -72,6 +73,15 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         coEvery { getOrCreateWalletManager(any(), any(), any()) } returns walletManager
     }
     private lateinit var repository: DefaultYieldSupplyTransactionRepository
+    private val receiptWalletManager = mockk<WalletManager>(
+        relaxed = true,
+        moreInterfaces = arrayOf(TransactionReceiptProvider::class),
+    )
+    private val outcomeWalletManagersFacade: WalletManagersFacade = mockk()
+    private val outcomeRepository = DefaultYieldSupplyTransactionRepository(
+        walletManagersFacade = outcomeWalletManagersFacade,
+        dispatchers = TestingCoroutineDispatcherProvider(),
+    )
 
     @BeforeEach
     fun setUp() {
@@ -83,6 +93,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
             recordPrivateCalls = true,
         )
         every { mockk<Token>().contractAddress } returns mockedContractAddress
+        clearMocks(receiptWalletManager, outcomeWalletManagersFacade)
     }
 
     @Test
@@ -417,21 +428,6 @@ class DefaultYieldSupplyTransactionRepositoryTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class GetEnterTransactionOutcome {
 
-        private val receiptWalletManager = mockk<WalletManager>(
-            relaxed = true,
-            moreInterfaces = arrayOf(TransactionReceiptProvider::class),
-        )
-        private val outcomeWalletManagersFacade: WalletManagersFacade = mockk()
-        private val outcomeRepository = DefaultYieldSupplyTransactionRepository(
-            walletManagersFacade = outcomeWalletManagersFacade,
-            dispatchers = TestingCoroutineDispatcherProvider(),
-        )
-
-        @BeforeEach
-        fun resetMocks() {
-            clearMocks(receiptWalletManager, outcomeWalletManagersFacade)
-        }
-
         @ParameterizedTest
         @ProvideTestModels
         fun `GIVEN receipt WHEN getEnterTransactionOutcome THEN maps outcome`(model: OutcomeModel) = runTest {
@@ -465,31 +461,82 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         private fun provideTestModels() = listOf(
             OutcomeModel(receipt = Result.Success(null), expected = null),
             OutcomeModel(receipt = Result.Failure(BlockchainSdkError.CustomError("rpc down")), expected = null),
-            OutcomeModel(receipt = Result.Success(receipt(isSuccess = true)), expected = YieldSupplyEnterOutcome.Deposited),
             OutcomeModel(
-                receipt = Result.Success(receipt(isSuccess = false)),
+                receipt = Result.Success(receipt(transactionHash = ENTER_TX_HASH, isSuccess = true)),
+                expected = YieldSupplyEnterOutcome.Deposited,
+            ),
+            OutcomeModel(
+                receipt = Result.Success(receipt(transactionHash = ENTER_TX_HASH, isSuccess = false)),
                 protocolBalance = null,
                 expected = YieldSupplyEnterOutcome.Failed,
             ),
             OutcomeModel(
-                receipt = Result.Success(receipt(isSuccess = false)),
+                receipt = Result.Success(receipt(transactionHash = ENTER_TX_HASH, isSuccess = false)),
                 protocolBalance = BigDecimal.TEN,
                 expected = YieldSupplyEnterOutcome.DepositedByRelayer,
             ),
             OutcomeModel(
-                receipt = Result.Success(receipt(isSuccess = true)),
+                receipt = Result.Success(receipt(transactionHash = ENTER_TX_HASH, isSuccess = true)),
                 isReceiptProvider = false,
                 expected = null,
             ),
         )
+    }
 
-        private fun receipt(isSuccess: Boolean) = EthereumTransactionReceipt(
-            transactionHash = ENTER_TX_HASH,
-            isSuccess = isSuccess,
-            blockNumber = BigInteger.ONE,
-            gasUsed = BigInteger.ONE,
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetTransactionOutcome {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN receipt WHEN getTransactionOutcome THEN maps outcome`(model: TransactionOutcomeModel) = runTest {
+            // Arrange
+            val resolvedWalletManager = if (model.isReceiptProvider) receiptWalletManager else walletManager
+            coEvery {
+                outcomeWalletManagersFacade.getOrCreateWalletManager(any(), any(), any())
+            } returns resolvedWalletManager
+            coEvery {
+                (receiptWalletManager as TransactionReceiptProvider).getTransactionReceipt(CLAIM_TX_HASH)
+            } returns model.receipt
+
+            // Act
+            val actual = outcomeRepository.getTransactionOutcome(
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrency,
+                transactionHash = CLAIM_TX_HASH,
+            )
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            TransactionOutcomeModel(receipt = Result.Success(null), expected = null),
+            TransactionOutcomeModel(
+                receipt = Result.Failure(BlockchainSdkError.CustomError("rpc down")),
+                expected = null,
+            ),
+            TransactionOutcomeModel(
+                receipt = Result.Success(receipt(transactionHash = CLAIM_TX_HASH, isSuccess = true)),
+                expected = YieldSupplyTransactionOutcome.Confirmed,
+            ),
+            TransactionOutcomeModel(
+                receipt = Result.Success(receipt(transactionHash = CLAIM_TX_HASH, isSuccess = false)),
+                expected = YieldSupplyTransactionOutcome.Reverted,
+            ),
+            TransactionOutcomeModel(
+                receipt = Result.Success(receipt(transactionHash = CLAIM_TX_HASH, isSuccess = true)),
+                isReceiptProvider = false,
+                expected = null,
+            ),
         )
     }
+
+    data class TransactionOutcomeModel(
+        val receipt: Result<EthereumTransactionReceipt?>,
+        val expected: YieldSupplyTransactionOutcome?,
+        val isReceiptProvider: Boolean = true,
+    )
 
     data class OutcomeModel(
         val receipt: Result<EthereumTransactionReceipt?>,
@@ -498,8 +545,16 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         val isReceiptProvider: Boolean = true,
     )
 
+    private fun receipt(transactionHash: String, isSuccess: Boolean) = EthereumTransactionReceipt(
+        transactionHash = transactionHash,
+        isSuccess = isSuccess,
+        blockNumber = BigInteger.ONE,
+        gasUsed = BigInteger.ONE,
+    )
+
     private companion object {
         const val ENTER_TX_HASH = "0xenter"
+        const val CLAIM_TX_HASH = "0xclaim"
         const val MODULE_ADDRESS = "0x2222222222222222222222222222222222222222"
     }
 }
