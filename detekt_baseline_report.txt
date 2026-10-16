@@ -1,7 +1,7 @@
 ==========================================
 Detekt Baseline Updater & Issue Counter
 ==========================================
-Date: 2026-10-14 16:29:41
+Date: 2026-10-16 18:50:31
 
 Step 1: Running detekt to check for new issues...
 
@@ -17,13 +17,13 @@ Counting issues in baseline files...
 ==========================================
 
 Summary:
-  Total Issues: 385
-  Modules with Issues: 42
-  Average Issues per Module: 9
+  Total Issues: 130
+  Modules with Issues: 36
+  Average Issues per Module: 3
 
 Progress:
-  Fixed: 1548 out of 1933 (80%)
-  Remaining: 385
+  Fixed: 1803 out of 1933 (93%)
+  Remaining: 130
 
 ==========================================
 All Modules with Issues (sorted by count)
@@ -31,46 +31,40 @@ All Modules with Issues (sorted by count)
 
 Module                                                           Issues
 ────────────────────────────────────────────────────────────────
-features/onboarding-v2/impl                                          63
-features/wallet/impl                                                 34
-features/walletconnect/impl                                          27
-data/wallet-connect                                                  25
-features/tokendetails/impl                                           19
-domain/models                                                        16
-features/hot-wallet/impl                                             14
-domain/staking/models                                                13
-core/pagination                                                      12
-features/manage-tokens/impl                                          11
-data/visa                                                            11
-common/ui                                                            11
-features/tester/impl                                                 10
-core/ui                                                              10
-domain/wallets                                                        9
-core/analytics/models                                                 9
-features/nft/impl                                                     8
-features/tangempay/details/impl                                       7
-features/token-recieve/impl                                           6
-domain/wallet-connect/models                                          6
-data/yield-supply                                                     6
-domain/transaction                                                    5
-domain/onramp                                                         5
-core/utils                                                            5
-features/referral/impl                                                4
-features/qr-scanning/impl                                             4
-domain/onramp/models                                                  4
-domain/account/status                                                 4
+features/wallet/impl                                                 12
+features/walletconnect/impl                                          10
+features/onboarding-v2/impl                                          10
+data/visa                                                            10
+features/tester/impl                                                  8
+data/wallet-connect                                                   8
+core/pagination                                                       6
+domain/wallets                                                        5
+features/tokendetails/impl                                            4
+domain/wallet-connect/models                                          4
 domain/account                                                        4
+core/ui                                                               4
+features/token-recieve/impl                                           3
+features/referral/impl                                                3
+features/qr-scanning/impl                                             3
+domain/onramp/models                                                  3
+domain/models                                                         3
 domain/core                                                           3
-data/wallets                                                          3
-data/account                                                          3
-features/welcome/impl                                                 2
+domain/account/status                                                 3
+core/utils                                                            3
+features/manage-tokens/impl                                           2
+features/hot-wallet/impl                                              2
 domain/txhistory/models                                               2
+domain/onramp                                                         2
 data/wallet-manager                                                   2
-data/txhistory                                                        2
-features/details/impl                                                 1
+features/tangempay/details/impl                                       1
+features/nft/impl                                                     1
 domain/wallets/models                                                 1
+domain/transaction                                                    1
 domain/quotes                                                         1
 domain/onboarding                                                     1
 domain/express/models                                                 1
-domain/balance-hiding                                                 1
+data/wallets                                                          1
+data/txhistory                                                        1
+data/account                                                          1
+common/ui                                                             1
 ────────────────────────────────────────────────────────────────

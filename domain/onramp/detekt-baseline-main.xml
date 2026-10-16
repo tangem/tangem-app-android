@@ -4,8 +4,5 @@
   <CurrentIssues>
     <ID>MaxChainedCallsOnSameLine:GetOnrampOffersUseCase.kt$GetOnrampOffersUseCase$offer.quote.paymentMethod.type.getProcessingSpeed().speed</ID>
     <ID>NamedArguments:GetOnrampOffersUseCase.kt$GetOnrampOffersUseCase$determineAdvantages( recentOffer, bestRateOffer, fastestOffer, isSingleOffer, )</ID>
-    <ID>UnnecessaryLet:OnrampAnalyticsEvent.kt$OnrampAnalyticsEvent.Errors$let { put(PAYMENT_METHOD, paymentMethod) }</ID>
-    <ID>UnnecessaryLet:OnrampAnalyticsEvent.kt$OnrampAnalyticsEvent.Errors$let { put(PROVIDER, providerName) }</ID>
-    <ID>UseEmptyCounterpart:OnrampAnalyticsEvent.kt$OnrampAnalyticsEvent$mapOf()</ID>
   </CurrentIssues>
 </SmellBaseline>

@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>NoNameShadowing:ListenToFlipsUseCase.kt$ListenToFlipsUseCase${ send(HideBalancesError.DataError(it).left()) }</ID>
-  </CurrentIssues>
-</SmellBaseline>
