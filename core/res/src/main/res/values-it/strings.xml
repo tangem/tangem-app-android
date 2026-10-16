@@ -69,6 +69,7 @@
   <string name="initial_message_scan_header">Avvicina per scansionare</string>
   <string name="initial_message_sign_header">Avvicina per firmare</string>
   <string name="initial_message_tap_header">Avvicina la carta</string>
+  <string name="money_account_onboarding_disclaimer">Tangem Pay è una società di tecnologia finanziaria, non una banca. I servizi bancari sono forniti da SSB, membro FDIC. I fondi depositati presso SSB sono idonei alla copertura assicurativa FDIC fino a 250.000 USD per depositante, per banca assicurata, nel rispetto delle limitazioni applicabili e delle norme FDIC.</string>
   <string name="no_account_send_to_create">Per creare un account, invia fondi a questo indirizzo</string>
   <string name="no_trustline_xlm_asset">The destination account does not have a trustline for the asset being sent.</string>
   <string name="onboarding_create_wallet_button_create_wallet">Crea portafoglio</string>
@@ -506,6 +507,7 @@
   <string name="tangempay_remove_account_alert_title">Rimuovere l\'account?</string>
   <string name="tangempay_residency_all_country">Cambia paese</string>
   <string name="tangempay_residency_all_state">Seleziona un altro stato</string>
+  <string name="tangempay_residency_search_empty">Nessun risultato. Provi a modificare la ricerca</string>
   <string name="tangempay_residency_suggested_country">Paese suggerito</string>
   <string name="tangempay_residency_suggested_state"> Stato suggerito</string>
   <string name="tangempay_residency_title_country">Paese di residenza</string>
@@ -626,6 +628,11 @@
   <string name="tangempay_withdraw_hub_within_portfolio">All’interno del tuo Tangem Wallet</string>
   <string name="tangempay_your_pin_code">Il tuo codice PIN</string>
   <string name="twins_recreate_toolbar">Tangem Twin</string>
+  <string name="virtual_account_requisites_bank_address">Indirizzo della banca</string>
+  <string name="virtual_account_requisites_bank_name">Nome della banca</string>
+  <string name="virtual_account_requisites_beneficiary_address">Indirizzo del beneficiario</string>
+  <string name="virtual_account_requisites_beneficiary_name">Nome del beneficiario</string>
+  <string name="virtual_account_requisites_routing_number">Routing number</string>
   <string name="visa_onboarding_pin_code_description">Imposta un codice di 4 cifre.\nVerrà utilizzato per i pagamenti.</string>
   <string name="visa_onboarding_pin_code_title">Crea codice PIN</string>
   <string name="visa_onboarding_pin_not_accepted">Il PIN non è stato accettato. Riprova o utilizza un codice diverso.</string>
