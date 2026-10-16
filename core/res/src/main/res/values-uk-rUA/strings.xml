@@ -530,6 +530,7 @@
   <string name="common_sign">Підписати</string>
   <string name="common_sign_and_send">Підписати та надіслати</string>
   <string name="common_skip">Пропустити</string>
+  <string name="common_slippage">Прослизання</string>
   <string name="common_something_went_wrong">Щось пішло не так</string>
   <string name="common_stake">Застейкати</string>
   <string name="common_staked">Застейкано</string>
@@ -1398,6 +1399,7 @@
   <string name="markets_yield_supply_banner_title">Активувати режим дохідності</string>
   <string name="mobile_wallet_requires_min_os_warning_body">Оновіться до версії %1$s, щоб створити мобільний гаманець</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Мобільний гаманець потребує %1$s або новіше.</string>
+  <string name="money_account_onboarding_disclaimer">Tangem Pay — фінансово-технологічна компанія, а не банк. Банківські послуги надає SSB, член FDIC. Кошти, розміщені в SSB, мають право на страхування FDIC на суму до 250 000 доларів США на вкладника в кожному застрахованому банку з урахуванням чинних обмежень і правил FDIC.</string>
   <string name="news_all_news">Всі новини</string>
   <string name="news_like">Вподобайка</string>
   <plurals name="news_published_hours_ago">
@@ -2108,7 +2110,10 @@
   <string name="support_selector_view_chat_button">Відкрити чат</string>
   <string name="support_selector_view_email_button">Відкрити пошту</string>
   <string name="swap_approve_description">Підтверджуючи, ви дозволяєте смартконтракту використовувати ваші токени в майбутніх транзакціях.</string>
+  <string name="swap_custom_slippage_info">У цього провайдера не можна налаштувати прослизання. У рідкісних випадках воно може сягати %s</string>
   <string name="swap_detailed_mode">Детальний режим</string>
+  <string name="swap_exchange_rates_info_text">на екрані включають комісію провайдера послуг</string>
+  <string name="swap_exchange_rates_info_title">Курси обміну</string>
   <string name="swap_fixed_rate">Фіксований курс</string>
   <string name="swap_give_permission_fee_footer">Мережа стягує комісію за схвалення токену за підтвердження, що саме ви дозволяєте використовувати ваш токен для обміну.</string>
   <string name="swap_in_progress">Обмін у процесі</string>
@@ -2118,6 +2123,10 @@
   <string name="swap_search_tooltip_description">Шукайте будь-який токен, навіть якщо його ще немає у вашому списку.</string>
   <string name="swap_search_tooltip_title">Використовуйте пошук, щоб знайти потрібне</string>
   <string name="swap_simple_mode">Простий режим</string>
+  <string name="swap_slippage_error">Недопустиме значення</string>
+  <string name="swap_slippage_info_text">означає різницю між очікуваною та фактичною ціною обміну через зміни ринкової ціни або ліквідності</string>
+  <string name="swap_slippage_warning_text">Обмін може не відбутися, якщо прослизання досягне встановленого порога</string>
+  <string name="swap_slippage_warning_title">Встановлене прослизання: %s</string>
   <string name="swap_story_fifth_subtitle">Надійна підтримка 24/7, щоб ваші фінансові операції були швидкими та надійними!</string>
   <string name="swap_story_fifth_title">Цілодобова підтримка</string>
   <string name="swap_story_first_subtitle">Надійні провайдери дозволяють легко обмінювати активи, забезпечуючи повну безпеку у вашому гаманці</string>
@@ -2595,6 +2604,7 @@
   <string name="tangempay_remove_account_alert_title">Видалити аккаунт?</string>
   <string name="tangempay_residency_all_country">Змінити країну</string>
   <string name="tangempay_residency_all_state">Обрати інший штат</string>
+  <string name="tangempay_residency_search_empty">Нічого не знайдено. Спробуйте змінити запит</string>
   <string name="tangempay_residency_suggested_country">Запропонована країна</string>
   <string name="tangempay_residency_suggested_state"> Запропонований штат</string>
   <string name="tangempay_residency_title_country">Країна проживання</string>
@@ -2856,6 +2866,11 @@
   <string name="user_wallet_list_rename_popup_title">Перейменування гаманця</string>
   <string name="user_wallet_list_unlock_all">Розблокувати все</string>
   <string name="user_wallet_list_unlock_all_with">Розблокувати все з %s</string>
+  <string name="virtual_account_requisites_bank_address">Адреса банку</string>
+  <string name="virtual_account_requisites_bank_name">Назва банку</string>
+  <string name="virtual_account_requisites_beneficiary_address">Адреса отримувача</string>
+  <string name="virtual_account_requisites_beneficiary_name">Ім’я отримувача</string>
+  <string name="virtual_account_requisites_routing_number">Routing number</string>
   <plurals name="visa_limits_available_for_days_title">
     <item quantity="one">доступно протягом %d дня</item>
     <item quantity="few">доступно протягом %d днів</item>
