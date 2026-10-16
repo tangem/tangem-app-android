@@ -7,22 +7,27 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowText
+import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.features.yield.supply.impl.R
-import com.tangem.features.yield.supply.impl.common.ui.YieldSupplyFeeRow
 import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.core.res.R as CoreResR
 
 /** The Yield screen is on the legacy theme, while the status template needs the redesigned palette. */
@@ -71,22 +76,31 @@ private fun StatusIcon(status: YieldSupplyClaimResultUM.Status) {
 @Composable
 private fun Fees(state: YieldSupplyClaimResultUM) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        YieldSupplyFeeRow(
+        FeeRow(
             title = resourceReference(CoreResR.string.common_network_fee_title),
             value = state.networkFee,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp),
+            divider = true,
         )
-        HorizontalDivider(thickness = 0.5.dp, color = TangemTheme.colors.stroke.primary)
-        YieldSupplyFeeRow(
+        FeeRow(
             title = resourceReference(CoreResR.string.yield_module_claim_service_fee_title),
             value = state.serviceFee,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp),
         )
     }
+}
+
+@Composable
+private fun FeeRow(title: TextReference, value: TextReference?, divider: Boolean = false) {
+    TangemRow(
+        divider = divider,
+        titleSlot = { TangemRowText(text = title, role = TangemRowTextRole.Title) },
+        valueSlot = {
+            Text(
+                text = value?.resolveReference() ?: DASH_SIGN,
+                style = TangemTheme.typography3.body.medium,
+                color = TangemTheme.colors3.text.secondary,
+            )
+        },
+    )
 }
 
 @Composable
