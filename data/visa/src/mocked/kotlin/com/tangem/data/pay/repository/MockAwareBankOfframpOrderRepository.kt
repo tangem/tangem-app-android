@@ -28,7 +28,8 @@ internal class MockAwareBankOfframpOrderRepository @Inject constructor(
     private val isMockMode: Boolean
         get() = apiConfigsManager
             .getEnvironmentConfig(TangemPay.Bff.ID)
-            .environment == ApiEnvironment.MOCK
+            .environment == ApiEnvironment.MOCK &&
+            System.getProperty(UITEST_ORDERS_FROM_API_KEY) != "1"
 
     private val delegate: BankOfframpOrderRepository
         get() = if (isMockMode) mock else real
@@ -67,4 +68,8 @@ internal class MockAwareBankOfframpOrderRepository @Inject constructor(
 
     override suspend fun cancelOrder(userWalletId: UserWalletId, orderId: String): Either<BankOfframpError, Unit> =
         delegate.cancelOrder(userWalletId = userWalletId, orderId = orderId)
+
+    companion object {
+        const val UITEST_ORDERS_FROM_API_KEY = "uitest.tangempay.bank_offramp_orders_from_api"
+    }
 }

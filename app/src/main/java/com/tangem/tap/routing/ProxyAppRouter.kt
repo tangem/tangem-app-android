@@ -6,26 +6,20 @@ import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.tap.routing.configurator.AppRouterConfig
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
 
+/**
+ * Bridges app-level singletons to the root router of the current activity. Main thread and failure handling are
+ * provided by the root router itself.
+ */
 internal class ProxyAppRouter(
     private val config: AppRouterConfig,
-    private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) : AppRouter {
 
     private val logger = TangemLogger.withTag("AppRouter")
-
-    private val routerScope: CoroutineScope
-        get() = requireNotNull(config.routerScope) {
-            "Router scope is not set in config"
-        }
 
     private val innerRouter: Router
         get() = requireNotNull(config.componentRouter) {
@@ -38,51 +32,33 @@ internal class ProxyAppRouter(
         }
 
     override fun push(route: AppRoute, onComplete: (isSuccess: Boolean) -> Unit) {
-        safeNavigate(onComplete, message = "Push $route") {
-            innerRouter.push(route, onComplete)
-        }
+        logger.i("Push $route")
+        innerRouter.push(route, onComplete)
     }
 
     override fun replaceCurrent(route: AppRoute, onComplete: (Boolean) -> Unit) {
-        safeNavigate(onComplete, message = "Replace a current route with $route") {
-            innerRouter.replaceCurrent(route, onComplete)
-        }
+        logger.i("Replace a current route with $route")
+        innerRouter.replaceCurrent(route, onComplete)
     }
 
     override fun replaceAll(vararg routes: AppRoute, onComplete: (isSuccess: Boolean) -> Unit) {
-        safeNavigate(onComplete, message = "Replace all routes with ${routes.toList().ifEmpty { "<empty>" }}") {
-            innerRouter.replaceAll(*routes, onComplete = onComplete)
-        }
+        logger.i("Replace all routes with ${routes.toList().ifEmpty { "<empty>" }}")
+        innerRouter.replaceAll(*routes, onComplete = onComplete)
     }
 
     override fun pop(onComplete: (isSuccess: Boolean) -> Unit) {
-        safeNavigate(onComplete, message = "Pop route") {
-            innerRouter.pop(onComplete)
-        }
+        logger.i("Pop route")
+        innerRouter.pop(onComplete)
     }
 
     override fun popTo(route: AppRoute, onComplete: (isSuccess: Boolean) -> Unit) {
-        safeNavigate(onComplete, message = "Pop to $route") {
-            innerRouter.popTo(route, onComplete)
-        }
+        logger.i("Pop to $route")
+        innerRouter.popTo(route, onComplete)
     }
 
     override fun popTo(routeClass: KClass<out AppRoute>, onComplete: (isSuccess: Boolean) -> Unit) {
-        safeNavigate(onComplete, message = "Pop to $routeClass") {
-            innerRouter.popTo(routeClass, onComplete)
-        }
-    }
-
-    private fun safeNavigate(onComplete: (isSuccess: Boolean) -> Unit, message: String, block: () -> Unit) {
-        routerScope.launch(dispatchers.mainImmediate) {
-            logger.i(message)
-
-            runSuspendCatching(block = { block() })
-                .onFailure { throwable ->
-                    logger.e(messageString = "Error", throwable = throwable)
-                    onComplete(false)
-                }
-        }
+        logger.i("Pop to $routeClass")
+        innerRouter.popTo(routeClass, onComplete)
     }
 
     override fun defaultCompletionHandler(isSuccess: Boolean, errorMessage: String) {
