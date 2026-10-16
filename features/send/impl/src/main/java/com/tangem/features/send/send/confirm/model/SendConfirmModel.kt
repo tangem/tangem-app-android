@@ -42,6 +42,7 @@ import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
@@ -573,6 +574,7 @@ internal class SendConfirmModel @Inject constructor(
 
         result.fold(
             ifLeft = { error ->
+                if (error is SendTransactionError.GaslessFeeIncreased) onFeeReload()
                 alertFactory.getSendTransactionErrorState(
                     error = error,
                     popBack = appRouter::pop,
