@@ -10,10 +10,13 @@ import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.usecase.BuildYieldClaimTransactionUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
+import com.tangem.features.yield.supply.impl.incentives.claim.di.YieldClaimTimeSource
 import com.tangem.features.yield.supply.impl.incentives.claim.model.YieldSupplyClaimPreparer
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
 internal sealed interface YieldPreClaim {
 
@@ -25,6 +28,7 @@ internal sealed interface YieldPreClaim {
         val userAddress: String,
         val token: CryptoCurrency.Token,
         val claimedRewards: List<YieldReward>,
+        val preparedAt: TimeMark,
     ) : YieldPreClaim
 }
 
@@ -38,6 +42,7 @@ internal class YieldSupplyWithdrawalClaimPreparer @Inject constructor(
     private val buildYieldClaimTransactionUseCase: BuildYieldClaimTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val yieldSupplyClaimTracker: YieldSupplyClaimTracker,
+    @YieldClaimTimeSource private val timeSource: TimeSource,
 ) {
 
     suspend fun prepare(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus): YieldPreClaim {
@@ -62,6 +67,7 @@ internal class YieldSupplyWithdrawalClaimPreparer @Inject constructor(
             userAddress = userAddress,
             rewards = rewards,
         ) ?: return skip("the fresh calldata is missing or was rejected by the gate")
+        val preparedAt = timeSource.markNow()
 
         val transactionData = buildYieldClaimTransactionUseCase(
             userWalletId = userWallet.walletId,
@@ -89,6 +95,7 @@ internal class YieldSupplyWithdrawalClaimPreparer @Inject constructor(
             userAddress = userAddress,
             token = token,
             claimedRewards = rewards.claimable,
+            preparedAt = preparedAt,
         )
     }
 
