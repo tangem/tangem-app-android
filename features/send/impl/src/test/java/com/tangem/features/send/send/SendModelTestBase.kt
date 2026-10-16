@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.right
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -86,7 +85,6 @@ internal abstract class SendModelTestBase {
     }
 
     protected val router: Router = mockk(relaxed = true)
-    protected val appRouter: AppRouter = mockk(relaxed = true)
     protected val getUserWalletUseCase: GetUserWalletUseCase = mockk(relaxed = true)
     protected val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase =
         mockk(relaxed = true)
@@ -220,7 +218,6 @@ internal abstract class SendModelTestBase {
             paramsContainer = paramsContainer,
             dispatchers = testScope.testDispatcherProvider(),
             analyticsEventHandler = analyticsEventHandler,
-            appRouter = appRouter,
             router = router,
             isSendTapHelpEnabledUseCase = isSendTapHelpEnabledUseCase,
             neverShowTapHelpUseCase = neverShowTapHelpUseCase,
@@ -293,5 +290,6 @@ internal abstract class SendModelTestBase {
         onLoadFee = { Either.Right(mockk(relaxed = true)) },
         onLoadFeeExtended = { Either.Right(mockk(relaxed = true)) },
         onSendTransaction = {},
+        onExitFlow = {},
     )
 }
