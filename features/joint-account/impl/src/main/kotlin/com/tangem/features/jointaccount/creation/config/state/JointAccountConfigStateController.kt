@@ -26,7 +26,7 @@ internal class JointAccountConfigStateController @Inject constructor() {
     private fun getInitialState(): JointAccountConfigUM = JointAccountConfigUM(
         name = "",
         namePlaceholder = resourceReference(R.string.common_joint_account),
-        icon = AccountIconUM.CryptoPortfolio(value = DEFAULT_ICON, color = DEFAULT_COLOR),
+        icon = AccountIconUM.CryptoPortfolio(value = DEFAULT_ICON, color = CryptoPortfolioIcon.Color.entries.random()),
         colors = CryptoPortfolioIcon.Color.entries.toImmutableList(),
         icons = CryptoPortfolioIcon.Icon.entries.toImmutableList(),
         wallet = null,
@@ -43,7 +43,6 @@ internal class JointAccountConfigStateController @Inject constructor() {
     )
 
     private companion object {
-        val DEFAULT_ICON = CryptoPortfolioIcon.Icon.entries.first()
-        val DEFAULT_COLOR = CryptoPortfolioIcon.Color.Azure
+        val DEFAULT_ICON = CryptoPortfolioIcon.Icon.Family
     }
 }
