@@ -36,6 +36,7 @@ private fun activityDetailsPreviews(): List<PolymarketActivityDetailsUM> {
     val bought = PolymarketActivityDetailsUM(
         title = resourceReference(R.string.prediction_history_bought),
         date = stringReference("Jul 9, 2026, 14:32"),
+        headline = null,
         amount = stringReference("-$166.84"),
         marketTitle = stringReference("Will Uzbekistan win the 2026 FIFA World Cup?"),
         iconUrl = null,
@@ -50,9 +51,22 @@ private fun activityDetailsPreviews(): List<PolymarketActivityDetailsUM> {
         ),
         onGoToPrediction = {},
     )
+    val won = bought.copy(
+        title = resourceReference(R.string.prediction_history_redeemed),
+        headline = stringReference("Your Prediction Won"),
+        amount = stringReference("$240.84"),
+        rows = persistentListOf(),
+    )
     return listOf(
         bought,
         bought.copy(title = resourceReference(R.string.prediction_history_sold), amount = stringReference("$166.84")),
+        won,
+        won.copy(
+            title = stringReference("Loss"),
+            headline = stringReference("Your Prediction Loss"),
+            amount = null,
+        ),
+        won.copy(headline = stringReference("Your Prediction Split")),
         bought.copy(
             outcome = stringReference("Aurora Gaming"),
             outcomeStatus = TangemBadge.Status.Error,
