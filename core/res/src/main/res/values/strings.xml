@@ -889,6 +889,8 @@
   <string name="feed_promo_earn_active_title">Put more to work</string>
   <string name="feed_promo_earn_description">Put your crypto to work and earn up to %1$s APY</string>
   <string name="feed_promo_earn_title">Start earning</string>
+  <string name="feed_promo_joint_account_description">Manage shared funds together</string>
+  <string name="feed_promo_joint_account_title">Create a joint account</string>
   <string name="feed_promo_load_error_action">Tap to reload</string>
   <string name="feed_promo_load_error_title">Suggestions didn\'t load</string>
   <string name="feed_promo_referral_description">Earn %1$s per friend</string>
@@ -1191,6 +1193,15 @@
   <string name="joint_account_invite_invalid_subtitle">Check that you opened the correct link, or ask the account creator to send it again</string>
   <string name="joint_account_invite_invalid_title">Invitation link isn\'t valid</string>
   <string name="joint_account_invite_load_failed_subtitle">Failed to load invite page.\nTap to reload</string>
+  <string name="joint_account_invite_member_joins_first_subtitle">The account waits until all members join</string>
+  <string name="joint_account_invite_member_joins_first_title">Everyone joins first</string>
+  <string name="joint_account_invite_member_message">Join my joint account “%1$s” in Tangem\n%2$s</string>
+  <string name="joint_account_invite_member_message_label">Invite message</string>
+  <string name="joint_account_invite_member_one_link_subtitle">Share it only with the person you want to add</string>
+  <string name="joint_account_invite_member_one_link_title">One link, one member</string>
+  <string name="joint_account_invite_member_title">Invite Member</string>
+  <string name="joint_account_invite_member_verifies_subtitle">It starts working once everyone verifies it.</string>
+  <string name="joint_account_invite_member_verifies_title">Then each of you verifies</string>
   <string name="joint_account_invite_members_about_signatures_description">Every transaction from this account needs approval from %1$s of %2$s members. Each member signs with their own wallet. The transaction is sent only after it collects enough signatures.</string>
   <string name="joint_account_invite_members_about_signatures_title">About signatures</string>
   <string name="joint_account_invite_members_approvals_value">Any %1$s of %2$s</string>
@@ -1199,18 +1210,13 @@
   <string name="joint_account_invite_members_invited">Invited</string>
   <string name="joint_account_invite_members_joined_progress">%1$s of %2$s members joined</string>
   <string name="joint_account_invite_members_member">Member</string>
-  <string name="joint_account_invite_members_member_number">Member %1$d</string>
   <string name="joint_account_invite_members_member_info">Member info</string>
+  <string name="joint_account_invite_members_member_number">Member %1$d</string>
   <string name="joint_account_invite_members_new_member">New member</string>
   <string name="joint_account_invite_members_not_invited">Not invited</string>
   <string name="joint_account_invite_members_other_members">Other members</string>
   <string name="joint_account_invite_members_required_approvals">Required approvals</string>
   <string name="joint_account_invite_members_resend">Resend</string>
-  <plurals name="joint_account_invite_members_still_need_to_join">
-    <item quantity="one">%d member still needs to join</item>
-    <item quantity="other">%d members still need to join</item>
-  </plurals>
-  <string name="joint_account_invite_members_verify_account">Verify account</string>
   <string name="joint_account_invite_members_safety_first_point_subtitle">Anyone who opens it can join and sign. Send it only to the right person — never post it publicly</string>
   <string name="joint_account_invite_members_safety_first_point_title">The link is like a key</string>
   <string name="joint_account_invite_members_safety_second_point_subtitle">Every member can approve transactions with the others. Only invite people you trust</string>
@@ -1220,11 +1226,16 @@
   <string name="joint_account_invite_members_safety_third_point_subtitle">When someone joins, check their address belongs to the right person — confirm it with them directly</string>
   <string name="joint_account_invite_members_safety_third_point_title">Check who joined</string>
   <string name="joint_account_invite_members_safety_title">Share invites safely</string>
+  <plurals name="joint_account_invite_members_still_need_to_join">
+    <item quantity="one">%d member still needs to join</item>
+    <item quantity="other">%d members still need to join</item>
+  </plurals>
   <string name="joint_account_invite_members_subtitle">%1$s of %2$s joined, including you</string>
   <string name="joint_account_invite_members_title">Invite members</string>
   <string name="joint_account_invite_members_to_join">Invite members to join</string>
-  <string name="joint_account_invite_members_waiting_to_join">Waiting to join</string>
+  <string name="joint_account_invite_members_verify_account">Verify account</string>
   <string name="joint_account_invite_members_waiting_title">Waiting for members</string>
+  <string name="joint_account_invite_members_waiting_to_join">Waiting to join</string>
   <string name="joint_account_invite_share_title">Invite to %s</string>
   <string name="joint_account_join_confirm_sheet_subtitle">This account has its own shared balance, separate from your personal funds. Members can manage the funds together, and some transactions may be approved without you.</string>
   <string name="joint_account_join_confirm_sheet_title">You\'re joining a shared account</string>
@@ -1552,6 +1563,8 @@
   <string name="mcp_session_title">Connected MCP</string>
   <string name="mobile_wallet_requires_min_os_warning_body">You must update to %1$s before creating a mobile wallet</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Mobile Wallet requires %1$s or later</string>
+  <string name="money_account_add_funds_receive_description">Send USDC Polygon to your account\'s address</string>
+  <string name="money_account_add_funds_swap_description">Use crypto from your wallet to topup your banking account</string>
   <string name="money_account_main_name">Money account</string>
   <string name="money_account_main_status_action_required">Action required</string>
   <string name="money_account_main_status_activating">Activating…</string>
@@ -1559,6 +1572,7 @@
   <string name="money_account_main_status_dialog_activating_description">We\'re getting your account ready. This may take a little time</string>
   <string name="money_account_main_status_dialog_activating_title">Creating your banking account</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">We\'re working on expanding to more regions. Need help?</string>
+  <string name="money_account_main_status_dialog_country_not_supported_description_template">We\'re working on expanding to more regions. Need help? %s</string>
   <string name="money_account_main_status_dialog_country_not_supported_title">Not available in your region yet</string>
   <string name="money_account_main_status_dialog_hide_account">Hide account from home</string>
   <string name="money_account_main_status_dialog_join_waitlist">Join the waitlist</string>
@@ -2097,7 +2111,7 @@
   <string name="promo_campaign_whale_swap_summary_description">Earn cashback on every swap from $10K until the end of August.\n\nRates step up with size: 0.10% from $10K, 0.20% from $20K, 0.50% from $100K.\n\nMax payout: $500 per swap, and $10,000 per wallet per swap direction until campaign lasts. Stable coin into stablecoin swaps are excluded.\n\nPayout arrives weekly in USDT or USDC address of your choice.</string>
   <string name="promo_code_activation_success">Your promo code was successfully activated. The reward will be credited to your %s account.</string>
   <string name="promo_code_no_address">A %1$s address is required to receive the bonus. Please add %1$s to your wallet and retry the activation.</string>
-  <string name="promo_code_no_address_title">%s address required</string>
+  <string name="promo_code_no_address_title">%s address required  </string>
   <string name="provider_name_support">%s support</string>
   <string name="push_notification_settings_banner_description">Push notifications are enabled but won\'t work until you allow them</string>
   <string name="push_notification_settings_banner_title">Allow notifications</string>
@@ -2892,7 +2906,6 @@
   <string name="tangempay_failed_to_issue_card_support_description">A technical error has occurred, please contact support.</string>
   <string name="tangempay_feature_will_be_available_soon">Feature will be available soon</string>
   <string name="tangempay_feature_will_be_available_soon_description">You will be able to issue additional cards for your payment account</string>
-  <string name="tangempay_geo_selection_search_empty">No results. Try to change request</string>
   <string name="tangempay_get_banner_description">Free Tangem Pay card with up to 2% cashback</string>
   <string name="tangempay_get_tangem_pay">Get Tangem Pay</string>
   <string name="tangempay_go_to_support">Go to Support</string>
@@ -3849,10 +3862,17 @@
   <string name="yield_module_incentive_chart_average_apy">Average APY</string>
   <string name="yield_module_incentive_chart_period_three_months">3 Months</string>
   <string name="yield_module_incentive_chart_period_week">Week</string>
-  <string name="yield_module_incentive_chart_powered_by_description">A campaign sponsor funds extra reward tokens, distributed through Merkl.\nIncentives may end, and reward token prices can change.\nThe displayed APY includes incentive rewards after Tangem\'s service fee.</string>
+  <string name="yield_module_incentive_chart_powered_by_description">A campaign sponsor funds extra reward tokens, distributed through Merkl.\nIncentives may end, and reward token prices can change.</string>
   <string name="yield_module_incentive_chart_powered_by_title">Powered by Merkl</string>
   <string name="yield_module_incentive_chart_sheet_title">Incentivized yield</string>
   <string name="yield_module_incentives_provider">Merkl</string>
+  <string name="yield_module_main_promo_button">Try Yield Mode</string>
+  <string name="yield_module_main_promo_subtitle">Put idle coins to work. No lockups, withdraw anytime.</string>
+  <string name="yield_module_main_promo_title">Earn with your crypto up to %1$s%% APY</string>
+  <plurals name="yield_module_main_promo_tokens_count">
+    <item quantity="one">Choose from %d token</item>
+    <item quantity="other">Choose from %d tokens</item>
+  </plurals>
   <string name="yield_module_main_screen_promo_banner_message">Enable %1$s%% APY on your balance</string>
   <string name="yield_module_main_view_approve_notification_description">Approval for your token in Yield Mode has been revoked. Open the token to grant permission again.</string>
   <string name="yield_module_main_view_approve_notification_title">Token approval needed</string>
