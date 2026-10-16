@@ -3,9 +3,6 @@ package com.tangem.test.mock.yield
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.earn.EarnRewardType
-import com.tangem.domain.models.earn.EarnToken
-import com.tangem.domain.models.earn.EarnType
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
@@ -224,22 +221,10 @@ object MockYieldSupply {
         ),
     )
 
-    fun yieldSupplyStatus(isActive: Boolean = true) = YieldSupplyStatus(
-        isActive = isActive,
+    fun activeYieldSupplyStatus() = YieldSupplyStatus(
+        isActive = true,
         isInitialized = true,
         isAllowedToSpend = true,
         effectiveProtocolBalance = null,
-    )
-
-    fun earnToken(apy: String = "0.092", networkId: String = NETWORK_ID, tokenSymbol: String = "USDT") = EarnToken(
-        apy = apy,
-        networkId = networkId,
-        rewardType = EarnRewardType.APY,
-        type = EarnType.YIELD,
-        tokenId = tokenSymbol.lowercase(),
-        tokenSymbol = tokenSymbol,
-        tokenName = tokenSymbol,
-        tokenAddress = TOKEN_ADDRESS,
-        decimalCount = 6,
     )
 }

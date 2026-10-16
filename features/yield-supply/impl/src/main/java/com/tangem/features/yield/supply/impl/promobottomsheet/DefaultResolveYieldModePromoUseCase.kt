@@ -14,31 +14,34 @@ import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoOffer
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoResolution
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
+import java.math.RoundingMode
 import javax.inject.Inject
 
 internal class DefaultResolveYieldModePromoUseCase @Inject constructor() : ResolveYieldModePromoUseCase {
 
     override fun invoke(
         statuses: List<CryptoCurrencyStatus>,
-        yieldApys: Map<String, BigDecimal>,
+        yieldSupplyApy: Map<String, BigDecimal>,
         earnOffers: EarnYieldOffers,
     ): YieldModePromoResolution {
         if (earnOffers.total <= 0) return YieldModePromoResolution.NoEligibleToken
-        if (statuses.any { it.value.yieldSupplyStatus?.isActive == true }) {
-            return YieldModePromoResolution.NoEligibleToken
-        }
+
+        val tokens = statuses.filter { status -> status.currency is CryptoCurrency.Token && !status.currency.isJoint }
 
         // A token held in several accounts is one position: its statuses differ only by derivation
-        val positions = statuses
-            .filter { status -> status.currency is CryptoCurrency.Token && !status.currency.isJoint }
+        val positions = tokens
             .groupBy { status -> (status.currency as CryptoCurrency.Token).yieldSupplyKey() }
-            .filterKeys { key -> key in yieldApys }
+            .filterKeys { key -> key in yieldSupplyApy }
 
         if (positions.isEmpty()) return YieldModePromoResolution.NoEligibleToken
-        if (positions.values.flatten().any { it.isLoading() }) return YieldModePromoResolution.Waiting
+        // Yield Mode can stay active on a token whose market has left the catalog, so every token has to load first
+        if (tokens.any { it.isLoading() }) return YieldModePromoResolution.Waiting
+        if (tokens.any { it.value.yieldSupplyStatus?.isActive == true }) return YieldModePromoResolution.NoEligibleToken
 
         val candidate = positions
-            .mapNotNull { (key, accountStatuses) -> candidateOrNull(key, accountStatuses, yieldApys.getValue(key)) }
+            .mapNotNull { (key, accountStatuses) ->
+                candidateOrNull(key = key, accountStatuses = accountStatuses, apy = yieldSupplyApy.getValue(key))
+            }
             .minWithOrNull(BEST_FIRST)
             ?: return YieldModePromoResolution.NoEligibleToken
 
@@ -82,7 +85,7 @@ internal class DefaultResolveYieldModePromoUseCase @Inject constructor() : Resol
         val apyPercent = apy.toBigDecimalOrNull()?.movePointRight(2)?.takeIf { it.signum() > 0 } ?: return null
 
         return YieldModePromoOffer(
-            apy = apyPercent,
+            apy = apyPercent.toShownScale(),
             tokensCount = tokensCount,
             tokenSymbol = tokenSymbol,
             blockchain = Blockchain.fromNetworkId(networkId)?.fullName ?: networkId,
@@ -90,11 +93,13 @@ internal class DefaultResolveYieldModePromoUseCase @Inject constructor() : Resol
     }
 
     private fun Candidate.toOffer(tokensCount: Int) = YieldModePromoOffer(
-        apy = apy,
+        apy = apy.toShownScale(),
         tokensCount = tokensCount,
         tokenSymbol = token.symbol,
         blockchain = token.network.name,
     )
+
+    private fun BigDecimal.toShownScale(): BigDecimal = setScale(APY_SCALE, RoundingMode.HALF_UP)
 
     private data class Candidate(
         val key: String,
@@ -105,6 +110,8 @@ internal class DefaultResolveYieldModePromoUseCase @Inject constructor() : Resol
     )
 
     private companion object {
+        const val APY_SCALE = 2
+
         // The spec's tie-break, with the numeric chain id the iOS app compares as well
         val BEST_FIRST: Comparator<Candidate> = compareByDescending<Candidate> { it.apy }
             .thenByDescending { it.fiatAmount }
