@@ -920,13 +920,7 @@ fun BaseTestCase.issueAdditionalCardFromMainScreen(cardsStateAfterIssue: String)
     step("Switch WireMock scenario '$issueOrderScenario' to '$issueOrderCompletedState'") {
         setWireMockScenarioState(issueOrderScenario, issueOrderCompletedState)
     }
-    step("Refresh until the issuing banner is gone") {
-        // Pull-to-refresh is idempotent, so it is repeated per iteration until the completed order lands.
-        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-            pullToRefreshTangemPay()
-            runCatching { onTangemPayMainScreen { issuingCardBanner.assertDoesNotExist() } }.isSuccess
-        }
-    }
+    refreshTangemPayUntilIssuingBannerIsGone()
     step("Re-arm the issue scenarios for the next card") {
         setWireMockScenarioState(issueOrderScenario, issueOrderStartedState)
         setWireMockScenarioState(issueOrdersScenario, issueOrdersEmptyState)
@@ -934,6 +928,16 @@ fun BaseTestCase.issueAdditionalCardFromMainScreen(cardsStateAfterIssue: String)
     step("Return to the Main screen") {
         Espresso.pressBack()
         awaitSuccess { onTangemPayMainScreen { mainScreenTile.assertIsDisplayed() } }
+    }
+}
+
+fun BaseTestCase.refreshTangemPayUntilIssuingBannerIsGone() {
+    step("Refresh until the issuing banner is gone") {
+        // Pull-to-refresh is idempotent, so it is repeated per iteration until the completed order lands.
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            pullToRefreshTangemPay()
+            runCatching { onTangemPayMainScreen { issuingCardBanner.assertDoesNotExist() } }.isSuccess
+        }
     }
 }
 
