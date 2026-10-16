@@ -33,6 +33,7 @@ import com.tangem.domain.moneyaccount.usecase.ActivateMoneyAccountUseCase
 import com.tangem.domain.moneyaccount.usecase.CreateMoneyAccountOrderUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountFeeTableUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountStatusUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountSuitableWalletsUseCase
@@ -217,6 +218,13 @@ internal interface MoneyAccountDataModule {
                 onboardingRepository = onboardingRepository,
                 singleAccountListSupplier = singleAccountListSupplier,
             )
+        }
+
+        @Provides
+        fun provideGetMoneyAccountBankCredentialsUseCase(
+            onboardingRepository: OnboardingRepository,
+        ): GetMoneyAccountBankCredentialsUseCase {
+            return GetMoneyAccountBankCredentialsUseCase(onboardingRepository = onboardingRepository)
         }
 
         @Provides
