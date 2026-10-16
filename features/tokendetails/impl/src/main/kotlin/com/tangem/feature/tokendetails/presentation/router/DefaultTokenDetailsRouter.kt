@@ -1,7 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.router
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.share.ShareManager
@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 @ModelScoped
 internal class DefaultTokenDetailsRouter @Inject constructor(
-    private val router: AppRouter,
+    private val router: Router,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
 ) : InnerTokenDetailsRouter {
