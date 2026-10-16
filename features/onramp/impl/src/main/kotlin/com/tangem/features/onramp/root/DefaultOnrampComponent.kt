@@ -12,6 +12,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -90,6 +91,7 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
                 params = OnrampRedirectComponent.Params(
                     userWalletId = params.userWalletId,
                     onBack = navigation::pop,
+                    onSuccess = { txId -> router.replaceCurrent(AppRoute.OnrampSuccess(txId)) },
                     cryptoCurrency = config.cryptoCurrency,
                     onrampProviderWithQuote = config.quote,
                 ),

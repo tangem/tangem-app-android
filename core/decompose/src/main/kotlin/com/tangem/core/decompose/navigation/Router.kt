@@ -54,4 +54,11 @@ interface Router {
      * @param onComplete The callback to be invoked when the operation is complete.
      */
     fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit = {})
+
+    /**
+     * Checks whether the [route] is in the navigation stack, including the stacks this router falls back to.
+     *
+     * @param route The route to look for.
+     */
+    fun contains(route: Route): Boolean
 }

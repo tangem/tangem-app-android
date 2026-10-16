@@ -27,4 +27,6 @@ class DummyRouter : Router {
     override fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit) {
         onComplete(true)
     }
+
+    override fun contains(route: Route): Boolean = false
 }

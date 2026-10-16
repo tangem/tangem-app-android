@@ -166,6 +166,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             }
 
             val stackItems = stack.items.map { it.configuration }
+            navigationProvider.updateStack(stackItems)
 
             currentRoute.value = stack.active.configuration
             wcRoutingComponent.onAppRouteChange(stack.active.configuration)

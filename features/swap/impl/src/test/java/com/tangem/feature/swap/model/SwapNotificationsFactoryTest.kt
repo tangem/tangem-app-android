@@ -1,7 +1,7 @@
 package com.tangem.feature.swap.model
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.routing.AppRouter
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -33,6 +33,8 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import com.tangem.core.ui.extensions.stringReference
 import java.math.BigDecimal
 
@@ -58,7 +60,7 @@ internal class SwapNotificationsFactoryTest {
     private val actions: UiActions = mockk(relaxed = true)
     private val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork = mockk()
     private val appCurrencyProvider: Provider<AppCurrency> = Provider { AppCurrency.Default }
-    private val appRouter: AppRouter = mockk()
+    private val router: Router = mockk()
 
     private val factory = SwapNotificationsFactory(
         actions = actions,
@@ -73,8 +75,8 @@ internal class SwapNotificationsFactoryTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(isEvmGaslessFeeSupportedForNetwork, appRouter)
-        every { appRouter.stack } returns emptyList()
+        clearMocks(isEvmGaslessFeeSupportedForNetwork, router)
+        every { router.contains(any()) } returns false
     }
 
     @Test
@@ -91,7 +93,7 @@ internal class SwapNotificationsFactoryTest {
             feeCryptoCurrencyStatus = buildCoinFeeStatus(),
             swapFee = null,
             feeError = null,
-            appRouter = appRouter,
+            router = router,
             lowSlippage = percent,
         )
 
@@ -111,7 +113,7 @@ internal class SwapNotificationsFactoryTest {
             feeCryptoCurrencyStatus = buildCoinFeeStatus(),
             swapFee = null,
             feeError = null,
-            appRouter = appRouter,
+            router = router,
         )
 
         // Assert
@@ -130,13 +132,36 @@ internal class SwapNotificationsFactoryTest {
             feeCryptoCurrencyStatus = buildCoinFeeStatus(),
             swapFee = null,
             feeError = null,
-            appRouter = appRouter,
+            router = router,
         )
 
         // Assert
         val warning = notifications.filterIsInstance<SwapNotificationUM.Error.UnableToCoverFeeWarning>().single()
         assertThat(warning.currencyName).isEqualTo("Ethereum")
         assertThat(warning.currencySymbol).isEqualTo("ETH")
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN fee currency details in stack or not WHEN insufficient fee THEN go to fee currency is hidden only when in stack`(
+        isFeeCurrencyInStack: Boolean,
+    ) {
+        // Arrange
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
+        every { router.contains(any()) } returns isFeeCurrencyInStack
+
+        // Act
+        val notifications = factory.getConfirmationStateNotifications(
+            quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.CEX),
+            feeCryptoCurrencyStatus = buildCoinFeeStatus(),
+            swapFee = null,
+            feeError = null,
+            router = router,
+        )
+
+        // Assert
+        val warning = notifications.filterIsInstance<SwapNotificationUM.Error.UnableToCoverFeeWarning>().single()
+        assertThat(warning.onConfirmClick == null).isEqualTo(isFeeCurrencyInStack)
     }
 
     @Test
@@ -151,7 +176,7 @@ internal class SwapNotificationsFactoryTest {
             feeCryptoCurrencyStatus = buildCoinFeeStatus(),
             swapFee = null,
             feeError = null,
-            appRouter = appRouter,
+            router = router,
         )
 
         // Assert
@@ -170,7 +195,7 @@ internal class SwapNotificationsFactoryTest {
             feeCryptoCurrencyStatus = buildCoinFeeStatus(),
             swapFee = null,
             feeError = null,
-            appRouter = appRouter,
+            router = router,
         )
 
         // Assert
@@ -192,7 +217,7 @@ internal class SwapNotificationsFactoryTest {
             feeCryptoCurrencyStatus = buildCoinFeeStatus(),
             swapFee = null,
             feeError = null,
-            appRouter = appRouter,
+            router = router,
         )
 
         // Assert
@@ -214,7 +239,7 @@ internal class SwapNotificationsFactoryTest {
             feeCryptoCurrencyStatus = buildCoinFeeStatus(),
             swapFee = null,
             feeError = null,
-            appRouter = appRouter,
+            router = router,
         )
 
         // Assert
@@ -233,7 +258,7 @@ internal class SwapNotificationsFactoryTest {
             feeCryptoCurrencyStatus = buildCoinFeeStatus(),
             swapFee = buildSwapFee(),
             feeError = null,
-            appRouter = appRouter,
+            router = router,
         )
 
         // Assert
@@ -257,7 +282,7 @@ internal class SwapNotificationsFactoryTest {
             feeCryptoCurrencyStatus = buildCoinFeeStatus(),
             swapFee = buildSwapFee(),
             feeError = null,
-            appRouter = appRouter,
+            router = router,
         )
 
         // Assert
@@ -282,7 +307,7 @@ internal class SwapNotificationsFactoryTest {
             feeCryptoCurrencyStatus = buildCoinFeeStatus(),
             swapFee = null,
             feeError = null,
-            appRouter = appRouter,
+            router = router,
         )
 
         // Assert — the cover-fee error replaces the approve prompt
@@ -309,7 +334,7 @@ internal class SwapNotificationsFactoryTest {
             feeCryptoCurrencyStatus = buildCoinFeeStatus(),
             swapFee = null,
             feeError = null,
-            appRouter = appRouter,
+            router = router,
         )
 
         // Assert
@@ -334,7 +359,7 @@ internal class SwapNotificationsFactoryTest {
             feeCryptoCurrencyStatus = buildCoinFeeStatus(),
             swapFee = buildSwapFee(),
             feeError = null,
-            appRouter = appRouter,
+            router = router,
         )
 
         // Assert
@@ -355,7 +380,7 @@ internal class SwapNotificationsFactoryTest {
             feeCryptoCurrencyStatus = buildCoinFeeStatus(),
             swapFee = buildSwapFee(),
             feeError = null,
-            appRouter = appRouter,
+            router = router,
         )
 
         // Assert
@@ -374,7 +399,7 @@ internal class SwapNotificationsFactoryTest {
             feeCryptoCurrencyStatus = buildCoinFeeStatus(),
             swapFee = buildSwapFee(),
             feeError = null,
-            appRouter = appRouter,
+            router = router,
         )
 
         // Assert
@@ -394,7 +419,7 @@ internal class SwapNotificationsFactoryTest {
             feeCryptoCurrencyStatus = buildCoinFeeStatus(),
             swapFee = buildSwapFee(),
             feeError = null,
-            appRouter = appRouter,
+            router = router,
         )
 
         // Assert
@@ -414,7 +439,7 @@ internal class SwapNotificationsFactoryTest {
             feeCryptoCurrencyStatus = buildCoinFeeStatus(),
             swapFee = buildSwapFee(),
             feeError = null,
-            appRouter = appRouter,
+            router = router,
         )
 
         // Assert

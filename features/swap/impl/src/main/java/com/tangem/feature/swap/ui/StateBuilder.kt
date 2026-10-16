@@ -5,7 +5,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
@@ -15,6 +14,7 @@ import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.buttons.predefined.PredefinedPercentButtonUM
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -69,7 +69,7 @@ internal class StateBuilder(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
     private val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val isChooseTokenPulseEnabled: Boolean,
     private val isCustomSlippageEnabled: Boolean = false,
     private val predictionTopUpLimitsProvider: Provider<PredictionTopUpLimits?> = Provider { null },
@@ -586,7 +586,7 @@ internal class StateBuilder(
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             swapFee = swapFee,
             feeError = feeError?.error,
-            appRouter = appRouter,
+            router = router,
             isHighNetworkFee = isHighNetworkFee,
             lowSlippage = getLowSlippage(swapProvider, slippage.customOrNull),
         )
@@ -712,7 +712,7 @@ internal class StateBuilder(
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             swapFee = null,
             feeError = feeError,
-            appRouter = appRouter,
+            router = router,
         )
 
         return uiStateHolder.copy(
