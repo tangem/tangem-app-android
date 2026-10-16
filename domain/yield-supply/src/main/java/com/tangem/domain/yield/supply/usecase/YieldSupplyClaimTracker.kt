@@ -5,6 +5,7 @@ import com.tangem.domain.models.normalizeEvmAddress
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOutcome
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
@@ -65,6 +66,7 @@ class YieldSupplyClaimTracker(
         userAddress: String,
         transactionHash: String,
         claimedRewards: List<YieldReward>,
+        origin: YieldSupplyClaimOrigin,
     ) {
         val key = trackedKey(chainId = chainId, userAddress = userAddress)
         if (key in trackedKeys.getAndUpdate { tracked -> tracked + key }) return
@@ -76,6 +78,7 @@ class YieldSupplyClaimTracker(
             userAddress = userAddress,
             transactionHash = transactionHash,
             claimedRewards = claimedRewards,
+            origin = origin,
         )
         coroutineScope.launch {
             // A revert is released before publishing, so listeners see the claim settled when its outcome arrives
@@ -155,6 +158,7 @@ class YieldSupplyClaimTracker(
         val userAddress: String,
         val transactionHash: String,
         val claimedRewards: List<YieldReward>,
+        val origin: YieldSupplyClaimOrigin,
     ) {
 
         fun toOutcome(outcome: YieldSupplyTransactionOutcome) = YieldSupplyClaimOutcome(
@@ -163,6 +167,7 @@ class YieldSupplyClaimTracker(
             chainId = chainId,
             userAddress = userAddress,
             outcome = outcome,
+            origin = origin,
         )
     }
 
