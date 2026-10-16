@@ -162,6 +162,40 @@ internal class FeedSearchModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN screen opened by the first typed character WHEN more is typed THEN search started is sent once`() =
+        runTest {
+            // Arrange
+            stubHistory(queries = emptyList())
+            val searchBarController = FakeSearchBarController(initialQuery = "b")
+
+            // Act
+            val model = createModel(testScope = this, searchBarController = searchBarController)
+            advanceUntilIdle()
+            searchBarController.onQueryChange("bi")
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { analyticsEventHandler.send(ofType<FeedSearchAnalyticsEvent.SearchStarted>()) }
+
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN empty query WHEN model created THEN search started is not sent`() = runTest {
+        // Arrange
+        stubHistory(queries = emptyList())
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { analyticsEventHandler.send(ofType<FeedSearchAnalyticsEvent.SearchStarted>()) }
+
+        model.onDestroy()
+    }
+
     private fun stubHistory(queries: List<String>) {
         every { getRecentFeedSearchQueriesUseCase() } returns flowOf(queries)
     }
@@ -192,8 +226,10 @@ internal class FeedSearchModelTest {
             state.update { it.copy(query = query) }
         }
 
-        override fun onActiveChange(isActive: Boolean) {
-            state.update { it.copy(isActive = isActive) }
+        override fun onFocusChange(isFocused: Boolean) = Unit
+
+        override fun onClose() {
+            state.value = FeedSearchBarUM()
         }
 
         override fun onSubmit() {
