@@ -7,7 +7,6 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -74,7 +73,6 @@ internal class NFTSendConfirmModelTest {
     }
 
     private val router: Router = mockk(relaxed = true)
-    private val appRouter: AppRouter = mockk(relaxed = true)
     private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase = mockk(relaxed = true)
     private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase = mockk(relaxed = true)
     private val createNFTTransferTransactionUseCase: CreateNFTTransferTransactionUseCase = mockk(relaxed = true)
@@ -324,7 +322,6 @@ internal class NFTSendConfirmModelTest {
             paramsContainer = paramsContainer,
             dispatchers = testDispatcherProvider(),
             router = router,
-            appRouter = appRouter,
             isSendTapHelpEnabledUseCase = isSendTapHelpEnabledUseCase,
             neverShowTapHelpUseCase = neverShowTapHelpUseCase,
             createNFTTransferTransactionUseCase = createNFTTransferTransactionUseCase,
@@ -365,6 +362,7 @@ internal class NFTSendConfirmModelTest {
         isBalanceHidingFlow = kotlinx.coroutines.flow.MutableStateFlow(false),
         onLoadFee = { mockk<com.tangem.blockchain.common.transaction.TransactionFee>(relaxed = true).right() },
         onSendTransaction = {},
+        onExitFlow = {},
     )
 
     private fun contentState(): NFTSendUM {
