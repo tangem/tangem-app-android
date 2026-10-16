@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.PromocodeActivationBody
@@ -14,9 +15,14 @@ import com.tangem.datasource.api.tangemTech.models.WalletResponse
 import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.models.PromoCodeActivation
+import com.tangem.domain.wallets.models.PromoPayout
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import arrow.core.left
+import arrow.core.right
 import io.mockk.*
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -24,6 +30,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 /**
  * Tests for [DefaultWalletsRepository]
@@ -229,78 +236,101 @@ class DefaultWalletsRepositoryTest {
     inner class ActivatePromoCode {
 
         @Test
-        fun `should return Right with status when API returns success`() = runTest {
+        fun `GIVEN stellar payout WHEN activatePromoCode THEN sends payout and returns activation`() = runTest {
             // Arrange
-            val walletId = UserWalletId("1234567890abcdef")
-            val promoCode = "PROMO123"
-            val address = "bc1qexampleaddress"
+            val payout = PromoPayout(networkId = "stellar", currencySymbol = "XLM")
             coEvery { tangemTechApi.activatePromoCode(any()) } returns ApiResponse.Success(
-                PromocodeActivationResponse(status = "activated"),
+                PromocodeActivationResponse(
+                    status = "activated",
+                    promoProgram = PromocodeActivationResponse.PromoProgram(id = "program-id"),
+                ),
             )
 
             // Act
-            val result = repository.activatePromoCode(
-                userWalletId = walletId,
-                promoCode = promoCode,
-                bitcoinAddress = address,
+            val actual = repository.activatePromoCode(
+                userWalletId = testWalletId,
+                promoCode = "PROMO",
+                address = "GADDRESS",
+                payout = payout,
             )
 
             // Assert
-            var right: String? = null
-            var left: ActivatePromoCodeError? = null
-            result.fold({ left = it }, { right = it })
-            assertThat(left).isNull()
-            assertThat(right).isEqualTo("activated")
-
+            assertThat(actual).isEqualTo(PromoCodeActivation(programId = "program-id").right())
             coVerify(exactly = 1) {
                 tangemTechApi.activatePromoCode(
-                    match<PromocodeActivationBody> { it.promoCode == promoCode && it.address == address },
+                    PromocodeActivationBody(
+                        promoCode = "PROMO",
+                        address = "GADDRESS",
+                        walletId = testWalletId.stringValue,
+                        paymentNetwork = "stellar",
+                        paymentCurrency = "XLM",
+                    ),
                 )
             }
         }
 
         @Test
-        fun `should return Left InvalidPromoCode when API returns NOT_FOUND`() = runTest {
+        fun `GIVEN no payout and bare response WHEN activatePromoCode THEN omits payout and returns empty activation`() =
+            runTest {
+                // Arrange
+                coEvery { tangemTechApi.activatePromoCode(any()) } returns ApiResponse.Success(
+                    PromocodeActivationResponse(status = "activated"),
+                )
+
+                // Act
+                val actual = repository.activatePromoCode(
+                    userWalletId = testWalletId,
+                    promoCode = "PROMO",
+                    address = "bc1qaddress",
+                    payout = null,
+                )
+
+                // Assert
+                assertThat(actual).isEqualTo(PromoCodeActivation(programId = null).right())
+                coVerify(exactly = 1) {
+                    tangemTechApi.activatePromoCode(
+                        PromocodeActivationBody(
+                            promoCode = "PROMO",
+                            address = "bc1qaddress",
+                            walletId = testWalletId.stringValue,
+                        ),
+                    )
+                }
+            }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN api error WHEN activatePromoCode THEN maps to domain error`(model: ErrorModel) = runTest {
             // Arrange
-            val walletId = UserWalletId("1234567890abcdef")
             @Suppress("UNCHECKED_CAST")
-            coEvery { tangemTechApi.activatePromoCode(any()) } returns ApiResponse.Error(
-                HttpException(code = HttpException.Code.NOT_FOUND, message = null, errorBody = null),
-            ) as ApiResponse<PromocodeActivationResponse>
+            coEvery { tangemTechApi.activatePromoCode(any()) } returns
+                ApiResponse.Error(model.apiError) as ApiResponse<PromocodeActivationResponse>
 
             // Act
-            val result = repository.activatePromoCode(
-                userWalletId = walletId,
+            val actual = repository.activatePromoCode(
+                userWalletId = testWalletId,
                 promoCode = "PROMO",
-                bitcoinAddress = "addr",
+                address = "addr",
+                payout = null,
             )
 
             // Assert
-            var error: ActivatePromoCodeError? = null
-            result.fold({ error = it }, { })
-            assertThat(error).isEqualTo(ActivatePromoCodeError.InvalidPromoCode)
+            assertThat(actual).isEqualTo(model.expected.left())
         }
 
-        @Test
-        fun `should return Left PromocodeAlreadyUsed when API returns CONFLICT`() = runTest {
-            // Arrange
-            val walletId = UserWalletId("1234567890abcdef")
-            @Suppress("UNCHECKED_CAST")
-            coEvery { tangemTechApi.activatePromoCode(any()) } returns ApiResponse.Error(
-                HttpException(code = HttpException.Code.CONFLICT, message = null, errorBody = null),
-            ) as ApiResponse<PromocodeActivationResponse>
+        private fun provideTestModels() = listOf(
+            ErrorModel(httpError(HttpException.Code.NOT_FOUND), ActivatePromoCodeError.InvalidPromoCode),
+            ErrorModel(httpError(HttpException.Code.CONFLICT), ActivatePromoCodeError.PromocodeAlreadyUsed),
+            ErrorModel(httpError(HttpException.Code.BAD_REQUEST), ActivatePromoCodeError.InvalidRequest),
+            ErrorModel(httpError(HttpException.Code.UNPROCESSABLE_ENTITY), ActivatePromoCodeError.CampaignExpired),
+            ErrorModel(httpError(HttpException.Code.INTERNAL_SERVER_ERROR), ActivatePromoCodeError.ActivationFailed),
+            ErrorModel(ApiResponseError.NetworkException(), ActivatePromoCodeError.NetworkError),
+            ErrorModel(ApiResponseError.TimeoutException(), ActivatePromoCodeError.NetworkError),
+            ErrorModel(ApiResponseError.UnknownException(IllegalStateException()), ActivatePromoCodeError.ActivationFailed),
+        )
 
-            // Act
-            val result = repository.activatePromoCode(
-                userWalletId = walletId,
-                promoCode = "PROMO",
-                bitcoinAddress = "addr",
-            )
-
-            // Assert
-            var error: ActivatePromoCodeError? = null
-            result.fold({ error = it }, { })
-            assertThat(error).isEqualTo(ActivatePromoCodeError.PromocodeAlreadyUsed)
-        }
+        private fun httpError(code: HttpException.Code) = HttpException(code = code, message = null, errorBody = null)
     }
+
+    data class ErrorModel(val apiError: ApiResponseError, val expected: ActivatePromoCodeError)
 }

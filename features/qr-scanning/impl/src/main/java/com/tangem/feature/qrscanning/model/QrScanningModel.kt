@@ -3,10 +3,10 @@ package com.tangem.feature.qrscanning.model
 import android.os.Handler
 import android.os.Looper
 import androidx.compose.runtime.Stable
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.data.card.sdk.CardSdkProvider
@@ -36,7 +36,7 @@ internal class QrScanningModel @Inject constructor(
     private val cardSdkProvider: CardSdkProvider,
     private val emitQrScannedEventUseCase: EmitQrScannedEventUseCase,
     private val settingsManager: SettingsManager,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val clipboardManager: ClipboardManager,
 ) : Model(), QrScanningClickIntents {
 
@@ -71,7 +71,7 @@ internal class QrScanningModel @Inject constructor(
         stateHolder.update(DismissBottomSheetTransformer())
     }
 
-    override fun onBackClick() = appRouter.pop()
+    override fun onBackClick() = router.pop()
 
     override fun onQrScanned(qrCode: String, source: QrResultSource) {
         if (qrCode.isNotBlank()) {
@@ -80,7 +80,7 @@ internal class QrScanningModel @Inject constructor(
                 emitQrScannedEventUseCase.invoke(qrCode)
             }
             if (!isScanned) {
-                appRouter.pop()
+                router.pop()
                 isScanned = true
             }
         }

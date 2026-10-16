@@ -657,6 +657,27 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         }
 
         @Test
+        fun `GIVEN blockaid flags the operation WHEN onSendClick THEN the dangerous transaction alert is shown`() =
+            runTest {
+                // Arrange
+                val onSendTransaction: () -> Unit = mockk(relaxed = true)
+                coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+                coEvery {
+                    jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any())
+                } returns JointOperationCreateError.Malicious.left()
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = onSendTransaction))
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { sendConfirmAlertFactory.getJointMaliciousState() }
+                verify(exactly = 0) { onSendTransaction() }
+            }
+
+        @Test
         fun `GIVEN the composition mismatches WHEN onSendClick THEN the sending blocked alert is shown`() = runTest {
             // Arrange
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount

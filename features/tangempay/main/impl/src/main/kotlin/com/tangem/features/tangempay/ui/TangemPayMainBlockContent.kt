@@ -134,7 +134,7 @@ private fun TangemPayMainContent(
             modifier = Modifier.layoutId(TangemRowLayoutId.END_TOP),
         )
         Text(
-            text = payMainUM.balanceSubtitle.resolveReference(),
+            text = payMainUM.balanceSubtitle.orMaskWithStars(isBalanceHidden).resolveReference(),
             color = TangemTheme.colors2.text.neutral.secondary,
             style = TangemTheme.typography2.captionSemibold12,
             modifier = Modifier.layoutId(TangemRowLayoutId.END_BOTTOM),

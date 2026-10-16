@@ -42,6 +42,7 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.SendComponent
@@ -65,6 +66,7 @@ import com.tangem.features.send.send.confirm.model.SendConfirmModel
 import com.tangem.features.send.send.joint.JointSendDelegate
 import com.tangem.features.send.send.model.SendModel
 import com.tangem.features.send.send.model.DefaultFeeLoader
+import com.tangem.features.send.send.model.TronGaslessSentAmountQuoter
 import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.features.send.testDispatcherProvider
 import com.tangem.test.core.TestAppCoroutineScope
@@ -104,6 +106,7 @@ internal abstract class SendModelTestBase {
     protected val createTransferTransactionUseCase: CreateTransferTransactionUseCase = mockk(relaxed = true)
     protected val getFeeUseCase: GetFeeUseCase = mockk(relaxed = true)
     protected val getFeeForGaslessUseCase: GetFeeForGaslessUseCase = mockk(relaxed = true)
+    protected val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk(relaxed = true)
     protected val getFeeForTokenUseCase: GetFeeForTokenUseCase = mockk(relaxed = true)
     protected val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase = mockk(relaxed = true)
     protected val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk(relaxed = true)
@@ -205,9 +208,13 @@ internal abstract class SendModelTestBase {
             sendAmountUpdateTrigger = sendAmountUpdateTrigger,
             analyticsEventHandler = analyticsEventHandler,
             jointSendDelegate = jointSendDelegate,
+            getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
             defaultFeeLoader = DefaultFeeLoader(
                 getFeeForGaslessUseCase = getFeeForGaslessUseCase,
                 getFeeUseCase = getFeeUseCase,
+            ),
+            tronGaslessSentAmountQuoter = TronGaslessSentAmountQuoter(
+                isAmountSubtractAvailableUseCase = isAmountSubtractAvailableUseCase,
             ),
         )
     }

@@ -155,7 +155,6 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val currentRoute = MutableStateFlow<AppRoute?>(null)
 
     init {
-        appRouterConfig.routerScope = componentScope
         appRouterConfig.componentRouter = router
         appRouterConfig.snackbarHandler = this
 

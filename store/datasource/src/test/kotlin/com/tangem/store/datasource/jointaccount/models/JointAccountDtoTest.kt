@@ -3,12 +3,18 @@ package com.tangem.store.datasource.jointaccount.models
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.tangem.core.remote.moshi.SkipMalformedElementsAdapterFactory
+import com.tangem.test.core.ProvideTestModels
 import org.intellij.lang.annotations.Language
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 internal class JointAccountDtoTest {
 
     private val moshi = Moshi.Builder()
+        .add(SkipMalformedElementsAdapterFactory)
         .addLast(KotlinJsonAdapterFactory())
         .build()
 
@@ -277,5 +283,97 @@ internal class JointAccountDtoTest {
         assertThat(json).contains("\"cryptoAccountId\"")
         assertThat(json).contains("\"config\"")
         assertThat(json).contains("\"safeAddress\"")
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class MalformedOperation {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN one operation out of contract WHEN parse THEN only it is dropped`(model: MalformedModel) {
+            // Arrange
+            @Language("JSON")
+            val json = """
+                {
+                  "cryptoAccountId": "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6",
+                  "membersCount": 2,
+                  "threshold": 2,
+                  "safeAddress": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+                  "status": "active",
+                  "members": [
+                    { "name": "Alice", "address": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf", "role": "creator" }
+                  ],
+                  "operations": [${model.operation}, ${operationJson()}]
+                }
+            """.trimIndent()
+
+            // Act
+            val actual = moshi.adapter(JointAccountDto::class.java).fromJson(json)
+
+            // Assert
+            assertThat(actual?.operations).containsExactly(validOperation)
+        }
+
+        private fun provideTestModels() = listOf(
+            MalformedModel(operation = operationJson(safeTx = safeTxJson(without = "value"))),
+            MalformedModel(operation = operationJson(safeTx = safeTxJson("to" to "null"))),
+            MalformedModel(operation = operationJson(safeTx = safeTxJson("operation" to "\"call\""))),
+            MalformedModel(operation = operationJson(safeTx = safeTxJson("operation" to "0.5"))),
+            MalformedModel(operation = operationJson(safeTx = "\"0x1234\"")),
+            MalformedModel(operation = operationJson(votes = """[{ "vote": "approve" }]""")),
+            MalformedModel(operation = "null"),
+        )
+    }
+
+    data class MalformedModel(val operation: String)
+
+    private fun safeTxJson(vararg overrides: Pair<String, String>, without: String? = null): String =
+        (SAFE_TX_FIELDS + overrides)
+            .filterKeys { it != without }
+            .entries
+            .joinToString(prefix = "{", postfix = "}") { (name, value) -> "\"$name\": $value" }
+
+    private fun operationJson(safeTx: String = safeTxJson(), votes: String = "[]"): String = """
+        {
+          "operationId": "3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708",
+          "chainId": 137,
+          "safeTx": $safeTx,
+          "status": "awaiting_signatures",
+          "votes": $votes
+        }
+    """.trimIndent()
+
+    private val validOperation = JointOperationDto(
+        operationId = "3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708",
+        chainId = 137,
+        safeTx = JointOperationDto.SafeTxDto(
+            to = "0x1111111111111111111111111111111111111111",
+            value = "1000",
+            data = "0x",
+            operation = 0,
+            safeTxGas = "112500",
+            baseGas = "410000",
+            gasPrice = "60000000000",
+            gasToken = "0x0000000000000000000000000000000000000000",
+            refundReceiver = "0x2222222222222222222222222222222222222222",
+            nonce = "4",
+        ),
+        status = "awaiting_signatures",
+    )
+
+    private companion object {
+        val SAFE_TX_FIELDS = mapOf(
+            "to" to "\"0x1111111111111111111111111111111111111111\"",
+            "value" to "\"1000\"",
+            "data" to "\"0x\"",
+            "operation" to "0",
+            "safeTxGas" to "\"112500\"",
+            "baseGas" to "\"410000\"",
+            "gasPrice" to "\"60000000000\"",
+            "gasToken" to "\"0x0000000000000000000000000000000000000000\"",
+            "refundReceiver" to "\"0x2222222222222222222222222222222222222222\"",
+            "nonce" to "\"4\"",
+        )
     }
 }

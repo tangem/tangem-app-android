@@ -134,14 +134,12 @@ internal interface MoneyAccountDataModule {
         @Provides
         @Singleton
         fun provideGetMoneyAccountBalanceUseCase(
-            moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory,
             singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
             singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
             singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
             singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
         ): GetMoneyAccountBalanceUseCase {
             return GetMoneyAccountBalanceUseCase(
-                moneyAccountCurrencyFactory = moneyAccountCurrencyFactory,
                 singleNetworkStatusFetcher = singleNetworkStatusFetcher,
                 singleNetworkStatusSupplier = singleNetworkStatusSupplier,
                 singleQuoteStatusFetcher = singleQuoteStatusFetcher,
