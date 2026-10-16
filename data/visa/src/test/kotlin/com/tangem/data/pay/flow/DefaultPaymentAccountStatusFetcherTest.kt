@@ -25,6 +25,7 @@ import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.models.pay.TangemPayEligibilityType
+import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
@@ -97,6 +98,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
     private companion object {
         const val STALE_ORDER_ID = "order-gone"
+        val RESIDENCY = TangemPayCustomerResidency(countryCode = "US", regionCode = "TX")
     }
 
     private val cardProductInstance = CustomerInfo.ProductInstance(
@@ -260,6 +262,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         coEvery { onboardingRepository.isTangemPayInitialDataProduced(userWalletId) } returns true
         coEvery { onboardingRepository.getOrderId(userWalletId) } returns null
         coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns Either.Right(customerInfo)
+        coEvery { onboardingRepository.getCustomerResidency(userWalletId) } returns null
 
         coEvery { paymentAccountStatusesStore.getSyncOrNull(userWalletId) } returns null
         coEvery { paymentAccountStatusesStore.store(any(), any()) } just Runs
@@ -666,9 +669,10 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     inner class ResidencyStepNotPassed {
 
         @Test
-        fun `GIVEN KYC required WHEN invoke THEN KycRequired stored`() = runTest {
+        fun `GIVEN KYC required AND customer residency WHEN invoke THEN KycRequired with it stored`() = runTest {
             // Arrange
             stubHappyPath(buildCustomerInfo(customerId = "cust_1").copy(kycStatus = KycStatus.REQUIRED))
+            coEvery { onboardingRepository.getCustomerResidency(userWalletId) } returns RESIDENCY
             val storedStatuses = captureStoredStatuses()
 
             // Act
@@ -676,7 +680,11 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
             // Assert
             assertThat(storedStatuses.map { it.value }.last()).isEqualTo(
-                PaymentAccountStatusValue.KycRequired(source = StatusSource.ACTUAL, customerId = "cust_1"),
+                PaymentAccountStatusValue.KycRequired(
+                    source = StatusSource.ACTUAL,
+                    customerId = "cust_1",
+                    customerResidency = RESIDENCY,
+                ),
             )
         }
 

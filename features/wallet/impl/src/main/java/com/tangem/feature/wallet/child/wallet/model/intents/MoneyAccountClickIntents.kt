@@ -1,18 +1,14 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
-import androidx.compose.ui.text.SpanStyle
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.bottomsheets.message.*
-import com.tangem.core.ui.extensions.plus
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.styledResourceReference
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.bottomSheetMessage
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_clock_28
 import com.tangem.core.ui.res.generated.icons.ic_heart_broken_28
@@ -150,48 +146,27 @@ internal class MoneyAccountClickIntentsImplementor @Inject constructor(
     }
 
     override fun onMoneyAccountCountryNotSupportedClicked(userWalletId: UserWalletId, countryCode: String?) {
-        val contactSupportLink = styledResourceReference(
-            id = R.string.common_contact_support,
-            spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.primary) },
-            onClick = {
+        val bottomSheet = regionUnavailableBottomSheet(
+            onContactSupportClick = {
                 sendFeedbackEmail(
                     FeedbackEmailType.DirectUserRequest(walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId)),
                 )
             },
-        )
-        val bottomSheet = bottomSheetMessage {
-            infoBlock {
-                vector(Icons.ic_heart_broken_28) {
-                    type = MessageBottomSheetUM.Vector.Type.Warning
-                    backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Warning
-                }
-                title = resourceReference(R.string.money_account_main_status_dialog_country_not_supported_title)
-                body = resourceReference(R.string.money_account_main_status_dialog_country_not_supported_description) +
-                    stringReference(" ") +
-                    contactSupportLink
-            }
-            if (countryCode != null) {
-                secondaryButton {
-                    text = resourceReference(R.string.money_account_main_status_dialog_join_waitlist)
-                    onClick {
+            secondaryAction = countryCode?.let {
+                EventMessageAction(
+                    title = resourceReference(R.string.money_account_main_status_dialog_join_waitlist),
+                    onClick = {
                         router.dialogNavigation.activate(
                             configuration = WalletDialogConfig.TangemPayWaitlist(
                                 userWalletId = userWalletId,
                                 countryCode = countryCode,
                             ),
                         )
-                        closeBs()
-                    }
-                }
-            }
-            primaryButton {
-                text = resourceReference(R.string.money_account_main_status_dialog_hide_account)
-                onClick {
-                    hideMoneyAccount(userWalletId)
-                    closeBs()
-                }
-            }
-        }
+                    },
+                )
+            },
+            onHideAccountClick = { hideMoneyAccount(userWalletId) },
+        )
 
         uiMessageSender.send(bottomSheet)
     }
