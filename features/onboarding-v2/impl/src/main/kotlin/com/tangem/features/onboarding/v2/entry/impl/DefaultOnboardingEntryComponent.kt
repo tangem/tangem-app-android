@@ -102,8 +102,8 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
             if (activeChild is InnerNavigationHolder) {
                 componentScope.launch {
                     activeChild.innerNavigation.state.collect { state ->
-                        stepperComponent.state.update {
-                            it.copy(
+                        stepperComponent.state.update { currentState ->
+                            currentState.copy(
                                 currentStep = state.stackSize,
                                 steps = state.stackMaxSize ?: 0,
                                 title = model.titleProvider.currentTitle.value,

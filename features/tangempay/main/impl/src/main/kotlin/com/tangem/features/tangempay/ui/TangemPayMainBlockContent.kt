@@ -112,8 +112,8 @@ private fun TangemPayMainContent(
             contentDescription = null,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.HEAD)
-                .size(TangemTheme.dimens2.x10)
-                .padding(end = TangemTheme.dimens2.x2),
+                .size(40.dp)
+                .padding(end = 8.dp),
         )
         Text(
             text = stringResourceSafe(R.string.tangempay_payment_account),
@@ -163,8 +163,8 @@ private fun TangemPayStateRow(
             contentDescription = null,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.HEAD)
-                .size(TangemTheme.dimens2.x10)
-                .padding(end = TangemTheme.dimens2.x2)
+                .size(40.dp)
+                .padding(end = 8.dp)
                 .conditionalCompose(!isEnabled) {
                     alpha(DISABLED_ALPHA)
                 },
@@ -196,7 +196,7 @@ private fun TangemPayStateRow(
             label = "Error Icon Animation",
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.TAIL)
-                .size(TangemTheme.dimens2.x4),
+                .size(16.dp),
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_alert_24),
@@ -257,36 +257,36 @@ private fun TangemPayMainLoading(modifier: Modifier = Modifier) {
         CircleShimmer(
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.HEAD)
-                .padding(end = TangemTheme.dimens2.x2)
-                .size(TangemTheme.dimens2.x10),
+                .padding(end = 8.dp)
+                .size(40.dp),
         )
         TextShimmer(
             style = TangemTheme.typography2.bodySemibold16,
-            radius = TangemTheme.dimens2.x25,
+            radius = 100.dp,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.START_TOP)
-                .width(TangemTheme.dimens2.x25),
+                .width(100.dp),
         )
         TextShimmer(
             style = TangemTheme.typography2.captionSemibold12,
-            radius = TangemTheme.dimens2.x25,
+            radius = 100.dp,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.START_BOTTOM)
-                .width(TangemTheme.dimens2.x11),
+                .width(44.dp),
         )
         TextShimmer(
             style = TangemTheme.typography2.bodyRegular16,
-            radius = TangemTheme.dimens2.x25,
+            radius = 100.dp,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.END_TOP)
-                .width(TangemTheme.dimens2.x20),
+                .width(80.dp),
         )
         TextShimmer(
             style = TangemTheme.typography2.bodyRegular16,
-            radius = TangemTheme.dimens2.x25,
+            radius = 100.dp,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.END_BOTTOM)
-                .width(TangemTheme.dimens2.x11),
+                .width(44.dp),
         )
     }
 }

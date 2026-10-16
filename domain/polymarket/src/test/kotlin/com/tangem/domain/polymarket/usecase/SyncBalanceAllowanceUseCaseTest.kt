@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketAuthError
+import com.tangem.domain.polymarket.model.PolymarketClobAsset
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -29,20 +30,20 @@ internal class SyncBalanceAllowanceUseCaseTest {
     @Test
     fun `GIVEN the sync succeeds WHEN invoked THEN returns Unit and calls the repository once`() = runTest {
         // Arrange
-        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS) } returns Unit.right()
+        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, PolymarketClobAsset.Collateral) } returns Unit.right()
 
         // Act
         val actual = useCase(ownerAddress = OWNER, credentials = CREDENTIALS)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 1) { repository.syncBalanceAllowance(OWNER, CREDENTIALS) }
+        coVerify(exactly = 1) { repository.syncBalanceAllowance(OWNER, CREDENTIALS, PolymarketClobAsset.Collateral) }
     }
 
     @Test
     fun `GIVEN a transport failure WHEN invoked THEN maps to the Network onboarding error`() = runTest {
         // Arrange
-        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS) } returns
+        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, PolymarketClobAsset.Collateral) } returns
             PolymarketAuthError.Network.left()
 
         // Act
@@ -55,7 +56,7 @@ internal class SyncBalanceAllowanceUseCaseTest {
     @Test
     fun `GIVEN a rejected signature WHEN invoked THEN maps to the Auth onboarding error`() = runTest {
         // Arrange
-        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS) } returns
+        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, PolymarketClobAsset.Collateral) } returns
             PolymarketAuthError.InvalidSignature.left()
 
         // Act

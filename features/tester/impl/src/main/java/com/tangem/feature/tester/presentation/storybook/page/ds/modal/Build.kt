@@ -2,6 +2,7 @@ package com.tangem.feature.tester.presentation.storybook.page.ds.modal
 
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.feature.tester.presentation.storybook.entity.TangemModalStory
+import com.tangem.feature.tester.presentation.storybook.entity.TangemModalTemplatesState
 import com.tangem.feature.tester.presentation.storybook.viewmodel.StateUpdater
 import com.tangem.feature.tester.presentation.storybook.viewmodel.storyPageFactory
 
@@ -23,6 +24,8 @@ internal fun StateUpdater<TangemModalStory>.build(): TangemModalStory {
         onInputToggle = { updateStory { it.copy(isInputVisible = !it.isInputVisible) } },
         onPresentationChange = { presentation -> updateStory { it.copy(presentation = presentation) } },
         onChromePlacementChange = { placement -> updateStory { it.copy(chromePlacement = placement) } },
+        templates = TangemModalTemplatesState(),
+        onTemplatesChange = { templates -> updateStory { it.copy(templates = templates) } },
     )
 }
 

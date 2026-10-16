@@ -3,6 +3,7 @@ package com.tangem.features.home.impl.ui.compose.views
 import androidx.compose.material3.ButtonColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.res.TangemColorPalette
@@ -26,10 +27,10 @@ internal fun StoriesButton(
         enabled = true,
         textStyle = TangemTheme.typography.subtitle1,
         iconPadding = when (icon) {
-            is TangemButtonIconPosition.Start -> TangemTheme.dimens.spacing4
+            is TangemButtonIconPosition.Start -> 4.dp
             is TangemButtonIconPosition.End,
             is TangemButtonIconPosition.None,
-            -> TangemTheme.dimens.spacing8
+            -> 8.dp
         },
         onClick = onClick,
     )

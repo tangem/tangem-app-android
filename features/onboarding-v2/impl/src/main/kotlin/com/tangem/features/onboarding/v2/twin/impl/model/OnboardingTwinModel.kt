@@ -1,7 +1,6 @@
 package com.tangem.features.onboarding.v2.twin.impl.model
 
 import com.tangem.utils.logging.TangemLogger
-import com.tangem.Message
 import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
 import com.tangem.common.core.TangemError
@@ -149,12 +148,6 @@ internal class OnboardingTwinModel @Inject constructor(
 
             val result = tangemSdkManager.createFirstTwinWallet(
                 cardId = params.scanResponse.card.cardId,
-                initialMessage = Message(
-                    tangemSdkManager.getString(
-                        R.string.twins_recreate_title_format,
-                        firstCardTwinNumber.number,
-                    ),
-                ),
             )
 
             when (result) {
@@ -209,23 +202,10 @@ internal class OnboardingTwinModel @Inject constructor(
     private fun createSecondWallet(firstPublicKey: String) {
         setLoading(true)
         modelScope.launch {
-            val secondCardNumber = firstCardTwinNumber.pairNumber().number
             val result = tangemSdkManager.createSecondTwinWallet(
                 firstPublicKey = firstPublicKey,
                 firstCardId = params.scanResponse.card.cardId,
                 issuerKeys = getIssuerKeys(),
-                preparingMessage = Message(
-                    tangemSdkManager.getString(R.string.twins_recreate_title_preparing),
-                ),
-                creatingWalletMessage = Message(
-                    tangemSdkManager.getString(R.string.twins_recreate_title_creating_wallet),
-                ),
-                initialMessage = Message(
-                    tangemSdkManager.getString(
-                        R.string.twins_recreate_title_format,
-                        secondCardNumber,
-                    ),
-                ),
             )
 
             when (result) {
@@ -276,12 +256,6 @@ internal class OnboardingTwinModel @Inject constructor(
                 secondCardPublicKey = secondCardPublicKey,
                 issuerKeyPair = getIssuerKeys(),
                 cardId = params.scanResponse.card.cardId,
-                initialMessage = Message(
-                    tangemSdkManager.getString(
-                        R.string.twins_recreate_title_format,
-                        firstCardTwinNumber.number,
-                    ),
-                ),
             )
 
             when (result) {

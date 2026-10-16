@@ -60,7 +60,6 @@ sealed interface MoneyAccountStatusValueDM {
     @SerialName("active_account")
     data class ActiveAccount(
         @SerialName("customer_id") val customerId: String,
-        @SerialName("product_instance_id") val productInstanceId: String,
         @SerialName("balance") val balance: BalanceDM?,
     ) : MoneyAccountStatusValueDM
 
@@ -68,7 +67,6 @@ sealed interface MoneyAccountStatusValueDM {
     @SerialName("deactivated")
     data class Deactivated(
         @SerialName("customer_id") val customerId: String,
-        @SerialName("product_instance_id") val productInstanceId: String,
         @SerialName("balance") val balance: BalanceDM?,
     ) : MoneyAccountStatusValueDM
 

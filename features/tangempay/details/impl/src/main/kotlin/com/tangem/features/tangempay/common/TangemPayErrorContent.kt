@@ -51,18 +51,18 @@ internal fun TangemPayErrorContent(
         modifier = modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = TangemTheme.dimens2.x4)
-            .padding(bottom = TangemTheme.dimens2.x4),
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        WarningIcon(modifier = Modifier.padding(top = TangemTheme.dimens2.x4))
+        WarningIcon(modifier = Modifier.padding(top = 16.dp))
         TitleText(
             text = title,
-            modifier = Modifier.padding(top = TangemTheme.dimens2.x8),
+            modifier = Modifier.padding(top = 32.dp),
         )
         SubtitleText(
             text = subtitle,
-            modifier = Modifier.padding(top = TangemTheme.dimens2.x2),
+            modifier = Modifier.padding(top = 8.dp),
         )
         SpacerH24()
         actions.forEach { action ->
@@ -85,14 +85,14 @@ internal fun TangemPayErrorContent(
 private fun WarningIcon(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens2.x20)
+            .size(80.dp)
             .testTag(TangemPayTestTags.ERROR_CONTENT_ICON)
             .clip(CircleShape)
             .background(TangemTheme.colors3.bg.status.warningSubtle),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens2.x7),
+            modifier = Modifier.size(28.dp),
             imageVector = Icons.ic_error_28,
             contentDescription = null,
             tint = TangemTheme.colors3.icon.status.warning,

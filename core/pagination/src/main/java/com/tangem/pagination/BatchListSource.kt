@@ -239,9 +239,9 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
     private suspend fun reloadTask(action: BatchAction.Reload<TRequestParams>) {
         val res = runCatching {
             batchFetcher.fetchFirst(action.requestParams)
-        }.getOrElse {
+        }.getOrElse { throwable ->
             currentCoroutineContext().ensureActive()
-            BatchFetchResult.Error(it)
+            BatchFetchResult.Error(throwable)
         }
 
         currentCoroutineContext().ensureActive()
@@ -459,12 +459,12 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
 
     private fun stopUpdates(predicate: (BatchAction.UpdateBatches<TKey, TUpdate>) -> Boolean) {
         updateAsyncJobs.update { actionAsyncJobs ->
-            actionAsyncJobs.mapNotNull {
-                if (predicate(it.first)) {
-                    it.second.cancel()
+            actionAsyncJobs.mapNotNull { actionJob ->
+                if (predicate(actionJob.first)) {
+                    actionJob.second.cancel()
                     null
                 } else {
-                    it
+                    actionJob
                 }
             }
             emptyList()
@@ -472,21 +472,21 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
 
         updateJobs.update { actionJobs ->
             waitingUpdateJobs.update { waitingActionJobs ->
-                waitingActionJobs.mapNotNull {
-                    if (predicate(it.first)) {
-                        it.second.cancel()
+                waitingActionJobs.mapNotNull { actionJob ->
+                    if (predicate(actionJob.first)) {
+                        actionJob.second.cancel()
                         null
                     } else {
-                        it
+                        actionJob
                     }
                 }
             }
-            actionJobs.mapNotNull {
-                if (predicate(it.first)) {
-                    it.second.cancel()
+            actionJobs.mapNotNull { actionJob ->
+                if (predicate(actionJob.first)) {
+                    actionJob.second.cancel()
                     null
                 } else {
-                    it
+                    actionJob
                 }
             }
         }

@@ -82,8 +82,8 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
 
         modelScope.launch {
             val dataToSignByCardWallet = visaActivationRepository.getCardWalletAcceptanceData(params.dataToSignRequest)
-                .getOrElse {
-                    onError(it)
+                .getOrElse { error ->
+                    onError(error)
                     return@launch
                 }
 
@@ -101,8 +101,8 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
             }
 
             visaActivationRepository.activateCard(resultData.signedActivationData)
-                .onLeft {
-                    onError(it)
+                .onLeft { error ->
+                    onError(error)
                     return@launch
                 }
 

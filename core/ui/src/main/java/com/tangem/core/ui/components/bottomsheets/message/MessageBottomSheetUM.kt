@@ -109,36 +109,50 @@ data class MessageBottomSheetUM(
 @DslMarker
 annotation class MessageBottomSheetDsl
 
+internal const val OLD_DSL_DEPRECATION =
+    "Build the message with messageModalUM { } (it accepts this grammar) and show it with MessageModal, " +
+        "or send modalMessage { }. Keep this DSL only in features that still show legacy bottom sheets."
+
 // region: DSL
 
+@Deprecated(
+    message = OLD_DSL_DEPRECATION,
+    replaceWith = ReplaceWith("messageModalUM(init)", "com.tangem.core.ui.message.modal.messageModalUM"),
+)
 fun messageBottomSheetUM(init: @MessageBottomSheetDsl MessageBottomSheetUM.() -> Unit) =
     MessageBottomSheetUM().apply(init)
 
+@Deprecated(message = OLD_DSL_DEPRECATION)
 fun MessageBottomSheetUM.onDismiss(block: () -> Unit) = apply { onDismissRequest = block }
 
 @Suppress("NestedScopeFunctions")
+@Deprecated(message = OLD_DSL_DEPRECATION)
 fun MessageBottomSheetUM.infoBlock(init: @MessageBottomSheetDsl MessageBottomSheetUM.InfoBlock.() -> Unit) = apply {
     val element = MessageBottomSheetUM.InfoBlock().apply(init)
     elements = (elements + element).toPersistentList()
 }
 
 @Suppress("NestedScopeFunctions")
+@Deprecated(message = OLD_DSL_DEPRECATION)
 fun MessageBottomSheetUM.InfoBlock.icon(@DrawableRes res: Int, init: MessageBottomSheetUM.Icon.() -> Unit = {}) =
     apply {
         icon = MessageBottomSheetUM.Icon(res).apply(init)
     }
 
 @Suppress("NestedScopeFunctions")
+@Deprecated(message = OLD_DSL_DEPRECATION)
 fun MessageBottomSheetUM.InfoBlock.vector(imageVector: ImageVector, init: MessageBottomSheetUM.Vector.() -> Unit = {}) =
     apply {
         vector = MessageBottomSheetUM.Vector(imageVector).apply(init)
     }
 
+@Deprecated(message = OLD_DSL_DEPRECATION)
 fun MessageBottomSheetUM.InfoBlock.iconImage(@DrawableRes res: Int) = apply {
     iconImage = MessageBottomSheetUM.IconImage(res)
 }
 
 @Suppress("NestedScopeFunctions")
+@Deprecated(message = OLD_DSL_DEPRECATION)
 fun MessageBottomSheetUM.InfoBlock.chip(text: TextReference, init: MessageBottomSheetUM.Chip.() -> Unit = {}) = apply {
     chip = MessageBottomSheetUM.Chip(text).apply(init)
 }
@@ -150,15 +164,18 @@ internal fun MessageBottomSheetUM.button(init: @MessageBottomSheetDsl MessageBot
 }
 
 @Suppress("NestedScopeFunctions")
+@Deprecated(message = OLD_DSL_DEPRECATION)
 fun MessageBottomSheetUM.primaryButton(init: @MessageBottomSheetDsl MessageBottomSheetUM.Button.() -> Unit) = apply {
     button { isPrimary = true; apply(init) }
 }
 
 @Suppress("NestedScopeFunctions")
+@Deprecated(message = OLD_DSL_DEPRECATION)
 fun MessageBottomSheetUM.secondaryButton(init: @MessageBottomSheetDsl MessageBottomSheetUM.Button.() -> Unit) = apply {
     button { isPrimary = false; apply(init) }
 }
 
+@Deprecated(message = OLD_DSL_DEPRECATION)
 fun MessageBottomSheetUM.Button.onClick(block: MessageBottomSheetUM.CloseScope.() -> Unit) = apply {
     onClick = block
 }

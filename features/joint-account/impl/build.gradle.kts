@@ -39,6 +39,8 @@ dependencies {
     implementation(projects.domain.jointAccount)
     implementation(projects.domain.models)
     implementation(projects.domain.notifications.models)
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.wallets)
 
     /** SDK */
@@ -71,6 +73,7 @@ dependencies {
     testImplementation(projects.common.test)
     testImplementation(projects.core.remote)
     testImplementation(projects.domain.appCurrency.models)
+    testImplementation(projects.domain.core)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
 }

@@ -20,7 +20,7 @@ import com.tangem.domain.transaction.models.AvailableFeeTokens
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
-import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
+import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.NonceInserted
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
@@ -70,7 +70,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getAvailableFeeTokensUseCase: GetAvailableFeeTokensUseCase,
-    isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork,
 ) : FeeSelectorIntents {
 
     private var appCurrency: AppCurrency = AppCurrency.Default
@@ -80,7 +80,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     val isGaslessEnabled = params.onLoadFeeExtended != null &&
         params.cryptoCurrencyStatus.currency is CryptoCurrency.Token &&
         (
-            isGaslessFeeSupportedForNetwork(params.feeCryptoCurrencyStatus.currency.network) ||
+            isEvmGaslessFeeSupportedForNetwork(params.feeCryptoCurrencyStatus.currency.network) ||
                 params.isTronGaslessSupported &&
                 BlockchainUtils.isTron(params.cryptoCurrencyStatus.currency.network.rawId)
             )

@@ -43,10 +43,10 @@ import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
-import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
@@ -122,7 +122,6 @@ internal class SendConfirmModel @Inject constructor(
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val currenciesRepository: CurrenciesRepository,
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
-    private val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
     private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
     private val jointSendDelegate: JointSendDelegate,
     private val recordTokenTransferFromSendUseCase: RecordTokenTransferFromSendUseCase,
@@ -331,6 +330,7 @@ internal class SendConfirmModel @Inject constructor(
             is JointOperationCreateError.SlotBusy -> alertFactory.getJointSlotBusyState()
             is JointOperationCreateError.AccountNotReady -> alertFactory.getJointAccountNotReadyState()
             is JointOperationCreateError.NetworkStateMoved -> alertFactory.getJointNetworkStateMovedState()
+            is JointOperationCreateError.Malicious -> alertFactory.getJointMaliciousState()
             is JointOperationCreateError.CompositionMismatch -> {
                 TangemLogger.e("Unable to create the joint operation: $error")
                 alertFactory.getJointSendBlockedState(onSupportClick = { onFailedTxEmailClick(error.toString()) })
@@ -556,21 +556,14 @@ internal class SendConfirmModel @Inject constructor(
         val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
         val feeToken = getCurrencyStatusForFeePayment().currency
 
-        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
-
-        val result = when {
-            feeExtended?.tronGaslessQuote != null -> createAndSendTronGaslessTransactionUseCase(
-                userWallet = userWallet,
-                network = cryptoCurrency.network,
-                transactionData = txData,
-                fee = feeExtended,
-            )
-            isFeeInTokenCurrency -> createAndSendGaslessTransactionUseCase(
+        val result = if (feeExtended?.isGasless == true) {
+            createAndSendGaslessTransactionUseCase(
                 userWallet = userWallet,
                 transactionData = txData,
                 fee = feeExtended,
             )
-            else -> sendTransactionUseCase(
+        } else {
+            sendTransactionUseCase(
                 txData = txData,
                 userWallet = userWallet,
                 network = cryptoCurrency.network,
@@ -625,9 +618,9 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun getCurrencyStatusForFeePayment(): CryptoCurrencyStatus {
         val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
-        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency ||
-            feeExtended?.tronGaslessQuote != null
-        return if (isFeeInTokenCurrency) {
+        // A joint send pays in a Smart Gas token through the Safe, not through a relayer, so it is not gasless
+        val isFeeInToken = feeExtended?.isGasless == true || isFeeInSmartGasToken()
+        return if (isFeeInToken) {
             feeUMV2?.feeExtraInfo?.feeCryptoCurrencyStatus ?: cryptoCurrencyStatus
         } else {
             params.feeCryptoCurrencyStatus

@@ -279,6 +279,27 @@ internal class DefaultYieldIncentivesRepositoryTest {
         coVerify(exactly = 1) { api.getClaimHistory(chainId = CHAIN_ID, userAddress = ADDRESS) }
     }
 
+    @Test
+    fun `GIVEN cached user data WHEN invalidateUserCache THEN both endpoints are fetched again`() = runTest {
+        // Arrange
+        val repository = createRepository(testScope = this)
+        coEvery { api.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS) } returns
+            success(incentivesResponse())
+        coEvery { api.getClaimHistory(chainId = CHAIN_ID, userAddress = ADDRESS) } returns
+            success(YieldClaimHistoryResponse(chainId = CHAIN_ID, claims = null))
+        repository.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS)
+        repository.getClaimHistory(chainId = CHAIN_ID, userAddress = ADDRESS)
+
+        // Act
+        repository.invalidateUserCache(chainId = CHAIN_ID, userAddress = ADDRESS.uppercase())
+        repository.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS)
+        repository.getClaimHistory(chainId = CHAIN_ID, userAddress = ADDRESS)
+
+        // Assert
+        coVerify(exactly = 2) { api.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS) }
+        coVerify(exactly = 2) { api.getClaimHistory(chainId = CHAIN_ID, userAddress = ADDRESS) }
+    }
+
     private fun createRepository(testScope: TestScope, isMerklIncentivesEnabled: Boolean = true) =
         DefaultYieldIncentivesRepository(
             api = api,

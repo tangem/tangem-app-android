@@ -2,6 +2,8 @@ package com.tangem.domain.polymarket.usecase
 
 import arrow.core.left
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PredictionOrderDraftError
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
@@ -239,6 +241,9 @@ internal class BuildPredictionOrderDraftUseCaseTest {
         minOrderAmount = BigDecimal.ONE,
         tickSize = BigDecimal("0.001"),
         isLive = false,
+        version = PolymarketMarketVersion.V1,
+        exchange = PolymarketContracts.CTF_EXCHANGE,
+        signingDomainVersion = "2",
     )
 
     private companion object {

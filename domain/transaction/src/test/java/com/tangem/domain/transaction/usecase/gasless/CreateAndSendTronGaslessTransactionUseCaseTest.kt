@@ -1,5 +1,6 @@
 package com.tangem.domain.transaction.usecase.gasless
 
+import arrow.core.some
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
@@ -10,10 +11,13 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
-import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.status.utils.CryptoCurrencyOperations
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
@@ -23,7 +27,10 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -34,15 +41,17 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
     private val transactionRepository: TransactionRepository = mockk()
     private val walletManagersFacade: WalletManagersFacade = mockk()
     private val tronGaslessTransactionRepository: TronGaslessTransactionRepository = mockk()
-    private val cardSdkConfigRepository: CardSdkConfigRepository = mockk()
+    private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
+    private val gaslessSignerProvider: GaslessSignerProvider = mockk()
+    private val accountList: AccountList = mockk()
     private val signer: TransactionSigner = mockk()
 
     private val useCase = CreateAndSendTronGaslessTransactionUseCase(
         transactionRepository = transactionRepository,
         walletManagersFacade = walletManagersFacade,
         tronGaslessTransactionRepository = tronGaslessTransactionRepository,
-        cardSdkConfigRepository = cardSdkConfigRepository,
-        getHotWalletSigner = { signer },
+        singleAccountListSupplier = singleAccountListSupplier,
+        gaslessSignerProvider = gaslessSignerProvider,
     )
 
     private val userWallet = MockUserWalletFactory.create()
@@ -84,12 +93,17 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             normal = Fee.Common(amount = Amount(token = sentToken, value = BigDecimal("2.75"))),
         ),
         feeTokenId = usdtCurrency.id,
-        tronGaslessQuote = quote,
+        gaslessProtocolData = GaslessProtocolData.Tron(quote = quote),
     )
 
     @BeforeEach
     fun setUp() {
-        every { cardSdkConfigRepository.getCommonSigner(any(), any(), any()) } returns signer
+        mockkObject(CryptoCurrencyOperations)
+        every { gaslessSignerProvider(userWallet) } returns signer
+        coEvery { singleAccountListSupplier.getSyncOrNull(userWallet.walletId) } returns accountList
+        with(CryptoCurrencyOperations) {
+            every { accountList.getCryptoCurrency(usdtCurrency.id, null) } returns usdtCurrency.some()
+        }
         coEvery {
             transactionRepository.createTransferTransaction(any(), any(), any(), any(), any(), any(), any())
         } returns compensationTx
@@ -101,11 +115,16 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
         } returns TronGaslessSubmitResult(compensationTxHash = "hComp", originalTxHash = "hOrig", status = "BROADCAST")
     }
 
+    @AfterEach
+    fun tearDown() {
+        unmockkObject(CryptoCurrencyOperations)
+    }
+
     @Test
     fun `GIVEN signing and submit succeed WHEN invoke THEN returns original hash, compensation signed first`() =
         runTest {
             // Act
-            val result = useCase(userWallet, usdtCurrency.network, originalTx, fee)
+            val result = useCase(userWallet, originalTx, fee)
 
             // Assert
             assertThat(result.getOrNull()).isEqualTo("hOrig")
@@ -140,11 +159,13 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
                 transactionFee = TransactionFee.Single(
                     normal = Fee.Common(amount = Amount(token = usdcToken, value = BigDecimal("2.75"))),
                 ),
-                tronGaslessQuote = quote.copy(compensationToken = usdcContract),
+                gaslessProtocolData = GaslessProtocolData.Tron(
+                    quote = quote.copy(compensationToken = usdcContract),
+                ),
             )
 
             // Act
-            val result = useCase(userWallet, usdtCurrency.network, originalTx, crossTokenFee)
+            val result = useCase(userWallet, originalTx, crossTokenFee)
 
             // Assert
             assertThat(result.getOrNull()).isEqualTo("hOrig")
@@ -166,7 +187,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
         coEvery { walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any()) } returns null
 
         // Act
-        val result = useCase(userWallet, usdtCurrency.network, originalTx, fee)
+        val result = useCase(userWallet, originalTx, fee)
 
         // Assert
         assertThat(result.isLeft()).isTrue()
@@ -176,11 +197,13 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
     fun `GIVEN compensation token differs from fee token WHEN invoke THEN error`() = runTest {
         // Arrange — backend quotes a compensation token other than the selected fee token.
         val mismatchedFee = fee.copy(
-            tronGaslessQuote = quote.copy(compensationToken = "TOtherContractAddress00000000000000"),
+            gaslessProtocolData = GaslessProtocolData.Tron(
+                quote = quote.copy(compensationToken = "TOtherContractAddress00000000000000"),
+            ),
         )
 
         // Act
-        val result = useCase(userWallet, usdtCurrency.network, originalTx, mismatchedFee)
+        val result = useCase(userWallet, originalTx, mismatchedFee)
 
         // Assert
         assertThat(result.isLeft()).isTrue()
@@ -190,7 +213,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
     @Test
     fun `GIVEN amount matches the quote WHEN invoke THEN quote is not refreshed`() = runTest {
         // Act
-        val result = useCase(userWallet, usdtCurrency.network, originalTx, fee)
+        val result = useCase(userWallet, originalTx, fee)
 
         // Assert
         assertThat(result.getOrNull()).isEqualTo("hOrig")
@@ -215,7 +238,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             )
 
             // Act
-            val result = useCase(userWallet, usdtCurrency.network, reducedTx, fee)
+            val result = useCase(userWallet, reducedTx, fee)
 
             // Assert
             assertThat(result.getOrNull()).isEqualTo("hOrig2")
@@ -237,14 +260,16 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
     @Test
     fun `GIVEN quote taken for another destination WHEN invoke THEN re-quotes for the actual destination`() = runTest {
         // Arrange
-        val estimationFee = fee.copy(tronGaslessQuote = quote.copy(quotedToAddress = "TEstimation"))
+        val estimationFee = fee.copy(
+            gaslessProtocolData = GaslessProtocolData.Tron(quote.copy(quotedToAddress = "TEstimation")),
+        )
         coEvery { tronGaslessTransactionRepository.estimate(any()) } returns quote.copy(quoteId = "q_2")
         coEvery {
             tronGaslessTransactionRepository.submit(userWallet.walletId, "q_2", "signedComp", "signedOrig")
         } returns TronGaslessSubmitResult(compensationTxHash = "hComp", originalTxHash = "hOrig2", status = "BROADCAST")
 
         // Act
-        val result = useCase(userWallet, usdtCurrency.network, originalTx, estimationFee)
+        val result = useCase(userWallet, originalTx, estimationFee)
 
         // Assert
         assertThat(result.getOrNull()).isEqualTo("hOrig2")
@@ -276,7 +301,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             )
 
             // Act
-            val result = useCase(userWallet, usdtCurrency.network, reducedTx, fee)
+            val result = useCase(userWallet, reducedTx, fee)
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(SendTransactionError.GaslessFeeIncreased)
@@ -291,7 +316,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
         } returns TronGaslessSubmitResult(compensationTxHash = "hComp", originalTxHash = "hOrig", status = "PARTIAL_FAILED")
 
         // Act
-        val result = useCase(userWallet, usdtCurrency.network, originalTx, fee)
+        val result = useCase(userWallet, originalTx, fee)
 
         // Assert
         assertThat(result.isLeft()).isTrue()
