@@ -342,7 +342,20 @@ internal class YieldSupplyClaimTrackerTest {
             summary = MockYieldSupply.claimableSummary(claimable = listOf(OTHER_REWARD)).right(),
             isReflected = true,
         ),
-        ReflectionModel(summary = MockYieldSupply.deferredSummary().right(), isReflected = true),
+        ReflectionModel(
+            summary = MockYieldSupply.deferredSummary(claimable = listOf(CLAIMED_REWARD)).right(),
+            isReflected = false,
+        ),
+        ReflectionModel(
+            summary = MockYieldSupply.deferredSummary(
+                claimable = listOf(CLAIMED_REWARD.copy(claimableAmount = BigInteger.ONE)),
+            ).right(),
+            isReflected = true,
+        ),
+        ReflectionModel(
+            summary = YieldRewardsSummary.PendingOnly(pending = listOf(CLAIMED_REWARD)).right(),
+            isReflected = true,
+        ),
         ReflectionModel(summary = YieldRewardsSummary.None.right(), isReflected = true),
         ReflectionModel(summary = YieldIncentivesError.Unavailable.left(), isReflected = false),
     )
