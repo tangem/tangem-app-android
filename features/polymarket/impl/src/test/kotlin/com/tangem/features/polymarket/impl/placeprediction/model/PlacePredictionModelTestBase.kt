@@ -136,7 +136,7 @@ internal abstract class PlacePredictionModelTestBase {
         coEvery { getPriceUseCase(assetId = any(), side = any()) } returns BigDecimal("0.48").right()
         coEvery { checkGeoblockUseCase() } returns false.right()
         coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()
-        coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult().right()
+        coEvery { placeOrderUseCase(any(), any(), any(), any()) } returns createPlaceResult().right()
         coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
             createPosition().right()
     }

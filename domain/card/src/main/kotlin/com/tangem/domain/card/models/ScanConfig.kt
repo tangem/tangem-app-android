@@ -5,7 +5,8 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.models.scan.ScanResponse
 
 /**
- * Options of a card scan. Prefer the [signIn] and [rescanKnownCard] presets over a custom combination.
+ * Options of a card scan. The defaults sign in with or add a card that may be new to the app; override only what a
+ * screen does differently.
  *
  * @property analyticsSource                    screen that started the scan
  * @property cardId                             ID of the card to scan; any card is accepted when `null`
@@ -22,11 +23,11 @@ import com.tangem.domain.models.scan.ScanResponse
 data class ScanConfig(
     val analyticsSource: AnalyticsParam.ScreensSources,
     val cardId: String? = null,
-    val shouldConfirmWalletOwnership: Boolean,
-    val canRequestAccessCodeFromRepository: Boolean,
-    val shouldUpdateCardIdDisplayFormat: Boolean,
-    val shouldTrackScanFails: Boolean,
-    val shouldLaunchOnboarding: Boolean,
+    val shouldConfirmWalletOwnership: Boolean = true,
+    val canRequestAccessCodeFromRepository: Boolean = false,
+    val shouldUpdateCardIdDisplayFormat: Boolean = true,
+    val shouldTrackScanFails: Boolean = true,
+    val shouldLaunchOnboarding: Boolean = true,
     val callback: Callback,
 ) {
 
@@ -46,31 +47,5 @@ data class ScanConfig(
         suspend fun onFailure(error: TangemError) {}
 
         suspend fun onSuccess(scanResponse: ScanResponse) {}
-    }
-
-    companion object {
-
-        /** Sign in with or add a card that may be new to the app */
-        fun signIn(analyticsSource: AnalyticsParam.ScreensSources, callback: Callback): ScanConfig = ScanConfig(
-            analyticsSource = analyticsSource,
-            shouldConfirmWalletOwnership = true,
-            canRequestAccessCodeFromRepository = false,
-            shouldUpdateCardIdDisplayFormat = true,
-            shouldTrackScanFails = true,
-            shouldLaunchOnboarding = true,
-            callback = callback,
-        )
-
-        /** Re-scan the card of a wallet already saved in the app, e.g. on the card settings screen */
-        fun rescanKnownCard(analyticsSource: AnalyticsParam.ScreensSources, callback: Callback): ScanConfig =
-            ScanConfig(
-                analyticsSource = analyticsSource,
-                shouldConfirmWalletOwnership = false,
-                canRequestAccessCodeFromRepository = true,
-                shouldUpdateCardIdDisplayFormat = false,
-                shouldTrackScanFails = false,
-                shouldLaunchOnboarding = false,
-                callback = callback,
-            )
     }
 }

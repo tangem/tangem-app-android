@@ -10,4 +10,9 @@ internal class DefaultPromoBannersFeatureToggles(
 
     override val isPromoCampaignsV2Enabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1705_PROMO_CAMPAIGNS_V2_ENABLED)
+
+    override val isHideMarketingBannersWhileSystemEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            FeatureToggles.TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED,
+        )
 }

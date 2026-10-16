@@ -3,6 +3,7 @@ package com.tangem.tests.walletConnect
 import android.Manifest
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants
+import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.utils.getWcUri
 import com.tangem.common.utils.setClipboardText
@@ -32,6 +33,9 @@ class SolanaWalletConnectTest : BaseTestCase() {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$scenarioState'") {
+                setWireMockScenarioState(QUOTES_API_SCENARIO, scenarioState)
             }
 
             step("Open 'Main Screen'") {
@@ -90,6 +94,9 @@ class SolanaWalletConnectTest : BaseTestCase() {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
             }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$scenarioState'") {
+                setWireMockScenarioState(QUOTES_API_SCENARIO, scenarioState)
+            }
 
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -147,6 +154,9 @@ class SolanaWalletConnectTest : BaseTestCase() {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$scenarioState'") {
+                setWireMockScenarioState(QUOTES_API_SCENARIO, scenarioState)
             }
 
             step("Open 'Main Screen'") {
@@ -209,6 +219,9 @@ class SolanaWalletConnectTest : BaseTestCase() {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$scenarioState'") {
+                setWireMockScenarioState(QUOTES_API_SCENARIO, scenarioState)
             }
 
             step("Set URI to clipboard") {

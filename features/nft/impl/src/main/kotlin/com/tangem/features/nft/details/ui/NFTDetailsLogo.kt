@@ -17,6 +17,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.RectangleShimmer
@@ -43,7 +44,7 @@ internal fun NFTDetailsLogo(state: NFTAssetUM.Media, modifier: Modifier = Modifi
                     .crossfade(true)
                     .build(),
                 loading = {
-                    RectangleShimmer(radius = TangemTheme.dimens.radius16)
+                    RectangleShimmer(radius = 16.dp)
                 },
                 error = {
                     Placeholder()
@@ -64,7 +65,7 @@ private fun Placeholder(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size120),
+            modifier = Modifier.size(120.dp),
             painter = painterResource(R.drawable.ic_nft_placeholder_120),
             contentDescription = null,
             tint = TangemTheme.colors.icon.primary1,

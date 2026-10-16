@@ -67,14 +67,14 @@ internal fun WcAppInfoItem(
                     clickableSingle { (verifiedDAppState as VerifiedDAppState.Verified).onVerifiedClick() }
                 },
             )
-            .padding(TangemTheme.dimens.spacing12),
+            .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         AsyncImage(
             modifier = Modifier
-                .size(TangemTheme.dimens.size48)
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
+                .size(48.dp)
+                .clip(RoundedCornerShape(8.dp))
                 .testTag(WalletConnectBottomSheetTestTags.APP_ICON),
             model = iconUrl,
             contentDescription = title,
@@ -83,10 +83,10 @@ internal fun WcAppInfoItem(
         )
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(

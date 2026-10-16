@@ -80,6 +80,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             analyticsSendSource = params.analyticsSendSource,
             accountFlow = params.accountFlow,
             isAccountModeFlow = params.isAccountModeFlow,
+            onCloseFlow = params.onCloseFlow,
         ),
         onResult = model::onAmountResult,
         onClick = model::showEditAmount,
@@ -198,7 +199,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             onBackClick = router::pop,
             backIconRes = R.drawable.ic_back_24,
             backgroundColor = TangemTheme.colors.background.tertiary,
-            modifier = Modifier.height(TangemTheme.dimens.size56),
+            modifier = Modifier.height(56.dp),
         )
     }
 
@@ -342,6 +343,8 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
         val accountFlow: StateFlow<Account?>,
         val isAccountModeFlow: StateFlow<Boolean>,
         val callback: ModelCallback,
+        /** Closes the whole flow, not just the current step. */
+        val onCloseFlow: () -> Unit,
     )
 
     @AssistedFactory
