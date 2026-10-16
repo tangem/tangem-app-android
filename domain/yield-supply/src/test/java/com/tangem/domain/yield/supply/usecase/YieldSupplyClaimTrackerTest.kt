@@ -7,6 +7,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOutcome
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
@@ -305,6 +306,7 @@ internal class YieldSupplyClaimTrackerTest {
                 userAddress = USER_ADDRESS,
                 transactionHash = OTHER_TX_HASH,
                 claimedRewards = listOf(CLAIMED_REWARD),
+                origin = YieldSupplyClaimOrigin.ClaimSheet,
             )
             advanceUntilIdle()
 
@@ -382,6 +384,7 @@ internal class YieldSupplyClaimTrackerTest {
         userAddress = USER_ADDRESS,
         transactionHash = TX_HASH,
         claimedRewards = listOf(CLAIMED_REWARD),
+        origin = YieldSupplyClaimOrigin.ClaimSheet,
     )
 
     private suspend fun YieldSupplyClaimTracker.isInFlight() = isClaimInFlight(CHAIN_ID, USER_ADDRESS).first()
@@ -392,6 +395,7 @@ internal class YieldSupplyClaimTrackerTest {
         chainId = CHAIN_ID,
         userAddress = USER_ADDRESS,
         outcome = outcome,
+        origin = YieldSupplyClaimOrigin.ClaimSheet,
     )
 
     /** Subscribes before the claim is tracked; call sites drain the collector with an extra `runCurrent`. */

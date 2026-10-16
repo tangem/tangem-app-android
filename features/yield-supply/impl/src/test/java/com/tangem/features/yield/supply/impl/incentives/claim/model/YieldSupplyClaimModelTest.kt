@@ -28,6 +28,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.domain.yield.supply.YieldSupplyError
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardDestination
@@ -525,6 +526,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
                     userAddress = SOURCE_ADDRESS,
                     transactionHash = TX_HASH,
                     claimedRewards = listOf(owner()),
+                    origin = YieldSupplyClaimOrigin.ClaimSheet,
                 )
             }
 
@@ -606,6 +608,7 @@ internal class YieldSupplyClaimModelTest : YieldSupplyActionModelTestBase() {
                     userAddress = SOURCE_ADDRESS,
                     transactionHash = TX_HASH,
                     claimedRewards = listOf(owner()),
+                    origin = YieldSupplyClaimOrigin.ClaimSheet,
                 )
             }
         }
