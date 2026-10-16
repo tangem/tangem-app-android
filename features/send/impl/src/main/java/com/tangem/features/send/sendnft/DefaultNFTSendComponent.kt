@@ -172,7 +172,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
                 account = model.account,
                 isAccountsMode = model.isAccountsMode,
                 onSendTransaction = { innerRouter.replaceAll(CommonSendRoute.ConfirmSuccess) },
-                onExitFlow = router::pop,
+                onCloseFlow = router::pop,
             ),
         )
     }

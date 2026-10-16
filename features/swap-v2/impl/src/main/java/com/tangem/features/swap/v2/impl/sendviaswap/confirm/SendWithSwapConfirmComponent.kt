@@ -80,7 +80,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             analyticsSendSource = params.analyticsSendSource,
             accountFlow = params.accountFlow,
             isAccountModeFlow = params.isAccountModeFlow,
-            onExitFlow = params.onExitFlow,
+            onCloseFlow = params.onCloseFlow,
         ),
         onResult = model::onAmountResult,
         onClick = model::showEditAmount,
@@ -344,7 +344,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
         val isAccountModeFlow: StateFlow<Boolean>,
         val callback: ModelCallback,
         /** Closes the whole flow, not just the current step. */
-        val onExitFlow: () -> Unit,
+        val onCloseFlow: () -> Unit,
     )
 
     @AssistedFactory
