@@ -21,8 +21,10 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -54,10 +56,13 @@ internal class YieldSupplyRewardsBannerModel @Inject constructor(
                 .mapNotNull { it.value.networkAddress?.defaultAddress?.value }
                 .first()
 
+            // Only the campaign chain matters here: restarting on every market update, an APY change for one, would
+            // drop the claim observation mid-flight and miss its settlement
             yieldSupplyMarketFlowUseCase(params.cryptoCurrency)
+                .map { market -> market?.takeIf { it.campaign?.hasActiveCampaign == true }?.chainId }
+                .distinctUntilChanged()
                 .flowOn(dispatchers.io)
-                .collectLatest { market ->
-                    val chainId = market?.takeIf { it.campaign?.hasActiveCampaign == true }?.chainId
+                .collectLatest { chainId ->
                     if (chainId == null) {
                         context = null
                         rewards = null

@@ -423,6 +423,33 @@ internal class YieldSupplyRewardsBannerModelTest {
     }
 
     @Test
+    fun `GIVEN a claim in flight WHEN the market updates and the claim settles THEN the rewards are read only on settle`() =
+        runTest {
+            // Arrange
+            val markets = MutableStateFlow(market(hasCampaign = true))
+            every { marketFlowUseCase(any()) } returns markets
+            coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returnsMany listOf(
+                MockYieldSupply.claimableSummary(claimable = listOf(reward(claimable = "1000"))).right(),
+                YieldRewardsSummary.None.right(),
+            )
+            claimInFlight.value = true
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            markets.value = markets.value.copy(apy = BigDecimal("5.0"))
+            advanceUntilIdle()
+            claimInFlight.value = false
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value).isNull()
+            coVerify(exactly = 2) { getRewardsSummaryUseCase(any(), any()) }
+
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN a claim in flight WHEN it settles and the rewards cannot be read THEN the banner stays`() = runTest {
         // Arrange
         coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returnsMany listOf(
