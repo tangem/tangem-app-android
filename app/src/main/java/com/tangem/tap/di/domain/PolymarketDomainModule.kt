@@ -380,10 +380,12 @@ internal object PolymarketDomainModule {
     fun provideSubmitPredictionClaimInteractor(
         redeemRepository: PolymarketRedeemRepository,
         polymarketRepository: PolymarketRepository,
+        positionsRepository: PolymarketPositionsRepository,
         signer: PolymarketTypedDataSigner,
     ): SubmitPredictionClaimInteractor = SubmitPredictionClaimInteractor(
         redeemRepository = redeemRepository,
         polymarketRepository = polymarketRepository,
+        positionsRepository = positionsRepository,
         signer = signer,
     )
 }
