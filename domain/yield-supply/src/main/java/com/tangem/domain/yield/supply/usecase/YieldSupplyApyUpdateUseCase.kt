@@ -3,6 +3,7 @@ package com.tangem.domain.yield.supply.usecase
 import arrow.core.Either
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldMarketToken
+import com.tangem.domain.yield.supply.models.activeEffectiveApys
 import java.math.BigDecimal
 
 /**
@@ -17,8 +18,6 @@ class YieldSupplyApyUpdateUseCase(
 ) {
 
     suspend operator fun invoke(): Either<Throwable, Map<String, BigDecimal>> = Either.catch {
-        yieldSupplyRepository.updateMarkets()
-            .filter { it.isActive }
-            .associate { it.yieldSupplyKey to it.effectiveApy }
+        yieldSupplyRepository.updateMarkets().activeEffectiveApys()
     }
 }
