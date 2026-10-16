@@ -290,6 +290,6 @@ internal abstract class SendModelTestBase {
         onLoadFee = { Either.Right(mockk(relaxed = true)) },
         onLoadFeeExtended = { Either.Right(mockk(relaxed = true)) },
         onSendTransaction = {},
-        onExitFlow = {},
+        onCloseFlow = {},
     )
 }
