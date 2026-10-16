@@ -23,6 +23,7 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.addfunds.VIRTUAL_ACCOUNT_TERMS_OF_USE_URL
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.withCacheBypass
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,8 +58,8 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
                 isLoading = false,
                 onShowDetailsClick = ::onShowDetailsClick,
                 onDismiss = ::onDismiss,
-                onTermsClick = { urlOpener.openUrl(VIRTUAL_ACCOUNT_TERMS_OF_USE_URL) },
-                onPrivacyClick = { urlOpener.openUrl(PRIVACY_POLICY_URL) },
+                onTermsClick = { urlOpener.openUrl(VIRTUAL_ACCOUNT_TERMS_OF_USE_URL.withCacheBypass()) },
+                onPrivacyClick = { urlOpener.openUrl(PRIVACY_POLICY_URL.withCacheBypass()) },
             ),
         )
 
