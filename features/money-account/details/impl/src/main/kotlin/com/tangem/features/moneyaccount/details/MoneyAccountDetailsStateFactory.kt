@@ -16,6 +16,7 @@ import com.tangem.features.moneyaccount.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
 internal class MoneyAccountDetailsStateFactory(
+    private val onAddFundsClick: () -> Unit,
     private val onTermsClick: () -> Unit,
     private val onSupportClick: () -> Unit,
     private val onBackClick: () -> Unit,
@@ -44,7 +45,7 @@ internal class MoneyAccountDetailsStateFactory(
             ),
         ),
         onBackClick = onBackClick,
-        onAddFundsClick = {},
+        onAddFundsClick = onAddFundsClick,
         onSendClick = {},
     )
 
