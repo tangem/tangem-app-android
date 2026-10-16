@@ -9,6 +9,7 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
@@ -38,7 +39,6 @@ import com.tangem.test.mock.yield.MockYieldSupply.claimableSummary
 import com.tangem.test.mock.yield.MockYieldSupply.coin
 import com.tangem.test.mock.yield.MockYieldSupply.deferredSummary
 import com.tangem.test.mock.yield.MockYieldSupply.market
-import com.tangem.test.mock.yield.MockYieldSupply.network
 import com.tangem.test.mock.yield.MockYieldSupply.reward
 import com.tangem.test.mock.yield.MockYieldSupply.token
 import io.mockk.clearMocks
@@ -67,6 +67,7 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
     private val validateCalldataUseCase: ValidateYieldClaimCalldataUseCase = mockk()
     private val buildClaimTransactionUseCase: BuildYieldClaimTransactionUseCase = mockk()
     private val getFeeUseCase: GetFeeUseCase = mockk()
+    private val getFeePaidStatusUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase = mockk()
     private val claimTracker: YieldSupplyClaimTracker = mockk()
 
     private val userWallet: UserWallet = mockk(relaxed = true) {
@@ -82,6 +83,7 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         ),
         buildYieldClaimTransactionUseCase = buildClaimTransactionUseCase,
         getFeeUseCase = getFeeUseCase,
+        getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidStatusUseCase,
         yieldSupplyClaimTracker = claimTracker,
     )
 
@@ -94,6 +96,7 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
             validateCalldataUseCase,
             buildClaimTransactionUseCase,
             getFeeUseCase,
+            getFeePaidStatusUseCase,
             claimTracker,
         )
         every { marketFlowUseCase(token = any()) } returns flowOf(market())
@@ -116,6 +119,9 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         coEvery {
             getFeeUseCase(userWallet = any(), network = any(), transactionData = any())
         } returns TransactionFee.Single(normal = fee(CLAIM_FEE)).right()
+        coEvery {
+            getFeePaidStatusUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
+        } returns statusOf(coin(), balance = BigDecimal.TEN).right()
     }
 
     @Test
@@ -124,7 +130,6 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         val actual = preparer.prepare(
             userWallet = userWallet,
             cryptoCurrencyStatus = statusOf(token(), balance = BigDecimal.TEN),
-            feeCryptoCurrencyStatus = statusOf(coin(), balance = BigDecimal.TEN),
             withdrawalFee = WITHDRAWAL_FEE,
         )
 
@@ -148,12 +153,14 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
             coEvery {
                 getFeeUseCase(userWallet = any(), network = any(), transactionData = any())
             } returns TransactionFee.Single(normal = tokenFee).right()
+            coEvery {
+                getFeePaidStatusUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
+            } returns statusOf(feeToken, balance = BigDecimal.TEN).right()
 
             // Act
             val actual = preparer.prepare(
                 userWallet = userWallet,
                 cryptoCurrencyStatus = statusOf(token(), balance = BigDecimal.TEN),
-                feeCryptoCurrencyStatus = statusOf(feeToken, balance = BigDecimal.TEN),
                 withdrawalFee = WITHDRAWAL_FEE,
             )
 
@@ -169,22 +176,6 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         }
 
     @Test
-    fun `GIVEN a coin fee and the token status as the fee balance WHEN prepared THEN skipped after the estimate`() =
-        runTest {
-            // Act
-            val actual = preparer.prepare(
-                userWallet = userWallet,
-                cryptoCurrencyStatus = statusOf(token(), balance = BigDecimal.TEN),
-                feeCryptoCurrencyStatus = statusOf(token(), balance = BigDecimal.TEN),
-                withdrawalFee = WITHDRAWAL_FEE,
-            )
-
-            // Assert
-            assertThat(actual).isEqualTo(YieldPreClaim.Skip)
-            coVerify(exactly = 1) { getFeeUseCase(userWallet = any(), network = any(), transactionData = any()) }
-        }
-
-    @Test
     fun `GIVEN a claimable summary WHEN prepared THEN the gate is given the module context of the summary`() =
         runTest {
             // Arrange
@@ -194,7 +185,6 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
             preparer.prepare(
                 userWallet = userWallet,
                 cryptoCurrencyStatus = statusOf(token(), balance = BigDecimal.TEN),
-                feeCryptoCurrencyStatus = statusOf(coin(), balance = BigDecimal.TEN),
                 withdrawalFee = WITHDRAWAL_FEE,
             )
 
@@ -223,7 +213,6 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         val actual = preparer.prepare(
             userWallet = userWallet,
             cryptoCurrencyStatus = statusOf(token(), balance = BigDecimal.TEN),
-            feeCryptoCurrencyStatus = statusOf(coin(), balance = BigDecimal.TEN),
             withdrawalFee = WITHDRAWAL_FEE,
         )
 
@@ -242,7 +231,6 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         val actual = preparer.prepare(
             userWallet = userWallet,
             cryptoCurrencyStatus = model.status,
-            feeCryptoCurrencyStatus = statusOf(model.feeCurrency, balance = model.feeBalance),
             withdrawalFee = WITHDRAWAL_FEE,
         )
 
@@ -253,43 +241,41 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
     internal data class SkipModel(
         val reason: String,
         val status: CryptoCurrencyStatus,
-        val feeBalance: BigDecimal,
-        val feeCurrency: CryptoCurrency = coin(),
         val arrange: () -> Unit,
     ) {
         override fun toString(): String = reason
     }
 
     private fun provideTestModels() = listOf(
-        SkipModel(reason = "currency is not a token", status = statusOf(coin(), BigDecimal.TEN), BigDecimal.TEN) {},
-        SkipModel(reason = "no network address", status = statusWithoutAddress(), BigDecimal.TEN) {},
-        SkipModel(reason = "token has no market entry", status = statusOf(token(), BigDecimal.TEN), BigDecimal.TEN) {
+        SkipModel(reason = "currency is not a token", status = statusOf(coin(), BigDecimal.TEN)) {},
+        SkipModel(reason = "no network address", status = statusWithoutAddress()) {},
+        SkipModel(reason = "token has no market entry", status = statusOf(token(), BigDecimal.TEN)) {
             every { marketFlowUseCase(token = any()) } returns flowOf(null)
         },
-        SkipModel(reason = "markets cache cannot be read", status = statusOf(token(), BigDecimal.TEN), BigDecimal.TEN) {
+        SkipModel(reason = "markets cache cannot be read", status = statusOf(token(), BigDecimal.TEN)) {
             every { marketFlowUseCase(token = any()) } returns flow { throw IOException("DataStore read failed") }
         },
-        SkipModel(reason = "incentives unavailable", status = statusOf(token(), BigDecimal.TEN), BigDecimal.TEN) {
+        SkipModel(reason = "incentives unavailable", status = statusOf(token(), BigDecimal.TEN)) {
             coEvery {
                 getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
             } returns YieldIncentivesError.Unavailable.left()
         },
-        SkipModel(reason = "claim is deferred", status = statusOf(token(), BigDecimal.TEN), BigDecimal.TEN) {
+        SkipModel(reason = "claim is deferred", status = statusOf(token(), BigDecimal.TEN)) {
             coEvery {
                 getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
             } returns deferredSummary().right()
         },
-        SkipModel(reason = "calldata unavailable", status = statusOf(token(), BigDecimal.TEN), BigDecimal.TEN) {
+        SkipModel(reason = "calldata unavailable", status = statusOf(token(), BigDecimal.TEN)) {
             coEvery {
                 getFreshCalldataUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
             } returns YieldIncentivesError.Unavailable.left()
         },
-        SkipModel(reason = "calldata rejected by the gate", status = statusOf(token(), BigDecimal.TEN), BigDecimal.TEN) {
+        SkipModel(reason = "calldata rejected by the gate", status = statusOf(token(), BigDecimal.TEN)) {
             coEvery {
                 validateCalldataUseCase(calldata = any(), context = any())
             } returns YieldClaimValidationError.NotRecommended.left()
         },
-        SkipModel(reason = "transaction cannot be built", status = statusOf(token(), BigDecimal.TEN), BigDecimal.TEN) {
+        SkipModel(reason = "transaction cannot be built", status = statusOf(token(), BigDecimal.TEN)) {
             coEvery {
                 buildClaimTransactionUseCase(
                     userWalletId = any(),
@@ -299,43 +285,34 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
                 )
             } returns YieldSupplyError.DataError(Throwable()).left()
         },
-        SkipModel(reason = "fee cannot be estimated", status = statusOf(token(), BigDecimal.TEN), BigDecimal.TEN) {
+        SkipModel(reason = "fee cannot be estimated", status = statusOf(token(), BigDecimal.TEN)) {
             coEvery {
                 getFeeUseCase(userWallet = any(), network = any(), transactionData = any())
             } returns GetFeeError.UnknownError.left()
         },
-        SkipModel(reason = "claim fee amount is unknown", status = statusOf(token(), BigDecimal.TEN), BigDecimal.TEN) {
+        SkipModel(reason = "claim fee amount is unknown", status = statusOf(token(), BigDecimal.TEN)) {
             coEvery {
                 getFeeUseCase(userWallet = any(), network = any(), transactionData = any())
             } returns TransactionFee.Single(normal = fee(value = null)).right()
         },
-        SkipModel(reason = "a claim on this module is in flight", status = statusOf(token(), BigDecimal.TEN), BigDecimal.TEN) {
+        SkipModel(reason = "a claim on this module is in flight", status = statusOf(token(), BigDecimal.TEN)) {
             every {
                 claimTracker.isClaimInFlight(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
             } returns flowOf(true)
         },
-        SkipModel(
-            reason = "the fee coin belongs to another network",
-            status = statusOf(token(), BigDecimal.TEN),
-            feeBalance = BigDecimal.TEN,
-            feeCurrency = coin(network = network(id = "polygon", name = "Polygon", currencySymbol = "POL")),
-        ) {},
-        SkipModel(
-            reason = "the token fee is paid in another token",
-            status = statusOf(token(), BigDecimal.TEN),
-            feeBalance = BigDecimal.TEN,
-            feeCurrency = token(contractAddress = FEE_TOKEN_ADDRESS),
-        ) {
+        SkipModel(reason = "the fee currency is not in the account", status = statusOf(token(), BigDecimal.TEN)) {
             coEvery {
-                getFeeUseCase(userWallet = any(), network = any(), transactionData = any())
-            } returns TransactionFee.Single(
-                normal = fee(value = CLAIM_FEE, type = AmountType.Token(sdkToken(TOKEN_ELSEWHERE_ADDRESS))),
-            ).right()
+                getFeePaidStatusUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
+            } returns null.right()
+        },
+        SkipModel(reason = "the fee balance is not loaded yet", status = statusOf(token(), BigDecimal.TEN)) {
+            coEvery {
+                getFeePaidStatusUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
+            } returns CryptoCurrencyStatus(currency = coin(), value = CryptoCurrencyStatus.Loading).right()
         },
         SkipModel(
             reason = "the fee is paid with a fee resource",
             status = statusOf(token(), BigDecimal.TEN),
-            feeBalance = BigDecimal.TEN,
         ) {
             coEvery {
                 getFeeUseCase(userWallet = any(), network = any(), transactionData = any())
@@ -346,8 +323,11 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         SkipModel(
             reason = "balance covers the claim but not the withdrawal after it",
             status = statusOf(token(), BigDecimal.TEN),
-            feeBalance = CLAIM_FEE + WITHDRAWAL_FEE - BigDecimal("0.0001"),
-        ) {},
+        ) {
+            coEvery {
+                getFeePaidStatusUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
+            } returns statusOf(coin(), balance = CLAIM_FEE + WITHDRAWAL_FEE - BigDecimal("0.0001")).right()
+        },
     )
 
     private fun claimTransaction() = TransactionData.Uncompiled(
@@ -399,6 +379,5 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         val CLAIM_FEE: BigDecimal = BigDecimal("0.001")
         val WITHDRAWAL_FEE: BigDecimal = BigDecimal("0.002")
         const val FEE_TOKEN_ADDRESS = "0xfee0000000000000000000000000000000000fee"
-        const val TOKEN_ELSEWHERE_ADDRESS = "0xbad0000000000000000000000000000000000bad"
     }
 }
