@@ -121,9 +121,13 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private val cashback = cashbackControllerFactory.create(scope = modelScope, accountStatus = currentStatus)
 
-    val uiState: StateFlow<TangemPayDetailsUM> =
-        combine(baseState, cashback.state, TangemPayDetailsUM::withCashback)
-            .stateIn(modelScope, SharingStarted.Eagerly, baseState.value)
+    val uiState: StateFlow<TangemPayDetailsUM> = combine(
+        baseState,
+        cashback.state,
+        getBalanceHidingSettingsUseCase.isBalanceHidden(),
+    ) { state, cashbackState, isBalanceHidden ->
+        state.withCashback(cashbackState).copy(isBalanceHidden = isBalanceHidden)
+    }.stateIn(modelScope, SharingStarted.Eagerly, baseState.value)
 
     private val refreshStateJobHolder = JobHolder()
     private val planSelectionJobHolder = JobHolder()
@@ -138,7 +142,6 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     init {
         analytics.send(TangemPayAnalyticsEvents.MainScreenOpened())
-        handleBalanceHiding()
 
         paymentAccountStatusSupplier.invoke(userWalletId)
             .onEach { status -> currentStatus.update { status } }
@@ -306,12 +309,6 @@ internal class TangemPayDetailsModel @Inject constructor(
             return
         }
         router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub)
-    }
-
-    private fun handleBalanceHiding() {
-        getBalanceHidingSettingsUseCase().onEach {
-            baseState.update(DetailBalanceVisibilityTransformer(isHidden = it.isBalanceHidden))
-        }.launchIn(modelScope)
     }
 
     override fun onContactSupportClicked() {
@@ -578,7 +575,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         bottomSheetNavigation.activate(
             configuration = TangemPayDetailsNavigation.TransactionDetails(
                 transaction = item,
-                isBalanceHidden = baseState.value.isBalanceHidden,
+                isBalanceHidden = uiState.value.isBalanceHidden,
                 userWalletId = userWalletId,
                 customerId = customerId,
             ),

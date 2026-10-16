@@ -5,7 +5,6 @@ import arrow.core.right
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -51,7 +50,6 @@ import org.junit.jupiter.api.Test
 internal class CreateWalletStartModelTest {
 
     private val router: Router = mockk(relaxed = true)
-    private val appRouter: AppRouter = mockk(relaxed = true)
     private val scanCardProcessor: ScanCardProcessor = mockk()
     private val cardSdkConfigRepository: CardSdkConfigRepository = mockk(relaxed = true)
     private val settingsRepository: SettingsRepository = mockk()
@@ -326,7 +324,7 @@ internal class CreateWalletStartModelTest {
 
         verify { coldUserWalletBuilderFactory.create(scanResponse = testScanResponse) }
         coVerify(exactly = 0) { saveWalletUseCase(userWallet = any(), canOverride = any(), analyticsSource = any()) }
-        verify(exactly = 0) { appRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
+        verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
     }
 
     @Test
@@ -362,7 +360,7 @@ internal class CreateWalletStartModelTest {
                     ),
                 )
             }
-            verify { appRouter.replaceAll(routes = arrayOf(AppRoute.Wallet), onComplete = any()) }
+            verify { router.replaceAll(routes = arrayOf(AppRoute.Wallet), onComplete = any()) }
         }
 
     @Test
@@ -383,7 +381,7 @@ internal class CreateWalletStartModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 0) { userWalletsListRepository.unlock(any(), any()) }
-        verify(exactly = 0) { appRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
+        verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
     }
 
     @Test
@@ -405,7 +403,7 @@ internal class CreateWalletStartModelTest {
             model.uiState.value.onScanClick.invoke()
             advanceUntilIdle()
 
-            verify { appRouter.replaceAll(routes = arrayOf(AppRoute.Wallet), onComplete = any()) }
+            verify { router.replaceAll(routes = arrayOf(AppRoute.Wallet), onComplete = any()) }
         }
 
     @Test
@@ -428,7 +426,7 @@ internal class CreateWalletStartModelTest {
             advanceUntilIdle()
 
             verify {
-                appRouter.replaceAll(
+                router.replaceAll(
                     routes = arrayOf(
                         AppRoute.Onboarding(
                             scanResponse = testScanResponse,
@@ -532,7 +530,6 @@ internal class CreateWalletStartModelTest {
             scanCardProcessor = scanCardProcessor,
             cardSdkConfigRepository = cardSdkConfigRepository,
             settingsRepository = settingsRepository,
-            appRouter = appRouter,
             coldUserWalletBuilderFactory = coldUserWalletBuilderFactory,
             saveWalletUseCase = saveWalletUseCase,
             isHotWalletCreationSupported = isHotWalletCreationSupported,

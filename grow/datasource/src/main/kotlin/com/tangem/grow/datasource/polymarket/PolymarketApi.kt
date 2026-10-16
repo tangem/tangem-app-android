@@ -62,20 +62,25 @@ interface PolymarketApi {
         @Query("depositWalletAddress") depositWalletAddress: String,
     ): ApiResponse<PolymarketDepositReconcileResponse>
 
-    @GET("api/predictions/v1/positions?sort=endDate&ascending=true")
+    /**
+     * Open holdings, most valuable first. The first page carries only [limit]; every next page carries only the
+     * [cursor] of the page before it, which also fixes the page size — a cursor sent with a limit is a `400`.
+     */
+    @GET("api/predictions/v1/positions")
     suspend fun getPositions(
         @Header("wallet-id") walletId: String,
         @Query("depositWalletAddress") depositWalletAddress: String,
-        @Query("limit") limit: Int,
-        @Query("offset") offset: Int,
+        @Query("limit") limit: Int?,
+        @Query("cursor") cursor: String?,
     ): ApiResponse<PolymarketPositionsResponse>
 
-    @GET("api/predictions/v1/positions/closed?sort=closedAt&ascending=false")
+    /** Closed holdings, most recently closed first. Paged like [getPositions]. */
+    @GET("api/predictions/v1/positions/closed")
     suspend fun getClosedPositions(
         @Header("wallet-id") walletId: String,
         @Query("depositWalletAddress") depositWalletAddress: String,
-        @Query("limit") limit: Int,
-        @Query("offset") offset: Int,
+        @Query("limit") limit: Int?,
+        @Query("cursor") cursor: String?,
     ): ApiResponse<PolymarketClosedPositionsResponse>
 
     @GET("api/predictions/v1/positions/outcome")

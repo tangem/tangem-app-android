@@ -31,7 +31,6 @@ import com.tangem.features.tangempay.withdraw.bank.ui.BankRailIcon
 internal fun BankWithdrawAmountSheets(sheet: SheetUM) {
     val tokens = rememberLastNonNull(sheet as? SheetUM.Tokens)
     TangemModal<TangemBottomSheetConfigContent.Empty>(
-        presentation = TangemModal.Presentation.Dialog,
         config = TangemBottomSheetConfig(
             isShown = sheet is SheetUM.Tokens,
             onDismissRequest = sheet.onDismiss,
@@ -44,7 +43,6 @@ internal fun BankWithdrawAmountSheets(sheet: SheetUM) {
 
     val routes = rememberLastNonNull(sheet as? SheetUM.Routes)
     TangemModal<TangemBottomSheetConfigContent.Empty>(
-        presentation = TangemModal.Presentation.Dialog,
         config = TangemBottomSheetConfig(
             isShown = sheet is SheetUM.Routes,
             onDismissRequest = sheet.onDismiss,
@@ -92,6 +90,7 @@ private fun TokenRow(item: TokenItemUM) {
 @Composable
 private fun RouteRow(item: RouteItemUM) {
     TangemRow(
+        modifier = Modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_ROUTE_OPTION),
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = { BankRailIcon(rail = item.rail, size = 40.dp) },

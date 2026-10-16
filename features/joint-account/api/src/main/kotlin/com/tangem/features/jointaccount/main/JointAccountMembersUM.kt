@@ -1,6 +1,7 @@
 package com.tangem.features.jointaccount.main
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import kotlinx.collections.immutable.ImmutableList
@@ -13,46 +14,39 @@ import kotlinx.collections.immutable.ImmutableList
  * simply not wiring it here for the current account state.
  *
  * @property topBar          which affordance leaves the screen and what it shows — see [TopBarUM].
- * @property header          the in-content title/progress block; `null` once the account is active — its
- * title moves into [topBar] instead and there is nothing left to collect.
- * @property shareSafely     "Share invites safely" info block; tapping opens the info sheet. `null` once the
- * account is active, or when this device isn't the creator — only the creator shares invites.
+ * @property header          the in-content title; `null` once the account is active — its title moves into
+ * [topBar] instead.
+ * @property summaryCard     the account's name, icon, joining progress and approval rule; `null` until the
+ * account's own record (name and icon) arrives.
  * @property joined          members who have already joined, in display order.
  * @property freeSlots       slots still waiting to be filled, in display order.
- * @property otherMembersLabel section label shown above [freeSlots]; `null` hides it (no free slots).
- * @property activateButton the "Activate account" call to action pinned to the bottom of the screen —
- * creator only, shown when every slot is filled; `null` hides it (not the creator, the composition is not
- * full yet, or the account is already active) — see [ActivateButtonUM].
+ * @property membersLabel    section label shown above [joined]; `null` hides it (nobody joined).
+ * @property waitingLabel    section label shown above [freeSlots]; `null` hides it (no free slots).
+ * @property footer        the "Verify account" footer pinned to the bottom of the screen; `null` once the
+ * account is active — see [FooterUM].
  */
 @Immutable
 data class JointAccountMembersUM(
     val topBar: TopBarUM,
     val header: HeaderUM?,
-    val shareSafely: ShareSafelyUM?,
+    val summaryCard: SummaryCardUM?,
     val joined: ImmutableList<MemberUM.Joined>,
     val freeSlots: ImmutableList<MemberUM.FreeSlot>,
-    val otherMembersLabel: TextReference?,
-    val activateButton: ActivateButtonUM?,
+    val membersLabel: TextReference?,
+    val waitingLabel: TextReference?,
+    val footer: FooterUM?,
 ) {
 
-    /**
-     * The top bar's affordance for leaving the screen. The two shapes are mutually exclusive by design —
-     * archiving is never offered once the account is active, so that state simply carries no such field.
-     */
+    /** The top bar's affordance for leaving the screen. */
     @Immutable
     sealed interface TopBarUM {
 
         /**
          * Top-right close "X" — dismisses the working (collecting/activating) view.
          *
-         * @property canArchive     whether the three-dot menu with the destructive "Archive account" action
-         * is shown.
-         * @property onArchiveClick archive the account.
-         * @property onCloseClick   leave the screen and return to the wallet.
+         * @property onCloseClick leave the screen and return to the wallet.
          */
         data class Dismissible(
-            val canArchive: Boolean,
-            val onArchiveClick: () -> Unit,
             val onCloseClick: () -> Unit,
         ) : TopBarUM
 
@@ -70,40 +64,55 @@ data class JointAccountMembersUM(
     }
 
     /**
-     * The in-content title/progress block shown above the member list.
+     * The in-content title shown above the member list.
      *
-     * @property title    screen title ("Invite members" while collecting).
-     * @property progress collection progress, e.g. "1 of 5 joined, including you".
+     * @property title screen title ("Invite members" while collecting).
      */
     data class HeaderUM(
         val title: TextReference,
-        val progress: TextReference,
     )
 
     /**
-     * "Activate account" button.
+     * The account summary card above the member list.
      *
-     * @property walletIconRes wallet-interaction icon at the end of the button — a card for a cold wallet, which
-     * signs the activation with a tap; `null` for a hot wallet.
+     * @property icon                 account icon, the same as on the wallet screen.
+     * @property name                 account name.
+     * @property progress             joining progress, e.g. "1 of 5 members joined".
+     * @property approvals            approval rule, e.g. "Any 2 of 5".
+     * @property onApprovalsInfoClick explain how the approval rule works.
+     */
+    data class SummaryCardUM(
+        val icon: AccountIconUM.CryptoPortfolio,
+        val name: TextReference,
+        val progress: TextReference,
+        val approvals: TextReference,
+        val onApprovalsInfoClick: () -> Unit,
+    )
+
+    /**
+     * The footer pinned to the bottom of the screen.
+     *
+     * @property hint   how many members still need to join, shown above [button]; `null` hides it.
+     * @property button the "Verify account" button.
+     */
+    data class FooterUM(
+        val hint: TextReference?,
+        val button: VerifyButtonUM,
+    )
+
+    /**
+     * "Verify account" button.
+     *
+     * @property isEnabled     the button can be pressed — only the creator, once every slot is filled.
      * @property isLoading     the activation is being signed and sent.
+     * @property walletIconRes wallet-interaction icon at the end of the button — a card for a cold wallet, which
+     * signs with a tap; `null` for a hot wallet.
      * @property onClick       sign and activate the account.
      */
-    data class ActivateButtonUM(
-        val walletIconRes: Int?,
+    data class VerifyButtonUM(
+        val isEnabled: Boolean,
         val isLoading: Boolean,
-        val onClick: () -> Unit,
-    )
-
-    /**
-     * "Share invites safely" info block.
-     *
-     * @property title       block headline.
-     * @property description supporting line explaining that anyone with the link can join and sign.
-     * @property onClick     open the "Sharing safely" info sheet.
-     */
-    data class ShareSafelyUM(
-        val title: TextReference,
-        val description: TextReference,
+        val walletIconRes: Int?,
         val onClick: () -> Unit,
     )
 
@@ -128,31 +137,46 @@ data class JointAccountMembersUM(
          *
          * @property avatar      colored monogram avatar.
          * @property name        member's display name.
-         * @property role        role label: "You • Creator", "You" or "Joined".
+         * @property isYou       this wallet is the member — a "You" chip follows the name.
+
+         * @property status      membership status ("Joined").
          * @property onInfoClick open the member card with the full owner address.
          */
         data class Joined(
             override val id: String,
             val avatar: MemberAvatarUM,
             val name: TextReference,
-            val role: TextReference,
+            val isYou: Boolean,
+            val isCreator: Boolean,
+            val status: TextReference,
             val onInfoClick: () -> Unit,
         ) : MemberUM
 
         /**
          * A free slot waiting to be filled.
          *
-         * @property title         slot title ("Member").
-         * @property status        slot status ("Not invited").
-         * @property canInvite     whether the "Invite" button is shown (creator only, working view only).
-         * @property onInviteClick share this slot's invite link via the system share sheet.
+         * @property title  slot title ("Member 2").
+         * @property status slot status ("Not invited").
+         * @property action the button the slot offers; `null` shows none (not the creator, or nothing to share).
          */
         data class FreeSlot(
             override val id: String,
             val title: TextReference,
             val status: TextReference,
-            val canInvite: Boolean,
-            val onInviteClick: () -> Unit,
+            val action: SlotActionUM?,
         ) : MemberUM
+    }
+
+    /** The button of a free slot. */
+    @Immutable
+    sealed interface SlotActionUM {
+
+        val onClick: () -> Unit
+
+        /** "Invite" — share this slot's invite link via the system share sheet. */
+        data class Invite(override val onClick: () -> Unit) : SlotActionUM
+
+        /** "Resend" — share this slot's invite link again. */
+        data class Resend(override val onClick: () -> Unit) : SlotActionUM
     }
 }

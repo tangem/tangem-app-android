@@ -180,6 +180,7 @@ internal class WalletModel @Inject constructor(
         subscribeOnBalanceHiding()
         subscribeOnSelectedWalletFlow()
         subscribeToScreenBackgroundState()
+        restoreTrackingContextOnResume()
         subscribeOnPushNotificationsPermission()
         subscribeTangemPayOnWalletState()
         subscribeJointAccountPolling()
@@ -455,6 +456,16 @@ internal class WalletModel @Inject constructor(
                     }
                 }
             }
+            .launchIn(modelScope)
+    }
+
+    // Screens opened over the main one push their own tracking context and pop it on destroy, which can leave
+    // another wallet's context or none at all. Decompose destroys them before resuming this screen.
+    private fun restoreTrackingContextOnResume() {
+        screenLifecycleProvider.isBackgroundState
+            .filterNot { isBackground -> isBackground }
+            .mapNotNull { userWalletsListRepository.selectedUserWallet.value }
+            .onEach { selectedWallet -> trackingContextProxy.setContext(selectedWallet) }
             .launchIn(modelScope)
     }
 

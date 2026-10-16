@@ -62,6 +62,7 @@ dependencies {
     // endregion
 
     // region Project - Domain models
+    implementation(projects.domain.moneyAccount.models)
     implementation(projects.domain.visa.models)
     // endregion
 

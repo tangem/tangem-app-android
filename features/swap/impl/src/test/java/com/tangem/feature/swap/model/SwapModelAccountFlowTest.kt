@@ -31,7 +31,9 @@ import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -996,6 +998,30 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
+    fun `GIVEN a collectibles top-up with accounts mode off WHEN the state is built THEN both cards show account names`() =
+        runTest {
+            // Arrange
+            val (from, _) = stubResolvedTopUpPair(toAccount = Account.Collectibles(userWalletId))
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.CollectiblesTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            val sendTitle = (model.uiState.sendCardData as SwapCardState.SwapCardData).type.accountTitleUM
+            val receiveTitle = (model.uiState.receiveCardData as SwapCardState.SwapCardData).type.accountTitleUM
+            assertThat((sendTitle as AccountTitleUM.Account).name).isEqualTo(from.account.accountName.toUM().value)
+            assertThat(receiveTitle).isEqualTo(
+                AccountTitleUM.Account(
+                    prefixText = resourceReference(R.string.swapping_to_account_title),
+                    name = resourceReference(R.string.collectibles_main_title),
+                    icon = AccountIconUM.Collectibles,
+                ),
+            )
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN a prediction top-up WHEN the state is built THEN the receive card shows the prediction account in USD`() =
         runTest {
             // Arrange
@@ -1022,6 +1048,33 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
+    fun `GIVEN a collectibles top-up WHEN the state is built THEN the receive card shows the vault in USD and is locked`() =
+        runTest {
+            // Arrange
+            val (_, vault) = stubResolvedTopUpPair(toAccount = Account.Collectibles(userWalletId))
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.CollectiblesTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            val receiveCard = model.uiState.receiveCardData as SwapCardState.SwapCardData
+            val expectedBalance = vault.status.value.amount.format {
+                fiat(
+                    fiatCurrencyCode = AppCurrency.Default.code,
+                    fiatCurrencySymbol = AppCurrency.Default.symbol,
+                )
+            }
+            assertThat(receiveCard.currencyIconState).isEqualTo(CurrencyIconState.CollectiblesAccount())
+            assertThat(receiveCard.fiatSymbolOverride).isEqualTo("USD")
+            assertThat(receiveCard.balance)
+                .isEqualTo(resourceReference(R.string.common_balance, wrappedList(expectedBalance)))
+            assertThat(receiveCard.isSelectionLocked).isTrue()
+            assertThat(model.uiState.titleId).isEqualTo(R.string.common_add_funds)
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN a prediction top-up WHEN the prediction balance changes THEN the receive card shows the new USD balance`() =
         runTest {
             // Arrange
@@ -1042,6 +1095,41 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
 
             // Act
             val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            val receiveCard = model.uiState.receiveCardData as SwapCardState.SwapCardData
+            val expectedBalance = updatedAmount.format {
+                fiat(
+                    fiatCurrencyCode = AppCurrency.Default.code,
+                    fiatCurrencySymbol = AppCurrency.Default.symbol,
+                )
+            }
+            assertThat(receiveCard.balance)
+                .isEqualTo(resourceReference(R.string.common_balance, wrappedList(expectedBalance)))
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a collectibles top-up WHEN the vault balance changes THEN the receive card shows the new USD balance`() =
+        runTest {
+            // Arrange
+            val (_, vault) = stubResolvedTopUpPair(toAccount = Account.Collectibles(userWalletId))
+            val updatedAmount = BigDecimal("7.5")
+            val updatedVaultStatus = vault.status.copy(
+                value = mockk<CryptoCurrencyStatus.Value>(relaxed = true) {
+                    every { amount } returns updatedAmount
+                },
+            )
+            val vaultStatusValue = mockk<CollectiblesAccountStatusValue.Onboarded>(relaxed = true) {
+                every { cryptoCurrencyStatus } returns updatedVaultStatus
+            }
+            every { singleAccountStatusSupplier(any()) } returns flowOf(
+                AccountStatus.Collectibles(account = Account.Collectibles(userWalletId), value = vaultStatusValue),
+            )
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.CollectiblesTopUp)
             advanceUntilIdle()
 
             // Assert
@@ -1148,6 +1236,60 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         // Assert
         verify(exactly = 1) { predictionFundingWindow.open(userWalletId) }
         verify { router.replaceAll(SwapRoute.Success) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a collectibles top-up WHEN the transfer is sent THEN the vault is read again`() = runTest {
+        // Arrange
+        val model = createTopUpTransferModel(
+            accountFlow = AccountFlow.CollectiblesTopUp,
+            toAccount = Account.Collectibles(userWalletId),
+        )
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) {
+            collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWalletId))
+        }
+        verify(exactly = 0) { predictionFundingWindow.open(any()) }
+        verify { router.replaceAll(SwapRoute.Success) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a collectibles top-up WHEN the swap is sent THEN the vault is read again`() = runTest {
+        // Arrange
+        val model = createTopUpSwapModel(
+            accountFlow = AccountFlow.CollectiblesTopUp,
+            toAccount = Account.Collectibles(userWalletId),
+        )
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) {
+            collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWalletId))
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN the transfer is sent THEN the collectibles vault is not read`() = runTest {
+        // Arrange
+        val model = createTopUpTransferModel(accountFlow = AccountFlow.PredictionTopUp)
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { collectiblesAccountStatusFetcher(any()) }
         model.onDestroy()
     }
 
@@ -1970,9 +2112,10 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     private fun TestScope.createTopUpTransferModel(
         accountFlow: AccountFlow?,
         feeType: AnalyticsParam.FeeType = AnalyticsParam.FeeType.Normal,
+        toAccount: Account = Account.Prediction(userWalletId),
     ): SwapModel {
         val from = swapCurrencyStatus()
-        val collateral = swapCurrencyStatus(currency = usdcPolygonToken(), account = Account.Prediction(userWalletId))
+        val collateral = swapCurrencyStatus(currency = usdcPolygonToken(), account = toAccount)
         coEvery {
             initialCurrenciesResolver.invoke(
                 userWalletId = any(),
@@ -2116,8 +2259,11 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         model.onDestroy()
     }
 
-    private fun TestScope.createTopUpSwapModel(accountFlow: AccountFlow?): SwapModel {
-        stubResolvedTopUpPair()
+    private fun TestScope.createTopUpSwapModel(
+        accountFlow: AccountFlow?,
+        toAccount: Account = Account.Prediction(userWalletId),
+    ): SwapModel {
+        stubResolvedTopUpPair(toAccount)
         val provider = swapProvider(id = "changelly", type = ExchangeProviderType.CEX)
         every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns false
         coEvery { swapInteractor.getUnfulfilledReceiveRequirement(any()) } returns null
@@ -2152,10 +2298,12 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         onProviderClick = {},
     )
 
-    private fun stubResolvedTopUpPair(): Pair<SwapCurrencyStatus, SwapCurrencyStatus> {
+    private fun stubResolvedTopUpPair(
+        toAccount: Account = Account.Prediction(userWalletId),
+    ): Pair<SwapCurrencyStatus, SwapCurrencyStatus> {
         val wallet = accountFlowUserWallet()
         val from = buildSwapCurrencyStatus(wallet)
-        val collateral = buildSwapCurrencyStatus(wallet).copy(account = Account.Prediction(userWalletId))
+        val to = buildSwapCurrencyStatus(wallet).copy(account = toAccount)
         coEvery {
             initialCurrenciesResolver.invoke(
                 userWalletId = any(),
@@ -2164,8 +2312,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 accountFlow = any(),
                 initialToCryptoCurrency = any(),
             )
-        } returns (from to collateral)
-        return from to collateral
+        } returns (from to to)
+        return from to to
     }
 
     // -------------------------------------------------------------------------
