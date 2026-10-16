@@ -202,7 +202,7 @@ class TokenItemStateConverter(
                     )
                 }?.value
                 if (yieldSupplyApy != null) {
-                    val isActive = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive ?: false
+                    val isActive = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive == true
                     return EarnApyInfo(
                         text = resourceReference(
                             R.string.yield_module_earn_badge,
@@ -358,10 +358,12 @@ class TokenItemStateConverter(
                             if (status.value.yieldSupplyStatus?.isActive == true &&
                                 status.value.yieldSupplyStatus?.isAllowedToSpend == false
                             ) {
-                                TokenItemState.FiatAmountState.Content.IconUM(
-                                    iconRes = R.drawable.ic_alert_triangle_20,
-                                    tint = IconTint.Warning,
-                                ).let(::add)
+                                add(
+                                    TokenItemState.FiatAmountState.Content.IconUM(
+                                        iconRes = R.drawable.ic_alert_triangle_20,
+                                        tint = IconTint.Warning,
+                                    ),
+                                )
                             }
                             if (status.value.sources.total == StatusSource.ONLY_CACHE) {
                                 add(

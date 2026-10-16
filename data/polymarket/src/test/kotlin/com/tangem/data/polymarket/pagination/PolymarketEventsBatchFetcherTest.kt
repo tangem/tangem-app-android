@@ -89,8 +89,8 @@ internal class PolymarketEventsBatchFetcherTest {
 
         // Assert
         val success = result as BatchFetchResult.Success
-        assertThat(success.empty).isTrue()
-        assertThat(success.last).isTrue()
+        assertThat(success.isEmpty).isTrue()
+        assertThat(success.isLast).isTrue()
         assertThat(requestedCursors).containsExactly(null)
     }
 
@@ -111,7 +111,7 @@ internal class PolymarketEventsBatchFetcherTest {
         val success = result as BatchFetchResult.Success
         assertThat(success.data.events).containsExactly(event)
         assertThat(success.data.requestCursor).isEqualTo("cursor-1")
-        assertThat(success.last).isFalse()
+        assertThat(success.isLast).isFalse()
         assertThat(requestedCursors).containsExactly(null, "cursor-1").inOrder()
     }
 
@@ -149,8 +149,8 @@ internal class PolymarketEventsBatchFetcherTest {
 
             // Assert
             val success = result as BatchFetchResult.Success
-            assertThat(success.empty).isTrue()
-            assertThat(success.last).isTrue()
+            assertThat(success.isEmpty).isTrue()
+            assertThat(success.isLast).isTrue()
             assertThat(requestedCursors).containsExactly(null, "cursor-0", "cursor-1", "cursor-2").inOrder()
         }
 
@@ -227,7 +227,7 @@ internal class PolymarketEventsBatchFetcherTest {
         val success = second as BatchFetchResult.Success
         assertThat(success.data.events).containsExactly(event)
         assertThat(success.data.requestCursor).isEqualTo("cursor-2")
-        assertThat(success.last).isTrue()
+        assertThat(success.isLast).isTrue()
         assertThat(requestedCursors).containsExactly(null, "cursor-1", "cursor-2").inOrder()
     }
 

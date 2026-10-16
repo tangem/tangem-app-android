@@ -59,8 +59,8 @@ internal class Wallet1ChooseOptionModel @Inject constructor(
                 cardRepository.finishCardActivation(scanResponse.card.cardId)
 
                 // save user wallet for manage tokens screen
-                params.multiWalletState.update {
-                    it.copy(resultUserWallet = userWallet)
+                params.multiWalletState.update { state ->
+                    state.copy(resultUserWallet = userWallet)
                 }
 
                 returnToParentFlow.emit(Unit)

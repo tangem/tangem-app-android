@@ -134,7 +134,7 @@ internal class DefaultWcSessionsManager(
                 .find { account -> account.accountId == storeSession.accountId } as? Account.Personal
                 ?: return@mapNotNull null
             val networks = wcNetworksConverter.findWalletNetworks(wallet, account, sdkSession)
-            val originUrl = storeSession.url ?: sdkSession.metaData?.url ?: ""
+            val originUrl = storeSession.url ?: sdkSession.metaData?.url.orEmpty()
             WcSession(
                 wallet = wallet,
                 sdkModel = WcSdkSessionConverter.convert(
