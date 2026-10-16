@@ -18,6 +18,7 @@ import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSy
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
@@ -26,7 +27,9 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.yield.supply.models.incentives.YieldClaimCalldata
+import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.usecase.BuildYieldClaimTransactionUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.formatter.YieldSupplyAmountFormatter
 import com.tangem.features.yield.supply.impl.common.formatter.formatUsd
@@ -73,6 +76,7 @@ internal class YieldSupplyClaimModel @Inject constructor(
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
+    private val yieldSupplyClaimTracker: YieldSupplyClaimTracker,
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
@@ -143,7 +147,7 @@ internal class YieldSupplyClaimModel @Inject constructor(
             return
         }
 
-        claimJob = modelScope.launch { claim(prepared.transactionData) }
+        claimJob = modelScope.launch { claim(prepared) }
     }
 
     private fun prepare() {
@@ -154,7 +158,8 @@ internal class YieldSupplyClaimModel @Inject constructor(
         prepareJob = modelScope.launch { loadClaim() }
     }
 
-    private suspend fun claim(transactionData: TransactionData.Uncompiled) {
+    private suspend fun claim(prepared: PreparedClaim) {
+        val transactionData = prepared.transactionData
         uiState.update { it.copy(isClaimInProgress = true) }
 
         if (!isFeeCovered(transactionData)) {
@@ -170,6 +175,7 @@ internal class YieldSupplyClaimModel @Inject constructor(
                 userWallet = params.userWallet,
                 network = cryptoCurrency.network,
             )
+            result.onRight { transactionHash -> trackClaim(transactionHash, prepared.claimedRewards) }
             if (modelScope.isActive) onTransactionSent(result)
         }
     }
@@ -193,7 +199,20 @@ internal class YieldSupplyClaimModel @Inject constructor(
                     },
                 )
             },
-            ifRight = { _ -> params.onDismiss() },
+            ifRight = { params.onDismiss() },
+        )
+    }
+
+    private fun trackClaim(transactionHash: String, claimedRewards: List<YieldReward>) {
+        val token = cryptoCurrency as? CryptoCurrency.Token ?: return
+
+        yieldSupplyClaimTracker.track(
+            userWalletId = params.userWallet.walletId,
+            cryptoCurrency = token,
+            chainId = params.chainId,
+            userAddress = params.userAddress,
+            transactionHash = transactionHash,
+            claimedRewards = claimedRewards,
         )
     }
 
@@ -253,7 +272,11 @@ internal class YieldSupplyClaimModel @Inject constructor(
         }
 
         val transactionData = loadNetworkFee(calldata) ?: return
-        preparedClaim = PreparedClaim(transactionData = transactionData, preparedAt = preparedAt)
+        preparedClaim = PreparedClaim(
+            transactionData = transactionData,
+            preparedAt = preparedAt,
+            claimedRewards = summary.claimable,
+        )
     }
 
     /** Also clears fee notifications left by a previous run. */
@@ -372,7 +395,11 @@ internal class YieldSupplyClaimModel @Inject constructor(
         return feeStatus
     }
 
-    private class PreparedClaim(val transactionData: TransactionData.Uncompiled, val preparedAt: TimeMark)
+    private class PreparedClaim(
+        val transactionData: TransactionData.Uncompiled,
+        val preparedAt: TimeMark,
+        val claimedRewards: List<YieldReward>,
+    )
 
     private companion object {
         /** Shorter than the Merkl proof rollover; bound to the proof, not to the fee the owner already accepted. */

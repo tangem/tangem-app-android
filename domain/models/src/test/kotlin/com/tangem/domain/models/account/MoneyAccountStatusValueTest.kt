@@ -17,7 +17,6 @@ internal class MoneyAccountStatusValueTest {
     private fun balanceOf(fiatRate: BigDecimal?, cryptoAmount: BigDecimal = BigDecimal("100")) =
         MoneyAccountStatusValue.Balance(
             cryptoAmount = cryptoAmount,
-            cryptoCurrency = cryptoCurrency,
             depositAddress = "0xabc",
             currencyCode = "USD",
             fiatRate = fiatRate,
@@ -25,9 +24,9 @@ internal class MoneyAccountStatusValueTest {
 
     private fun activeWith(balance: MoneyAccountStatusValue.Balance?) = MoneyAccountStatusValue.Account.Active(
         source = StatusSource.ACTUAL,
+        cryptoCurrency = cryptoCurrency,
         balance = balance,
         customerId = "customer",
-        productInstanceId = "pi-1",
     )
 
     @Test
@@ -81,29 +80,5 @@ internal class MoneyAccountStatusValueTest {
     fun `GIVEN Loading WHEN totalFiatBalance THEN Loading`() {
         // Act & Assert
         Truth.assertThat(MoneyAccountStatusValue.Loading.totalFiatBalance).isEqualTo(TotalFiatBalance.Loading)
-    }
-
-    @Test
-    fun `GIVEN balance without rate WHEN cryptoCurrencyStatus THEN NoQuote`() {
-        // Arrange
-        val balance = balanceOf(fiatRate = null)
-
-        // Act & Assert
-        Truth.assertThat(balance.cryptoCurrencyStatus.value)
-            .isInstanceOf(CryptoCurrencyStatus.NoQuote::class.java)
-    }
-
-    @Test
-    fun `GIVEN balance with rate WHEN cryptoCurrencyStatus THEN Loaded with the rate`() {
-        // Arrange
-        val rate = BigDecimal("0.9")
-        val balance = balanceOf(fiatRate = rate)
-
-        // Act
-        val value = balance.cryptoCurrencyStatus.value
-
-        // Assert
-        Truth.assertThat(value).isInstanceOf(CryptoCurrencyStatus.Loaded::class.java)
-        Truth.assertThat((value as CryptoCurrencyStatus.Loaded).fiatRate).isEqualTo(rate)
     }
 }

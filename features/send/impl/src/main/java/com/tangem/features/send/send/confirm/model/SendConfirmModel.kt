@@ -42,6 +42,7 @@ import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
@@ -329,6 +330,7 @@ internal class SendConfirmModel @Inject constructor(
             is JointOperationCreateError.SlotBusy -> alertFactory.getJointSlotBusyState()
             is JointOperationCreateError.AccountNotReady -> alertFactory.getJointAccountNotReadyState()
             is JointOperationCreateError.NetworkStateMoved -> alertFactory.getJointNetworkStateMovedState()
+            is JointOperationCreateError.Malicious -> alertFactory.getJointMaliciousState()
             is JointOperationCreateError.CompositionMismatch -> {
                 TangemLogger.e("Unable to create the joint operation: $error")
                 alertFactory.getJointSendBlockedState(onSupportClick = { onFailedTxEmailClick(error.toString()) })
@@ -572,6 +574,7 @@ internal class SendConfirmModel @Inject constructor(
 
         result.fold(
             ifLeft = { error ->
+                if (error is SendTransactionError.GaslessFeeIncreased) onFeeReload()
                 alertFactory.getSendTransactionErrorState(
                     error = error,
                     popBack = appRouter::pop,

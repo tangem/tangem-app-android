@@ -6,13 +6,13 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -57,7 +57,7 @@ internal class FeedComponentModel @Inject constructor(
     private val stateController: FeedStateController,
     private val fetchTopEarnTokensUseCase: FetchTopEarnTokensUseCase,
     private val getTopEarnTokensUseCase: GetTopEarnTokensUseCase,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
@@ -106,7 +106,7 @@ internal class FeedComponentModel @Inject constructor(
     }
 
     private fun openCurrencyDetails(result: AddToPortfolioManager.Result) {
-        appRouter.push(
+        router.push(
             AppRoute.CurrencyDetails(
                 userWalletId = result.wallet.walletId,
                 currency = result.addedCurrency.currency,
