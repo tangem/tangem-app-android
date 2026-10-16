@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.history.model
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.polymarket.model.PolymarketActivity
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivityRowUM
@@ -56,7 +57,11 @@ internal class PolymarketActivityUMConverter(
             type = type,
             title = type.title(),
             subtitle = PolymarketActivitySubtitleUM.Plain(
-                stringReference(activity.marketTitle.ifBlank { activity.transactionHash.orEmpty() }),
+                if (activity.redeemResult == PolymarketActivity.RedeemResult.WON && activity.marketTitle.isNotBlank()) {
+                    resourceReference(R.string.prediction_history_won_description, wrappedList(activity.marketTitle))
+                } else {
+                    stringReference(activity.marketTitle.ifBlank { activity.transactionHash.orEmpty() })
+                },
             ),
             amount = stringReference(
                 when (type) {
@@ -67,7 +72,9 @@ internal class PolymarketActivityUMConverter(
             ),
             iconUrl = activity.historyIconUrl,
             onClick = when (activity.type) {
-                PolymarketActivity.Type.BUY, PolymarketActivity.Type.SELL -> onActivityClick?.let { { it(activity) } }
+                PolymarketActivity.Type.BUY, PolymarketActivity.Type.SELL, PolymarketActivity.Type.REDEEM -> {
+                    onActivityClick?.let { { it(activity) } }
+                }
                 else -> null
             },
         )

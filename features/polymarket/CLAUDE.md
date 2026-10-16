@@ -100,3 +100,4 @@ BUY / WITHDRAW are outgoing, SELL / DEPOSIT / REDEEM incoming, a lost redemption
 CSV are inert placeholders.
 
 Activity details use `TangemModal`; outcome price appears only when an order provides it.
+LOST hides its amount until the activity API supplies the lost stake.
