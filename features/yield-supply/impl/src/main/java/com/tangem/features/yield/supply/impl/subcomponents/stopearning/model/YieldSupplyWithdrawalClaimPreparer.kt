@@ -2,9 +2,9 @@ package com.tangem.features.yield.supply.impl.subcomponents.stopearning.model
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
@@ -13,7 +13,6 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMarketFlowUseCase
 import com.tangem.features.yield.supply.impl.incentives.claim.model.YieldSupplyClaimPreparer
 import com.tangem.utils.coroutines.runSuspendCatching
-import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -44,13 +43,13 @@ internal class YieldSupplyWithdrawalClaimPreparer @Inject constructor(
     private val yieldSupplyClaimPreparer: YieldSupplyClaimPreparer,
     private val buildYieldClaimTransactionUseCase: BuildYieldClaimTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
+    private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val yieldSupplyClaimTracker: YieldSupplyClaimTracker,
 ) {
 
     suspend fun prepare(
         userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         withdrawalFee: BigDecimal,
     ): YieldPreClaim {
         val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: return skip("the asset is not a token")
@@ -88,11 +87,16 @@ internal class YieldSupplyWithdrawalClaimPreparer @Inject constructor(
         ).getOrNull()?.normal ?: return skip("the claim fee could not be estimated")
 
         val claimFee = fee.amount.value ?: return skip("the claim fee amount is unknown")
-        // The caller falls back to the token's own status when the fee currency cannot be resolved
-        if (!fee.amount.type.isPaidFrom(currency = feeCryptoCurrencyStatus.currency, network = token.network)) {
-            return skip("the claim fee is not paid from the balance it is weighed against")
+        val feeAmountType = fee.amount.type
+        if (feeAmountType is AmountType.FeeResource || feeAmountType == AmountType.Reserve) {
+            return skip("the claim fee is not paid from a balance the two fees can be summed against")
         }
-        if (claimFee + withdrawalFee > feeCryptoCurrencyStatus.value.amount.orZero()) {
+        // Read only now: the balance may have moved since the withdrawal sheet opened
+        val feeBalance = getFeePaidCryptoCurrencyStatusSyncUseCase(
+            userWalletId = userWallet.walletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+        ).getOrNull()?.value?.amount ?: return skip("the balance paying the fee is unknown")
+        if (claimFee + withdrawalFee > feeBalance) {
             return skip("the owner cannot pay for both transactions")
         }
 
@@ -109,22 +113,6 @@ internal class YieldSupplyWithdrawalClaimPreparer @Inject constructor(
         TangemLogger.i("Claim before withdrawal skipped: $reason")
 
         return YieldPreClaim.Skip
-    }
-
-    private fun AmountType.isPaidFrom(currency: CryptoCurrency, network: Network): Boolean {
-        if (currency.network != network) return false
-
-        return when (this) {
-            AmountType.Coin -> currency is CryptoCurrency.Coin
-            is AmountType.Token -> currency.isTokenOf(token.contractAddress)
-            is AmountType.TokenYieldSupply -> currency.isTokenOf(token.contractAddress)
-            // Neither is a balance the two fees can be summed against
-            is AmountType.FeeResource, AmountType.Reserve -> false
-        }
-    }
-
-    private fun CryptoCurrency.isTokenOf(contractAddress: String): Boolean {
-        return this is CryptoCurrency.Token && this.contractAddress.equals(contractAddress, ignoreCase = true)
     }
 
     /** Bounded so a cold or unreadable markets cache never delays the withdrawal. */
