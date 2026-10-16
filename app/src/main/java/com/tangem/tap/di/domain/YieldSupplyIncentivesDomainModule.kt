@@ -1,6 +1,5 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.domain.yield.supply.YieldSupplyErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
@@ -83,28 +82,6 @@ internal object YieldSupplyIncentivesDomainModule {
             yieldIncentivesRepository = yieldIncentivesRepository,
             getYieldRewardsSummaryUseCase = getYieldRewardsSummaryUseCase,
             coroutineScope = appScope,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun providePrepareClaimBeforeWithdrawUseCase(
-        yieldSupplyMarketFlowUseCase: YieldSupplyMarketFlowUseCase,
-        getYieldRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase,
-        getFreshYieldClaimCalldataUseCase: GetFreshYieldClaimCalldataUseCase,
-        validateYieldClaimCalldataUseCase: ValidateYieldClaimCalldataUseCase,
-        buildYieldClaimTransactionUseCase: BuildYieldClaimTransactionUseCase,
-        getFeeUseCase: GetFeeUseCase,
-        yieldSupplyClaimTracker: YieldSupplyClaimTracker,
-    ): PrepareClaimBeforeWithdrawUseCase {
-        return PrepareClaimBeforeWithdrawUseCase(
-            yieldSupplyMarketFlowUseCase = yieldSupplyMarketFlowUseCase,
-            getYieldRewardsSummaryUseCase = getYieldRewardsSummaryUseCase,
-            getFreshYieldClaimCalldataUseCase = getFreshYieldClaimCalldataUseCase,
-            validateYieldClaimCalldataUseCase = validateYieldClaimCalldataUseCase,
-            buildYieldClaimTransactionUseCase = buildYieldClaimTransactionUseCase,
-            getFeeUseCase = getFeeUseCase,
-            yieldSupplyClaimTracker = yieldSupplyClaimTracker,
         )
     }
 }
