@@ -43,7 +43,7 @@ internal class DefaultMcpRepository @Inject constructor(
     override fun getSessions(): Flow<List<McpSession>> = sessions.onStart { loadSessions(force = false) }
 
     override suspend fun getAgent(clientId: String): McpAgent {
-        agentStore.get(clientId)?.let { return it }
+        agentStore.getOrNull(clientId)?.let { return it }
 
         return mcpApi.getClient(clientId = clientId)
             .toEither()
