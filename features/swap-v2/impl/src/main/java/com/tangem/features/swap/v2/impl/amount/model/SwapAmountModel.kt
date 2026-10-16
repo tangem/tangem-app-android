@@ -4,7 +4,6 @@ import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
@@ -13,6 +12,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.features.swap.v2.impl.amount.store.SwapBestRateAnimationStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -83,7 +83,7 @@ internal class SwapAmountModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserCountryUseCase: GetUserCountryUseCase,
     private val swapBestRateAnimationStore: SwapBestRateAnimationStore,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val swapAmountAlertFactory: SwapAmountAlertFactory,
     private val swapAlertFactory: SwapAlertFactory,
     private val swapAmountUpdateListener: SwapAmountUpdateListener,
@@ -317,7 +317,7 @@ internal class SwapAmountModel @Inject constructor(
             )
             val isEditMode = amountParams.route.isEditMode
             val selectedCurrency = (uiState.value as? SwapAmountUM.Content)?.secondaryCryptoCurrencyStatus?.currency
-            appRouter.push(
+            router.push(
                 AppRoute.ChooseManagedTokens(
                     userWalletId = userWallet.walletId,
                     initialCurrency = primaryCryptoCurrency,
@@ -920,7 +920,7 @@ internal class SwapAmountModel @Inject constructor(
                     )
                 }
             },
-            popBack = appRouter::pop,
+            popBack = params.onExitFlow,
         )
     }
 

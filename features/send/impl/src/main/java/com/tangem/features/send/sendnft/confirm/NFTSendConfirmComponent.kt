@@ -207,6 +207,8 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
         val onSendTransaction: () -> Unit,
+        /** Closes the whole flow, not just the current step. */
+        val onExitFlow: () -> Unit,
     )
 
     interface ModelCallback {
