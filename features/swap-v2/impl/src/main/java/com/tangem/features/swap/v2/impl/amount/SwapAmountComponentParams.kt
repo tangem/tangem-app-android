@@ -26,6 +26,9 @@ internal sealed class SwapAmountComponentParams {
     abstract val accountFlow: StateFlow<Account?>
     abstract val isAccountModeFlow: StateFlow<Boolean>
 
+    /** Closes the whole flow, not just the current step. */
+    abstract val onExitFlow: () -> Unit
+
     data class AmountParams(
         override val amountUM: SwapAmountUM,
         override val analyticsCategoryName: String,
@@ -38,6 +41,7 @@ internal sealed class SwapAmountComponentParams {
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         override val accountFlow: StateFlow<Account?>,
         override val isAccountModeFlow: StateFlow<Boolean>,
+        override val onExitFlow: () -> Unit,
         val title: TextReference,
         val callback: SwapAmountComponent.ModelCallback,
         val route: SendWithSwapRoute,
@@ -55,6 +59,7 @@ internal sealed class SwapAmountComponentParams {
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         override val accountFlow: StateFlow<Account?>,
         override val isAccountModeFlow: StateFlow<Boolean>,
+        override val onExitFlow: () -> Unit,
         val blockClickEnableFlow: StateFlow<Boolean>,
     ) : SwapAmountComponentParams()
 }
