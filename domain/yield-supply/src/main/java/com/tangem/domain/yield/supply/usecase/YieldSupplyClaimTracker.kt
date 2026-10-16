@@ -92,12 +92,31 @@ class YieldSupplyClaimTracker(
         }
     }
 
+    /**
+     * For a claim whose broadcast is unknown, when a batch it rode in failed: the module is held until Merkl reflects
+     * the claim or the settlement window passes, so a retry cannot sign the same cumulative proof again.
+     */
+    fun trackUnresolved(chainId: Int, userAddress: String, claimedRewards: List<YieldReward>) {
+        val key = trackedKey(chainId = chainId, userAddress = userAddress)
+        if (key in trackedKeys.getAndUpdate { tracked -> tracked + key }) return
+
+        coroutineScope.launch {
+            try {
+                withTimeoutOrNull(SETTLEMENT_TIMEOUT_MS) {
+                    awaitReflected(chainId = chainId, userAddress = userAddress, claimedRewards = claimedRewards)
+                }
+            } finally {
+                trackedKeys.update { it - key }
+            }
+        }
+    }
+
     private suspend fun isReverted(claim: TrackedClaim): Boolean {
         val outcome = awaitOutcome(claim)
         if (outcome == YieldSupplyTransactionOutcome.Reverted) return true
 
         if (outcome == YieldSupplyTransactionOutcome.Confirmed) outcomes.emit(claim.toOutcome(outcome))
-        awaitReflected(claim)
+        awaitReflected(chainId = claim.chainId, userAddress = claim.userAddress, claimedRewards = claim.claimedRewards)
 
         return false
     }
@@ -120,13 +139,13 @@ class YieldSupplyClaimTracker(
         return null
     }
 
-    private suspend fun awaitReflected(claim: TrackedClaim) {
-        while (!isReflected(claim)) delay(REFLECTION_CHECK_INTERVAL_MS)
+    private suspend fun awaitReflected(chainId: Int, userAddress: String, claimedRewards: List<YieldReward>) {
+        while (!isReflected(chainId, userAddress, claimedRewards)) delay(REFLECTION_CHECK_INTERVAL_MS)
     }
 
-    private suspend fun isReflected(claim: TrackedClaim): Boolean {
-        yieldIncentivesRepository.invalidateUserCache(chainId = claim.chainId, userAddress = claim.userAddress)
-        val summary = getYieldRewardsSummaryUseCase(chainId = claim.chainId, userAddress = claim.userAddress)
+    private suspend fun isReflected(chainId: Int, userAddress: String, claimedRewards: List<YieldReward>): Boolean {
+        yieldIncentivesRepository.invalidateUserCache(chainId = chainId, userAddress = userAddress)
+        val summary = getYieldRewardsSummaryUseCase(chainId = chainId, userAddress = userAddress)
             .getOrNull()
             ?: return false
         // A deferred summary can still list the claimed amounts: losing the recommendation does not mean Merkl
@@ -139,7 +158,7 @@ class YieldSupplyClaimTracker(
             -> return true
         }
 
-        return claim.claimedRewards.all { claimed ->
+        return claimedRewards.all { claimed ->
             val remainingAmount = claimable
                 .firstOrNull { reward ->
                     reward.rewardToken.normalizeEvmAddress() == claimed.rewardToken.normalizeEvmAddress()
