@@ -213,7 +213,6 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
             yieldSupplyWithdrawalClaimPreparer.prepare(
                 userWallet = userWallet,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
-                feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                 withdrawalFee = withdrawalFee,
             )
         }

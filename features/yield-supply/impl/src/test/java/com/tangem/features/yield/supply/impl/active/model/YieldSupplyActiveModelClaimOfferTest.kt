@@ -11,6 +11,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -92,6 +93,26 @@ internal class YieldSupplyActiveModelClaimOfferTest : YieldSupplyActiveModelTest
 
         activeModel.onDestroy()
     }
+
+    @Test
+    fun `GIVEN the rewards backend stalls WHEN stop earning is tapped THEN the withdrawal opens after the timeout`() =
+        runTest {
+            // Arrange
+            coEvery { getYieldRewardsSummaryUseCase(any(), any()) } coAnswers { awaitCancellation() }
+            val model = createModelWithAddress()
+            val slot = FakeSlotHost(model.slotNavigation)
+            advanceUntilIdle()
+
+            // Act
+            model.onStopEarning()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(slot.configuration).isEqualTo(YieldSupplyActiveRoute.Exit)
+            assertThat(model.wasClaimOfferedBeforeWithdrawal).isFalse()
+
+            model.onDestroy()
+        }
 
     private fun provideTestModels() = listOf(
         NoOfferModel(reason = "the backend defers the claim") {
