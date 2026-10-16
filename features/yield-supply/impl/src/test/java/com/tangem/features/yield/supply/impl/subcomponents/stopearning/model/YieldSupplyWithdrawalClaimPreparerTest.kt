@@ -9,7 +9,6 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
@@ -27,7 +26,7 @@ import com.tangem.domain.yield.supply.usecase.GetYieldRewardsSummaryUseCase
 import com.tangem.domain.yield.supply.usecase.ValidateYieldClaimCalldataUseCase
 import com.tangem.domain.yield.supply.usecase.YieldClaimValidationContext
 import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
-import com.tangem.domain.yield.supply.usecase.YieldSupplyMarketFlowUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.features.yield.supply.impl.incentives.claim.model.YieldSupplyClaimPreparer
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.yield.MockYieldSupply.CHAIN_ID
@@ -47,7 +46,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -57,25 +55,27 @@ import org.junit.jupiter.params.ParameterizedTest
 import java.io.IOException
 import java.math.BigDecimal
 import java.math.BigInteger
+import kotlin.time.TestTimeSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class YieldSupplyWithdrawalClaimPreparerTest {
 
-    private val marketFlowUseCase: YieldSupplyMarketFlowUseCase = mockk()
+    private val getTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase = mockk()
     private val getRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase = mockk()
     private val getFreshCalldataUseCase: GetFreshYieldClaimCalldataUseCase = mockk()
     private val validateCalldataUseCase: ValidateYieldClaimCalldataUseCase = mockk()
     private val buildClaimTransactionUseCase: BuildYieldClaimTransactionUseCase = mockk()
     private val getFeeUseCase: GetFeeUseCase = mockk()
-    private val getFeePaidStatusUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase = mockk()
     private val claimTracker: YieldSupplyClaimTracker = mockk()
 
     private val userWallet: UserWallet = mockk(relaxed = true) {
         every { walletId } returns UserWalletId("abcdef012345")
     }
 
+    private val clock = TestTimeSource()
+
     private val preparer = YieldSupplyWithdrawalClaimPreparer(
-        yieldSupplyMarketFlowUseCase = marketFlowUseCase,
+        yieldSupplyGetTokenStatusUseCase = getTokenStatusUseCase,
         yieldSupplyClaimPreparer = YieldSupplyClaimPreparer(
             getYieldRewardsSummaryUseCase = getRewardsSummaryUseCase,
             getFreshYieldClaimCalldataUseCase = getFreshCalldataUseCase,
@@ -83,23 +83,22 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         ),
         buildYieldClaimTransactionUseCase = buildClaimTransactionUseCase,
         getFeeUseCase = getFeeUseCase,
-        getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidStatusUseCase,
         yieldSupplyClaimTracker = claimTracker,
+        timeSource = clock,
     )
 
     @BeforeEach
     fun setUp() {
         clearMocks(
-            marketFlowUseCase,
+            getTokenStatusUseCase,
             getRewardsSummaryUseCase,
             getFreshCalldataUseCase,
             validateCalldataUseCase,
             buildClaimTransactionUseCase,
             getFeeUseCase,
-            getFeePaidStatusUseCase,
             claimTracker,
         )
-        every { marketFlowUseCase(token = any()) } returns flowOf(market())
+        coEvery { getTokenStatusUseCase(token = any()) } returns market().right()
         every { claimTracker.isClaimInFlight(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns flowOf(false)
         coEvery {
             getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
@@ -119,9 +118,6 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         coEvery {
             getFeeUseCase(userWallet = any(), network = any(), transactionData = any())
         } returns TransactionFee.Single(normal = fee(CLAIM_FEE)).right()
-        coEvery {
-            getFeePaidStatusUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
-        } returns statusOf(coin(), balance = BigDecimal.TEN).right()
     }
 
     @Test
@@ -130,7 +126,6 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         val actual = preparer.prepare(
             userWallet = userWallet,
             cryptoCurrencyStatus = statusOf(token(), balance = BigDecimal.TEN),
-            withdrawalFee = WITHDRAWAL_FEE,
         )
 
         // Assert
@@ -140,6 +135,8 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
                 chainId = CHAIN_ID,
                 userAddress = USER_ADDRESS,
                 token = token(),
+                claimedRewards = listOf(reward()),
+                preparedAt = clock.markNow(),
             ),
         )
     }
@@ -148,20 +145,15 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
     fun `GIVEN a fee paid in a token WHEN its balance covers both fees THEN the claim transaction is ready`() =
         runTest {
             // Arrange
-            val feeToken = token(contractAddress = FEE_TOKEN_ADDRESS, symbol = "FEE")
             val tokenFee = fee(value = CLAIM_FEE, type = AmountType.Token(sdkToken(FEE_TOKEN_ADDRESS.uppercase())))
             coEvery {
                 getFeeUseCase(userWallet = any(), network = any(), transactionData = any())
             } returns TransactionFee.Single(normal = tokenFee).right()
-            coEvery {
-                getFeePaidStatusUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
-            } returns statusOf(feeToken, balance = BigDecimal.TEN).right()
 
             // Act
             val actual = preparer.prepare(
                 userWallet = userWallet,
                 cryptoCurrencyStatus = statusOf(token(), balance = BigDecimal.TEN),
-                withdrawalFee = WITHDRAWAL_FEE,
             )
 
             // Assert
@@ -171,8 +163,28 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
                     chainId = CHAIN_ID,
                     userAddress = USER_ADDRESS,
                     token = token(),
+                    claimedRewards = listOf(reward()),
+                    preparedAt = clock.markNow(),
                 ),
             )
+        }
+
+    @Test
+    fun `GIVEN a claim fee above any balance WHEN prepared THEN the claim is still ready for the sheet to weigh`() =
+        runTest {
+            // Arrange
+            coEvery {
+                getFeeUseCase(userWallet = any(), network = any(), transactionData = any())
+            } returns TransactionFee.Single(normal = fee(BigDecimal("1000000"))).right()
+
+            // Act
+            val actual = preparer.prepare(
+                userWallet = userWallet,
+                cryptoCurrencyStatus = statusOf(token(), balance = BigDecimal.ONE),
+            )
+
+            // Assert
+            assertThat(actual).isInstanceOf(YieldPreClaim.Ready::class.java)
         }
 
     @Test
@@ -185,7 +197,6 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
             preparer.prepare(
                 userWallet = userWallet,
                 cryptoCurrencyStatus = statusOf(token(), balance = BigDecimal.TEN),
-                withdrawalFee = WITHDRAWAL_FEE,
             )
 
             // Assert
@@ -213,7 +224,6 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         val actual = preparer.prepare(
             userWallet = userWallet,
             cryptoCurrencyStatus = statusOf(token(), balance = BigDecimal.TEN),
-            withdrawalFee = WITHDRAWAL_FEE,
         )
 
         // Assert
@@ -231,7 +241,6 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         val actual = preparer.prepare(
             userWallet = userWallet,
             cryptoCurrencyStatus = model.status,
-            withdrawalFee = WITHDRAWAL_FEE,
         )
 
         // Assert
@@ -250,10 +259,7 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
         SkipModel(reason = "currency is not a token", status = statusOf(coin(), BigDecimal.TEN)) {},
         SkipModel(reason = "no network address", status = statusWithoutAddress()) {},
         SkipModel(reason = "token has no market entry", status = statusOf(token(), BigDecimal.TEN)) {
-            every { marketFlowUseCase(token = any()) } returns flowOf(null)
-        },
-        SkipModel(reason = "markets cache cannot be read", status = statusOf(token(), BigDecimal.TEN)) {
-            every { marketFlowUseCase(token = any()) } returns flow { throw IOException("DataStore read failed") }
+            coEvery { getTokenStatusUseCase(token = any()) } returns IOException("markets unavailable").left()
         },
         SkipModel(reason = "incentives unavailable", status = statusOf(token(), BigDecimal.TEN)) {
             coEvery {
@@ -300,16 +306,6 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
                 claimTracker.isClaimInFlight(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
             } returns flowOf(true)
         },
-        SkipModel(reason = "the fee currency is not in the account", status = statusOf(token(), BigDecimal.TEN)) {
-            coEvery {
-                getFeePaidStatusUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
-            } returns null.right()
-        },
-        SkipModel(reason = "the fee balance is not loaded yet", status = statusOf(token(), BigDecimal.TEN)) {
-            coEvery {
-                getFeePaidStatusUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
-            } returns CryptoCurrencyStatus(currency = coin(), value = CryptoCurrencyStatus.Loading).right()
-        },
         SkipModel(
             reason = "the fee is paid with a fee resource",
             status = statusOf(token(), BigDecimal.TEN),
@@ -319,14 +315,6 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
             } returns TransactionFee.Single(
                 normal = fee(value = CLAIM_FEE, type = AmountType.FeeResource(name = "Mana")),
             ).right()
-        },
-        SkipModel(
-            reason = "balance covers the claim but not the withdrawal after it",
-            status = statusOf(token(), BigDecimal.TEN),
-        ) {
-            coEvery {
-                getFeePaidStatusUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
-            } returns statusOf(coin(), balance = CLAIM_FEE + WITHDRAWAL_FEE - BigDecimal("0.0001")).right()
         },
     )
 
@@ -377,7 +365,6 @@ internal class YieldSupplyWithdrawalClaimPreparerTest {
 
     private companion object {
         val CLAIM_FEE: BigDecimal = BigDecimal("0.001")
-        val WITHDRAWAL_FEE: BigDecimal = BigDecimal("0.002")
         const val FEE_TOKEN_ADDRESS = "0xfee0000000000000000000000000000000000fee"
     }
 }

@@ -58,7 +58,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
@@ -144,7 +143,7 @@ internal class YieldSupplyClaimModel @Inject constructor(
         if (claimJob?.isActive == true) return
 
         val prepared = preparedClaim ?: return
-        if (prepared.preparedAt.elapsedNow() >= PREPARATION_VALIDITY) {
+        if (prepared.preparedAt.elapsedNow() >= YieldSupplyClaimPreparer.PREPARATION_VALIDITY) {
             prepare()
             return
         }
@@ -417,9 +416,4 @@ internal class YieldSupplyClaimModel @Inject constructor(
         val preparedAt: TimeMark,
         val claimedRewards: List<YieldReward>,
     )
-
-    private companion object {
-        /** Shorter than the Merkl proof rollover; bound to the proof, not to the fee the owner already accepted. */
-        val PREPARATION_VALIDITY = 2.minutes
-    }
 }
