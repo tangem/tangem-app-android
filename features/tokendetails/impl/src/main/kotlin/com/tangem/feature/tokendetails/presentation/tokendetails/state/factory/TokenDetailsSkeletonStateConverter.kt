@@ -75,11 +75,13 @@ internal class TokenDetailsSkeletonStateConverter(
     private fun createMenu(cryptoCurrency: CryptoCurrency): TokenDetailsAppBarMenuConfig = TokenDetailsAppBarMenuConfig(
         items = buildList {
             addGenerateXPubMenuItem(cryptoCurrency)
-            TangemDropdownMenuItem(
-                title = TextReference.Res(id = R.string.token_details_hide_token),
-                textColor = themedColor { TangemTheme.colors.text.warning },
-                onClick = clickIntents::onHideClick,
-            ).let(::add)
+            add(
+                TangemDropdownMenuItem(
+                    title = TextReference.Res(id = R.string.token_details_hide_token),
+                    textColor = themedColor { TangemTheme.colors.text.warning },
+                    onClick = clickIntents::onHideClick,
+                ),
+            )
         }.toImmutableList(),
     )
 
