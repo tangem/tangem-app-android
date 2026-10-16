@@ -3,9 +3,9 @@ package com.tangem.tap.features.details.ui.resetcard.model
 import arrow.core.left
 import arrow.core.right
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
 import com.tangem.domain.card.ResetCardUseCase
 import com.tangem.domain.models.wallet.UserWallet
@@ -38,7 +38,7 @@ internal class ResetCardModelTest {
     private val deleteWalletUseCase: DeleteWalletUseCase = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val cardSettingsInteractor: CardSettingsInteractor = mockk(relaxed = true)
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
 
     private val userWalletId = UserWalletId(stringValue = "011a")
     private val userWallet: UserWallet.Cold = mockk(relaxed = true) {
@@ -47,7 +47,7 @@ internal class ResetCardModelTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(getUserWalletUseCase, getSelectedWalletSyncUseCase, analyticsEventHandler, appRouter)
+        clearMocks(getUserWalletUseCase, getSelectedWalletSyncUseCase, analyticsEventHandler, router)
         every { getUserWalletUseCase(userWalletId = userWalletId) } returns userWallet.right()
     }
 
@@ -60,8 +60,8 @@ internal class ResetCardModelTest {
         model.onBackClick()
 
         // Assert
-        verify(exactly = 1) { appRouter.pop(any()) }
-        verify(exactly = 0) { appRouter.replaceAll(*anyVararg(), onComplete = any()) }
+        verify(exactly = 1) { router.pop(any()) }
+        verify(exactly = 0) { router.replaceAll(*anyVararg(), onComplete = any()) }
         verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
@@ -77,12 +77,12 @@ internal class ResetCardModelTest {
 
         // Assert
         verify(exactly = 1) {
-            appRouter.replaceAll(
+            router.replaceAll(
                 AppRoute.Home(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten),
                 onComplete = any(),
             )
         }
-        verify(exactly = 0) { appRouter.pop(any()) }
+        verify(exactly = 0) { router.pop(any()) }
     }
 
     @Test
@@ -100,8 +100,8 @@ internal class ResetCardModelTest {
             model.onBackClick()
 
             // Assert
-            verify(exactly = 1) { appRouter.popTo(AppRoute.Wallet::class, any()) }
-            verify(exactly = 0) { appRouter.pop(any()) }
+            verify(exactly = 1) { router.popTo(AppRoute.Wallet::class, any()) }
+            verify(exactly = 0) { router.pop(any()) }
         }
 
     @Test
@@ -141,7 +141,7 @@ internal class ResetCardModelTest {
             deleteWalletUseCase = deleteWalletUseCase,
             analyticsEventHandler = analyticsEventHandler,
             cardSettingsInteractor = cardSettingsInteractor,
-            appRouter = appRouter,
+            router = router,
         )
     }
 }

@@ -56,6 +56,19 @@ internal class MoneyAccountStatusValueDMJsonFormatTest {
     }
 
     @Test
+    fun `GIVEN active account cached with product_instance_id WHEN decode THEN field is ignored`() {
+        // Arrange
+        val cached = """{"__type":"active_account","customer_id":"cust-2","product_instance_id":"pi-2",""" +
+            """"balance":null}"""
+
+        // Act
+        val actual = json.decodeFromString(MoneyAccountStatusValueDM.serializer(), cached)
+
+        // Assert
+        assertThat(actual).isEqualTo(MoneyAccountStatusValueDM.ActiveAccount(customerId = "cust-2", balance = null))
+    }
+
+    @Test
     fun `GIVEN status in the previous Moshi format WHEN decode THEN it fails`() {
         // Act
         val error = runCatching {
@@ -99,20 +112,16 @@ internal class MoneyAccountStatusValueDMJsonFormatTest {
         FormatModel(
             status = MoneyAccountStatusValueDM.ActiveAccount(
                 customerId = "cust-2",
-                productInstanceId = "pi-2",
                 balance = BALANCE,
             ),
-            json = """{"__type":"active_account","customer_id":"cust-2","product_instance_id":"pi-2",""" +
-                """"balance":$BALANCE_JSON}""",
+            json = """{"__type":"active_account","customer_id":"cust-2","balance":$BALANCE_JSON}""",
         ),
         FormatModel(
             status = MoneyAccountStatusValueDM.Deactivated(
                 customerId = "cust-2",
-                productInstanceId = "pi-2",
                 balance = null,
             ),
-            json = """{"__type":"deactivated","customer_id":"cust-2","product_instance_id":"pi-2",""" +
-                """"balance":null}""",
+            json = """{"__type":"deactivated","customer_id":"cust-2","balance":null}""",
         ),
     )
 

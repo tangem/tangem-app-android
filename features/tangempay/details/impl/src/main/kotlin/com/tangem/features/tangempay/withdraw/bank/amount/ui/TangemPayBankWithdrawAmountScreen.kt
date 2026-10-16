@@ -7,11 +7,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -32,6 +36,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
@@ -80,7 +85,7 @@ internal fun TangemPayBankWithdrawAmountScreen(state: TangemPayBankWithdrawAmoun
         modifier = modifier
             .fillMaxSize()
             .background(TangemTheme.colors3.bg.primary)
-            .imePadding()
+            .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars))
             .testTag(TangemPayTestTags.BANK_WITHDRAW_AMOUNT_SCREEN),
     ) {
         TangemTopNavigation(
@@ -110,7 +115,10 @@ internal fun TangemPayBankWithdrawAmountScreen(state: TangemPayBankWithdrawAmoun
                 onClick = state.route.onClick?.let { onRouteClick -> { dismissKeyboardThen(onRouteClick) } },
             )
         }
-        TangemFooter(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)) {
+        TangemFooter(
+            windowInsets = WindowInsets(0),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        ) {
             TangemButton(
                 modifier = Modifier.fillMaxWidth(),
                 size = TangemButton.Size.X12,
@@ -126,17 +134,19 @@ internal fun TangemPayBankWithdrawAmountScreen(state: TangemPayBankWithdrawAmoun
 @Composable
 private fun rememberDismissKeyboardThen(): (action: () -> Unit) -> Unit {
     val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
     val keyboard = keyboardAsState()
     val scope = rememberCoroutineScope()
     val pendingAction = remember { mutableStateOf<Job?>(null) }
-    return remember(focusManager, keyboard, scope) {
+    return remember(focusManager, keyboardController, keyboard, scope) {
         { action ->
             if (pendingAction.value?.isActive != true) {
-                focusManager.clearFocus()
+                keyboardController?.hide()
                 pendingAction.value = scope.launch {
                     withTimeoutOrNull(KEYBOARD_HIDE_TIMEOUT_MILLIS) {
                         snapshotFlow { keyboard.value.isOpened }.first { isOpened -> !isOpened }
                     }
+                    focusManager.clearFocus()
                     action()
                 }
             }
