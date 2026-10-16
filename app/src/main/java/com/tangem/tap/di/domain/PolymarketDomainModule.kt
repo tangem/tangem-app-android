@@ -31,6 +31,7 @@ import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.CreatePolymarketPositionsSessionUseCase
+import com.tangem.domain.polymarket.usecase.GetAllPolymarketActivityUseCase
 import com.tangem.domain.polymarket.usecase.CreatePolymarketActivitySessionUseCase
 import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
 import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
@@ -63,6 +64,13 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 @Suppress("TooManyFunctions")
 internal object PolymarketDomainModule {
+
+    @Provides
+    @Singleton
+    fun provideGetAllPolymarketActivityUseCase(
+        repository: PolymarketActivityRepository,
+        deriveAddresses: DerivePolymarketAddressesUseCase,
+    ): GetAllPolymarketActivityUseCase = GetAllPolymarketActivityUseCase(repository, deriveAddresses)
 
     @Provides
     @Singleton
