@@ -362,7 +362,7 @@ internal class NFTSendConfirmModelTest {
         isBalanceHidingFlow = kotlinx.coroutines.flow.MutableStateFlow(false),
         onLoadFee = { mockk<com.tangem.blockchain.common.transaction.TransactionFee>(relaxed = true).right() },
         onSendTransaction = {},
-        onExitFlow = {},
+        onCloseFlow = {},
     )
 
     private fun contentState(): NFTSendUM {
