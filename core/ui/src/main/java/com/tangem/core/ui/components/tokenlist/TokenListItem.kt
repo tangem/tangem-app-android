@@ -25,6 +25,7 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.account.AccountCharIcon
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.account.AccountResIcon
+import com.tangem.core.ui.components.account.CollectiblesAccountResIcon
 import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.components.account.PredictionAccountResIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
@@ -106,6 +107,9 @@ fun PortfolioListItem(state: TokensListItemUM.Portfolio, isBalanceHidden: Boolea
                             size = if (isExpanded) AccountIconSize.ExtraSmall else AccountIconSize.Default,
                         )
                         is CurrencyIconState.PredictionAccount -> icon.copy(
+                            size = if (isExpanded) AccountIconSize.ExtraSmall else AccountIconSize.Default,
+                        )
+                        is CurrencyIconState.CollectiblesAccount -> icon.copy(
                             size = if (isExpanded) AccountIconSize.ExtraSmall else AccountIconSize.Default,
                         )
                         else -> icon
@@ -219,6 +223,7 @@ fun ExpandedPortfolioHeader(
             when (val icon = state.iconState) {
                 is CurrencyIconState.PaymentAccount -> PaymentAccountIcon(size = icon.size)
                 is CurrencyIconState.PredictionAccount -> PredictionAccountResIcon(size = icon.size)
+                is CurrencyIconState.CollectiblesAccount -> CollectiblesAccountResIcon(size = icon.size)
                 is CurrencyIconState.CryptoPortfolio.Icon -> AccountResIcon(
                     imageVector = icon.imageVector(),
                     color = icon.color,
