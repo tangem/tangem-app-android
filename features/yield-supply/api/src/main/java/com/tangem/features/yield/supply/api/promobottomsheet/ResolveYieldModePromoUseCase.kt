@@ -8,12 +8,12 @@ import java.math.BigDecimal
 interface ResolveYieldModePromoUseCase {
 
     /**
-     * [statuses] are the selected wallet's personal account statuses; [yieldApys] is the catalog refreshed in this
+     * [statuses] are the selected wallet's personal account statuses; [yieldSupplyApy] is the catalog refreshed in this
      * launch: yield supply key → effective APY, percent.
      */
     operator fun invoke(
         statuses: List<CryptoCurrencyStatus>,
-        yieldApys: Map<String, BigDecimal>,
+        yieldSupplyApy: Map<String, BigDecimal>,
         earnOffers: EarnYieldOffers,
     ): YieldModePromoResolution
 }
