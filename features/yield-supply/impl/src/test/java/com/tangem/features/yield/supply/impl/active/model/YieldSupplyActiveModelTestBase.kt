@@ -26,6 +26,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyActiveComponent
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
+import com.tangem.features.yield.supply.impl.incentives.claim.model.YieldSupplyClaimPreparer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.every
@@ -79,7 +80,11 @@ internal abstract class YieldSupplyActiveModelTestBase {
         analyticsHandler = mockk<AnalyticsEventHandler>(relaxed = true),
         yieldSupplyGetProtocolBalanceUseCase = yieldSupplyGetProtocolBalanceUseCase,
         yieldSupplyGetTokenStatusUseCase = yieldSupplyGetTokenStatusUseCase,
-        getYieldRewardsSummaryUseCase = getYieldRewardsSummaryUseCase,
+        yieldSupplyClaimPreparer = YieldSupplyClaimPreparer(
+            getYieldRewardsSummaryUseCase = getYieldRewardsSummaryUseCase,
+            getFreshYieldClaimCalldataUseCase = mockk(relaxed = true),
+            validateYieldClaimCalldataUseCase = mockk(relaxed = true),
+        ),
         yieldSupplyMinAmountUseCase = mockk<YieldSupplyMinAmountUseCase>(relaxed = true),
         yieldSupplyGetCurrentFeeUseCase = mockk<YieldSupplyGetCurrentFeeUseCase>(relaxed = true),
         yieldSupplyGetMaxFeeUseCase = mockk<YieldSupplyGetMaxFeeUseCase>(relaxed = true),

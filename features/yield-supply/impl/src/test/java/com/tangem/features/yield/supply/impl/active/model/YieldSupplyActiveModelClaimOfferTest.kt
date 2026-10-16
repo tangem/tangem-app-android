@@ -7,11 +7,14 @@ import com.tangem.domain.yield.supply.models.YieldBoostStatus
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.yield.MockYieldSupply
+import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -21,13 +24,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
-/** Which sheet a tap on "Stop earning" opens while the module still holds claimable rewards. */
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class YieldSupplyActiveModelClaimOfferTest : YieldSupplyActiveModelTestBase() {
 
     @BeforeEach
     fun setUp() {
+        every { network.rawId } returns AVALANCHE_NETWORK_ID
         coEvery { getYieldBoostStatusUseCase(any(), any()) } returns YieldBoostStatus.NotStarted.right()
         every { claimTracker.isClaimInFlight(any(), any()) } returns flowOf(false)
         coEvery { yieldSupplyGetTokenStatusUseCase(any()) } returns MockYieldSupply.market().right()
@@ -49,7 +52,6 @@ internal class YieldSupplyActiveModelClaimOfferTest : YieldSupplyActiveModelTest
         assertThat(slot.configuration).isEqualTo(
             YieldSupplyActiveRoute.Claim(chainId = MockYieldSupply.market().chainId, userAddress = USER_ADDRESS),
         )
-        assertThat(model.wasClaimOfferedBeforeWithdrawal).isTrue()
 
         model.onDestroy()
     }
@@ -89,10 +91,57 @@ internal class YieldSupplyActiveModelClaimOfferTest : YieldSupplyActiveModelTest
 
         // Assert
         assertThat(slot.configuration).isEqualTo(YieldSupplyActiveRoute.Exit)
-        assertThat(activeModel.wasClaimOfferedBeforeWithdrawal).isFalse()
 
         activeModel.onDestroy()
     }
+
+    @Test
+    fun `GIVEN a network that batches WHEN stop earning is tapped THEN the withdrawal opens without a rewards lookup`() =
+        runTest {
+            // Arrange
+            every { network.rawId } returns NETWORK_ID
+            val model = createModelWithAddress()
+            val slot = FakeSlotHost(model.slotNavigation)
+            advanceUntilIdle()
+            forgetRewardsLookups()
+
+            // Act
+            model.onStopEarning()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(slot.configuration).isEqualTo(YieldSupplyActiveRoute.Exit)
+            coVerify(exactly = 0) { getYieldRewardsSummaryUseCase(any(), any()) }
+
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a decision in progress WHEN stop earning is tapped again THEN the rewards are looked up once`() =
+        runTest {
+            // Arrange
+            coEvery { getYieldRewardsSummaryUseCase(any(), any()) } coAnswers {
+                delay(LOOKUP_MILLIS)
+                MockYieldSupply.claimableSummary().right()
+            }
+            val model = createModelWithAddress()
+            val slot = FakeSlotHost(model.slotNavigation)
+            advanceUntilIdle()
+            forgetRewardsLookups()
+
+            // Act
+            model.onStopEarning()
+            model.onStopEarning()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { getYieldRewardsSummaryUseCase(any(), any()) }
+            assertThat(slot.configuration).isEqualTo(
+                YieldSupplyActiveRoute.Claim(chainId = MockYieldSupply.market().chainId, userAddress = USER_ADDRESS),
+            )
+
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN the rewards backend stalls WHEN stop earning is tapped THEN the withdrawal opens after the timeout`() =
@@ -109,7 +158,6 @@ internal class YieldSupplyActiveModelClaimOfferTest : YieldSupplyActiveModelTest
 
             // Assert
             assertThat(slot.configuration).isEqualTo(YieldSupplyActiveRoute.Exit)
-            assertThat(model.wasClaimOfferedBeforeWithdrawal).isFalse()
 
             model.onDestroy()
         }
@@ -133,6 +181,11 @@ internal class YieldSupplyActiveModelClaimOfferTest : YieldSupplyActiveModelTest
         override fun toString(): String = reason
     }
 
+    /** The screen reads the rewards for its banner too; only the lookups the tap makes are counted. */
+    private fun forgetRewardsLookups() {
+        clearMocks(getYieldRewardsSummaryUseCase, answers = false, recordedCalls = true)
+    }
+
     /** The address the offer is keyed by arrives with the balance, so the status has to carry one. */
     private fun TestScope.createModelWithAddress(): YieldSupplyActiveModel =
         createModel(dispatchers = createTestingCoroutineDispatcherProvider()).also { model ->
@@ -144,5 +197,7 @@ internal class YieldSupplyActiveModelClaimOfferTest : YieldSupplyActiveModelTest
 
     private companion object {
         const val USER_ADDRESS = "0xowner"
+        const val AVALANCHE_NETWORK_ID = "avalanche"
+        const val LOOKUP_MILLIS = 1_000L
     }
 }
