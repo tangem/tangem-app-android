@@ -106,7 +106,7 @@ private fun PrizeImagePlaceholder(modifier: Modifier = Modifier) {
         modifier = modifier
             .size(40.dp)
             .clip(RoundedCornerShape(999.dp))
-            .background(TangemTheme.colors3.bg.opaque.primary)
+            .background(TangemTheme.colors3.bg.transparent.primary)
             .padding(10.dp)
             .size(20.dp),
     )

@@ -5,7 +5,7 @@ import com.tangem.data.wallets.cold.UserWalletIdPreflightReadFilter
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
-import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.visa.model.TangemPayInitialData
 import com.tangem.domain.visa.model.MoneyAccountActivationData
 import com.tangem.sdk.api.TangemSdkManager
 import javax.inject.Inject
@@ -15,15 +15,13 @@ internal class DefaultTangemPayAuthDataSource @Inject constructor(
     private val tangemPayHotSdkManager: TangemPayHotSdkManager,
 ) : TangemPayAuthDataSource {
 
-    override suspend fun produceInitialCredentials(
-        userWallet: UserWallet,
-    ): Either<Throwable, TangemPayInitialCredentials> {
+    override suspend fun produceInitialData(userWallet: UserWallet): Either<Throwable, TangemPayInitialData> {
         return when (userWallet) {
             is UserWallet.Cold -> {
                 val preflightReadFilter = UserWalletIdPreflightReadFilter(userWallet)
-                tangemSdkManager.tangemPayProduceInitialCredentials(preflightReadFilter = preflightReadFilter)
+                tangemSdkManager.tangemPayProduceInitialData(preflightReadFilter = preflightReadFilter)
             }
-            is UserWallet.Hot -> tangemPayHotSdkManager.produceInitialCredentials(userWallet)
+            is UserWallet.Hot -> tangemPayHotSdkManager.produceInitialData(userWallet)
         }
     }
 

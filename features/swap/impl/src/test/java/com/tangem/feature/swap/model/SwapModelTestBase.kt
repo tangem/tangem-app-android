@@ -32,8 +32,10 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionTopUpMinimumUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionDepositCurrencyStatusesUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionWithdrawalTracker
 import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
@@ -51,7 +53,7 @@ import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
-import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
+import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.domain.GetSwapUiModeUseCase
 import com.tangem.feature.swap.domain.SetSwapUiModeUseCase
@@ -111,7 +113,7 @@ internal abstract class SwapModelTestBase {
     protected val getPaymentAccountCryptoCurrencyStatusUseCase: GetPaymentAccountCryptoCurrencyStatusUseCase =
         mockk(relaxed = true)
     protected val tangemPayWithdrawWithSwapUseCase: TangemPayWithdrawWithSwapUseCase = mockk(relaxed = true)
-    protected val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk(relaxed = true)
+    protected val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork = mockk(relaxed = true)
     protected val feeSelectorReloadTrigger: FeeSelectorReloadTrigger = mockk(relaxed = true)
     protected val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase = mockk(relaxed = true)
     protected val appsFlyerRepository: AppsFlyerRepository = mockk(relaxed = true)
@@ -137,6 +139,12 @@ internal abstract class SwapModelTestBase {
     protected val recordTokenTransferFromSwapUseCase: RecordTokenTransferFromSwapUseCase = mockk(relaxed = true)
     protected val getPredictionTopUpMinimumUseCase: GetPredictionTopUpMinimumUseCase = mockk {
         coEvery { this@mockk(any(), any()) } returns null
+    }
+    protected val getPredictionDepositCurrencyStatusesUseCase: GetPredictionDepositCurrencyStatusesUseCase = mockk {
+        coEvery { this@mockk(any()) } returns emptyList()
+    }
+    protected val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher = mockk {
+        coEvery { this@mockk(any()) } returns Unit.right()
     }
     protected val backupErrorWarningSender: BackupErrorWarningSender = mockk {
         every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
@@ -263,7 +271,7 @@ internal abstract class SwapModelTestBase {
         getAccountCurrencyStatusUseCase = getAccountCurrencyStatusUseCase,
         getPaymentAccountCryptoCurrencyStatusUseCase = getPaymentAccountCryptoCurrencyStatusUseCase,
         tangemPayWithdrawWithSwapUseCase = tangemPayWithdrawWithSwapUseCase,
-        isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+        isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
         feeSelectorReloadTrigger = feeSelectorReloadTrigger,
         getTangemPayCustomerIdUseCase = getTangemPayCustomerIdUseCase,
         appsFlyerRepository = appsFlyerRepository,
@@ -290,7 +298,9 @@ internal abstract class SwapModelTestBase {
             getPredictionTopUpMinimumUseCase = getPredictionTopUpMinimumUseCase,
             getCurrencyUSDQuoteUseCase = getCurrencyUSDQuoteUseCase,
         ),
+        getPredictionDepositCurrencyStatusesUseCase = getPredictionDepositCurrencyStatusesUseCase,
         backupErrorWarningSender = backupErrorWarningSender,
+        collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
     )
 
     // region builders

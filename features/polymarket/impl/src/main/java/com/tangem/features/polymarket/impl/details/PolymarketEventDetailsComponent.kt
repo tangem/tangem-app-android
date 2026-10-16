@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.essenty.lifecycle.doOnPause
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -27,6 +29,11 @@ internal class PolymarketEventDetailsComponent(
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: PolymarketEventDetailsModel = getOrCreateModel(params = params)
+
+    init {
+        lifecycle.doOnResume { model.onResume() }
+        lifecycle.doOnPause { model.onPause() }
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {

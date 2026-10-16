@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -39,17 +40,17 @@ fun TangemRadioButton(
         modifier = modifier.clickable(
             enabled = isEnabled,
             interactionSource = remember { MutableInteractionSource() },
-            indication = ripple(bounded = false, radius = TangemTheme.dimens.size16),
+            indication = ripple(bounded = false, radius = 16.dp),
             onClick = onClick,
         ),
     ) {
         val color = TangemTheme.colors.stroke.secondary
-        val radius = with(LocalDensity.current) { TangemTheme.dimens.size9.toPx() }
-        val width = with(LocalDensity.current) { TangemTheme.dimens.size2.toPx() }
+        val radius = with(LocalDensity.current) { 9.dp.toPx() }
+        val width = with(LocalDensity.current) { 2.dp.toPx() }
         Canvas(
             modifier = Modifier
-                .size(TangemTheme.dimens.size24)
-                .padding(TangemTheme.dimens.spacing2),
+                .size(24.dp)
+                .padding(2.dp),
         ) {
             drawCircle(
                 color = color,
@@ -60,8 +61,8 @@ fun TangemRadioButton(
         AnimatedVisibility(
             visible = isSelected,
             label = "Radio button animation",
-            modifier = modifier
-                .size(TangemTheme.dimens.size24),
+            modifier = Modifier
+                .size(24.dp),
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_check_circle_24),

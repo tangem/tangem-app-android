@@ -3,12 +3,11 @@ package com.tangem.tap.features.details.ui.resetcard.model
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
 import com.tangem.domain.card.ResetCardUseCase
@@ -49,7 +48,7 @@ internal class ResetCardModel @Inject constructor(
     private val deleteWalletUseCase: DeleteWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val cardSettingsInteractor: CardSettingsInteractor,
-    private val appRouter: AppRouter,
+    private val router: Router,
 ) : Model() {
 
     private val params = paramsContainer.require<ResetCardComponent.Params>()
@@ -273,7 +272,7 @@ internal class ResetCardModel @Inject constructor(
 
             finishFullReset()
         } else {
-            appRouter.pop()
+            router.pop()
         }
     }
 
@@ -283,9 +282,9 @@ internal class ResetCardModel @Inject constructor(
         val newSelectedWallet = getSelectedWalletSyncUseCase.invoke().getOrNull()
 
         if (newSelectedWallet != null) {
-            appRouter.popTo<AppRoute.Wallet>()
+            router.popTo(AppRoute.Wallet::class)
         } else {
-            appRouter.replaceAll(AppRoute.Home(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten))
+            router.replaceAll(AppRoute.Home(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten))
         }
     }
 
