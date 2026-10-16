@@ -552,4 +552,16 @@ internal object TransactionDomainModule {
             getHotWalletSigner = tangemHotWalletSignerFactory::create,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideGetSendIntentUseCase(sendIntentRepository: SendIntentRepository): GetSendIntentUseCase {
+        return GetSendIntentUseCase(sendIntentRepository = sendIntentRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCompleteSendIntentUseCase(sendIntentRepository: SendIntentRepository): CompleteSendIntentUseCase {
+        return CompleteSendIntentUseCase(sendIntentRepository = sendIntentRepository)
+    }
 }
