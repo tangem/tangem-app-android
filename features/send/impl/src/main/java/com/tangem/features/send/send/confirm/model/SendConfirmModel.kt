@@ -6,7 +6,6 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.backup.BackupErrorWarningSender
@@ -96,7 +95,6 @@ internal class SendConfirmModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val appRouter: AppRouter,
     private val router: Router,
     private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase,
     private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
@@ -577,7 +575,7 @@ internal class SendConfirmModel @Inject constructor(
                 if (error is SendTransactionError.GaslessFeeIncreased) onFeeReload()
                 alertFactory.getSendTransactionErrorState(
                     error = error,
-                    popBack = appRouter::pop,
+                    popBack = params.onCloseFlow,
                     onFailedTxEmailClick = ::onFailedTxEmailClick,
                 )
                 analyticsEventHandler.send(
@@ -740,7 +738,7 @@ internal class SendConfirmModel @Inject constructor(
             isHoldToConfirm = isHoldToConfirm,
             onClick = {
                 when (confirmUM) {
-                    is ConfirmUM.Success -> appRouter.pop()
+                    is ConfirmUM.Success -> params.onCloseFlow()
                     is ConfirmUM.Content -> if (confirmUM.isSending) {
                         return@NavigationButton
                     } else {
