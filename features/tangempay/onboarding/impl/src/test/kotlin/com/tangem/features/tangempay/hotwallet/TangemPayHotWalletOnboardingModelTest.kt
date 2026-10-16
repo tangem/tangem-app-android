@@ -78,12 +78,12 @@ internal class TangemPayHotWalletOnboardingModelTest {
             LegalLinkTestModel(
                 link = "terms of service",
                 click = { it.onTermsOfServiceClick() },
-                expectedUrl = "https://tangem.com/tangem_tos.html",
+                expectedUrl = "https://www.paera.com/tangempay",
             ),
             LegalLinkTestModel(
                 link = "privacy policy",
                 click = { it.onPrivacyPolicyClick() },
-                expectedUrl = "https://tangem.com/privacy-policy.html",
+                expectedUrl = "https://tangem.com/docs/en/pay-privacy-policy.pdf",
             ),
         )
     }

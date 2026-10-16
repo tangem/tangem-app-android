@@ -31,13 +31,11 @@ dependencies {
     implementation(projects.domain.appsflyer)
     api(projects.domain.card)
     api(projects.domain.common)
-    api(projects.domain.feedback)
     api(projects.domain.hotWallet)
     api(projects.domain.settings)
     api(projects.domain.socialLogin)
     api(projects.domain.wallets)
     implementation(projects.domain.cloudBackup)
-    implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
     implementation(projects.domain.wallets.models)
 
@@ -50,7 +48,6 @@ dependencies {
     runtimeOnly(projects.common.ui)
 
     /** Tangem libraries */
-    api(projects.libs.tangemSdkApi)
     api(projects.core.configToggles)
     api(tangemDeps.hot.core)
     implementation(tangemDeps.card.core)
