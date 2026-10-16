@@ -250,7 +250,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
             is BatchFetchResult.Success -> {
                 val batch = if (res.empty.not()) {
                     Batch(
-                        key = generateNewKey(listOf()),
+                        key = generateNewKey(emptyList()),
                         data = res.data,
                     )
                 } else {
@@ -258,8 +258,8 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
                 }
 
                 BatchListState(
-                    data = batch?.let { listOf(it) } ?: emptyList(),
-                    status = if (res.last) {
+                    data = batch?.let { listOf(it) }.orEmpty(),
+                    status = if (res.isLast) {
                         PaginationStatus.EndOfPagination
                     } else {
                         PaginationStatus.Paginating(res)

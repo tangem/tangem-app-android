@@ -139,7 +139,7 @@ internal class PolymarketFeedContentTransformerTest {
             EmptyFeedModel(status = PaginationStatus.EndOfPagination),
             EmptyFeedModel(
                 status = PaginationStatus.Paginating(
-                    lastResult = BatchFetchResult.Success(data = batchOf(), empty = true, last = false),
+                    lastResult = BatchFetchResult.Success(data = batchOf(), isEmpty = true, isLast = false),
                 ),
             ),
         )

@@ -214,10 +214,10 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
 
             runCatching {
                 Either.Right(requestBlock())
-            }.getOrElse { responseError ->
-                if (responseError is ApiResponseError.HttpException && responseError.errorBody != null) {
-                    val errorCode = TangemPayErrorResponse.decodeOrNull(json, responseError.errorBody)?.error?.code
-                        ?: responseError.code.numericCode
+            }.getOrElse { retryError ->
+                if (retryError is ApiResponseError.HttpException && retryError.errorBody != null) {
+                    val errorCode = TangemPayErrorResponse.decodeOrNull(json, retryError.errorBody)?.error?.code
+                        ?: retryError.code.numericCode
                     Either.Left(VisaApiError.fromBackendError(errorCode))
                 } else {
                     Either.Left(VisaApiError.UnknownWithoutCode)
