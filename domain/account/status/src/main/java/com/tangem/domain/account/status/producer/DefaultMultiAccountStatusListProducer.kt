@@ -42,9 +42,9 @@ internal class DefaultMultiAccountStatusListProducer @AssistedInject constructor
     override fun produce(): Flow<List<AccountStatusList>> {
         return userWalletsListRepository.loadAndGet()
             .flatMapLatest { userWallets ->
-                val flows = userWallets.map {
+                val flows = userWallets.map { userWallet ->
                     singleAccountStatusListSupplier(
-                        params = SingleAccountStatusListProducer.Params(it.walletId),
+                        params = SingleAccountStatusListProducer.Params(userWallet.walletId),
                     )
                 }
 

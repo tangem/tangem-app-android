@@ -1,5 +1,8 @@
 package com.tangem.domain.yield.supply.usecase
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
@@ -7,12 +10,15 @@ import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOutcome
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
+import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
+import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.mock.yield.MockYieldSupply
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -26,6 +32,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import java.math.BigInteger
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -33,49 +41,81 @@ internal class YieldSupplyClaimTrackerTest {
 
     private val transactionRepository: YieldSupplyTransactionRepository = mockk()
     private val incentivesRepository: YieldIncentivesRepository = mockk(relaxUnitFun = true)
+    private val getRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(transactionRepository, incentivesRepository)
+        clearMocks(transactionRepository, incentivesRepository, getRewardsSummaryUseCase)
+        coEvery {
+            getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
+        } returns YieldRewardsSummary.None.right()
     }
 
     @Test
-    fun `GIVEN receipt confirms WHEN claim tracked THEN confirmed outcome emitted and user cache invalidated`() =
+    fun `GIVEN receipt confirms WHEN Merkl has not reflected it yet THEN confirmed is emitted while still in flight`() =
         runTest {
             // Arrange
-            coEvery {
-                transactionRepository.getTransactionOutcome(USER_WALLET_ID, TOKEN, TX_HASH)
-            } returns YieldSupplyTransactionOutcome.Confirmed
+            receiptReturns(YieldSupplyTransactionOutcome.Confirmed)
+            rewardsReturn(MockYieldSupply.claimableSummary(claimable = listOf(CLAIMED_REWARD)).right())
             val tracker = createTracker(testScope = this)
             val outcomes = collectOutcomes(tracker)
 
             // Act
             tracker.track()
-            advanceUntilIdle()
+            advanceTimeBy(delayTimeMillis = 10_001)
             runCurrent()
 
             // Assert
-            assertThat(outcomes).containsExactly(
-                YieldSupplyClaimOutcome(
-                    userWalletId = USER_WALLET_ID,
-                    cryptoCurrencyId = TOKEN.id,
-                    chainId = CHAIN_ID,
-                    userAddress = USER_ADDRESS,
-                    outcome = YieldSupplyTransactionOutcome.Confirmed,
-                    origin = YieldSupplyClaimOrigin.ClaimSheet,
-                ),
+            assertThat(outcomes).containsExactly(outcome(YieldSupplyTransactionOutcome.Confirmed))
+            assertThat(tracker.isInFlight()).isTrue()
+        }
+
+    @Test
+    fun `GIVEN receipt reverts WHEN the outcome arrives THEN the claim is already released`() = runTest {
+        // Arrange
+        receiptReturns(YieldSupplyTransactionOutcome.Reverted)
+        val tracker = createTracker(testScope = this)
+        val inFlightOnOutcome = mutableListOf<Boolean>()
+        backgroundScope.launch { tracker.outcomes.collect { inFlightOnOutcome += tracker.isInFlight() } }
+        runCurrent()
+
+        // Act
+        tracker.track()
+        advanceUntilIdle()
+        runCurrent()
+
+        // Assert
+        assertThat(inFlightOnOutcome).containsExactly(false)
+    }
+
+    @Test
+    fun `GIVEN receipt confirms WHEN rewards are read THEN the user cache is invalidated before each read`() =
+        runTest {
+            // Arrange
+            receiptReturns(YieldSupplyTransactionOutcome.Confirmed)
+            coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returnsMany listOf(
+                MockYieldSupply.claimableSummary(claimable = listOf(CLAIMED_REWARD)).right(),
+                YieldRewardsSummary.None.right(),
             )
-            coVerify(exactly = 1) {
+            val tracker = createTracker(testScope = this)
+
+            // Act
+            tracker.track()
+            advanceUntilIdle()
+
+            // Assert
+            coVerifyOrder {
                 incentivesRepository.invalidateUserCache(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
+                getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
+                incentivesRepository.invalidateUserCache(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
+                getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS)
             }
         }
 
     @Test
-    fun `GIVEN receipt reverts WHEN claim tracked THEN reverted outcome emitted and cache left alone`() = runTest {
+    fun `GIVEN receipt reverts WHEN claim tracked THEN reverted outcome emitted and rewards are not read`() = runTest {
         // Arrange
-        coEvery {
-            transactionRepository.getTransactionOutcome(USER_WALLET_ID, TOKEN, TX_HASH)
-        } returns YieldSupplyTransactionOutcome.Reverted
+        receiptReturns(YieldSupplyTransactionOutcome.Reverted)
         val tracker = createTracker(testScope = this)
         val outcomes = collectOutcomes(tracker)
 
@@ -85,40 +125,126 @@ internal class YieldSupplyClaimTrackerTest {
         runCurrent()
 
         // Assert
-        assertThat(outcomes).containsExactly(
-            YieldSupplyClaimOutcome(
-                userWalletId = USER_WALLET_ID,
-                cryptoCurrencyId = TOKEN.id,
-                chainId = CHAIN_ID,
-                userAddress = USER_ADDRESS,
-                outcome = YieldSupplyTransactionOutcome.Reverted,
-                origin = YieldSupplyClaimOrigin.ClaimSheet,
-            ),
-        )
+        assertThat(outcomes).containsExactly(outcome(YieldSupplyTransactionOutcome.Reverted))
+        assertThat(tracker.isInFlight()).isFalse()
         coVerify(exactly = 0) { incentivesRepository.invalidateUserCache(any(), any()) }
+        coVerify(exactly = 0) { getRewardsSummaryUseCase(chainId = any(), userAddress = any()) }
     }
 
     @Test
-    fun `GIVEN transaction not mined WHEN attempts run out THEN no outcome and claim no longer in flight`() = runTest {
+    fun `GIVEN a confirmed claim WHEN Merkl still offers the claimed rewards THEN the claim stays in flight`() =
+        runTest {
+            // Arrange
+            receiptReturns(YieldSupplyTransactionOutcome.Confirmed)
+            rewardsReturn(MockYieldSupply.claimableSummary(claimable = listOf(CLAIMED_REWARD)).right())
+            val tracker = createTracker(testScope = this)
+
+            // Act
+            tracker.track()
+            advanceTimeBy(delayTimeMillis = 60_000)
+
+            // Assert
+            assertThat(tracker.isInFlight()).isTrue()
+        }
+
+    @ParameterizedTest
+    @MethodSource("provideReflectionModels")
+    fun `GIVEN a confirmed claim WHEN Merkl reports the rewards THEN the claim is released only once reflected`(
+        model: ReflectionModel,
+    ) = runTest {
         // Arrange
-        coEvery { transactionRepository.getTransactionOutcome(USER_WALLET_ID, TOKEN, TX_HASH) } returns null
+        receiptReturns(YieldSupplyTransactionOutcome.Confirmed)
+        rewardsReturn(model.summary)
         val tracker = createTracker(testScope = this)
-        val outcomes = collectOutcomes(tracker)
 
         // Act
         tracker.track()
-        advanceUntilIdle()
+        advanceTimeBy(delayTimeMillis = 30_000)
 
         // Assert
-        assertThat(outcomes).isEmpty()
-        assertThat(tracker.isClaimInFlight(CHAIN_ID, USER_ADDRESS).first()).isFalse()
+        assertThat(tracker.isInFlight()).isEqualTo(!model.isReflected)
     }
+
+    @Test
+    fun `GIVEN a confirmed claim WHEN Merkl never reflects it THEN the claim is released after six minutes`() =
+        runTest {
+            // Arrange
+            receiptReturns(YieldSupplyTransactionOutcome.Confirmed)
+            rewardsReturn(MockYieldSupply.claimableSummary(claimable = listOf(CLAIMED_REWARD)).right())
+            val tracker = createTracker(testScope = this)
+
+            // Act
+            tracker.track()
+            advanceTimeBy(delayTimeMillis = 359_000)
+            val isInFlightBeforeTimeout = tracker.isInFlight()
+            advanceTimeBy(delayTimeMillis = 2_000)
+
+            // Assert
+            assertThat(isInFlightBeforeTimeout).isTrue()
+            assertThat(tracker.isInFlight()).isFalse()
+        }
+
+    @Test
+    fun `GIVEN a confirmed claim WHEN Merkl reflects it on a later read THEN the claim is released then`() = runTest {
+        // Arrange
+        receiptReturns(YieldSupplyTransactionOutcome.Confirmed)
+        coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returnsMany listOf(
+            MockYieldSupply.claimableSummary(claimable = listOf(CLAIMED_REWARD)).right(),
+            MockYieldSupply.claimableSummary(claimable = listOf(CLAIMED_REWARD)).right(),
+            YieldRewardsSummary.None.right(),
+        )
+        val tracker = createTracker(testScope = this)
+
+        // Act
+        tracker.track()
+        advanceTimeBy(delayTimeMillis = 30_000)
+        val isInFlightAfterSecondRead = tracker.isInFlight()
+        advanceTimeBy(delayTimeMillis = 15_000)
+
+        // Assert
+        assertThat(isInFlightAfterSecondRead).isTrue()
+        assertThat(tracker.isInFlight()).isFalse()
+        coVerify(exactly = 3) { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) }
+    }
+
+    @Test
+    fun `GIVEN transaction not mined WHEN Merkl never reflects it THEN no outcome and claim no longer in flight`() =
+        runTest {
+            // Arrange
+            receiptReturns(null)
+            rewardsReturn(MockYieldSupply.claimableSummary(claimable = listOf(CLAIMED_REWARD)).right())
+            val tracker = createTracker(testScope = this)
+            val outcomes = collectOutcomes(tracker)
+
+            // Act
+            tracker.track()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(outcomes).isEmpty()
+            assertThat(tracker.isInFlight()).isFalse()
+        }
+
+    @Test
+    fun `GIVEN transaction not mined WHEN the receipt attempts run out THEN Merkl is asked whether it was reflected`() =
+        runTest {
+            // Arrange
+            receiptReturns(null)
+            val tracker = createTracker(testScope = this)
+
+            // Act
+            tracker.track()
+            advanceTimeBy(delayTimeMillis = 301_000)
+
+            // Assert
+            assertThat(tracker.isInFlight()).isFalse()
+            coVerify(exactly = 1) { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) }
+        }
 
     @Test
     fun `GIVEN claim submitted WHEN receipt is still pending THEN claim reads as in flight`() = runTest {
         // Arrange
-        coEvery { transactionRepository.getTransactionOutcome(USER_WALLET_ID, TOKEN, TX_HASH) } returns null
-
+        receiptReturns(null)
         val tracker = createTracker(testScope = this)
 
         // Act
@@ -126,16 +252,13 @@ internal class YieldSupplyClaimTrackerTest {
         advanceTimeBy(delayTimeMillis = 15_000)
 
         // Assert
-        assertThat(tracker.isClaimInFlight(CHAIN_ID, USER_ADDRESS).first()).isTrue()
+        assertThat(tracker.isInFlight()).isTrue()
     }
 
     @Test
     fun `GIVEN claim already tracked WHEN tracked again THEN the receipt is polled by one watcher only`() = runTest {
         // Arrange
-        coEvery {
-            transactionRepository.getTransactionOutcome(USER_WALLET_ID, TOKEN, TX_HASH)
-        } returns YieldSupplyTransactionOutcome.Confirmed
-
+        receiptReturns(YieldSupplyTransactionOutcome.Confirmed)
         val tracker = createTracker(testScope = this)
 
         // Act
@@ -153,7 +276,7 @@ internal class YieldSupplyClaimTrackerTest {
         model: InFlightModel,
     ) = runTest {
         // Arrange
-        coEvery { transactionRepository.getTransactionOutcome(USER_WALLET_ID, TOKEN, TX_HASH) } returns null
+        receiptReturns(null)
         val tracker = createTracker(testScope = this)
         tracker.track()
 
@@ -168,9 +291,7 @@ internal class YieldSupplyClaimTrackerTest {
     fun `GIVEN a claim of one token WHEN the same module is claimed from another token THEN it is not followed twice`() =
         runTest {
             // Arrange
-            coEvery {
-                transactionRepository.getTransactionOutcome(USER_WALLET_ID, TOKEN, TX_HASH)
-            } returns YieldSupplyTransactionOutcome.Confirmed
+            receiptReturns(YieldSupplyTransactionOutcome.Confirmed)
             coEvery {
                 transactionRepository.getTransactionOutcome(USER_WALLET_ID, OTHER_TOKEN, OTHER_TX_HASH)
             } returns YieldSupplyTransactionOutcome.Confirmed
@@ -184,6 +305,7 @@ internal class YieldSupplyClaimTrackerTest {
                 chainId = CHAIN_ID,
                 userAddress = USER_ADDRESS,
                 transactionHash = OTHER_TX_HASH,
+                claimedRewards = listOf(CLAIMED_REWARD),
                 origin = YieldSupplyClaimOrigin.ClaimSheet,
             )
             advanceUntilIdle()
@@ -201,11 +323,59 @@ internal class YieldSupplyClaimTrackerTest {
         InFlightModel(chainId = CHAIN_ID, userAddress = OTHER_USER_ADDRESS, isInFlight = false),
     )
 
+    private fun provideReflectionModels() = listOf(
+        ReflectionModel(
+            summary = MockYieldSupply.claimableSummary(claimable = listOf(CLAIMED_REWARD)).right(),
+            isReflected = false,
+        ),
+        ReflectionModel(
+            summary = MockYieldSupply.claimableSummary(
+                claimable = listOf(CLAIMED_REWARD.copy(claimableAmount = BigInteger.ONE)),
+            ).right(),
+            isReflected = true,
+        ),
+        ReflectionModel(
+            summary = MockYieldSupply.claimableSummary(
+                claimable = listOf(CLAIMED_REWARD.copy(rewardToken = CLAIMED_REWARD.rewardToken.uppercase())),
+            ).right(),
+            isReflected = false,
+        ),
+        ReflectionModel(
+            summary = MockYieldSupply.claimableSummary(claimable = listOf(OTHER_REWARD)).right(),
+            isReflected = true,
+        ),
+        ReflectionModel(
+            summary = MockYieldSupply.deferredSummary(claimable = listOf(CLAIMED_REWARD)).right(),
+            isReflected = false,
+        ),
+        ReflectionModel(
+            summary = MockYieldSupply.deferredSummary(
+                claimable = listOf(CLAIMED_REWARD.copy(claimableAmount = BigInteger.ONE)),
+            ).right(),
+            isReflected = true,
+        ),
+        ReflectionModel(
+            summary = YieldRewardsSummary.PendingOnly(pending = listOf(CLAIMED_REWARD)).right(),
+            isReflected = true,
+        ),
+        ReflectionModel(summary = YieldRewardsSummary.None.right(), isReflected = true),
+        ReflectionModel(summary = YieldIncentivesError.Unavailable.left(), isReflected = false),
+    )
+
     private fun createTracker(testScope: TestScope) = YieldSupplyClaimTracker(
         yieldSupplyTransactionRepository = transactionRepository,
         yieldIncentivesRepository = incentivesRepository,
+        getYieldRewardsSummaryUseCase = getRewardsSummaryUseCase,
         coroutineScope = TestAppCoroutineScope(testScope),
     )
+
+    private fun receiptReturns(outcome: YieldSupplyTransactionOutcome?) {
+        coEvery { transactionRepository.getTransactionOutcome(USER_WALLET_ID, TOKEN, TX_HASH) } returns outcome
+    }
+
+    private fun rewardsReturn(summary: Either<YieldIncentivesError, YieldRewardsSummary>) {
+        coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returns summary
+    }
 
     private fun YieldSupplyClaimTracker.track() = track(
         userWalletId = USER_WALLET_ID,
@@ -213,13 +383,22 @@ internal class YieldSupplyClaimTrackerTest {
         chainId = CHAIN_ID,
         userAddress = USER_ADDRESS,
         transactionHash = TX_HASH,
+        claimedRewards = listOf(CLAIMED_REWARD),
         origin = YieldSupplyClaimOrigin.ClaimSheet,
     )
 
-    /**
-     * `advanceUntilIdle` stops at the foreground work, so the collector is drained with an extra `runCurrent` at
-     * the call sites rather than here — the subscription itself must exist before the claim is tracked.
-     */
+    private suspend fun YieldSupplyClaimTracker.isInFlight() = isClaimInFlight(CHAIN_ID, USER_ADDRESS).first()
+
+    private fun outcome(outcome: YieldSupplyTransactionOutcome) = YieldSupplyClaimOutcome(
+        userWalletId = USER_WALLET_ID,
+        cryptoCurrencyId = TOKEN.id,
+        chainId = CHAIN_ID,
+        userAddress = USER_ADDRESS,
+        outcome = outcome,
+        origin = YieldSupplyClaimOrigin.ClaimSheet,
+    )
+
+    /** Subscribes before the claim is tracked; call sites drain the collector with an extra `runCurrent`. */
     private fun TestScope.collectOutcomes(tracker: YieldSupplyClaimTracker): List<YieldSupplyClaimOutcome> {
         val collected = mutableListOf<YieldSupplyClaimOutcome>()
         backgroundScope.launch { tracker.outcomes.collect(collected::add) }
@@ -229,6 +408,11 @@ internal class YieldSupplyClaimTrackerTest {
     }
 
     data class InFlightModel(val chainId: Int, val userAddress: String, val isInFlight: Boolean)
+
+    data class ReflectionModel(
+        val summary: Either<YieldIncentivesError, YieldRewardsSummary>,
+        val isReflected: Boolean,
+    )
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("00")
@@ -241,6 +425,8 @@ internal class YieldSupplyClaimTrackerTest {
 
         val TOKEN = createToken(contractAddress = "0xusdt", symbol = "USDT")
         val OTHER_TOKEN = createToken(contractAddress = "0xusdc", symbol = "USDC")
+        val CLAIMED_REWARD = MockYieldSupply.reward(claimableAmount = BigInteger("1000"))
+        val OTHER_REWARD = MockYieldSupply.reward(rewardToken = "0xother", claimableAmount = BigInteger("5000"))
 
         private fun createToken(contractAddress: String, symbol: String) = MockYieldSupply.token(
             contractAddress = contractAddress,

@@ -95,7 +95,7 @@ internal fun ApprovalTypeSelectorRow(
                 painter = rememberVectorPainter(ImageVector.vectorResource(id = R.drawable.ic_chevron_24)),
                 contentDescription = null,
                 tint = TangemTheme.colors.icon.informative,
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing2),
+                modifier = Modifier.padding(start = 2.dp),
             )
         }
         ApprovalTypeDropdown(
@@ -128,7 +128,7 @@ private fun ApprovalTypeDropdown(
 
     MaterialTheme(
         colorScheme = MaterialTheme.colorScheme.copy(surface = TangemTheme.colors.background.action),
-        shapes = MaterialTheme.shapes.copy(extraSmall = RoundedCornerShape(TangemTheme.dimens.radius16)),
+        shapes = MaterialTheme.shapes.copy(extraSmall = RoundedCornerShape(16.dp)),
     ) {
         DropdownMenu(
             expanded = isExpanded,
@@ -169,7 +169,7 @@ private fun ApprovalTypeDropdown(
                                 ),
                                 tint = color,
                                 contentDescription = null,
-                                modifier = Modifier.padding(start = TangemTheme.dimens.size20),
+                                modifier = Modifier.padding(start = 20.dp),
                             )
                         }
                     },

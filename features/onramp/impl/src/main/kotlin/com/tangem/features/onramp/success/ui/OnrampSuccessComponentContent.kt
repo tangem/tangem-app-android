@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -33,6 +34,7 @@ import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TransactionSuccessScreenTestTags
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.core.ui.utils.toTimeFormat
@@ -125,7 +127,7 @@ private fun AmountBlock(state: OnrampSuccessComponentUM.Content) {
     ) {
         val iconModifier = Modifier.size(size = 40.dp)
         SubcomposeAsyncImage(
-            modifier = iconModifier,
+            modifier = iconModifier.testTag(TransactionSuccessScreenTestTags.CURRENCY_ICON),
             model = ImageRequest.Builder(context = LocalContext.current)
                 .data(state.currencyImageUrl)
                 .crossfade(enable = true)
@@ -178,7 +180,9 @@ private fun AmountProviderBlock(providerName: TextReference, providerImageUrl: S
             color = TangemTheme.colors.text.tertiary,
         )
         SubcomposeAsyncImage(
-            modifier = Modifier.size(size = 16.dp),
+            modifier = Modifier
+                .size(size = 16.dp)
+                .testTag(TransactionSuccessScreenTestTags.PROVIDER_ICON),
             model = ImageRequest.Builder(context = LocalContext.current)
                 .data(providerImageUrl)
                 .crossfade(enable = true)

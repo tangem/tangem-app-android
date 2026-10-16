@@ -13,11 +13,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.EventMessageAction
-import com.tangem.core.ui.message.GlobalLoadingMessage
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.core.ui.message.ToastMessage
-import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
@@ -33,29 +29,34 @@ import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.GetSharedJointAccountInvitesUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.AccountName
+import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.domain.models.account.OwnerKeyIndex
+import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatcher
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.converter.JointAccountToMembersUMConverter
+import com.tangem.features.jointaccount.main.entity.AboutSignaturesConfig
 import com.tangem.features.jointaccount.main.entity.ActivationConfirmationConfig
 import com.tangem.features.jointaccount.main.entity.MemberCardConfig
 import com.tangem.features.jointaccount.main.state.JointAccountMembersStateController
 import com.tangem.features.jointaccount.main.state.transformers.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
 import com.tangem.core.ui.R as CoreUiR
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Stable
 @ModelScoped
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class JointAccountMembersModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -70,15 +71,19 @@ internal class JointAccountMembersModel @Inject constructor(
     private val getSharedJointAccountInvitesUseCase: GetSharedJointAccountInvitesUseCase,
     private val ownerAddressResolver: JointOwnerAddressResolver,
     private val activateJointAccountUseCase: ActivateJointAccountUseCase,
-    private val archiveCryptoPortfolioUseCase: ArchiveCryptoPortfolioUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val stateController: JointAccountMembersStateController,
     private val inviteSharing: JointAccountInviteSharing,
+    private val compromiseWatcher: JointAccountCompromiseWatcher,
 ) : Model() {
 
     private var activationJob: Job? = null
 
     private val params = paramsContainer.require<JointAccountMembersComponent.Params>()
+
+    val bottomSheetNavigation: SlotNavigation<MemberCardConfig> = SlotNavigation()
+    val activationConfirmationNavigation: SlotNavigation<ActivationConfirmationConfig> = SlotNavigation()
+    val aboutSignaturesNavigation: SlotNavigation<AboutSignaturesConfig> = SlotNavigation()
 
     private val converterCallbacks = JointAccountToMembersUMConverter.Callbacks(
         onMemberInfoClick = { avatar, name, address ->
@@ -86,14 +91,11 @@ internal class JointAccountMembersModel @Inject constructor(
         },
         onInviteClick = { inviteId -> inviteSharing.share(inviteId) },
         onActivateClick = ::onActivateClick,
-        onShareSafelyClick = ::onShareSafelyClick,
-        onArchiveClick = ::onArchiveClick,
+        onApprovalsInfoClick = { threshold, total ->
+            aboutSignaturesNavigation.activate(AboutSignaturesConfig(threshold = threshold, total = total))
+        },
         onCloseClick = ::onCloseClick,
     )
-
-    val bottomSheetNavigation: SlotNavigation<MemberCardConfig> = SlotNavigation()
-    val shareSafelyNavigation: SlotNavigation<Unit> = SlotNavigation()
-    val activationConfirmationNavigation: SlotNavigation<ActivationConfirmationConfig> = SlotNavigation()
 
     val isConfirmingActivation: StateFlow<Boolean>
         field = MutableStateFlow(false)
@@ -106,11 +108,15 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private val isResumed = MutableStateFlow(false)
 
-    private val resolvedAccountFlow: Flow<JointAccount?> = jointAccountListSupplier(userWalletId = params.userWalletId)
-        .map { accounts ->
-            accounts.firstOrNull { params.cryptoAccountId == null || it.cryptoAccountId == params.cryptoAccountId }
-        }
-        .distinctUntilChanged()
+    private val resolvedAccountFlow: Flow<JointAccount?> = compromiseWatcher.verified(
+        userWalletId = params.userWalletId,
+        accounts = jointAccountListSupplier(userWalletId = params.userWalletId)
+            .map { accounts ->
+                accounts.firstOrNull { params.cryptoAccountId == null || it.cryptoAccountId == params.cryptoAccountId }
+            }
+            .distinctUntilChanged(),
+        onCompromised = router::pop,
+    )
 
     init {
         stateController.update(UpdateMembersInitialStateTransformer(onCloseClick = ::onCloseClick))
@@ -146,19 +152,21 @@ internal class JointAccountMembersModel @Inject constructor(
                     cryptoAccountId = account.cryptoAccountId,
                 )
                 combine(
-                    flow = ownAddressFlow(cryptoAccountId = account.cryptoAccountId),
+                    flow = ownJointAccountFlow(cryptoAccountId = account.cryptoAccountId),
                     flow2 = getSharedJointAccountInvitesUseCase(
                         userWalletId = params.userWalletId,
                         cryptoAccountId = account.cryptoAccountId,
                     ),
                     flow3 = isConfirmingActivation,
-                ) { ownAddress, shared, isActivating ->
+                ) { ownAccount, shared, isActivating ->
                     ResolvedAccount(
                         account = account,
                         invites = invites,
                         sharedInvites = shared,
-                        ownAddress = ownAddress,
+                        ownAddress = ownAccount?.ownAddress,
                         isActivating = isActivating,
+                        name = ownAccount?.name,
+                        icon = ownAccount?.icon,
                     )
                 }
             }
@@ -178,6 +186,8 @@ internal class JointAccountMembersModel @Inject constructor(
                             callbacks = converterCallbacks,
                             walletIconRes = walletIconRes,
                             isActivating = account.isActivating,
+                            accountName = account.name,
+                            accountIcon = account.icon,
                         )
                     }
                     ?: ClearMembersAccountTransformer()
@@ -188,27 +198,41 @@ internal class JointAccountMembersModel @Inject constructor(
     }
 
     /**
-     * The wallet's own owner address in the account, derived from the key index its `/accounts` record carries.
-     * Starts with null so the screen renders before that record arrives (the create and join flows refresh the two
-     * lists concurrently) and settles once it does; the key is derived once per index.
+     * The account's `/accounts` record as this wallet sees it: its name, icon and the wallet's own owner address,
+     * derived from the key index the record carries. Starts with null so the screen renders before that record
+     * arrives (the create and join flows refresh the two lists concurrently) and settles once it does; the key is
+     * derived once per index.
      */
-    private fun ownAddressFlow(cryptoAccountId: String): Flow<String?> {
+    private fun ownJointAccountFlow(cryptoAccountId: String): Flow<OwnJointAccount?> {
         val accountId = AccountId
             .forJointAccount(userWalletId = params.userWalletId, value = cryptoAccountId)
             .getOrNull()
             ?: return flowOf(null)
 
         return singleAccountSupplier.filterJointAccount(accountId = accountId)
-            .map { account -> account.ownerKeyIndex }
-            .distinctUntilChanged()
-            .map { ownerKeyIndex ->
-                ownerAddressResolver
-                    .resolve(userWalletId = params.userWalletId, ownerKeyIndex = ownerKeyIndex)
-                    .onLeft { TangemLogger.e("Unable to resolve the own owner address of the joint account", it) }
-                    .getOrNull()
+            .map { account ->
+                OwnJointAccount(
+                    ownerKeyIndex = account.ownerKeyIndex,
+                    name = account.accountName,
+                    icon = account.icon,
+                    ownAddress = null,
+                )
             }
-            .onStart { emit(null) }
+            .distinctUntilChanged()
+            .runningFold<OwnJointAccount, OwnJointAccount?>(initial = null) { previous, next ->
+                val ownAddress = if (previous?.ownerKeyIndex == next.ownerKeyIndex) {
+                    previous.ownAddress
+                } else {
+                    resolveOwnAddress(ownerKeyIndex = next.ownerKeyIndex)
+                }
+                next.copy(ownAddress = ownAddress)
+            }
     }
+
+    private suspend fun resolveOwnAddress(ownerKeyIndex: OwnerKeyIndex): String? = ownerAddressResolver
+        .resolve(userWalletId = params.userWalletId, ownerKeyIndex = ownerKeyIndex)
+        .onLeft { TangemLogger.e("Unable to resolve the own owner address of the joint account", it) }
+        .getOrNull()
 
     /**
      * The backend won't silent-push joint-account state changes (a slot filling, activation, an operation awaiting
@@ -339,10 +363,6 @@ internal class JointAccountMembersModel @Inject constructor(
         )
     }
 
-    private fun onShareSafelyClick() {
-        shareSafelyNavigation.activate(Unit)
-    }
-
     private fun onMemberInfoClick(config: MemberCardConfig) {
         bottomSheetNavigation.activate(config)
     }
@@ -357,65 +377,6 @@ internal class JointAccountMembersModel @Inject constructor(
         )
     }
 
-    private fun onArchiveClick(cryptoAccountId: String) {
-        uiMessageSender.send(
-            DialogMessage(
-                title = resourceReference(CoreUiR.string.account_details_archive),
-                message = resourceReference(CoreUiR.string.account_details_archive_joint_description),
-                firstActionBuilder = {
-                    EventMessageAction(
-                        title = resourceReference(CoreUiR.string.account_details_archive_action),
-                        isWarning = true,
-                        onClick = { archiveAccount(cryptoAccountId) },
-                    )
-                },
-                secondActionBuilder = { cancelAction() },
-            ),
-        )
-    }
-
-    private fun archiveAccount(cryptoAccountId: String) {
-        modelScope.launch {
-            uiMessageSender.send(GlobalLoadingMessage(isShow = true))
-
-            AccountId.forJointAccount(userWalletId = params.userWalletId, value = cryptoAccountId).fold(
-                ifLeft = { failedArchiveDialog(error = null) },
-                ifRight = { accountId ->
-                    archiveCryptoPortfolioUseCase(accountId)
-                        .onLeft { error -> failedArchiveDialog(error = error) }
-                        .onRight {
-                            val toast = ToastMessage(
-                                message = resourceReference(CoreUiR.string.account_archive_success_message),
-                            )
-                            uiMessageSender.send(toast)
-                            router.pop()
-                        }
-                },
-            )
-
-            uiMessageSender.send(GlobalLoadingMessage(isShow = false))
-        }
-    }
-
-    private fun failedArchiveDialog(error: ArchiveCryptoPortfolioUseCase.Error?) {
-        val titleRes: Int
-        val messageRes: Int
-        if (error is ArchiveCryptoPortfolioUseCase.Error.ActiveReferralStatus) {
-            titleRes = CoreUiR.string.account_could_not_archive_referral_program_title
-            messageRes = CoreUiR.string.account_could_not_archive_referral_program_message
-        } else {
-            titleRes = CoreUiR.string.common_something_went_wrong
-            messageRes = CoreUiR.string.account_generic_error_dialog_message
-        }
-
-        uiMessageSender.send(
-            DialogMessage(
-                title = resourceReference(titleRes),
-                message = resourceReference(messageRes),
-            ),
-        )
-    }
-
     private fun onCloseClick() {
         router.pop()
     }
@@ -426,6 +387,15 @@ internal class JointAccountMembersModel @Inject constructor(
         val sharedInvites: Set<String>,
         val ownAddress: String?,
         val isActivating: Boolean,
+        val name: AccountName?,
+        val icon: CryptoPortfolioIcon?,
+    )
+
+    private data class OwnJointAccount(
+        val ownerKeyIndex: OwnerKeyIndex,
+        val name: AccountName,
+        val icon: CryptoPortfolioIcon,
+        val ownAddress: String?,
     )
 
     private companion object {
