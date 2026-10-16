@@ -312,7 +312,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                 TangemLogger.e(error.toString())
                 alertFactory.getSendTransactionErrorState(
                     error = error,
-                    popBack = params.onExitFlow,
+                    popBack = params.onCloseFlow,
                     onFailedTxEmailClick = ::onFailedTxEmailClick,
                 )
                 analyticsEventHandler.send(
@@ -410,7 +410,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                     is ConfirmUM.Success -> {
                         modelScope.launch {
                             nftSendSuccessTrigger.triggerSuccessNFTSend()
-                            params.onExitFlow()
+                            params.onCloseFlow()
                         }
                     }
                     is ConfirmUM.Content -> if (confirmUM.isSending) {

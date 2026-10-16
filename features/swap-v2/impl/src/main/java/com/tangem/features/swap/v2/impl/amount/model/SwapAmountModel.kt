@@ -920,7 +920,7 @@ internal class SwapAmountModel @Inject constructor(
                     )
                 }
             },
-            popBack = params.onExitFlow,
+            popBack = params.onCloseFlow,
         )
     }
 
