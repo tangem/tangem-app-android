@@ -25,7 +25,7 @@ internal class RewardsValidatorStateConverterTest {
             address = JAILED_ADDRESS,
             status = Yield.Validator.ValidatorStatus.JAILED,
             name = "Jailed validator",
-            preferred = false,
+            isPreferred = false,
             isStrategicPartner = false,
         ),
     )
@@ -35,7 +35,7 @@ internal class RewardsValidatorStateConverterTest {
             address = LISTED_ADDRESS,
             status = Yield.Validator.ValidatorStatus.ACTIVE,
             name = "Listed validator",
-            preferred = true,
+            isPreferred = true,
             isStrategicPartner = false,
         ),
     )
