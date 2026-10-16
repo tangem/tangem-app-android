@@ -42,8 +42,8 @@ internal class WcAppInfoTransformer(
             ),
             onNetworksClick = onNetworksClick,
             connectButtonConfig = WcPrimaryButtonConfig(
-                showProgress = false,
-                enabled = WcConnectButtonAvailabilityConverter.convert(
+                shouldShowProgress = false,
+                isEnabled = WcConnectButtonAvailabilityConverter.convert(
                     WcConnectButtonAvailabilityConverter.Input(
                         missingNetworks = proposalNetwork.missingRequired,
                         requiredNetworks = proposalNetwork.required,

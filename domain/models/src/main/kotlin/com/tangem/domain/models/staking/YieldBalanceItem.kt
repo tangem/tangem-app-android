@@ -3,6 +3,7 @@ package com.tangem.domain.models.staking
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.staking.action.StakingActionType
 import kotlinx.datetime.Instant
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -42,29 +43,29 @@ data class PendingAction(
     data class PendingActionArgs(
         val amount: Amount?,
         val duration: Duration?,
-        val validatorAddress: Boolean?,
-        val validatorAddresses: Boolean?,
+        @SerialName("validatorAddress") val hasValidatorAddress: Boolean?,
+        @SerialName("validatorAddresses") val hasValidatorAddresses: Boolean?,
         val tronResource: TronResource?,
-        val signatureVerification: Boolean?,
+        @SerialName("signatureVerification") val hasSignatureVerification: Boolean?,
     ) {
 
         @Serializable
         data class Amount(
-            val required: Boolean,
+            @SerialName("required") val isRequired: Boolean,
             val minimum: SerializedBigDecimal?,
             val maximum: SerializedBigDecimal?,
         )
 
         @Serializable
         data class Duration(
-            val required: Boolean,
+            @SerialName("required") val isRequired: Boolean,
             val minimum: Int?,
             val maximum: Int?,
         )
 
         @Serializable
         data class TronResource(
-            val required: Boolean,
+            @SerialName("required") val isRequired: Boolean,
             val options: List<String>,
         )
     }

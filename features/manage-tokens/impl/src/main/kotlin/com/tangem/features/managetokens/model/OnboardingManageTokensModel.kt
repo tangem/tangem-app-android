@@ -99,7 +99,7 @@ internal class OnboardingManageTokensModel @Inject constructor(
             ),
             actionButtonConfig = OnboardingManageTokensUM.ActionButtonConfig.Later(
                 onClick = ::onLaterClick,
-                showProgress = false,
+                shouldShowProgress = false,
             ),
         )
     }
@@ -218,7 +218,7 @@ internal class OnboardingManageTokensModel @Inject constructor(
                 state.copy(
                     actionButtonConfig = OnboardingManageTokensUM.ActionButtonConfig.Continue(
                         onClick = ::saveChanges,
-                        showTangemIcon = shouldShowTangemIcon,
+                        shouldShowTangemIcon = shouldShowTangemIcon,
                     ),
                 )
             }

@@ -159,15 +159,15 @@ internal class DefaultYieldSupplyTransactionRepository(
 
         val amount = getEnterAmount(cryptoCurrency, yieldSupplyStatus)
 
-        val emptyContractAddress = existingYieldAddress == null || existingYieldAddress == EthereumUtils.ZERO_ADDRESS
-        val activeYieldContractAddress = if (emptyContractAddress) {
+        val isContractAddressEmpty = existingYieldAddress == null || existingYieldAddress == EthereumUtils.ZERO_ADDRESS
+        val activeYieldContractAddress = if (isContractAddressEmpty) {
             calculatedYieldContractAddress
         } else {
             existingYieldAddress
         }
 
         when {
-            yieldSupplyStatus == null || emptyContractAddress -> {
+            yieldSupplyStatus == null || isContractAddressEmpty -> {
                 enterTransactions.add(
                     createDeployTransaction(
                         walletManager = walletManager,

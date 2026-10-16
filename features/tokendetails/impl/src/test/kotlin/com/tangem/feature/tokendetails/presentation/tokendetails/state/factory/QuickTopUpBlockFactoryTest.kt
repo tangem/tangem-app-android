@@ -299,7 +299,7 @@ internal class QuickTopUpBlockFactoryTest {
     fun `GIVEN ConfirmResidency with onramp-available country WHEN build THEN returns block using app currency`() {
         // Arrange
         val country = mockk<OnrampCountry>(relaxed = true) {
-            every { onrampAvailable } returns true
+            every { isOnrampAvailable } returns true
         }
         val confirmResidency = OnrampAvailability.ConfirmResidency(country = country)
 
@@ -328,7 +328,7 @@ internal class QuickTopUpBlockFactoryTest {
     fun `GIVEN ConfirmResidency with onramp-unavailable country WHEN build THEN returns null`() {
         // Arrange
         val country = mockk<OnrampCountry>(relaxed = true) {
-            every { onrampAvailable } returns false
+            every { isOnrampAvailable } returns false
         }
         val confirmResidency = OnrampAvailability.ConfirmResidency(country = country)
 
