@@ -8,7 +8,15 @@ import com.tangem.features.promobanners.api.PromoBannersBlockComponent.Placehold
 import com.tangem.features.promobanners.impl.converters.PromoBannerDisplayDTOConverter
 import com.tangem.features.promobanners.impl.model.PromoBannerDisplay
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 
 internal typealias BannersCache = Map<BannersCacheKey, List<PromoBannerDisplay>>
 
@@ -25,31 +33,33 @@ internal class DefaultPromoBannersRepository(
 
     private val converter = PromoBannerDisplayDTOConverter()
 
-    override suspend fun getBanners(
+    private val fetchMutexes = ConcurrentHashMap<BannersCacheKey, Mutex>()
+
+    override suspend fun getBannersSync(
         walletId: String,
         placeholder: Placeholder,
         languageISOCode: String,
     ): List<PromoBannerDisplay> {
         val key = BannersCacheKey(walletId, placeholder)
 
-        cache.getSyncOrNull()?.get(key)?.let { return it }
-
-        val banners = withContext(dispatchers.io) {
-            tangemTechApi.getPromoBannerDisplays(
-                walletId = walletId,
-                placeholder = placeholder.value,
-                languageISOCode = languageISOCode,
-            ).getOrThrow()
-                .items
-                .map(converter::convert)
-                .sortedBy { it.priority.order }
+        return lockOf(key).withLock {
+            cache.getSyncOrNull()?.get(key) ?: fetch(key, languageISOCode)
         }
+    }
 
-        cache.update(default = emptyMap()) { current ->
-            current + (key to banners)
+    override suspend fun refreshBanners(walletIds: Set<String>, languageISOCode: String) {
+        val keys = cache.getSyncOrNull()?.keys.orEmpty().filter { it.walletId in walletIds }
+
+        keys.forEach { key ->
+            runSuspendCatching { lockOf(key).withLock { fetch(key, languageISOCode) } }
+                .onFailure { error -> TangemLogger.e("Failed to refresh promo banners for $key", error) }
         }
+    }
 
-        return banners
+    override fun getBanners(walletId: String, placeholder: Placeholder): Flow<List<PromoBannerDisplay>> {
+        val key = BannersCacheKey(walletId, placeholder)
+
+        return cache.get().mapNotNull { it[key] }.distinctUntilChanged()
     }
 
     override suspend fun getCachedBanners(walletId: String, placeholder: Placeholder): List<PromoBannerDisplay>? {
@@ -74,5 +84,26 @@ internal class DefaultPromoBannersRepository(
             )
             tangemTechApi.dismissPromoBannerDisplay(displayId, request).getOrThrow()
         }
+    }
+
+    private fun lockOf(key: BannersCacheKey): Mutex = fetchMutexes.getOrPut(key, ::Mutex)
+
+    private suspend fun fetch(key: BannersCacheKey, languageISOCode: String): List<PromoBannerDisplay> {
+        val banners = withContext(dispatchers.io) {
+            tangemTechApi.getPromoBannerDisplays(
+                walletId = key.walletId,
+                placeholder = key.placeholder.value,
+                languageISOCode = languageISOCode,
+            ).getOrThrow()
+                .items
+                .map(converter::convert)
+                .sortedBy { it.priority.order }
+        }
+
+        cache.update(default = emptyMap()) { current ->
+            current + (key to banners)
+        }
+
+        return banners
     }
 }

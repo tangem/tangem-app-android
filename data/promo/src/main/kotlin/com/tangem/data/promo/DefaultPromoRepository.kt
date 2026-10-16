@@ -23,6 +23,9 @@ import com.tangem.domain.promo.models.*
 import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -85,7 +88,7 @@ internal class DefaultPromoRepository(
         }
     }
 
-    override suspend fun getCampaigns(userWallet: UserWallet, forceRefresh: Boolean): List<PromoCampaign> {
+    override suspend fun getCampaignsSync(userWallet: UserWallet, forceRefresh: Boolean): List<PromoCampaign> {
         val userWalletId = userWallet.walletId
 
         return campaignsMutexes.getOrPut(userWalletId, ::Mutex).withLock {
@@ -94,6 +97,10 @@ internal class DefaultPromoRepository(
                 campaignsStore.update(emptyMap()) { it + (userWalletId to campaigns) }
             }
         }
+    }
+
+    override fun getCampaigns(userWalletId: UserWalletId): Flow<List<PromoCampaign>> {
+        return campaignsStore.get().mapNotNull { it[userWalletId] }.distinctUntilChanged()
     }
 
     override suspend fun register(
