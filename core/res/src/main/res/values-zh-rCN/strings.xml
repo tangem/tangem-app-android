@@ -495,6 +495,7 @@
   <string name="common_sign">签名</string>
   <string name="common_sign_and_send">签名并发送</string>
   <string name="common_skip">跳过</string>
+  <string name="common_slippage">滑点</string>
   <string name="common_something_went_wrong">出问题了</string>
   <string name="common_stake">质押</string>
   <string name="common_staked">已质押</string>
@@ -1345,6 +1346,7 @@
   <string name="markets_yield_supply_banner_title">激活收益模式</string>
   <string name="mobile_wallet_requires_min_os_warning_body">创建手机钱包前必须更新至 %1$s</string>
   <string name="mobile_wallet_requires_min_os_warning_title">手机钱包需要 %1$s 或更高版本</string>
+  <string name="money_account_onboarding_disclaimer">Tangem Pay 是一家金融科技公司，而非银行。银行服务由 SSB 提供，SSB 为 FDIC 成员。存放于 SSB 的资金符合 FDIC 保险的承保条件，每位存款人在每家投保银行的保额最高为 250,000 美元，并受适用限制及 FDIC 规则约束。</string>
   <string name="news_all_news">所有新闻</string>
   <string name="news_like">喜欢</string>
   <plurals name="news_published_hours_ago">
@@ -2018,7 +2020,10 @@
   <string name="support_selector_view_chat_button">打开聊天</string>
   <string name="support_selector_view_email_button">打开邮件</string>
   <string name="swap_approve_description">批准后，您即允许智能合约在未来的交易中使用您的代币。</string>
+  <string name="swap_custom_slippage_info">该服务商无法自定义滑点，在极少数情况下滑点可能高达 %s </string>
   <string name="swap_detailed_mode">详细模式</string>
+  <string name="swap_exchange_rates_info_text">显示的费用包含服务提供商的费用。</string>
+  <string name="swap_exchange_rates_info_title">汇率</string>
   <string name="swap_fixed_rate">固定利率</string>
   <string name="swap_give_permission_fee_footer">网络将收取代币批准费，以验证您是否授权使用您的代币进行兑换。</string>
   <string name="swap_in_progress">兑换中</string>
@@ -2028,6 +2033,10 @@
   <string name="swap_search_tooltip_description">搜索任何代币，即使它还不在你的列表中。</string>
   <string name="swap_search_tooltip_title">使用搜索查找所需内容</string>
   <string name="swap_simple_mode">简易模式</string>
+  <string name="swap_slippage_error">不支持的金额</string>
+  <string name="swap_slippage_info_text">是指由于市场价格或流动性变化导致的预期成交价格与实际成交价格之间的差异。</string>
+  <string name="swap_slippage_warning_text">如果达到滑点阈值，互换交易可能会失败。</string>
+  <string name="swap_slippage_warning_title">滑点已设定为 %s</string>
   <string name="swap_story_fifth_subtitle">我们提供全天候支持，让您安心无忧，任何问题都能得到帮助。</string>
   <string name="swap_story_fifth_title">永远在这里</string>
   <string name="swap_story_first_subtitle">多个值得信赖的供应商汇聚一处——在您的钱包中轻松兑换任何资产</string>
@@ -2496,6 +2505,7 @@
   <string name="tangempay_remove_account_alert_title">删除账号？</string>
   <string name="tangempay_residency_all_country">更改国家</string>
   <string name="tangempay_residency_all_state">选择其他州</string>
+  <string name="tangempay_residency_search_empty">未找到结果，请尝试更改搜索内容</string>
   <string name="tangempay_residency_suggested_country">推荐国家</string>
   <string name="tangempay_residency_suggested_state"> 推荐州</string>
   <string name="tangempay_residency_title_country">居住国家</string>
@@ -2749,6 +2759,11 @@
   <string name="user_wallet_list_rename_popup_title">重命名钱包</string>
   <string name="user_wallet_list_unlock_all">全部解锁</string>
   <string name="user_wallet_list_unlock_all_with">解锁所有 %s</string>
+  <string name="virtual_account_requisites_bank_address">银行地址</string>
+  <string name="virtual_account_requisites_bank_name">银行名称</string>
+  <string name="virtual_account_requisites_beneficiary_address">收款人地址</string>
+  <string name="virtual_account_requisites_beneficiary_name">收款人姓名</string>
+  <string name="virtual_account_requisites_routing_number">Routing number</string>
   <string name="visa_balance_limits_details_aml_verified">已通过反洗钱（AML）验证</string>
   <string name="visa_balance_limits_details_available">可用</string>
   <string name="visa_balance_limits_details_blocked">已屏蔽</string>

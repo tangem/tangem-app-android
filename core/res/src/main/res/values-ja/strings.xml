@@ -492,6 +492,7 @@
   <string name="common_sign">署名</string>
   <string name="common_sign_and_send">署名して送信</string>
   <string name="common_skip">スキップ</string>
+  <string name="common_slippage">スリッページ</string>
   <string name="common_something_went_wrong">問題が発生しました</string>
   <string name="common_stake">ステーキング</string>
   <string name="common_staked">ステーキング済み</string>
@@ -1343,6 +1344,7 @@
   <string name="markets_yield_supply_banner_title">利息モードを有効にする</string>
   <string name="mobile_wallet_requires_min_os_warning_body">モバイルウォレットを作成するには、%1$sにアップデートする必要があります</string>
   <string name="mobile_wallet_requires_min_os_warning_title">モバイルウォレットを使用するには、%1$s以降が必要です</string>
+  <string name="money_account_onboarding_disclaimer">Tangem Payはフィンテック企業であり、銀行ではありません。銀行サービスはFDIC加盟のSSBが提供しています。SSBに預け入れられた資金は、適用される制限およびFDIC規則に従い、預金者1人あたり、保険対象銀行ごとに最大250,000米ドルまでFDIC保険の対象となります。</string>
   <string name="news_all_news">すべてのニュース</string>
   <string name="news_like">いいね</string>
   <plurals name="news_published_hours_ago">
@@ -2028,7 +2030,10 @@
   <string name="support_selector_view_chat_button">チャットを開く</string>
   <string name="support_selector_view_email_button">メールを開く</string>
   <string name="swap_approve_description">承認すると、このスマートコントラクトが今後の取引でトークンを利用できるようになります。</string>
+  <string name="swap_custom_slippage_info">このプロバイダーではスリッページを変更できず、まれに最大%sに達する場合があります</string>
   <string name="swap_detailed_mode">詳細モード</string>
+  <string name="swap_exchange_rates_info_text">表示される交換レートには、サービスプロバイダーの手数料が含まれています</string>
+  <string name="swap_exchange_rates_info_title">交換レート</string>
   <string name="swap_fixed_rate">固定レート</string>
   <string name="swap_give_permission_fee_footer">ネットワークは、あなたがトークンのスワップを承認していることを確認するために、トークン承認手数料を請求します。</string>
   <string name="swap_in_progress">スワップ中</string>
@@ -2038,6 +2043,10 @@
   <string name="swap_search_tooltip_description">どのトークンでも検索できます。まだ一覧に表示されていないものでも検索可能です。</string>
   <string name="swap_search_tooltip_title">必要なものは検索して見つけましょう。</string>
   <string name="swap_simple_mode">シンプルモード</string>
+  <string name="swap_slippage_error">対応していない金額です</string>
+  <string name="swap_slippage_info_text">とは、市場価格や流動性の変動によって生じる、予想価格と実際の約定価格の差です。</string>
+  <string name="swap_slippage_warning_text">スリッページが許容範囲を超えると、スワップが失敗する場合があります</string>
+  <string name="swap_slippage_warning_title">スリッページは%sに設定されています</string>
   <string name="swap_story_fifth_subtitle">24時間体制のサポートであらゆる問題に対応します。</string>
   <string name="swap_story_fifth_title">いつもここに</string>
   <string name="swap_story_first_subtitle">複数の信頼できるプロバイダーが一箇所に集結。ウォレット内で様々な暗号資産を簡単に交換できます。</string>
@@ -2506,6 +2515,7 @@
   <string name="tangempay_remove_account_alert_title">アカウントを削除しますか？</string>
   <string name="tangempay_residency_all_country">国を変更</string>
   <string name="tangempay_residency_all_state">別の州を選択</string>
+  <string name="tangempay_residency_search_empty">見つかりませんでした。検索条件を変更してお試しください</string>
   <string name="tangempay_residency_suggested_country">おすすめの国</string>
   <string name="tangempay_residency_suggested_state"> おすすめの州</string>
   <string name="tangempay_residency_title_country">居住国</string>
@@ -2766,6 +2776,11 @@
   <string name="user_wallet_list_rename_popup_title">ウォレット名の変更</string>
   <string name="user_wallet_list_unlock_all">すべてのロックを解除</string>
   <string name="user_wallet_list_unlock_all_with">%sですべてをロック解除</string>
+  <string name="virtual_account_requisites_bank_address">銀行の住所</string>
+  <string name="virtual_account_requisites_bank_name">銀行名</string>
+  <string name="virtual_account_requisites_beneficiary_address">受取人の住所</string>
+  <string name="virtual_account_requisites_beneficiary_name">受取人名</string>
+  <string name="virtual_account_requisites_routing_number">Routing number</string>
   <string name="visa_balance_limits_details_aml_verified">AML認証済み</string>
   <string name="visa_balance_limits_details_available">利用可能</string>
   <string name="visa_balance_limits_details_blocked">ブロック中</string>
