@@ -34,14 +34,14 @@ internal fun QuickTopUpBlock(state: QuickTopUpBlockUM, modifier: Modifier = Modi
     Box(modifier = modifier.fillMaxWidth()) {
         TangemSurface(
             modifier = Modifier.fillMaxWidth(),
-            color = TangemTheme.colors3.bg.opaque.primary,
+            color = TangemTheme.colors3.bg.transparent.primary,
             shape = RoundedCornerShape(24.dp),
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(TangemTheme.dimens2.x3),
-                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x4),
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 val titleColor = TangemTheme.colors3.text.primary
                 Text(
@@ -56,7 +56,7 @@ internal fun QuickTopUpBlock(state: QuickTopUpBlockUM, modifier: Modifier = Modi
                     },
                 )
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1_5),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     state.amounts.fastForEach { amountUM ->
                         PrimaryInverseTangemButton(

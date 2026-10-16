@@ -125,12 +125,12 @@ private fun BlockchainItem(model: BlockchainUM, modifier: Modifier = Modifier) {
     RowContentContainer(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = TangemTheme.dimens.size52),
+            .heightIn(min = 52.dp),
         icon = {
             Image(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .size(TangemTheme.dimens.size22),
+                    .size(22.dp),
                 painter = painterResource(id = model.iconResId),
                 contentDescription = null,
             )

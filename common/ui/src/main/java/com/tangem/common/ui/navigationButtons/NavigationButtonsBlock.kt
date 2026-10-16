@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.navigationButtons.preview.NavigationButtonsPreview
 import com.tangem.core.ui.components.HoldToConfirmButton
 import com.tangem.core.ui.components.Keyboard
@@ -55,7 +56,7 @@ fun NavigationButtonsBlock(
         DoneButtons(state?.extraButtons)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             NavigationPrimaryButton(state?.primaryButton, modifier = Modifier.weight(1f))
         }
@@ -77,7 +78,7 @@ fun NavigationButtonsBlockV2(
         DoneButtons(navigationUM?.secondaryPairButtonsUM)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             PreviousButton(navigationUM?.prevButton)
             key(navigationUM?.source) {
@@ -164,10 +165,10 @@ private fun PreviousButton(prevButton: NavigationButton?) {
                 tint = TangemTheme.colors.icon.primary1,
                 contentDescription = null,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
+                    .clip(RoundedCornerShape(16.dp))
                     .background(TangemTheme.colors.button.secondary)
                     .clickable(onClick = button.onClick)
-                    .padding(TangemTheme.dimens.spacing12)
+                    .padding(12.dp)
                     .testTag(SendScreenTestTags.PREVIOUS_BUTTON),
             )
         }
@@ -185,8 +186,8 @@ fun DoneButtons(pairButtons: Pair<NavigationButton, NavigationButton>?, modifier
     ) {
         val (leftButton, rightButton) = remember(this) { requireNotNull(pairButtons) }
         Row(
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
-            modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(bottom = 12.dp),
         ) {
             SecondaryButtonIconStart(
                 text = leftButton.textReference.resolveReference(),
@@ -240,7 +241,7 @@ private fun InfoText(footerText: TextReference?, modifier: Modifier = Modifier) 
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = TangemTheme.dimens.spacing12)
+                .padding(bottom = 12.dp)
                 .testTag(SendScreenTestTags.FOOTER_TEXT),
         )
     }

@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -68,12 +69,12 @@ fun PasteButton(
                     shape = TangemTheme.shapes.roundedCornersXMedium,
                 )
                 .padding(
-                    horizontal = TangemTheme.dimens.spacing12,
-                    vertical = TangemTheme.dimens.spacing4,
+                    horizontal = 12.dp,
+                    vertical = 4.dp,
                 )
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = ripple(radius = TangemTheme.dimens.radius8),
+                    indication = ripple(radius = 8.dp),
                     enabled = isPasteEnabled,
                     onClick = {
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -96,10 +97,10 @@ fun CrossIcon(onClick: () -> Unit, modifier: Modifier = Modifier) {
         tint = TangemTheme.colors.icon.informative,
         contentDescription = stringResourceSafe(R.string.common_close),
         modifier = modifier
-            .size(TangemTheme.dimens.size24)
+            .size(24.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(radius = TangemTheme.dimens.radius12),
+                indication = ripple(radius = 12.dp),
                 onClick = onClick,
             ),
     )

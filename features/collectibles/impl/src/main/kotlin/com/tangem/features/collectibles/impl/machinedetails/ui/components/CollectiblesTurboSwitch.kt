@@ -39,7 +39,11 @@ internal fun CollectiblesTurboSwitch(
         label = "TurboThumbOffset",
     )
     val trackColor by animateColorAsState(
-        targetValue = if (isChecked) TangemTheme.colors3.bg.status.info else TangemTheme.colors3.bg.opaque.secondary,
+        targetValue = if (isChecked) {
+            TangemTheme.colors3.bg.status.info
+        } else {
+            TangemTheme.colors3.bg.transparent.secondary
+        },
         label = "TurboTrackColor",
     )
 

@@ -30,7 +30,8 @@ data class CollectibleGachaMachineNft(
     val description: String?,
     val rarity: CollectibleRarity?,
     val grade: Grade?,
-    val imageUrl: String?,
+    val frontImageUrl: String?,
+    val backImageUrl: String?,
     val insuredValue: BigDecimal?,
 ) {
 
