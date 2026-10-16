@@ -122,10 +122,10 @@ internal class MultiWalletUpgradeWalletModel @Inject constructor(
                             cardRepository.startCardActivation(cardId = result.data.card.cardId)
 
                             // TODO [REDACTED_TASK_KEY] track wallet created
-                            val cardDoesNotSupportBackup = result.data.card.settings.isBackupAllowed.not()
+                            val isBackupNotSupported = result.data.card.settings.isBackupAllowed.not()
                             when {
-                                cardDoesNotSupportBackup -> createWalletAndNavigateBackWithDone()
-                                params.parentParams.withSeedPhraseFlow -> onDone.emit(Step.AddBackupDevice)
+                                isBackupNotSupported -> createWalletAndNavigateBackWithDone()
+                                params.parentParams.isSeedPhraseFlow -> onDone.emit(Step.AddBackupDevice)
                                 else -> {
                                     onDone.emit(Step.ChooseBackupOption)
                                 }

@@ -181,7 +181,7 @@ class TokenItemStateConverter(
                         text = stringReference(currencyStatus.currency.name),
                         hasPending = value.hasCurrentNetworkTransactions,
                         earnApy = apyInfo?.text,
-                        earnApyIsActive = apyInfo?.isActive == true,
+                        isEarnApyActive = apyInfo?.isActive == true,
                     )
                 }
             }
@@ -274,14 +274,14 @@ class TokenItemStateConverter(
                         .firstNotNullOfOrNull { address ->
                             validatorsByAddress[address]?.rewardInfo
                         } ?: stakingOptions.yield.validators
-                        .filter { it.preferred }
+                        .filter { it.isPreferred }
                         .mapNotNull { validator ->
                             validator.rewardInfo
                         }
                         .maxByOrNull { it.rate }
                 } else {
                     stakingOptions.yield.validators
-                        .filter { it.preferred }
+                        .filter { it.isPreferred }
                         .mapNotNull { validator ->
                             validator.rewardInfo
                         }

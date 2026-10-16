@@ -59,7 +59,11 @@ internal class PolymarketPositionsBatchFetcher(
                     return BatchFetchResult.Error(IllegalStateException("Positions cursor did not advance"))
                 }
                 next = cursor?.let(PolymarketPositionsPageRequest::Next)
-                BatchFetchResult.Success(data = page.positions, empty = page.positions.isEmpty(), last = cursor == null)
+                BatchFetchResult.Success(
+                    data = page.positions,
+                    isEmpty = page.positions.isEmpty(),
+                    isLast = cursor == null,
+                )
             },
         )
     }

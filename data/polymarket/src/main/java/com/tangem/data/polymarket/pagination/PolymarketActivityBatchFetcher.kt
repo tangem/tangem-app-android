@@ -45,6 +45,6 @@ internal class PolymarketActivityBatchFetcher(
             require(page.nextCursor == null || page.nextCursor !in cursors) { "Activity cursor did not advance" }
             page.nextCursor?.let(cursors::add)
             nextCursor = page.nextCursor
-            BatchFetchResult.Success(data = page.items, empty = page.items.isEmpty(), last = nextCursor == null)
+            BatchFetchResult.Success(data = page.items, isEmpty = page.items.isEmpty(), isLast = nextCursor == null)
         }.getOrElse { BatchFetchResult.Error(it) }
 }
