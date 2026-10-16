@@ -372,8 +372,10 @@ internal interface TangemPayDataModule {
         @Provides
         fun provideJoinTangemPayWaitlistUseCase(
             waitlistRepository: TangemPayWaitlistRepository,
+            onboardingRepository: OnboardingRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         ): JoinTangemPayWaitlistUseCase {
-            return JoinTangemPayWaitlistUseCase(waitlistRepository)
+            return JoinTangemPayWaitlistUseCase(waitlistRepository, onboardingRepository, paymentAccountStatusFetcher)
         }
 
         @Provides
