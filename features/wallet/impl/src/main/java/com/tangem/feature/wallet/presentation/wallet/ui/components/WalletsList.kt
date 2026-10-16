@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -49,15 +50,15 @@ internal fun WalletsList(
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val horizontalCardPadding = TangemTheme.dimens.spacing16
+    val horizontalCardPadding = 16.dp
     val screenWidth = LocalWindowSize.current.width
     val itemWidth by remember(screenWidth) { derivedStateOf { screenWidth - horizontalCardPadding * 2 } }
 
     LazyRow(
         modifier = modifier.background(color = TangemTheme.colors.background.secondary),
         state = lazyListState,
-        contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         flingBehavior = rememberWalletsFlingBehaviour(lazyListState = lazyListState, itemWidth = itemWidth),
     ) {
         // Using key is required to guarantee the correct wallet selection

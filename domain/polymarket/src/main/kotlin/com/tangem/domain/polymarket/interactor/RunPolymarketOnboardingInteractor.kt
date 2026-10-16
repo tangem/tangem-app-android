@@ -71,12 +71,14 @@ class RunPolymarketOnboardingInteractor(
     }
 
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.runOnboarding(addresses: PolymarketAddresses) {
+        val wasOnboarded = polymarketOnboardedStore.isOnboardedSync(addresses.userWalletId)
         val entry = (step { getWalletStatus(addresses) } ?: return).status
+        val isNewAccount = entry != PolymarketWalletStatus.READY_TO_TRADE && !wasOnboarded
         val credentials = getApiCredentials(addresses.userWalletId)
 
         if (!entry.owesApprovals() && credentials != null) {
             awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = entry) ?: return
-            finish(addresses, credentials, isNewAccount = entry != PolymarketWalletStatus.READY_TO_TRADE)
+            finish(addresses, credentials, isNewAccount = isNewAccount)
             return
         }
 
@@ -85,7 +87,13 @@ class RunPolymarketOnboardingInteractor(
         emit(PolymarketOnboardingProgress.AwaitingSignature)
         val signed = step { signOnboardingDigests(addresses, nonce) } ?: return
 
-        settleWallet(addresses = addresses, entry = entry, signed = signed, credentials = credentials)
+        settleWallet(
+            addresses = addresses,
+            entry = entry,
+            signed = signed,
+            credentials = credentials,
+            isNewAccount = isNewAccount,
+        )
     }
 
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.settleWallet(
@@ -93,6 +101,7 @@ class RunPolymarketOnboardingInteractor(
         entry: PolymarketWalletStatus,
         signed: PolymarketSignedOnboarding,
         credentials: PolymarketApiCredentials?,
+        isNewAccount: Boolean,
     ) {
         var current = entry
         if (current.needsDeploy()) {
@@ -118,7 +127,7 @@ class RunPolymarketOnboardingInteractor(
         }
 
         awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = current) ?: return
-        finish(addresses, activeCredentials, isNewAccount = entry != PolymarketWalletStatus.READY_TO_TRADE)
+        finish(addresses, activeCredentials, isNewAccount = isNewAccount)
     }
 
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.awaitStatus(

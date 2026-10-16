@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -48,7 +49,7 @@ internal fun NonFiatContentBlock(
 private fun DraggableImage(reorderableTokenListState: ReorderableLazyListState?) {
     Box(
         modifier = Modifier
-            .size(size = TangemTheme.dimens.size32)
+            .size(size = 32.dp)
             .then(
                 other = if (reorderableTokenListState != null) {
                     Modifier.detectReorder(reorderableTokenListState)

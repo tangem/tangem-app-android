@@ -18,6 +18,14 @@ internal class PolymarketRedeemErrorResolver @Inject constructor(
             PolymarketRedeemError.Unexpected(httpCode = null, detail = error.cause.message ?: error.message)
     }
 
+    /** The call lookup alone answers `409` for a market with nothing to redeem; elsewhere a `409` is unexpected. */
+    fun resolveCallLookup(error: ApiResponseError): PolymarketRedeemError =
+        if (error is ApiResponseError.HttpException && error.code == Code.CONFLICT) {
+            PolymarketRedeemError.NothingToRedeem(detail = problemDetailParser.parseDetail(error.errorBody))
+        } else {
+            resolve(error)
+        }
+
     private fun resolveHttp(error: ApiResponseError.HttpException): PolymarketRedeemError {
         val detail = problemDetailParser.parseDetail(error.errorBody)
         return when (error.code) {

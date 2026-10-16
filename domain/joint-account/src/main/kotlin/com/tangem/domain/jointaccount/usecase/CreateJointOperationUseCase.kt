@@ -3,10 +3,13 @@ package com.tangem.domain.jointaccount.usecase
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
+import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import arrow.core.right
+import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
+import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.model.JointAccount
@@ -15,10 +18,12 @@ import com.tangem.domain.jointaccount.model.JointOperationSigningError
 import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.SafeInnerCall
+import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
+import com.tangem.domain.jointaccount.safe.SafeDeployment
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.supplier.find
@@ -40,6 +45,8 @@ class CreateJointOperationUseCase(
     private val compositionChecker: SafeCompositionChecker,
     private val networkReader: JointNetworkReader,
     private val payloadCodec: JointTransferPayloadCodec,
+    private val blockaidGate: JointOperationBlockaidGate,
+    private val ownerAddressResolver: JointOwnerAddressResolver,
 ) {
 
     suspend operator fun invoke(
@@ -114,7 +121,7 @@ class CreateJointOperationUseCase(
     ): Either<JointOperationCreateError, Unit> = either {
         val userWalletId = account.accountId.userWalletId
 
-        compositionChecker
+        val deployment = compositionChecker
             .ensureMatches(
                 userWalletId = userWalletId,
                 network = network,
@@ -128,6 +135,15 @@ class CreateJointOperationUseCase(
             .build(userWalletId = userWalletId, network = network, call = call, gasToken = gasToken)
             .mapLeft(JointOperationCreateError::Failed)
             .bind()
+
+        checkBlockaid(
+            account = account,
+            network = network,
+            safeTx = safeTx,
+            chainId = chainId,
+            safeAddress = safeAddress,
+            deployment = deployment,
+        )
 
         val signature = signer
             .signOperation(
@@ -149,6 +165,45 @@ class CreateJointOperationUseCase(
                 signature = signature,
             )
             .bind()
+    }
+
+    /** The initiator's operation passes the same Blockaid check a co-signer runs; only a clear verdict lets it be signed */
+    @Suppress("LongParameterList")
+    private suspend fun Raise<JointOperationCreateError>.checkBlockaid(
+        account: Account.Joint,
+        network: Network,
+        safeTx: SafeTx,
+        chainId: Long,
+        safeAddress: String,
+        deployment: SafeDeployment,
+    ) {
+        val ownerAddress = ownerAddressResolver
+            .resolve(userWalletId = account.accountId.userWalletId, ownerKeyIndex = account.ownerKeyIndex)
+            .mapLeft(JointOperationCreateError::Failed)
+            .bind()
+            ?: raise(JointOperationCreateError.Failed(cause = IllegalStateException("The owner key is not derived")))
+
+        val verdict = blockaidGate.verify(
+            network = network,
+            safeTx = safeTx,
+            chainId = chainId,
+            safeAddress = safeAddress,
+            ownerAddress = ownerAddress,
+            deployment = deployment,
+        )
+
+        when (verdict) {
+            JointOperationBlockaidGate.Verdict.SAFE,
+            JointOperationBlockaidGate.Verdict.WARNING,
+            -> Unit
+            JointOperationBlockaidGate.Verdict.MALICIOUS -> raise(JointOperationCreateError.Malicious)
+            JointOperationBlockaidGate.Verdict.UNAVAILABLE -> raise(
+                JointOperationCreateError.Failed(cause = IllegalStateException("Blockaid is unavailable")),
+            )
+            JointOperationBlockaidGate.Verdict.UNKNOWN -> raise(
+                JointOperationCreateError.Failed(cause = IllegalStateException("Blockaid returned no verdict")),
+            )
+        }
     }
 
     /** Only the two known transfer shapes exist, and the Safe never calls itself */
