@@ -6,6 +6,7 @@ import com.tangem.core.analytics.api.AnalyticsUserIdHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.tap.common.analytics.ABTestsTrackingContextObserver
 import com.tangem.tap.common.analytics.DefaultTrackingContextProxy
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAppInstanceIdProvider
 import com.tangem.tap.common.analytics.handlers.opentelemetry.DefaultOtelFeatureToggles
@@ -14,6 +15,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 
 @Module
@@ -23,14 +25,19 @@ internal object AnalyticsModule {
     @Provides
     @Singleton
     fun provideAnalyticsContextProxy(
-        abtestsManager: ABTestsManager,
         paramsInterceptorHolder: ParamsInterceptorHolder,
         userIdHandler: AnalyticsUserIdHandler,
+        observers: Set<@JvmSuppressWildcards TrackingContextProxy.Observer>,
     ): TrackingContextProxy = DefaultTrackingContextProxy(
-        abTestsManager = abtestsManager,
         paramsInterceptorHolder = paramsInterceptorHolder,
         userIdHandler = userIdHandler,
+        observers = observers,
     )
+
+    @Provides
+    @IntoSet
+    fun provideABTestsTrackingContextObserver(abTestsManager: ABTestsManager): TrackingContextProxy.Observer =
+        ABTestsTrackingContextObserver(abTestsManager)
 
     @Provides
     @Singleton
