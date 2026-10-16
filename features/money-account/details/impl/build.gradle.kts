@@ -39,6 +39,7 @@ dependencies {
 
     /** Other */
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
     implementation(tangemDeps.blockchain)
 
     /** DI */
