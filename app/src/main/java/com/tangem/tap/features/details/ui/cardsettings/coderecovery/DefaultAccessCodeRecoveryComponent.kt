@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.tap.features.details.ui.cardsettings.coderecovery.api.AccessCodeRecoveryComponent
@@ -17,7 +16,6 @@ import dagger.assisted.AssistedInject
 internal class DefaultAccessCodeRecoveryComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: Unit,
-    private val appRouter: AppRouter,
 ) : AccessCodeRecoveryComponent, AppComponentContext by appComponentContext {
 
     private val model: AccessCodeRecoveryModel = getOrCreateModel()
@@ -28,7 +26,7 @@ internal class DefaultAccessCodeRecoveryComponent @AssistedInject constructor(
 
         AccessCodeRecoveryScreen(
             state = state,
-            onBackClick = { appRouter.pop() },
+            onBackClick = { router.pop() },
         )
     }
 
