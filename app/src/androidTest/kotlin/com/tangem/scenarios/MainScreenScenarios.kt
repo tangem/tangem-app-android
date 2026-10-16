@@ -13,6 +13,7 @@ import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.screens.onAddAndManageBottomSheet
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onOrganizeTokensScreen
+import com.tangem.screens.onWarningBottomSheet
 import io.qameta.allure.kotlin.Allure.step
 import org.junit.Assert.assertEquals
 
@@ -77,4 +78,17 @@ fun BaseTestCase.pullToRefreshMainScreen() {
             swipeDown(startY = 0f, endY = visibleSize.height.toFloat() * 6f, durationMillis = 800)
         }
     waitForIdle()
+}
+
+// A new hot wallet gets this one-off sheet once its balance turns positive, so it shows up only when that load wins.
+fun BaseTestCase.closeFinishWalletActivationSheetIfShown() {
+    var isShown = false
+    onWarningBottomSheet { isShown = isFinishWalletActivationShown() }
+    if (!isShown) return
+    step("Click on 'Later' button") {
+        onWarningBottomSheet { finishWalletActivationLaterButton.performClick() }
+    }
+    step("Assert 'Finalize wallet setup' sheet is not displayed") {
+        awaitSuccess { onWarningBottomSheet { finishWalletActivationTitle.assertDoesNotExist() } }
+    }
 }
