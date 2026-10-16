@@ -80,7 +80,7 @@ internal fun TokenDetailsTopBar(topAppBarUM: TokenDetailsTopAppBarUM, modifier: 
             Box(modifier = Modifier.testTag(TokenDetailsScreenTestTags.TOKEN_TITLE)) {
                 TokenDetailsTitle(titleState = topAppBarUM.titleState)
             }
-            Spacer(modifier = Modifier.height(TangemTheme.dimens2.x0_5))
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = topAppBarUM.subtitle.resolveAnnotatedReference(),
                 color = TangemTheme.colors2.text.neutral.tertiary,
@@ -174,8 +174,8 @@ private fun TokenDetailsMenuItem(
 private fun TokenDetailsTitle(titleState: TitleState) {
     val appearance = TitleAppearance(
         style = TangemTheme.typography2.bodySemibold16,
-        iconSize = TangemTheme.dimens2.x5,
-        spacing = TangemTheme.dimens2.x1,
+        iconSize = 20.dp,
+        spacing = 4.dp,
     )
 
     when (titleState) {

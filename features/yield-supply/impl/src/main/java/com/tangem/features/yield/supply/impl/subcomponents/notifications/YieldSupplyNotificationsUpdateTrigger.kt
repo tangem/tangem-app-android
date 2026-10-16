@@ -11,6 +11,8 @@ interface YieldSupplyNotificationsUpdateTrigger {
     /** Flow returns whether there is error notifications */
     val hasErrorFlow: Flow<Boolean>
 
+    val cannotCoverFeeFlow: Flow<Boolean>
+
     /** Trigger fee check reload */
     suspend fun triggerUpdate(data: YieldSupplyNotificationData)
 }
@@ -21,6 +23,8 @@ interface YieldSupplyNotificationsUpdateListener {
 
     /** Trigger return callback with check result */
     suspend fun callbackHasError(hasError: Boolean)
+
+    suspend fun callbackCannotCoverFee(cannotCoverFee: Boolean)
 }
 
 @Singleton
@@ -29,6 +33,9 @@ internal class DefaultYieldSupplyNotificationsUpdateTrigger @Inject constructor(
     YieldSupplyNotificationsUpdateListener {
 
     override val hasErrorFlow: Flow<Boolean>
+        field = MutableSharedFlow()
+
+    override val cannotCoverFeeFlow: Flow<Boolean>
         field = MutableSharedFlow()
 
     override val updateTriggerFlow: Flow<YieldSupplyNotificationData>
@@ -40,5 +47,9 @@ internal class DefaultYieldSupplyNotificationsUpdateTrigger @Inject constructor(
 
     override suspend fun callbackHasError(hasError: Boolean) {
         hasErrorFlow.emit(hasError)
+    }
+
+    override suspend fun callbackCannotCoverFee(cannotCoverFee: Boolean) {
+        cannotCoverFeeFlow.emit(cannotCoverFee)
     }
 }

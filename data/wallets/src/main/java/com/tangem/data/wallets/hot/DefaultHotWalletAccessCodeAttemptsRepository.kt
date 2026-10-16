@@ -66,10 +66,17 @@ class DefaultHotWalletAccessCodeAttemptsRepository @Inject constructor(
             )
         }.distinctUntilChanged()
 
-        return flow.transformLatest {
+        return flow.transformLatest { attemptRecord ->
             while (true) {
-                emit(toState(id, it.attempts, it.deadline, it.bootCount))
-                val remaining = remainingSeconds(it.deadline, it.bootCount)
+                emit(
+                    toState(
+                        id = id,
+                        count = attemptRecord.attempts,
+                        deadlineElapsed = attemptRecord.deadline,
+                        bootStored = attemptRecord.bootCount,
+                    ),
+                )
+                val remaining = remainingSeconds(attemptRecord.deadline, attemptRecord.bootCount)
                 if (remaining <= 0) break
                 delay(timeMillis = 1000)
             }

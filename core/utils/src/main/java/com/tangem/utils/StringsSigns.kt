@@ -19,4 +19,5 @@ object StringsSigns {
     const val APPROXIMATE = "≈"
     const val WHITE_SPACE = " "
     const val LIGHTNING = "⚡"
+    const val NUMBER_SIGN = "#"
 }
