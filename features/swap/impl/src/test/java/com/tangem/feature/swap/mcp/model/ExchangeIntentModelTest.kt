@@ -35,6 +35,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
@@ -42,7 +43,9 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -159,6 +162,8 @@ internal class ExchangeIntentModelTest {
         // Act
         val exchangeIntentModel = createModel(testScope = this)
         advanceUntilIdle()
+        exchangeIntentModel.onClose()
+        exchangeIntentModel.onClose()
 
         // Assert
         verify(exactly = 1) { messageSender.send(any<ToastMessage>()) }
@@ -226,6 +231,54 @@ internal class ExchangeIntentModelTest {
     }
 
     @Test
+    fun `GIVEN account flow swap on top WHEN proceed THEN intent swap is pushed without replacing it`() = runTest {
+        // Arrange
+        every { appRouter.stack } returns listOf(
+            AppRoute.Swap(
+                userWalletId = walletId,
+                screenSource = "Main",
+                accountFlow = AppRoute.Swap.AccountFlow.TopUp,
+            ),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        (model.uiState.value as ExchangeIntentUM.Offer).primaryButton.onClick()
+
+        // Assert
+        verify(exactly = 1) { appRouter.push(expectedSwapRoute(), any()) }
+        verify(exactly = 0) { appRouter.replaceCurrent(any(), any()) }
+        verify(exactly = 1) { router.pop(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN intent swap covered by account flow WHEN proceed THEN existing intent swap is revealed`() = runTest {
+        // Arrange
+        every { appRouter.stack } returns listOf(
+            expectedSwapRoute(),
+            AppRoute.Swap(
+                userWalletId = walletId,
+                screenSource = "Main",
+                accountFlow = AppRoute.Swap.AccountFlow.TopUp,
+            ),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        (model.uiState.value as ExchangeIntentUM.Offer).primaryButton.onClick()
+
+        // Assert
+        verify(exactly = 1) { appRouter.popTo(expectedSwapRoute(), any()) }
+        verify(exactly = 0) { appRouter.push(any(), any()) }
+        verify(exactly = 0) { appRouter.replaceCurrent(any(), any()) }
+        verify(exactly = 1) { router.pop(any()) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN offer WHEN sheet is dismissed THEN the queue slot is released once and nothing else happens`() =
         runTest {
             // Arrange
@@ -252,7 +305,6 @@ internal class ExchangeIntentModelTest {
 
         // Act
         model.onClose()
-        model.onDestroy()
         response.complete(intent.right())
         advanceUntilIdle()
 
@@ -260,6 +312,140 @@ internal class ExchangeIntentModelTest {
         verify(exactly = 1) { router.pop(any()) }
         verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
         assertThat(model.uiState.value).isEqualTo(ExchangeIntentUM.Loading)
+        model.onDestroy()
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CallbackCompletion {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN retained offer callbacks WHEN completion repeats THEN only first completion has effects`(
+            testModel: CompletionModel,
+        ) = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            val proceed = (model.uiState.value as ExchangeIntentUM.Offer).primaryButton.onClick
+
+            // Act
+            testModel.actions.forEach { action ->
+                when (action) {
+                    CompletionAction.Close -> model.onClose()
+                    CompletionAction.Proceed -> proceed()
+                    CompletionAction.Destroy -> model.onDestroy()
+                }
+            }
+
+            // Assert
+            verify(exactly = testModel.expectedPops) { router.pop(any()) }
+            verify(exactly = testModel.expectedNavigations) { appRouter.push(expectedSwapRoute(), any()) }
+            verify(exactly = 0) { appRouter.replaceCurrent(any(), any()) }
+            verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
+            model.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            CompletionModel(listOf(CompletionAction.Close, CompletionAction.Close), 1, 0),
+            CompletionModel(listOf(CompletionAction.Close, CompletionAction.Proceed), 1, 0),
+            CompletionModel(listOf(CompletionAction.Proceed, CompletionAction.Proceed), 1, 1),
+            CompletionModel(listOf(CompletionAction.Proceed, CompletionAction.Close), 1, 1),
+            CompletionModel(listOf(CompletionAction.Destroy, CompletionAction.Proceed), 0, 0),
+            CompletionModel(listOf(CompletionAction.Destroy, CompletionAction.Close), 0, 0),
+            CompletionModel(listOf(CompletionAction.Close, CompletionAction.Destroy, CompletionAction.Proceed), 1, 0),
+            CompletionModel(listOf(CompletionAction.Proceed, CompletionAction.Destroy, CompletionAction.Close), 1, 1),
+        )
+
+        @Test
+        fun `GIVEN navigation triggers dismissal WHEN proceed THEN queue is released only once`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            every { appRouter.push(any(), any()) } answers { model.onClose() }
+
+            // Act
+            (model.uiState.value as ExchangeIntentUM.Offer).primaryButton.onClick()
+
+            // Assert
+            verify(exactly = 1) { appRouter.push(expectedSwapRoute(), any()) }
+            verify(exactly = 1) { router.pop(any()) }
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class LoadingCompletion {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN noncancellable intent request WHEN closed before response THEN late response has no effects`(
+            testModel: LateResponseModel,
+        ) = runTest {
+            // Arrange
+            val response = CompletableDeferred<Either<Throwable, ExchangeIntent>>()
+            coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } coAnswers {
+                withContext(NonCancellable) { response.await() }
+            }
+            val model = createModel(testScope = this)
+            runCurrent()
+
+            // Act
+            model.onClose()
+            response.complete(testModel.response)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value).isEqualTo(ExchangeIntentUM.Loading)
+            verify(exactly = 1) { router.pop(any()) }
+            verify(exactly = 0) { appRouter.push(any(), any()) }
+            verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
+            model.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            LateResponseModel(description = "success", response = intent.right()),
+            LateResponseModel(description = "failure", response = IllegalStateException("unavailable").left()),
+        )
+
+        @Test
+        fun `GIVEN agent lookup in flight WHEN closed THEN loading is cancelled without showing an offer`() = runTest {
+            // Arrange
+            var lookupCancelled = false
+            coEvery { mcpRepository.getAgent(any()) } coAnswers {
+                try {
+                    awaitCancellation()
+                } finally {
+                    lookupCancelled = true
+                }
+            }
+            val model = createModel(testScope = this)
+            runCurrent()
+
+            // Act
+            model.onClose()
+            runCurrent()
+
+            // Assert
+            assertThat(lookupCancelled).isTrue()
+            assertThat(model.uiState.value).isEqualTo(ExchangeIntentUM.Loading)
+            verify(exactly = 1) { router.pop(any()) }
+            verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
+            model.onDestroy()
+        }
+    }
+
+    enum class CompletionAction { Close, Proceed, Destroy }
+
+    data class CompletionModel(
+        val actions: List<CompletionAction>,
+        val expectedPops: Int,
+        val expectedNavigations: Int,
+    )
+
+    data class LateResponseModel(val description: String, val response: Either<Throwable, ExchangeIntent>) {
+        override fun toString() = description
     }
 
     private fun expectedSwapRoute() = swapRouteConverter.convert(

@@ -24,6 +24,9 @@ import com.tangem.feature.swap.mcp.holdings.ExchangeIntentHoldingsResolver
 import com.tangem.features.swap.mcp.ExchangeIntentComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -54,17 +57,35 @@ internal class ExchangeIntentModel @Inject constructor(
 
     private val params = paramsContainer.require<ExchangeIntentComponent.Params>()
 
+    private var loadJob: Job? = null
     private var loaded: LoadedExchange? = null
+    private var isFinished = false
 
     val uiState: StateFlow<ExchangeIntentUM>
         field = MutableStateFlow<ExchangeIntentUM>(ExchangeIntentUM.Loading)
 
     init {
         TangemLogger.i("Exchange intent received: id=${params.intentId}")
-        modelScope.launch { loadIntent() }
+        loadJob = modelScope.launch { loadIntent() }
     }
 
-    fun onClose() = router.pop()
+    fun onClose() {
+        if (finish()) router.pop()
+    }
+
+    override fun onDestroy() {
+        finish()
+        super.onDestroy()
+    }
+
+    private fun finish(): Boolean {
+        if (isFinished) return false
+        isFinished = true
+        loaded = null
+        loadJob?.cancel()
+        loadJob = null
+        return true
+    }
 
     private suspend fun loadIntent() {
         val walletId = userWalletsListRepository.selectedUserWalletSync()?.walletId
@@ -87,6 +108,7 @@ internal class ExchangeIntentModel @Inject constructor(
             ),
         ) ?: return close(reason = "the amount of the intent is malformed")
 
+        currentCoroutineContext().ensureActive()
         loaded = LoadedExchange(walletId = walletId, intent = intent, holdings = holdings)
         uiState.value = offer
     }
@@ -100,13 +122,15 @@ internal class ExchangeIntentModel @Inject constructor(
     }
 
     private fun close(reason: String, error: Throwable? = null) {
+        if (!finish()) return
         TangemLogger.e("Exchange intent ${params.intentId} is not offered: $reason", error)
         messageSender.send(ToastMessage(message = resourceReference(R.string.common_something_went_wrong)))
-        onClose()
+        router.pop()
     }
 
     private fun onProceed() {
         val (walletId, intent, holdings) = loaded ?: return
+        if (!finish()) return
         val route = swapRouteConverter.convert(
             ExchangeIntentSwapRouteConverter.Input(
                 intent = intent,
@@ -117,17 +141,18 @@ internal class ExchangeIntentModel @Inject constructor(
         )
 
         openSwap(route)
+        router.pop()
     }
 
     /** Opens Swap in place of an open one, unless that one is an account flow: it is a different one using Swap. */
     private fun openSwap(route: AppRoute.Swap) {
-        val currentRoute = appRouter.stack.lastOrNull()
-        if (currentRoute is AppRoute.Swap && currentRoute.accountFlow != null) {
+        val currentStack = appRouter.stack
+        val currentRoute = currentStack.lastOrNull()
+        if (currentRoute is AppRoute.Swap && currentRoute.accountFlow != null && route !in currentStack) {
             appRouter.push(route)
         } else {
             appRouter.pushOrReplaceCurrent(route)
         }
-        onClose()
     }
 
     private data class LoadedExchange(
