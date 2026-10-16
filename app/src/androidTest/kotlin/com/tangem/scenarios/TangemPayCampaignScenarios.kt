@@ -90,8 +90,9 @@ fun BaseTestCase.assertTangemPayCampaignIssueCardContent(issueFee: String) {
 
 fun BaseTestCase.refreshMainUntilTangemPayTileSubtitle(subtitle: String) {
     step("Refresh 'Main' until the Tangem Pay tile shows '$subtitle'") {
-        // Pull-to-refresh is idempotent, so it is repeated until the new customer state lands.
+        // Repeated until the state lands; a swipe under the activation sheet leaves Main dragged down and deaf to taps.
         composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            closeFinishWalletActivationSheetIfShown()
             pullToRefreshMainScreen()
             runCatching { onTangemPayMainScreen { tileWithSubtitle(subtitle).assertIsDisplayed() } }.isSuccess
         }

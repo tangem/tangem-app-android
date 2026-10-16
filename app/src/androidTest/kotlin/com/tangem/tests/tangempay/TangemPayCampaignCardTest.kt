@@ -12,6 +12,7 @@ import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.scenarios.assertTangemPayCampaignIssueCardContent
+import com.tangem.scenarios.closeFinishWalletActivationSheetIfShown
 import com.tangem.scenarios.assertTangemPayCampaignLandingContent
 import com.tangem.scenarios.countTangemPayCampaignOrders
 import com.tangem.scenarios.countTangemPayDeeplinkValidations
@@ -125,8 +126,9 @@ class TangemPayCampaignCardTest : BaseTestCase() {
             step("Wait for the card issuing status on Main") {
                 refreshMainUntilTangemPayTileSubtitle(issuingYourCardText)
             }
+            step("Close 'Finalize wallet setup' sheet if it is displayed") { closeFinishWalletActivationSheetIfShown() }
             step("Click on Tangem Pay tile") {
-                onTangemPayMainScreen { mainScreenTile.clickWithAssertion() }
+                onTangemPayMainScreen { clickMainScreenTileViaOnClickAction() }
             }
             step("Assert 'Issuing your card' sheet is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
