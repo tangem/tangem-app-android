@@ -38,21 +38,24 @@ internal class PolymarketActivityDetailsConverter(
 ) {
 
     fun convert(activity: PolymarketActivity, onGoToPrediction: (() -> Unit)?): PolymarketActivityDetailsUM {
+        val fundingDirection = fundingDirection(activity.type)
         val isRedemption = activity.type == Type.REDEEM
         val isLoss = isRedemption && activity.redeemResult == RedeemResult.LOST
-        val outcome = activity.market?.outcome?.takeIf { it.isNotBlank() }
+        val outcome = activity.market?.outcome?.takeIf { it.isNotBlank() && fundingDirection == null }
         return PolymarketActivityDetailsUM(
             title = when {
                 isLoss -> resourceReference(R.string.prediction_history_loss)
+                activity.type == Type.DEPOSIT -> resourceReference(R.string.prediction_history_deposited)
                 else -> activity.rowType().title()
             },
             date = stringReference(dateFormatter.format(activity.occurredAt)),
             headline = if (isRedemption) redemptionHeadline(activity.redeemResult) else null,
             amount = if (isLoss) null else stringReference(activity.detailsAmount()),
-            marketTitle = activity.marketTitle.takeIf { it.isNotBlank() }?.let(
+            marketTitle = activity.marketTitle.takeIf { it.isNotBlank() && fundingDirection == null }?.let(
                 ::stringReference,
             ),
             iconUrl = activity.historyIconUrl,
+            fundingDirection = fundingDirection,
             outcomePrice = activity.order?.averagePrice?.takeIf { outcome != null }
                 ?.formatPolymarketPrice(isResolved = true)?.let(::stringReference),
             outcome = outcome?.let(::stringReference),
@@ -60,13 +63,19 @@ internal class PolymarketActivityDetailsConverter(
                 outcome.equals("Yes", ignoreCase = true) -> TangemBadge.Status.Success
                 else -> polymarketOutcomeAccent(activity.market?.outcomeIndex, outcome.orEmpty()).toBadgeStatus()
             },
-            rows = if (isRedemption) {
+            rows = if (isRedemption || fundingDirection != null) {
                 emptyList<Row>().toImmutableList()
             } else {
                 tradeRows(activity)
             },
-            onGoToPrediction = onGoToPrediction,
+            onGoToPrediction = onGoToPrediction.takeIf { fundingDirection == null },
         )
+    }
+
+    private fun fundingDirection(type: Type) = when (type) {
+        Type.DEPOSIT -> PolymarketActivityDetailsUM.FundingDirection.Deposit
+        Type.WITHDRAW -> PolymarketActivityDetailsUM.FundingDirection.Withdraw
+        else -> null
     }
 
     private fun redemptionHeadline(result: RedeemResult?) = when (result) {
