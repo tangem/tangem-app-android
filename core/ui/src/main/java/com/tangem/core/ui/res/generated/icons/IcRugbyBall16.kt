@@ -1,0 +1,52 @@
+@file:Suppress("all")
+
+package com.tangem.core.ui.res.generated.icons
+
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+/**
+ * Auto-generated from design tokens. Do not edit manually.
+ */
+
+private var _ic_rugby_ball_16: ImageVector? = null
+
+val Icons.ic_rugby_ball_16: ImageVector
+    get() {
+        if (_ic_rugby_ball_16 != null) return _ic_rugby_ball_16!!
+        _ic_rugby_ball_16 = ImageVector.Builder(
+            name = "ic_rugby_ball_16",
+            defaultWidth = 16.dp,
+            defaultHeight = 16.dp,
+            viewportWidth = 16f,
+            viewportHeight = 16f,
+        ).apply {
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M8.90017 6.21263C9.1441 5.96871 9.54082 5.96901 9.78493 6.21263C10.029 6.45671 10.029 6.85332 9.78493 7.0974L9.55544 7.32689L9.78493 7.55638C10.029 7.80042 10.0289 8.19706 9.78493 8.44115C9.54086 8.68523 9.14425 8.68523 8.90017 8.44115L8.67068 8.21166L8.21169 8.67064L8.44118 8.90013C8.68526 9.14421 8.68526 9.54082 8.44118 9.7849C8.19711 10.029 7.8005 10.029 7.55642 9.7849L7.32693 9.55541L7.09743 9.7849C6.85336 10.029 6.45675 10.029 6.21267 9.7849C5.96904 9.54079 5.96874 9.14406 6.21267 8.90013L6.44216 8.67064L6.21267 8.44115C5.96903 8.19704 5.96874 7.80032 6.21267 7.55638C6.4566 7.31245 6.85332 7.31275 7.09743 7.55638L7.32693 7.78588L7.78591 7.32689L7.55642 7.0974C7.31266 6.8533 7.31245 6.45661 7.55642 6.21263C7.8004 5.96879 8.19712 5.96892 8.44118 6.21263L8.67068 6.44213L8.90017 6.21263Z"),
+            )
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M11.4666 2.02611C11.4708 2.0263 11.4751 2.02584 11.4793 2.02611C12.8169 2.11386 13.882 3.17922 13.9715 4.51635L13.9724 4.51927C14.0228 5.28046 13.9996 6.01153 13.9109 6.70678C13.9103 6.71462 13.9089 6.72235 13.908 6.73021C13.6537 8.68881 12.8632 10.3609 11.6121 11.612C10.3604 12.8638 8.68715 13.654 6.72732 13.9079C6.72042 13.9088 6.71369 13.9103 6.70681 13.9109C6.01156 13.9995 5.2805 14.0228 4.51931 13.9724L4.51638 13.9714C3.17913 13.882 2.11386 12.817 2.02615 11.4792C2.02587 11.475 2.02634 11.4708 2.02615 11.4665C1.977 10.712 1.99913 9.98723 2.08669 9.2976C2.08792 9.28093 2.09093 9.26451 2.09353 9.24779C2.35076 7.29828 3.14082 5.63409 4.38747 4.38744C5.63412 3.14079 7.29831 2.35073 9.24783 2.09349C9.26487 2.09085 9.28162 2.08787 9.29861 2.08666C9.98796 1.9992 10.7124 1.97699 11.4666 2.02611ZM3.2615 10.2273C3.24488 10.6044 3.24758 10.9948 3.27419 11.3972L3.28884 11.529C3.38536 12.136 3.86264 12.6141 4.4695 12.7107L4.60134 12.7253C5.00312 12.7519 5.39268 12.7536 5.76931 12.737C5.24606 11.6375 4.36091 10.7507 3.2615 10.2273ZM8.92947 3.4099C7.43663 3.69282 6.20012 4.34237 5.27126 5.27123C4.34237 6.20012 3.69186 7.43652 3.40896 8.92943C5.07918 9.59526 6.4022 10.9185 7.06814 12.5886C8.56161 12.3058 9.79923 11.6573 10.7283 10.7283C11.6572 9.79939 12.3057 8.56213 12.5886 7.06908C10.9186 6.40329 9.59545 5.07994 8.92947 3.4099ZM10.9109 3.2517C10.6786 3.24653 10.4507 3.25162 10.2273 3.26146C10.7508 4.36095 11.6374 5.24601 12.7371 5.76927C12.7536 5.39264 12.752 5.00309 12.7254 4.60131C12.6815 3.93294 12.1791 3.39227 11.5291 3.28881L11.3972 3.27416L10.9109 3.2517Z"),
+            )
+        }.build()
+        return _ic_rugby_ball_16!!
+    }
+
+@Composable
+@Preview(showBackground = true)
+private fun IcRugbyBall16Preview() {
+    Icon(
+        imageVector = Icons.ic_rugby_ball_16,
+        contentDescription = null,
+    )
+}
