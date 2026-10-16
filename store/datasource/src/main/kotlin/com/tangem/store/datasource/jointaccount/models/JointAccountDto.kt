@@ -2,26 +2,9 @@ package com.tangem.store.datasource.jointaccount.models
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import com.tangem.core.remote.moshi.SkipMalformedElements
 
-/**
- * A joint account as the backend returns it, both in the `GET` list and in the `POST` create response.
- *
- * @property cryptoAccountId the requesting wallet's own row in `accounts` (64 hex chars, upper case) — the merge key
- * against `accounts[].id` from `GET /v1/wallets/{walletId}/accounts`, which carries the account's personal name,
- * icon, color, ordering and tokens
- * @property membersCount    slots including the creator, fixed at creation
- * @property threshold       signatures required to execute an operation, fixed at creation
- * @property safeAddress     the Safe address, one and the same in every supported EVM network; `null` while `pending`
- * @property status          `pending` → `confirming` → `active`, forward only, plus the reserved `cancelled`.
- * Kept as a raw string: mapping to a domain type (including a value the backend adds later) is the data layer's
- * job, a parse must never fail on it
- * @property members         taken slots only, ordered by join time, the creator first; free slots are
- * `membersCount - members.size`
- * @property invites         one per free slot; present **only** in the `POST` create response — this is the only
- * place the backend ever returns them, so they must be persisted right away
- * @property operations      the account's non-terminal operations (v1.3) — at most one per chain by the slot
- * invariant. A finished operation simply disappears from here; absent in pre-v1.3 responses
- */
+
 @JsonClass(generateAdapter = true)
 data class JointAccountDto(
     @Json(name = "cryptoAccountId") val cryptoAccountId: String,
@@ -31,6 +14,7 @@ data class JointAccountDto(
     @Json(name = "status") val status: String,
     @Json(name = "members") val members: List<Member>,
     @Json(name = "invites") val invites: List<Invite>? = null,
+    @SkipMalformedElements
     @Json(name = "operations") val operations: List<JointOperationDto>? = null,
 ) {
 

@@ -23,6 +23,9 @@ sealed interface PredictionClaimFailure {
 
     data object CallUnavailable : PredictionClaimFailure
 
+    /** The backend has nothing left to redeem for the market — claimed elsewhere already, most likely. */
+    data class NothingToRedeem(val detail: String?) : PredictionClaimFailure
+
     data object NonceUnavailable : PredictionClaimFailure
 
     data class SigningFailed(val error: PolymarketSigningError) : PredictionClaimFailure
@@ -57,11 +60,16 @@ class SubmitPredictionClaimInteractor(
     }
 
     private suspend fun Raise<PredictionClaimFailure>.submit(params: Params): PredictionClaimReceipt {
-        val call = redeemRepository.getCall(
+        val calls = redeemRepository.getCalls(
             walletId = params.walletId,
             conditionId = params.conditionId,
             isNegRisk = params.isNegRisk,
-        ).getOrElse { raise(PredictionClaimFailure.CallUnavailable) }
+        ).getOrElse { error ->
+            if (error is PolymarketRedeemError.NothingToRedeem) {
+                raise(PredictionClaimFailure.NothingToRedeem(detail = error.detail))
+            }
+            raise(PredictionClaimFailure.CallUnavailable)
+        }.calls
 
         val nonce = polymarketRepository.getRelayerNonce(params.ownerAddress)
             .getOrElse { raise(PredictionClaimFailure.NonceUnavailable) }
@@ -75,7 +83,7 @@ class SubmitPredictionClaimInteractor(
                 depositWalletAddress = params.depositWalletAddress,
                 nonce = nonce,
                 deadline = deadline,
-                calls = listOf(call),
+                calls = calls,
             ),
         ).getOrElse { raise(PredictionClaimFailure.SigningFailed(it)) }
         ensure(!PolymarketRelayerDeadline.isExpired(deadline, nowMillis = currentTimeMillis())) {
@@ -87,7 +95,7 @@ class SubmitPredictionClaimInteractor(
             depositWalletAddress = params.depositWalletAddress,
             nonce = nonce,
             deadline = deadline,
-            call = call,
+            calls = calls,
             signature = signature,
         )
 

@@ -257,6 +257,7 @@ internal class SendModelTest : SendModelTestBase() {
             // Arrange
             val model = createLoadedSendModel()
             givenDefaultFee(isNativeFeePreferred = true)
+            coEvery { getFeeUseCase(any(), any(), any()) } returns mockk<TransactionFee>(relaxed = true).right()
 
             // Act
             model.loadFeeExtended(maybeToken = null)

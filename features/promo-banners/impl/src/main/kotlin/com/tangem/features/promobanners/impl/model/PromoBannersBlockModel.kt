@@ -65,6 +65,8 @@ internal class PromoBannersBlockModel @Inject constructor(
     private val prefetchSemaphore = Semaphore(permits = PREFETCH_PARALLELISM)
     private val isCampaignsV2Enabled = promoBannersFeatureToggles.isPromoCampaignsV2Enabled
     private val requestedCampaignWalletIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
+    private val followedBannerWalletIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
+    private val followedCampaignWalletIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
     /** Raw banners per wallet, filled from cache/prefetch/network. Source of truth for the UI. */
     private val rawBannersByWalletId = MutableStateFlow<Map<String, List<PromoBannerDisplay>>>(emptyMap())
@@ -146,7 +148,7 @@ internal class PromoBannersBlockModel @Inject constructor(
     /**
      * Warms the banners for every wallet in the background so switching to another wallet renders its
      * banners instantly from cache instead of after a network gap. Each wallet is fetched at most once
-     * ([prefetchedWalletIds]); [PromoBannersRepository.getBanners] is a no-op once the wallet is cached.
+     * ([prefetchedWalletIds]); [PromoBannersRepository.getBannersSync] is a no-op once the wallet is cached.
      */
     private fun prefetchAllWallets() {
         modelScope.launch {
@@ -157,11 +159,12 @@ internal class PromoBannersBlockModel @Inject constructor(
                     wallets.forEach { wallet ->
                         requestCampaigns(wallet)
                         val walletId = wallet.walletId.stringValue
+                        followBanners(walletId)
                         if (prefetchedWalletIds.add(walletId)) {
                             modelScope.launch {
                                 prefetchSemaphore.withPermit {
                                     runSuspendCatching {
-                                        repository.getBanners(walletId, params.placeholder, languageISOCode)
+                                        repository.getBannersSync(walletId, params.placeholder, languageISOCode)
                                     }.onSuccess { putBanners(walletId, it) }
                                         .onFailure { prefetchedWalletIds.remove(walletId) }
                                 }
@@ -179,10 +182,11 @@ internal class PromoBannersBlockModel @Inject constructor(
     private fun requestCampaigns(userWallet: UserWallet) {
         if (!isCampaignsV2Enabled) return
         val walletId = userWallet.walletId.stringValue
+        followCampaigns(userWallet)
         if (!requestedCampaignWalletIds.add(walletId)) return
 
         modelScope.launch {
-            getPromoCampaignsUseCase(userWallet).fold(
+            getPromoCampaignsUseCase.invokeSync(userWallet).fold(
                 ifLeft = { error ->
                     TangemLogger.e("Failed to load promo campaigns for banners", error)
                     requestedCampaignWalletIds.remove(walletId)
@@ -195,7 +199,29 @@ internal class PromoBannersBlockModel @Inject constructor(
         }
     }
 
+    /** A registration refreshes the campaigns cache */
+    private fun followCampaigns(userWallet: UserWallet) {
+        val walletId = userWallet.walletId.stringValue
+        if (!followedCampaignWalletIds.add(walletId)) return
+
+        getPromoCampaignsUseCase(userWallet)
+            .onEach { campaigns ->
+                campaignsByWalletId.update { it + (walletId to WalletCampaigns.Loaded(userWallet, campaigns)) }
+            }
+            .launchIn(modelScope)
+    }
+
+    /** A refetch elsewhere (e.g. after a failed campaign registration) reaches the block through the cache. */
+    private fun followBanners(walletId: String) {
+        if (!followedBannerWalletIds.add(walletId)) return
+
+        repository.getBanners(walletId, params.placeholder)
+            .onEach { banners -> putBanners(walletId, banners) }
+            .launchIn(modelScope)
+    }
+
     private suspend fun loadWallet(walletId: String) {
+        followBanners(walletId)
         val cached = runSuspendCatching { repository.getCachedBanners(walletId, params.placeholder) }.getOrNull()
         if (cached != null) {
             putBanners(walletId, cached)
@@ -204,7 +230,7 @@ internal class PromoBannersBlockModel @Inject constructor(
 
         putBanners(walletId, banners = emptyList())
         runSuspendCatching {
-            repository.getBanners(walletId, params.placeholder, Locale.getDefault().language)
+            repository.getBannersSync(walletId, params.placeholder, Locale.getDefault().language)
         }.onSuccess { banners ->
             putBanners(walletId, banners)
         }.onFailure { error ->

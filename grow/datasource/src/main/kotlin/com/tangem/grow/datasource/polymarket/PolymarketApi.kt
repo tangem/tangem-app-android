@@ -2,7 +2,6 @@ package com.tangem.grow.datasource.polymarket
 
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketActivityPageResponse
-import com.tangem.grow.datasource.polymarket.models.PolymarketApprovalCallDto
 import com.tangem.grow.datasource.polymarket.models.PolymarketCategoriesResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketConfigurationResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketDepositReconcileResponse
@@ -18,6 +17,7 @@ import com.tangem.grow.datasource.polymarket.models.PolymarketWalletApprovalsReq
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletOperationResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletStatusResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketRedeemCallResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketRelayedBatchRequest
 import com.tangem.grow.datasource.polymarket.models.PolymarketRelayedBatchResponse
 import retrofit2.http.Body
@@ -162,7 +162,7 @@ interface PolymarketApi {
     ): ApiResponse<PolymarketWalletOperationResponse>
 
     /**
-     * Relay the fully-signed 13-approval batch (gasless). The DW must be deployed first. Returns as soon
+     * Relay the fully-signed 17-approval batch (gasless). The DW must be deployed first. Returns as soon
      * as the relayer accepts; the client then polls [getWalletStatus].
      */
     @POST("api/predictions/v1/wallet/approvals")
@@ -198,18 +198,18 @@ interface PolymarketApi {
     ): ApiResponse<PolymarketRelayedBatchResponse>
 
     /**
-     * Read the single contract call that redeems a resolved position. Offline lookup: it relays nothing and
-     * may be retried freely.
+     * Read the contract calls that redeem a resolved position. Offline lookup: it relays nothing and may be
+     * retried freely. A `409` means there is nothing to redeem, or the market's version is not supported.
      */
     @GET("api/predictions/v1/positions/redeem/call")
     suspend fun getRedeemCall(
         @Header("wallet-id") walletId: String,
         @Query("conditionId") conditionId: String,
         @Query("negRisk") isNegRisk: Boolean,
-    ): ApiResponse<PolymarketApprovalCallDto>
+    ): ApiResponse<PolymarketRedeemCallResponse>
 
     /**
-     * Relay the signed redeem call (gasless). Idempotent per (wallet, market): a claim already in flight
+     * Relay the signed redeem calls (gasless). Idempotent per (wallet, market): a claim already in flight
      * answers with its own `transactionId` and current state instead of relaying a second one.
      */
     @POST("api/predictions/v1/positions/redeem")

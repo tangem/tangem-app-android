@@ -214,37 +214,20 @@ class TangemPayBankOfframpTest : BaseTestCase() {
     }
 
     @AllureId("12178")
-    @DisplayName("Tangem Pay: a recipient is added to the Withdraw hub recents only after a successful transfer")
+    @DisplayName("Tangem Pay: a bank recipient is added to the Withdraw hub recents only after a successful transfer")
     @Test
     fun recipientAddedToRecentsAfterSuccessfulTransferTest() {
-        val channelsBankOfframpState = "BankOfframp"
         val bankAccountsAfterTransferState = "AfterTransfer"
-        val swapStoriesScenario = "stories_first_time_swap_v2"
-        val swapStoriesErrorState = "Error"
-        val quotesScenario = "quotes_api"
-        val quotesWithUsdtAndUsdcState = "USDTAndUSDC"
         val bankAmount = "5"
         val sendingTitle = getResourceString(CoreResR.string.tangempay_withdraw_bank_success_title, "$$bankAmount")
         val transferTypeTitle = getResourceString(CoreResR.string.tangempay_withdraw_bank_transfer_type_title)
         val thirdPartyAccount = getResourceString(CoreResR.string.tangempay_withdraw_bank_transfer_type_third_party)
         val accountTypeTitle = getResourceString(CoreResR.string.tangempay_withdraw_bank_account_type_title)
         val checkingAccount = getResourceString(CoreResR.string.tangempay_withdraw_bank_account_type_checking)
-        val swapSourceToken = "USDT"
-        val swapSourceNetwork = "BNB Smart Chain"
-        val swapReceiveToken = "Bitcoin"
-        val swapAmount = "5"
 
-        setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(swapStoriesScenario, swapStoriesErrorState) },
-        ).run {
-            step("Set WireMock scenarios for a multichain Tangem Pay withdrawal") {
-                setTangemPayMultiNetworkWithdrawScenarios()
-            }
-            step("Set WireMock scenario '$quotesScenario' to '$quotesWithUsdtAndUsdcState'") {
-                setWireMockScenarioState(quotesScenario, quotesWithUsdtAndUsdcState)
-            }
-            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO' to '$channelsBankOfframpState'") {
-                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsBankOfframpState)
+        setupHooks().run {
+            step("Set WireMock scenarios for a Tangem Pay customer with the bank off-ramp") {
+                setTangemPayBankOfframpScenarios()
             }
             step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub() }
             step("Assert 'Bank transfer' recents zero state is displayed") {
@@ -268,18 +251,46 @@ class TangemPayBankOfframpTest : BaseTestCase() {
             step("Assert '$sendingTitle' screen is displayed") {
                 flakySafely { onTangemPayBankWithdrawSuccessScreen { title(sendingTitle).assertIsDisplayed() } }
             }
-            step("Click on 'Close' button") {
-                onTangemPayBankWithdrawSuccessScreen { closeButton.performClick() }
-            }
-            step("Assert payment account balance is displayed") {
-                flakySafely { onTangemPayMainScreen { balance.assertIsDisplayed() } }
-            }
+            step("Close 'Sending' screen") { closeTangemPayBankWithdrawSuccess() }
             step("Set WireMock scenario '$bankAccountsScenario' to '$bankAccountsAfterTransferState'") {
                 setWireMockScenarioState(bankAccountsScenario, bankAccountsAfterTransferState)
             }
             step("Open 'Withdraw' hub") { openWithdrawHubFromPaymentAccount() }
             step("Assert recent recipient '${JANE.shortName}' is displayed") {
                 assertTangemPayRecentRecipientDisplayed(JANE)
+            }
+        }
+    }
+
+    @AllureId("12670")
+    @DisplayName("Tangem Pay: a token is added to the Withdraw hub 'Transfer or swap' recents only after a successful swap")
+    @Test
+    fun tokenAddedToRecentsAfterSuccessfulSwapTest() {
+        val channelsBankOfframpState = "BankOfframp"
+        val swapStoriesScenario = "stories_first_time_swap_v2"
+        val swapStoriesErrorState = "Error"
+        val quotesScenario = "quotes_api"
+        val quotesWithUsdtAndUsdcState = "USDTAndUSDC"
+        val swapSourceToken = "USDT"
+        val swapSourceNetwork = "BNB Smart Chain"
+        val swapReceiveToken = "Bitcoin"
+        val swapAmount = "5"
+
+        setupHooks(
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(swapStoriesScenario, swapStoriesErrorState) },
+        ).run {
+            step("Set WireMock scenarios for a multichain Tangem Pay withdrawal") {
+                setTangemPayMultiNetworkWithdrawScenarios()
+            }
+            step("Set WireMock scenario '$quotesScenario' to '$quotesWithUsdtAndUsdcState'") {
+                setWireMockScenarioState(quotesScenario, quotesWithUsdtAndUsdcState)
+            }
+            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO' to '$channelsBankOfframpState'") {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsBankOfframpState)
+            }
+            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub() }
+            step("Assert 'Transfer or swap' recents zero state is displayed") {
+                flakySafely { onTangemPayWithdrawHubScreen { swapRecentsEmpty.assertIsDisplayed() } }
             }
             step("Click on 'Within your portfolio' card") {
                 onTangemPayWithdrawHubScreen { withinPortfolioCard.performClick() }

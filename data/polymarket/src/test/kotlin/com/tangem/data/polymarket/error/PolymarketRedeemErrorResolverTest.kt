@@ -6,6 +6,7 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.domain.polymarket.model.PolymarketRedeemError
 import com.tangem.test.core.ProvideTestModels
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
@@ -24,6 +25,24 @@ internal class PolymarketRedeemErrorResolverTest {
         assertThat(actual).isEqualTo(model.expected)
     }
 
+    @Test
+    fun `GIVEN a 409 WHEN the call lookup is resolved THEN there is nothing to redeem`() {
+        // Act
+        val actual = resolver.resolveCallLookup(http(code = Code.CONFLICT, detail = "nothing to redeem"))
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketRedeemError.NothingToRedeem(detail = "nothing to redeem"))
+    }
+
+    @Test
+    fun `GIVEN a 404 WHEN the call lookup is resolved THEN it is the usual not found`() {
+        // Act
+        val actual = resolver.resolveCallLookup(http(code = Code.NOT_FOUND))
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketRedeemError.NotFound)
+    }
+
     internal data class TestModel(val error: ApiResponseError, val expected: PolymarketRedeemError)
 
     private fun provideTestModels() = listOf(
@@ -38,6 +57,10 @@ internal class PolymarketRedeemErrorResolverTest {
             expected = PolymarketRedeemError.RelayerRejected("position is not redeemable"),
         ),
         TestModel(http(code = Code.BAD_GATEWAY), PolymarketRedeemError.RelayerUnavailable),
+        TestModel(
+            error = http(code = Code.CONFLICT, detail = "in flight"),
+            expected = PolymarketRedeemError.Unexpected(httpCode = Code.CONFLICT.numericCode, detail = "in flight"),
+        ),
         TestModel(
             error = http(code = Code.IM_A_TEAPOT, detail = "teapot"),
             expected = PolymarketRedeemError.Unexpected(httpCode = Code.IM_A_TEAPOT.numericCode, detail = "teapot"),

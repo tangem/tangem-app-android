@@ -16,6 +16,7 @@ import com.tangem.domain.account.status.utils.CryptoCurrencyOperations
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
+import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
@@ -287,7 +288,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
     }
 
     @Test
-    fun `GIVEN refreshed compensation exceeds the confirmed one WHEN invoke THEN error and nothing is signed`() =
+    fun `GIVEN refreshed compensation exceeds the confirmed one WHEN invoke THEN fee increased error, nothing signed`() =
         runTest {
             // Arrange — a bigger compensation would leave the reduced transfer short of funds and revert it.
             val reducedTx = originalTx.copy(
@@ -303,7 +304,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             val result = useCase(userWallet, reducedTx, fee)
 
             // Assert
-            assertThat(result.isLeft()).isTrue()
+            assertThat(result.leftOrNull()).isEqualTo(SendTransactionError.GaslessFeeIncreased)
             coVerify(exactly = 0) { walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any()) }
         }
 
