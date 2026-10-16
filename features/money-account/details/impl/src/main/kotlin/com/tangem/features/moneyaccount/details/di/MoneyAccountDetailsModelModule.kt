@@ -4,6 +4,7 @@ import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.moneyaccount.details.MoneyAccountDetailsModel
 import com.tangem.features.moneyaccount.details.addfunds.MoneyAccountAddFundsModel
+import com.tangem.features.moneyaccount.details.addfunds.options.MoneyAccountAddFundsOptionsModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -23,4 +24,9 @@ internal interface MoneyAccountDetailsModelModule {
     @IntoMap
     @ClassKey(MoneyAccountAddFundsModel::class)
     fun bindMoneyAccountAddFundsModel(model: MoneyAccountAddFundsModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(MoneyAccountAddFundsOptionsModel::class)
+    fun bindMoneyAccountAddFundsOptionsModel(model: MoneyAccountAddFundsOptionsModel): Model
 }
