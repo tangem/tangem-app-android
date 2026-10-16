@@ -66,7 +66,7 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
     }
 
     private companion object {
-        const val TERMS_OF_SERVICE_URL = "https://tangem.com/tangem_tos.html"
-        const val PRIVACY_POLICY_URL = "https://tangem.com/privacy-policy.html"
+        const val TERMS_OF_SERVICE_URL = "https://www.paera.com/tangempay"
+        const val PRIVACY_POLICY_URL = "https://tangem.com/docs/en/pay-privacy-policy.pdf"
     }
 }

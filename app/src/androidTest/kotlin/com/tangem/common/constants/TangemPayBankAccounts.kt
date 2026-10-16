@@ -79,4 +79,35 @@ object TangemPayBankAccounts {
         routingNumber = "021000021",
         bankName = "Chase Bank",
     )
+
+    val MICHAEL = TangemPayBankRecipient(
+        displayName = "Michael Scott",
+        firstName = "Michael",
+        lastName = "Scott",
+        accountNumber = "9876543210",
+        routingNumber = "026009593",
+        bankName = "Bank of America",
+        postalCode = "32501",
+    )
+
+    val EMILY = TangemPayBankRecipient(
+        displayName = "Emily Clark",
+        firstName = "Emily",
+        lastName = "Clark",
+        accountNumber = "8765432109",
+        routingNumber = "021000021",
+        bankName = "JPMorgan Chase",
+        postalCode = "32501",
+    )
+
+    val DUNDER = TangemPayBankRecipient(
+        displayName = "Dunder Mifflin",
+        firstName = "",
+        lastName = "",
+        businessName = "Dunder Mifflin",
+        accountNumber = "7654321098",
+        routingNumber = "121000248",
+        bankName = "Wells Fargo Bank",
+        postalCode = "32501",
+    )
 }
