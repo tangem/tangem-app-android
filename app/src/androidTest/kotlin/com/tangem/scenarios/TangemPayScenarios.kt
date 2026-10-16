@@ -631,6 +631,30 @@ fun BaseTestCase.unfreezeCardFromCardPage() {
     }
 }
 
+fun BaseTestCase.assertTangemPayCardActionsEnabled() {
+    step("Assert 'Details' button is enabled") {
+        awaitSuccess { onTangemPayCardPageScreen { showDetailsControl.assertIsEnabled() } }
+    }
+    step("Assert 'PIN code' button is enabled") {
+        awaitSuccess { onTangemPayCardPageScreen { changePinControl.assertIsEnabled() } }
+    }
+    step("Assert daily limit 'Change' button is enabled") {
+        awaitSuccess { onTangemPayCardPageScreen { dailyLimitChangeButton.assertIsEnabled() } }
+    }
+}
+
+fun BaseTestCase.assertTangemPayCardActionsLockedWhileFrozen() {
+    step("Assert 'Details' button is disabled") {
+        awaitSuccess { onTangemPayCardPageScreen { showDetailsControl.assertIsNotEnabled() } }
+    }
+    step("Assert 'PIN code' button is disabled") {
+        awaitSuccess { onTangemPayCardPageScreen { changePinControl.assertIsNotEnabled() } }
+    }
+    step("Assert daily limit 'Change' button is enabled") {
+        awaitSuccess { onTangemPayCardPageScreen { dailyLimitChangeButton.assertIsEnabled() } }
+    }
+}
+
 /** From the card page, opens the 'Replace card' reissue bottom sheet via the 'More' menu. */
 fun BaseTestCase.openReissueSheet() {
     step("Click on 'More' button") {
@@ -1240,6 +1264,10 @@ fun BaseTestCase.assertTangemPayCardClosed(closedLastDigits: String, remainingLa
 
 fun BaseTestCase.openTangemPayVirtualAccountRequisites() {
     clickTangemPayBankTransferOption()
+    assertTangemPayVirtualAccountRequisitesDisplayed()
+}
+
+fun BaseTestCase.assertTangemPayVirtualAccountRequisitesDisplayed() {
     step("Assert virtual account banking details are displayed") {
         awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
             onVirtualAccountRequisitesBottomSheet {
