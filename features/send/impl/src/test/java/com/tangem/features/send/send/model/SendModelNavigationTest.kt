@@ -179,6 +179,7 @@ internal class SendModelNavigationTest {
             getFeeForTokenUseCase = mockk(relaxed = true),
             getTronGaslessFeeUseCase = mockk(relaxed = true),
             tronDefaultFeeLoader = mockk(relaxed = true),
+            tronGaslessSentAmountQuoter = mockk(relaxed = true),
             getAccountCurrencyStatusUseCase = mockk(relaxed = true),
             isAccountsModeEnabledUseCase = mockk(relaxed = true),
             sendAmountUpdateTrigger = mockk(relaxed = true),
