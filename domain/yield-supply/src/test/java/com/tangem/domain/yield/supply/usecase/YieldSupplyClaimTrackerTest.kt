@@ -362,6 +362,50 @@ internal class YieldSupplyClaimTrackerTest {
         ReflectionModel(summary = YieldIncentivesError.Unavailable.left(), isReflected = false),
     )
 
+    @Test
+    fun `GIVEN an unresolved claim WHEN Merkl never reflects it THEN the module is held for the settlement window`() =
+        runTest {
+            // Arrange
+            rewardsReturn(MockYieldSupply.claimableSummary(claimable = listOf(CLAIMED_REWARD)).right())
+            val tracker = createTracker(testScope = this)
+            val outcomes = collectOutcomes(tracker)
+
+            // Act
+            tracker.trackUnresolved()
+            advanceTimeBy(delayTimeMillis = SETTLEMENT_WINDOW_MS - 1)
+            runCurrent()
+            val isHeldInWindow = tracker.isInFlight()
+            advanceTimeBy(delayTimeMillis = 2)
+            runCurrent()
+
+            // Assert
+            assertThat(isHeldInWindow).isTrue()
+            assertThat(tracker.isInFlight()).isFalse()
+            assertThat(outcomes).isEmpty()
+            coVerify(exactly = 0) { transactionRepository.getTransactionOutcome(any(), any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN an unresolved claim WHEN Merkl reflects it THEN the module is released early`() = runTest {
+        // Arrange
+        coEvery { getRewardsSummaryUseCase(chainId = CHAIN_ID, userAddress = USER_ADDRESS) } returnsMany listOf(
+            MockYieldSupply.claimableSummary(claimable = listOf(CLAIMED_REWARD)).right(),
+            YieldRewardsSummary.None.right(),
+        )
+        val tracker = createTracker(testScope = this)
+
+        // Act
+        tracker.trackUnresolved()
+        runCurrent()
+        val isHeldBeforeReflection = tracker.isInFlight()
+        advanceTimeBy(delayTimeMillis = REFLECTION_CHECK_MS + 1)
+        runCurrent()
+
+        // Assert
+        assertThat(isHeldBeforeReflection).isTrue()
+        assertThat(tracker.isInFlight()).isFalse()
+    }
+
     private fun createTracker(testScope: TestScope) = YieldSupplyClaimTracker(
         yieldSupplyTransactionRepository = transactionRepository,
         yieldIncentivesRepository = incentivesRepository,
@@ -385,6 +429,12 @@ internal class YieldSupplyClaimTrackerTest {
         transactionHash = TX_HASH,
         claimedRewards = listOf(CLAIMED_REWARD),
         origin = YieldSupplyClaimOrigin.ClaimSheet,
+    )
+
+    private fun YieldSupplyClaimTracker.trackUnresolved() = trackUnresolved(
+        chainId = CHAIN_ID,
+        userAddress = USER_ADDRESS,
+        claimedRewards = listOf(CLAIMED_REWARD),
     )
 
     private suspend fun YieldSupplyClaimTracker.isInFlight() = isClaimInFlight(CHAIN_ID, USER_ADDRESS).first()
@@ -422,6 +472,8 @@ internal class YieldSupplyClaimTrackerTest {
         const val OTHER_CHAIN_ID = 137
         const val OTHER_USER_ADDRESS = "0xotherowner"
         const val OTHER_TX_HASH = "0xotherclaim"
+        const val SETTLEMENT_WINDOW_MS = 360_000L
+        const val REFLECTION_CHECK_MS = 15_000L
 
         val TOKEN = createToken(contractAddress = "0xusdt", symbol = "USDT")
         val OTHER_TOKEN = createToken(contractAddress = "0xusdc", symbol = "USDC")
