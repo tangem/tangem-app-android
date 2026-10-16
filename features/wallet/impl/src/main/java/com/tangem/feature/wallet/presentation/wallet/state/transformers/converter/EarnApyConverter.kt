@@ -103,14 +103,14 @@ internal class EarnApyConverter(
                         .firstNotNullOfOrNull { address ->
                             validatorsByAddress[address]?.rewardInfo
                         } ?: option.yield.validators
-                        .filter { it.preferred }
+                        .filter { it.isPreferred }
                         .mapNotNull { validator ->
                             validator.rewardInfo
                         }
                         .maxByOrNull { it.rate }
                 } else {
                     option.yield.validators
-                        .filter { it.preferred }
+                        .filter { it.isPreferred }
                         .mapNotNull { validator ->
                             validator.rewardInfo
                         }

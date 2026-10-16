@@ -60,7 +60,7 @@ internal class WalletHardwareBackupModelTest {
         every { getUserWalletUseCase.invoke(WALLET_ID) } returns hotWallet.right()
         every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
         every { socialLoginFeatureToggles.isSocialLoginEnabled } returns true
-        every { hotWallet.backedUp } returns false
+        every { hotWallet.isBackedUp } returns false
         coEvery { isSocialBackupCompletedUseCase(WALLET_ID) } returns false
     }
 
@@ -135,7 +135,7 @@ internal class WalletHardwareBackupModelTest {
         runTest {
             // Arrange
             coEvery { isSocialBackupCompletedUseCase(WALLET_ID) } returns true
-            every { hotWallet.backedUp } returns true
+            every { hotWallet.isBackedUp } returns true
             val model = createModel(this)
 
             // Act

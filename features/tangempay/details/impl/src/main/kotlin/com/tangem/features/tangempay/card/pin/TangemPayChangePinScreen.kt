@@ -86,7 +86,7 @@ internal fun TangemPayChangePinScreen(
             SpacerH(24.dp)
             PinCodeSection(state)
             SpacerH(24.dp)
-            AnimatedVisibility(state.submitButtonLoading) {
+            AnimatedVisibility(state.isSubmitButtonLoading) {
                 TangemLoader()
             }
         }
@@ -102,7 +102,7 @@ private fun PinCodeSection(state: TangemPayChangePinUM, modifier: Modifier = Mod
             value = state.pinCode,
             onValueChange = state.onPinCodeChange,
             focusRequester = focusRequester,
-            readOnly = state.submitButtonLoading,
+            readOnly = state.isSubmitButtonLoading,
         )
 
         AnimatedVisibility(
@@ -221,24 +221,24 @@ private class TangemPayChangePinUMPreviewProvider : CollectionPreviewParameterPr
             pinCode = "",
             error = null,
             onPinCodeChange = {},
-            submitButtonLoading = false,
-            submitButtonEnabled = false,
+            isSubmitButtonLoading = false,
+            isSubmitButtonEnabled = false,
             onSubmitClick = {},
         ),
         TangemPayChangePinUM(
             pinCode = "1111",
             error = resourceReference(R.string.visa_onboarding_pin_validation_error_message),
             onPinCodeChange = {},
-            submitButtonLoading = false,
-            submitButtonEnabled = false,
+            isSubmitButtonLoading = false,
+            isSubmitButtonEnabled = false,
             onSubmitClick = {},
         ),
         TangemPayChangePinUM(
             pinCode = "2580",
             error = null,
             onPinCodeChange = {},
-            submitButtonLoading = false,
-            submitButtonEnabled = true,
+            isSubmitButtonLoading = false,
+            isSubmitButtonEnabled = true,
             onSubmitClick = {},
         ),
     ),

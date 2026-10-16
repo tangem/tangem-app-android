@@ -246,7 +246,7 @@ class DefaultHotWalletAccessor @Inject constructor(
     private suspend fun requestPassword(hotWalletId: HotWalletId, hasBiometry: Boolean): RequestedAuth {
         val attemptRequest = HotWalletPasswordRequester.AttemptRequest(
             hotWalletId = hotWalletId,
-            authMode = false,
+            isAuthMode = false,
             hasBiometry = hasBiometry,
         )
 

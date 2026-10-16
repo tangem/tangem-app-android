@@ -207,7 +207,7 @@ internal class WalletModel @Inject constructor(
         modelScope.launch {
             if (shouldShowMarketsTooltipUseCase()) {
                 stateHolder.update {
-                    it.copy(showMarketsOnboarding = true)
+                    it.copy(shouldShowMarketsOnboarding = true)
                 }
             }
         }
@@ -274,7 +274,7 @@ internal class WalletModel @Inject constructor(
 
             if (shouldShowMarketsTooltipUseCase()) {
                 stateHolder.update {
-                    it.copy(showMarketsOnboarding = true)
+                    it.copy(shouldShowMarketsOnboarding = true)
                 }
             }
         }
@@ -833,7 +833,7 @@ internal class WalletModel @Inject constructor(
                     prevIndex = prevIndex,
                     newIndex = newIndex,
                     currentStateProvider = Provider(action = stateHolder::value),
-                    withScrollAnimation = false,
+                    shouldAnimateScroll = false,
                     stateUpdater = { newState -> stateHolder.update { newState } },
                     onConsume = {},
                 ),

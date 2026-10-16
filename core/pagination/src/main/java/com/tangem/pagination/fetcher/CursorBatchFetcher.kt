@@ -57,7 +57,7 @@ class CursorBatchFetcher<TRequestParams : Any, TItem : Any>(
     ): BatchFetchResult<List<TItem>> {
         val lastRequest = requireNotNull(lastRequest.value) { "fetchFirst() must be called before fetchNext()" }
 
-        if (lastResult is BatchFetchResult.Success && lastResult.last && overrideRequestParams == null) {
+        if (lastResult is BatchFetchResult.Success && lastResult.isLast && overrideRequestParams == null) {
             return BatchFetchResult.Error(EndOfPaginationException())
         }
 

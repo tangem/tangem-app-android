@@ -96,7 +96,7 @@ internal class WelcomeModel @Inject constructor(
     )
     private val walletsFetcherJobHolder = JobHolder()
     private val wallets = MutableStateFlow<ImmutableList<UserWalletItemUM>>(persistentListOf())
-    private var routedOut = false
+    private var isRoutedOut = false
     private val isWalletCreationRestrictionEnabled: StateFlow<Boolean> =
         hotWalletRestrictionManager.isCreationEnabled()
 
@@ -128,7 +128,7 @@ internal class WelcomeModel @Inject constructor(
             if (canUnlockWithBiometrics()) {
                 userWalletsListRepository.unlockAllWallets()
                     .onRight {
-                        routedOut = true
+                        isRoutedOut = true
                         router.replaceAll(AppRoute.Wallet)
                     }
                     .onLeft { error ->
@@ -157,11 +157,11 @@ internal class WelcomeModel @Inject constructor(
 
     private fun setSelectWalletState() {
         modelScope.launch {
-            if (routedOut || uiState.value is WelcomeUM.SelectWallet) return@launch
+            if (isRoutedOut || uiState.value is WelcomeUM.SelectWallet) return@launch
 
             uiState.value = WelcomeUM.SelectWallet(
                 wallets = walletsFetcher.userWallets.first(),
-                showUnlockWithBiometricButton = canUnlockWithBiometrics(),
+                shouldShowUnlockWithBiometricButton = canUnlockWithBiometrics(),
                 addWalletClick = ::addWalletClick,
                 onUnlockWithBiometricClick = {
                     analyticsEventHandler.send(SignIn.ButtonUnlockAllWithBiometric())
@@ -292,7 +292,7 @@ internal class WelcomeModel @Inject constructor(
     private suspend fun nonBiometricUnlockWallet(userWalletId: UserWalletId) {
         nonBiometricUnlockWalletUseCase(userWalletId, AnalyticsParam.ScreensSources.SignIn)
             .onRight {
-                routedOut = true
+                isRoutedOut = true
                 userWalletsListRepository.select(userWalletId)
                 router.replaceAll(AppRoute.Wallet)
             }

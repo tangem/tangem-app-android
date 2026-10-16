@@ -52,7 +52,7 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
 
     private fun getInitialState(): OnboardingVisaPinCodeUM {
         return OnboardingVisaPinCodeUM(
-            submitButtonEnabled = false,
+            isSubmitButtonEnabled = false,
             onPinCodeChange = ::onPinCodeChange,
             onSubmitClick = ::onSubmitClick,
             error = if (params.wasValidationError) {
@@ -70,7 +70,7 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
             _uiState.update { currentState ->
                 currentState.copy(
                     pinCode = pin,
-                    submitButtonEnabled = PinCodeValidation.validate(pin),
+                    isSubmitButtonEnabled = PinCodeValidation.validate(pin),
                     error = if (isError) {
                         analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ErrorPinValidation())
                         resourceReference(R.string.visa_onboarding_pin_validation_error_message)
@@ -109,6 +109,6 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
     }
 
     private fun loading(state: Boolean) {
-        _uiState.update { it.copy(submitButtonLoading = state) }
+        _uiState.update { it.copy(isSubmitButtonLoading = state) }
     }
 }

@@ -41,12 +41,12 @@ internal fun HotWalletStepper(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         TangemTopAppBar(
-            startButton = if (state.showBackButton) {
+            startButton = if (state.shouldShowBackButton) {
                 TopAppBarButtonUM.Back(onBackClick)
             } else {
                 null
             },
-            endButton = if (state.showSkipButton) {
+            endButton = if (state.shouldShowSkipButton) {
                 TopAppBarButtonUM.Text(
                     text = resourceReference(R.string.common_skip),
                     onClicked = onSkipClick,
@@ -88,8 +88,8 @@ private fun HotWalletStepper_Preview() {
                     currentStep = 2,
                     steps = 3,
                     title = resourceReference(R.string.common_done),
-                    showBackButton = true,
-                    showSkipButton = false,
+                    shouldShowBackButton = true,
+                    shouldShowSkipButton = false,
                 ),
                 onBackClick = {},
                 onSkipClick = {},

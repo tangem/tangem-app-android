@@ -37,7 +37,7 @@ internal class OnboardingChildFactory @Inject constructor(
                 context = childContext,
                 params = OnboardingMultiWalletComponent.Params(
                     scanResponse = route.scanResponse,
-                    withSeedPhraseFlow = route.withSeedPhraseFlow,
+                    isSeedPhraseFlow = route.isSeedPhraseFlow,
                     titleProvider = route.titleProvider,
                     onDone = route.onDone,
                     onForceExit = route.onForceExit,

@@ -435,7 +435,7 @@ internal class WalletSettingsModel @Inject constructor(
                     source = AnalyticsParam.ScreensSources.WalletSettings.value,
                     action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.AccessCode,
                     cloudBackupState = resolveCloudBackupState(userWallet),
-                    isBackedUp = manualBackupState(userWallet.backedUp),
+                    isBackedUp = manualBackupState(userWallet.isBackedUp),
                     isSocialBackedUp = socialBackupState(),
                 ),
             )
@@ -582,7 +582,7 @@ internal class WalletSettingsModel @Inject constructor(
             event = WalletSettingsAnalyticEvents.ForgetWalletRequest(
                 source = AnalyticsParam.ScreensSources.WalletSettings.value,
                 cloudBackupState = resolveCloudBackupState(userWallet),
-                isBackedUp = userWallet.backedUp,
+                isBackedUp = userWallet.isBackedUp,
             ),
         )
 
@@ -688,7 +688,7 @@ internal class WalletSettingsModel @Inject constructor(
                 }
                 // The seed phrase itself only when it was saved: a social-only wallet has no phrase the user
                 // has seen, so it goes to the backup options instead.
-                if (userWallet.backedUp) {
+                if (userWallet.isBackedUp) {
                     primaryButton {
                         text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_view_v2)
                         onClick {
@@ -765,7 +765,7 @@ internal class WalletSettingsModel @Inject constructor(
                         closeBs()
                     }
                 }
-                if (userWallet.backedUp) {
+                if (userWallet.isBackedUp) {
                     primaryButton {
                         text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_view_v2)
                         onClick {

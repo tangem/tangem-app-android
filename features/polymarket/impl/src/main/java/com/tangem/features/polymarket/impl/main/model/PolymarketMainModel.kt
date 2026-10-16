@@ -251,7 +251,7 @@ internal class PolymarketMainModel @Inject constructor(
             when (val status = feed.batchFlow.state.value.status) {
                 is PaginationStatus.Paginating -> {
                     val lastResult = status.lastResult
-                    val canLoadMore = lastResult !is BatchFetchResult.Success || !lastResult.last
+                    val canLoadMore = lastResult !is BatchFetchResult.Success || !lastResult.isLast
                     if (canLoadMore) feed.actionsFlow.emit(BatchAction.LoadMore())
                 }
                 else -> Unit
