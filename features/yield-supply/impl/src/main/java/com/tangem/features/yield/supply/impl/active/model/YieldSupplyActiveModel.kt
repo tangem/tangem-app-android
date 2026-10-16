@@ -43,6 +43,7 @@ import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.core.res.R as CoreResR
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
 import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
@@ -230,13 +231,30 @@ internal class YieldSupplyActiveModel @Inject constructor(
         claimResultFlow.update { null }
     }
 
+    /**
+     * Yield Mode is also opened from the main screen, Markets, For You and a deep link, so the token screen is not
+     * always the one beneath it.
+     */
     fun onGoToTokenClick() {
         onClaimResultDismiss()
-        appRouter.pop()
+        // Matched by wallet and currency: the route in the stack may carry a navigation action or a market block flag
+        val tokenRoute = appRouter.stack.lastOrNull { route ->
+            route is AppRoute.CurrencyDetails &&
+                route.userWalletId == userWalletId &&
+                route.currency.id == cryptoCurrency.id
+        }
+        if (tokenRoute != null) {
+            appRouter.popTo(tokenRoute)
+        } else {
+            appRouter.replaceCurrent(AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = cryptoCurrency))
+        }
     }
 
     private fun subscribeOnClaimOutcome() {
         yieldSupplyClaimTracker.outcomes
+            // A claim signed on the way out was never put to the user as a transaction of its own, so its failure
+            // would point at the withdrawal they did make
+            .filter { it.origin == YieldSupplyClaimOrigin.ClaimSheet }
             .filter { it.userWalletId == userWalletId && it.cryptoCurrencyId == cryptoCurrency.id }
             .onEach { claimOutcome ->
                 when (claimOutcome.outcome) {
