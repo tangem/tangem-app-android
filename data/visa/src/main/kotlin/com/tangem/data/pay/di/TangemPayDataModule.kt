@@ -354,6 +354,22 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideStoreTangemPayCustomerResidencyUseCase(
+            onboardingRepository: OnboardingRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): StoreTangemPayCustomerResidencyUseCase {
+            return StoreTangemPayCustomerResidencyUseCase(onboardingRepository, paymentAccountStatusFetcher)
+        }
+
+        @Provides
+        fun provideClearTangemPayCustomerResidencyUseCase(
+            onboardingRepository: OnboardingRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): ClearTangemPayCustomerResidencyUseCase {
+            return ClearTangemPayCustomerResidencyUseCase(onboardingRepository, paymentAccountStatusFetcher)
+        }
+
+        @Provides
         fun provideJoinTangemPayWaitlistUseCase(
             waitlistRepository: TangemPayWaitlistRepository,
         ): JoinTangemPayWaitlistUseCase {
