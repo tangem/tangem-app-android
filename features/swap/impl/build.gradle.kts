@@ -57,6 +57,7 @@ dependencies {
     api(projects.domain.wallets)
     implementation(projects.domain.account)
     implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.collectibles)
     implementation(projects.domain.core)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.marketing.models)

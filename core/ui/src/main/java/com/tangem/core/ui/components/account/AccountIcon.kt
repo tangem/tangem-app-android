@@ -30,6 +30,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.assets.il_account_gacha
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_magic_ball_24
 
@@ -226,6 +227,16 @@ fun PredictionAccountResIcon(size: AccountIconSize, modifier: Modifier = Modifie
     )
 }
 
+@Composable
+fun CollectiblesAccountResIcon(size: AccountIconSize, modifier: Modifier = Modifier) {
+    AccountResIcon(
+        imageVector = CollectiblesAccountIcon.imageVector,
+        color = CollectiblesAccountIcon.color,
+        size = size,
+        modifier = modifier,
+    )
+}
+
 /** Art of the Prediction account, shared by the account icon and the wallet row, so both change together. */
 object PredictionAccountIcon {
 
@@ -238,10 +249,10 @@ object PredictionAccountIcon {
 /** Art of the Collectibles account, shared by the account icon and the wallet row, so both change together. */
 object CollectiblesAccountIcon {
 
-    // TODO([REDACTED_TASK_KEY]): replace the placeholder icon and color with the final collectibles account asset
-    @DrawableRes
-    val resId: Int = R.drawable.ic_gift_24
-    val color: Color = Color(color = 0xFFE2A400)
+    val imageVector: ImageVector
+        get() = Icons.il_account_gacha
+    val color: Color
+        @Composable get() = TangemTheme.colors3.bg.status.warning
 }
 
 fun AccountIconSize.toBoxSize(): Dp = when (this) {
