@@ -30,7 +30,9 @@ class DefaultAppComponentContext(
         get() = instanceKeeper.getOrCreate(key = NAVIGATION_PROVIDER_KEY) { DefaultAppNavigationProvider() }
 
     override val router: Router
-        get() = replaceRouter ?: instanceKeeper.getOrCreate(key = ROUTER_KEY) { DefaultRouter(navigationProvider) }
+        get() = replaceRouter ?: instanceKeeper.getOrCreate(key = ROUTER_KEY) {
+            DefaultRouter(navigationProvider, dispatchers)
+        }
 }
 
 private const val NAVIGATION_PROVIDER_KEY = "DefaultAppComponentContext.navigationProvider"
