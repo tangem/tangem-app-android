@@ -107,6 +107,10 @@ class TangemPayCardPagePageObject(semanticsProvider: SemanticsNodeInteractionsPr
         useUnmergedTree = true
     }
 
+    val showDetailsControl: KNode = settingControl(TangemPayTestTags.SHOW_DETAILS_ROW)
+
+    val changePinControl: KNode = settingControl(TangemPayTestTags.CHANGE_PIN_ROW)
+
     val freezeCardRow: KNode = child {
         hasTestTag(TangemPayTestTags.FREEZE_CARD_ROW)
         useUnmergedTree = true
@@ -203,6 +207,12 @@ class TangemPayCardPagePageObject(semanticsProvider: SemanticsNodeInteractionsPr
 
     val dailyLimitValue: KNode = child {
         hasTestTag(TangemPayTestTags.DAILY_LIMIT_CURRENT_VALUE)
+        useUnmergedTree = true
+    }
+
+    private fun settingControl(testTag: String): KNode = child {
+        hasAnyAncestor(withTestTag(testTag))
+        hasClickAction()
         useUnmergedTree = true
     }
 }

@@ -2,7 +2,9 @@ package com.tangem.screens.tangempay
 
 import androidx.annotation.StringRes
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.performSemanticsAction
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import com.tangem.core.ui.test.BaseButtonTestTags
@@ -11,6 +13,7 @@ import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.core.res.R as CoreResR
+import io.github.kakaocup.compose.intercept.operation.ComposeOperationType
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -24,6 +27,11 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
     val mainScreenTile: KNode = child {
         hasTestTag(TangemPayTestTags.MAIN_SCREEN_TILE)
         useUnmergedTree = true
+    }
+
+    // After a new hot wallet's onboarding the tile on CI drops injected taps, while its OnClick action still fires.
+    fun clickMainScreenTileViaOnClickAction() {
+        mainScreenTile.delegate.perform(TileAction.ON_CLICK) { performSemanticsAction(SemanticsActions.OnClick) }
     }
 
     fun tileWithSubtitle(subtitle: String): KNode = child {
@@ -356,3 +364,5 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
 
 internal fun BaseTestCase.onTangemPayMainScreen(function: TangemPayMainPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)
+
+private enum class TileAction : ComposeOperationType { ON_CLICK }
