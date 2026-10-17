@@ -21,6 +21,19 @@ class TangemPayBankWithdrawSuccessPageObject(semanticsProvider: SemanticsNodeInt
         useUnmergedTree = true
     }
 
+    fun subtitle(text: String): KNode = child {
+        hasTestTag(StatusScreenTestTags.DESCRIPTION)
+        hasText(text, substring = true)
+        hasAnyAncestor(withTestTag(TangemPayTestTags.BANK_WITHDRAW_SUCCESS_SCREEN))
+        useUnmergedTree = true
+    }
+
+    fun detailText(text: String): KNode = child {
+        hasText(text)
+        hasAnyAncestor(withTestTag(TangemPayTestTags.BANK_WITHDRAW_SUCCESS_SCREEN))
+        useUnmergedTree = true
+    }
+
     val closeButton: KNode = child {
         hasText(getResourceString(CoreResR.string.common_close))
         hasClickAction()

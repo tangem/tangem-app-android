@@ -23,8 +23,3 @@ interface AnalyticsEventFilter {
      */
     fun canBeConsumedByHandler(handler: AnalyticsHandler, event: AnalyticsEvent): Boolean
 }
-
-interface AnalyticsFilterHolder {
-    fun addFilter(filter: AnalyticsEventFilter)
-    fun removeFilter(filter: AnalyticsEventFilter): Boolean
-}

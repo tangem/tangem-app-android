@@ -1,6 +1,7 @@
 package com.tangem.common.ui.markets.action
 
 import com.tangem.common.ui.tokens.rendersActionAsEnabled
+import com.tangem.common.ui.tokens.rendersSwapAsEnabled
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import kotlinx.collections.immutable.ImmutableList
@@ -96,12 +97,12 @@ object QuickActionsConverter {
 
         val byBsAction = actions.associateBy { it.toBsAction() }
         // The row derives from the swap, so it follows the swap's look: shown while the swap looks enabled —
-        // a joint account's tap then explains the reason instead of navigating
+        // a joint account's or an unreachable Express's tap then explains the reason instead of navigating
         val exchangeReason = byBsAction[TokenActionsBSContentUM.Action.Exchange]?.unavailabilityReason
         return allowed.mapNotNull { action ->
             when (action) {
                 TokenActionsBSContentUM.Action.SendWithSwap ->
-                    if (exchangeReason?.rendersActionAsEnabled() == true) {
+                    if (exchangeReason?.rendersSwapAsEnabled() == true) {
                         QuickActionState(QuickActionUM.V2.SwapAndSend, isEnabled = true)
                     } else {
                         null
@@ -109,7 +110,13 @@ object QuickActionsConverter {
                 else -> {
                     val state = byBsAction[action] ?: return@mapNotNull null
                     val um = state.toQuickActionUM() ?: return@mapNotNull null
-                    QuickActionState(um, isEnabled = state.unavailabilityReason.rendersActionAsEnabled())
+                    val reason = state.unavailabilityReason
+                    val isEnabled = if (action == TokenActionsBSContentUM.Action.Exchange) {
+                        reason.rendersSwapAsEnabled()
+                    } else {
+                        reason.rendersActionAsEnabled()
+                    }
+                    QuickActionState(um, isEnabled = isEnabled)
                 }
             }
         }

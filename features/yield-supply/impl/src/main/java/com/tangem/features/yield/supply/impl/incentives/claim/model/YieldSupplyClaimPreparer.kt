@@ -4,12 +4,14 @@ import arrow.core.getOrElse
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.models.incentives.YieldClaimCalldata
+import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
 import com.tangem.domain.yield.supply.usecase.GetFreshYieldClaimCalldataUseCase
 import com.tangem.domain.yield.supply.usecase.GetYieldRewardsSummaryUseCase
 import com.tangem.domain.yield.supply.usecase.ValidateYieldClaimCalldataUseCase
 import com.tangem.domain.yield.supply.usecase.YieldClaimValidationContext
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.minutes
 
 internal class YieldSupplyClaimPreparer @Inject constructor(
     private val getYieldRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase,
@@ -18,12 +20,21 @@ internal class YieldSupplyClaimPreparer @Inject constructor(
 ) {
 
     suspend fun loadRewards(chainId: Int, userAddress: String): YieldSupplyClaimRewards? {
+        return loadSummary(chainId = chainId, userAddress = userAddress)?.toClaimRewards()
+    }
+
+    /** Unlike [loadRewards], leaves out a deferred claim: only the owner may choose to claim against the advice. */
+    suspend fun loadRecommendedRewards(chainId: Int, userAddress: String): YieldSupplyClaimRewards? {
+        return (loadSummary(chainId = chainId, userAddress = userAddress) as? YieldRewardsSummary.Claimable)
+            ?.toClaimRewards()
+    }
+
+    private suspend fun loadSummary(chainId: Int, userAddress: String): YieldRewardsSummary? {
         return getYieldRewardsSummaryUseCase(chainId = chainId, userAddress = userAddress)
             .getOrElse { error ->
-                TangemLogger.e("Yield claim sheet has no rewards to show: $error")
-                return null
+                TangemLogger.e("Yield claim rewards unavailable: $error")
+                null
             }
-            .toClaimRewards()
     }
 
     suspend fun loadValidatedCalldata(
@@ -55,5 +66,10 @@ internal class YieldSupplyClaimPreparer @Inject constructor(
             TangemLogger.e("Yield claim rejected before signing: $error")
             null
         }
+    }
+
+    companion object {
+        /** Shorter than the Merkl proof rollover; bound to the proof, not to the fee the owner already accepted. */
+        val PREPARATION_VALIDITY = 2.minutes
     }
 }

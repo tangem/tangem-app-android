@@ -3,11 +3,11 @@ package com.tangem.features.yield.supply.impl.main.model
 import arrow.core.*
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.earn.EarnBlockUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
@@ -54,7 +54,7 @@ import java.math.BigDecimal
 internal class YieldSupplyModelTest {
 
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val accountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
@@ -535,7 +535,7 @@ internal class YieldSupplyModelTest {
         model.onStartEarningClick()
 
         // Assert
-        verify { appRouter.push(capture(routeSlot), any()) }
+        verify { router.push(capture(routeSlot), any()) }
         val route = routeSlot.captured as AppRoute.YieldSupplyEntry
         assertThat(route.userWalletId).isEqualTo(userWalletId)
         assertThat(route.cryptoCurrency).isEqualTo(token)
@@ -554,7 +554,7 @@ internal class YieldSupplyModelTest {
         model.onStartEarningClick()
 
         // Assert
-        verify { appRouter.push(capture(routeSlot), any()) }
+        verify { router.push(capture(routeSlot), any()) }
         assertThat((routeSlot.captured as AppRoute.YieldSupplyEntry).apy).isEmpty()
     }
 
@@ -569,7 +569,7 @@ internal class YieldSupplyModelTest {
         model.onActiveClick()
 
         // Assert
-        verify(exactly = 0) { appRouter.push(any(), any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     @Test
@@ -583,7 +583,7 @@ internal class YieldSupplyModelTest {
         model.onLearnMoreClick()
 
         // Assert
-        verify { appRouter.push(capture(routeSlot), any()) }
+        verify { router.push(capture(routeSlot), any()) }
         val route = routeSlot.captured as AppRoute.Stories
         assertThat(route.storyId).isEqualTo(StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id)
         assertThat(route.screenSource).isEqualTo("TokenDetails")
@@ -602,7 +602,7 @@ internal class YieldSupplyModelTest {
         ),
         dispatchers = createDispatchers(),
         analyticsEventsHandler = analytics,
-        appRouter = appRouter,
+        router = router,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         singleAccountStatusListSupplier = accountStatusListSupplier,

@@ -1,6 +1,7 @@
 package com.tangem.feature.referral.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.account.derivationIndex
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -8,7 +9,6 @@ import androidx.compose.runtime.setValue
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -66,7 +66,7 @@ internal class ReferralModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getAccountCurrencyByAddressUseCase: GetAccountCurrencyByAddressUseCase,
-    private val appRouter: AppRouter,
+    private val router: Router,
 ) : Model() {
 
     private val params = paramsContainer.require<ReferralComponent.Params>()
@@ -144,7 +144,7 @@ internal class ReferralModel @Inject constructor(
 
     private fun createInitiallyUiState() = ReferralStateHolder(
         headerState = HeaderState(
-            onBackClicked = appRouter::pop,
+            onBackClicked = router::pop,
         ),
         referralInfoState = ReferralInfoState.Loading,
         errorSnackbar = null,
@@ -203,7 +203,7 @@ internal class ReferralModel @Inject constructor(
 
     private fun showErrorSnackbar(throwable: Throwable) {
         uiState = uiState.copy(
-            errorSnackbar = ErrorSnackbar(throwable = throwable, onOkClicked = appRouter::pop),
+            errorSnackbar = ErrorSnackbar(throwable = throwable, onOkClicked = router::pop),
         )
     }
 

@@ -1,6 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
 import com.tangem.common.ui.tokens.rendersActionAsEnabled
+import com.tangem.common.ui.tokens.rendersSwapAsEnabled
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.isLoading
@@ -36,7 +37,7 @@ internal class UpdateAddFundsTransformer(
         val swapRow = swapAction?.let { action ->
             AddFundsUM.Row(
                 isLoading = action.unavailabilityReason.isLoading,
-                isEnabled = action.unavailabilityReason.rendersActionAsEnabled(),
+                isEnabled = action.unavailabilityReason.rendersSwapAsEnabled(),
                 onClick = {
                     onActionDispatched()
                     clickIntents.onAddFundsSwapClick(action.unavailabilityReason)
