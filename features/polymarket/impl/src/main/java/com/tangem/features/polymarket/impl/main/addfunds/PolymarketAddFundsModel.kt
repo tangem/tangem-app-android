@@ -6,8 +6,10 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.res.R
-import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_grid_20
+import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_20
 import com.tangem.features.polymarket.impl.main.addfunds.analytics.PredictionAddFundsAnalyticsEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
@@ -26,14 +28,14 @@ internal class PolymarketAddFundsModel @Inject constructor(
     val uiState: PolymarketAddFundsUM = PolymarketAddFundsUM(
         items = persistentListOf(
             PolymarketAddFundsUM.Item(
-                iconRes = CoreUiR.drawable.ic_exchange_horizontal_24,
-                title = resourceReference(R.string.common_swap),
+                icon = Icons.ic_logo_tangem_20,
+                title = resourceReference(R.string.prediction_add_funds_swap_title),
                 description = resourceReference(R.string.prediction_add_funds_swap_subtitle),
                 onClick = ::onSwapClick,
             ),
             PolymarketAddFundsUM.Item(
-                iconRes = CoreUiR.drawable.ic_arrow_down_24,
-                title = resourceReference(R.string.common_receive),
+                icon = Icons.ic_grid_20,
+                title = resourceReference(R.string.prediction_add_funds_receive_title),
                 description = resourceReference(R.string.prediction_add_funds_receive_subtitle),
                 onClick = ::onReceiveClick,
             ),

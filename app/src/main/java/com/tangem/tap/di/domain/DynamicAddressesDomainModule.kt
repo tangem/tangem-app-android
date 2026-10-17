@@ -5,6 +5,7 @@ import com.tangem.domain.dynamicaddresses.EnableDynamicAddressesUseCase
 import com.tangem.domain.dynamicaddresses.GetDynamicAddressesStatusUseCase
 import com.tangem.domain.dynamicaddresses.GetDynamicReceiveAddressUseCase
 import com.tangem.domain.dynamicaddresses.GetDerivedXpubUseCase
+import com.tangem.domain.dynamicaddresses.GetUsedDynamicAddressesUseCase
 import com.tangem.domain.dynamicaddresses.IsDynamicAddressesAvailableUseCase
 import com.tangem.domain.dynamicaddresses.IsDynamicAddressesConsolidationRequiredUseCase
 import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
@@ -52,6 +53,14 @@ internal object DynamicAddressesDomainModule {
         dynamicAddressesRepository: DynamicAddressesRepository,
     ): GetDynamicReceiveAddressUseCase {
         return GetDynamicReceiveAddressUseCase(dynamicAddressesRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetUsedDynamicAddressesUseCase(
+        dynamicAddressesRepository: DynamicAddressesRepository,
+    ): GetUsedDynamicAddressesUseCase {
+        return GetUsedDynamicAddressesUseCase(dynamicAddressesRepository)
     }
 
     @Provides

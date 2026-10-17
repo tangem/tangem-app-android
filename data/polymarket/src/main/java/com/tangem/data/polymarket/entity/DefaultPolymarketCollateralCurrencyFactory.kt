@@ -1,5 +1,6 @@
 package com.tangem.data.polymarket.entity
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.getSupportedTransactionExtras
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.currency.getTokenIconUrlFromDefaultHost
@@ -9,7 +10,9 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketDepositBlockchain
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.model.PolymarketDepositAsset
 import com.tangem.domain.polymarket.model.PredictionCollateral
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -21,47 +24,63 @@ import javax.inject.Singleton
 @Singleton
 internal class DefaultPolymarketCollateralCurrencyFactory @Inject constructor() : PolymarketCollateralCurrencyFactory {
 
-    private val network by lazy(mode = LazyThreadSafetyMode.NONE) {
-        val blockchain = PolymarketDepositBlockchain
+    private val networks = ConcurrentHashMap<Blockchain, Network>()
 
+    override fun create(): CryptoCurrency.Token = token(
+        network = network(PolymarketDepositBlockchain),
+        contractAddress = PolymarketContracts.COLLATERAL.lowercase(),
+        name = PolymarketCollateralCurrencyFactory.COLLATERAL_NAME,
+        symbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
+        decimals = PolymarketContracts.COLLATERAL_DECIMALS,
+    )
+
+    override fun createDepositTarget(asset: PolymarketDepositAsset): CryptoCurrency.Token = token(
+        network = network(asset.blockchain),
+        contractAddress = asset.contractAddress,
+        name = PolymarketCollateralCurrencyFactory.DEPOSIT_NAME,
+        symbol = PolymarketCollateralCurrencyFactory.DEPOSIT_SYMBOL,
+        decimals = asset.decimals,
+    )
+
+    private fun network(blockchain: Blockchain): Network = networks.getOrPut(blockchain) {
         Network(
             id = Network.ID(value = blockchain.toNetworkId(), derivationPath = Network.DerivationPath.None),
             name = blockchain.fullName,
             currencySymbol = blockchain.currency,
             derivationPath = Network.DerivationPath.None,
             isTestnet = blockchain.isTestnet(),
-            standardType = Network.StandardType.Unspecified(blockchain.name),
+            standardType = blockchain.standardType(),
             hasFiatFeeRate = true,
             canHandleTokens = true,
             transactionExtrasType = blockchain.getSupportedTransactionExtras(),
-            nameResolvingType = Network.NameResolvingType.NONE,
+            nameResolvingType = blockchain.nameResolvingType(),
         )
     }
 
-    override fun create(): CryptoCurrency.Token = token(
-        contractAddress = PolymarketContracts.COLLATERAL.lowercase(),
-        name = PolymarketCollateralCurrencyFactory.COLLATERAL_NAME,
-        symbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
-    )
+    private fun Blockchain.standardType(): Network.StandardType = when (this) {
+        Blockchain.Ethereum -> Network.StandardType.ERC20
+        Blockchain.BSC -> Network.StandardType.BEP20
+        else -> Network.StandardType.Unspecified(name)
+    }
 
-    override fun createDepositTarget(): CryptoCurrency.Token = token(
-        contractAddress = PolymarketContracts.USDC_TOKEN_ADDRESS,
-        name = PolymarketCollateralCurrencyFactory.DEPOSIT_NAME,
-        symbol = PolymarketCollateralCurrencyFactory.DEPOSIT_SYMBOL,
-    )
+    private fun Blockchain.nameResolvingType(): Network.NameResolvingType = when (this) {
+        Blockchain.Ethereum -> Network.NameResolvingType.ENS
+        else -> Network.NameResolvingType.NONE
+    }
 
-    private fun token(contractAddress: String, name: String, symbol: String) = CryptoCurrency.Token(
-        id = getTokenId(
+    private fun token(network: Network, contractAddress: String, name: String, symbol: String, decimals: Int) =
+        CryptoCurrency.Token(
+            id = getTokenId(
+                network = network,
+                rawTokenId = PredictionCollateral.RAW_ID,
+                contractAddress = contractAddress,
+            ),
             network = network,
-            rawTokenId = PredictionCollateral.RAW_ID,
+            name = name,
+            symbol = symbol,
+            decimals = decimals,
+            iconUrl = getTokenIconUrlFromDefaultHost(PredictionCollateral.RAW_ID),
+            isCustom = false,
             contractAddress = contractAddress,
-        ),
-        network = network,
-        name = name,
-        symbol = symbol,
-        decimals = PolymarketContracts.COLLATERAL_DECIMALS,
-        iconUrl = getTokenIconUrlFromDefaultHost(PredictionCollateral.RAW_ID),
-        isCustom = false,
-        contractAddress = contractAddress,
-    )
+        )
 }

@@ -43,9 +43,11 @@ internal sealed interface HotWalletImportError {
  *
  * Extracted verbatim from the seed-import flow so the recovery-phrase import and the cloud-backup
  * restore converge on the exact same save/sync/analytics sequence: import via the Hot SDK, build the
- * wallet, persist it, kick off the remote sync + assets discovery, and send the identical onboarding
- * analytics ([AnalyticsParam.WalletCreationType.SeedImport]). Callers own only their progress UI, the
- * navigation callback and the seed-phrase backup state they import with.
+ * wallet, persist it, kick off the remote sync + assets discovery, and send the onboarding analytics
+ * ([AnalyticsParam.WalletCreationType.SeedImport] unless the caller passes another type). Callers own only
+ * their progress UI, the navigation callback and the seed-phrase backup state they import with. A caller
+ * that must keep the wallet out of the list until something else succeeds runs [materialize] and [save]
+ * on its own and reports the creation itself.
  */
 @Suppress("LongParameterList")
 internal class HotWalletImporter @Inject constructor(
@@ -70,8 +72,22 @@ internal class HotWalletImporter @Inject constructor(
         passphrase: CharArray?,
         name: String? = null,
         isSeedPhraseBackedUp: Boolean,
+        creationType: AnalyticsParam.WalletCreationType = AnalyticsParam.WalletCreationType.SeedImport,
     ): Either<HotWalletImportError, UserWalletId> = either {
-        val userWallet = runSuspendCatching {
+        val userWallet = materialize(mnemonic, passphrase, name).bind()
+        save(scope, userWallet, isSeedPhraseBackedUp).bind()
+        sendWalletCreatedEvents(mnemonic, passphrase, creationType)
+
+        userWallet.walletId
+    }
+
+    /** Puts the wallet into the Hot SDK storage only; the wallets list does not see it yet */
+    suspend fun materialize(
+        mnemonic: Mnemonic,
+        passphrase: CharArray?,
+        name: String? = null,
+    ): Either<HotWalletImportError, UserWallet.Hot> = either {
+        runSuspendCatching {
             val hotWalletId = tangemHotSdk.importWallet(mnemonic, passphrase, HotAuth.NoAuth)
             hotUserWalletBuilderFactory.create(hotWalletId).build(name = name)
         }.getOrElse { error ->
@@ -83,15 +99,19 @@ internal class HotWalletImporter @Inject constructor(
                 else -> raise(HotWalletImportError.Unknown(error))
             }
         }
-
-        save(userWallet, isSeedPhraseBackedUp).bind()
-        startRemoteSync(scope, userWallet.walletId)
-        sendWalletCreatedEvents(mnemonic, passphrase)
-
-        userWallet.walletId
     }
 
-    private suspend fun save(
+    /** Adds a [materialize]d wallet to the wallets list and starts its remote sync */
+    suspend fun save(
+        scope: CoroutineScope,
+        userWallet: UserWallet.Hot,
+        isSeedPhraseBackedUp: Boolean,
+    ): Either<HotWalletImportError, Unit> = either {
+        persist(userWallet, isSeedPhraseBackedUp).bind()
+        startRemoteSync(scope, userWallet.walletId)
+    }
+
+    private suspend fun persist(
         userWallet: UserWallet.Hot,
         isSeedPhraseBackedUp: Boolean,
     ): Either<HotWalletImportError, Unit> =
@@ -114,7 +134,11 @@ internal class HotWalletImporter @Inject constructor(
         }
     }
 
-    private suspend fun sendWalletCreatedEvents(mnemonic: Mnemonic, passphrase: CharArray?) {
+    private suspend fun sendWalletCreatedEvents(
+        mnemonic: Mnemonic,
+        passphrase: CharArray?,
+        creationType: AnalyticsParam.WalletCreationType,
+    ) {
         analyticsEventHandler.send(
             event = OnboardingAnalyticsEvent.Onboarding.Finished(
                 source = AnalyticsParam.ScreensSources.ImportWallet,
@@ -123,7 +147,7 @@ internal class HotWalletImporter @Inject constructor(
         analyticsEventHandler.send(
             event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
                 source = AnalyticsParam.ScreensSources.ImportWallet,
-                creationType = AnalyticsParam.WalletCreationType.SeedImport,
+                creationType = creationType,
                 seedPhraseLength = mnemonic.mnemonicComponents.size,
                 passPhraseState = if (passphrase?.any { char -> !char.isWhitespace() } == true) {
                     AnalyticsParam.EmptyFull.Full

@@ -3,6 +3,7 @@ package com.tangem.grow.datasource.di
 import android.content.Context
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
+import com.tangem.core.remote.ApiSerialization
 import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.Timeouts
@@ -14,6 +15,7 @@ import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.listTypes
 import com.tangem.grow.datasource.collectibles.CollectiblesApi
 import com.tangem.grow.datasource.collectibles.CollectiblesAuthProvider
@@ -260,15 +262,22 @@ internal object GrowDatasourceModule {
         dataStoreFactory: AppDataStoreFactory,
     ): YieldMarketsStore {
         return DefaultYieldMarketsStore(
-            persistenceStore = dataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = listTypes<YieldSupplyMarketTokenDto>(),
-                    defaultValue = emptyList(),
-                ),
-                produceFile = { context.dataStoreFile(fileName = "yield_markets_cache") },
-                scope = appScope,
-            ),
+            persistenceStore = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+                dataStoreFactory.create(
+                    defaultValue = emptyList<YieldSupplyMarketTokenDto>(),
+                    fileName = "yield_markets_cache",
+                )
+            } else {
+                dataStoreFactory.create(
+                    serializer = MoshiDataStoreSerializer(
+                        moshi = moshi,
+                        types = listTypes<YieldSupplyMarketTokenDto>(),
+                        defaultValue = emptyList(),
+                    ),
+                    produceFile = { context.dataStoreFile(fileName = "yield_markets_cache") },
+                    scope = appScope,
+                )
+            },
         )
     }
 
@@ -427,6 +436,7 @@ internal object GrowDatasourceModule {
                 apiConfigId = Collectibles.ID,
                 shouldApplyTimeoutAnnotations = true,
                 shouldUseSessionAuth = true,
+                serialization = ApiSerialization.KOTLINX,
             ),
         )
     }

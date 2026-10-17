@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.features.collectibles.impl.discovery.ui.CollectiblesTabBand
 import com.tangem.features.collectibles.impl.discovery.ui.CollectiblesTabBandSkeleton
@@ -29,11 +30,20 @@ internal fun CollectiblesPinnedHeader(
     Box(
         modifier = modifier.fillMaxWidth(),
     ) {
-        TangemFade(
-            position = TangemFade.Position.Top,
-            blur = true,
-            modifier = Modifier.height(frostHeight),
-        )
+        // A haze source above the list, so the top bar's material buttons sample the frost and not only
+        // the content under it; the nested fade still blurs only the list (lower zIndex).
+        Box(
+            modifier = Modifier
+                .height(frostHeight)
+                .hazeSourceTangem(zIndex = 1f),
+        ) {
+            TangemFade(
+                position = TangemFade.Position.Top,
+                variant = TangemFade.Variant.Hard,
+                blur = true,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
         val bandModifier = Modifier
             .fillMaxWidth()
             .padding(top = topPadding)

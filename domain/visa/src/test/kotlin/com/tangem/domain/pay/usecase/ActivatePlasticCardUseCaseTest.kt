@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CardActivationOrder
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
@@ -58,11 +59,13 @@ internal class ActivatePlasticCardUseCaseTest {
         // Arrange
         val created = order(status = OrderStatus.PROCESSING)
         coEvery {
-            orderRepository.createCardActivationOrder(
+            orderRepository.createOrder(
                 userWalletId = USER_WALLET_ID,
-                order = CardActivationOrder(
-                    productInstanceId = PRODUCT_INSTANCE_ID,
-                    lastFourDigits = LAST_FOUR_DIGITS,
+                request = CustomerOrderRequest.CardActivation(
+                    order = CardActivationOrder(
+                        productInstanceId = PRODUCT_INSTANCE_ID,
+                        lastFourDigits = LAST_FOUR_DIGITS,
+                    ),
                 ),
                 idempotencyKey = IDEMPOTENCY_KEY,
             )
@@ -91,7 +94,7 @@ internal class ActivatePlasticCardUseCaseTest {
     @Test
     fun `GIVEN the order is still processing WHEN invoked THEN succeeds without awaiting the poller`() = runTest {
         // Arrange
-        coEvery { orderRepository.createCardActivationOrder(any(), any(), any()) } returns
+        coEvery { orderRepository.createOrder(any(), any(), any()) } returns
             order(status = OrderStatus.PROCESSING).right()
         coEvery { startTangemPayOrderPollingUseCase(any(), any(), any(), any()) } coAnswers { awaitCancellation() }
 
@@ -109,7 +112,7 @@ internal class ActivatePlasticCardUseCaseTest {
         model: SubmitErrorModel,
     ) = runTest {
         // Arrange
-        coEvery { orderRepository.createCardActivationOrder(any(), any(), any()) } returns model.error.left()
+        coEvery { orderRepository.createOrder(any(), any(), any()) } returns model.error.left()
 
         // Act
         val result = invokeUseCase()
@@ -127,13 +130,13 @@ internal class ActivatePlasticCardUseCaseTest {
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
-        coVerify(exactly = 0) { orderRepository.createCardActivationOrder(any(), any(), any()) }
+        coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any()) }
     }
 
     @Test
     fun `GIVEN the submit request throws WHEN invoked THEN collapses to Unspecified`() = runTest {
         // Arrange
-        coEvery { orderRepository.createCardActivationOrder(any(), any(), any()) } throws
+        coEvery { orderRepository.createOrder(any(), any(), any()) } throws
             IllegalStateException("Can not find customer address")
 
         // Act
@@ -148,7 +151,7 @@ internal class ActivatePlasticCardUseCaseTest {
     fun `GIVEN an already terminal order WHEN invoked THEN it is still handed to the poller`() = runTest {
         // Arrange
         val created = order(status = OrderStatus.COMPLETED)
-        coEvery { orderRepository.createCardActivationOrder(any(), any(), any()) } returns created.right()
+        coEvery { orderRepository.createOrder(any(), any(), any()) } returns created.right()
         coEvery { startTangemPayOrderPollingUseCase(any(), any(), any(), any()) } returns true
 
         // Act

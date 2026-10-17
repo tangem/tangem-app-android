@@ -8,6 +8,7 @@ import com.tangem.common.annotations.ApiEnv
 import com.tangem.common.annotations.ApiEnvConfig
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.*
 import com.tangem.common.utils.setWireMockScenarioState
@@ -15,6 +16,7 @@ import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.scenarios.openTokenDetailsFromTokenList
 import com.tangem.scenarios.SwapEntryPoint
 import com.tangem.scenarios.chackUnableToCoverFeeNotification
+import com.tangem.scenarios.checkProviderSlippageSheet
 import com.tangem.scenarios.checkSwapWarning
 import com.tangem.scenarios.chooseReceiveToken
 import com.tangem.scenarios.openMainScreen
@@ -153,17 +155,10 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
         val tokenTitle = "USDC"
         val receiveTokenName = "Solana"
         val inputAmount = "100"
-        val currencySymbol = "SOL"
         val slippagePercent = "5%"
         val tokensScenarioState = "SolanaUSDC"
         val exchangeQuoteScenarioName = "exchange_quote_solana"
         val exchangeQuoteScenarioState = "HighPriceImpact"
-        val dialogTitle = getResourceString(R.string.swapping_alert_title)
-        val dialogText = getResourceString(
-            R.string.swapping_alert_cex_description_with_slippage,
-            currencySymbol,
-            slippagePercent
-        )
 
         setupHooks().run {
 
@@ -216,23 +211,11 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                     }
                 }
             }
-            step("Assert receive amount information icon is displayed") {
-                onSwapTokenScreen { receiveFiatAmountInformationIcon.assertIsDisplayed() }
+            step("Assert receive amount information icon is not displayed") {
+                onSwapTokenScreen { receiveFiatAmountInformationIcon.assertDoesNotExist() }
             }
-            step("Click on receive amount information icon") {
-                onSwapTokenScreen { receiveFiatAmountInformationIcon.performClick() }
-            }
-            step("Assert information dialog is displayed") {
-                onDialog { dialogContainer.assertIsDisplayed() }
-            }
-            step("Assert information dialog title is displayed") {
-                onDialog { title.assertTextEquals(dialogTitle) }
-            }
-            step("Assert information dialog text for CEX is displayed") {
-                onDialog { text.assertTextEquals(dialogText) }
-            }
-            step("Assert dialog 'OK' button is displayed") {
-                onDialog { okButton.assertIsDisplayed() }
+            step("Assert provider slippage is displayed in 'Slippage' bottom sheet") {
+                checkProviderSlippageSheet(slippagePercent)
             }
         }
     }
@@ -245,13 +228,6 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
         val receiveTokenName = "Ethereum"
         val inputAmount = "1000"
         val slippagePercent = "3.5%"
-        val dialogTitle = getResourceString(R.string.swapping_alert_title)
-        val highPriceImpactDescription = getResourceString(R.string.swapping_high_price_impact_description)
-        val swappingAlertDEXDescription = getResourceString(R.string.swapping_alert_dex_description)
-        val swappingAlertDEXDescriptionWithSlippage = getResourceString(
-            R.string.swapping_alert_dex_description_with_slippage,
-            slippagePercent
-        )
         val pairsToScenarioName = "polygon_pos_to_pairs"
         val pairsFromScenarioName = "polygon_pos_from_pairs"
         val scenarioState = "DexProvider"
@@ -295,30 +271,11 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Assert fiat amount with warning is displayed") {
                 onSwapTokenScreen { receiveFiatAmount.assertTextContains("%", substring = true) }
             }
-            step("Assert receive amount information icon is displayed") {
-                onSwapTokenScreen { receiveFiatAmountInformationIcon.assertIsDisplayed() }
+            step("Assert receive amount information icon is not displayed") {
+                onSwapTokenScreen { receiveFiatAmountInformationIcon.assertDoesNotExist() }
             }
-            step("Click on receive amount information icon") {
-                onSwapTokenScreen { receiveFiatAmountInformationIcon.performClick() }
-            }
-            step("Assert information dialog is displayed") {
-                onDialog { dialogContainer.assertIsDisplayed() }
-            }
-            step("Assert information dialog title is displayed") {
-                onDialog { title.assertTextEquals(dialogTitle) }
-            }
-            step("Assert information dialog text for DEX is displayed") {
-                onDialog {
-                    text.assertTextContains(highPriceImpactDescription, substring = true)
-                    text.assertTextContains(swappingAlertDEXDescription, substring = true)
-                    text.assertTextContains(swappingAlertDEXDescriptionWithSlippage, substring = true)
-                }
-            }
-            step("Assert dialog 'OK' button is displayed") {
-                onDialog { okButton.assertIsDisplayed() }
-            }
-            step("Click on 'OK' button") {
-                onDialog { okButton.performClick() }
+            step("Assert provider slippage is displayed in 'Slippage' bottom sheet") {
+                checkProviderSlippageSheet(slippagePercent)
             }
         }
     }
@@ -336,7 +293,6 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
         // swap-v2 raises the "High price impact" banner already at the MEDIUM threshold — hence the Medium mock.
         val quotesScenarioState = "MediumPriceImpactMain"
         val bannerTitle = getResourceString(R.string.swapping_high_price_impact_title)
-        val dialogTitle = getResourceString(R.string.swapping_alert_title)
 
         setupHooks().run {
 
@@ -386,20 +342,8 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                     onSwapTokenScreen { warningTitle(bannerTitle).assertIsDisplayed() }
                 }
             }
-            step("Assert receive amount information icon is displayed") {
-                onSwapTokenScreen { receiveFiatAmountInformationIcon.assertIsDisplayed() }
-            }
-            step("Click on receive amount information icon") {
-                onSwapTokenScreen { receiveFiatAmountInformationIcon.performClick() }
-            }
-            step("Assert information dialog is displayed") {
-                onDialog { dialogContainer.assertIsDisplayed() }
-            }
-            step("Assert information dialog title is displayed") {
-                onDialog { title.assertTextEquals(dialogTitle) }
-            }
-            step("Assert dialog 'OK' button is displayed") {
-                onDialog { okButton.assertIsDisplayed() }
+            step("Assert receive amount information icon is not displayed") {
+                onSwapTokenScreen { receiveFiatAmountInformationIcon.assertDoesNotExist() }
             }
         }
     }
@@ -416,7 +360,6 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
         val inputAmount = "300"
         val quotesScenarioState = "HighPriceImpact"
         val bannerTitle = getResourceString(R.string.swapping_trade_too_large_title)
-        val dialogTitle = getResourceString(R.string.swapping_alert_title)
 
         setupHooks().run {
 
@@ -466,20 +409,8 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                     onSwapTokenScreen { warningTitle(bannerTitle).assertIsDisplayed() }
                 }
             }
-            step("Assert receive amount information icon is displayed") {
-                onSwapTokenScreen { receiveFiatAmountInformationIcon.assertIsDisplayed() }
-            }
-            step("Click on receive amount information icon") {
-                onSwapTokenScreen { receiveFiatAmountInformationIcon.performClick() }
-            }
-            step("Assert information dialog is displayed") {
-                onDialog { dialogContainer.assertIsDisplayed() }
-            }
-            step("Assert information dialog title is displayed") {
-                onDialog { title.assertTextEquals(dialogTitle) }
-            }
-            step("Assert dialog 'OK' button is displayed") {
-                onDialog { okButton.assertIsDisplayed() }
+            step("Assert receive amount information icon is not displayed") {
+                onSwapTokenScreen { receiveFiatAmountInformationIcon.assertDoesNotExist() }
             }
         }
     }
@@ -490,7 +421,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     fun solanaRemainingBalanceEqualToZeroWarningTest() {
         val tokenTitle = "Solana"
         val receiveTokenName = "USDC"
-        val inputAmount = "0.00168933"
+        val inputAmount = "0.03781706"
         val tokensScenarioState = "SolanaUSDC"
         val rentAmount = "SOL 0.00089088"
         val notificationTitle = getResourceString(R.string.send_notification_invalid_amount_title)
@@ -529,11 +460,20 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Choose receive token") {
                 chooseReceiveToken(receiveTokenName)
             }
+            step("Assert 'Swap tokens on screen' button is enabled") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { replaceTokensButton.assertIsEnabled() }
+                }
+            }
             step("Input swap amount = '$inputAmount'") {
-                waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
+                }
+            }
+            step("Assert 'Swap' button is enabled") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { swapButton.assertIsEnabled() }
                 }
             }
             step("Assert 'Invalid amount' warning is not displayed") {
@@ -721,6 +661,11 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Choose receive token") {
                 chooseReceiveToken(receiveTokenName)
             }
+            step("Assert 'Swap tokens on screen' button is enabled") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { replaceTokensButton.assertIsEnabled() }
+                }
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
@@ -735,6 +680,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                         message = notificationMessage
                     )
                 }
+            }
+            step("Assert 'Swap' button is not enabled") {
+                onSwapTokenScreen { swapButton.assertIsNotEnabled() }
             }
         }
     }

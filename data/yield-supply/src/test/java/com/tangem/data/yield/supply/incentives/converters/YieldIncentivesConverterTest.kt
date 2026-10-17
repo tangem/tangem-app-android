@@ -1,6 +1,8 @@
 package com.tangem.data.yield.supply.incentives.converters
 
+import arrow.core.left
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.yield.supply.models.incentives.YieldIncentivesError
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardDestination
 import com.tangem.grow.datasource.yield.models.incentives.YieldIncentivesResponse
@@ -45,7 +47,6 @@ internal class YieldIncentivesConverterTest {
                 estimatedNetValueUsd = BigDecimal("1.42"),
                 estimatedServiceFeeUsd = BigDecimal("0.08"),
                 serviceFeeRateBps = 500,
-                isClaimRecommended = true,
                 finalDestination = YieldRewardDestination.Owner,
             ),
         )
@@ -91,33 +92,74 @@ internal class YieldIncentivesConverterTest {
                 estimatedNetValueUsd = BigDecimal.ZERO,
                 estimatedServiceFeeUsd = BigDecimal.ZERO,
                 serviceFeeRateBps = 0,
-                isClaimRecommended = true,
                 finalDestination = YieldRewardDestination.Module,
             ),
         )
     }
 
     @Test
-    fun `GIVEN incentives response WHEN convert THEN envelope is mapped`() {
+    fun `GIVEN incentives response WHEN convert THEN module fields are mapped`() {
         // Arrange
-        val response = YieldIncentivesResponse(
-            chainId = 1,
-            userAddress = "0xUser",
-            moduleAddress = null,
-            rewards = listOf(createRewardDto(finalDestination = "owner")),
-            lastUpdatedAt = "2026-07-31T10:30:00.000Z",
-        )
+        val response = createIncentivesResponse(isClaimRecommended = false)
 
         // Act
         val actual = YieldIncentivesConverter.convert(response)
 
         // Assert
-        assertThat(actual.chainId).isEqualTo(1)
-        assertThat(actual.userAddress).isEqualTo("0xUser")
-        assertThat(actual.moduleAddress).isNull()
-        assertThat(actual.rewards).hasSize(1)
-        assertThat(actual.lastUpdatedAt).isEqualTo(Instant.parse("2026-07-31T10:30:00.000Z"))
+        val incentives = actual.getOrNull()
+        assertThat(incentives?.chainId).isEqualTo(1)
+        assertThat(incentives?.userAddress).isEqualTo("0xUser")
+        assertThat(incentives?.moduleAddress).isNull()
+        assertThat(incentives?.rewards).hasSize(1)
+        assertThat(incentives?.lastUpdatedAt).isEqualTo(Instant.parse("2026-07-31T10:30:00.000Z"))
     }
+
+    @Test
+    fun `GIVEN claimRecommended on the response WHEN convert THEN it lands on the model`() {
+        // Arrange
+        val response = createIncentivesResponse(isClaimRecommended = true)
+
+        // Act
+        val actual = YieldIncentivesConverter.convert(response)
+
+        // Assert
+        assertThat(actual.getOrNull()?.isClaimRecommended).isTrue()
+    }
+
+    @Test
+    fun `GIVEN response without claimRecommended WHEN convert THEN the payload is refused`() {
+        // Arrange — a missing key must not read as "not recommended": that is indistinguishable from the
+        // below-threshold state and would take the Claim action dark without saying why.
+        val response = createIncentivesResponse(isClaimRecommended = null)
+
+        // Act
+        val actual = YieldIncentivesConverter.convert(response)
+
+        // Assert
+        assertThat(actual).isEqualTo(YieldIncentivesError.Unavailable.left())
+    }
+
+    @Test
+    fun `GIVEN an unparsable timestamp WHEN convert THEN the rest of the payload still maps`() {
+        // Arrange
+        val response = createIncentivesResponse(isClaimRecommended = true).copy(lastUpdatedAt = "not a timestamp")
+
+        // Act
+        val actual = YieldIncentivesConverter.convert(response)
+
+        // Assert
+        assertThat(actual.isRight()).isTrue()
+        assertThat(actual.getOrNull()?.lastUpdatedAt).isNull()
+    }
+
+    private fun createIncentivesResponse(isClaimRecommended: Boolean?) = YieldIncentivesResponse(
+        chainId = 1,
+        userAddress = "0xUser",
+        moduleAddress = null,
+        isClaimRecommended = isClaimRecommended,
+        rewards = listOf(createRewardDto(finalDestination = "owner")),
+        lastUpdatedAt = "2026-07-31T10:30:00.000Z",
+    )
 
     private fun createRewardDto(finalDestination: String?) = YieldRewardDto(
         source = "merkl",
@@ -131,7 +173,6 @@ internal class YieldIncentivesConverterTest {
         estimatedNetValueUsd = BigDecimal("1.42"),
         estimatedServiceFeeUsd = BigDecimal("0.08"),
         serviceFeeRateBps = 500,
-        isClaimRecommended = true,
         finalDestination = finalDestination,
     )
 }

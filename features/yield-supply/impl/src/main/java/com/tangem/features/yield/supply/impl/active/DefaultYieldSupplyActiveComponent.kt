@@ -30,7 +30,9 @@ import com.tangem.features.yield.supply.impl.active.model.YieldSupplyActiveModel
 import com.tangem.features.yield.supply.impl.active.model.YieldSupplyActiveRoute
 import com.tangem.features.yield.supply.impl.active.ui.YieldSupplyActiveContent
 import com.tangem.features.yield.supply.impl.active.ui.YieldSupplyActiveTitle
+import com.tangem.features.yield.supply.impl.apy.about.YieldSupplyAboutApyComponent
 import com.tangem.features.yield.supply.impl.chart.DefaultYieldSupplyChartComponent
+import com.tangem.features.yield.supply.impl.incentives.banner.DefaultYieldSupplyRewardsBannerComponent
 import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyApproveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import dagger.assisted.Assisted
@@ -50,6 +52,15 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
         appComponentContext = child("chartComponent"),
         params = DefaultYieldSupplyChartComponent.Params(
             cryptoCurrency = model.cryptoCurrencyStatusFlow.value.currency as CryptoCurrency.Token,
+        ),
+    )
+
+    private val rewardsBannerComponent = DefaultYieldSupplyRewardsBannerComponent(
+        appComponentContext = child("rewardsBannerComponent"),
+        params = DefaultYieldSupplyRewardsBannerComponent.Params(
+            cryptoCurrency = model.cryptoCurrencyStatusFlow.value.currency as CryptoCurrency.Token,
+            cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
+            onClaimClick = model::onClaimRewardsClick,
         ),
     )
 
@@ -96,6 +107,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
                     isBalanceHidden = isBalanceHidden,
                     chartComponent = chartComponent,
                     marketingBannerComponent = marketingBannerComponent,
+                    rewardsBannerComponent = rewardsBannerComponent,
                     onReadMoreClick = model::onReadMoreClick,
                 )
 
@@ -132,6 +144,14 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
                 userWallet = model.userWallet,
                 cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
                 callback = model,
+            ),
+        )
+        is YieldSupplyActiveRoute.AboutApy -> YieldSupplyAboutApyComponent(
+            appComponentContext = factoryContext,
+            params = YieldSupplyAboutApyComponent.Params(
+                baseApy = route.baseApy,
+                rewardsApr = route.rewardsApr,
+                onDismiss = model::onAboutApyDismiss,
             ),
         )
         YieldSupplyActiveRoute.Approve -> YieldSupplyApproveComponent(

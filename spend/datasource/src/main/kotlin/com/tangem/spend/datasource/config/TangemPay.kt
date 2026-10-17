@@ -72,6 +72,13 @@ sealed class TangemPay(
             ApiEnvironment.STAGE,
             ApiEnvironment.STAGE_2,
             ApiEnvironment.STAGE_3,
+            ApiEnvironment.DEV_NEW,
+            ApiEnvironment.DEV_2_NEW,
+            ApiEnvironment.DEV_3_NEW,
+            ApiEnvironment.DEV_4_NEW,
+            ApiEnvironment.DEV_5_NEW,
+            ApiEnvironment.DEV_6_NEW,
+            ApiEnvironment.PROD_NEW,
             ApiEnvironment.DEV_2,
             ApiEnvironment.DEV_3,
             -> null
@@ -95,6 +102,13 @@ sealed class TangemPay(
                 ApiEnvironment.STAGE,
                 ApiEnvironment.STAGE_2,
                 ApiEnvironment.STAGE_3,
+                ApiEnvironment.DEV_NEW,
+                ApiEnvironment.DEV_2_NEW,
+                ApiEnvironment.DEV_3_NEW,
+                ApiEnvironment.DEV_4_NEW,
+                ApiEnvironment.DEV_5_NEW,
+                ApiEnvironment.DEV_6_NEW,
+                ApiEnvironment.PROD_NEW,
                 -> error("Unknown environment: $apiEnvironment")
             }
         }
@@ -122,6 +136,13 @@ sealed class TangemPay(
                 ApiEnvironment.STAGE,
                 ApiEnvironment.STAGE_2,
                 ApiEnvironment.STAGE_3,
+                ApiEnvironment.DEV_NEW,
+                ApiEnvironment.DEV_2_NEW,
+                ApiEnvironment.DEV_3_NEW,
+                ApiEnvironment.DEV_4_NEW,
+                ApiEnvironment.DEV_5_NEW,
+                ApiEnvironment.DEV_6_NEW,
+                ApiEnvironment.PROD_NEW,
                 -> error("Unknown environment: $apiEnvironment")
             }
         }

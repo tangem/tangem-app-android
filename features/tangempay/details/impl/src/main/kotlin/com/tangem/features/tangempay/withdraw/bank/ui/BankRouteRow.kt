@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.image.TangemIcon
@@ -23,6 +24,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_down_20
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.pay.model.bankofframp.BankRail
 
 /** Rail pill: rail icon, name, ETA badge and fee; a non-null [onClick] makes the row tappable and adds a chevron. */
@@ -37,6 +39,7 @@ internal fun BankRouteRow(
 ) {
     Row(
         modifier = modifier
+            .testTag(TangemPayTestTags.BANK_WITHDRAW_ROUTE_ROW)
             .fillMaxWidth()
             .clip(CircleShape)
             .background(TangemTheme.colors3.bg.secondary)
