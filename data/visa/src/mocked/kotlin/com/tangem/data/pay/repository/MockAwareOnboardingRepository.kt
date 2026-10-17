@@ -52,6 +52,9 @@ internal class MockAwareOnboardingRepository @Inject constructor(
             .getEnvironmentConfig(TangemPay.Bff.ID)
             .environment == ApiEnvironment.MOCK
 
+    private val isOrderMockMode: Boolean
+        get() = isMockMode && System.getProperty(UITEST_ORDER_FROM_API_KEY) != "1"
+
     override suspend fun validateDeeplink(link: String): Either<UniversalError, Boolean> = real.validateDeeplink(link)
 
     override suspend fun isTangemPayInitialDataProduced(userWalletId: UserWalletId): Boolean {
@@ -100,7 +103,7 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         request: CustomerOrderRequest.CardIssue,
         idempotencyKey: String,
     ): Either<VisaApiError, String> {
-        if (isMockMode) {
+        if (isOrderMockMode) {
             mockOrderIds.add(userWalletId)
             return MOCK_ORDER_ID.right()
         }
@@ -108,7 +111,7 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     }
 
     override suspend fun clearOrderId(userWalletId: UserWalletId) {
-        if (isMockMode) {
+        if (isOrderMockMode) {
             mockOrderIds.remove(userWalletId)
             return
         }
@@ -116,7 +119,7 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     }
 
     override suspend fun getOrderId(userWalletId: UserWalletId): String? {
-        if (isMockMode) return MOCK_ORDER_ID.takeIf { userWalletId in mockOrderIds }
+        if (isOrderMockMode) return MOCK_ORDER_ID.takeIf { userWalletId in mockOrderIds }
         return real.getOrderId(userWalletId)
     }
 
@@ -212,6 +215,7 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         real.isTangemPayDeactivated(userWalletId)
 
     private companion object {
+        const val UITEST_ORDER_FROM_API_KEY = "uitest.tangempay.onboarding_order_from_api"
         const val MOCK_ORDER_ID = "mock-order-id"
         const val MOCK_VA_ORDER_ID = "mock-va-order-id"
     }

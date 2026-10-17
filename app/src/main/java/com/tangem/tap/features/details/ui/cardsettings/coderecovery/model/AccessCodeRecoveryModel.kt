@@ -2,10 +2,10 @@ package com.tangem.tap.features.details.ui.cardsettings.coderecovery.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.common.doOnSuccess
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -25,7 +25,7 @@ internal class AccessCodeRecoveryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val tangemSdkManager: TangemSdkManager,
     private val cardSettingsInteractor: CardSettingsInteractor,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
@@ -73,7 +73,7 @@ internal class AccessCodeRecoveryModel @Inject constructor(
                     )
                 }
 
-                appRouter.pop()
+                router.pop()
             }
     }
 

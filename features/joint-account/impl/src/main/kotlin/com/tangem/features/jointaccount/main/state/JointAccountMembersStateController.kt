@@ -20,16 +20,13 @@ internal class JointAccountMembersStateController @Inject constructor() {
     }
 
     private fun getInitialState(): JointAccountMembersUM = JointAccountMembersUM(
-        topBar = JointAccountMembersUM.TopBarUM.Dismissible(
-            canArchive = false,
-            onArchiveClick = {},
-            onCloseClick = {},
-        ),
+        topBar = JointAccountMembersUM.TopBarUM.Dismissible(onCloseClick = {}),
         header = null,
-        shareSafely = null,
+        summaryCard = null,
         joined = persistentListOf(),
         freeSlots = persistentListOf(),
-        otherMembersLabel = null,
-        activateButton = null,
+        membersLabel = null,
+        waitingLabel = null,
+        footer = null,
     )
 }

@@ -79,6 +79,7 @@ import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionWithdrawalTracker
 import com.tangem.domain.polymarket.interactor.PredictionWithdrawalFailure
@@ -182,6 +183,7 @@ internal class SwapModel @Inject constructor(
     private val shouldShowStoriesInteractor: ShouldShowStoriesInteractor,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val backupErrorWarningSender: BackupErrorWarningSender,
+    private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val swapInteractor: SwapInteractor,
     private val swapTransferInteractor: SwapTransferInteractor,
     private val swapTransferStateBuilder: SwapTransferStateBuilder,
@@ -592,7 +594,8 @@ internal class SwapModel @Inject constructor(
         modelScope.launch(dispatchers.default) {
             isAccountsMode = isAccountsModeEnabledUseCase.invokeSync() ||
                 isPredictionTopUpFlow ||
-                isPredictionWithdrawFlow
+                isPredictionWithdrawFlow ||
+                isCollectiblesTopUpFlow
 
             val (resolvedFromCurrencyStatus, resolvedToCurrencyStatus) = initialCurrenciesResolver(
                 userWalletId = params.userWalletId,
@@ -2169,6 +2172,11 @@ internal class SwapModel @Inject constructor(
             }
     }
 
+    private fun collectiblesVaultStatusUpdates(vaultStatus: SwapCurrencyStatus): Flow<CryptoCurrencyStatus> {
+        return singleAccountStatusSupplier(SingleAccountStatusProducer.Params(vaultStatus.account.accountId))
+            .mapNotNull { accountStatus -> (accountStatus as? AccountStatus.Collectibles)?.value?.cryptoCurrencyStatus }
+    }
+
     private fun subscribeToCoinBalanceUpdates(swapCurrencyStatus: SwapCurrencyStatus, isFromCurrency: Boolean) {
         val swapCurrency = swapCurrencyStatus.currency
 
@@ -2184,8 +2192,7 @@ internal class SwapModel @Inject constructor(
             // Virtual account isn't a swap source in the MVP (withdrawal reuses the send flow)
             is Account.Money -> emptyFlow()
             is Account.Prediction -> predictionDepositStatusUpdates(swapCurrencyStatus)
-            // Collectibles account holds no spendable currencies of its own — its funds live in the gacha vault
-            is Account.Collectibles -> emptyFlow()
+            is Account.Collectibles -> collectiblesVaultStatusUpdates(swapCurrencyStatus)
             // A joint account isn't a swap source either — spending from a Safe is a future co-signed operation
             is Account.Joint -> emptyFlow()
         }.distinctUntilChanged { old, new -> old.value.amount == new.value.amount } // Check only balance changes
@@ -3108,7 +3115,7 @@ internal class SwapModel @Inject constructor(
     private fun SwapStateHolder.withAccountFlowPresentation(): SwapStateHolder = withAccountFlowPresentation(
         accountFlow = accountFlow,
         isReverseLocked = isReverseLocked,
-        predictionCollateralBalance = if (isPredictionWithdrawFlow) {
+        accountBalance = if (isPredictionWithdrawFlow) {
             dataState.fromSwapCurrencyStatus?.status?.value?.amount
         } else {
             dataState.toSwapCurrencyStatus?.status?.value?.amount
@@ -3182,6 +3189,17 @@ internal class SwapModel @Inject constructor(
                         fromSwapCurrencyStatus.currency.network,
                     )
                 }
+            }
+        }
+        if (dataState.toSwapCurrencyStatus?.account is Account.Collectibles) refreshCollectiblesVault()
+    }
+
+    private fun refreshCollectiblesVault() {
+        modelScope.launch {
+            withContext(NonCancellable) {
+                delay(UPDATE_BALANCE_DELAY_MILLIS)
+                collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(params.userWalletId))
+                    .onLeft { error -> TangemLogger.e("Unable to refresh the collectibles vault", error) }
             }
         }
     }

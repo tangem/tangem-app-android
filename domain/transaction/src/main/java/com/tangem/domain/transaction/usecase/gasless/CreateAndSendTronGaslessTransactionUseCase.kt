@@ -2,6 +2,7 @@ package com.tangem.domain.transaction.usecase.gasless
 
 import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.common.Amount
@@ -20,6 +21,7 @@ import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Builds the compensation token transfer, signs it together with the original transfer in ONE signing
@@ -111,7 +113,7 @@ class CreateAndSendTronGaslessTransactionUseCase(
         )
     }
 
-    private suspend fun quoteForFinalAmount(
+    private suspend fun Raise<SendTransactionError>.quoteForFinalAmount(
         userWallet: UserWallet,
         quotedFee: TronGaslessQuote,
         original: TransactionData.Uncompiled,
@@ -133,9 +135,12 @@ class CreateAndSendTronGaslessTransactionUseCase(
                 feeTokenContract = feeToken.contractAddress,
             ),
         )
-        require(refreshed.compensationAmountRaw <= quotedFee.compensationAmountRaw) {
-            "Tron gasless compensation grew from ${quotedFee.compensationAmountRaw} to " +
-                "${refreshed.compensationAmountRaw} while re-quoting $amountRaw to ${original.destinationAddress}"
+        if (refreshed.compensationAmountRaw > quotedFee.compensationAmountRaw) {
+            TangemLogger.e(
+                "Tron gasless compensation grew from ${quotedFee.compensationAmountRaw} to " +
+                    "${refreshed.compensationAmountRaw} while re-quoting $amountRaw to ${original.destinationAddress}",
+            )
+            raise(SendTransactionError.GaslessFeeIncreased)
         }
         return refreshed
     }

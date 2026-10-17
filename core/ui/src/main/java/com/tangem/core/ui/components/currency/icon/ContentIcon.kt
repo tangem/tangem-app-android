@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.account.AccountCharIcon
 import com.tangem.core.ui.components.account.AccountResIcon
+import com.tangem.core.ui.components.account.CollectiblesAccountResIcon
 import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.components.account.PredictionAccountResIcon
 import com.tangem.core.ui.components.currency.DefaultCurrencyIcon
@@ -70,6 +71,7 @@ internal fun ContentIcon(
         )
         is CurrencyIconState.PaymentAccount -> PaymentAccountIcon(modifier = modifier, size = icon.size)
         is CurrencyIconState.PredictionAccount -> PredictionAccountResIcon(modifier = modifier, size = icon.size)
+        is CurrencyIconState.CollectiblesAccount -> CollectiblesAccountResIcon(modifier = modifier, size = icon.size)
         is CurrencyIconState.CryptoPortfolio.Icon -> AccountResIcon(
             modifier = modifier,
             imageVector = icon.imageVector(),

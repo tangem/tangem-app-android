@@ -3,7 +3,6 @@ package com.tangem.tap.common.analytics.handlers.customerio
 import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.core.analytics.api.AnalyticsUserIdHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 
 /**
  * Customer.io analytics handler.
@@ -29,16 +28,5 @@ class CustomerIoAnalyticsHandler(
 
     companion object {
         const val ID = "CustomerIO"
-    }
-
-    class Builder : AnalyticsHandlerBuilder {
-        override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler? {
-            val cdpApiKey = data.config.customerIoCdpApiKey
-            if (cdpApiKey.isNullOrBlank()) return null
-
-            return CustomerIoAnalyticsHandler(
-                client = CustomerIoClient(application = data.application, cdpApiKey = cdpApiKey),
-            )
-        }
     }
 }

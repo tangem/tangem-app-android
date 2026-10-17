@@ -26,7 +26,9 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
 import com.tangem.domain.yield.supply.models.incentives.YieldClaimCalldata
+import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.usecase.BuildYieldClaimTransactionUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
@@ -36,6 +38,7 @@ import com.tangem.features.yield.supply.impl.incentives.claim.YieldSupplyClaimCo
 import com.tangem.features.yield.supply.impl.incentives.claim.di.YieldClaimTimeSource
 import com.tangem.features.yield.supply.impl.incentives.claim.entity.YieldSupplyClaimNotificationUM
 import com.tangem.features.yield.supply.impl.incentives.claim.entity.YieldSupplyClaimUM
+import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
@@ -55,7 +58,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
@@ -141,12 +143,12 @@ internal class YieldSupplyClaimModel @Inject constructor(
         if (claimJob?.isActive == true) return
 
         val prepared = preparedClaim ?: return
-        if (prepared.preparedAt.elapsedNow() >= PREPARATION_VALIDITY) {
+        if (prepared.preparedAt.elapsedNow() >= YieldSupplyClaimPreparer.PREPARATION_VALIDITY) {
             prepare()
             return
         }
 
-        claimJob = modelScope.launch { claim(prepared.transactionData) }
+        claimJob = modelScope.launch { claim(prepared) }
     }
 
     private fun prepare() {
@@ -157,7 +159,8 @@ internal class YieldSupplyClaimModel @Inject constructor(
         prepareJob = modelScope.launch { loadClaim() }
     }
 
-    private suspend fun claim(transactionData: TransactionData.Uncompiled) {
+    private suspend fun claim(prepared: PreparedClaim) {
+        val transactionData = prepared.transactionData
         uiState.update { it.copy(isClaimInProgress = true) }
 
         if (!isFeeCovered(transactionData)) {
@@ -173,7 +176,7 @@ internal class YieldSupplyClaimModel @Inject constructor(
                 userWallet = params.userWallet,
                 network = cryptoCurrency.network,
             )
-            result.onRight(::trackClaim)
+            result.onRight { transactionHash -> trackClaim(transactionHash, prepared.claimedRewards) }
             if (modelScope.isActive) onTransactionSent(result)
         }
     }
@@ -197,11 +200,25 @@ internal class YieldSupplyClaimModel @Inject constructor(
                     },
                 )
             },
-            ifRight = { params.onDismiss() },
+            // onSubmitted closes this sheet itself
+            ifRight = { onClaimSubmitted() },
         )
     }
 
-    private fun trackClaim(transactionHash: String) {
+    private fun onClaimSubmitted() {
+        val state = uiState.value
+
+        params.onSubmitted(
+            YieldSupplyClaimResultUM(
+                status = YieldSupplyClaimResultUM.Status.Submitted,
+                total = state.total,
+                serviceFee = state.serviceFee,
+                networkFee = state.networkFee,
+            ),
+        )
+    }
+
+    private fun trackClaim(transactionHash: String, claimedRewards: List<YieldReward>) {
         val token = cryptoCurrency as? CryptoCurrency.Token ?: return
 
         yieldSupplyClaimTracker.track(
@@ -210,6 +227,8 @@ internal class YieldSupplyClaimModel @Inject constructor(
             chainId = params.chainId,
             userAddress = params.userAddress,
             transactionHash = transactionHash,
+            claimedRewards = claimedRewards,
+            origin = YieldSupplyClaimOrigin.ClaimSheet,
         )
     }
 
@@ -269,7 +288,11 @@ internal class YieldSupplyClaimModel @Inject constructor(
         }
 
         val transactionData = loadNetworkFee(calldata) ?: return
-        preparedClaim = PreparedClaim(transactionData = transactionData, preparedAt = preparedAt)
+        preparedClaim = PreparedClaim(
+            transactionData = transactionData,
+            preparedAt = preparedAt,
+            claimedRewards = summary.claimable,
+        )
     }
 
     /** Also clears fee notifications left by a previous run. */
@@ -388,10 +411,9 @@ internal class YieldSupplyClaimModel @Inject constructor(
         return feeStatus
     }
 
-    private class PreparedClaim(val transactionData: TransactionData.Uncompiled, val preparedAt: TimeMark)
-
-    private companion object {
-        /** Shorter than the Merkl proof rollover; bound to the proof, not to the fee the owner already accepted. */
-        val PREPARATION_VALIDITY = 2.minutes
-    }
+    private class PreparedClaim(
+        val transactionData: TransactionData.Uncompiled,
+        val preparedAt: TimeMark,
+        val claimedRewards: List<YieldReward>,
+    )
 }

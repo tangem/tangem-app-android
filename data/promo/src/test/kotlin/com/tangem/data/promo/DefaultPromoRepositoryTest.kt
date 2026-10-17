@@ -31,6 +31,7 @@ import com.tangem.domain.promo.models.PromoRegistrationResult.PromoRegistrationS
 import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import app.cash.turbine.test
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent
@@ -224,13 +225,13 @@ internal class DefaultPromoRepositoryTest {
         private val language = SupportedLanguages.getCurrentSupportedLanguageCode()
 
         @Test
-        fun `GIVEN cold wallet WHEN getCampaigns THEN sends card type with batch id and returns converted`() = runTest {
+        fun `GIVEN cold wallet WHEN getCampaignsSync THEN sends card type with batch id and returns converted`() = runTest {
             // Arrange
             val repository = createRepository()
             stubPromotionsV3(PromotionsV3Response(promotions = listOf(createV3Dto())))
 
             // Act
-            val result = repository.getCampaigns(coldWallet)
+            val result = repository.getCampaignsSync(coldWallet)
 
             // Assert
             assertThat(result).containsExactly(createExpectedCampaign())
@@ -245,13 +246,13 @@ internal class DefaultPromoRepositoryTest {
         }
 
         @Test
-        fun `GIVEN hot wallet WHEN getCampaigns THEN sends mobile type without batch id`() = runTest {
+        fun `GIVEN hot wallet WHEN getCampaignsSync THEN sends mobile type without batch id`() = runTest {
             // Arrange
             val repository = createRepository()
             stubPromotionsV3(PromotionsV3Response(promotions = emptyList()))
 
             // Act
-            repository.getCampaigns(hotWallet)
+            repository.getCampaignsSync(hotWallet)
 
             // Assert
             coVerify(exactly = 1) {
@@ -265,14 +266,14 @@ internal class DefaultPromoRepositoryTest {
         }
 
         @Test
-        fun `GIVEN campaigns cached WHEN getCampaigns again THEN served from cache`() = runTest {
+        fun `GIVEN campaigns cached WHEN getCampaignsSync again THEN served from cache`() = runTest {
             // Arrange
             val repository = createRepository()
             stubPromotionsV3(PromotionsV3Response(promotions = listOf(createV3Dto())))
-            repository.getCampaigns(coldWallet)
+            repository.getCampaignsSync(coldWallet)
 
             // Act
-            val result = repository.getCampaigns(coldWallet)
+            val result = repository.getCampaignsSync(coldWallet)
 
             // Assert
             assertThat(result).containsExactly(createExpectedCampaign())
@@ -280,7 +281,7 @@ internal class DefaultPromoRepositoryTest {
         }
 
         @Test
-        fun `GIVEN request in flight WHEN getCampaigns for same wallet THEN one request serves both`() = runTest {
+        fun `GIVEN request in flight WHEN getCampaignsSync for same wallet THEN one request serves both`() = runTest {
             // Arrange
             val repository = createRepository()
             val responseGate = CompletableDeferred<Unit>()
@@ -290,8 +291,8 @@ internal class DefaultPromoRepositoryTest {
             }
 
             // Act
-            val first = async { repository.getCampaigns(coldWallet) }
-            val second = async { repository.getCampaigns(coldWallet) }
+            val first = async { repository.getCampaignsSync(coldWallet) }
+            val second = async { repository.getCampaignsSync(coldWallet) }
             runCurrent()
             responseGate.complete(Unit)
 
@@ -302,15 +303,15 @@ internal class DefaultPromoRepositoryTest {
         }
 
         @Test
-        fun `GIVEN campaigns cached WHEN getCampaigns with forceRefresh THEN fetches again`() = runTest {
+        fun `GIVEN campaigns cached WHEN getCampaignsSync with forceRefresh THEN fetches again`() = runTest {
             // Arrange
             val repository = createRepository()
             stubPromotionsV3(PromotionsV3Response(promotions = listOf(createV3Dto())))
-            repository.getCampaigns(coldWallet)
+            repository.getCampaignsSync(coldWallet)
             stubPromotionsV3(PromotionsV3Response(promotions = emptyList()))
 
             // Act
-            val result = repository.getCampaigns(coldWallet, forceRefresh = true)
+            val result = repository.getCampaignsSync(coldWallet, forceRefresh = true)
 
             // Assert
             assertThat(result).isEmpty()
@@ -318,7 +319,27 @@ internal class DefaultPromoRepositoryTest {
         }
 
         @Test
-        fun `GIVEN api error WHEN getCampaigns THEN throws`() = runTest {
+        fun `GIVEN campaigns cached WHEN refreshed with forceRefresh THEN updates emit the refreshed ones`() = runTest {
+            // Arrange
+            val repository = createRepository()
+            stubPromotionsV3(PromotionsV3Response(promotions = listOf(createV3Dto())))
+            repository.getCampaignsSync(coldWallet)
+            stubPromotionsV3(PromotionsV3Response(promotions = emptyList()))
+
+            repository.getCampaigns(coldWallet.walletId).test {
+                assertThat(awaitItem()).containsExactly(createExpectedCampaign())
+
+                // Act
+                repository.getCampaignsSync(coldWallet, forceRefresh = true)
+
+                // Assert
+                assertThat(awaitItem()).isEmpty()
+                expectNoEvents()
+            }
+        }
+
+        @Test
+        fun `GIVEN api error WHEN getCampaignsSync THEN throws`() = runTest {
             // Arrange
             val repository = createRepository()
             @Suppress("UNCHECKED_CAST")
@@ -331,7 +352,7 @@ internal class DefaultPromoRepositoryTest {
             ) as ApiResponse<PromotionsV3Response>
 
             // Act
-            val error = runCatching { repository.getCampaigns(coldWallet) }.exceptionOrNull()
+            val error = runCatching { repository.getCampaignsSync(coldWallet) }.exceptionOrNull()
 
             // Assert
             assertThat(error).isNotNull()

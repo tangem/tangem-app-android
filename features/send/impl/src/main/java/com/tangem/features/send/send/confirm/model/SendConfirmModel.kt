@@ -6,7 +6,6 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.backup.BackupErrorWarningSender
@@ -42,6 +41,7 @@ import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
@@ -95,7 +95,6 @@ internal class SendConfirmModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val appRouter: AppRouter,
     private val router: Router,
     private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase,
     private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
@@ -573,9 +572,10 @@ internal class SendConfirmModel @Inject constructor(
 
         result.fold(
             ifLeft = { error ->
+                if (error is SendTransactionError.GaslessFeeIncreased) onFeeReload()
                 alertFactory.getSendTransactionErrorState(
                     error = error,
-                    popBack = appRouter::pop,
+                    popBack = params.onCloseFlow,
                     onFailedTxEmailClick = ::onFailedTxEmailClick,
                 )
                 analyticsEventHandler.send(
@@ -738,7 +738,7 @@ internal class SendConfirmModel @Inject constructor(
             isHoldToConfirm = isHoldToConfirm,
             onClick = {
                 when (confirmUM) {
-                    is ConfirmUM.Success -> appRouter.pop()
+                    is ConfirmUM.Success -> params.onCloseFlow()
                     is ConfirmUM.Content -> if (confirmUM.isSending) {
                         return@NavigationButton
                     } else {

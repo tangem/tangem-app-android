@@ -20,6 +20,7 @@ dependencies {
 
     // region Other libraries
     implementation(deps.androidx.core.ktx)
+    implementation(deps.arrow.core)
     api(deps.moshi)
     implementation(deps.retrofit)
     // endregion
