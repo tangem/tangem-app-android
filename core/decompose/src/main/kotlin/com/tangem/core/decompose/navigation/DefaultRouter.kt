@@ -10,6 +10,7 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Runnable
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.reflect.KClass
+import kotlin.reflect.safeCast
 
 /**
  * Router of the root stack. Every operation runs on the main thread; a navigation failure is logged and reported as
@@ -58,6 +59,17 @@ internal class DefaultRouter(
     override fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit) {
         popTo(
             predicate = { it::class != routeClass },
+            onComplete = onComplete,
+        )
+    }
+
+    override fun <R : Route> popToMatching(
+        routeClass: KClass<R>,
+        predicate: (R) -> Boolean,
+        onComplete: (isSuccess: Boolean) -> Unit,
+    ) {
+        popTo(
+            predicate = { route -> routeClass.safeCast(route)?.let(predicate) != true },
             onComplete = onComplete,
         )
     }

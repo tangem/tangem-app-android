@@ -28,5 +28,13 @@ class DummyRouter : Router {
         onComplete(true)
     }
 
+    override fun <R : Route> popToMatching(
+        routeClass: KClass<R>,
+        predicate: (R) -> Boolean,
+        onComplete: (isSuccess: Boolean) -> Unit,
+    ) {
+        onComplete(true)
+    }
+
     override fun contains(route: Route): Boolean = false
 }
