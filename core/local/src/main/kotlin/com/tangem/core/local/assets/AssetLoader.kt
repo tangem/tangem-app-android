@@ -4,6 +4,7 @@ package com.tangem.core.local.assets
 
 import com.tangem.datasource.utils.listTypes
 import com.tangem.datasource.utils.mapWithStringKeyTypes
+import kotlinx.serialization.DeserializationStrategy
 import java.lang.reflect.Type
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
@@ -17,6 +18,9 @@ interface AssetLoader {
 
     /** Load content [T] of asset file [fileName] parsed with [type] */
     suspend fun <T> load(fileName: String, type: KType): T?
+
+    /** Load content [T] of asset file [fileName] decoded with kotlinx [deserializer] */
+    suspend fun <T> load(fileName: String, deserializer: DeserializationStrategy<T>): T?
 
     /** Load list [T] values of asset file [fileName] parsed with [type] */
     suspend fun <T> loadList(fileName: String, type: Type): List<T>

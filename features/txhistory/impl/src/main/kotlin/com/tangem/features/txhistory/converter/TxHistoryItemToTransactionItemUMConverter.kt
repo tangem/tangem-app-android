@@ -81,7 +81,9 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             // region Content
             is TransactionType.Operation -> operationContent(value, uiStatus)
             is TransactionType.Swap -> swapContent(value, uiStatus)
-            is TransactionType.Transfer -> transferContent(value, uiStatus)
+            is TransactionType.Transfer,
+            is TransactionType.Joint.Transfer,
+            -> transferContent(value, uiStatus)
             is TransactionType.Staking.ClaimRewards -> claimRewardsContent(value, uiStatus)
             is TransactionType.YieldSupply.Send -> yieldSend(value, uiStatus, type)
             is TransactionType.YieldSupply.DeployContract -> yieldDeployContractContent(value, uiStatus, type)
@@ -280,13 +282,12 @@ internal class TxHistoryItemToTransactionItemUMConverter(
 
     /** What the fee was paid for; a gasless leg or an untracked token has nothing to name and says so instead. */
     private fun TxInfo.feeSubtitle(): ContentSubtitle {
-        val networkFee = type as? TransactionType.NetworkFee
-        val symbol = networkFee?.amount?.currencySymbol?.ifBlank { null }
+        val symbol = feeForAmount()?.currencySymbol?.ifBlank { null }
             ?: return ContentSubtitle.Plain(resourceReference(R.string.transaction_history_fee_for_sending))
 
         return ContentSubtitle.FeeFor(
             symbol = symbol,
-            icon = networkFee.amount.resolveToken(networkTokens)?.let(iconStateConverter::convert),
+            icon = feeForToken(networkTokens)?.let(iconStateConverter::convert),
         )
     }
 
@@ -399,7 +400,8 @@ private fun TxInfo.formatContentAmount(currency: CryptoCurrency): String {
         type is TransactionType.Staking.ClaimRewards -> ""
         else -> if (isOutgoing) StringsSigns.MINUS else StringsSigns.PLUS
     }
-    return prefix + value.format { crypto(symbol = "", decimals = currency.displayDecimals) }.trim()
+    val approximateMark = if (showsFeeAsAmount(currency)) approximateMark() else ""
+    return prefix + approximateMark + value.format { crypto(symbol = "", decimals = currency.displayDecimals) }.trim()
 }
 
 // endregion
@@ -496,6 +498,7 @@ private fun TransactionType.feeSubtitleResId(): Int? = when (this) {
     is TransactionType.YieldSupply.ReactivateToken -> R.string.transaction_history_fee_for_yield_mode_reactivation
     is TransactionType.Approve,
     TransactionType.GaslessFee,
+    is TransactionType.Joint.Transfer,
     is TransactionType.NetworkFee,
     is TransactionType.Operation,
     TransactionType.Staking.ClaimRewards,

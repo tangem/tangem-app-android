@@ -17,6 +17,9 @@ interface CollectiblesHotDelegate {
     /** Returns the existing delegate, creating one on first call. Idempotent. */
     suspend fun provision(accountId: AccountId): Either<CollectiblesAccountError, HotDelegatePublicKey>
 
+    /** Reads the existing delegate without ever creating one; null if there is none or it cannot be read. */
+    suspend fun getPublicKeyOrNull(accountId: AccountId): HotDelegatePublicKey?
+
     /** Signs whatever it is handed — deciding that a transaction is safe to sign is the caller's job. */
     suspend fun sign(accountId: AccountId, message: ByteArray): Either<CollectiblesAccountError, ByteArray>
 

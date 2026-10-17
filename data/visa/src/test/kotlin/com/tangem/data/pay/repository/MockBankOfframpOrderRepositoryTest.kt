@@ -85,14 +85,15 @@ internal class MockBankOfframpOrderRepositoryTest {
 
         // Act & Assert
         val processing = BankOfframpOrderState.Processing(OrderStep.UNKNOWN).right()
-        assertThat(repository.getOrderState(WALLET_ID, orderId)).isEqualTo(processing)
+        assertThat(repository.getOrderState(WALLET_ID, orderId, request())).isEqualTo(processing)
         nowMillis += 5_999L
-        assertThat(repository.getOrderState(WALLET_ID, orderId)).isEqualTo(processing)
+        assertThat(repository.getOrderState(WALLET_ID, orderId, request())).isEqualTo(processing)
         nowMillis += 1L
-        assertThat(repository.getOrderState(WALLET_ID, orderId).getOrNull())
+        assertThat(repository.getOrderState(WALLET_ID, orderId, request()).getOrNull())
             .isInstanceOf(BankOfframpOrderState.AwaitingSignature::class.java)
         assertThat(repository.submitSignature(WALLET_ID, orderId, "0xsig", KEY)).isEqualTo(Unit.right())
-        assertThat(repository.getOrderState(WALLET_ID, orderId)).isEqualTo(BankOfframpOrderState.Completed.right())
+        assertThat(repository.getOrderState(WALLET_ID, orderId, request()))
+            .isEqualTo(BankOfframpOrderState.Completed.right())
     }
 
     @Test
@@ -117,13 +118,14 @@ internal class MockBankOfframpOrderRepositoryTest {
 
         // Assert
         assertThat(canceled).isEqualTo(Unit.right())
-        assertThat(repository.getOrderState(WALLET_ID, orderId)).isEqualTo(BankOfframpOrderState.Canceled.right())
+        assertThat(repository.getOrderState(WALLET_ID, orderId, request()))
+            .isEqualTo(BankOfframpOrderState.Canceled.right())
     }
 
     @Test
     fun `GIVEN unknown order WHEN getOrderState THEN unknown error`() = runTest {
         // Act
-        val actual = repository.getOrderState(WALLET_ID, "missing")
+        val actual = repository.getOrderState(WALLET_ID, "missing", request())
 
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(BankOfframpError.Unknown::class.java)
@@ -137,7 +139,7 @@ internal class MockBankOfframpOrderRepositoryTest {
 
         // Act
         nowMillis += 6_000L
-        val actual = repository.getOrderState(WALLET_ID, orderId)
+        val actual = repository.getOrderState(WALLET_ID, orderId, request())
 
         // Assert
         assertThat(actual.getOrNull()).isInstanceOf(BankOfframpOrderState.Failed::class.java)
@@ -151,7 +153,7 @@ internal class MockBankOfframpOrderRepositoryTest {
 
         // Act
         nowMillis += 600_000L
-        val actual = repository.getOrderState(WALLET_ID, orderId)
+        val actual = repository.getOrderState(WALLET_ID, orderId, request())
 
         // Assert
         assertThat(actual).isEqualTo(BankOfframpOrderState.Processing(OrderStep.UNKNOWN).right())
@@ -169,7 +171,8 @@ internal class MockBankOfframpOrderRepositoryTest {
 
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(BankOfframpError.Unknown::class.java)
-        assertThat(repository.getOrderState(WALLET_ID, orderId)).isEqualTo(BankOfframpOrderState.Completed.right())
+        assertThat(repository.getOrderState(WALLET_ID, orderId, request()))
+            .isEqualTo(BankOfframpOrderState.Completed.right())
     }
 
     private suspend fun createOrderId(): String {
@@ -208,6 +211,7 @@ internal class MockBankOfframpOrderRepositoryTest {
         amountInCents = amountInCents,
         chainId = 137L,
         tokenContractAddress = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+        tokenDecimals = 6,
         rail = BankRail.ACH,
         recipient = recipient,
     )

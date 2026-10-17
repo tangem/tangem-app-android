@@ -464,7 +464,10 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
                         amount = BigDecimal("2"),
                         fiatAmount = BigDecimal("400"),
                         fiatRate = BigDecimal("200"),
-                        staking = createStakedBalance(BigDecimal("3")),
+                        staking = createStakedBalance(
+                            staked = BigDecimal("3"),
+                            isStakedIncludedInNetworkBalance = true,
+                        ),
                     ),
                 ),
             )

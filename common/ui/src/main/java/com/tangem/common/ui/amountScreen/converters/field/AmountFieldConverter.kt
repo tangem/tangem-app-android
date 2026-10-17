@@ -8,6 +8,7 @@ import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.utils.parseBigDecimal
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Amount
@@ -31,7 +32,7 @@ class AmountFieldConverter(
 ) : Converter<String, AmountFieldModel> {
 
     override fun convert(value: String): AmountFieldModel {
-        val cryptoDecimal = value.toBigDecimalOrNull() ?: BigDecimal.ZERO
+        val cryptoDecimal = value.parseBigDecimalOrNull() ?: BigDecimal.ZERO
         val cryptoAmount = cryptoDecimal.convertToAmount(cryptoCurrencyStatus.currency)
         val fiatRate = cryptoCurrencyStatus.value.fiatRate
         val (fiatValue, fiatDecimal) = when {

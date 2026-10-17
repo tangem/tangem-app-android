@@ -42,7 +42,7 @@ private fun screenCases(): List<PolymarketPositionsPreviewCase> {
             active = active,
             finished = finished,
         ),
-        PolymarketPositionsPreviewCase("Initial loading", active = Content.Loading),
+        PolymarketPositionsPreviewCase("Initial loading", active = Content.Loading, finished = Content.Loading),
         PolymarketPositionsPreviewCase("Empty Active"),
         PolymarketPositionsPreviewCase("Empty Finished", selectedTab = Tab.Finished),
         PolymarketPositionsPreviewCase("Initial error", active = Content.Error(onRetry = {})),

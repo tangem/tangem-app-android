@@ -36,8 +36,15 @@ data class PolymarketEventDto(
     @Json(name = "liquidity") val liquidity: Double?,
     @Json(name = "totalMarketsCount") val totalMarketsCount: Int,
     @Json(name = "negRisk") val isNegRisk: Boolean,
+    @Json(name = "live") val isLive: Boolean,
     @Json(name = "displayMode") val displayMode: String,
     @Json(name = "markets") val markets: List<PolymarketMarketDto>,
+    @Json(name = "gameId") val gameId: String? = null,
+    @Json(name = "score") val score: String? = null,
+    @Json(name = "period") val period: String? = null,
+    @Json(name = "ended") val isEnded: Boolean? = null,
+    @Json(name = "dataFetchedAt") val dataFetchedAt: String? = null,
+    @Json(name = "teams") val teams: List<PolymarketTeamDto>? = null,
 )
 
 /** BFF `Market`. The feed carries only the top active markets of an event, event details carry all of them. */

@@ -1,12 +1,12 @@
 package com.tangem.spend.datasource.pay.models.request
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class GetTokenByCustomerWalletRequest(
-    @Json(name = "auth_type") val authType: String,
-    @Json(name = "session_id") val sessionId: String,
-    @Json(name = "signature") val signature: String,
-    @Json(name = "message_format") val messageFormat: String,
+    @SerialName("auth_type") val authType: String,
+    @SerialName("session_id") val sessionId: String,
+    @SerialName("signature") val signature: String,
+    @SerialName("message_format") val messageFormat: String,
 )

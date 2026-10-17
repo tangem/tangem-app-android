@@ -3,6 +3,7 @@ package com.tangem.core.ui.ds.row.token
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
@@ -202,6 +203,16 @@ sealed class TangemTokenRowUM : TangemRowUM {
                 Staking,
             }
         }
+
+        /** A warning-colored message bubble (e.g. a pending joint-account co-sign request), DS3-rendered. */
+        data class Warning(
+            val text: TextReference,
+            val icon: ImageVector? = null,
+            val trailingIcon: ImageVector? = null,
+            val closeContentDescription: TextReference? = null,
+            val onBubbleClick: (() -> Unit)? = null,
+            val onCloseClick: (() -> Unit)? = null,
+        ) : PromoBannerUM()
 
         @Serializable
         data object Empty : PromoBannerUM()

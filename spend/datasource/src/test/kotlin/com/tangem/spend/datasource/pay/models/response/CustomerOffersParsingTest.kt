@@ -1,29 +1,18 @@
 package com.tangem.spend.datasource.pay.models.response
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.ToJson
+import com.tangem.core.remote.json.NetworkJsonFactory
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 internal class CustomerOffersParsingTest {
 
-    private class BigDecimalAdapter {
-        @FromJson
-        fun fromJson(value: String) = BigDecimal(value)
-
-        @ToJson
-        fun toJson(value: BigDecimal) = value.toString()
-    }
-
-    private val moshi = Moshi.Builder().add(BigDecimalAdapter()).build()
-    private val adapter = moshi.adapter(CustomerOffersResponse::class.java)
+    private val json = NetworkJsonFactory.create()
 
     @Test
     fun `GIVEN a plastic offer without fee and data WHEN parse THEN the whole response still parses`() {
         // Act
-        val offers = adapter.fromJson(PLACEHOLDER_PLASTIC_OFFER_JSON)!!.result.orEmpty()
+        val offers = json.decodeFromString(CustomerOffersResponse.serializer(), PLACEHOLDER_PLASTIC_OFFER_JSON).result.orEmpty()
 
         // Assert
         assertThat(offers).hasSize(2)
@@ -32,7 +21,7 @@ internal class CustomerOffersParsingTest {
     @Test
     fun `GIVEN a plastic offer without fee and data WHEN parse THEN the virtual offer keeps its fee and data`() {
         // Act
-        val offers = adapter.fromJson(PLACEHOLDER_PLASTIC_OFFER_JSON)!!.result.orEmpty()
+        val offers = json.decodeFromString(CustomerOffersResponse.serializer(), PLACEHOLDER_PLASTIC_OFFER_JSON).result.orEmpty()
 
         // Assert
         val virtual = offers.single { it.type == "CARD_ISSUE_VIRTUAL_RAIN" }
@@ -44,7 +33,7 @@ internal class CustomerOffersParsingTest {
     @Test
     fun `GIVEN a plastic offer without fee and data WHEN parse THEN its fee data are null and its image survives`() {
         // Act
-        val offers = adapter.fromJson(PLACEHOLDER_PLASTIC_OFFER_JSON)!!.result.orEmpty()
+        val offers = json.decodeFromString(CustomerOffersResponse.serializer(), PLACEHOLDER_PLASTIC_OFFER_JSON).result.orEmpty()
 
         // Assert
         val plastic = offers.single { it.type == "CARD_ISSUE_PLASTIC_RAIN" }
@@ -56,7 +45,7 @@ internal class CustomerOffersParsingTest {
     @Test
     fun `GIVEN an offer without a type images and order type WHEN parse THEN they are null`() {
         // Act
-        val offers = adapter.fromJson(UNTYPED_OFFER_JSON)!!.result.orEmpty()
+        val offers = json.decodeFromString(CustomerOffersResponse.serializer(), UNTYPED_OFFER_JSON).result.orEmpty()
 
         // Assert
         val offer = offers.single()
@@ -68,7 +57,7 @@ internal class CustomerOffersParsingTest {
     @Test
     fun `GIVEN a fee object without amount and currency WHEN parse THEN they are null`() {
         // Act
-        val offers = adapter.fromJson(EMPTY_FEE_JSON)!!.result.orEmpty()
+        val offers = json.decodeFromString(CustomerOffersResponse.serializer(), EMPTY_FEE_JSON).result.orEmpty()
 
         // Assert
         val fee = offers.single().fee
@@ -79,7 +68,7 @@ internal class CustomerOffersParsingTest {
     @Test
     fun `GIVEN a null result WHEN parse THEN the response still parses`() {
         // Act
-        val result = adapter.fromJson(NULL_RESULT_JSON)!!
+        val result = json.decodeFromString(CustomerOffersResponse.serializer(), NULL_RESULT_JSON)
 
         // Assert
         assertThat(result.result).isNull()

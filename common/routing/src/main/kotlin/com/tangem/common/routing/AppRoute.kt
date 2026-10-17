@@ -115,16 +115,18 @@ sealed class AppRoute(val path: String) : Route {
     /**
      * Support chat (Usedesk) screen.
      *
-     * @property walletMetaInfo   wallet meta info; its user wallet id is sent to Usedesk as the client email
-     * @property source           source of the chat opening (Settings by default, Swap for FR-02). Drives both
+     * @property walletMetaInfo   wallet meta info; its user wallet id is the client email unless [clientEmail] is set
+     * @property source           source of the chat opening (Settings by default). Drives both
      *                            analytics and the Usedesk additional fields mapped by the component.
      * @property prefilledMessage optional message sent to the chat on behalf of the user right after init
+     * @property clientEmail      client email for Usedesk, for flows that have no wallet yet
      */
     @Serializable
     data class Usedesk(
         val walletMetaInfo: WalletMetaInfo,
         val source: AnalyticsParam.ScreensSources = AnalyticsParam.ScreensSources.Settings,
         val prefilledMessage: String? = null,
+        val clientEmail: String? = null,
     ) : AppRoute(path = "/usedesk/${walletMetaInfo.userWalletId}")
 
     @Serializable
@@ -251,6 +253,7 @@ sealed class AppRoute(val path: String) : Route {
         val toCryptoCurrency: CryptoCurrency? = null,
         val fromAmount: SerializedBigDecimal? = null,
         val providerId: String? = null,
+        val intentId: String? = null,
     ) : AppRoute(
         path = "/swap" +
             "/${fromCryptoCurrency?.id?.value}" +
@@ -342,6 +345,18 @@ sealed class AppRoute(val path: String) : Route {
     data class WalletHardwareBackup(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/wallet_hardware_backup/${userWalletId.stringValue}")
+
+    @Serializable
+    data class HardwareUpgradeStories(
+        val userWalletId: UserWalletId,
+        val source: Source,
+    ) : AppRoute(path = "/hardware_upgrade_stories/${userWalletId.stringValue}") {
+
+        enum class Source {
+            MAIN,
+            WALLET_SETTINGS,
+        }
+    }
 
     @Serializable
     data class CreateCloudBackup(
@@ -515,6 +530,7 @@ sealed class AppRoute(val path: String) : Route {
     data class ForgetWallet(
         val userWalletId: UserWalletId,
         val shouldDeleteCloudBackup: Boolean = false,
+        val shouldDeleteSocialRecovery: Boolean = false,
     ) : AppRoute(path = "/forget_wallet/${userWalletId.stringValue}")
 
     @Serializable
@@ -534,7 +550,14 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class JointAccountCreation(
         val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/joint_account_creation/${userWalletId.stringValue}")
+        val source: Source,
+    ) : AppRoute(path = "/joint_account_creation/${userWalletId.stringValue}") {
+
+        enum class Source {
+            AddAccount,
+            MainScreen,
+        }
+    }
 
     @Serializable
     data class JointAccountJoin(
@@ -619,7 +642,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class TangemPayEligibility(
         val product: TangemPayProduct,
-        val userWalletId: UserWalletId?,
+        val userWalletId: UserWalletId,
     ) : AppRoute(path = "/tangem_pay_eligibility")
 
     @Serializable
@@ -630,15 +653,20 @@ sealed class AppRoute(val path: String) : Route {
         @Serializable
         sealed class Mode {
             @Serializable
-            data class Deeplink(val userWalletId: UserWalletId, val deeplink: String) : Mode()
+            data class Deeplink(val deeplink: String) : Mode()
 
             @Serializable
-            data class FromMain(val userWalletId: UserWalletId) : Mode()
+            data object FromMain : Mode()
 
             @Serializable
-            data class FromDetailsScreen(val userWalletId: UserWalletId) : Mode()
+            data object FromDetailsScreen : Mode()
         }
     }
+
+    @Serializable
+    data class MoneyAccountMain(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/money_account_main/${userWalletId.stringValue}")
 
     @Serializable
     data class Survey(val token: String, val displayId: String? = null) : AppRoute(path = "/survey")

@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -31,6 +32,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.choice.state.TangemPayBankWithdrawChoiceUM
 import com.tangem.features.tangempay.withdraw.bank.choice.state.TangemPayBankWithdrawChoiceUM.OptionUM
@@ -41,7 +43,8 @@ internal fun TangemPayBankWithdrawChoiceScreen(state: TangemPayBankWithdrawChoic
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors3.bg.primary),
+            .background(TangemTheme.colors3.bg.primary)
+            .testTag(TangemPayTestTags.BANK_WITHDRAW_CHOICE_SCREEN),
     ) {
         TangemTopNavigation(
             title = state.header.title,
@@ -87,6 +90,7 @@ private fun OptionsCard(options: ImmutableList<OptionUM>) {
     ) {
         options.fastForEachIndexed { index, option ->
             TangemRow(
+                modifier = Modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_CHOICE_OPTION),
                 divider = index < options.lastIndex,
                 verticalAlignment = TangemRowVerticalAlignment.Center,
                 titleSlot = { TangemRowText(text = option.title, role = TangemRowTextRole.Title) },

@@ -1539,6 +1539,7 @@
   <string name="money_account_main_status_dialog_activating_description">We\'re getting your account ready. This may take a little time</string>
   <string name="money_account_main_status_dialog_activating_title">Creating your banking account</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">We\'re working on expanding to more regions. Need help?</string>
+  <string name="money_account_main_status_dialog_country_not_supported_description_template">We\'re working on expanding to more regions. Need help? %s</string>
   <string name="money_account_main_status_dialog_country_not_supported_title">Not available in your region yet</string>
   <string name="money_account_main_status_dialog_hide_account">Hide account from home</string>
   <string name="money_account_main_status_dialog_join_waitlist">Join the waitlist</string>
@@ -3014,6 +3015,7 @@
   <string name="tangempay_remove_account_alert_title">Remove account?</string>
   <string name="tangempay_residency_all_country">Change country</string>
   <string name="tangempay_residency_all_state">Select another state</string>
+  <string name="tangempay_residency_search_empty">No results. Try to change request</string>
   <string name="tangempay_residency_suggested_country">Suggested country</string>
   <string name="tangempay_residency_suggested_state">Suggested state</string>
   <string name="tangempay_residency_title_country">Country of residence</string>

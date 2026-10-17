@@ -8,6 +8,7 @@ import com.domain.blockaid.models.transaction.ValidationResult
 import com.domain.blockaid.models.transaction.simultation.AmountInfo
 import com.domain.blockaid.models.transaction.simultation.ApproveInfo
 import com.domain.blockaid.models.transaction.simultation.SimulationData
+import com.domain.blockaid.models.transaction.simultation.TokenInfo
 import com.google.common.truth.Truth
 import com.tangem.store.datasource.blockaid.models.response.*
 import org.junit.jupiter.api.Test
@@ -76,6 +77,63 @@ class BlockAidMapperTest {
     }
 
     @Test
+    fun `GIVEN max erc20 approval with zero exposure WHEN mapToDomain THEN approval is unlimited`() {
+        // Arrange
+        val spenderDetails = SpenderDetails(
+            isApprovedForAll = false,
+            approval = "0x" + "f".repeat(64),
+            exposure = listOf(ExposureDetail(value = "0", rawValue = "0x0")),
+        )
+        val response = approveScanResponse(spenderDetails)
+
+        // Act
+        val result = mapper.mapToDomain(response)
+
+        // Assert
+        val approve = (result.simulation as SimulationResult.Success).data as SimulationData.Approve
+        val amount = approve.items.single() as ApproveInfo.Amount
+        Truth.assertThat(amount.isUnlimited).isTrue()
+    }
+
+    @Test
+    fun `GIVEN finite erc20 approval and exposure WHEN mapToDomain THEN approved amount is taken from approval`() {
+        // Arrange
+        val spenderDetails = SpenderDetails(
+            isApprovedForAll = false,
+            approval = "0x989680",
+            exposure = listOf(ExposureDetail(value = "500", rawValue = "0x1dcd6500")),
+        )
+        val response = approveScanResponse(spenderDetails)
+
+        // Act
+        val result = mapper.mapToDomain(response)
+
+        // Assert
+        val approve = (result.simulation as SimulationResult.Success).data as SimulationData.Approve
+        val amount = approve.items.single() as ApproveInfo.Amount
+        Truth.assertThat(amount.isUnlimited).isFalse()
+        Truth.assertThat(amount.approvedAmount).isEquivalentAccordingToCompareTo(BigDecimal.TEN)
+    }
+
+    private fun approveScanResponse(spenderDetails: SpenderDetails) = TransactionScanResponse(
+        validation = ValidationResponse(status = "Success", resultType = "Benign", description = ""),
+        simulation = SimulationResponse(
+            status = "Success",
+            accountSummary = AccountSummaryResponse(
+                assetsDiffs = emptyList(),
+                exposures = listOf(
+                    Exposure(
+                        asset = Asset(chainId = 1, logoUrl = "logo", symbol = "USDC", decimals = 6),
+                        spenders = mapOf("spender" to spenderDetails),
+                        assetType = "ERC20",
+                    ),
+                ),
+                traces = null,
+            ),
+        ),
+    )
+
+    @Test
     fun `when response benign validation and success simulation then returns send receive result`() {
         val assetDiff = AssetDiff(
             assetType = "ERC20",
@@ -105,6 +163,82 @@ class BlockAidMapperTest {
         Truth.assertThat(data).isNotNull()
         Truth.assertThat((data?.send?.first() as? AmountInfo.FungibleTokens)?.amount).isEqualTo(BigDecimal("1.5"))
         Truth.assertThat((data?.receive?.first() as? AmountInfo.FungibleTokens)?.amount).isEqualTo(BigDecimal("2.0"))
+    }
+
+    @Test
+    fun `GIVEN exposures and assets diffs WHEN mapToDomain THEN approve keeps outgoing transfer`() {
+        // Arrange
+        val exposure = Exposure(
+            asset = Asset(chainId = 1, logoUrl = "usdc", symbol = "USDC", decimals = 6),
+            spenders = mapOf(
+                "spender" to SpenderDetails(
+                    isApprovedForAll = false,
+                    exposure = listOf(ExposureDetail(value = "1.0", rawValue = "0xf4240")),
+                ),
+            ),
+            assetType = "ERC20",
+        )
+        val assetDiff = AssetDiff(
+            assetType = "NATIVE",
+            asset = Asset(chainId = 1, logoUrl = "eth", symbol = "ETH", decimals = 18),
+            inTransfer = null,
+            outTransfer = listOf(Transfer(value = "5.0", rawValue = "0x4563918244f40000")),
+        )
+        val response = createSuccessScanResponse(exposures = listOf(exposure), assetsDiffs = listOf(assetDiff))
+
+        // Act
+        val result = mapper.mapToDomain(response)
+
+        // Assert
+        val expected = SimulationData.Approve(
+            items = listOf(
+                ApproveInfo.Amount(
+                    approvedAmount = BigDecimal("1.0"),
+                    isUnlimited = false,
+                    tokenInfo = TokenInfo(chainId = 1, logoUrl = "usdc", symbol = "USDC", decimals = 6),
+                ),
+            ),
+            send = listOf(
+                AmountInfo.FungibleTokens(
+                    amount = BigDecimal("5.0"),
+                    token = TokenInfo(chainId = 1, logoUrl = "eth", symbol = "ETH", decimals = 18),
+                ),
+            ),
+            receive = emptyList(),
+        )
+        Truth.assertThat(result.simulation).isEqualTo(SimulationResult.Success(expected))
+    }
+
+    @Test
+    fun `GIVEN exposures without approvals and assets diffs WHEN mapToDomain THEN returns send receive`() {
+        // Arrange
+        val exposure = Exposure(
+            asset = Asset(chainId = 1, logoUrl = "usdc", symbol = "USDC", decimals = 6),
+            spenders = emptyMap(),
+            assetType = "ERC20",
+        )
+        val assetDiff = AssetDiff(
+            assetType = "NATIVE",
+            asset = Asset(chainId = 1, logoUrl = "eth", symbol = "ETH", decimals = 18),
+            inTransfer = null,
+            outTransfer = listOf(Transfer(value = "5.0", rawValue = "0x4563918244f40000")),
+        )
+        val response = createSuccessScanResponse(exposures = listOf(exposure), assetsDiffs = listOf(assetDiff))
+
+        // Act
+        val result = mapper.mapToDomain(response)
+
+        // Assert
+        val expected = SimulationData.SendAndReceive(
+            send = listOf(
+                AmountInfo.FungibleTokens(
+                    amount = BigDecimal("5.0"),
+                    token = TokenInfo(chainId = 1, logoUrl = "eth", symbol = "ETH", decimals = 18),
+                ),
+            ),
+            receive = emptyList(),
+        )
+        Truth.assertThat(result.simulation).isEqualTo(SimulationResult.Success(expected))
     }
 
     @Test
@@ -252,4 +386,17 @@ class BlockAidMapperTest {
         Truth.assertThat(tx["to"]).isEqualTo("0xTO")
         Truth.assertThat(tx["data"]).isEqualTo("0xdeadbeef")
     }
+
+    private fun createSuccessScanResponse(exposures: List<Exposure>, assetsDiffs: List<AssetDiff>) =
+        TransactionScanResponse(
+            validation = ValidationResponse(status = "Success", resultType = "Benign", description = ""),
+            simulation = SimulationResponse(
+                status = "Success",
+                accountSummary = AccountSummaryResponse(
+                    assetsDiffs = assetsDiffs,
+                    exposures = exposures,
+                    traces = null,
+                ),
+            ),
+        )
 }
