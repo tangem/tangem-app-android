@@ -56,6 +56,19 @@ interface Router {
     fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit = {})
 
     /**
+     * Pops routes from the navigation stack until the ***last*** route of [routeClass] that satisfies [predicate].
+     *
+     * @param routeClass The class of the route to pop to.
+     * @param predicate The condition the route to pop to must satisfy.
+     * @param onComplete The callback to be invoked when the operation is complete.
+     */
+    fun <R : Route> popToMatching(
+        routeClass: KClass<R>,
+        predicate: (R) -> Boolean,
+        onComplete: (isSuccess: Boolean) -> Unit = {},
+    )
+
+    /**
      * Checks whether the [route] is in the navigation stack, including the stacks this router falls back to.
      *
      * @param route The route to look for.

@@ -9,6 +9,7 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.utils.logging.TangemLogger
 import kotlin.reflect.KClass
+import kotlin.reflect.safeCast
 
 /**
  * Creates a router that can handle a specific type of route.
@@ -88,6 +89,25 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
             )
         } else {
             fallBackRouter.popTo(routeClass, onComplete)
+        }
+    }
+
+    override fun <R : Route> popToMatching(
+        routeClass: KClass<R>,
+        predicate: (R) -> Boolean,
+        onComplete: (Boolean) -> Unit,
+    ) {
+        if (T::class.java.isAssignableFrom(routeClass.java)) {
+            stackNavigation.navigate(
+                transformer = { stack ->
+                    stack
+                        .dropLastWhile { route -> routeClass.safeCast(route)?.let(predicate) != true }
+                        .ifEmpty { stack }
+                },
+                onComplete = { newStack, oldStack -> onComplete(newStack.size < oldStack.size) },
+            )
+        } else {
+            fallBackRouter.popToMatching(routeClass, predicate, onComplete)
         }
     }
 

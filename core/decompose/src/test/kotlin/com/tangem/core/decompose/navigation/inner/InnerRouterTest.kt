@@ -8,6 +8,7 @@ import com.tangem.core.decompose.navigation.Router
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -65,6 +66,20 @@ internal class InnerRouterTest {
 
         // Assert
         assertThat(actual).isTrue()
+    }
+
+    @Test
+    fun `GIVEN outer route class WHEN popToMatching THEN fallback router pops`() {
+        // Arrange
+        val predicate: (OuterRoute) -> Boolean = { true }
+        every { fallBackRouter.popToMatching(OuterRoute::class, predicate, any()) } returns Unit
+        val router = context.InnerRouter(stackNavigation = stackNavigation, fallBackRouter = fallBackRouter)
+
+        // Act
+        router.popToMatching(OuterRoute::class, predicate)
+
+        // Assert
+        verify(exactly = 1) { fallBackRouter.popToMatching(OuterRoute::class, predicate, any()) }
     }
 
     private sealed interface InnerRoute : Route {

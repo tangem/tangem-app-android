@@ -37,5 +37,13 @@ internal class WcRouter(
         /** Not allowed */
     }
 
+    override fun <R : Route> popToMatching(
+        routeClass: KClass<R>,
+        predicate: (R) -> Boolean,
+        onComplete: (Boolean) -> Unit,
+    ) {
+        /** Not allowed */
+    }
+
     override fun contains(route: Route): Boolean = false
 }
