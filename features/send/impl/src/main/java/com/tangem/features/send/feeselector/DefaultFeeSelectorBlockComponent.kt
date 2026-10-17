@@ -91,6 +91,7 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
         FeeSelectorBlockContent(
             state = state,
             onReadMoreClick = model::onReadMoreClicked,
+            isPlain = params.blockAppearance == FeeSelectorParams.BlockAppearance.Plain,
             modifier = modifier
                 .conditional(isScreenSource && (isNotSingleFee || isGaslessAvailable)) {
                     Modifier.clickable {

@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.style.TextAlign
@@ -33,6 +34,7 @@ import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.GiveApprovalTestTags
 import com.tangem.features.approval.impl.model.GiveApprovalUM
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
 import kotlinx.collections.immutable.ImmutableList
@@ -87,7 +89,8 @@ internal fun GiveApprovalContent(
                 onConfirm = onApproveClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = TangemTheme.dimens.spacing16),
+                    .padding(horizontal = TangemTheme.dimens.spacing16)
+                    .testTag(GiveApprovalTestTags.APPROVE_BUTTON),
             )
         } else {
             PrimaryButtonIconEnd(
@@ -96,7 +99,8 @@ internal fun GiveApprovalContent(
                 showProgress = uiState.isApproveLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = TangemTheme.dimens.spacing16),
+                    .padding(horizontal = TangemTheme.dimens.spacing16)
+                    .testTag(GiveApprovalTestTags.APPROVE_BUTTON),
                 onClick = onApproveClick,
                 enabled = uiState.isApproveButtonEnabled,
             )

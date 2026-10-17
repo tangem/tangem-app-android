@@ -61,7 +61,6 @@ internal class CryptoCurrencyStatusSerializationTest {
             fiatAmount = BigDecimal.TEN,
             fiatRate = BigDecimal.TEN,
             priceChange = BigDecimal.ZERO,
-            stakingBalance = null,
             yieldSupplyStatus = null,
             hasCurrentNetworkTransactions = false,
             pendingTransactions = emptySet(),

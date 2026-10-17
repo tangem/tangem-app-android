@@ -68,8 +68,10 @@ import com.tangem.features.send.send.confirm.model.SendConfirmModel
 import com.tangem.features.send.send.joint.JointSendDelegate
 import com.tangem.features.send.send.model.SendModel
 import com.tangem.features.send.send.model.TronDefaultFeeLoader
+import com.tangem.features.send.send.model.TronGaslessSentAmountQuoter
 import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.features.send.testDispatcherProvider
+import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
@@ -217,6 +219,9 @@ internal abstract class SendModelTestBase {
                 getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
                 isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
             ),
+            tronGaslessSentAmountQuoter = TronGaslessSentAmountQuoter(
+                isAmountSubtractAvailableUseCase = isAmountSubtractAvailableUseCase,
+            ),
         )
     }
 
@@ -259,6 +264,7 @@ internal abstract class SendModelTestBase {
             jointSendDelegate = jointSendDelegate,
             recordTokenTransferFromSendUseCase = recordTokenTransferFromSendUseCase,
             sendBalanceUpdaterFactory = sendBalanceUpdaterFactory,
+            appScope = TestAppCoroutineScope(testScope = testScope),
         )
     }
 

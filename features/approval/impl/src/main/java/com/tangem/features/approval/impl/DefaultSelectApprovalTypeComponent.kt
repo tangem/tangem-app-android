@@ -1,8 +1,12 @@
 package com.tangem.features.approval.impl
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -11,10 +15,16 @@ import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
+import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.approval.api.SelectApprovalTypeComponent
 import com.tangem.features.approval.impl.model.SelectApprovalTypeModel
+import com.tangem.features.approval.impl.ui.ApprovalAmountRow
+import com.tangem.features.approval.impl.ui.ApprovalConfirmButton
+import com.tangem.features.approval.impl.ui.ApprovalRows
+import com.tangem.features.approval.impl.ui.ApprovalSubtitle
 import com.tangem.features.approval.impl.ui.SelectApprovalTypeContent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -42,8 +52,6 @@ internal class DefaultSelectApprovalTypeComponent @AssistedInject constructor(
 
     @Composable
     override fun BottomSheet() {
-        val uiState by model.uiState.collectAsStateWithLifecycle()
-
         val config = remember {
             TangemBottomSheetConfig(
                 isShown = true,
@@ -61,6 +69,7 @@ internal class DefaultSelectApprovalTypeComponent @AssistedInject constructor(
                 onClicked = model::onCancelClick,
             ),
         ) {
+            val uiState by model.uiState.collectAsStateWithLifecycle()
             SelectApprovalTypeContent(
                 currency = currency,
                 uiState = uiState,
@@ -68,6 +77,43 @@ internal class DefaultSelectApprovalTypeComponent @AssistedInject constructor(
                 onConfirmClick = model::onConfirmClick,
             )
         }
+    }
+
+    @Composable
+    override fun Title() {
+        TangemModal.TopNavigation(
+            title = resourceReference(R.string.give_permission_title),
+            onClose = model::onCancelClick,
+        )
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        val uiState by model.uiState.collectAsStateWithLifecycle()
+
+        Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(32.dp)) {
+            ApprovalSubtitle(text = uiState.subtitle, onLearnMoreClick = model::onLearnMoreClick)
+            ApprovalRows(
+                amountRow = {
+                    ApprovalAmountRow(
+                        currency = currency,
+                        approveType = uiState.approveType,
+                        approveItems = uiState.approveItems,
+                        onChangeApproveType = model::onChangeApproveType,
+                    )
+                },
+            )
+        }
+    }
+
+    @Composable
+    override fun Footer() {
+        ApprovalConfirmButton(
+            text = resourceReference(R.string.common_confirm),
+            isEnabled = true,
+            isLoading = false,
+            onClick = model::onConfirmClick,
+        )
     }
 
     @AssistedFactory

@@ -268,7 +268,7 @@ private fun PlacePredictionStatusContentPreview(
                 title = "Will Uzbekistan win the 2026 FIFA World Cup?",
                 imageUrl = null,
                 outcomeTitle = "No",
-                outcomePriceCents = 85,
+                outcomePrice = "85¢",
                 resolutionDateMillis = 1_774_000_000_000L,
             ),
             intents = PlacePredictionPreviewIntents,

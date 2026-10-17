@@ -25,8 +25,10 @@ import com.tangem.domain.swap.models.PredefinedPercentAmount
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.FeeBucket
+import java.math.BigDecimal
 
 private const val SWAP_CATEGORY = "Swap"
+private const val SLIPPAGE = "Slippage"
 private const val PROMO_CATEGORY = "Promo"
 
 sealed class SwapEvents(
@@ -119,16 +121,43 @@ sealed class SwapEvents(
     )
 
     class ButtonSwapClicked(
-        val sendToken: String,
-        val receiveToken: String,
+        val fromCurrency: CryptoCurrency,
+        val toCurrency: CryptoCurrency,
         val swapUIMode: SwapUIMode,
+        val slippage: BigDecimal?,
     ) : SwapEvents(
         event = "Button - Swap",
-        params = mapOf(
-            "Send Token" to sendToken,
-            "Receive Token" to receiveToken,
-            "Swap type" to swapUIMode.key,
-        ),
+        params = buildMap {
+            putAll(pairParams(fromCurrency, toCurrency))
+            put("Swap type", swapUIMode.key)
+            slippage?.let { put(SLIPPAGE, it.toSlippageValue()) }
+        },
+    )
+
+    class ButtonSlippage(
+        val fromCurrency: CryptoCurrency,
+        val toCurrency: CryptoCurrency,
+    ) : SwapEvents(
+        event = "Button - Slippage",
+        params = pairParams(fromCurrency, toCurrency),
+    )
+
+    class ButtonSlippageConfirm(
+        val fromCurrency: CryptoCurrency,
+        val toCurrency: CryptoCurrency,
+        val slippage: BigDecimal,
+    ) : SwapEvents(
+        event = "Button - Confirm",
+        params = pairParams(fromCurrency, toCurrency) + (SLIPPAGE to slippage.toSlippageValue()),
+    )
+
+    class NoticeCustomSlippageThreshold(
+        val fromCurrency: CryptoCurrency,
+        val toCurrency: CryptoCurrency,
+        val slippage: BigDecimal,
+    ) : SwapEvents(
+        event = "Warning - Custom slippage threshold",
+        params = pairParams(fromCurrency, toCurrency) + (SLIPPAGE to slippage.toSlippageValue()),
     )
 
     class ButtonGivePermissionClicked(
@@ -389,6 +418,15 @@ sealed class SwapEvents(
         ),
     )
 }
+
+private fun pairParams(fromCurrency: CryptoCurrency, toCurrency: CryptoCurrency): Map<String, String> = mapOf(
+    SEND_TOKEN to fromCurrency.symbol,
+    SEND_BLOCKCHAIN to fromCurrency.network.name,
+    RECEIVE_TOKEN to toCurrency.symbol,
+    RECEIVE_BLOCKCHAIN to toCurrency.network.name,
+)
+
+private fun BigDecimal.toSlippageValue(): String = stripTrailingZeros().toPlainString()
 
 private fun PredefinedPercentAmount.toAnalyticsValue(): String = when (this) {
     PredefinedPercentAmount.PERCENT_25 -> "25"

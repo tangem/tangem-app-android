@@ -20,3 +20,12 @@ fun createAppPreferencesStore(
 ): AppPreferencesStore = object :
     AppPreferencesStore(moshi, dispatchers),
     DataStore<Preferences> by preferencesDataStore {}
+
+fun createAppPreferencesStore(
+    dispatchers: CoroutineDispatcherProvider,
+    preferencesDataStore: DataStore<Preferences>,
+): AppPreferencesStore = createAppPreferencesStore(
+    moshi = Moshi.Builder().build(),
+    dispatchers = dispatchers,
+    preferencesDataStore = preferencesDataStore,
+)

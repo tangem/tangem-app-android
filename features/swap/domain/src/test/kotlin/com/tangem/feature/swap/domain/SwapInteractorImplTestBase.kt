@@ -280,6 +280,8 @@ internal fun buildCoinCurrency(
 internal fun buildSwapProvider(
     type: ExchangeProviderType = ExchangeProviderType.DEX,
     providerId: String = "test-provider-${type.name}",
+    isCustomSlippageSupported: Boolean = false,
+    slippage: BigDecimal? = null,
 ): SwapProvider = SwapProvider(
     providerId = providerId,
     rateTypes = listOf(RateType.FLOAT),
@@ -289,8 +291,9 @@ internal fun buildSwapProvider(
     termsOfUse = null,
     privacyPolicy = null,
     isRecommended = false,
-    slippage = null,
+    slippage = slippage,
     isExtraIdSupported = false,
+    isCustomSlippageSupported = isCustomSlippageSupported,
 )
 
 /**
@@ -344,11 +347,13 @@ internal fun buildQuoteModel(
     allowanceContract: String? = null,
     txType: ExpressTxType? = null,
     isRestricted: Boolean = false,
+    slippage: BigDecimal? = null,
 ): QuoteModel = QuoteModel(
     toTokenAmount = SwapAmount(toAmount, decimals),
     allowanceContract = allowanceContract,
     txType = txType,
     isRestricted = isRestricted,
+    slippage = slippage,
 )
 
 /**

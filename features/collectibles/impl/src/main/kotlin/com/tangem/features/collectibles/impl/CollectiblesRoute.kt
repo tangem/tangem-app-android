@@ -16,5 +16,9 @@ internal sealed interface CollectiblesRoute : Route {
     @Serializable
     data class Main(val userWalletId: UserWalletId) : CollectiblesRoute
 
+    @Serializable
     data class MachineDetails(val externalId: String) : CollectiblesRoute
+
+    @Serializable
+    data class ConfirmOrder(val externalId: String, val isTurboEnabled: Boolean) : CollectiblesRoute
 }

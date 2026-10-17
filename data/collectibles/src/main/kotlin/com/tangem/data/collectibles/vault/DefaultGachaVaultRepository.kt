@@ -21,6 +21,7 @@ import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
 import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
@@ -28,8 +29,8 @@ import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.collectibles.vault.GachaVaultLimits
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.CollectiblesVaultBalance
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -62,6 +63,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val tangemSdkManager: TangemSdkManager,
     private val hotWalletSignerFactory: TangemHotWalletSigner.Factory,
+    private val hotDelegate: CollectiblesHotDelegate,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : GachaVaultRepository {
 
@@ -113,7 +115,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
 
     override suspend fun getVaultBalance(
         userWallet: UserWallet,
-        cachedToken: CryptoCurrency.Token?,
+        cached: CollectiblesVaultBalance?,
     ): Either<CollectiblesAccountError, CollectiblesVaultBalance> = withContext(dispatchers.io) {
         either {
             val network = networkProvider.create(userWallet).mapLeft { it.asFailure() }.bind()
@@ -125,10 +127,11 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                 .mapLeft { it.toVaultFailure(userWallet) }
                 .bind()
 
-            val token = cachedToken ?: walletManager.getCollectiblesVaultUsdc().toEither()
-                .map { usdc -> currencyFactory.create(mint = usdc.mint) }
-                .mapLeft { it.toVaultFailure(userWallet) }
-                .bind()
+            val (token, ata) = cached?.let { it.usdcToken to it.ataAddress }
+                ?: walletManager.getCollectiblesVaultUsdc().toEither()
+                    .map { usdc -> currencyFactory.create(mint = usdc.mint) to usdc.address }
+                    .mapLeft { it.toVaultFailure(userWallet) }
+                    .bind()
 
             // TODO find out the right way to get vault balance
             val balances = walletManagersFacade.getTokenBalances(
@@ -142,22 +145,10 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                 // The provider lists only the accounts holding something, so an absent entry is an empty one
                 usdcAmount = balances.firstOrNull { it.contractAddress == token.contractAddress }?.amount
                     ?: BigDecimal.ZERO,
+                ataAddress = ata,
             )
         }
     }
-
-    override suspend fun getVaultTopUpAddress(userWallet: UserWallet): Either<CollectiblesAccountError, String> =
-        withContext(dispatchers.io) {
-            either {
-                val network = networkProvider.create(userWallet).mapLeft { it.asFailure() }.bind()
-
-                vaultWalletManager(userWalletId = userWallet.walletId, network = network)
-                    .flatMap { walletManager -> walletManager.getCollectiblesVaultUsdc().toEither() }
-                    .map { usdc -> usdc.address }
-                    .mapLeft { it.toVaultFailure(userWallet) }
-                    .bind()
-            }
-        }
 
     override suspend fun closeVault(userWallet: UserWallet): Either<CollectiblesAccountError, Unit> =
         withContext(dispatchers.io) {
@@ -293,6 +284,60 @@ internal class DefaultGachaVaultRepository @Inject constructor(
             .bind()
             .sendVaultTransaction(signer) { buildCloseCollectiblesVault() }
             .bind()
+    }
+
+    override suspend fun getVaultAddress(userWallet: UserWallet): Either<CollectiblesAccountError, String> =
+        withContext(dispatchers.io) {
+            either {
+                val network = networkProvider.create(userWallet).mapLeft { it.asFailure() }.bind()
+
+                vaultWalletManager(userWalletId = userWallet.walletId, network = network)
+                    .flatMap { walletManager -> walletManager.getCollectiblesVaultAddress().toEither() }
+                    .mapLeft { error -> error.toVaultFailure(userWallet) }
+                    .bind()
+            }
+        }
+
+    override suspend fun sendPurchasePack(
+        userWallet: UserWallet,
+        hotDelegate: HotDelegatePublicKey,
+        amount: Long,
+        feeAmount: Long,
+        memo: String,
+    ): Either<CollectiblesAccountError, String> = withContext(dispatchers.io) {
+        either {
+            val network = networkProvider.create(userWallet).mapLeft { it.asFailure() }.bind()
+            val walletManager = vaultWalletManager(userWalletId = userWallet.walletId, network = network)
+                .mapLeft { error -> error.toVaultFailure(userWallet) }
+                .bind()
+
+            var signingFailure: CollectiblesAccountError? = null
+            val accountId = AccountId.forCollectiblesAccount(userWalletId = userWallet.walletId)
+            val signer: suspend (ByteArray) -> Result<ByteArray> = { message ->
+                this@DefaultGachaVaultRepository.hotDelegate.sign(accountId, message).fold(
+                    ifLeft = { error ->
+                        signingFailure = error
+                        Result.Failure(BlockchainSdkError.CustomError("Hot delegate failed to sign: $error"))
+                    },
+                    ifRight = { signature -> Result.Success(signature) },
+                )
+            }
+
+            walletManager.sendPurchasePack(
+                hotDelegate = hotDelegate.base58,
+                amount = amount,
+                feeAmount = feeAmount,
+                memo = memo,
+                signer = signer,
+            )
+                .toEither()
+                .map { result -> result.hash }
+                .onLeft { error ->
+                    TangemLogger.e("GachaVaultRepository: purchase_pack failed: ${error.customMessage}")
+                }
+                .mapLeft { error -> signingFailure ?: error.toVaultFailure(userWallet) }
+                .bind()
+        }
     }
 
     /** Reading first keeps it at one signature: `init_vault` over an existing vault fails with `already in use`. */

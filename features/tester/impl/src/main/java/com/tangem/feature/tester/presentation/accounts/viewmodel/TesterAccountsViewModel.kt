@@ -3,6 +3,7 @@ package com.tangem.feature.tester.presentation.accounts.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.account.models.AccountList
@@ -13,6 +14,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.hashedStringValue
 import com.tangem.feature.tester.presentation.accounts.entity.AccountsUM
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -27,6 +29,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@Suppress("LongParameterList")
 @HiltViewModel
 internal class TesterAccountsViewModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
@@ -34,6 +37,7 @@ internal class TesterAccountsViewModel @Inject constructor(
     private val singleAccountListFetcher: SingleAccountListFetcher,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val eTagsStore: ETagsStore,
+    private val clipboardManager: ClipboardManager,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel() {
 
@@ -110,18 +114,36 @@ internal class TesterAccountsViewModel @Inject constructor(
                 AccountsUM.Button(id = AccountsUM.Button.ID.SortByDerivationIndex, onClick = ::sortAccountsByIndex),
                 AccountsUM.Button(id = AccountsUM.Button.ID.ClearETag) { clearETag() },
             ),
+            walletIds = null,
         )
     }
 
     private fun onWalletSelect(userWallet: UserWallet) {
-        uiState.update {
-            it.copy(
-                walletSelector = it.walletSelector.copy(selected = userWallet),
-                accountListBottomSheetConfig = it.accountListBottomSheetConfig.copy(
+        uiState.update { state ->
+            state.copy(
+                walletSelector = state.walletSelector.copy(selected = userWallet),
+                walletIds = createWalletIds(userWallet.walletId),
+                accountListBottomSheetConfig = state.accountListBottomSheetConfig.copy(
                     accounts = getWalletAccounts(userWallet.walletId),
                 ),
             )
         }
+    }
+
+    private fun createWalletIds(userWalletId: UserWalletId): AccountsUM.WalletIds {
+        val id = userWalletId.stringValue
+        val hash = userWalletId.hashedStringValue
+
+        return AccountsUM.WalletIds(
+            id = id,
+            hash = hash,
+            onCopyIdClick = { copy(id) },
+            onCopyHashClick = { copy(hash) },
+        )
+    }
+
+    private fun copy(value: String) {
+        clipboardManager.setText(text = value, isSensitive = false)
     }
 
     private fun updateAccountsList() {

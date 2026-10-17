@@ -42,6 +42,7 @@ import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.tangem.core.ui.R
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon.State.Indicator
 import com.tangem.core.ui.extensions.ColorReference2
@@ -58,6 +59,8 @@ import kotlinx.coroutines.launch
 /**
  * Design-system v2 token icon rendered from a high-level [TangemTokenIcon.UiState] — a loaded token,
  * a loading shimmer, or an error placeholder.
+ *
+ * Version: 1.1.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=3901-470)
  *
@@ -285,6 +288,8 @@ private fun TokenAsyncImage(
 
 /** Public API namespace for [TangemTokenIcon]. */
 object TangemTokenIcon {
+
+    val version = DsVersion(major = 1, minor = 1, patch = 0)
 
     /** High-level rendering state for the [TangemTokenIcon] overload that accepts a [UiState]. */
     @Immutable

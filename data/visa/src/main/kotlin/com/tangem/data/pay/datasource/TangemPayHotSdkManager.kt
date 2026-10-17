@@ -35,30 +35,10 @@ internal class TangemPayHotSdkManager @Inject constructor(
 
     suspend fun produceInitialCredentials(hotWallet: UserWallet.Hot): Either<Throwable, TangemPayInitialCredentials> =
         withUnlockedHotWallet(hotWallet) { unlockHotWallet ->
-            val extendedPublicKey = getExtendedPublicKey(unlockHotWallet = unlockHotWallet)
-            val address = VisaUtilities.generateAddressFromExtendedKey(extendedPublicKey)
-            val challenge = tangemPayAuthRemoteDataSource.getCustomerWalletAuthChallenge(
-                customerWalletAddress = address,
-                customerWalletId = hotWallet.walletId.stringValue,
-            ).getOrElse { raise(it.tangemError) }
-
-            val content = VisaUtilities.signWithNonceMessage(challenge.challenge)
-            val hash = VisaUtilities.hashPersonalMessage(content.toByteArray(Charsets.UTF_8))
-            val signature = getSignature(
+            authorize(
+                hotWallet = hotWallet,
                 unlockHotWallet = unlockHotWallet,
-                hash = hash,
-                extendedPublicKey = extendedPublicKey,
-            )
-
-            val authTokens = tangemPayAuthRemoteDataSource.getTokenWithCustomerWallet(
-                sessionId = challenge.session.sessionId,
-                signature = signature,
-                nonce = challenge.challenge,
-            ).getOrElse { raise(VisaActivationError.FailedRemoteState.tangemError) }
-
-            TangemPayInitialCredentials(
-                customerWalletAddress = address,
-                authTokens = authTokens,
+                extendedPublicKey = getExtendedPublicKey(unlockHotWallet = unlockHotWallet),
             )
         }
 
@@ -80,12 +60,19 @@ internal class TangemPayHotSdkManager @Inject constructor(
             val extendedPublicKey = curveResponse.publicKeys[VisaUtilities.moneyAccountDerivationPath]
                 ?: raise(VisaActivationError.MissingWallet.tangemError)
 
+            val customerWalletKey = getExtendedPublicKey(unlockHotWallet = unlockHotWallet)
+            val initialCredentials = authorize(
+                hotWallet = hotWallet,
+                unlockHotWallet = unlockHotWallet,
+                extendedPublicKey = customerWalletKey,
+            )
+
             val address = VisaUtilities.generateAddressFromExtendedKey(extendedPublicKey)
             val content = VisaUtilities.moneyAccountDepositAddressMessage(depositAddress = address)
             val signature = getSignature(
                 unlockHotWallet = unlockHotWallet,
                 hash = VisaUtilities.hashPersonalMessage(content.toByteArray(Charsets.UTF_8)),
-                extendedPublicKey = getExtendedPublicKey(unlockHotWallet = unlockHotWallet),
+                extendedPublicKey = customerWalletKey,
             )
 
             MoneyAccountActivationData(
@@ -96,6 +83,7 @@ internal class TangemPayHotSdkManager @Inject constructor(
                         mapOf(VisaUtilities.moneyAccountDerivationPath to extendedPublicKey),
                     ),
                 ),
+                initialCredentials = initialCredentials,
             )
         }
 
@@ -114,6 +102,37 @@ internal class TangemPayHotSdkManager @Inject constructor(
         // Dismissing the password/access-code prompt is an expected outcome, not an error —
         // mirrors the cold-wallet path in DefaultTangemSdkManager.getWithdrawalSignature
         if (error is TangemSdkError.UserCancelled) WithdrawalSignatureResult.Cancelled else raise(error)
+    }
+
+    private suspend fun Raise<Throwable>.authorize(
+        hotWallet: UserWallet.Hot,
+        unlockHotWallet: UnlockHotWallet,
+        extendedPublicKey: ExtendedPublicKey,
+    ): TangemPayInitialCredentials {
+        val address = VisaUtilities.generateAddressFromExtendedKey(extendedPublicKey)
+        val challenge = tangemPayAuthRemoteDataSource.getCustomerWalletAuthChallenge(
+            customerWalletAddress = address,
+            customerWalletId = hotWallet.walletId.stringValue,
+        ).getOrElse { raise(it.tangemError) }
+
+        val content = VisaUtilities.signWithNonceMessage(challenge.challenge)
+        val hash = VisaUtilities.hashPersonalMessage(content.toByteArray(Charsets.UTF_8))
+        val signature = getSignature(
+            unlockHotWallet = unlockHotWallet,
+            hash = hash,
+            extendedPublicKey = extendedPublicKey,
+        )
+
+        val authTokens = tangemPayAuthRemoteDataSource.getTokenWithCustomerWallet(
+            sessionId = challenge.session.sessionId,
+            signature = signature,
+            nonce = challenge.challenge,
+        ).getOrElse { raise(VisaActivationError.FailedRemoteState.tangemError) }
+
+        return TangemPayInitialCredentials(
+            customerWalletAddress = address,
+            authTokens = authTokens,
+        )
     }
 
     private suspend fun Raise<Throwable>.getExtendedPublicKey(unlockHotWallet: UnlockHotWallet): ExtendedPublicKey {

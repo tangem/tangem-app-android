@@ -51,9 +51,18 @@ class TransactionErrorDialogFactory @Inject constructor() {
                 code = "",
                 onConfirmClick = popBackStack,
             )
+            is SendTransactionError.GaslessFeeIncreased -> gaslessFeeIncreasedDialog()
             else -> null
         }
     }
+
+    private fun gaslessFeeIncreasedDialog(): DialogMessage = DialogMessage(
+        message = resourceReference(id = R.string.send_notification_high_fee_title),
+        firstAction = EventMessageAction(
+            title = resourceReference(id = R.string.common_understand),
+            onClick = {},
+        ),
+    )
 
     private fun demoModeDialog(onConfirmClick: () -> Unit): DialogMessage = DialogMessage(
         title = resourceReference(id = R.string.warning_demo_mode_title),

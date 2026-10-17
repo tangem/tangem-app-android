@@ -6,6 +6,9 @@ import com.tangem.utils.logging.TangemLogger
 /**
  * Presentation of application version (<major>.<minor>.<fix?>).
  *
+ * The parsing and comparison rules are duplicated in `.github/scripts/list_build_capabilities.py`, which lists
+ * the enabled toggles for the CI build notification — keep both in sync.
+ *
  * @param value version value as string
  *
 [REDACTED_AUTHOR]

@@ -9,7 +9,6 @@ import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketPosition
-import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketConst
@@ -48,7 +47,13 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
     private var event: PolymarketEvent? = null
 
     val uiState: StateFlow<PolymarketPositionDetailsUM>
-        field = MutableStateFlow(PolymarketPositionDetailsUM(Content.Loading, onCloseClick = { router.pop() }))
+        field = MutableStateFlow(
+            PolymarketPositionDetailsUM(
+                content = Content.Loading,
+                onCloseClick = { router.pop() },
+                onMarketClosedSheetDismiss = ::hideMarketClosedSheet,
+            ),
+        )
 
     fun onResume() {
         if (isResumed) return
@@ -105,7 +110,7 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
             router.pop()
             return
         }
-        if (loaded == null || !loaded.canOpenPositionDetails) {
+        if (loaded == null) {
             uiState.update { it.copy(content = Content.Unavailable) }
             return
         }
@@ -138,8 +143,8 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
             state.copy(
                 content = content.copy(
                     event = content.event?.copy(onClick = loaded.eventId?.let { { openEvent() } }),
-                    onClosePositionClick = { closePosition() }.takeIf { loaded.canClosePosition },
-                    onBuyMoreClick = buyableMarket()?.let { market -> { buyMore(market) } },
+                    onClosePositionClick = closePositionAction(loaded),
+                    onBuyMoreClick = buyMoreAction(loaded),
                 ),
             )
         }
@@ -158,6 +163,30 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
         )
     }
 
+    private fun closePositionAction(loaded: PolymarketPosition.Open): (() -> Unit)? = when {
+        !loaded.canClosePosition -> null
+        loaded.isMarketTradable -> ::closePosition
+        else -> ::showMarketClosedSheet
+    }
+
+    private fun buyMoreAction(loaded: PolymarketPosition.Open): (() -> Unit)? {
+        if (!loaded.isMarketTradable) return ::showMarketClosedSheet
+        val market = eventMarket(loaded) ?: return null
+        return if (market.isAcceptingOrders) {
+            { buyMore(market) }
+        } else {
+            ::showMarketClosedSheet
+        }
+    }
+
+    private fun showMarketClosedSheet() {
+        uiState.update { it.copy(isMarketClosedSheetShown = true) }
+    }
+
+    private fun hideMarketClosedSheet() {
+        uiState.update { it.copy(isMarketClosedSheetShown = false) }
+    }
+
     private fun closePosition() {
         val loaded = position ?: return
         val marketId = loaded.marketId ?: return
@@ -170,13 +199,9 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
         )
     }
 
-    private fun buyableMarket(): PolymarketMarket? {
-        val loaded = position ?: return null
-        if (loaded.resolutionStatus != PolymarketResolutionStatus.OPEN) return null
+    private fun eventMarket(loaded: PolymarketPosition.Open): PolymarketMarket? {
         val loadedEvent = event?.takeIf { it.id == loaded.eventId } ?: return null
-        return loadedEvent.markets
-            .firstOrNull { market -> market.outcomes.any { it.assetId == loaded.id.assetId } }
-            ?.takeIf { it.isAcceptingOrders }
+        return loadedEvent.markets.firstOrNull { market -> market.outcomes.any { it.assetId == loaded.id.assetId } }
     }
 
     private fun buyMore(market: PolymarketMarket) {

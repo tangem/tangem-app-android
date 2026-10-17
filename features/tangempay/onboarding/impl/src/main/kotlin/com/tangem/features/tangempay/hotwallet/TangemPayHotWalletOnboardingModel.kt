@@ -4,6 +4,8 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -17,6 +19,7 @@ import javax.inject.Inject
 internal class TangemPayHotWalletOnboardingModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val urlOpener: UrlOpener,
     private val onboardingStarter: TangemPayOnboardingStarter,
 ) : Model() {
 
@@ -26,11 +29,21 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
                 isLoading = false,
                 onGetCardClick = ::onGetCardClick,
                 onTermsClick = ::onTermsClick,
+                onTermsOfServiceClick = ::onTermsOfServiceClick,
+                onPrivacyPolicyClick = ::onPrivacyPolicyClick,
             ),
         )
 
     private fun onTermsClick() {
-        router.push(AppRoute.Disclaimer(isTosAccepted = true))
+        urlOpener.openUrl(TangemPayConstants.termsAndLimitsLink())
+    }
+
+    private fun onTermsOfServiceClick() {
+        urlOpener.openUrl(TERMS_OF_SERVICE_URL)
+    }
+
+    private fun onPrivacyPolicyClick() {
+        urlOpener.openUrl(PRIVACY_POLICY_URL)
     }
 
     private fun onGetCardClick() {
@@ -50,5 +63,10 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
 
     private fun setLoading(isLoading: Boolean) {
         uiState.update { state -> state.copy(isLoading = isLoading) }
+    }
+
+    private companion object {
+        const val TERMS_OF_SERVICE_URL = "https://www.paera.com/tangempay"
+        const val PRIVACY_POLICY_URL = "https://tangem.com/docs/en/pay-privacy-policy.pdf"
     }
 }

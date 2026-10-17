@@ -45,8 +45,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.atoms.text.EllipsisText
-import com.tangem.core.ui.components.atoms.text.TextEllipsis
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.resolveReference
@@ -64,6 +63,8 @@ enum class TangemRowVerticalAlignment { Top, Center }
 /**
  * Design-system v2 row: a list-item container with start / end slots, title+subtitle on the
  * leading side, value+subvalue on the trailing side, and an optional slot below the row.
+ *
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=2344-1406)
  *
@@ -413,7 +414,8 @@ fun TangemRowText(
 
 /**
  * [TangemRowText] whose value is a blockchain [address]: instead of being cut at its end, it keeps as much of itself
- * as the slot's width allows and drops characters from its middle — see [EllipsisText].
+ * as the slot's width allows and drops characters from its middle. A plain [Text] rather than `EllipsisText`, whose
+ * `SubcomposeLayout` cannot report an intrinsic height and so crashes inside a `TangemModal`.
  *
  * The length follows the measured width, so give it a bounded slot (`Modifier.weight()` inside the row scope);
  * unbounded, the address renders in full.
@@ -425,13 +427,14 @@ fun TangemRowText(
 @Composable
 @NonRestartableComposable
 fun TangemRowAddressText(address: String, role: TangemRowTextRole, modifier: Modifier = Modifier) {
-    EllipsisText(
+    Text(
         text = address,
         modifier = modifier,
         color = rowTextColor(role),
         style = rowTextStyle(role),
         textAlign = rowTextAlign(role),
-        ellipsis = TextEllipsis.Middle,
+        maxLines = 1,
+        overflow = TextOverflow.MiddleEllipsis,
     )
 }
 
@@ -474,6 +477,12 @@ private fun Modifier.bottomDivider(color: Color, width: Dp, horizontalInset: Dp)
         end = Offset(x = size.width - inset, y = y),
         strokeWidth = stroke,
     )
+}
+
+/** Public API surface of [TangemRow]. */
+object TangemRow {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
 }
 
 // region Previews

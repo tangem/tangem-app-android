@@ -3,11 +3,12 @@ package com.tangem.data.pay.converter
 import com.tangem.data.pay.util.tangemPayImageOrNull
 import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
 import com.tangem.domain.models.account.TangemPayTariffPlan
+import com.tangem.utils.converter.Converter
 import java.util.Locale
 
-internal object TangemPayTariffPlanConverter {
+internal object TangemPayTariffPlanConverter : Converter<CustomerMeResponse.TariffPlan?, TangemPayTariffPlan?> {
 
-    fun convert(value: CustomerMeResponse.TariffPlan?): TangemPayTariffPlan? {
+    override fun convert(value: CustomerMeResponse.TariffPlan?): TangemPayTariffPlan? {
         val id = value?.id ?: return null
         val name = value.name ?: return null
         val programName = value.programName ?: return null

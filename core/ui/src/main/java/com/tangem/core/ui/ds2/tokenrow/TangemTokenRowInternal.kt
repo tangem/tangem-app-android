@@ -57,7 +57,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cloud_exclamation_20
-import com.tangem.core.ui.res.generated.icons.ic_warning_20
+import com.tangem.core.ui.res.generated.icons.ic_warning_20_filled
 import kotlin.math.max
 
 /** Content dimming applied to the leading texts of unavailable rows (Figma `opacity/disabled`). */
@@ -79,7 +79,8 @@ internal enum class TokenRowLayoutId {
  *   (30% of the row for the top line, 32% for the bottom line).
  * - START slots fill the remaining width, never shrinking below that minimum.
  * - A line with no counterpart on the other axis is vertically centered in the main area.
- * - EXTRA_BOTTOM is placed full-width below the main content with an 8dp gap.
+ * - EXTRA_BOTTOM is placed below the main content, within the horizontal paddings, with a 4dp gap:
+ *   the 8dp tip of a message bubble fills the rest of the 12dp spacing.
  */
 @Suppress("LongMethod")
 @Composable
@@ -94,8 +95,8 @@ internal fun TokenRowContainer(
     val isInteractive = onClick != null || onLongClick != null
 
     val density = LocalDensity.current
-    val verticalPadding = with(density) { 4.dp.roundToPx() }
-    val extraContentPadding = with(density) { 8.dp.roundToPx() }
+    val verticalPadding = with(density) { 2.dp.roundToPx() }
+    val extraContentPadding = with(density) { 4.dp.roundToPx() }
     val contentPadding = with(density) { 16.dp.roundToPx() }
 
     val rowModifier = modifier
@@ -177,7 +178,7 @@ internal fun TokenRowContainer(
 
             val extraBottomPlaceable = measurables.measure(
                 layoutId = TokenRowLayoutId.EXTRA_BOTTOM,
-                constraints = constraints,
+                constraints = constraints.copy(minWidth = 0, maxWidth = layoutWidth),
             )
 
             val mainLayoutHeight = maxOf(
@@ -188,7 +189,7 @@ internal fun TokenRowContainer(
             )
 
             val mainContentBottomPadding = if (extraBottomPlaceable != null) {
-                extraBottomPlaceable.heightOrZero() + contentPadding
+                extraContentPadding + extraBottomPlaceable.heightOrZero() + contentPadding
             } else {
                 contentPadding
             }
@@ -243,7 +244,7 @@ internal fun TokenRowContainer(
                 )
 
                 extraBottomPlaceable?.placeRelative(
-                    x = 0,
+                    x = contentPadding,
                     y = contentPadding + mainLayoutHeight + extraContentPadding,
                 )
             }
@@ -415,7 +416,7 @@ internal fun TokenRowTitleContent(
         if (badge != null) {
             TangemBadge(
                 text = badge.text,
-                variant = badge.variant,
+                variant = TangemBadge.Variant.Tinted,
                 status = badge.status,
                 size = TangemBadge.Size.X4,
             )
@@ -472,7 +473,7 @@ internal fun TokenRowBalanceContent(
     ) {
         if (showContractWarning) {
             Icon(
-                imageVector = Icons.ic_warning_20,
+                imageVector = Icons.ic_warning_20_filled,
                 contentDescription = null,
                 tint = TangemTheme.colors3.icon.status.warning,
                 modifier = Modifier.size(20.dp),

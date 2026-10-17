@@ -17,28 +17,23 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.moneyaccount.model.MoneyAccountEligibility
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.moneyaccount.model.MoneyAccountEligibility
-import com.tangem.domain.moneyaccount.model.MoneyAccountEntryPoint
-import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
-import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.analytics.Settings
+import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.details.component.DetailsComponent
-import com.tangem.features.details.entity.DetailsFooterUM
-import com.tangem.features.details.entity.DetailsItemUM
-import com.tangem.features.details.entity.DetailsUM
-import com.tangem.features.details.entity.SelectContactSupportTypeBS
-import com.tangem.features.details.entity.SelectEmailFeedbackTypeBS
+import com.tangem.features.details.entity.*
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.logging.TangemLogger
@@ -102,9 +97,6 @@ internal class DetailsModel @Inject constructor(
                 onBuyClick = ::onBuyClick,
             ),
         )
-
-        addTangemPayItemIfEligible()
-        addMoneyAccountItemIfEligible()
 
         state = MutableStateFlow(
             value = DetailsUM(
@@ -300,7 +292,12 @@ internal class DetailsModel @Inject constructor(
         }
     }
 
-    private fun addTangemPayItemIfEligible() {
+    fun onResume() {
+        updateTangemPayItem()
+        updateMoneyAccountItem()
+    }
+
+    private fun updateTangemPayItem() {
         modelScope.launch {
             val isEligible = if (tangemPayFeatureToggles.isResidencyStepEnabled) {
                 tangemPayEligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true).isNotEmpty()
@@ -313,8 +310,12 @@ internal class DetailsModel @Inject constructor(
                     .isNotEmpty()
             }
             if (isEligible) {
-                analyticsEventHandler.send(TangemPayAnalyticsEvents.PermanentButtonShowed())
+                if (!itemsBuilder.hasTangemPayItem(items.value)) {
+                    analyticsEventHandler.send(TangemPayAnalyticsEvents.PermanentButtonShowed())
+                }
                 items.update { itemsBuilder.addTangemPayItem(items = it, onClick = ::onTangemPayItemClicked) }
+            } else {
+                items.update { itemsBuilder.removeTangemPayItem(items = it) }
             }
         }
     }
@@ -335,28 +336,25 @@ internal class DetailsModel @Inject constructor(
         }
     }
 
-    private fun addMoneyAccountItemIfEligible() {
+    private fun updateMoneyAccountItem() {
         modelScope.launch {
             val isMoneyAccountEnabled = moneyAccountFeatureToggles.isMoneyAccountsEnabled
-            val eligibility = getMoneyAccountEligibilityUseCase(MoneyAccountEntryPoint.DETAILS)
+            val eligibility = getMoneyAccountEligibilityUseCase()
             if (eligibility is MoneyAccountEligibility.Available && isMoneyAccountEnabled) {
                 items.update { items ->
-                    itemsBuilder.addMoneyAccountItem(
-                        items = items,
-                        onClick = ::onMoneyAccountItemClicked,
-                    )
+                    itemsBuilder.addMoneyAccountItem(items = items, onClick = ::onMoneyAccountItemClicked)
                 }
+            } else {
+                items.update { items -> itemsBuilder.removeMoneyAccountItem(items = items) }
             }
         }
     }
 
     private fun onMoneyAccountItemClicked() {
         modelScope.launch {
-            when (val eligibility = getMoneyAccountEligibilityUseCase(MoneyAccountEntryPoint.DETAILS)) {
+            when (getMoneyAccountEligibilityUseCase()) {
                 is MoneyAccountEligibility.Available -> router.push(
-                    AppRoute.MoneyAccountOnboarding(
-                        AppRoute.MoneyAccountOnboarding.Mode.FromDetailsScreen(eligibility.wallets.first().walletId),
-                    ),
+                    AppRoute.MoneyAccountOnboarding(AppRoute.MoneyAccountOnboarding.Mode.FromDetailsScreen),
                 )
                 MoneyAccountEligibility.NotAvailable -> items.update { itemsBuilder.removeMoneyAccountItem(it) }
             }

@@ -56,7 +56,11 @@ internal fun PolymarketReconnectContent(
             ),
     ) {
         // No top padding: the hero is full-bleed and scrolls under the status bar and the top navigation.
-        OnboardingHero(imageResId = UiR.drawable.img_prediction_welcome_hero) {
+        OnboardingHero(
+            imageResId = UiR.drawable.img_prediction_welcome_hero,
+            tintStartY = HERO_TINT_START_Y,
+            tintEndY = HERO_TINT_END_Y,
+        ) {
             OnboardingHeadline(
                 title = resourceReference(R.string.prediction_onboarding_reconnect_title),
                 subtitle = resourceReference(R.string.prediction_onboarding_reconnect_subtitle),

@@ -255,8 +255,8 @@ internal class JointOperationStateTest {
     ) = JointOperationState(
         account = MockAccounts.createJointAccount(),
         displayed = JointTransferIntent.Native(recipient = OTHER, amountWei = BigInteger.ONE),
-        feeWei = BigInteger.ZERO,
-        feeCoin = null,
+        feeAmount = BigInteger.ZERO,
+        feeCurrency = null,
         threshold = 2,
         membersCount = signers.size,
         signers = signers,

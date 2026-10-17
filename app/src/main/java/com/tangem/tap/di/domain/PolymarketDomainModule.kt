@@ -1,6 +1,8 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
+import com.tangem.domain.polymarket.PolymarketCredentialsLock
+import com.tangem.domain.polymarket.PolymarketActivityRepository
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRedeemRepository
@@ -29,6 +31,7 @@ import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.CreatePolymarketPositionsSessionUseCase
+import com.tangem.domain.polymarket.usecase.CreatePolymarketActivitySessionUseCase
 import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
 import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
@@ -39,7 +42,10 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionTopUpMinimumUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
+import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
@@ -58,6 +64,18 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 @Suppress("TooManyFunctions")
 internal object PolymarketDomainModule {
+
+    @Provides
+    @Singleton
+    fun provideCreatePolymarketActivitySessionUseCase(
+        repository: PolymarketActivityRepository,
+        deriveAddresses: DerivePolymarketAddressesUseCase,
+        dispatchers: CoroutineDispatcherProvider,
+    ): CreatePolymarketActivitySessionUseCase = CreatePolymarketActivitySessionUseCase(
+        repository = repository,
+        deriveAddresses = deriveAddresses,
+        dispatchers = dispatchers,
+    )
 
     @Provides
     @Singleton
@@ -181,13 +199,35 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
+    fun provideInvalidatePolymarketCredentialsUseCase(
+        credentialsStore: PolymarketCredentialsStore,
+    ): InvalidatePolymarketCredentialsUseCase = InvalidatePolymarketCredentialsUseCase(
+        credentialsStore = credentialsStore,
+    )
+
+    @Provides
+    @Singleton
+    fun provideObservePolymarketCredentialsPresenceUseCase(
+        credentialsStore: PolymarketCredentialsStore,
+    ): ObservePolymarketCredentialsPresenceUseCase = ObservePolymarketCredentialsPresenceUseCase(
+        credentialsStore = credentialsStore,
+    )
+
+    @Provides
+    @Singleton
     fun provideDeriveApiCredentialsUseCase(
         polymarketRepository: PolymarketRepository,
         credentialsStore: PolymarketCredentialsStore,
+        credentialsLock: PolymarketCredentialsLock,
     ): DeriveApiCredentialsUseCase = DeriveApiCredentialsUseCase(
         polymarketRepository = polymarketRepository,
         credentialsStore = credentialsStore,
+        credentialsLock = credentialsLock,
     )
+
+    @Provides
+    @Singleton
+    fun providePolymarketCredentialsLock(): PolymarketCredentialsLock = PolymarketCredentialsLock()
 
     @Provides
     @Singleton
@@ -224,9 +264,13 @@ internal object PolymarketDomainModule {
     fun providePlacePredictionOrderUseCase(
         polymarketRepository: PolymarketRepository,
         getApiCredentials: GetPolymarketApiCredentialsUseCase,
+        invalidateCredentials: InvalidatePolymarketCredentialsUseCase,
+        credentialsLock: PolymarketCredentialsLock,
     ): PlacePredictionOrderUseCase = PlacePredictionOrderUseCase(
         polymarketRepository = polymarketRepository,
         getApiCredentials = getApiCredentials,
+        invalidateCredentials = invalidateCredentials,
+        credentialsLock = credentialsLock,
     )
 
     @Provides
@@ -244,9 +288,13 @@ internal object PolymarketDomainModule {
     fun provideGetPolymarketBalanceInteractor(
         polymarketRepository: PolymarketRepository,
         getApiCredentials: GetPolymarketApiCredentialsUseCase,
+        invalidateCredentials: InvalidatePolymarketCredentialsUseCase,
+        credentialsLock: PolymarketCredentialsLock,
     ): GetPolymarketBalanceInteractor = GetPolymarketBalanceInteractor(
         polymarketRepository = polymarketRepository,
         getApiCredentials = getApiCredentials,
+        invalidateCredentials = invalidateCredentials,
+        credentialsLock = credentialsLock,
     )
 
     @Provides
@@ -309,6 +357,12 @@ internal object PolymarketDomainModule {
     ): GetPredictionWithdrawalStateUseCase = GetPredictionWithdrawalStateUseCase(
         repository = withdrawRepository,
     )
+
+    @Provides
+    @Singleton
+    fun provideGetPredictionTopUpMinimumUseCase(
+        requisitesStore: PredictionDepositRequisitesStore,
+    ): GetPredictionTopUpMinimumUseCase = GetPredictionTopUpMinimumUseCase(requisitesStore = requisitesStore)
 
     @Provides
     @Singleton

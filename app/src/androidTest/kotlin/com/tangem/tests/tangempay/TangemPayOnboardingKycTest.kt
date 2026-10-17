@@ -10,6 +10,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_SHORT
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.scenarios.assertTangemPayWalletSelectorListsWallets
 import com.tangem.scenarios.clickGetCardOnTangemPayOnboarding
 import com.tangem.scenarios.openMainScreenWithExistingHotWallet
@@ -22,6 +23,7 @@ import com.tangem.screens.tangempay.onTangemPayKycSheet
 import com.tangem.screens.tangempay.onTangemPayMainScreen
 import com.tangem.screens.tangempay.onTangemPayOnboardingScreen
 import com.tangem.core.res.R as CoreResR
+import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
@@ -30,6 +32,15 @@ import org.junit.Test
 
 @HiltAndroidTest
 class TangemPayOnboardingKycTest : BaseTestCase() {
+
+    // These tests cover Tangem Pay onboarding: under TWI_1841 the Main promo gives way to the wallet's system cards
+    @RemoveWithToggle(
+        toggleName = "TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED",
+        description = "Move the test to a wallet without system cards, where the Main promo is shown",
+    )
+    override val featureToggleOverrides = mapOf(
+        FeatureToggles.TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED.rawName to false,
+    )
 
     @AllureId("9630")
     @DisplayName("Tangem Pay: existing customer authorization shows the tile on Main")

@@ -1,6 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
 import com.tangem.common.ui.tokens.rendersActionAsEnabled
+import com.tangem.common.ui.tokens.rendersSwapAsEnabled
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.TransferAnalyticsEvent
 import com.tangem.domain.models.StatusSource
@@ -42,7 +43,7 @@ internal class UpdateTransferTransformer(
         val swapRow = swapAction?.let { action ->
             TransferUM.Row(
                 isLoading = action.unavailabilityReason.isLoading,
-                isEnabled = action.unavailabilityReason.rendersActionAsEnabled(),
+                isEnabled = action.unavailabilityReason.rendersSwapAsEnabled(),
                 onClick = {
                     analyticsEventHandler.send(TransferAnalyticsEvent.ButtonSwap())
                     onActionDispatched()
@@ -55,7 +56,7 @@ internal class UpdateTransferTransformer(
         // This prevents a disabled Send&Swap row for cards that cannot swap at all (e.g. S2C single-currency cards);
         // a joint account's row stays, and the tap explains the reason.
         val swapAndSendRow = swapAction
-            ?.takeIf { it.unavailabilityReason.rendersActionAsEnabled() }
+            ?.takeIf { it.unavailabilityReason.rendersSwapAsEnabled() }
             ?.let { action ->
                 val clickReason = if (isJointAccount) {
                     ScenarioUnavailabilityReason.JointAccount

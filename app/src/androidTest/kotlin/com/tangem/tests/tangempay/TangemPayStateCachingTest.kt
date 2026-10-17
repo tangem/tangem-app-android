@@ -27,7 +27,6 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -192,7 +191,6 @@ class TangemPayStateCachingTest : BaseTestCase() {
         }
     }
 
-    @Ignore("[REDACTED_JIRA]")
     @AllureId("9586")
     @DisplayName("Tangem Pay: Main keeps the cached KYC in progress status when customer/me fails")
     @Test

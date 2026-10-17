@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerOffers
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
@@ -63,7 +64,7 @@ internal class IssuePlasticCardUseCaseTest {
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(VisaApiError.CardIssueOfferNotAvailable)
         coVerify(exactly = 0) { orderRepository.findOrders(any(), any(), any()) }
-        coVerify(exactly = 0) { orderRepository.createPlasticIssueOrder(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any()) }
     }
 
     @Test
@@ -82,7 +83,7 @@ internal class IssuePlasticCardUseCaseTest {
 
             // Assert
             assertThat(result.leftOrNull()).isEqualTo(VisaApiError.CardIssueOfferNotAvailable)
-            coVerify(exactly = 0) { orderRepository.createPlasticIssueOrder(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any()) }
         }
 
     @Test
@@ -91,10 +92,12 @@ internal class IssuePlasticCardUseCaseTest {
         givenNoActiveOrders()
         val created = order(id = "created", status = OrderStatus.PROCESSING)
         coEvery {
-            orderRepository.createPlasticIssueOrder(
+            orderRepository.createOrder(
                 userWalletId = USER_WALLET_ID,
-                specificationName = SPEC_NAME,
-                order = plasticCardOrder(),
+                request = CustomerOrderRequest.PlasticCardIssue(
+                    specificationName = SPEC_NAME,
+                    order = plasticCardOrder(),
+                ),
                 idempotencyKey = IDEMPOTENCY_KEY,
             )
         } returns created.right()
@@ -124,7 +127,7 @@ internal class IssuePlasticCardUseCaseTest {
         givenNoActiveOrders()
         val created = order(id = "created", status = OrderStatus.PROCESSING)
         coEvery {
-            orderRepository.createPlasticIssueOrder(any(), any(), any(), any())
+            orderRepository.createOrder(any(), any(), any())
         } returns created.right()
         val onOrderStateChange = slot<suspend (TangemPayOrderInfo) -> Unit>()
         coEvery {
@@ -170,7 +173,7 @@ internal class IssuePlasticCardUseCaseTest {
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(VisaApiError.CardIssueActiveOrderExists)
-        coVerify(exactly = 0) { orderRepository.createPlasticIssueOrder(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any()) }
         coVerify(exactly = 0) { startTangemPayOrderPollingUseCase(any(), any(), any(), any()) }
     }
 
@@ -188,7 +191,7 @@ internal class IssuePlasticCardUseCaseTest {
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(VisaApiError.ServerUnavailable)
-        coVerify(exactly = 0) { orderRepository.createPlasticIssueOrder(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any()) }
     }
 
     @Test
@@ -207,7 +210,7 @@ internal class IssuePlasticCardUseCaseTest {
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(VisaApiError.ServerUnavailable)
-        coVerify(exactly = 0) { orderRepository.createPlasticIssueOrder(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { orderRepository.createOrder(any(), any(), any()) }
     }
 
     @Test
@@ -218,7 +221,7 @@ internal class IssuePlasticCardUseCaseTest {
             listOf(order(id = "done", status = OrderStatus.COMPLETED)).right()
         val created = order(id = "created", status = OrderStatus.NEW)
         coEvery {
-            orderRepository.createPlasticIssueOrder(any(), any(), any(), any())
+            orderRepository.createOrder(any(), any(), any())
         } returns created.right()
 
         // Act
@@ -230,7 +233,7 @@ internal class IssuePlasticCardUseCaseTest {
 
         // Assert
         assertThat(result).isEqualTo(created.right())
-        coVerify(exactly = 1) { orderRepository.createPlasticIssueOrder(any(), any(), any(), any()) }
+        coVerify(exactly = 1) { orderRepository.createOrder(any(), any(), any()) }
     }
 
     @Test
@@ -238,7 +241,7 @@ internal class IssuePlasticCardUseCaseTest {
         // Arrange
         givenNoActiveOrders()
         coEvery {
-            orderRepository.createPlasticIssueOrder(any(), any(), any(), any())
+            orderRepository.createOrder(any(), any(), any())
         } returns VisaApiError.CardIssueInvalidShippingAddress.left()
 
         // Act
@@ -274,7 +277,7 @@ internal class IssuePlasticCardUseCaseTest {
         // Arrange
         givenNoActiveOrders()
         coEvery {
-            orderRepository.createPlasticIssueOrder(any(), any(), any(), any())
+            orderRepository.createOrder(any(), any(), any())
         } throws IllegalStateException("Can not find customer address")
 
         // Act

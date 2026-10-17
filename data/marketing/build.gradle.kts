@@ -11,12 +11,14 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.remote)
     implementation(deps.androidx.datastore)
 
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization.core)
     implementation(deps.arrow.core)
 
     implementation(projects.domain.marketing)

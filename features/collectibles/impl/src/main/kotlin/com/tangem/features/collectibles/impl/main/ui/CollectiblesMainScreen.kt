@@ -1,9 +1,13 @@
 package com.tangem.features.collectibles.impl.main.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -18,8 +22,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.collectibles.impl.discovery.CollectiblesDiscoveryComponent
 import com.tangem.features.collectibles.impl.discovery.ui.isCollectiblesTabBandPinned
@@ -34,6 +40,7 @@ import com.tangem.features.collectibles.impl.main.ui.components.rememberFillerHe
 import com.tangem.features.collectibles.impl.main.ui.components.rememberListFill
 import com.tangem.features.collectibles.impl.main.ui.components.rememberRestingFooterHeight
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
+import dev.chrisbanes.haze.rememberHazeState
 
 @Composable
 internal fun CollectiblesMainScreen(
@@ -146,22 +153,8 @@ private fun RefreshableList(
         isEnteringSearch = lead.areShown,
     )
 
-    if (isSearchActive) {
-        CollectiblesMainList(
-            state = state,
-            discoveryComponent = discoveryComponent,
-            discoveryState = discoveryState,
-            listState = listState,
-            lead = lead,
-            fillerHeight = fillerHeight,
-            statusHeight = fill.statusHeight,
-            contentPadding = contentPadding,
-        )
-    } else {
-        TangemPullToRefreshSlidingContainer(
-            config = pullToRefresh,
-            indicatorOffset = contentPadding.calculateTopPadding(),
-        ) {
+    MaterialBackdrop {
+        if (isSearchActive) {
             CollectiblesMainList(
                 state = state,
                 discoveryComponent = discoveryComponent,
@@ -172,9 +165,43 @@ private fun RefreshableList(
                 statusHeight = fill.statusHeight,
                 contentPadding = contentPadding,
             )
+        } else {
+            TangemPullToRefreshSlidingContainer(
+                config = pullToRefresh,
+                indicatorOffset = contentPadding.calculateTopPadding(),
+            ) {
+                CollectiblesMainList(
+                    state = state,
+                    discoveryComponent = discoveryComponent,
+                    discoveryState = discoveryState,
+                    listState = listState,
+                    lead = lead,
+                    fillerHeight = fillerHeight,
+                    statusHeight = fill.statusHeight,
+                    contentPadding = contentPadding,
+                )
+            }
         }
     }
 }
 
 private val CollectiblesDiscoveryUM.hasTabs: Boolean
     get() = tabs !is CollectiblesDiscoveryUM.TabsUM.Hidden
+
+/**
+ * Material elements inside the scaffold content can't blur the scaffold's own haze source (Haze skips
+ * an ancestor source of the same state), so they get a separate state backed by the plain background.
+ */
+@Composable
+private fun MaterialBackdrop(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    val buttonsHazeState = rememberHazeState()
+    Box(modifier = modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(TangemTheme.colors3.bg.primary)
+                .hazeSourceTangem(state = buttonsHazeState, zIndex = -1f),
+        )
+        CompositionLocalProvider(LocalHazeState provides buttonsHazeState, content = content)
+    }
+}

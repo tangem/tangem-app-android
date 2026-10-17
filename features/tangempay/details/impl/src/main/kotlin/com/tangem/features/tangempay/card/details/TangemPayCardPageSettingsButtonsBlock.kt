@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastForEach
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.extensions.resourceReference
@@ -34,7 +35,7 @@ internal fun TangemPayCardPageSettingsButtonsBlock(
             TangemPayActionButton(
                 modifier = Modifier.then(if (setting.testTag != null) Modifier.testTag(setting.testTag) else Modifier),
                 title = setting.title,
-                iconRes = setting.iconRes,
+                icon = TangemIconUM.Icon(iconRes = setting.iconRes),
                 onClick = setting.onClick,
                 isEnabled = setting.isEnabled,
                 isLoading = setting.isLoading,

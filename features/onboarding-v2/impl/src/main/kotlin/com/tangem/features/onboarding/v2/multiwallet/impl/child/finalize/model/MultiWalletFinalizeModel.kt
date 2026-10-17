@@ -62,7 +62,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.tangem.domain.sociallogin.usecase.DeleteSocialRecoveryUseCase
+import com.tangem.domain.sociallogin.usecase.DeleteSocialBackupAfterUpgradeUseCase
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
@@ -89,7 +91,8 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val derivationsHelper: DerivationsHelper,
     private val walletCardsBackupReporter: WalletCardsBackupReporter,
-    private val deleteSocialRecoveryUseCase: DeleteSocialRecoveryUseCase,
+    private val deleteSocialBackupAfterUpgradeUseCase: DeleteSocialBackupAfterUpgradeUseCase,
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -361,6 +364,8 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                     userWallet
                 }
                 is OnboardingMultiWalletComponent.Mode.UpgradeHotWallet -> {
+                    // the mark lives in the hot wallet's record, which the update below replaces with a cold one
+                    val hasSocialBackup = isSocialBackupCompletedUseCase(userWalletCreated.walletId)
                     updateWalletUseCase.invoke(
                         userWalletId = userWalletCreated.walletId,
                         update = { hotUserWallet ->
@@ -376,14 +381,17 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                         launch(NonCancellable) {
                             runSuspendCatching { walletsRepository.upgradeWallet(userWalletCreated.walletId) }
                                 .onFailure { TangemLogger.e("Failed to mark the wallet as upgraded", it) }
-                                // FR-16: the social account must not restore a wallet that now lives
-                                // on a card. Only once the upgrade is recorded, so a failure above does
-                                // not take the recovery away from a still-hot wallet. Best effort from
-                                // here — the card is written and there is nothing to roll back to.
                                 .onSuccess {
-                                    deleteSocialRecoveryUseCase(userWalletCreated.walletId).onLeft { error ->
-                                        TangemLogger.e("Failed to drop the social recovery after upgrade: $error")
-                                    }
+                                    if (!hasSocialBackup) return@onSuccess
+                                    deleteSocialBackupAfterUpgradeUseCase(userWalletCreated.walletId)
+                                        .onLeft { error ->
+                                            TangemLogger.e("Failed to delete the social backup after upgrade: $error")
+                                        }
+                                        .onRight {
+                                            analyticsEventHandler.send(
+                                                WalletSettingsAnalyticEvents.SocialRecoveryDeleted(),
+                                            )
+                                        }
                                 }
                         }
                     }.getOrElse {

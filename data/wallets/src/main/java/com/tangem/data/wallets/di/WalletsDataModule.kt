@@ -19,7 +19,6 @@ import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.utils.AppDataStoreFactory
-import com.tangem.datasource.utils.create
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.wallets.derivations.ColdMapDerivationsRepository
@@ -38,6 +37,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import kotlinx.serialization.builtins.ListSerializer
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -76,7 +76,8 @@ internal object WalletsDataModule {
             tangemTechApi = tangemTechApi,
             pendingStore = PendingWalletCardsBackupStore(
                 dataStore = dataStoreFactory.create(
-                    defaultValue = emptyList<PendingWalletCardsBackup>(),
+                    defaultValue = emptyList(),
+                    serializer = ListSerializer(PendingWalletCardsBackup.serializer()),
                     fileName = "pending_wallet_cards_backups",
                 ),
             ),

@@ -43,15 +43,16 @@ internal class GetJointAccountInvitePreviewUseCaseTest {
     @Test
     fun `GIVEN repository returns error WHEN invoke THEN it is returned as is`() = runTest {
         // Arrange
+        val invalidLink = JointAccountInvitePreviewError.InvalidLink(cause = IllegalStateException("Conflict"))
         coEvery {
             repository.getInvitePreview(walletId = WALLET_ID, inviteId = INVITE_ID)
-        } returns JointAccountInvitePreviewError.InvalidLink.left()
+        } returns invalidLink.left()
 
         // Act
         val actual = useCase(walletId = WALLET_ID, inviteId = INVITE_ID)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountInvitePreviewError.InvalidLink.left())
+        assertThat(actual).isEqualTo(invalidLink.left())
     }
 
     private fun preview() = JointAccountInvitePreview(

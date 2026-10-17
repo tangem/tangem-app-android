@@ -216,6 +216,16 @@ private fun AccountIconSize.iconSizeInDp(): Dp = when (this) {
     AccountIconSize.ContactDefault -> 20.dp
 }
 
+@Composable
+fun PredictionAccountResIcon(size: AccountIconSize, modifier: Modifier = Modifier) {
+    AccountResIcon(
+        imageVector = PredictionAccountIcon.imageVector,
+        color = PredictionAccountIcon.color,
+        size = size,
+        modifier = modifier,
+    )
+}
+
 /** Art of the Prediction account, shared by the account icon and the wallet row, so both change together. */
 object PredictionAccountIcon {
 

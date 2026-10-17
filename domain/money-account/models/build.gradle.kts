@@ -5,4 +5,6 @@ plugins {
 
 dependencies {
     api(projects.domain.models)
+
+    api(tangemDeps.card.core)
 }

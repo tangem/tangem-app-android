@@ -6,6 +6,10 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -21,6 +25,7 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.account.CashbackBlockUM
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tangempay.cashback.impl.model.TangemPayCashbackDateFormatter
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.Runs
 import io.mockk.clearMocks
@@ -57,11 +62,13 @@ internal class TangemPayCashbackControllerTest {
     private val getCashbackSummaryUseCase: GetCashbackSummaryUseCase = mockk()
     private val getCashbackDeactivationDismissedUseCase: GetCashbackDeactivationDismissedUseCase = mockk()
     private val setCashbackDeactivationDismissedUseCase: SetCashbackDeactivationDismissedUseCase = mockk()
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
 
     private val cachedSummary = MutableStateFlow<CashbackSummary?>(null)
     private val accountStatus = MutableStateFlow(paymentStatus(loadedStatus()))
+    private val isBalanceHidden = MutableStateFlow(false)
 
     @BeforeEach
     fun resetMocks() {
@@ -70,11 +77,14 @@ internal class TangemPayCashbackControllerTest {
             getCashbackSummaryUseCase,
             getCashbackDeactivationDismissedUseCase,
             setCashbackDeactivationDismissedUseCase,
+            getBalanceHidingSettingsUseCase,
             analytics,
             router,
         )
         cachedSummary.value = null
         accountStatus.value = paymentStatus(loadedStatus())
+        isBalanceHidden.value = false
+        every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHidden
         every { observeCashbackSummaryUseCase(any()) } returns cachedSummary
         coEvery { getCashbackDeactivationDismissedUseCase(any()) } returns false
         coEvery { setCashbackDeactivationDismissedUseCase(any()) } just Runs
@@ -97,6 +107,25 @@ internal class TangemPayCashbackControllerTest {
             assertThat(controller.state.value.block).isInstanceOf(CashbackBlockUM.Widget::class.java)
             assertThat(controller.state.value.menuItem).isNull()
             coVerify(exactly = 0) { getCashbackSummaryUseCase(any()) }
+        }
+
+        @Test
+        fun `GIVEN widget shown WHEN balances get hidden THEN widget amount masked`() = runTest {
+            // Arrange
+            cachedSummary.value = enabledSummary(CashbackDisplayMode.FULL)
+            val controller = createController(scope = backgroundScope)
+            runCurrent()
+
+            // Act
+            isBalanceHidden.value = true
+            runCurrent()
+
+            // Assert
+            val expectedTitle = resourceReference(
+                id = R.string.tangempay_cashback_widget_title,
+                formatArgs = wrappedList("***", TangemPayCashbackDateFormatter().formatMonth(year = 2026, month = 8)),
+            )
+            assertThat((controller.state.value.block as CashbackBlockUM.Widget).title).isEqualTo(expectedTitle)
         }
 
         @Test
@@ -609,6 +638,7 @@ internal class TangemPayCashbackControllerTest {
         getCashbackSummaryUseCase = getCashbackSummaryUseCase,
         getCashbackDeactivationDismissedUseCase = getCashbackDeactivationDismissedUseCase,
         setCashbackDeactivationDismissedUseCase = setCashbackDeactivationDismissedUseCase,
+        getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
         analytics = analytics,
         router = router,
     )

@@ -17,6 +17,7 @@ internal class ExpressDataConverter : Converter<ExchangeDataResponseWithTxDetail
         return SwapDataModel(
             toTokenAmount = createFromAmountWithOffset(data.toAmount, data.toDecimals),
             transaction = convertTransaction(value.txDetails, data),
+            slippage = ExpressSlippageConverter.fromApi(data.slippage),
         )
     }
 

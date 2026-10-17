@@ -52,6 +52,7 @@ internal class RegionUnavailableComponent(
         RegionUnavailableScreen(
             onSelectAnotherRegionClick = ::onSelectAnotherRegionClick,
             onJoinWaitlistClick = ::onJoinWaitlistClick,
+            onCloseClick = params.onCloseClick,
             modifier = modifier,
         )
 
@@ -74,5 +75,6 @@ internal class RegionUnavailableComponent(
         val countryCode: String,
         val regionCode: String?,
         val onSelectAnotherRegionClick: () -> Unit,
+        val onCloseClick: () -> Unit,
     )
 }

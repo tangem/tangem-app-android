@@ -21,6 +21,10 @@ internal class QrContentClassifierParser(
             return ClassifiedQrContent.WalletConnect(qrCode)
         }
 
+        parseMcpUserCode(qrCode)?.let { userCode ->
+            return ClassifiedQrContent.McpAuthorization(userCode)
+        }
+
         val coins = userCurrencies.filterIsInstance<CryptoCurrency.Coin>()
         val uniqueCoins = coins.distinctBy { it.network.id }
 
@@ -68,6 +72,26 @@ internal class QrContentClassifierParser(
         return paymentUriParsers.firstNotNullOfOrNull { parser ->
             parser.parse(qrCode, coins, allCurrencies).takeUnless { it is PaymentUriParser.ParseResult.NotRecognized }
         } ?: PaymentUriParser.ParseResult.NotRecognized
+    }
+
+    /**
+     * The MCP gateway encodes the pairing link into a QR as well as into a deep link, so the same URI arrives here
+     * unparsed. The prefix and the parameter mirror `DeepLinkRoute.McpAuthorization` / `DeeplinkConst.USER_CODE_KEY`,
+     * which the data layer cannot reference without depending on the routing module.
+     */
+    private fun parseMcpUserCode(qrCode: String): String? {
+        if (!qrCode.startsWith(MCP_AUTHORIZATION_PREFIX)) return null
+
+        // Without this the prefix alone would also claim a longer host, e.g. `tangem://mcp.authorizationfoo`
+        val afterHost = qrCode.removePrefix(MCP_AUTHORIZATION_PREFIX)
+        if (afterHost.isNotEmpty() && !afterHost.startsWith('?')) return null
+
+        val userCode = QrSentUriParser().extractParameters(qrCode)[PARAM_USER_CODE] ?: return null
+        val decoded = runCatching {
+            URLDecoder.decode(userCode, QrSentUriParser.CHARSET_UTF8)
+        }.getOrDefault(userCode)
+
+        return decoded.ifBlank { null }
     }
 
     private fun isDAppWcUrl(qrCode: String): Boolean {
@@ -120,5 +144,7 @@ internal class QrContentClassifierParser(
         const val HTTPS_PREFIX = "https://"
         const val PARAM_URI = "uri"
         const val WC_PREFIX = "wc:"
+        const val MCP_AUTHORIZATION_PREFIX = "tangem://mcp.authorization"
+        const val PARAM_USER_CODE = "user_code"
     }
 }

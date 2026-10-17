@@ -3,7 +3,10 @@ package com.tangem.data.pay.util
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.extensions.toHexString
 import com.tangem.domain.pay.model.OrderStep
+import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderState
+import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
+import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.spend.datasource.pay.models.response.OrderResponse
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
@@ -21,7 +24,9 @@ internal class BankOfframpOrderStateConverterTest {
     @ProvideTestModels
     fun `GIVEN an order response WHEN convert THEN the matching state returned`(model: ConvertModel) {
         // Act
-        val actual = BankOfframpOrderStateConverter.convert(model.response)
+        val actual = BankOfframpOrderStateConverter.convert(
+            BankOfframpOrderStateConverter.Input(result = model.response, request = ORDER_REQUEST),
+        )
 
         // Assert
         when (val expected = model.expected) {
@@ -49,6 +54,18 @@ internal class BankOfframpOrderStateConverterTest {
         ),
         ConvertModel(
             response = result(step = AWAITING_SIGNATURE, withdrawData = withdrawData(hash = "0xdeadbeef")),
+            expected = Expected.Unsignable,
+        ),
+        ConvertModel(
+            response = result(step = AWAITING_SIGNATURE, withdrawData = consistentWithdrawData(amount = "20000000")),
+            expected = Expected.Unsignable,
+        ),
+        ConvertModel(
+            response = result(step = AWAITING_SIGNATURE, withdrawData = consistentWithdrawData(chainId = 1)),
+            expected = Expected.Unsignable,
+        ),
+        ConvertModel(
+            response = result(step = AWAITING_SIGNATURE, withdrawData = consistentWithdrawData(asset = OTHER_ASSET)),
             expected = Expected.Unsignable,
         ),
         ConvertModel(
@@ -97,6 +114,11 @@ internal class BankOfframpOrderStateConverterTest {
             structuredData = structuredData,
         )
 
+    private fun consistentWithdrawData(chainId: Long = 137, asset: String = ASSET, amount: String = "10000000") =
+        typedData(chainId = chainId, asset = asset, amount = amount).let { structuredData ->
+            withdrawData(hash = digestOf(structuredData), structuredData = structuredData)
+        }
+
     private fun result(
         status: OrderResponse.Result.Status = OrderResponse.Result.Status.PROCESSING,
         step: String? = null,
@@ -137,8 +159,26 @@ internal class BankOfframpOrderStateConverterTest {
 
     private companion object {
         const val AWAITING_SIGNATURE = "AWAITING_SIGNATURE"
+        const val ASSET = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        const val OTHER_ASSET = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"
 
-        val STRUCTURED_DATA = """
+        val ORDER_REQUEST = BankOfframpOrderRequest(
+            amountInCents = 1_000L,
+            chainId = 137L,
+            tokenContractAddress = ASSET.lowercase(),
+            tokenDecimals = 6,
+            rail = BankRail.ACH,
+            recipient = BankOfframpRecipient.Saved(bankAccountId = "bank-account-1"),
+        )
+
+        val STRUCTURED_DATA = typedData()
+
+        val CONSISTENT_HASH = digestOf(STRUCTURED_DATA)
+
+        fun digestOf(structuredData: String): String =
+            "0x" + StructuredDataEncoder(structuredData).hashStructuredData().toHexString()
+
+        fun typedData(chainId: Long = 137, asset: String = ASSET, amount: String = "10000000") = """
             {
               "types": {
                 "EIP712Domain": [
@@ -146,19 +186,19 @@ internal class BankOfframpOrderStateConverterTest {
                   {"name": "chainId", "type": "uint256"}
                 ],
                 "Withdraw": [
-                  {"name": "sender", "type": "address"},
+                  {"name": "asset", "type": "address"},
+                  {"name": "recipient", "type": "address"},
                   {"name": "amount", "type": "uint256"}
                 ]
               },
               "primaryType": "Withdraw",
-              "domain": {"name": "Rain", "chainId": 137},
+              "domain": {"name": "Collateral", "chainId": $chainId},
               "message": {
-                "sender": "0x059dbd5f24a000d28f83268db1c85c9c3ab6a123",
-                "amount": "10000000"
+                "asset": "$asset",
+                "recipient": "0x059dbd5f24a000d28f83268db1c85c9c3ab6a123",
+                "amount": "$amount"
               }
             }
         """.trimIndent()
-
-        val CONSISTENT_HASH = "0x" + StructuredDataEncoder(STRUCTURED_DATA).hashStructuredData().toHexString()
     }
 }

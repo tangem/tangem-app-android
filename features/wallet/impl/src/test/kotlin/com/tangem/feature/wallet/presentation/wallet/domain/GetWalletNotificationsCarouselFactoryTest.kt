@@ -93,7 +93,7 @@ internal class GetWalletNotificationsCarouselFactoryTest {
         coEvery { shouldShowYieldBoostMainBannerUseCase(WALLET_ID) } returns model.mainBanner
 
         // Act
-        val result = factory.create(userWallet, clickIntents).first()
+        val result = factory.create(userWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.YieldBoostPromo }).isEqualTo(model.expectedShown)
@@ -111,16 +111,44 @@ internal class GetWalletNotificationsCarouselFactoryTest {
         } returns flowOf(accountStatusList(model.balance))
 
         // Act
-        val result = factory.create(userWallet, clickIntents).first()
+        val result = factory.create(userWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.RateApp }).isEqualTo(model.expectedShown)
     }
 
+    @ParameterizedTest
+    @MethodSource("provideBalanceStateModels")
+    fun `GIVEN total balance WHEN create THEN cards are settled once it stops loading`(
+        model: BalanceStateModel,
+    ) = runTest {
+        // Arrange
+        every {
+            singleAccountStatusListSupplier(any<SingleAccountStatusListProducer.Params>())
+        } returns flowOf(accountStatusList(model.balance))
+
+        // Act
+        val actual = factory.create(userWallet, clickIntents).first().balanceState
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
+    }
+
+    internal data class BalanceStateModel(val balance: TotalFiatBalance, val expected: NotificationsBalanceState)
+
+    private fun provideBalanceStateModels() = listOf(
+        BalanceStateModel(balance = TotalFiatBalance.Loading, expected = NotificationsBalanceState.Loading),
+        BalanceStateModel(
+            balance = TotalFiatBalance.Loaded(BigDecimal.ONE, StatusSource.CACHE),
+            expected = NotificationsBalanceState.Settled,
+        ),
+        BalanceStateModel(balance = TotalFiatBalance.Failed, expected = NotificationsBalanceState.Settled),
+    )
+
     @Test
     fun `GIVEN banner shown WHEN buttons clicked THEN routes to click intents`() = runTest {
         // Arrange
-        val banner = factory.create(userWallet, clickIntents).first()
+        val banner = factory.create(userWallet, clickIntents).first().notifications
             .filterIsInstance<WalletNotificationUM.YieldBoostPromo>()
             .first()
 
@@ -156,7 +184,7 @@ internal class GetWalletNotificationsCarouselFactoryTest {
         every { getWalletsUseCase() } returns flowOf(wallets)
 
         // Act
-        val result = factory.create(selectedWallet, clickIntents).first()
+        val result = factory.create(selectedWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.any { it is WalletNotificationUM.NoteMigration }).isEqualTo(model.expectedShown)
@@ -168,7 +196,7 @@ internal class GetWalletNotificationsCarouselFactoryTest {
         every { getWalletsUseCase() } returns flowOf(listOf(userWallet))
 
         // Act
-        val result = factory.create(userWallet, clickIntents).first()
+        val result = factory.create(userWallet, clickIntents).first().notifications
 
         // Assert
         assertThat(result.none { it is WalletNotificationUM.NoteMigration }).isTrue()

@@ -8,6 +8,7 @@ import arrow.core.raise.ensure
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CardActivationOrder
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.model.isValidCardLastDigits
 import com.tangem.domain.pay.repository.CustomerOrderRepository
@@ -33,9 +34,9 @@ class ActivatePlasticCardUseCase(
         val order = catch(
             block = {
                 customerOrderRepository
-                    .createCardActivationOrder(
+                    .createOrder(
                         userWalletId = userWalletId,
-                        order = activationOrder,
+                        request = CustomerOrderRequest.CardActivation(order = activationOrder),
                         idempotencyKey = idempotencyKey,
                     )
                     .bind()

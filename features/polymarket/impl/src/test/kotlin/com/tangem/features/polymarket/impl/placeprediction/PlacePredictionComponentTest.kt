@@ -103,13 +103,13 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         coVerify(exactly = 1) { getQuoteUseCase(any()) }
 
         // Act
-        slippage.onSlippageValueChange("1.5")
+        slippage.onSlippageValueChange("5")
         slippage.onSlippageConfirmClick()
         runCurrent()
 
         // Assert
-        assertThat(amount.uiState.value.slippage.percent).isEqualTo(BigDecimal("1.5"))
-        coVerify(exactly = 1) { getQuoteUseCase(match { it.slippagePercent == BigDecimal("1.5") }) }
+        assertThat(amount.uiState.value.slippage.percent).isEqualTo(BigDecimal("5"))
+        coVerify(exactly = 1) { getQuoteUseCase(match { it.slippagePercent == BigDecimal("5") }) }
         lifecycle.destroy()
     }
 
@@ -223,6 +223,7 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         )
         PlacePredictionComponent(
             appComponentContext = context,
+            tokenReceiveComponentFactory = mockk(),
             params = PlacePredictionComponent.Params.Buy(USER_WALLET_ID, EVENT_ID, MARKET_ID, ASSET_ID),
         )
         lifecycle.create()

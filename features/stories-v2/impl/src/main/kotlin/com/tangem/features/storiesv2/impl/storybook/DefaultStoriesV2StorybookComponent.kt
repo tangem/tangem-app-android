@@ -14,43 +14,51 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.features.storiesv2.StoriesV2Component
 import com.tangem.features.storiesv2.StoriesV2PendingAction
+import com.tangem.features.storiesv2.StoriesV2Prefetcher
 import com.tangem.features.storiesv2.StoriesV2Result
 import com.tangem.features.storiesv2.StoriesV2StorybookComponent
 import com.tangem.features.storiesv2.StoryV2ActionTarget
 import com.tangem.features.storiesv2.StoryV2Source
 import com.tangem.features.storiesv2.StoryV2Type
 import com.tangem.features.storiesv2.impl.content.BundledStoryV2ContentSource
+import com.tangem.features.storiesv2.impl.content.StoryV2ContentRepository
 import com.tangem.features.storiesv2.impl.content.StoryV2PreviewContent
+import com.tangem.features.storiesv2.impl.content.remote.StoryV2Registry
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.serialization.builtins.serializer
 
+@Suppress("LongParameterList")
 internal class DefaultStoriesV2StorybookComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: Unit,
     private val previewContent: StoryV2PreviewContent,
     private val bundledSource: BundledStoryV2ContentSource,
+    private val contentRepository: StoryV2ContentRepository,
+    private val prefetcher: StoriesV2Prefetcher,
     private val playerFactory: StoriesV2Component.Factory,
 ) : StoriesV2StorybookComponent, AppComponentContext by appComponentContext {
 
     private val lastResult = MutableStateFlow<String?>(null)
 
-    private val playerNavigation = SlotNavigation<Unit>()
+    /** Keyed by story type name, so a remote story plays through the same path production takes. */
+    private val playerNavigation = SlotNavigation<String>()
 
     private val playerSlot = childSlot(
         source = playerNavigation,
-        serializer = Unit.serializer(),
+        serializer = String.serializer(),
         key = "storiesV2StorybookPlayer",
         // The player registers its own back callback, so it closes the way it does in production instead of
         // being popped from the outside.
         handleBackButton = false,
-        childFactory = { _, componentContext ->
+        childFactory = { typeName, componentContext ->
             playerFactory.create(
                 context = childByContext(componentContext),
                 params = StoriesV2Component.Params(
-                    type = StoryV2Type.ONBOARDING,
+                    type = StoryV2Type.valueOf(typeName),
                     source = StoryV2Source.STORYBOOK,
                     // Every action ends the story, so the result line shows what was tapped.
                     onAction = StoriesV2PendingAction::end,
@@ -59,6 +67,11 @@ internal class DefaultStoriesV2StorybookComponent @AssistedInject constructor(
             )
         },
     )
+
+    init {
+        // Until a real entry point exists, opening the showcase is the moment a remote story becomes known.
+        prefetchRemoteStories()
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -71,7 +84,11 @@ internal class DefaultStoriesV2StorybookComponent @AssistedInject constructor(
         } else {
             StoriesV2StorybookScreen(
                 lastResult = result,
+                remoteStories = StoryV2Registry.remoteTypes,
                 onPresetClick = ::onPresetClick,
+                onRemoteStoryClick = ::onRemoteStoryClick,
+                onPrefetchClick = ::onPrefetchClick,
+                onClearRemoteClick = ::onClearRemoteClick,
                 modifier = modifier,
             )
         }
@@ -85,7 +102,30 @@ internal class DefaultStoriesV2StorybookComponent @AssistedInject constructor(
             StoryV2Preset.build(preset = preset, bundled = bundledSource)
         }
         lastResult.value = null
-        playerNavigation.activate(Unit)
+        playerNavigation.activate(StoryV2Type.ONBOARDING.name)
+    }
+
+    private fun onRemoteStoryClick(type: StoryV2Type) {
+        previewContent.composition = null
+        lastResult.value = null
+        playerNavigation.activate(type.name)
+    }
+
+    private fun onPrefetchClick() {
+        prefetchRemoteStories()
+        lastResult.value = "Prefetch started"
+    }
+
+    /** Leaves the next open with nothing on the device, which is how the loading screen and the retry get seen. */
+    private fun onClearRemoteClick() {
+        componentScope.launch {
+            contentRepository.clearRemoteContent()
+            lastResult.value = "Remote stories cleared"
+        }
+    }
+
+    private fun prefetchRemoteStories() {
+        StoryV2Registry.remoteTypes.forEach(prefetcher::prefetch)
     }
 
     private fun onResult(result: StoriesV2Result) {

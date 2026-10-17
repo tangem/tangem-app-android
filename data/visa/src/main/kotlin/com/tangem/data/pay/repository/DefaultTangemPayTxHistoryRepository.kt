@@ -1,11 +1,9 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
-import com.squareup.moshi.Moshi
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.visa.utils.TangemPayTxHistoryItemConverter
 import com.tangem.spend.datasource.pay.TangemPayApi
-import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.spend.datasource.pay.store.TangemPayTxHistoryItemsStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchFlow
@@ -31,10 +29,8 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
     private val cacheRegistry: CacheRegistry,
     private val txHistoryItemsStore: TangemPayTxHistoryItemsStore,
     private val dispatchers: CoroutineDispatcherProvider,
-    @NetworkMoshi private val moshi: Moshi,
+    private val txHistoryItemConverter: TangemPayTxHistoryItemConverter,
 ) : TangemPayTxHistoryRepository {
-
-    private val txHistoryItemConverter by lazy { TangemPayTxHistoryItemConverter(moshi) }
 
     override fun getTxHistoryBatchFlow(
         userWalletId: UserWalletId,

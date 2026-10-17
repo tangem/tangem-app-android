@@ -287,7 +287,6 @@ class BuildTokenSelectorSectionsTransformerTest {
                 fiatAmount = BigDecimal("30000.0"),
                 fiatRate = BigDecimal("30000.0"),
                 priceChange = BigDecimal("1.0"),
-                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),

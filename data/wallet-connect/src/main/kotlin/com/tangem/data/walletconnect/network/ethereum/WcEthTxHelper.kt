@@ -22,6 +22,7 @@ import com.tangem.domain.account.status.utils.CryptoCurrencyOperations.getCrypto
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.tokens.model.Amount as DomainAmount
 import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.walletconnect.model.WcApprovedAmount
 import com.tangem.domain.walletconnect.model.WcEthTransactionParams
@@ -79,19 +80,34 @@ internal class WcEthTxHelper @Inject constructor(
         )
     }
 
-    fun getApprovedAmount(txData: String?, result: CheckTransactionResult): ApproveInfo.Amount? {
-        val approvalMethodId = ApprovalERC20TokenCallData("", null).methodId
-        val isApprovalWcMethod = txData?.startsWith(approvalMethodId)
-        if (isApprovalWcMethod != true) return null
-        val simulation = result.simulation as? SimulationResult.Success
-            ?: return null
-        val approves = (simulation.data as? SimulationData.Approve)
+    /**
+     * The allowance is decoded from the calldata that is going to be signed: BlockAid exposure reflects the balance
+     * currently at risk, not the requested allowance, so it's used only for token metadata.
+     */
+    fun getApprovedAmount(txData: String?, result: CheckTransactionResult): WcApprovedAmount? {
+        val approvalCallData = txData?.decodeApprovalCallData() ?: return null
+        val simulation = result.simulation as? SimulationResult.Success ?: return null
+        val tokenInfo = (simulation.data as? SimulationData.Approve)
             ?.items
             ?.filterIsInstance<ApproveInfo.Amount>()
+            ?.firstOrNull()
+            ?.tokenInfo
             ?: return null
-        if (approves.isEmpty()) return null
-        val amount = approves.first()
-        return amount
+
+        return WcApprovedAmount(
+            amount = DomainAmount(
+                currencySymbol = tokenInfo.symbol,
+                decimals = tokenInfo.decimals,
+                value = approvalCallData.amount?.value?.movePointLeft(tokenInfo.decimals)?.stripTrailingZeros(),
+            ),
+            logoUrl = tokenInfo.logoUrl,
+            chainId = tokenInfo.chainId,
+        )
+    }
+
+    private fun String.decodeApprovalCallData(): ApprovalERC20TokenCallData? {
+        val bytes = runCatching { removePrefix(HEX_PREFIX).hexToBytes() }.getOrNull() ?: return null
+        return ApprovalERC20TokenCallData(bytes)
     }
 }
 

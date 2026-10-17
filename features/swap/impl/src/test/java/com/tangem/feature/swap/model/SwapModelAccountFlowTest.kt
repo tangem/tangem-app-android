@@ -8,10 +8,18 @@ import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.utils.parseBigDecimal
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.lce.Lce
@@ -22,6 +30,7 @@ import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -55,8 +64,10 @@ import com.tangem.feature.swap.models.ChangeCardsButtonState
 import com.tangem.feature.swap.models.SwapButton
 import com.tangem.feature.swap.models.SwapCardState
 import com.tangem.feature.swap.models.SwapStateHolder
+import com.tangem.feature.swap.models.TransactionCardType
 import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.models.states.ProviderState
+import com.tangem.feature.swap.models.PredictionTopUpLimits
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.router.SwapRoute
 import com.tangem.feature.swap.ui.transfer.SwapTransferNotificationsFactory
@@ -66,6 +77,7 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooserBlock
 import com.tangem.features.commonfeatures.api.choosetoken.PaymentAccountTokens
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.utils.extensions.orZero
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
@@ -86,7 +98,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.CsvSource
 import java.math.BigDecimal
+import java.util.Locale
 
 /**
  * Tests for mode-based withdrawal detection driven by [AccountFlow] plus the hidden/no-op reverse
@@ -117,7 +131,11 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         // real Left so that branch resolves via createInitialErrorState (which does not touch receiveCardData/
         // sendCardData's fiatSymbolOverride/isSelectionLocked/tokenSymbol, so it doesn't affect these tests).
         coEvery {
-            swapInteractor.getPair(fromSwapCurrencyStatus = any(), toSwapCurrencyStatus = any(), filterProviderTypes = any())
+            swapInteractor.getPair(
+                fromSwapCurrencyStatus = any(),
+                toSwapCurrencyStatus = any(),
+                filterProviderTypes = any()
+            )
         } returns Either.Left(ExpressError.UnknownError)
         coEvery {
             getMinimumTransactionAmountSyncUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
@@ -773,9 +791,12 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN a prediction withdraw WHEN the state is built THEN the send card is locked and the title is Withdraw`() =
         runTest {
             // Arrange
-            stubResolvedPredictionPair()
+            val (collateral, destination) = stubResolvedPredictionPair()
             stubTransferState()
             stubTransferStateBuilderPassthrough()
+            every { getSelectedAppCurrencyUseCase.invoke() } returns flowOf(
+                AppCurrency(code = "EUR", name = "Euro", symbol = "€").right(),
+            )
 
             // Act
             val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
@@ -784,10 +805,154 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             // Assert
             val sendCard = model.uiState.sendCardData as SwapCardState.SwapCardData
             assertThat(sendCard.isSelectionLocked).isTrue()
+            assertThat(sendCard.currencyIconState).isEqualTo(CurrencyIconState.PredictionAccount())
+            assertThat(sendCard.fiatSymbolOverride).isEqualTo(AppCurrency.Default.code)
+            assertThat(sendCard.amountCurrencyOverride).isEqualTo(AppCurrency.Default)
+            val expectedBalance = collateral.status.value.amount.format {
+                fiat(AppCurrency.Default.code, AppCurrency.Default.symbol)
+            }
+            assertThat(sendCard.balance)
+                .isEqualTo(resourceReference(R.string.common_balance, wrappedList(expectedBalance)))
+            val receiveCard = model.uiState.receiveCardData as SwapCardState.SwapCardData
+            assertThat(receiveCard.tokenSymbol).isEqualTo(stringReference(destination.currency.symbol))
+            assertThat(receiveCard.fiatSymbolOverride).isNull()
+            assertThat(receiveCard.amountCurrencyOverride).isNull()
             assertThat(model.uiState.titleId).isEqualTo(R.string.prediction_main_withdraw)
             assertThat(model.uiState.changeCardsButtonState).isEqualTo(ChangeCardsButtonState.HIDDEN)
             model.onDestroy()
         }
+
+    @ParameterizedTest
+    @CsvSource(
+        value = [
+            "en-US|1.235|$1.235",
+            "en-US|10.999999|$10.999999",
+            "en-US|1.2399999|$1.239999",
+            "en-US|1.230000|$1.23",
+            "en-US|10|$10.00",
+            "en-US|0|$0.00",
+            "en-US|0.000001|$0.000001",
+            "en-US|0.009999|$0.009999",
+            "en-US|1234.567890|$1,234.56789",
+            "en-US|null|—",
+            "de-DE|1234.567890|1.234,56789\u00a0$",
+            "de-DE|0.000001|0,000001\u00a0$",
+        ],
+        delimiter = '|',
+        nullValues = ["null"],
+    )
+    fun `GIVEN a prediction balance WHEN withdrawing THEN the USD balance preserves spendable precision`(
+        localeTag: String,
+        balance: String?,
+        expected: String,
+    ) = runTest {
+        // Arrange
+        val originalLocale = Locale.getDefault()
+        Locale.setDefault(Locale.forLanguageTag(localeTag))
+        try {
+            val (collateral, _) = stubResolvedPredictionPair()
+            every { collateral.status.value.amount } returns balance?.toBigDecimal()
+            stubTransferState()
+            stubTransferStateBuilderPassthrough()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+            try {
+                advanceUntilIdle()
+
+                // Assert
+                val sendCard = model.uiState.sendCardData as SwapCardState.SwapCardData
+                assertThat(sendCard.balance)
+                    .isEqualTo(resourceReference(R.string.common_balance, wrappedList(expected)))
+            } finally {
+                model.onDestroy()
+            }
+        } finally {
+            Locale.setDefault(originalLocale)
+        }
+    }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN entering USD THEN collateral amount and precision are preserved`() = runTest {
+        val (collateral, destination) = stubResolvedPredictionPair(
+            collateral = polygonUsdcDestination().copy(account = Account.Prediction(userWalletId)),
+        )
+        every { collateral.status.value.fiatRate } returns BigDecimal("0.85")
+        every { collateral.currency.displayDecimals } returns 6
+        every { getSelectedAppCurrencyUseCase.invoke() } returns flowOf(
+            AppCurrency(code = "EUR", name = "Euro", symbol = "€").right(),
+        )
+        coEvery {
+            swapTransferInteractor.updateTransfer(any(), any(), any(), any(), any())
+        } answers {
+            transferState(collateral, destination, arg<String>(2).parseBigDecimalOrNull().orZero(), false)
+        }
+        val model = createModel(
+            accountFlow = AccountFlow.PredictionWithdraw,
+            dispatchers = deferredDispatchers(),
+            swapTransferStateBuilder = realSwapTransferStateBuilder(),
+        )
+        advanceUntilIdle()
+
+        val sendCard = model.uiState.sendCardData as SwapCardState.SwapCardData
+        (sendCard.type as TransactionCardType.Inputtable).onCurrencyChange(true)
+        model.enterAmount("1.234567")
+        advanceUntilIdle()
+
+        val updatedCard = model.uiState.sendCardData as SwapCardState.SwapCardData
+        val amountField = requireNotNull(updatedCard.amountField)
+        assertThat(updatedCard.amountCurrencyOverride).isEqualTo(AppCurrency.Default)
+        assertThat(amountField.isFiatValue).isFalse()
+        assertThat(amountField.cryptoAmount.value).isEqualTo(BigDecimal("1.234567"))
+        assertThat(amountField.cryptoAmount.decimals).isEqualTo(collateral.currency.displayDecimals)
+        assertThat(amountField.value).isEqualTo("1.234567")
+        coVerify {
+            swapTransferInteractor.updateTransfer(collateral, destination, "1.234567", any(), any())
+        }
+
+        val maxAmount = BigDecimal("9.876543")
+        every { swapInteractor.getTokenBalance(collateral.status) } returns SwapAmount(maxAmount, 6)
+        requireNotNull(model.uiState.onMaxAmountSelected).invoke()
+        advanceUntilIdle()
+
+        val maxCard = model.uiState.sendCardData as SwapCardState.SwapCardData
+        assertThat(maxCard.amountCurrencyOverride).isEqualTo(AppCurrency.Default)
+        assertThat(requireNotNull(maxCard.amountField).cryptoAmount.value).isEqualTo(maxAmount)
+        assertThat(requireNotNull(maxCard.amountField).value).isEqualTo(maxAmount.parseBigDecimal(decimals = 6))
+        coVerify {
+            swapTransferInteractor.updateTransfer(collateral, destination, maxAmount.parseBigDecimal(decimals = 6), any(), any())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN the balance updates THEN the source balance stays in USD`() = runTest {
+        val (collateral, _) = stubResolvedPredictionPair()
+        stubTransferState()
+        stubTransferStateBuilderPassthrough()
+        val updatedAmount = BigDecimal("7.5")
+        val updatedStatus = collateral.status.copy(
+            value = mockk<CryptoCurrencyStatus.Value>(relaxed = true) {
+                every { amount } returns updatedAmount
+            },
+        )
+        val predictionValue = mockk<PredictionAccountStatusValue.Active>(relaxed = true) {
+            every { cryptoCurrencyStatus } returns updatedStatus
+        }
+        every { singleAccountStatusSupplier(any()) } returns flowOf(
+            AccountStatus.Prediction(account = Account.Prediction(userWalletId), value = predictionValue),
+        )
+
+        val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+        advanceUntilIdle()
+
+        val sendCard = model.uiState.sendCardData as SwapCardState.SwapCardData
+        val expectedBalance = updatedAmount.format { fiat(AppCurrency.Default.code, AppCurrency.Default.symbol) }
+        assertThat(sendCard.balance)
+            .isEqualTo(resourceReference(R.string.common_balance, wrappedList(expectedBalance)))
+        assertThat(sendCard.amountCurrencyOverride).isEqualTo(AppCurrency.Default)
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN a prediction top-up WHEN the state is built THEN the receive card is locked and the title is Add funds`() =
@@ -804,6 +969,86 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             assertThat(receiveCard.isSelectionLocked).isTrue()
             assertThat(model.uiState.titleId).isEqualTo(R.string.common_add_funds)
             assertThat(model.uiState.changeCardsButtonState).isEqualTo(ChangeCardsButtonState.HIDDEN)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up with accounts mode off WHEN the state is built THEN both cards show account names`() =
+        runTest {
+            // Arrange
+            val (from, collateral) = stubResolvedTopUpPair()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            val sendTitle = (model.uiState.sendCardData as SwapCardState.SwapCardData).type.accountTitleUM
+            val receiveTitle = (model.uiState.receiveCardData as SwapCardState.SwapCardData).type.accountTitleUM
+            assertThat((sendTitle as AccountTitleUM.Account).name).isEqualTo(from.account.accountName.toUM().value)
+            assertThat((receiveTitle as AccountTitleUM.Account).icon).isEqualTo(AccountIconUM.Prediction)
+            assertThat(receiveTitle.name).isEqualTo(resourceReference(R.string.prediction_account_title))
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN the state is built THEN the receive card shows the prediction account in USD`() =
+        runTest {
+            // Arrange
+            val (_, collateral) = stubResolvedTopUpPair()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            val receiveCard = model.uiState.receiveCardData as SwapCardState.SwapCardData
+            val expectedBalance = collateral.status.value.amount.format {
+                fiat(
+                    fiatCurrencyCode = AppCurrency.Default.code,
+                    fiatCurrencySymbol = AppCurrency.Default.symbol,
+                )
+            }
+            assertThat(receiveCard.currencyIconState).isEqualTo(CurrencyIconState.PredictionAccount())
+            assertThat(receiveCard.fiatSymbolOverride).isEqualTo("USD")
+            assertThat(receiveCard.balance)
+                .isEqualTo(resourceReference(R.string.common_balance, wrappedList(expectedBalance)))
+            assertThat(receiveCard.tokenSymbol).isEqualTo(stringReference(collateral.currency.symbol))
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN the prediction balance changes THEN the receive card shows the new USD balance`() =
+        runTest {
+            // Arrange
+            val (_, collateral) = stubResolvedTopUpPair()
+            val updatedAmount = BigDecimal("7.5")
+            val updatedCollateralStatus = collateral.status.copy(
+                value = mockk<CryptoCurrencyStatus.Value>(relaxed = true) {
+                    every { amount } returns updatedAmount
+                },
+            )
+            val predictionStatusValue = mockk<PredictionAccountStatusValue.Active>(relaxed = true) {
+                every { cryptoCurrencyStatus } returns updatedCollateralStatus
+            }
+            every { singleAccountStatusSupplier(any()) } returns flowOf(
+                AccountStatus.Prediction(account = Account.Prediction(userWalletId), value = predictionStatusValue),
+            )
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            val receiveCard = model.uiState.receiveCardData as SwapCardState.SwapCardData
+            val expectedBalance = updatedAmount.format {
+                fiat(
+                    fiatCurrencyCode = AppCurrency.Default.code,
+                    fiatCurrencySymbol = AppCurrency.Default.symbol,
+                )
+            }
+            assertThat(receiveCard.balance)
+                .isEqualTo(resourceReference(R.string.common_balance, wrappedList(expectedBalance)))
             model.onDestroy()
         }
 
@@ -926,6 +1171,69 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
+    fun `GIVEN a prediction top-up with a $10 minimum and a 0_5 USDC rate WHEN the transfer is built THEN the builder gets the limits in USDC`() =
+        runTest {
+            // Arrange
+            coEvery { getPredictionTopUpMinimumUseCase(userWalletId) } returns BigDecimal("10")
+            coEvery { getCurrencyUSDQuoteUseCase(CryptoCurrency.RawID("usd-coin")) } returns BigDecimal("0.5")
+
+            // Act
+            val model = createTopUpTransferModel(accountFlow = AccountFlow.PredictionTopUp)
+
+            // Assert
+            val limits = capturedTopUpLimits().last()
+            assertThat(limits?.minimum).isEqualTo(BigDecimal("20.000000"))
+            assertThat(limits?.maximum).isEqualTo(BigDecimal("100000.000000"))
+            coVerify { getCurrencyUSDQuoteUseCase(CryptoCurrency.RawID("usd-coin")) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up without a USD quote WHEN the transfer is built THEN no limits reach the builder`() =
+        runTest {
+            // Arrange
+            coEvery { getPredictionTopUpMinimumUseCase(userWalletId) } returns BigDecimal("10")
+            coEvery { getCurrencyUSDQuoteUseCase(any()) } returns null
+
+            // Act
+            val model = createTopUpTransferModel(accountFlow = AccountFlow.PredictionTopUp)
+
+            // Assert
+            assertThat(capturedTopUpLimits().toSet()).containsExactly(null)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN no account flow WHEN the transfer is built THEN the prediction limits are not resolved`() = runTest {
+        // Arrange
+        coEvery { getPredictionTopUpMinimumUseCase(userWalletId) } returns BigDecimal("10")
+
+        // Act
+        val model = createTopUpTransferModel(accountFlow = null)
+
+        // Assert
+        assertThat(capturedTopUpLimits().toSet()).containsExactly(null)
+        coVerify(exactly = 0) { getPredictionTopUpMinimumUseCase(any()) }
+        model.onDestroy()
+    }
+
+    private fun capturedTopUpLimits(): List<PredictionTopUpLimits?> {
+        val captured = mutableListOf<PredictionTopUpLimits?>()
+        verify {
+            swapTransferStateBuilder.createTransferState(
+                actions = any(),
+                transferState = any(),
+                uiStateHolder = any(),
+                feePaidCryptoCurrencyStatus = any(),
+                feeSelectorUM = any(),
+                isHighNetworkFee = any(),
+                predictionTopUpLimits = captureNullable(captured),
+            )
+        }
+        return captured
+    }
+
+    @Test
     fun `GIVEN no account flow WHEN the same transfer is sent THEN no funding window opens`() = runTest {
         // Arrange
         val model = createTopUpTransferModel(accountFlow = null)
@@ -1023,17 +1331,18 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN a Tangem Pay withdraw WHEN no amount is entered yet THEN the button keeps its default label`() = runTest {
-        // Arrange
+    fun `GIVEN a Tangem Pay withdraw WHEN no amount is entered yet THEN the button keeps its default label`() =
+        runTest {
+            // Arrange
 
-        // Act
-        val model = createModel(accountFlow = AccountFlow.Withdraw)
-        advanceUntilIdle()
+            // Act
+            val model = createModel(accountFlow = AccountFlow.Withdraw)
+            advanceUntilIdle()
 
-        // Assert
-        assertThat(model.uiState.swapButton.title).isNull()
-        model.onDestroy()
-    }
+            // Assert
+            assertThat(model.uiState.swapButton.title).isNull()
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN a prediction withdraw WHEN the destinations request fails THEN an error is shown`() = runTest {
@@ -1151,6 +1460,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             coEvery { submitPredictionWithdrawalInteractor.prepare(any()) } returns prepared.right()
             coEvery { submitPredictionWithdrawalInteractor.confirm(prepared) } returns receipt.right()
             val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+            val bottomSheetSlot = SlotTracker(model.flatSheetSlotNavigation)
             advanceUntilIdle()
             model.enterAmount("5")
             advanceUntilIdle()
@@ -1168,7 +1478,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             verify { swapTransferStateBuilder.createPredictionWithdrawalSentState(any(), any()) }
             verify { router.replaceAll(SwapRoute.Success) }
             verify(exactly = 0) { messageSender.send(any()) }
-            assertThat(model.uiState.bottomSheetConfig).isNull()
+            assertThat(bottomSheetSlot.results).isEmpty()
             coVerify(exactly = 0) { swapTransferInteractor.withdrawTangemPay(any(), any(), any(), any()) }
             model.onDestroy()
         }
@@ -1285,30 +1595,31 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
-    fun `GIVEN a prediction withdraw WHEN the interactor fails THEN an alert is shown and nothing is tracked`() = runTest {
-        // Arrange
-        stubResolvedPredictionPair(destination = polygonUsdcDestination())
-        stubTransferState(sendingAmount = BigDecimal("5"))
-        stubTransferStateBuilderPassthrough()
-        stubStoredPolymarketAddresses()
-        coEvery { submitPredictionWithdrawalInteractor.prepare(any()) } returns
-            PredictionWithdrawalFailure.AddressUnavailable.left()
-        val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
-        advanceUntilIdle()
-        model.enterAmount("5")
-        advanceUntilIdle()
+    fun `GIVEN a prediction withdraw WHEN the interactor fails THEN an alert is shown and nothing is tracked`() =
+        runTest {
+            // Arrange
+            stubResolvedPredictionPair(destination = polygonUsdcDestination())
+            stubTransferState(sendingAmount = BigDecimal("5"))
+            stubTransferStateBuilderPassthrough()
+            stubStoredPolymarketAddresses()
+            coEvery { submitPredictionWithdrawalInteractor.prepare(any()) } returns
+                PredictionWithdrawalFailure.AddressUnavailable.left()
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+            advanceUntilIdle()
+            model.enterAmount("5")
+            advanceUntilIdle()
 
-        // Act
-        model.uiState.swapButton.onClick()
-        advanceUntilIdle()
+            // Act
+            model.uiState.swapButton.onClick()
+            advanceUntilIdle()
 
-        // Assert
-        coVerify(exactly = 0) { submitPredictionWithdrawalInteractor.confirm(any()) }
-        verify(exactly = 0) { predictionWithdrawalTracker.track(any()) }
-        verify(exactly = 1) { messageSender.send(any()) }
-        verify(exactly = 0) { router.replaceAll(SwapRoute.Success) }
-        model.onDestroy()
-    }
+            // Assert
+            coVerify(exactly = 0) { submitPredictionWithdrawalInteractor.confirm(any()) }
+            verify(exactly = 0) { predictionWithdrawalTracker.track(any()) }
+            verify(exactly = 1) { messageSender.send(any()) }
+            verify(exactly = 0) { router.replaceAll(SwapRoute.Success) }
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN a withdrawal already in flight WHEN confirmed THEN it is tracked, an alert is shown and the screen stays`() =
@@ -1405,7 +1716,12 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 feePaidCurrencyStatus = any(),
                 fee = null,
             )
-        } returns transferState(from = collateral, to = destination, amount = aboveBalance, isInsufficientBalance = true)
+        } returns transferState(
+            from = collateral,
+            to = destination,
+            amount = aboveBalance,
+            isInsufficientBalance = true
+        )
         val model = createModel(
             accountFlow = AccountFlow.PredictionWithdraw,
             dispatchers = deferredDispatchers(),
@@ -1424,7 +1740,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
 
     private fun realSwapTransferStateBuilder(): SwapTransferStateBuilder {
         val notificationsFactory: SwapTransferNotificationsFactory = mockk {
-            every { getNotifications(any(), any(), any(), any(), any()) } returns persistentListOf()
+            every { getNotifications(any(), any(), any(), any(), any(), any()) } returns persistentListOf()
         }
         val isFeeApproximateUseCase: IsFeeApproximateUseCase = mockk {
             every { invoke(networkId = any(), amountType = any()) } returns false
@@ -1496,7 +1812,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
 
     private fun stubTransferStateBuilderPassthrough() {
         every {
-            swapTransferStateBuilder.createTransferState(any(), any(), any(), any(), any(), any())
+            swapTransferStateBuilder.createTransferState(any(), any(), any(), any(), any(), any(), any())
         } answers {
             arg<SwapStateHolder>(2).copy(
                 swapButton = SwapButton(
@@ -1509,7 +1825,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
         every {
             swapTransferStateBuilder.updateTransferButtonEnableState(
-                any(), any(), any(), any(), any(), any(), any(), any(), any(),
+                any(), any(), any(), any(), any(), any(), any(), any(), any(), any(),
             )
         } answers { arg<SwapStateHolder>(3) }
         every { swapTransferStateBuilder.updateTransferTitle(any()) } answers { firstArg() }
@@ -1613,9 +1929,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             chainId = POLYGON_CHAIN_ID,
             tokenAddress = USDC_CONTRACT_ADDRESS.lowercase(),
         ),
+        collateral: SwapCurrencyStatus = buildSwapCurrencyStatus(accountFlowUserWallet())
+            .copy(account = Account.Prediction(userWalletId)),
     ): Pair<SwapCurrencyStatus, SwapCurrencyStatus> {
-        val wallet = accountFlowUserWallet()
-        val collateral = buildSwapCurrencyStatus(wallet).copy(account = Account.Prediction(userWalletId))
         every { multiAccountStatusListSupplier() } returns
             flowOf(listOf(accountStatusList(listOf(personalAccountStatus(listOf(destination.status))))))
         coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns
@@ -1651,7 +1967,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         feeType: AnalyticsParam.FeeType = AnalyticsParam.FeeType.Normal,
     ): SwapModel {
         val from = swapCurrencyStatus()
-        val collateral = swapCurrencyStatus(account = Account.Prediction(userWalletId))
+        val collateral = swapCurrencyStatus(currency = usdcPolygonToken(), account = Account.Prediction(userWalletId))
         coEvery {
             initialCurrenciesResolver.invoke(
                 userWalletId = any(),

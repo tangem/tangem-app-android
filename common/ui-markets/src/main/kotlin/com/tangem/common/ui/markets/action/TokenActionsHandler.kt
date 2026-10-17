@@ -8,6 +8,7 @@ import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.common.ui.tokens.getUnavailabilityReasonTitle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.JointAccountFakedoorAnalyticsEvent
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -18,6 +19,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.model.OnrampSource
@@ -130,6 +132,9 @@ class TokenActionsHandler @AssistedInject constructor(
             context.swapPosition == AppRoute.Swap.CurrencyPosition.TO
         if (reason == ScenarioUnavailabilityReason.None || isJointAddFundsSwap) return false
 
+        if (reason == ScenarioUnavailabilityReason.JointAccount && context == TokenActionsContext.Transfer) {
+            sendJointFakedoor(action = action, currency = cryptoCurrencyData.status.currency)
+        }
         uiMessageSender.send(
             DialogMessage(
                 message = reason.getUnavailabilityReasonText(),
@@ -137,6 +142,23 @@ class TokenActionsHandler @AssistedInject constructor(
             ),
         )
         return true
+    }
+
+    private fun sendJointFakedoor(action: TokenActionsBSContentUM.Action, currency: CryptoCurrency) {
+        val fakedoorAction = when (action) {
+            TokenActionsBSContentUM.Action.Exchange -> JointAccountFakedoorAnalyticsEvent.Action.Swap
+            TokenActionsBSContentUM.Action.SendWithSwap -> JointAccountFakedoorAnalyticsEvent.Action.SwapAndSend
+            TokenActionsBSContentUM.Action.Sell -> JointAccountFakedoorAnalyticsEvent.Action.Sell
+            else -> return
+        }
+        analyticsEventHandler.send(
+            JointAccountFakedoorAnalyticsEvent(
+                source = JointAccountFakedoorAnalyticsEvent.Source.Transfer,
+                action = fakedoorAction,
+                blockchain = currency.network.name,
+                token = currency.symbol,
+            ),
+        )
     }
 
     private fun warnAboutBackupErrorOrProceed(

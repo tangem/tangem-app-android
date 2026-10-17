@@ -2,6 +2,7 @@ package com.tangem.datasource.local.datastore
 
 import android.content.Context
 import androidx.datastore.core.CorruptionException
+import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Serializer
@@ -9,12 +10,16 @@ import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
+import com.tangem.core.remote.json.NetworkJson
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
 import java.io.File
 import javax.inject.Inject
 
@@ -30,17 +35,31 @@ internal class DefaultAppDataStoreFactory @Inject constructor(
     @ApplicationContext private val context: Context,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val appScope: AppCoroutineScope,
+    @NetworkJson private val json: Json,
+    private val featureTogglesManager: FeatureTogglesManager,
 ) : AppDataStoreFactory {
+
+    override val isKotlinxDataStoreEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18288_KOTLINX_DATASTORE_ENABLED)
 
     override fun <T> create(defaultValue: T, serializer: KSerializer<T>, fileName: String): DataStore<T> {
         return create(
-            serializer = KotlinxDataStoreSerializer(defaultValue = defaultValue, serializer = serializer),
+            serializer = if (isKotlinxDataStoreEnabled) {
+                KotlinxDataStoreSerializer(defaultValue = defaultValue, serializer = serializer, json = json)
+            } else {
+                KotlinxDataStoreSerializer(defaultValue = defaultValue, serializer = serializer)
+            },
             scope = appScope,
             produceFile = { context.dataStoreFile(fileName) },
         )
     }
 
-    override fun <T> create(serializer: Serializer<T>, scope: CoroutineScope, produceFile: () -> File): DataStore<T> {
+    override fun <T> create(
+        serializer: Serializer<T>,
+        scope: CoroutineScope,
+        produceFile: () -> File,
+        migrations: List<DataMigration<T>>,
+    ): DataStore<T> {
         val file = produceFile()
         return DataStoreFactory.create(
             serializer = serializer,
@@ -48,6 +67,7 @@ internal class DefaultAppDataStoreFactory @Inject constructor(
                 analyticsExceptionHandler.sendException(corruptionEvent(file = file, cause = exception))
                 serializer.defaultValue
             },
+            migrations = migrations,
             scope = scope,
             produceFile = { file },
         )

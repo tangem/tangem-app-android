@@ -91,6 +91,7 @@ import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.moneyaccount.main.component.MoneyAccountMainBlockComponent
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
+import com.tangem.utils.annotations.RemoveWithToggle
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toImmutableMap
@@ -111,6 +112,8 @@ internal fun WalletScreen(
     jointAccountComponent: JointAccountMainBlockComponent,
     modifier: Modifier = Modifier,
     isNewShtorkaEnabled: Boolean = false,
+    @RemoveWithToggle("TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED")
+    isHideMarketingWhileSystemEnabled: Boolean = false,
     isShtorkaBlurEnabled: () -> Boolean = { true },
     isShtorkaPartialExpansionSupported: Boolean = false,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
@@ -167,6 +170,7 @@ internal fun WalletScreen(
         jointAccountComponent = jointAccountComponent,
         behavior = behavior,
         isNewShtorkaEnabled = isNewShtorkaEnabled,
+        isHideMarketingWhileSystemEnabled = isHideMarketingWhileSystemEnabled,
         isShtorkaBlurEnabled = isShtorkaBlurEnabled,
         isShtorkaPartialExpansionSupported = isShtorkaPartialExpansionSupported,
         shtorkaHeaderContent = shtorkaHeaderContent,
@@ -205,6 +209,8 @@ private fun WalletContent(
     listStates: ImmutableMap<Int, LazyListState>,
     modifier: Modifier = Modifier,
     isNewShtorkaEnabled: Boolean = false,
+    @RemoveWithToggle("TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED")
+    isHideMarketingWhileSystemEnabled: Boolean = false,
     isShtorkaBlurEnabled: () -> Boolean = { true },
     isShtorkaPartialExpansionSupported: Boolean = false,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
@@ -399,7 +405,9 @@ private fun WalletContent(
                                         isBalanceHidden = state.isHidingMode,
                                         contentPadding = contentPadding,
                                         tangemPayComponent = tangemPayComponent,
-                                        promoBannersBlockComponent = promoBannersBlockComponent,
+                                        promoBannersBlockComponent = promoBannersBlockComponent?.takeIf {
+                                            !isHideMarketingWhileSystemEnabled || currentWallet.isMarketingBlockVisible
+                                        },
                                         walletId = currentWalletId,
                                         moneyAccountComponent = moneyAccountComponent,
                                         polymarketComponent = polymarketComponent,
