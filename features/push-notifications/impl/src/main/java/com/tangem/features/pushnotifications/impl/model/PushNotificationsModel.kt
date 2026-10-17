@@ -2,13 +2,13 @@ package com.tangem.features.pushnotifications.impl.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.pushnotificationpreferences.MarkPushNotificationFirstActivationDoneUseCase
@@ -35,7 +35,7 @@ internal class PushNotificationsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
     private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val analyticHandler: AnalyticsEventHandler,
     private val notificationsRepository: NotificationsRepository,
     private val userWalletsListRepository: UserWalletsListRepository,
@@ -147,7 +147,7 @@ internal class PushNotificationsModel @Inject constructor(
         if (params.isBottomSheet) {
             notificationsRepository.setUserAllowToSubscribeOnPushNotifications(false)
         } else {
-            params.nextRoute?.let { appRouter.replaceAll(it) }
+            params.nextRoute?.let { router.replaceAll(it) }
         }
         params.modelCallbacks.onDenySystemPermission()
     }
@@ -167,7 +167,7 @@ internal class PushNotificationsModel @Inject constructor(
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             params.modelCallbacks.onAllowSystemPermission()
             if (!params.isBottomSheet) {
-                params.nextRoute?.let { appRouter.replaceAll(it) }
+                params.nextRoute?.let { router.replaceAll(it) }
             }
         }
     }
@@ -186,7 +186,7 @@ internal class PushNotificationsModel @Inject constructor(
             markFirstActivationDoneForAllWallets()
             params.modelCallbacks.onDenySystemPermission()
             if (!params.isBottomSheet) {
-                params.nextRoute?.let { appRouter.replaceAll(it) }
+                params.nextRoute?.let { router.replaceAll(it) }
             }
         }
     }

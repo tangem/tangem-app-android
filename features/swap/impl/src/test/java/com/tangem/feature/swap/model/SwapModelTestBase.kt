@@ -35,6 +35,7 @@ import com.tangem.domain.polymarket.usecase.GetPredictionTopUpMinimumUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionDepositCurrencyStatusesUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionWithdrawalTracker
 import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
@@ -141,6 +142,9 @@ internal abstract class SwapModelTestBase {
     }
     protected val getPredictionDepositCurrencyStatusesUseCase: GetPredictionDepositCurrencyStatusesUseCase = mockk {
         coEvery { this@mockk(any()) } returns emptyList()
+    }
+    protected val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher = mockk {
+        coEvery { this@mockk(any()) } returns Unit.right()
     }
     protected val backupErrorWarningSender: BackupErrorWarningSender = mockk {
         every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
@@ -296,6 +300,7 @@ internal abstract class SwapModelTestBase {
         ),
         getPredictionDepositCurrencyStatusesUseCase = getPredictionDepositCurrencyStatusesUseCase,
         backupErrorWarningSender = backupErrorWarningSender,
+        collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
     )
 
     // region builders

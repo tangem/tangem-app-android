@@ -17,6 +17,6 @@ internal data class SendIntentResponse(
     @SerialName("comment") val comment: String?,
     /** Hash of the transaction the app reported for the intent. */
     @SerialName("txHash") val txHash: String?,
-    @SerialName("clientId") val clientId: String,
+    @SerialName("clientId") val clientId: String?,
     @SerialName("sessionId") val sessionId: String,
 )
