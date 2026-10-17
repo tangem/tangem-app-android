@@ -9,6 +9,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
+import com.tangem.core.ui.res.generated.icons.ic_percent_backward_24
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.details.impl.R
@@ -168,6 +169,7 @@ internal class TangemPayTxHistoryItemsConverter(
             title = when (collateral.type) {
                 TangemPayTxHistoryItem.Type.Deposit -> resourceReference(R.string.tangem_pay_deposit)
                 TangemPayTxHistoryItem.Type.Withdrawal -> resourceReference(R.string.tangem_pay_withdrawal)
+                TangemPayTxHistoryItem.Type.Cashback -> resourceReference(R.string.tangempay_cashback_title)
             },
             subtitle = resourceReference(R.string.common_transfer),
             time = DateTimeFormatters.formatDate(collateral.date, DateTimeFormatters.timeFormatter),
@@ -175,6 +177,7 @@ internal class TangemPayTxHistoryItemsConverter(
                 imageVector = when (collateral.type) {
                     TangemPayTxHistoryItem.Type.Deposit -> Icons.ic_arrow_down_24
                     TangemPayTxHistoryItem.Type.Withdrawal -> Icons.ic_arrow_up_24
+                    TangemPayTxHistoryItem.Type.Cashback -> Icons.ic_percent_backward_24
                 },
                 tintReference = { TangemTheme.colors3.icon.secondary },
             ),
