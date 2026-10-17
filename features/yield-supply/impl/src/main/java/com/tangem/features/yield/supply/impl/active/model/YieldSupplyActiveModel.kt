@@ -28,6 +28,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
@@ -43,7 +44,12 @@ import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.core.res.R as CoreResR
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
+import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
+import com.tangem.features.yield.supply.impl.incentives.claim.model.YieldSupplyClaimPreparer
+import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
+import com.tangem.features.yield.supply.impl.subcomponents.stopearning.model.YieldSupplyWithdrawalClaimBatching
 import com.tangem.features.yield.supply.impl.common.formatter.formatApy
 import com.tangem.features.yield.supply.impl.active.model.transformers.YieldSupplyActiveFeeContentTransformer
 import com.tangem.features.yield.supply.impl.active.model.transformers.YieldSupplyActiveMinAmountTransformer
@@ -56,7 +62,9 @@ import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.Clock
 import javax.inject.Inject
 
@@ -68,6 +76,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val analyticsHandler: AnalyticsEventHandler,
     private val yieldSupplyGetProtocolBalanceUseCase: YieldSupplyGetProtocolBalanceUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
+    private val yieldSupplyClaimPreparer: YieldSupplyClaimPreparer,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
     private val yieldSupplyGetCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase,
     private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
@@ -76,9 +85,11 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val urlOpener: UrlOpener,
     private val router: Router,
+    private val appRouter: AppRouter,
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
     private val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase,
     private val boostStoryPreloader: YieldBoostStoryPreloader,
+    private val yieldSupplyClaimTracker: YieldSupplyClaimTracker,
 ) : Model(), YieldSupplyStopEarningComponent.ModelCallback,
     YieldSupplyApproveComponent.ModelCallback {
 
@@ -95,12 +106,20 @@ internal class YieldSupplyActiveModel @Inject constructor(
         ),
     )
 
+    val claimResultFlow: StateFlow<YieldSupplyClaimResultUM?>
+        field = MutableStateFlow<YieldSupplyClaimResultUM?>(null)
+
     val balanceHiddenFlow = MutableStateFlow(false)
     val transactionInProgressFlow: StateFlow<Boolean>
         field = MutableStateFlow(false)
 
     private val userWalletId = params.userWalletId
     private val cryptoCurrency = cryptoCurrencyStatusFlow.value.currency
+
+    private var wasClaimOfferedBeforeWithdrawal = false
+
+    private var stopEarningDecision: Job? = null
+
     private var appCurrency = AppCurrency.Default
 
     val marketingRequest: Flow<MarketingBannerRequest?> = flowOf(
@@ -141,6 +160,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
             ),
         )
         subscribeOnCurrencyStatusUpdates()
+        subscribeOnClaimOutcome()
         loadBoostBlock()
         modelScope.launch(dispatchers.io) { boostStoryPreloader.preload() }
 
@@ -203,8 +223,52 @@ internal class YieldSupplyActiveModel @Inject constructor(
         slotNavigation.activate(YieldSupplyActiveRoute.Approve)
     }
 
+    /**
+     * Where the claim cannot ride the withdrawal batch, the first withdrawal attempt with claimable rewards opens the
+     * claim sheet instead: the withdrawal deactivates the module the rewards sit on. Offered once — a second tap goes
+     * through to the withdrawal whatever the owner chose.
+     */
     fun onStopEarning() {
-        slotNavigation.activate(YieldSupplyActiveRoute.Exit)
+        if (YieldSupplyWithdrawalClaimBatching.isSupported(cryptoCurrency.network)) {
+            slotNavigation.activate(YieldSupplyActiveRoute.Exit)
+        } else {
+            offerClaimBeforeWithdrawal()
+        }
+    }
+
+    private fun offerClaimBeforeWithdrawal() {
+        if (stopEarningDecision?.isActive == true) return
+
+        stopEarningDecision = modelScope.launch {
+            // A stalled incentives backend must not keep the user from the withdrawal
+            val claimRoute = withTimeoutOrNull(OFFER_CLAIM_TIMEOUT_MILLIS) { claimRouteBeforeWithdrawal() }
+            if (claimRoute != null) {
+                wasClaimOfferedBeforeWithdrawal = true
+                slotNavigation.activate(claimRoute)
+            } else {
+                slotNavigation.activate(YieldSupplyActiveRoute.Exit)
+            }
+        }
+    }
+
+    private suspend fun claimRouteBeforeWithdrawal(): YieldSupplyActiveRoute.Claim? {
+        if (wasClaimOfferedBeforeWithdrawal) return null
+
+        val token = cryptoCurrency as? CryptoCurrency.Token ?: return null
+        val chainId = yieldSupplyGetTokenStatusUseCase(token).getOrNull()?.chainId ?: return null
+        val userAddress = cryptoCurrencyStatusFlow.value.value.networkAddress
+            ?.defaultAddress
+            ?.value
+            ?: return null
+
+        val isClaimInFlight = yieldSupplyClaimTracker
+            .isClaimInFlight(chainId = chainId, userAddress = userAddress)
+            .firstOrNull()
+        if (isClaimInFlight != false) return null
+
+        yieldSupplyClaimPreparer.loadRecommendedRewards(chainId = chainId, userAddress = userAddress) ?: return null
+
+        return YieldSupplyActiveRoute.Claim(chainId = chainId, userAddress = userAddress)
     }
 
     /**
@@ -217,6 +281,64 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     fun onClaimRewardsClick(chainId: Int, userAddress: String) {
         slotNavigation.activate(YieldSupplyActiveRoute.Claim(chainId = chainId, userAddress = userAddress))
+    }
+
+    fun onClaimSubmitted(result: YieldSupplyClaimResultUM) {
+        slotNavigation.dismiss()
+        claimResultFlow.update { result }
+    }
+
+    fun onClaimResultDismiss() {
+        claimResultFlow.update { null }
+    }
+
+    /**
+     * Yield Mode is also opened from the main screen, Markets, For You and a deep link, so the token screen is not
+     * always the one beneath it.
+     */
+    fun onGoToTokenClick() {
+        onClaimResultDismiss()
+        // Matched by wallet and currency: the route in the stack may carry a navigation action or a market block flag
+        val tokenRoute = appRouter.stack.lastOrNull { route ->
+            route is AppRoute.CurrencyDetails &&
+                route.userWalletId == userWalletId &&
+                route.currency.id == cryptoCurrency.id
+        }
+        if (tokenRoute != null) {
+            appRouter.popTo(tokenRoute)
+        } else {
+            appRouter.replaceCurrent(AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = cryptoCurrency))
+        }
+    }
+
+    private fun subscribeOnClaimOutcome() {
+        yieldSupplyClaimTracker.outcomes
+            // A claim signed on the way out was never put to the user as a transaction of its own, so its failure
+            // would point at the withdrawal they did make
+            .filter { it.origin == YieldSupplyClaimOrigin.ClaimSheet }
+            .filter { it.userWalletId == userWalletId && it.cryptoCurrencyId == cryptoCurrency.id }
+            .onEach { claimOutcome ->
+                when (claimOutcome.outcome) {
+                    YieldSupplyTransactionOutcome.Confirmed -> claimResultFlow.update { result ->
+                        result?.copy(
+                            status = YieldSupplyClaimResultUM.Status.Confirmed(
+                                timestamp = Clock.System.now().toEpochMilliseconds(),
+                            ),
+                        )
+                    }
+                    // Shown even when the result was already closed: the user would not learn about it otherwise
+                    YieldSupplyTransactionOutcome.Reverted -> claimResultFlow.update { result ->
+                        result?.copy(status = YieldSupplyClaimResultUM.Status.Failed)
+                            ?: YieldSupplyClaimResultUM(
+                                status = YieldSupplyClaimResultUM.Status.Failed,
+                                total = TextReference.EMPTY,
+                                serviceFee = null,
+                                networkFee = null,
+                            )
+                    }
+                }
+            }
+            .launchIn(modelScope)
     }
 
     private fun onApyInfoClick() {
@@ -429,5 +551,6 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     private companion object {
         const val AAVEV3_PREFIX = "a"
+        const val OFFER_CLAIM_TIMEOUT_MILLIS = 3_000L
     }
 }
