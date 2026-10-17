@@ -13,7 +13,6 @@ import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
-import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
 import com.tangem.tap.common.log.TangemLoggingInitializer
@@ -32,8 +31,6 @@ interface ApplicationEntryPoint {
     fun getExcludedBlockchainsManager(): ExcludedBlockchainsManager
 
     fun getGetAppThemeModeUseCase(): GetAppThemeModeUseCase
-
-    fun getWalletsRepository(): WalletsRepository
 
     fun getTangemLoggingInitializer(): TangemLoggingInitializer
 
