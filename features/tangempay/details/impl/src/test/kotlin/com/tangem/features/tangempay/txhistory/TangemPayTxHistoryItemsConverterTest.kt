@@ -1,8 +1,18 @@
 package com.tangem.features.tangempay.txhistory
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
+import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
+import com.tangem.core.ui.res.generated.icons.ic_percent_backward_24
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.cashback
+import com.tangem.features.tangempay.collateralTransaction
+import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.spendTransaction
 import io.mockk.mockk
 import org.junit.jupiter.api.AfterEach
@@ -43,9 +53,70 @@ internal class TangemPayTxHistoryItemsConverterTest {
         assertThat((result as TangemPayTransactionState.Content.Spend).cashback).isEqualTo(model.expected)
     }
 
+    @ParameterizedTest
+    @MethodSource("provideCollateralModels")
+    fun `GIVEN collateral type WHEN convert THEN row title, icon and signed amount match the type`(
+        model: CollateralModel,
+    ) {
+        // Arrange
+        val converter = TangemPayTxHistoryItemsConverter(txHistoryUiActions = uiActions)
+        val collateral = collateralTransaction(type = model.type, amount = model.amount)
+
+        // Act
+        val actual = converter.convert(collateral) as TangemPayTransactionState.Content.Collateral
+
+        // Assert
+        val expected = TangemPayTransactionState.Content.Collateral(
+            id = collateral.id,
+            onClick = actual.onClick,
+            amount = model.expectedAmount,
+            amountColor = actual.amountColor,
+            title = model.expectedTitle,
+            subtitle = resourceReference(R.string.common_transfer),
+            icon = TangemIconUM.Icon(
+                imageVector = model.expectedIcon,
+                tintReference = (actual.icon as TangemIconUM.Icon).tint,
+            ),
+            time = actual.time,
+        )
+        assertThat(actual).isEqualTo(expected)
+    }
+
     data class CashbackModel(
         val cashback: TangemPayTxHistoryItem.Cashback?,
         val expected: TangemPayTransactionCashbackUM?,
+    )
+
+    data class CollateralModel(
+        val type: TangemPayTxHistoryItem.Type,
+        val amount: BigDecimal,
+        val expectedTitle: TextReference,
+        val expectedAmount: String,
+        val expectedIcon: ImageVector,
+    )
+
+    private fun provideCollateralModels() = listOf(
+        CollateralModel(
+            type = TangemPayTxHistoryItem.Type.Deposit,
+            amount = BigDecimal("50.00"),
+            expectedTitle = resourceReference(R.string.tangem_pay_deposit),
+            expectedAmount = "+$50.00",
+            expectedIcon = Icons.ic_arrow_down_24,
+        ),
+        CollateralModel(
+            type = TangemPayTxHistoryItem.Type.Withdrawal,
+            amount = BigDecimal("-20.00"),
+            expectedTitle = resourceReference(R.string.tangem_pay_withdrawal),
+            expectedAmount = "-$20.00",
+            expectedIcon = Icons.ic_arrow_up_24,
+        ),
+        CollateralModel(
+            type = TangemPayTxHistoryItem.Type.Cashback,
+            amount = BigDecimal("19.00"),
+            expectedTitle = resourceReference(R.string.tangempay_cashback_title),
+            expectedAmount = "+$19.00",
+            expectedIcon = Icons.ic_percent_backward_24,
+        ),
     )
 
     @Suppress("LongMethod")
