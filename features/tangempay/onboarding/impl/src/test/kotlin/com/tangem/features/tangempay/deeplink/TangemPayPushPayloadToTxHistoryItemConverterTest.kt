@@ -2,8 +2,11 @@ package com.tangem.features.tangempay.deeplink
 
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.google.common.truth.Truth.assertThat
+import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.util.Currency
 
 class TangemPayPushPayloadToTxHistoryItemConverterTest {
 
@@ -384,6 +387,34 @@ class TangemPayPushPayloadToTxHistoryItemConverterTest {
 
         assertThat(result).isNotNull()
         assertThat(result!!.type).isEqualTo(TangemPayTxHistoryItem.Type.Deposit)
+    }
+
+    @Test
+    fun `GIVEN cashback topup type WHEN convertCollateral THEN Collateral with Cashback type`() {
+        // Arrange
+        val payload = mapOf(
+            "type" to "cashback_topup",
+            "transaction_id" to "col-321",
+            "amount" to "19.00",
+            "currency" to "usd",
+            "transaction_hash" to "0xcashback",
+            "posted_at" to "2025-10-25T19:22:22.597Z",
+        )
+        val expected = TangemPayTxHistoryItem.Collateral(
+            id = "col-321",
+            jsonRepresentation = payload.toString(),
+            date = DateTime.parse("2025-10-25T19:22:22.597Z").withZone(DateTimeZone.getDefault()),
+            amount = BigDecimal("19.00"),
+            currency = Currency.getInstance("USD"),
+            transactionHash = "0xcashback",
+            type = TangemPayTxHistoryItem.Type.Cashback,
+        )
+
+        // Act
+        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
+
+        // Assert
+        assertThat(result).isEqualTo(expected)
     }
 
     @Test

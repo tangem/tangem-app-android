@@ -54,6 +54,7 @@ internal object TangemPayTxHistoryDetailsConverter :
             is TangemPayTxHistoryItem.Collateral -> when (this.type) {
                 TangemPayTxHistoryItem.Type.Deposit -> resourceReference(R.string.tangem_pay_deposit)
                 TangemPayTxHistoryItem.Type.Withdrawal -> resourceReference(R.string.tangem_pay_withdrawal)
+                TangemPayTxHistoryItem.Type.Cashback -> resourceReference(R.string.tangempay_cashback_title)
             }
             is TangemPayTxHistoryItem.Fee -> resourceReference(R.string.tangem_pay_fee_title)
         }
@@ -61,20 +62,16 @@ internal object TangemPayTxHistoryDetailsConverter :
 
     private fun TangemPayTxHistoryItem.extractIcon(): TangemIconUM {
         return when (this) {
-            is TangemPayTxHistoryItem.Collateral -> when (this.type) {
-                TangemPayTxHistoryItem.Type.Deposit -> TangemIconUM.Icon(
-                    imageVector = Icons.ic_arrow_down_24,
-                    tintReference = {
-                        TangemTheme.colors3.icon.secondary
-                    },
-                )
-                TangemPayTxHistoryItem.Type.Withdrawal -> TangemIconUM.Icon(
-                    imageVector = Icons.ic_arrow_up_24,
-                    tintReference = {
-                        TangemTheme.colors3.icon.secondary
-                    },
-                )
-            }
+            is TangemPayTxHistoryItem.Collateral -> TangemIconUM.Icon(
+                imageVector = when (this.type) {
+                    TangemPayTxHistoryItem.Type.Deposit -> Icons.ic_arrow_down_24
+                    TangemPayTxHistoryItem.Type.Withdrawal -> Icons.ic_arrow_up_24
+                    TangemPayTxHistoryItem.Type.Cashback -> Icons.ic_percent_backward_24
+                },
+                tintReference = {
+                    TangemTheme.colors3.icon.secondary
+                },
+            )
             is TangemPayTxHistoryItem.Fee -> {
                 TangemIconUM.Icon(
                     iconRes = R.drawable.ic_percent_24,
@@ -105,11 +102,11 @@ internal object TangemPayTxHistoryDetailsConverter :
         }
     }
 
-    private fun TangemPayTxHistoryItem.extractTransactionTitle(): TextReference {
+    private fun TangemPayTxHistoryItem.extractTransactionTitle(): TextReference? {
         return when (this) {
             is TangemPayTxHistoryItem.Spend -> stringReference(this.enrichedMerchantName ?: this.merchantName)
             is TangemPayTxHistoryItem.Payment -> resourceReference(R.string.common_transfer)
-            is TangemPayTxHistoryItem.Collateral -> resourceReference(R.string.common_transfer)
+            is TangemPayTxHistoryItem.Collateral -> null
             is TangemPayTxHistoryItem.Fee -> {
                 this.description?.let(::stringReference) ?: resourceReference(R.string.tangem_pay_fee_subtitle)
             }

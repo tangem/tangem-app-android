@@ -76,7 +76,6 @@ internal class TangemPayMainBlockConverter(
                     return TangemPayMainUM.IssuingCard(onClick = { tangemPayClickIntents.openDetails(value) })
                 }
                 val cardsCount = statusValue.cards.count()
-                if (cardsCount == 0) return TangemPayMainUM.TemporaryUnavailable
                 val subtitle = pluralReference(
                     id = R.plurals.tangempay_cards_count,
                     count = cardsCount,

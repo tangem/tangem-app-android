@@ -35,7 +35,6 @@ import com.tangem.grow.datasource.express.models.response.ExchangeDataResponseWi
 import com.tangem.grow.datasource.express.models.response.RateType
 import com.tangem.grow.datasource.express.models.response.SwapPairProvider
 import com.tangem.grow.datasource.express.models.response.TxDetails
-import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
@@ -529,17 +528,13 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         val isYieldSupplyActive = cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
         if (!isYieldSupplyActive) return this
 
-        return if (featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED)) {
-            filterNot { it.type == ExpressProviderType.ONRAMP }
-        } else {
-            filter { provider ->
-                when (provider.type) {
-                    ExpressProviderType.CEX -> true
-                    ExpressProviderType.DEX,
-                    ExpressProviderType.DEX_BRIDGE,
-                    -> provider.providerId in YIELD_ALLOWED_DEX_PROVIDER_IDS
-                    ExpressProviderType.ONRAMP -> false
-                }
+        return filter { provider ->
+            when (provider.type) {
+                ExpressProviderType.CEX -> true
+                ExpressProviderType.DEX,
+                ExpressProviderType.DEX_BRIDGE,
+                -> provider.providerId in YIELD_ALLOWED_DEX_PROVIDER_IDS
+                ExpressProviderType.ONRAMP -> false
             }
         }
     }
@@ -555,7 +550,6 @@ private val MEMO_RESTRICTED_NETWORKS = setOf(
  * DEX providers allowed for token swaps in yield mode.
  * Mirrors iOS ExpressConstants.yieldModuleDEXProviderIds (PR #4998).
  */
-@RemoveWithToggle("TWI_1326_YIELD_MODE_SWAP_ENABLED")
 private val YIELD_ALLOWED_DEX_PROVIDER_IDS = setOf(
     "1inch",
     "okx-cross-chain",
