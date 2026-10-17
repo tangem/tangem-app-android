@@ -1,6 +1,7 @@
 package com.tangem.features.txhistory.converter
 
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.txhistory.model.ExpressTx
@@ -8,6 +9,7 @@ import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.BuildConfig
+import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.utils.converter.Converter
 
@@ -24,6 +26,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     onGoToProvider: (String) -> Unit,
     isBalanceHidden: Boolean,
     onCopyTxId: (() -> Unit)? = null,
+    copyIdTitle: TextReference = resourceReference(R.string.common_transaction_id),
     shareText: TextReference? = null,
     onShare: (String) -> Unit = {},
     onExplore: (() -> Unit)? = null,
@@ -44,6 +47,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
 
     private val menu = buildDetailsMenu(
         onCopyTxId = onCopyTxId,
+        copyIdTitle = copyIdTitle,
         shareText = shareText,
         onShare = onShare,
         onExplore = onExplore,
