@@ -184,7 +184,36 @@ internal class DefaultRouterTest {
         assertThat(actual).containsExactly(true, true, false).inOrder()
     }
 
+    @Test
+    fun `GIVEN routes of the class WHEN popToMatching THEN popped to the last route satisfying the predicate`() {
+        // Arrange
+        stack = listOf(RouteA, Details(id = 1, flag = true), Details(id = 2), Details(id = 1, flag = false), RouteB)
+
+        // Act
+        router.popToMatching(Details::class, predicate = { it.id == 1 }, onComplete = onComplete)
+
+        // Assert
+        assertThat(stack)
+            .containsExactly(RouteA, Details(id = 1, flag = true), Details(id = 2), Details(id = 1, flag = false))
+            .inOrder()
+        assertThat(results).containsExactly(true)
+    }
+
+    @Test
+    fun `GIVEN no route satisfying the predicate WHEN popToMatching THEN stack is unchanged and completion fails`() {
+        // Arrange
+        stack = listOf(RouteA, Details(id = 2), RouteB)
+
+        // Act
+        router.popToMatching(Details::class, predicate = { it.id == 1 }, onComplete = onComplete)
+
+        // Assert
+        assertThat(stack).containsExactly(RouteA, Details(id = 2), RouteB).inOrder()
+        assertThat(results).containsExactly(false)
+    }
+
     private data object RouteA : Route
     private data object RouteB : Route
     private data object RouteC : Route
+    private data class Details(val id: Int, val flag: Boolean = false) : Route
 }

@@ -18,3 +18,15 @@ inline fun <reified R : Route> Router.popTo(noinline onComplete: (isSuccess: Boo
 fun Router.popToOrReplaceCurrent(route: Route) {
     popTo(route) { isFound -> if (!isFound) replaceCurrent(route) }
 }
+
+/**
+ * Pops back to the last route of type [R] that satisfies [predicate], otherwise opens [route] in place of the current
+ * route. Use it instead of the equality-based overload when the route in the stack may differ from [route] in fields
+ * that don't identify the screen.
+ *
+ * @param route The route to open when no matching route is in the stack.
+ * @param predicate The condition a route in the stack must satisfy to be popped back to.
+ */
+inline fun <reified R : Route> Router.popToOrReplaceCurrent(route: R, noinline predicate: (R) -> Boolean) {
+    popToMatching(R::class, predicate) { isFound -> if (!isFound) replaceCurrent(route) }
+}
