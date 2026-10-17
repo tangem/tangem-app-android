@@ -52,6 +52,7 @@ import com.tangem.features.txhistory.component.TxHistoryDetailsComponent
 import com.tangem.features.txhistory.converter.ExpressTxToShareTextConverter
 import com.tangem.features.txhistory.converter.FiatConversion
 import com.tangem.features.txhistory.converter.TxHistoryInfoToTxHistoryDetailsUMConverter
+import com.tangem.features.txhistory.converter.copyIdLabels
 import com.tangem.features.txhistory.converter.fiatCode
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
@@ -211,7 +212,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
         val lookup = inputs.lookup
         // Each header-menu row drops with the data behind it: no explorer hash (an express op with no on-chain leg
         // yet, or a blank on-chain hash) drops "Explore"; only an express deal can describe itself as text, so an
-        // on-chain row has no "Share"; a blank id drops "Transaction ID".
+        // on-chain row has no "Share"; a blank id drops the copy-id row.
         val explorerHash = txInfo.explorerHash?.ifBlank { null }
         val idToCopy = txInfo.idToCopy.ifBlank { null }
         val shareText = (txInfo as? ExpressTx)?.let(shareTextConverter::convert)
@@ -223,6 +224,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
             onCopyAddress = { address -> onCopyAddress(address, txInfo) },
             onGoToProvider = { url -> onGoToProvider(url, txInfo) },
             onCopyTxId = idToCopy?.let { id -> { onCopyTxId(id, txInfo) } },
+            copyIdTitle = resourceReference(txInfo.copyIdLabels.title),
             shareText = shareText,
             onShare = { text -> onShare(text, txInfo) },
             onExplore = explorerHash?.let { hash -> { explore(hash, txInfo) } },
@@ -322,7 +324,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
         )
     }
 
-    /** Copies the transaction id to the clipboard — wired into the header menu's "Transaction ID" row. */
+    /** Copies the transaction id to the clipboard — wired into the header menu's copy-id row. */
     private fun onCopyTxId(id: String, txInfo: TxHistoryInfo) {
         analyticsEventHandler.send(
             TxHistoryAnalyticsEvent.ButtonCopyTransactionId(
@@ -334,7 +336,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
         clipboardManager.setText(text = id, isSensitive = false)
         uiMessageSender.send(
             SnackbarMessage(
-                message = resourceReference(R.string.express_transaction_id_copied),
+                message = resourceReference(txInfo.copyIdLabels.copied),
                 startIconId = R.drawable.ic_check_24,
             ),
         )

@@ -85,16 +85,17 @@ val TxHistoryInfo.explorerHash: String?
     }
 
 /**
- * Human-meaningful transaction id to copy/display: the on-chain hash for an [OnChainTx], the express deal's own
- * [ExpressTx.txId] otherwise — regardless of whether the deal is already matched to an on-chain leg. Support looks up
- * an express deal (and every on-chain leg tied to it) by that id, so a merged row must keep exposing it rather than
- * falling back to the matched leg's hash or to the provider's [ExpressTx.externalTxId].
+ * Human-meaningful transaction id to copy/display: the on-chain hash for an [OnChainTx], the provider-side
+ * [ExpressTx.externalTxId] otherwise — regardless of whether the deal is already matched to an on-chain leg. It is the
+ * id the user quotes to the provider's support desk, which is why the express row names it after its operation
+ * ("Swap ID" / "Onramp ID") instead of "Transaction ID". A DEX deal has no provider-side id, so the Tangem-side
+ * [ExpressTx.txId] stands in — support finds the deal and every on-chain leg tied to it by that one.
  */
 val TxHistoryInfo.idToCopy: String
     get() = when (this) {
         is OnChainTx.BSDK -> txInfo.txHash
         is OnChainTx.TangemPay -> explorerHash ?: txId
-        is ExpressTx -> txId
+        is ExpressTx -> externalTxId?.takeIf(String::isNotBlank) ?: txId
     }
 
 /**
@@ -129,9 +130,9 @@ sealed interface ExpressTx : TxHistoryInfo {
     val externalTxUrl: String?
 
     /**
-     * Provider-side id of this deal; `null` when the provider supplies none. It identifies the deal on the provider's
-     * side (their tracking page, the rating key); what the user copies and shares is the Tangem-side [txId] — see
-     * [idToCopy].
+     * Provider-side id of this deal; `null` when the provider supplies none (a DEX swap has no provider desk behind
+     * it). It identifies the deal on the provider's side — their tracking page, the rating key — and is what the user
+     * copies and shares, see [idToCopy].
      */
     val externalTxId: String?
 
