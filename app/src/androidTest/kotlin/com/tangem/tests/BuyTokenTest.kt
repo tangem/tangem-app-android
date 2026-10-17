@@ -1,15 +1,20 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.utils.getWireMockRequestCount
+import com.tangem.common.utils.getWireMockRequestCountByQueryParam
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.scenarios.openBuyScreenFromTokenDetails
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @HiltAndroidTest
@@ -123,6 +128,220 @@ class BuyTokenTest : BaseTestCase() {
             }
             step("Assert offer token amount = '$tokenAmount'") {
                 onBuyTokenDetailsScreen { offerTokenAmount.assertTextContains(tokenAmount) }
+            }
+        }
+    }
+
+    @AllureId("11991")
+    @DisplayName("Buy. Currency. Currencies list was not received")
+    @Test
+    fun currenciesListNotReceivedTest() {
+        val scenarioName = "currencies_api"
+        val scenarioState = "Error"
+        val currenciesMethod = "GET"
+        val currenciesPath = "/v1/currencies"
+        val tokenTitle = "Polygon"
+
+        setupHooks().run {
+            step("Set WireMock scenario '$scenarioName' to '$scenarioState'") {
+                setWireMockScenarioState(scenarioName, scenarioState)
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on 'Add funds' button") {
+                onMainScreen { addFundsButton.clickWithAssertion() }
+            }
+            step("Click on token with name: '$tokenTitle'") {
+                onChooseTokenBottomSheet {
+                    title.assertIsDisplayed()
+                    tokenWithTitle(tokenTitle).clickWithAssertion()
+                }
+            }
+            step("Click on 'Buy' in 'Get token' bottom sheet") {
+                onGetTokenBottomSheet { buyButton.clickWithAssertion() }
+            }
+            step("Click on 'Confirm' button in 'Dialog'") {
+                onDialog { confirmButton.clickWithAssertion() }
+            }
+            val requestsBeforeOpen = getWireMockRequestCount(currenciesMethod, currenciesPath)
+            step("Click on 'Expand fiat list' button") {
+                onBuyTokenDetailsScreen { expandFiatListButton.clickWithAssertion() }
+            }
+            step("Assert error message is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) { onBuyTokenFiatListBottomSheet { errorTitle.assertIsDisplayed() } }
+            }
+            step("Assert 'Try again' button is displayed") {
+                onBuyTokenFiatListBottomSheet { tryAgainButton.assertIsDisplayed() }
+            }
+            step("Assert currencies were requested on opening the list") {
+                flakySafely {
+                    assertTrue(getWireMockRequestCount(currenciesMethod, currenciesPath) > requestsBeforeOpen)
+                }
+            }
+            val requestsAfterOpen = getWireMockRequestCount(currenciesMethod, currenciesPath)
+            step("Click on 'Try again' button") {
+                onBuyTokenFiatListBottomSheet { tryAgainButton.clickWithAssertion() }
+            }
+            step("Assert currencies were requested again") {
+                flakySafely {
+                    assertTrue(getWireMockRequestCount(currenciesMethod, currenciesPath) > requestsAfterOpen)
+                }
+            }
+            step("Assert error message is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) { onBuyTokenFiatListBottomSheet { errorTitle.assertIsDisplayed() } }
+            }
+        }
+    }
+
+    @AllureId("3719")
+    @DisplayName("Buy. All offers. Offers sorting")
+    @Test
+    fun allOffersSortedByReceiveAmountTest() {
+        val quoteScenarioName = "onramp_quote"
+        val quoteScenarioState = "ProvidersSorting"
+        val quotesPath = "/v1/onramp-quote"
+        val tokenTitle = "Polygon"
+        val fiatAmount = "1"
+        val paymentMethod = "Card"
+        val paymentMethodId = "card"
+        val lowerAmountProviderId = "mercuryo"
+        val higherAmountProviderId = "simplex"
+        val higherAmountProviderName = "Simplex"
+        val lowerAmountProviderName = "Mercuryo"
+        val higherAmount = "520.00"
+        val lowerAmount = "488.24938338"
+
+        setupHooks().run {
+            step("Set WireMock scenario '$quoteScenarioName' to '$quoteScenarioState'") {
+                setWireMockScenarioState(quoteScenarioName, quoteScenarioState)
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            val lowerProviderQuotesBefore = getWireMockRequestCountByQueryParam(
+                method = "GET",
+                urlPath = quotesPath,
+                queryParam = "providerId",
+                queryValue = lowerAmountProviderId,
+            )
+            val higherProviderQuotesBefore = getWireMockRequestCountByQueryParam(
+                method = "GET",
+                urlPath = quotesPath,
+                queryParam = "providerId",
+                queryValue = higherAmountProviderId,
+            )
+            val cardQuotesBefore = getWireMockRequestCountByQueryParam(
+                method = "GET",
+                urlPath = quotesPath,
+                queryParam = "paymentMethod",
+                queryValue = paymentMethodId,
+            )
+            step("Open 'Buy' screen from token details and write amount") {
+                openBuyScreenFromTokenDetails(tokenTitle = tokenTitle, fiatAmount = fiatAmount)
+            }
+            step("Assert offer token amount is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) { onBuyTokenDetailsScreen { offerTokenAmount.assertIsDisplayed() } }
+            }
+            step("Assert quote of '$lowerAmountProviderId' was requested") {
+                flakySafely {
+                    assertTrue(
+                        getWireMockRequestCountByQueryParam("GET", quotesPath, "providerId", lowerAmountProviderId) >
+                            lowerProviderQuotesBefore,
+                    )
+                }
+            }
+            step("Assert quote of '$higherAmountProviderId' was requested") {
+                flakySafely {
+                    assertTrue(
+                        getWireMockRequestCountByQueryParam("GET", quotesPath, "providerId", higherAmountProviderId) >
+                            higherProviderQuotesBefore,
+                    )
+                }
+            }
+            step("Assert both providers were requested with payment method '$paymentMethodId'") {
+                flakySafely {
+                    assertTrue(
+                        getWireMockRequestCountByQueryParam("GET", quotesPath, "paymentMethod", paymentMethodId) >=
+                            cardQuotesBefore + 2,
+                    )
+                }
+            }
+            step("Click on 'All offers' button") {
+                onBuyTokenDetailsScreen { allOffersButton.clickWithAssertion() }
+            }
+            step("Click on '$paymentMethod' payment method") {
+                onSelectPaymentMethodBottomSheet { paymentMethodWithName(paymentMethod).clickWithAssertion() }
+            }
+            step("Assert provider '$higherAmountProviderName' is listed") {
+                onSelectProviderBottomSheet {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                        providerNameContaining(higherAmountProviderName).assertIsDisplayed()
+                    }
+                }
+            }
+            step("Assert provider '$lowerAmountProviderName' is listed") {
+                onSelectProviderBottomSheet { providerNameContaining(lowerAmountProviderName).assertIsDisplayed() }
+            }
+            step("Assert offers with '$higherAmount' are above offers with '$lowerAmount'") {
+                onSelectProviderBottomSheet {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { assertOfferAmountsOrdered(higherAmount, lowerAmount) }
+                }
+            }
+        }
+    }
+
+    @AllureId("11588")
+    @DisplayName("Buy. Geo. Restrictions for a country and one provider")
+    @Test
+    fun oneProviderRestrictedTest() {
+        val quoteScenarioName = "onramp_quote"
+        val quoteScenarioState = "ProviderRestricted"
+        val tokenTitle = "Polygon"
+        val fiatAmount = "1"
+        val paymentMethod = "Card"
+
+        setupHooks().run {
+            step("Set WireMock scenario '$quoteScenarioName' to '$quoteScenarioState'") {
+                setWireMockScenarioState(quoteScenarioName, quoteScenarioState)
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Buy' screen from token details and write amount") {
+                openBuyScreenFromTokenDetails(tokenTitle = tokenTitle, fiatAmount = fiatAmount)
+            }
+            step("Assert offer token amount is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) { onBuyTokenDetailsScreen { offerTokenAmount.assertIsDisplayed() } }
+            }
+            step("Assert region restriction error is not displayed under the amount") {
+                onBuyTokenDetailsScreen { regionRestrictionAmountError.assertDoesNotExist() }
+            }
+            step("Click on 'All offers' button") {
+                onBuyTokenDetailsScreen { allOffersButton.clickWithAssertion() }
+            }
+            step("Click on '$paymentMethod' payment method") {
+                onSelectPaymentMethodBottomSheet { paymentMethodWithName(paymentMethod).clickWithAssertion() }
+            }
+            step("Assert the restricted provider has 'Not available' badge") {
+                onSelectProviderBottomSheet {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { restrictedOfferBadge.assertIsDisplayed() }
+                }
+            }
+            step("Assert 'Buy' button of the restricted provider is disabled") {
+                onSelectProviderBottomSheet { disabledOfferBuyButton.assertIsDisplayed() }
+            }
+            step("Assert 'Buy' button of the other provider is enabled") {
+                onSelectProviderBottomSheet { enabledOfferBuyButton.assertIsDisplayed() }
             }
         }
     }

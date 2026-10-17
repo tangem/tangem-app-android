@@ -64,7 +64,9 @@ sealed interface TxInfo {
 
         override val txHash: String get() = first.txHash
         override val timestampInMillis: Long get() = first.timestampInMillis
-        override val status: TransactionStatus get() = first.status
+        /** The payload's: the gasless fee or a Safe refund is paid even when the transfer it paid for failed */
+        override val status: TransactionStatus
+            get() = (transfers.firstOrNull { it.type != TransactionType.GaslessFee } ?: first).status
         override val fee: SdkAmount? get() = first.fee
 
         val gaslessFee: Single? get() = transfers.firstOrNull { it.type == TransactionType.GaslessFee }
@@ -183,6 +185,27 @@ sealed interface TxInfo {
             val amount: SdkAmount?,
             val address: String,
         ) : TransactionType
+
+        /**
+         * A joint account's executed Safe operation in the token's history, read from the `execTransaction` calldata of
+         * the token transfer record. [refundCap] is the fee the operation was signed with, in the coin or the token the
+         * Safe refunds in; the actual refund is not in the record. The coin's history reads the Safe's internal
+         * transfers instead.
+         */
+        @Serializable
+        sealed interface Joint : TransactionType {
+            val refundCap: SdkAmount
+            val signaturesCount: Int
+
+            /** The token whose history this is, sent from the Safe */
+            @Serializable
+            data class Transfer(
+                val recipient: String,
+                val amount: SerializedBigDecimal,
+                override val refundCap: SdkAmount,
+                override val signaturesCount: Int,
+            ) : Joint
+        }
 
         @Serializable
         sealed interface YieldSupply : TransactionType {

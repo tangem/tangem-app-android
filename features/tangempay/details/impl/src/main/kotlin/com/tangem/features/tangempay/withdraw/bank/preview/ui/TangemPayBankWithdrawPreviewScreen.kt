@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,6 +57,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM
 import com.tangem.features.tangempay.withdraw.bank.ui.BankFromRow
@@ -73,7 +75,7 @@ internal fun TangemPayBankWithdrawPreviewScreen(state: TangemPayBankWithdrawPrev
 @Composable
 private fun FailedScreen(state: TangemPayBankWithdrawPreviewUM.Failed, modifier: Modifier = Modifier) {
     TangemStatusScreen(
-        modifier = modifier,
+        modifier = modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_ERROR_SCREEN),
         variant = TangemStatusScreen.Variant.Warning,
         title = state.title,
         description = resourceReference(R.string.common_try_again_later),
@@ -116,7 +118,7 @@ private fun SummaryScreen(state: TangemPayBankWithdrawPreviewUM.Summary, modifie
     var footerHeight by remember { mutableStateOf(FooterHeightFallback) }
 
     TangemTopBarScaffold(
-        modifier = modifier,
+        modifier = modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_PREVIEW_SCREEN),
         containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
             TangemTopNavigation(
@@ -175,6 +177,7 @@ private fun SummaryScreen(state: TangemPayBankWithdrawPreviewUM.Summary, modifie
 private fun AmountCard(amount: TangemPayBankWithdrawPreviewUM.AmountCardUM) {
     Column(
         modifier = Modifier
+            .testTag(TangemPayTestTags.BANK_WITHDRAW_PREVIEW_AMOUNT_CARD)
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(TangemTheme.colors3.bg.secondary)
@@ -226,6 +229,7 @@ private fun DetailCard(card: TangemPayBankWithdrawPreviewUM.RecipientCardUM) {
     val rows = card.rows
     Column(
         modifier = Modifier
+            .testTag(TangemPayTestTags.BANK_WITHDRAW_PREVIEW_RECIPIENT_CARD)
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(TangemTheme.colors3.bg.secondary)

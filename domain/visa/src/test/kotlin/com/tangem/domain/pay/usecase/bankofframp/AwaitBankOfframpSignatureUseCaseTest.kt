@@ -29,27 +29,28 @@ internal class AwaitBankOfframpSignatureUseCaseTest {
     @Test
     fun `GIVEN order processing twice then awaiting signature WHEN invoke THEN hash returned after three polls`() = runTest {
         // Arrange
-        coEvery { repository.getOrderState(TEST_USER_WALLET_ID, ORDER_ID) } returnsMany listOf(
+        coEvery { repository.getOrderState(TEST_USER_WALLET_ID, ORDER_ID, ORDER_REQUEST) } returnsMany listOf(
             BankOfframpOrderState.Processing(OrderStep.UNKNOWN).right(),
             BankOfframpOrderState.Processing(OrderStep.UNKNOWN).right(),
             BankOfframpOrderState.AwaitingSignature(payloadHash = "0xhash").right(),
         )
 
         // Act
-        val actual = useCase(TEST_USER_WALLET_ID, ORDER_ID)
+        val actual = useCase(TEST_USER_WALLET_ID, ORDER_ID, ORDER_REQUEST)
 
         // Assert
         assertThat(actual).isEqualTo("0xhash".right())
-        coVerify(exactly = 3) { repository.getOrderState(TEST_USER_WALLET_ID, ORDER_ID) }
+        coVerify(exactly = 3) { repository.getOrderState(TEST_USER_WALLET_ID, ORDER_ID, ORDER_REQUEST) }
     }
 
     @Test
     fun `GIVEN order canceled WHEN invoke THEN unknown error`() = runTest {
         // Arrange
-        coEvery { repository.getOrderState(TEST_USER_WALLET_ID, ORDER_ID) } returns BankOfframpOrderState.Canceled.right()
+        coEvery { repository.getOrderState(TEST_USER_WALLET_ID, ORDER_ID, ORDER_REQUEST) } returns
+            BankOfframpOrderState.Canceled.right()
 
         // Act
-        val actual = useCase(TEST_USER_WALLET_ID, ORDER_ID)
+        val actual = useCase(TEST_USER_WALLET_ID, ORDER_ID, ORDER_REQUEST)
 
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(BankOfframpError.Unknown::class.java)
@@ -58,11 +59,11 @@ internal class AwaitBankOfframpSignatureUseCaseTest {
     @Test
     fun `GIVEN order failed WHEN invoke THEN its error is returned`() = runTest {
         // Arrange
-        coEvery { repository.getOrderState(TEST_USER_WALLET_ID, ORDER_ID) } returns
+        coEvery { repository.getOrderState(TEST_USER_WALLET_ID, ORDER_ID, ORDER_REQUEST) } returns
             BankOfframpOrderState.Failed(BankOfframpError.WithdrawalInProgress).right()
 
         // Act
-        val actual = useCase(TEST_USER_WALLET_ID, ORDER_ID)
+        val actual = useCase(TEST_USER_WALLET_ID, ORDER_ID, ORDER_REQUEST)
 
         // Assert
         assertThat(actual).isEqualTo(BankOfframpError.WithdrawalInProgress.left())
@@ -72,18 +73,19 @@ internal class AwaitBankOfframpSignatureUseCaseTest {
     fun `GIVEN order never leaves processing WHEN timeout elapses THEN four polls and polling timeout error`() =
         runTest {
             // Arrange
-            coEvery { repository.getOrderState(TEST_USER_WALLET_ID, ORDER_ID) } returns
+            coEvery { repository.getOrderState(TEST_USER_WALLET_ID, ORDER_ID, ORDER_REQUEST) } returns
                 BankOfframpOrderState.Processing(OrderStep.UNKNOWN).right()
 
             // Act
-            val actual = useCase(TEST_USER_WALLET_ID, ORDER_ID, timeout = 12.seconds)
+            val actual = useCase(TEST_USER_WALLET_ID, ORDER_ID, ORDER_REQUEST, timeout = 12.seconds)
 
             // Assert
             assertThat(actual).isEqualTo(BankOfframpError.PollingTimeout.left())
-            coVerify(exactly = 4) { repository.getOrderState(TEST_USER_WALLET_ID, ORDER_ID) }
+            coVerify(exactly = 4) { repository.getOrderState(TEST_USER_WALLET_ID, ORDER_ID, ORDER_REQUEST) }
         }
 
     private companion object {
         const val ORDER_ID = "order-1"
+        val ORDER_REQUEST = orderRequest()
     }
 }

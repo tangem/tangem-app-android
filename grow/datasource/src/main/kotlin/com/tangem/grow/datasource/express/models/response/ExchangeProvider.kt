@@ -38,6 +38,9 @@ data class ExchangeProvider(
 
     @Json(name = "isExtraIdSupported")
     val isExtraIdSupported: Boolean = false,
+
+    @Json(name = "isCustomSlippageSupported")
+    val isCustomSlippageSupported: Boolean = false,
 )
 
 @JsonClass(generateAdapter = false)

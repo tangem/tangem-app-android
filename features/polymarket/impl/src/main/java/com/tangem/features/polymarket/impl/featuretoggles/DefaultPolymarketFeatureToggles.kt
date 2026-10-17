@@ -10,4 +10,7 @@ internal class DefaultPolymarketFeatureToggles @Inject constructor(
 ) : PolymarketFeatureToggles {
     override val isPolymarketEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16204_POLYMARKET_ENABLED)
+
+    override val isPolymarketPhaseTwoEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1700_POLYMARKET_PHASE_TWO_ENABLED)
 }

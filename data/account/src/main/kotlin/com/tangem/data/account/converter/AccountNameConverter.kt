@@ -3,6 +3,7 @@ package com.tangem.data.account.converter
 import arrow.core.getOrElse
 import com.tangem.domain.models.account.AccountName
 import com.tangem.utils.converter.TwoWayConverter
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * A converter for transforming [AccountName] domain models into their string representations.
@@ -23,8 +24,13 @@ internal object AccountNameConverter : TwoWayConverter<AccountName, String?> {
         return if (value == null) {
             AccountName.DefaultMain
         } else {
-            AccountName(value = value).getOrElse {
-                error("Unable to create AccountName from value: $value. Cause: $it")
+            AccountName(value = value).getOrElse { validationError ->
+                // One name failing the local rules must not fail the whole account list it arrives in
+                TangemLogger.e("Stored account name is accepted as is: $validationError")
+
+                AccountName.Custom.fromStored(value = value).getOrElse {
+                    error("Unable to create AccountName from value: $value. Cause: $it")
+                }
             }
         }
     }

@@ -18,6 +18,7 @@ dependencies {
     implementation(projects.features.swapV2.api)
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.addressBook.api)
+    implementation(projects.features.jointAccount.api)
 
     /** Libs */
     implementation(projects.libs.crypto)

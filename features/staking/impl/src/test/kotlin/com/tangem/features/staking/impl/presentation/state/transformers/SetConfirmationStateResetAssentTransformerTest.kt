@@ -47,8 +47,8 @@ internal class SetConfirmationStateResetAssentTransformerTest {
 
     @Test
     fun `GIVEN a stale contribution WHEN transform THEN the primary button is disabled`() {
-        // Arrange — the toggle-on shape: `Sources.stakingBalanceSource` is stamped ACTUAL and the real staleness
-        // rides on the contribution, which is what `stakingSource` resolves
+        // Arrange — `Sources.stakingBalanceSource` is stamped ACTUAL and the real staleness rides on the
+        // contribution, which is what `stakingSource` resolves
         val transformer = SetConfirmationStateResetAssentTransformer(
             cryptoCurrencyStatus = statusWith(
                 sources = CryptoCurrencyStatus.Sources(stakingBalanceSource = StatusSource.ACTUAL),
@@ -60,24 +60,6 @@ internal class SetConfirmationStateResetAssentTransformerTest {
         val actual = transformer.transform(stakingUiState())
 
         // Assert — reading `Sources.stakingBalanceSource` directly would leave this enabled
-        val confirmation = actual.confirmationState as StakingStates.ConfirmationState.Data
-        assertThat(confirmation.isPrimaryButtonEnabled).isFalse()
-    }
-
-    @Test
-    fun `GIVEN a stale legacy staking balance WHEN transform THEN the primary button is disabled`() {
-        // Arrange — the toggle-off shape, which has to keep behaving exactly as it always did
-        val transformer = SetConfirmationStateResetAssentTransformer(
-            cryptoCurrencyStatus = statusWith(
-                sources = CryptoCurrencyStatus.Sources(),
-                stakingBalance = cachedStakingBalance(),
-            ),
-        )
-
-        // Act
-        val actual = transformer.transform(stakingUiState())
-
-        // Assert
         val confirmation = actual.confirmationState as StakingStates.ConfirmationState.Data
         assertThat(confirmation.isPrimaryButtonEnabled).isFalse()
     }
@@ -135,21 +117,18 @@ internal class SetConfirmationStateResetAssentTransformerTest {
 
     // region Fixtures
     /**
-     * [CryptoCurrencyStatus.Value.stakingBalance] and [CryptoCurrencyStatus.Value.contributions] are stubbed
-     * explicitly, not left to `relaxed`. A relaxed mock hands back a *child mock* for the nullable balance rather
-     * than `null`, and then a relaxed `StatusSource` resolves to the enum's first constant — which is `CACHE`,
-     * not `ACTUAL`. That silently pins every case to "stale" and would let the disabled-button assertions pass
-     * for the wrong reason.
+     * [CryptoCurrencyStatus.Value.contributions] is stubbed explicitly, not left to `relaxed`. A relaxed mock
+     * hands back a *child mock* for the balance rather than a real one, and then a relaxed `StatusSource`
+     * resolves to the enum's first constant — which is `CACHE`, not `ACTUAL`. That silently pins every case to
+     * "stale" and would let the disabled-button assertions pass for the wrong reason.
      */
     private fun statusWith(
         sources: CryptoCurrencyStatus.Sources,
-        stakingBalance: StakingBalance? = null,
         contributions: List<BalanceContribution> = emptyList(),
     ): CryptoCurrencyStatus = CryptoCurrencyStatus(
         currency = mockk(relaxed = true),
         value = mockk(relaxed = true) {
             every { this@mockk.sources } returns sources
-            every { this@mockk.stakingBalance } returns stakingBalance
             every { this@mockk.contributions } returns contributions
         },
     )

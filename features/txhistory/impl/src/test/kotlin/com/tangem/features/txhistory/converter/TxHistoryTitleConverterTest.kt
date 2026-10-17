@@ -21,6 +21,7 @@ internal class TxHistoryTitleConverterTest {
     private val coin = MockCryptoCurrencyFactory().createCoin(Blockchain.Ethereum)
 
     private val converter = TxHistoryTitleConverter(coin)
+    private val refundCap = SdkAmount(currencySymbol = "ETH", value = BigDecimal("500000000000000").movePointLeft(18), decimals = 18)
 
     @ParameterizedTest
     @ProvideTestModels
@@ -34,6 +35,19 @@ internal class TxHistoryTitleConverterTest {
 
     @Suppress("LongMethod")
     private fun provideTestModels() = listOf(
+        // A joint account's executed token operation reads like the transfer it is
+        TitleModel(
+            tx = txInfo(
+                type = TransactionType.Joint.Transfer(
+                    recipient = "0xrecipient",
+                    amount = BigDecimal.ONE,
+                    refundCap = refundCap,
+                    signaturesCount = 2,
+                ),
+                isOutgoing = true,
+            ),
+            expected = resRef(R.string.common_sent),
+        ),
         // Pills resolve to the status-aware label text (no amount)
         TitleModel(
             tx = txInfo(TransactionType.Approve(amount = SdkAmount(currencySymbol = "USDT", value = null, decimals = 6), address = "0xspender")),

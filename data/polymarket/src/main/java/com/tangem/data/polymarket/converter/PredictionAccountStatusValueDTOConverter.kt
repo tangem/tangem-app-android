@@ -29,7 +29,6 @@ internal class PredictionAccountStatusValueDTOConverter(
         is PredictionAccountStatusValue.Active -> PredictionAccountStatusValueDTO.Active(
             balance = value.balance,
             depositAddress = value.depositAddress,
-            positionsValue = value.positionsValue,
         )
         is PredictionAccountStatusValue.Loading,
         is PredictionAccountStatusValue.Error,
@@ -48,7 +47,6 @@ internal class PredictionAccountStatusValueDTOConverter(
         is PredictionAccountStatusValueDTO.Active -> PredictionAccountStatusValue.Active(
             source = StatusSource.CACHE,
             balance = value.balance,
-            positionsValue = value.positionsValue,
             fiatRate = null,
             depositCurrency = collateralCurrencyFactory.createDepositTarget(),
             depositAddress = value.depositAddress,

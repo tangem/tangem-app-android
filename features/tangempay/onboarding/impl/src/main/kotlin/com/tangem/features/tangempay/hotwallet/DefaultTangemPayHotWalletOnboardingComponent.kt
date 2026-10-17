@@ -1,13 +1,15 @@
 package com.tangem.features.tangempay.hotwallet
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.SystemBarsIconsDisposable
-import com.tangem.core.ui.res.ForceDarkTheme
+import com.tangem.core.ui.res.LocalIsInDarkTheme
+import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -24,11 +26,13 @@ internal class DefaultTangemPayHotWalletOnboardingComponent @AssistedInject cons
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         SystemBarsIconsDisposable(darkIcons = false)
-        ForceDarkTheme {
-            TangemPayHotWalletOnboardingScreen(
-                state = state,
-                modifier = modifier,
-            )
+        CompositionLocalProvider(LocalIsInDarkTheme provides true) {
+            TangemThemeRedesign {
+                TangemPayHotWalletOnboardingScreen(
+                    state = state,
+                    modifier = modifier,
+                )
+            }
         }
     }
 

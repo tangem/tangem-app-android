@@ -37,16 +37,12 @@ internal class DefaultStoriesV2Component @AssistedInject constructor(
         val state by model.uiState.collectAsStateWithLifecycle()
         val videoAspectRatio by model.videoAspectRatio.collectAsStateWithLifecycle()
 
-        // Nothing is drawn until the composition resolves. That is not a loading state the viewer can reach: a
-        // story that cannot be shown reports itself unavailable and the host moves on instead.
-        state?.let { storyState ->
-            StoriesV2Screen(
-                state = storyState,
-                handle = model,
-                videoAspectRatio = videoAspectRatio,
-                modifier = modifier,
-            )
-        }
+        StoriesV2Screen(
+            state = state,
+            handle = model,
+            videoAspectRatio = videoAspectRatio,
+            modifier = modifier,
+        )
     }
 
     @AssistedFactory

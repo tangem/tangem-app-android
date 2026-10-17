@@ -173,6 +173,26 @@ internal object SwapNotificationUM {
             ),
         )
 
+        data class PredictionMinimumDeposit(
+            val amountText: String,
+        ) : Warning(
+            title = resourceReference(
+                id = R.string.warning_express_notification_invalid_reserve_amount_title,
+                formatArgs = wrappedList(amountText),
+            ),
+            subtitle = TextReference.EMPTY,
+        )
+
+        data class PredictionMaximumDeposit(
+            val amountText: String,
+        ) : Warning(
+            title = resourceReference(
+                id = R.string.prediction_add_funds_max_receive_amount_title,
+                formatArgs = wrappedList(amountText),
+            ),
+            subtitle = TextReference.EMPTY,
+        )
+
         data class NeedReserveToCreateAccount(
             val receiveAmount: String,
             val receiveToken: String,
@@ -230,6 +250,13 @@ internal object SwapNotificationUM {
         data object HighPriceImpact : Warning(
             title = resourceReference(R.string.swapping_high_price_impact_title),
             subtitle = resourceReference(R.string.swapping_high_price_impact_text),
+        )
+
+        data class LowSlippage(val percent: TextReference, val onClick: () -> Unit) : Warning(
+            title = combinedReference(resourceReference(R.string.swap_slippage_warning_title, wrappedList(percent))),
+            subtitle = resourceReference(R.string.swap_slippage_warning_text),
+            shouldShowArrowIcon = true,
+            onClick = onClick,
         )
 
         data object TradeTooHigh : Warning(

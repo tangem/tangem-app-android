@@ -34,7 +34,8 @@ class CheckHotWalletUpgradeBannerUseCase(
         val daysSinceClosure = closureTimestamp?.let { TimeUnit.MILLISECONDS.toDays(currentTime - it) }
 
         // Wallet balance is positive, but the first top-up hasn't been tracked yet
-        if (hasBalance && !hasHadFirstTopUp) {
+        val isFirstTopUpDetectedNow = hasBalance && !hasHadFirstTopUp
+        if (isFirstTopUpDetectedNow) {
             hotWalletRepository.setHasHadFirstTopUp(walletId, true)
             hotWalletRepository.setShouldShowUpgradeBanner(walletId, true)
             hotWalletRepository.setUpgradeBannerClosureTimestamp(walletId, null)
@@ -42,6 +43,8 @@ class CheckHotWalletUpgradeBannerUseCase(
         }
 
         val shouldShow = when {
+            // Shown from the next session on; the arguments still hold the state from before the writes above
+            isFirstTopUpDetectedNow -> false
             // Banner should be shown (e.g., because of the first top-up in the previous session)
             shouldShowUpgradeBanner -> !hotWalletRepository.isFirstTopUpDetectedThisSession(walletId)
             // Banner was closed; it happened more than BANNER_RESHOW_DAYS (30) days ago

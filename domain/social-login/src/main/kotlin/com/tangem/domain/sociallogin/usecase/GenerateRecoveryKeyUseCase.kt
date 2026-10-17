@@ -6,7 +6,7 @@ import javax.inject.Inject
 
 /**
 
- * registered on the backend, so the create flow holds on to it until both have succeeded (NFR-01).
+ * registered on the backend, so the create flow holds on to it until both have succeeded.
  */
 class GenerateRecoveryKeyUseCase @Inject constructor(
     private val recoveryKeyGenerator: RecoveryKeyGenerator,

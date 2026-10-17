@@ -10,4 +10,7 @@ internal class DefaultWalletConnectFeatureToggles(
 
     override val isBitcoinEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.WALLET_CONNECT_BITCOIN_ENABLED)
+
+    override val isOnDemandInitEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18021_WALLETCONNECT_ON_DEMAND_INIT_ENABLED)
 }

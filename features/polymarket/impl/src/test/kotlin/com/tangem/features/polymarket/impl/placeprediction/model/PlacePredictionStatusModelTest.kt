@@ -118,7 +118,7 @@ internal class PlacePredictionStatusModelTest : PlacePredictionModelTestBase() {
         }
 
     @Test
-    fun `GIVEN the market resolved while indexing WHEN the position is read THEN view position is hidden`() =
+    fun `GIVEN the market resolved while indexing WHEN the position is read THEN view position is available`() =
         runTest {
             // Arrange
             coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
@@ -135,7 +135,7 @@ internal class PlacePredictionStatusModelTest : PlacePredictionModelTestBase() {
             advanceUntilIdle()
 
             // Assert
-            assertThat(model.viewPosition.value).isEqualTo(ViewPositionUM.Hidden)
+            assertThat(model.viewPosition.value).isEqualTo(ViewPositionUM.Available)
             coVerify(exactly = 1) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
         }
 
