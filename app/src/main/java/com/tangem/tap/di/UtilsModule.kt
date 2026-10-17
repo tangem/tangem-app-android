@@ -49,11 +49,10 @@ internal interface UtilsModule {
     @Singleton
     fun bindTestPushEmitter(impl: DefaultTestPushEmitter): TestPushEmitter
 
-    companion object {
+    @Binds
+    fun bindShareManager(impl: IntentShareManager): ShareManager
 
-        @Provides
-        @Singleton
-        fun provideShareManager(): ShareManager = IntentShareManager()
+    companion object {
 
         @Provides
         @Singleton

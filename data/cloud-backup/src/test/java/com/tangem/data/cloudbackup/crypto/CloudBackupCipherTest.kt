@@ -187,7 +187,7 @@ internal class CloudBackupCipherTest {
     }
 
     @Test
-    fun `GIVEN password in NFD form WHEN decrypt with NFC form THEN succeeds (CPR-06)`() {
+    fun `GIVEN password in NFD form WHEN decrypt with NFC form THEN succeeds`() {
         // Arrange: the same passphrase in two Unicode normalization forms
         val nfcPassword = charArrayOf('c', 'a', 'f', '\u00e9') // precomposed e-acute (NFC)
         val nfdPassword = charArrayOf('c', 'a', 'f', 'e', '\u0301') // e + combining acute (NFD)

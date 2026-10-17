@@ -98,7 +98,6 @@ internal class BalanceContributionSeamTest {
         // Assert — only Data balances ever reach a status
         assertThat(status.value.contributions).isEmpty()
         assertThat(status.getExtraBalanceOrNull()).isNull()
-        assertThat(status.value.stakingBalance).isNull()
     }
 
     @Test

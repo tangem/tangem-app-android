@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
@@ -35,6 +36,8 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 /**
  * Design-system v2 button supporting an optional leading icon, label, and trailing icon.
+ *
+ * Version: 1.2.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=0-1)
  *
@@ -151,6 +154,8 @@ private fun resolveBorder(isFocused: Boolean, colorTokens: ColorTokens, contentA
 private fun Color.scaleAlpha(factor: Float): Color = if (factor == 1f) this else copy(alpha = alpha * factor)
 
 object TangemButton {
+
+    val version = DsVersion(major = 1, minor = 2, patch = 0)
 
     /**
      * Visual style of the button.

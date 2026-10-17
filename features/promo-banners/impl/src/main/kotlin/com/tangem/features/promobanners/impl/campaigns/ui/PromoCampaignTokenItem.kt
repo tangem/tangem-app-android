@@ -22,6 +22,7 @@ import com.tangem.core.ui.components.account.AccountCharIcon
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.account.AccountResIcon
 import com.tangem.core.ui.components.account.PaymentAccountIcon
+import com.tangem.core.ui.components.account.PredictionAccountResIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.token.state.TokenItemState
@@ -44,6 +45,7 @@ internal fun PromoCampaignTokenItem(
             ) {
                 when (val icon = selectedAccount.iconState) {
                     is CurrencyIconState.PaymentAccount -> PaymentAccountIcon(size = icon.size)
+                    is CurrencyIconState.PredictionAccount -> PredictionAccountResIcon(size = icon.size)
                     is CurrencyIconState.CryptoPortfolio.Icon -> AccountResIcon(
                         imageVector = icon.imageVector(),
                         color = icon.color,

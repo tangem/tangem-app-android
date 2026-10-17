@@ -99,4 +99,8 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
             queryParams: Map<String, String>,
         ): DefaultStakingDeepLinkHandler
     }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://staking"
+    }
 }

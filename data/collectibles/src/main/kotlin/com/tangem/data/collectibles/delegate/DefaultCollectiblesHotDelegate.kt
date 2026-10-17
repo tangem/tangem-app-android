@@ -67,6 +67,16 @@ internal class DefaultCollectiblesHotDelegate @Inject constructor(
         }
     }
 
+    override suspend fun getPublicKeyOrNull(accountId: AccountId): HotDelegatePublicKey? {
+        return withContext(dispatchers.io) {
+            val delegate = storedDelegate(accountId) ?: return@withContext null
+
+            runSuspendCatching { derivePublicKey(delegate.hotWalletId) }
+                .onFailure { TangemLogger.e("Failed to read the collectibles hot delegate", it) }
+                .getOrNull()
+        }
+    }
+
     private suspend fun create(accountId: AccountId): HotDelegatePublicKey {
         val hotWalletId = tangemHotSdk.generateWallet(HotAuth.NoAuth, MnemonicType.Words12)
 

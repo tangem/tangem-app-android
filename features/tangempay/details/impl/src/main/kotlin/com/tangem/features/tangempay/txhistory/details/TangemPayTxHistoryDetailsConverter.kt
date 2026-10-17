@@ -307,6 +307,7 @@ internal object TangemPayTxHistoryDetailsConverter :
         transaction = item,
         cashback = cashbackDetails,
         loadState = cashbackLoadState,
+        isBalanceHidden = isBalanceHidden,
         onRefreshClick = onCashbackRefreshClick,
     )
 

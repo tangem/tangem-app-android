@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -35,6 +36,8 @@ import kotlinx.collections.immutable.toImmutableList
 /**
  * Design-system v2 tab navigation — a horizontally scrollable row of [TangemTabItem]s sharing one
  * animated selection pill.
+ *
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?m=dev&node-id=6534-619)
  *
@@ -110,6 +113,12 @@ private fun resolvePillBounds(
         offset += (widths[tabs[i].id] ?: return null) + ItemSpacing
     }
     return PillBounds(offset = offset, width = widths[selected.id] ?: return null)
+}
+
+/** Public API surface of [TangemTabNavigation]. */
+object TangemTabNavigation {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
 }
 
 // region Previews

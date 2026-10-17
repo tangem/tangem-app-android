@@ -110,6 +110,54 @@ internal class TangemModalMorphTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ModalContentBottomCarve {
+
+        @ParameterizedTest
+        @MethodSource("provideTestModels")
+        fun `GIVEN nav clearance and keyboard WHEN modalContentBottomCarve THEN keeps clear of the taller one`(
+            model: BottomCarveModel,
+        ) {
+            // Act
+            val actual = modalContentBottomCarve(
+                navClearance = model.navClearance,
+                imeBottom = model.imeBottom,
+                cardBottomMargin = model.cardBottomMargin,
+                cardHeight = model.cardHeight,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            // No keyboard: only the navigation-bar clearance of an edge-to-edge card.
+            BottomCarveModel(navClearance = NAV_BAR, imeBottom = 0, cardBottomMargin = 0, expected = NAV_BAR),
+            // Resting card: the clearance is still outside the card, nothing to carve.
+            BottomCarveModel(navClearance = 0, imeBottom = 0, cardBottomMargin = NAV_BAR + MARGIN, expected = 0),
+            // Keyboard on an edge-to-edge card: the IME inset already spans the navigation bar.
+            BottomCarveModel(navClearance = NAV_BAR, imeBottom = KEYBOARD, cardBottomMargin = 0, expected = KEYBOARD),
+            // Keyboard mid-morph: the part of the card's margin the keyboard covers is not inside the card.
+            BottomCarveModel(
+                navClearance = NAV_BAR / 2,
+                imeBottom = KEYBOARD,
+                cardBottomMargin = NAV_BAR,
+                expected = KEYBOARD - NAV_BAR,
+            ),
+            // Keyboard shorter than the margin: it does not reach the card.
+            BottomCarveModel(navClearance = 0, imeBottom = MARGIN, cardBottomMargin = NAV_BAR, expected = 0),
+            // Never taller than the card itself.
+            BottomCarveModel(
+                navClearance = NAV_BAR,
+                imeBottom = KEYBOARD,
+                cardBottomMargin = 0,
+                cardHeight = KEYBOARD / 2,
+                expected = KEYBOARD / 2,
+            ),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class ContentHeightCache {
 
         private val measurable: IntrinsicMeasurable = mockk()
@@ -216,6 +264,14 @@ internal class TangemModalMorphTest {
         val expected: Float,
     )
 
+    internal data class BottomCarveModel(
+        val navClearance: Int,
+        val imeBottom: Int,
+        val cardBottomMargin: Int,
+        val cardHeight: Int = CARD_HEIGHT,
+        val expected: Int,
+    )
+
     internal data class MorphTargetModel(
         val intrinsicHeight: Int,
         val maxHeight: Int,
@@ -230,5 +286,9 @@ internal class TangemModalMorphTest {
         const val PROBE_WIDTH = 1000
         const val PROBED_HEIGHT = 600
         const val GROWN_HEIGHT = 800
+        const val NAV_BAR = 126
+        const val MARGIN = 21
+        const val KEYBOARD = 900
+        const val CARD_HEIGHT = 2000
     }
 }

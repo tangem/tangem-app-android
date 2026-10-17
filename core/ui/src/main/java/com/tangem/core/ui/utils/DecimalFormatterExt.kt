@@ -10,6 +10,7 @@ import java.util.Locale
 
 private const val TEXT_CHUNK_THOUSAND = 3
 private const val SCIENTIFIC_NOTATION = 'e'
+private const val DECIMAL_RADIX = 10
 const val POINT_SEPARATOR = '.'
 const val COMMA_SEPARATOR = ','
 const val DECIMAL_SEPARATOR_LIMIT = 1
@@ -155,7 +156,7 @@ fun BigDecimal.parseBigDecimal(decimals: Int, roundingMode: RoundingMode = Round
 
 /**
  * Universal amount string parser to [BigDecimal]
- * Able to parse values with only ONE separator, assuming separator is COMMA.
+ * Able to parse values with only ONE separator: POINT, COMMA or the [Locale.getDefault] decimal separator.
  * Otherwise returns null.
  */
 fun String.parseBigDecimalOrNull() = runCatching {
@@ -173,26 +174,24 @@ fun String.parseBigDecimalOrNull() = runCatching {
     } > DECIMAL_SEPARATOR_LIMIT
     if (shouldExcludeFormatted || shouldExcludeWrongScientific) return null
 
-    // An attempt to parse value with POINT decimal separator
-    val parsed = this.toBigDecimalOrNull()
-
-    if (parsed == null) {
-        // If parsing with POINT separator fails trying to parse with COMMA separator
-        val decimalFormatSymbol = DecimalFormatSymbols().apply {
-            decimalSeparator = COMMA_SEPARATOR
-        }
-        val decimalFormat = DecimalFormat().apply {
-            decimalFormatSymbols = decimalFormatSymbol
-            isParseBigDecimal = true
-        }
-
-        // Return either number or null if fails
-        decimalFormat.parse(this) as? BigDecimal
-    } else {
-        // If parsing with POINT separator succeeds return number
-        parsed
-    }
+    this.toBigDecimalOrNull() ?: this.toPointDecimal().toBigDecimalOrNull()
 }.getOrNull()
+
+/**
+ * Rewrites a value written with a COMMA or the [Locale.getDefault] decimal separator (e.g. `٫` with Arabic-Indic
+ * digits under `ar-EG`, as [parseBigDecimal] writes it) into a POINT-separated ASCII number, so it is parsed whole —
+ * a prefix parse would silently read `٩٫٨٧` as 9.
+ */
+private fun String.toPointDecimal(): String {
+    val localeDecimalSeparator = DecimalFormatSymbols(Locale.getDefault()).decimalSeparator
+    return map { char ->
+        when {
+            char == COMMA_SEPARATOR || char == localeDecimalSeparator -> POINT_SEPARATOR
+            char.isDigit() -> Character.digit(char, DECIMAL_RADIX).digitToChar()
+            else -> char
+        }
+    }.joinToString(separator = "")
+}
 
 private fun Int.getWithIntegerDecimals(before: String, separator: Char, after: String): String = if (this == 0) {
     before

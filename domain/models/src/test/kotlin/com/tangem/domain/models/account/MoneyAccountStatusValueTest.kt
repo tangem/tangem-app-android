@@ -55,17 +55,24 @@ internal class MoneyAccountStatusValueTest {
     }
 
     @Test
-    fun `GIVEN no balance WHEN totalFiatBalance THEN zero`() {
+    fun `GIVEN onboarding status WHEN totalFiatBalance THEN zero`() {
         // Arrange
         val issuing = MoneyAccountStatusValue.Onboarding.Issuing(
             source = StatusSource.ACTUAL,
-            balance = null,
-            customerId = null,
+            customerId = "customer-1",
             step = MoneyAccountStatusValue.IssuingStep.STARTING,
         )
 
         // Act & Assert
         Truth.assertThat(issuing.totalFiatBalance).isEqualTo(
+            TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
+        )
+    }
+
+    @Test
+    fun `GIVEN account without balance WHEN totalFiatBalance THEN zero`() {
+        // Act & Assert
+        Truth.assertThat(activeWith(balance = null).totalFiatBalance).isEqualTo(
             TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
         )
     }
@@ -98,29 +105,5 @@ internal class MoneyAccountStatusValueTest {
         // Assert
         Truth.assertThat(value).isInstanceOf(CryptoCurrencyStatus.Loaded::class.java)
         Truth.assertThat((value as CryptoCurrencyStatus.Loaded).fiatRate).isEqualTo(rate)
-    }
-
-    @Test
-    fun `GIVEN progress status WHEN copySealed with source THEN source replaced`() {
-        // Arrange
-        val status = MoneyAccountStatusValue.Onboarding.UnderReview(
-            source = StatusSource.ACTUAL,
-            balance = null,
-            customerId = "customer",
-            kycStatus = KycStatus.PENDING,
-        )
-
-        // Act
-        val actual = status.copySealed(source = StatusSource.ONLY_CACHE)
-
-        // Assert
-        Truth.assertThat(actual).isEqualTo(status.copy(source = StatusSource.ONLY_CACHE))
-    }
-
-    @Test
-    fun `GIVEN terminal status WHEN copySealed THEN status unchanged`() {
-        // Act & Assert
-        Truth.assertThat(MoneyAccountStatusValue.NotCreated.copySealed(source = StatusSource.ONLY_CACHE))
-            .isEqualTo(MoneyAccountStatusValue.NotCreated)
     }
 }

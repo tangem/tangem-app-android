@@ -12,6 +12,7 @@ import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openAppByDeepLink
 import com.tangem.scenarios.openMainScreenWithNewHotWallet
+import com.tangem.scenarios.selectTangemPayResidency
 import com.tangem.screens.onIntroductionScreen
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.tangempay.onTangemPayHotWalletOnboardingScreen
@@ -28,6 +29,8 @@ class TangemPayDeeplinkOnboardingTest : BaseTestCase() {
 
     private val onboardVisaDeeplink = "tangem://onboard-visa?entry=ff1&id=6USB3LU2"
     private val validateEndpoint = "/bff-v2/v1/deeplink/validate"
+    private val residencyCountry = "United States"
+    private val residencyRegion = "California"
 
     @AllureId("9527")
     @DisplayName("Tangem Pay: onboard-visa deeplink validated as VALID opens Tangem Pay onboarding")
@@ -136,7 +139,7 @@ class TangemPayDeeplinkOnboardingTest : BaseTestCase() {
                 onTangemPayOnboardingScreen { title.assertIsNotDisplayed() }
             }
             step("Assert Tangem Pay mobile onboarding screen is not displayed") {
-                onTangemPayHotWalletOnboardingScreen { setupWalletBlockTitle.assertIsNotDisplayed() }
+                onTangemPayHotWalletOnboardingScreen { legalCaption.assertIsNotDisplayed() }
             }
             step("Assert '$validateEndpoint' is not requested") {
                 val validateRequestsAfter = getWireMockRequestCount("POST", validateEndpoint)
@@ -183,8 +186,8 @@ class TangemPayDeeplinkOnboardingTest : BaseTestCase() {
                     }
                 }
             }
-            step("Assert Tangem Pay mobile onboarding 'Set up wallet' block is not displayed") {
-                onTangemPayHotWalletOnboardingScreen { setupWalletBlockTitle.assertIsNotDisplayed() }
+            step("Assert Tangem Pay mobile onboarding legal caption is not displayed") {
+                onTangemPayHotWalletOnboardingScreen { legalCaption.assertIsNotDisplayed() }
             }
             step("Assert '$validateEndpoint' is requested once") {
                 val validateRequestsAfter = getWireMockRequestCount("POST", validateEndpoint)
@@ -225,6 +228,9 @@ class TangemPayDeeplinkOnboardingTest : BaseTestCase() {
             }
             step("Click on 'Get card' button") {
                 onTangemPayOnboardingScreen { getCardButton.clickWithAssertion() }
+            }
+            step("Select residency: '$residencyCountry', '$residencyRegion'") {
+                selectTangemPayResidency(country = residencyCountry, region = residencyRegion)
             }
             // The mocked build skips the wallet authorization that precedes KYC in production.
             step("Assert KYC screen is displayed") {

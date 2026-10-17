@@ -1,30 +1,19 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 class FreezeUnfreezeCardResponse(
-    @Json(name = "result") val result: Result?,
+    @SerialName("result") val result: Result?,
 ) {
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Result(
-        @Json(name = "order_id") val orderId: String,
-        @Json(name = "status") val status: Status,
+        @SerialName("order_id") val orderId: String,
+        /**
+         * A status this build does not know falls back to [OrderResponse.Result.Status.UNKNOWN] since app version 6.5.
+         * Older versions fail to parse the whole response on it.
+         */
+        @SerialName("status") val status: OrderResponse.Result.Status = OrderResponse.Result.Status.UNKNOWN,
     )
-
-    @JsonClass(generateAdapter = false)
-    enum class Status {
-        @Json(name = "NEW")
-        NEW,
-
-        @Json(name = "PROCESSING")
-        PROCESSING,
-
-        @Json(name = "COMPLETED")
-        COMPLETED,
-
-        @Json(name = "CANCELED")
-        CANCELED,
-    }
 }

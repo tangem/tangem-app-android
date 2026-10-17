@@ -1,6 +1,5 @@
 package com.tangem.feature.swap.model
 
-import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
@@ -27,7 +26,7 @@ internal class SwapModelApprovalSelectorCallbackTest : SwapModelTestBase() {
     fun `GIVEN no current loaded state WHEN onApproveTypeSelected THEN type remembered and no reload`() = runTest {
         // Arrange
         val model = createModel()
-        val slot = SlotTracker(model.approvalSlotNavigation)
+        val slot = SlotTracker(model.glassSheetSlotNavigation)
         val statesBefore = model.dataState.lastLoadedSwapStates
 
         // Act
@@ -47,7 +46,7 @@ internal class SwapModelApprovalSelectorCallbackTest : SwapModelTestBase() {
             // Arrange
             val provider = swapProvider()
             val model = createModel()
-            val slot = SlotTracker(model.approvalSlotNavigation)
+            val slot = SlotTracker(model.glassSheetSlotNavigation)
             model.dataState = model.dataState.copy(
                 selectedProvider = provider,
                 lastLoadedSwapStates = mapOf(provider to quotesLoadedState(provider, PermissionDataState.Empty)),
@@ -68,7 +67,7 @@ internal class SwapModelApprovalSelectorCallbackTest : SwapModelTestBase() {
         // Arrange
         val provider = swapProvider()
         val model = createModel()
-        val slot = SlotTracker(model.approvalSlotNavigation)
+        val slot = SlotTracker(model.glassSheetSlotNavigation)
         model.dataState = model.dataState.copy(
             selectedProvider = provider,
             lastLoadedSwapStates = mapOf(
@@ -93,7 +92,7 @@ internal class SwapModelApprovalSelectorCallbackTest : SwapModelTestBase() {
         // Arrange
         val provider = swapProvider()
         val model = createModel()
-        val slot = SlotTracker(model.approvalSlotNavigation)
+        val slot = SlotTracker(model.glassSheetSlotNavigation)
         model.dataState = model.dataState.copy(
             selectedProvider = provider,
             lastLoadedSwapStates = mapOf(
@@ -136,26 +135,5 @@ internal class SwapModelApprovalSelectorCallbackTest : SwapModelTestBase() {
         assertThat(model.dataState).isEqualTo(before)
         coVerify(exactly = 0) { feeSelectorReloadTrigger.triggerLoadingState() }
         coVerify(exactly = 0) { feeSelectorReloadTrigger.triggerUpdate() }
-    }
-
-    /**
-     * Minimal stand-in for `childSlot`: tracks the active configuration and invokes each navigation
-     * event's completion callback, which `DefaultSlotNavigation` leaves to its host. [results] holds
-     * one entry per navigation event, so a `dismiss()` shows up as a single `null`.
-     */
-    private class SlotTracker<C : Any>(navigation: SlotNavigation<C>) {
-
-        val results = mutableListOf<C?>()
-
-        private var configuration: C? = null
-
-        init {
-            navigation.subscribe { event ->
-                val oldConfiguration = configuration
-                configuration = event.transformer(oldConfiguration)
-                results += configuration
-                event.onComplete(configuration, oldConfiguration)
-            }
-        }
     }
 }

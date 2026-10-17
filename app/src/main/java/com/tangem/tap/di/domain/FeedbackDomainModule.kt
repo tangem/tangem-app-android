@@ -1,16 +1,20 @@
 package com.tangem.tap.di.domain
 
 import android.content.Context
+import com.tangem.domain.feedback.GetSupportChatLogsUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.SupportChatInfoProvider
+import com.tangem.domain.feedback.models.SupportChatTopic
 import com.tangem.domain.feedback.repository.FeedbackRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.Multibinds
 import javax.inject.Singleton
 
 @Module
@@ -49,4 +53,21 @@ internal object FeedbackDomainModule {
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideGetSupportChatLogsUseCase(
+        feedbackRepository: FeedbackRepository,
+        infoProviders: Map<SupportChatTopic, @JvmSuppressWildcards SupportChatInfoProvider>,
+    ): GetSupportChatLogsUseCase {
+        return GetSupportChatLogsUseCase(feedbackRepository = feedbackRepository, infoProviders = infoProviders)
+    }
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+internal interface SupportChatInfoProvidersModule {
+
+    @Multibinds
+    fun supportChatInfoProviders(): Map<SupportChatTopic, SupportChatInfoProvider>
 }

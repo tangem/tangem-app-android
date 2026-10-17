@@ -7,8 +7,10 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.wallet.isColdWallet
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
+import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.model.bankofframp.BankOfframpSignResult
 import com.tangem.domain.pay.usecase.bankofframp.AwaitBankOfframpSignatureUseCase
@@ -53,6 +55,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     private val cancelBankOfframpOrderUseCase: CancelBankOfframpOrderUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val analytics: AnalyticsEventHandler,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawPreviewComponent.Params>()
@@ -68,7 +71,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
         ),
     )
 
-    private val state = MutableStateFlow(PreviewState(isColdWallet = resolveIsColdWallet()))
+    private val state = MutableStateFlow(PreviewState(isColdWallet = resolveIsColdWallet(), isBalanceHidden = true))
 
     private val sendJobHolder = JobHolder()
 
@@ -88,6 +91,9 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     init {
         combine(params.draft, state) { draft, previewState -> umFactory.create(draft = draft, state = previewState) }
             .onEach { uiState.value = it }
+            .launchIn(modelScope)
+        getBalanceHidingSettingsUseCase.isBalanceHidden()
+            .onEach { isBalanceHidden -> state.update { it.copy(isBalanceHidden = isBalanceHidden) } }
             .launchIn(modelScope)
         analytics.send(TangemPayAnalyticsEvents.Offramp.ConfirmationScreenOpened())
     }
@@ -114,19 +120,26 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
         state.update { it.copy(send = SendState.CreatingOrder, failure = null, resumableOrderId = null) }
         modelScope.launch {
             createBankOfframpOrderUseCase(userWalletId = params.userWalletId, request = request, idempotencyKey = key)
-                .fold(ifLeft = ::onSendFailed, ifRight = { result -> onOrderCreated(result) })
+                .fold(
+                    ifLeft = ::onSendFailed,
+                    ifRight = { result -> onOrderCreated(result = result, request = request) },
+                )
         }.saveIn(sendJobHolder)
     }
 
-    private suspend fun onOrderCreated(result: BankOfframpOrderResult) {
+    private suspend fun onOrderCreated(result: BankOfframpOrderResult, request: BankOfframpOrderRequest) {
         params.onOrderCreated(result)
-        awaitSignature(orderId = result.orderId)
+        awaitSignature(orderId = result.orderId, request = request)
     }
 
     /** The backend prepares the transfer before it asks for a signature, so the order is polled until it does. */
-    private suspend fun awaitSignature(orderId: String) {
+    private suspend fun awaitSignature(orderId: String, request: BankOfframpOrderRequest) {
         state.update { it.copy(send = SendState.AwaitingSignature(orderId), failure = null, resumableOrderId = null) }
-        awaitBankOfframpSignatureUseCase(userWalletId = params.userWalletId, orderId = orderId).fold(
+        awaitBankOfframpSignatureUseCase(
+            userWalletId = params.userWalletId,
+            orderId = orderId,
+            request = request,
+        ).fold(
             ifLeft = { error -> onOrderFailed(error = error, orderId = orderId) },
             ifRight = { payloadHash -> sign(orderId = orderId, payloadHash = payloadHash) },
         )
@@ -179,6 +192,8 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
             )
             return
         }
+        val isOutcomeUnknown = error is BankOfframpError.Unknown && error.isOutcomeUnknown
+        if (!isOutcomeUnknown) idempotencyKey = null
         fail(failure = error.toFailure(), resumableOrderId = null)
     }
 
@@ -205,7 +220,8 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     private fun onRetryClick() {
         if (isSending) return
         val orderId = state.value.resumableOrderId ?: return send()
-        modelScope.launch { awaitSignature(orderId = orderId) }.saveIn(sendJobHolder)
+        val request = params.draft.value.toOrderRequest() ?: return
+        modelScope.launch { awaitSignature(orderId = orderId, request = request) }.saveIn(sendJobHolder)
     }
 
     private fun onBackClick() {
