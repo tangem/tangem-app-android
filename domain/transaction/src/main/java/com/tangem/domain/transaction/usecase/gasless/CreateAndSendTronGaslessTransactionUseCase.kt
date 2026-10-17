@@ -114,7 +114,9 @@ class CreateAndSendTronGaslessTransactionUseCase(
     ): TronGaslessQuote {
         val amountRaw = original.amount.toTronGaslessBaseUnits()
             ?: error("Tron gasless: transaction amount is null")
-        if (amountRaw == quotedFee.quotedAmountRaw) return quotedFee
+        val isQuoteForThisTransfer = amountRaw == quotedFee.quotedAmountRaw &&
+            original.destinationAddress == quotedFee.quotedToAddress
+        if (isQuoteForThisTransfer) return quotedFee
 
         val refreshed = tronGaslessTransactionRepository.estimate(
             TronGaslessEstimateParams(
@@ -128,7 +130,7 @@ class CreateAndSendTronGaslessTransactionUseCase(
         )
         require(refreshed.compensationAmountRaw <= quotedFee.compensationAmountRaw) {
             "Tron gasless compensation grew from ${quotedFee.compensationAmountRaw} to " +
-                "${refreshed.compensationAmountRaw} while re-quoting the reduced amount $amountRaw"
+                "${refreshed.compensationAmountRaw} while re-quoting $amountRaw to ${original.destinationAddress}"
         }
         return refreshed
     }
