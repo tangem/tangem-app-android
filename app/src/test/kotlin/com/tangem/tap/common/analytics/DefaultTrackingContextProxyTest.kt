@@ -6,8 +6,11 @@ import com.tangem.core.analytics.api.AnalyticsUserIdHandler
 import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
 import com.tangem.core.analytics.utils.TrackingContextProxy
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.common.analytics.paramsInterceptor.HotWalletContextInterceptor
 import com.tangem.tap.common.analytics.paramsInterceptor.LinkedCardContextInterceptor
 import io.mockk.clearMocks
@@ -24,12 +27,16 @@ internal class DefaultTrackingContextProxyTest {
 
     private val userIdHandler: AnalyticsUserIdHandler = mockk(relaxed = true)
     private val observer: TrackingContextProxy.Observer = mockk(relaxed = true)
+    private val walletsRepository: WalletsRepository = mockk()
     private val interceptorHolder = InMemoryParamsInterceptorHolder()
 
     private val proxy = DefaultTrackingContextProxy(
         paramsInterceptorHolder = interceptorHolder,
         userIdHandler = userIdHandler,
         observers = setOf(observer),
+        cardContextInterceptorFactory = object : CardContextInterceptor.Factory {
+            override fun create(scanResponse: ScanResponse) = CardContextInterceptor(scanResponse, walletsRepository)
+        },
     )
 
     private val coldWallet = MockUserWalletFactory.create()
