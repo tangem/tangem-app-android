@@ -78,6 +78,9 @@ internal sealed class TangemPayTxHistoryItemDM {
 
         @SerialName("withdrawal")
         Withdrawal,
+
+        @SerialName("cashback")
+        Cashback,
     }
 
     @Serializable
