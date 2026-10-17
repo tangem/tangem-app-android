@@ -9,6 +9,7 @@ import com.tangem.data.networks.utils.NetworkStatusFactory
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.isJoint
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -57,7 +58,7 @@ internal class CommonNetworkStatusFetcher @Inject constructor(
         return Either.catchOn(dispatchers.default) {
             // A pending joint account has no Safe yet, so no wallet manager: there is nothing to read and no error
             // to store. Building the manager can fail, so the lookup stays inside the catch
-            if (network.derivationPath is Network.DerivationPath.Joint &&
+            if (network.isJoint &&
                 walletManagersFacade.getOrCreateWalletManager(userWalletId = userWalletId, network = network) == null
             ) {
                 TangemLogger.i(

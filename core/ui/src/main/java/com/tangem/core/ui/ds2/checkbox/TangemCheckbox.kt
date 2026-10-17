@@ -28,18 +28,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentDataType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDataType
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.animation.TangemAnimationSpec
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.TangemTheme
@@ -53,6 +58,8 @@ import com.tangem.core.ui.res.generated.icons.ic_control_indeterminate_24
 /**
  * Design-system v2 tri-state checkbox: an `unchecked` outline box, a `checked` filled box with a
  * checkmark, or an `indeterminate` filled box with a dash.
+ *
+ * Version: 1.0.1
  *
  * [Figma](https://www.figma.com/design/y8arHOHCa6HjMpOMJ0Ykj6/DS-64-%7C-Token-Icon?node-id=3650-628)
  *
@@ -105,6 +112,11 @@ fun TangemCheckbox(
             }
             .semantics(mergeDescendants = true) {
                 if (!isEnabled) disabled()
+                if (onClick == null) {
+                    role = Role.Checkbox
+                    toggleableState = state
+                    contentDataType = ContentDataType.Toggle
+                }
                 contentDescription?.let { this.contentDescription = it }
             }
             .conditionalCompose(onClick != null) {
@@ -203,6 +215,12 @@ fun TangemCheckbox(
 }
 
 private val CheckboxShape = RoundedCornerShape(6.dp)
+
+/** Public API surface of [TangemCheckbox]. */
+object TangemCheckbox {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 1)
+}
 
 @Preview(name = "Light", showBackground = true)
 @Preview(name = "Dark", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES, showBackground = true)

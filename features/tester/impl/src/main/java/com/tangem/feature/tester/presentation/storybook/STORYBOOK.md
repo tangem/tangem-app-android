@@ -147,6 +147,18 @@ private fun buildStories() = listOf(
 )
 ```
 
+DS component pages are registered in `page/ds/DsComponentsListScreen.kt` instead, and additionally
+carry the component version:
+
+```kotlin
+DsStoryItem(title = "🃏 TangemFoo", version = TangemFoo.version, factory = fooStoryFactory),
+```
+
+`TangemFoo.version` is the `DsVersion` the component declares (see
+`.claude/rules/codestyle/design-system.md` → Versioning). The list row appends it to the title, and
+`StoryBookScreen` shows it as a badge in the top-right corner of the opened story. Use
+`version = null` only for entries that showcase tokens rather than a component.
+
 Pick an emoji that reflects the component's visual nature or purpose, e.g.:
 - Buttons → 🔘
 - Background effects → 🌌

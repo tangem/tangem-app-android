@@ -8,6 +8,7 @@ import com.tangem.common.utils.stubExternalUrlOpening
 import com.tangem.core.res.R as CoreResR
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.scenarios.*
+import com.tangem.screens.VirtualAccountRequisitesBottomSheetPageObject
 import com.tangem.screens.tangempay.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
@@ -131,16 +132,64 @@ class TangemPayTariffPlansTest : BaseTestCase() {
             step("Assert the plan order request was sent once") {
                 assertTangemPayTariffRequestSentOnce("plan order", ordersBefore, ::getTangemPayPlanOrderRequestCount)
             }
-            step("Activate the '$basicPlan' plan in WireMock") { stageTangemPayPlanState(planBasicState) }
-            step("Complete the card issuing in WireMock") { completeTangemPayBasicOrderIssuing() }
-            step("Assert the card issuing is over") { assertTangemPayIssuingCardBannerHidden() }
-            step("Assert payment account balance is displayed") {
-                awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTangemPayMainScreen { balance.assertIsDisplayed() }
-                }
-            }
+            step("Complete the '$basicPlan' card issuing") { completeTangemPayBasicPlanIssuing(planBasicState) }
             step("Open 'Current plan' screen") { openTangemPayCurrentPlan(assertMenuItems = true) }
             step("Assert current plan is '$basicPlan'") { assertTangemPayCurrentPlanName(basicPlan) }
+        }
+    }
+
+    @AllureId("12656")
+    @DisplayName("Tangem Pay: selecting Basic during onboarding adds the bank account top-up to Payment account")
+    @Test
+    fun selectBasicPlanAddsBankAccountTopUpTest() {
+        val planBasicWithAccountState = "BasicWithAccount"
+        val expectedBankName = "Lead Bank"
+        val expectedAccountNumber = "1234567890"
+        val expectedRoutingNumber = "101019644"
+
+        setupHooks(
+            additionalBeforeSection = {
+                setTangemPayTariffPlanScenarios(
+                    plan = planSelectNeededState,
+                    transitions = transitionsOnboardingState,
+                )
+            }
+        ).run {
+            step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
+            step("Open plan selection from onboarding") { openTangemPaySelectPlanFromOnboarding() }
+            step("Assert '$basicPlan' plan name is displayed") {
+                onTangemPaySelectPlanScreen { title.assertTextEquals(basicPlan) }
+            }
+            step("Hold the '$basicPlan' card issuing in WireMock") { stageTangemPayBasicOrderPolling() }
+            step("Click on 'Select' button") {
+                onTangemPaySelectPlanScreen { selectButton.clickWithAssertion() }
+            }
+            step("Assert the card is being issued") { assertTangemPayIssuingCardBanner() }
+            step("Complete the '$basicPlan' card issuing with a bank account") {
+                completeTangemPayBasicPlanIssuing(planBasicWithAccountState)
+            }
+            step("Open 'Add funds' with 'From a bank account' available") {
+                openTangemPayAddFundsWithBankTransferAvailable()
+            }
+            step("Click on 'From a bank account' option") {
+                onTangemPayAddFundsSheet { bankTransferOption.performClick() }
+            }
+            step("Assert bank account details are displayed") { assertTangemPayVirtualAccountRequisitesDisplayed() }
+            step("Assert bank name is '$expectedBankName'") {
+                assertVirtualAccountRequisite(VirtualAccountRequisitesBottomSheetPageObject.BANK_NAME, expectedBankName)
+            }
+            step("Assert account number is '$expectedAccountNumber'") {
+                assertVirtualAccountRequisite(
+                    VirtualAccountRequisitesBottomSheetPageObject.ACCOUNT_NUMBER,
+                    expectedAccountNumber,
+                )
+            }
+            step("Assert routing number is '$expectedRoutingNumber'") {
+                assertVirtualAccountRequisite(
+                    VirtualAccountRequisitesBottomSheetPageObject.ROUTING_NUMBER,
+                    expectedRoutingNumber,
+                )
+            }
         }
     }
 

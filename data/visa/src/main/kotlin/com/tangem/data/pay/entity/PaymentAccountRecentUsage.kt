@@ -1,10 +1,10 @@
 package com.tangem.data.pay.entity
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 internal data class PaymentAccountRecentUsage(
-    @Json(name = "accountId") val accountId: String,
-    @Json(name = "usedAtMillis") val usedAtMillis: Long,
+    @SerialName("accountId") val accountId: String,
+    @SerialName("usedAtMillis") val usedAtMillis: Long,
 )

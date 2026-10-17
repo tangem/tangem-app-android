@@ -5,4 +5,7 @@ interface TangemPayFeatureToggles {
     val isBankOfframpEnabled: Boolean
     val isCustomCardsCobrandEnabled: Boolean
     val isResidencyStepEnabled: Boolean
+    val isVisaOnrampV2Enabled: Boolean
+    val isGoogleWalletPushProvisioningEnabled: Boolean
+    val isGoogleWalletButtonAlwaysShown: Boolean
 }

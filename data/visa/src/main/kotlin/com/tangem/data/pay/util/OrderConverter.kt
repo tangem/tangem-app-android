@@ -4,11 +4,12 @@ import com.tangem.spend.datasource.pay.models.response.OrderResponse
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
+import com.tangem.utils.converter.Converter
 
 /** Maps a wire `OrderResponse.Result` into the domain [Order] model. */
-internal object OrderConverter {
+internal object OrderConverter : Converter<OrderResponse.Result, Order> {
 
-    fun convert(value: OrderResponse.Result): Order {
+    override fun convert(value: OrderResponse.Result): Order {
         val status = OrderStatusConverter.convert(value.status)
         val type = OrderType.fromString(value.type ?: value.data.type)
         return Order(

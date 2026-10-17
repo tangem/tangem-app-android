@@ -32,6 +32,7 @@ import com.tangem.core.ui.components.audits.AuditLabel
 import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.components.tooltip.TangemTooltip
 import com.tangem.core.ui.extensions.annotatedReference
+import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
@@ -40,17 +41,14 @@ import com.tangem.core.ui.format.bigdecimal.fee
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.FeeSelectorBlockTestTags
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeExtraInfo
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeFiatRateUM
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
-import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.*
 import com.tangem.features.send.impl.R
 import com.tangem.utils.extensions.isSingleItem
 import kotlinx.collections.immutable.persistentListOf
@@ -63,6 +61,7 @@ internal fun FeeSelectorBlockContent(
     state: FeeSelectorUM,
     onReadMoreClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isPlain: Boolean = false,
 ) {
     if (state is FeeSelectorUM.Error && state.isHidden) {
         return
@@ -70,27 +69,42 @@ internal fun FeeSelectorBlockContent(
 
     Row(
         modifier = modifier
-            .background(TangemTheme.colors.background.action)
+            .conditionalCompose(!isPlain) { Modifier.background(TangemTheme.colors.background.action) }
             .padding(12.dp)
             .testTag(FeeSelectorBlockTestTags.SELECTOR_BLOCK),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            modifier = Modifier
-                .size(24.dp)
-                .testTag(FeeSelectorBlockTestTags.ICON),
-            painter = painterResource(R.drawable.ic_fee_new_24),
-            contentDescription = null,
-            tint = TangemTheme.colors.icon.accent,
-        )
-        FeeSelectorDescription(state = state, onReadMoreClick = onReadMoreClick)
+        if (!isPlain) {
+            Icon(
+                modifier = Modifier
+                    .size(24.dp)
+                    .testTag(FeeSelectorBlockTestTags.ICON),
+                painter = painterResource(R.drawable.ic_fee_new_24),
+                contentDescription = null,
+                tint = TangemTheme.colors.icon.accent,
+            )
+        }
+        FeeSelectorDescription(state = state, onReadMoreClick = onReadMoreClick, isPlain = isPlain)
     }
 }
 
 @Composable
-private fun FeeSelectorDescription(state: FeeSelectorUM, onReadMoreClick: () -> Unit, modifier: Modifier = Modifier) {
-    Row(modifier = modifier, horizontalArrangement = Arrangement.SpaceBetween) {
-        FeeSelectorStaticPart(modifier = Modifier.weight(1f), onReadMoreClick = onReadMoreClick)
+private fun FeeSelectorDescription(
+    state: FeeSelectorUM,
+    onReadMoreClick: () -> Unit,
+    isPlain: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        FeeSelectorStaticPart(
+            modifier = Modifier.weight(1f),
+            onReadMoreClick = onReadMoreClick,
+            isPlain = isPlain,
+        )
         when (state) {
             is FeeSelectorUM.Content -> FeeContent(state)
             is FeeSelectorUM.Loading -> FeeLoading()
@@ -100,16 +114,16 @@ private fun FeeSelectorDescription(state: FeeSelectorUM, onReadMoreClick: () -> 
 }
 
 @Composable
-private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, isPlain: Boolean, modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Text(
             modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing4)
+                .conditionalCompose(!isPlain) { Modifier.padding(start = TangemTheme.dimens.spacing4) }
                 .weight(1f, fill = false)
                 .testTag(FeeSelectorBlockTestTags.TITLE),
             text = stringResourceSafe(R.string.common_network_fee_title),
-            style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            style = if (isPlain) TangemTheme.typography3.body.medium else TangemTheme.typography.body1,
+            color = if (isPlain) TangemTheme.colors3.text.primary else TangemTheme.colors.text.primary1,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -149,7 +163,7 @@ private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, modifier: Modifie
                         .testTag(FeeSelectorBlockTestTags.TOOLTIP_ICON),
                     painter = painterResource(id = R.drawable.ic_token_info_24),
                     contentDescription = null,
-                    tint = TangemTheme.colors.icon.informative,
+                    tint = if (isPlain) TangemTheme.colors3.icon.secondary else TangemTheme.colors.icon.informative,
                 )
             },
         )
@@ -195,7 +209,9 @@ private fun FeeLoading() {
     TextShimmer(
         radius = TangemTheme.dimens.radius3,
         style = TangemTheme.typography.body1,
-        modifier = Modifier.width(width = TangemTheme.dimens.size90),
+        modifier = Modifier
+            .width(width = TangemTheme.dimens.size90)
+            .testTag(FeeSelectorBlockTestTags.FEE_LOADING),
     )
 }
 
@@ -259,6 +275,24 @@ private fun FeeSelectorBlockContent_Preview(@PreviewParameter(FeeSelectorUMProvi
             modifier = Modifier.fillMaxWidth(),
             state = state,
             onReadMoreClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun FeeSelectorBlockContent_Plain_Preview(
+    @PreviewParameter(FeeSelectorUMProvider::class) state: FeeSelectorUM,
+) {
+    TangemThemePreviewRedesign {
+        FeeSelectorBlockContent(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(TangemTheme.colors3.bg.primary),
+            state = state,
+            onReadMoreClick = {},
+            isPlain = true,
         )
     }
 }

@@ -16,6 +16,20 @@ data class PolymarketDepositRequisites(val networks: List<PolymarketDepositNetwo
         .firstOrNull { it.chainId == POLYGON_CHAIN_ID }
         ?.targetFor(tokenAddress = PolymarketContracts.USDC_TOKEN_ADDRESS)
 
+    /**
+     * @return the [catalogued][PolymarketDepositAsset.CATALOG] assets the bridge lists with the same contract,
+     *  decimals and a known minimum, in catalogue order
+     */
+    val options: List<PolymarketDepositOption> = PolymarketDepositAsset.CATALOG.mapNotNull { asset ->
+        val network = networks.firstOrNull { it.chainId == asset.chainId && it.family == asset.family }
+            ?: return@mapNotNull null
+        val token = network.tokens.firstOrNull { token ->
+            asset.isSameContract(token.address) && token.decimals == asset.decimals && token.minCheckoutUsd != null
+        } ?: return@mapNotNull null
+
+        PolymarketDepositOption(asset = asset, target = PolymarketDepositTarget(network = network, token = token))
+    }
+
     private companion object {
         val POLYGON_CHAIN_ID: String = PolymarketContracts.CHAIN_ID.toString()
     }
@@ -48,3 +62,8 @@ data class PolymarketDepositTarget(
 
     val address: String get() = network.address
 }
+
+data class PolymarketDepositOption(
+    val asset: PolymarketDepositAsset,
+    val target: PolymarketDepositTarget,
+)

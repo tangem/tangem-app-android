@@ -10,10 +10,10 @@ import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 
 /**
- * Whether a wallet is backed up for the purpose of lifting the "finalize setup" restrictions (FR-11).
+ * Whether a wallet is backed up for the purpose of lifting the "finalize setup" restrictions.
  *
  * A hot wallet counts as backed up once it has any of the three — a seed phrase, a cloud backup or
- * social recovery (UC-08 FR-15) — so restriction predicates must read this rather than
+ * social recovery — so restriction predicates must read this rather than
  * [UserWallet.Hot.backedUp], which tracks the seed phrase alone.
  */
 class IsWalletBackedUpUseCase @Inject constructor(

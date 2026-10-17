@@ -7,7 +7,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
 import com.tangem.domain.models.wallet.UserWalletId
 
 internal class TangemPayViewPinComponent(
@@ -25,7 +24,6 @@ internal class TangemPayViewPinComponent(
     override fun BottomSheet() {
         val state by model.uiState.collectAsStateWithLifecycle()
         BackHandler(onBack = ::dismiss)
-        DisableScreenshotsDisposableEffect()
         TangemPayViewPinContent(state = state)
     }
 

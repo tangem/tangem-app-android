@@ -32,7 +32,8 @@ internal class SendRecipientHistoryListConverter(
     }
 
     private fun List<TxInfo>.filterRecipients(cryptoCurrency: CryptoCurrency) = this.filter { item ->
-        val isTransfer = item.type == TxInfo.TransactionType.Transfer
+        val isTransfer = item.type == TxInfo.TransactionType.Transfer ||
+            item.type is TxInfo.TransactionType.Joint.Transfer
         val isNotContract = item.interactionAddressType is TxInfo.InteractionAddressType.User
         val isSingleAddress = if (item.isOutgoing) {
             item.destinationType is TxInfo.DestinationType.Single
