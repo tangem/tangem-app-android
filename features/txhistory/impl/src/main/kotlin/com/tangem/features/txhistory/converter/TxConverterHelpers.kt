@@ -19,6 +19,9 @@ import com.tangem.domain.express.models.ExpressTransactionAsset
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
+import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.OnChainTx
+import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
 import kotlinx.collections.immutable.ImmutableList
@@ -89,18 +92,38 @@ internal fun Amount.formatFiatAmount(): String = (value ?: BigDecimal.ZERO)
 // region Details header helpers
 
 /**
+ * Title of the copy-id row and of the toast confirming the copy, paired so the two never drift apart. An express deal
+ * is named after the operation behind it, because the id it exposes is the provider's own — what the user quotes to
+ * that provider's support desk; an on-chain row keeps the generic transaction wording.
+ */
+internal enum class CopyIdLabels(@StringRes val title: Int, @StringRes val copied: Int) {
+    Transaction(title = R.string.common_transaction_id, copied = R.string.express_transaction_id_copied),
+    Swap(title = R.string.express_swap_id, copied = R.string.express_swap_id_copied),
+    Onramp(title = R.string.express_onramp_id, copied = R.string.express_onramp_id_copied),
+}
+
+/** Labels naming the id this row exposes for copy — see [CopyIdLabels]. */
+internal val TxHistoryInfo.copyIdLabels: CopyIdLabels
+    get() = when (this) {
+        is ExpressTx.Swap -> CopyIdLabels.Swap
+        is ExpressTx.Onramp -> CopyIdLabels.Onramp
+        is OnChainTx -> CopyIdLabels.Transaction
+    }
+
+/**
  * Header overflow context menu of the details card, shared by all transaction types. Each row is dropped when its data
  * is absent: "Add contact" (dropped when [onAddContact] is `null` — the counterparty is not a saveable address, or is
- * saved already), "Transaction ID" (copy; dropped when [onCopyTxId] is `null` — no id to copy), "Share" (dropped when
- * [shareText] is `null` — only an express deal can describe itself as text) and "Explore" (dropped when [onExplore] is
- * `null` — no on-chain hash to link to). An empty list leaves the header with no "•••" button. Repeat / Hide are not
- * part of this iteration.
+ * saved already), the [copyIdTitle] row (copy; dropped when [onCopyTxId] is `null` — no id to copy), "Share" (dropped
+ * when [shareText] is `null` — only an express deal can describe itself as text) and "Explore" (dropped when
+ * [onExplore] is `null` — no on-chain hash to link to). An empty list leaves the header with no "•••" button.
+ * Repeat / Hide are not part of this iteration.
  *
  * The transaction-dependent rows are not built here: "Copy address" is prepended by [withCopyAddress], which knows the
  * resolved counterparty, and a yield-supply tx appends "Explore Aave" — both per transaction shape.
  */
 internal fun buildDetailsMenu(
     onCopyTxId: (() -> Unit)?,
+    copyIdTitle: TextReference,
     shareText: TextReference?,
     onShare: (String) -> Unit,
     onExplore: (() -> Unit)?,
@@ -119,7 +142,7 @@ internal fun buildDetailsMenu(
         add(
             TxHistoryDetailsUM.MenuItemUM(
                 icon = Icons.ic_copy_24,
-                title = resourceReference(R.string.common_transaction_id),
+                title = copyIdTitle,
                 action = TxHistoryDetailsUM.MenuItemUM.Action.Direct(copy),
             ),
         )
