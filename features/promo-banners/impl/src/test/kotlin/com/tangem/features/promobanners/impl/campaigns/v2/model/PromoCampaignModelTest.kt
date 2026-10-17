@@ -46,10 +46,12 @@ import com.tangem.features.promobanners.impl.campaigns.v2.component.PromoCampaig
 import com.tangem.features.promobanners.impl.campaigns.v2.component.PromoCampaignRoute
 import com.tangem.features.promobanners.impl.campaigns.v2.createPromoCampaign
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoCampaignStatusUM
+import com.tangem.features.promobanners.impl.repository.PromoBannersRepository
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -63,6 +65,8 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 
 internal class PromoCampaignModelTest {
 
@@ -74,6 +78,7 @@ internal class PromoCampaignModelTest {
     private val getWalletsUseCase: GetWalletsUseCase = mockk()
     private val registerPromoCampaignUseCase: RegisterPromoCampaignUseCase = mockk()
     private val getPromoCampaignsUseCase: GetPromoCampaignsUseCase = mockk()
+    private val promoBannersRepository: PromoBannersRepository = mockk()
     private val userWalletsFetcherFactory: UserWalletsFetcher.Factory = mockk()
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
@@ -98,6 +103,7 @@ internal class PromoCampaignModelTest {
             getWalletsUseCase,
             registerPromoCampaignUseCase,
             getPromoCampaignsUseCase,
+            promoBannersRepository,
             userWalletsFetcherFactory,
             getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase,
@@ -114,7 +120,8 @@ internal class PromoCampaignModelTest {
         every { getWalletsUseCase.invokeSync() } returns listOf(mainWallet, linkedWallet)
         coEvery { registerPromoCampaignUseCase(any(), any()) } returns
             PromoRegistrationError.Generic(IllegalStateException()).left()
-        coEvery { getPromoCampaignsUseCase(any(), any()) } returns emptyList<PromoCampaign>().right()
+        coEvery { getPromoCampaignsUseCase.invokeSync(any(), any()) } returns emptyList<PromoCampaign>().right()
+        coJustRun { promoBannersRepository.refreshBanners(any(), any()) }
     }
 
     @Test
@@ -401,13 +408,13 @@ internal class PromoCampaignModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) { getPromoCampaignsUseCase(mainWallet, forceRefresh = true) }
-            coVerify(exactly = 1) { getPromoCampaignsUseCase(linkedWallet, forceRefresh = true) }
+            coVerify(exactly = 1) { getPromoCampaignsUseCase.invokeSync(mainWallet, forceRefresh = true) }
+            coVerify(exactly = 1) { getPromoCampaignsUseCase.invokeSync(linkedWallet, forceRefresh = true) }
             model.onDestroy()
         }
 
     @Test
-    fun `GIVEN registration fails WHEN enroll clicked THEN campaigns not refreshed`() = runTest {
+    fun `GIVEN registration fails WHEN enroll clicked THEN campaigns and banners not refreshed`() = runTest {
         // Arrange
         val model = createModel(isPayoutNeeded = false)
         advanceUntilIdle()
@@ -417,7 +424,34 @@ internal class PromoCampaignModelTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 0) { getPromoCampaignsUseCase(any(), any()) }
+        coVerify(exactly = 0) { getPromoCampaignsUseCase.invokeSync(any(), any()) }
+        coVerify(exactly = 0) { promoBannersRepository.refreshBanners(any(), any()) }
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @EnumSource(PromoMatchMode::class)
+    fun `GIVEN campaign not found WHEN enroll clicked THEN campaigns and banners refreshed for every wallet`(
+        matchMode: PromoMatchMode,
+    ) = runTest {
+        // Arrange
+        coEvery { registerPromoCampaignUseCase(any(), any()) } returns PromoRegistrationError.CampaignNotFound.left()
+        val model = createModel(isPayoutNeeded = false, matchMode = matchMode)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.footer.onButtonClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { getPromoCampaignsUseCase.invokeSync(mainWallet, forceRefresh = true) }
+        coVerify(exactly = 1) { getPromoCampaignsUseCase.invokeSync(linkedWallet, forceRefresh = true) }
+        coVerify(exactly = 1) {
+            promoBannersRepository.refreshBanners(
+                walletIds = setOf(mainWallet.walletId.stringValue, linkedWallet.walletId.stringValue),
+                languageISOCode = any(),
+            )
+        }
         model.onDestroy()
     }
 
@@ -426,7 +460,7 @@ internal class PromoCampaignModelTest {
         // Arrange
         coEvery { registerPromoCampaignUseCase(any(), any()) } returns
             listOf(registered(mainWallet.walletId, PromoRegistrationStatus.Enrolled)).right()
-        coEvery { getPromoCampaignsUseCase(any(), any()) } returns RuntimeException("network").left()
+        coEvery { getPromoCampaignsUseCase.invokeSync(any(), any()) } returns RuntimeException("network").left()
         val model = createModel(isPayoutNeeded = false)
         advanceUntilIdle()
 
@@ -584,6 +618,7 @@ internal class PromoCampaignModelTest {
         getWalletsUseCase = getWalletsUseCase,
         registerPromoCampaignUseCase = registerPromoCampaignUseCase,
         getPromoCampaignsUseCase = getPromoCampaignsUseCase,
+        promoBannersRepository = promoBannersRepository,
         userWalletsFetcherFactory = userWalletsFetcherFactory,
         getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
         sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
