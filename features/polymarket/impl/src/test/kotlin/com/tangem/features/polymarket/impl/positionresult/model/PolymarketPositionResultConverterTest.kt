@@ -37,6 +37,7 @@ internal class PolymarketPositionResultConverterTest {
             percentPnl = BigDecimal("20"),
             realizedPnl = BigDecimal("999"),
         ).copy(
+            avgPrice = BigDecimal(case.avgPrice),
             initialValue = BigDecimal("100"),
             currentValue = BigDecimal(case.currentValue),
             isRedeemable = case.isRedeemable,
@@ -48,7 +49,7 @@ internal class PolymarketPositionResultConverterTest {
                 imageUrl = "https://example.com/market.png",
                 outcomeTitle = "Yes",
                 outcomeAccent = PolymarketOutcomeAccent.Info,
-                outcomePriceCents = 36,
+                outcomePrice = case.expectedPrice,
                 resolutionDateMillis = null,
             ),
             result = case.uiResult,
@@ -111,6 +112,8 @@ internal class PolymarketPositionResultConverterTest {
             result = PolymarketPositionResult.WON,
             currentValue = "120",
             isRedeemable = true,
+            avgPrice = "0.9995",
+            expectedPrice = "100¢",
             uiResult = PolymarketPositionResultUM.Result.Won,
             titleRes = R.string.prediction_position_result_won_title,
             titleAmount = "$120.00",
@@ -136,6 +139,8 @@ internal class PolymarketPositionResultConverterTest {
             result = PolymarketPositionResult.LOST,
             currentValue = "0",
             isRedeemable = true,
+            avgPrice = "0.0004",
+            expectedPrice = "0¢",
             uiResult = PolymarketPositionResultUM.Result.Lost,
             titleRes = R.string.prediction_position_result_loss_title,
             titleAmount = "$100.00",
@@ -161,6 +166,8 @@ internal class PolymarketPositionResultConverterTest {
             result = PolymarketPositionResult.SPLIT,
             currentValue = "120",
             isRedeemable = true,
+            avgPrice = "0.5",
+            expectedPrice = "50¢",
             uiResult = PolymarketPositionResultUM.Result.Split,
             titleRes = R.string.prediction_position_result_split_title,
             titleAmount = "$120.00",
@@ -199,6 +206,8 @@ internal class PolymarketPositionResultConverterTest {
     )
 
     data class ResultCase(
+        val avgPrice: String = "0.3559",
+        val expectedPrice: String = "35.6¢",
         val result: PolymarketPositionResult,
         val currentValue: String,
         val isRedeemable: Boolean,

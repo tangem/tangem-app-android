@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.cashback.impl.model
 
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.arrayItemReference
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.defaultAmount
@@ -11,7 +12,6 @@ import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.domain.pay.model.TangemPayCashback
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackUM
-import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isNegative
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.isZero
@@ -22,18 +22,23 @@ import java.util.Currency
 internal class TangemPayCashbackUmConverter(
     private val dateFormatter: TangemPayCashbackDateFormatter = TangemPayCashbackDateFormatter(),
     private val today: () -> LocalDate = { LocalDate.now() },
-) : Converter<TangemPayCashback?, TangemPayCashbackUM> {
+) {
 
-    override fun convert(value: TangemPayCashback?): TangemPayCashbackUM {
+    fun convert(value: TangemPayCashback?, isBalanceHidden: Boolean): TangemPayCashbackUM {
         if (value == null) return emptyState(banner = null)
         val currency = getJavaCurrencyByCode(value.currency)
         val depositBanner = value.previousPayout
             ?.takeIf(::isAwaitingDeposit)
-            ?.let { depositBanner(payout = it, currency = currency) }
+            ?.let { depositBanner(payout = it, currency = currency, isBalanceHidden = isBalanceHidden) }
         return if (value.hasNothingEarned()) {
             emptyState(banner = depositBanner)
         } else {
-            earnedState(value = value, currency = currency, depositBanner = depositBanner)
+            earnedState(
+                value = value,
+                currency = currency,
+                depositBanner = depositBanner,
+                isBalanceHidden = isBalanceHidden,
+            )
         }
     }
 
@@ -53,11 +58,12 @@ internal class TangemPayCashbackUmConverter(
         value: TangemPayCashback,
         currency: Currency,
         depositBanner: TangemPayCashbackUM.Banner?,
+        isBalanceHidden: Boolean,
     ): TangemPayCashbackUM {
         val earned = value.confirmedAmount.format {
             val fiatFormat = fiat(currency.currencyCode, currency.symbol)
             if (value.confirmedAmount.isZero()) fiatFormat.defaultAmount() else fiatFormat.optionalDecimals()
-        }
+        }.orMaskWithStars(isBalanceHidden)
         val monthIn = arrayItemReference(R.array.common_month_in, value.period.month - 1)
         val isNegative = value.confirmedAmount.isNegative()
         val banner = if (isNegative) {
@@ -89,8 +95,11 @@ internal class TangemPayCashbackUmConverter(
     private fun depositBanner(
         payout: TangemPayCashback.PreviousPayout,
         currency: Currency,
+        isBalanceHidden: Boolean,
     ): TangemPayCashbackUM.Banner {
-        val amount = payout.amount.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() }
+        val amount = payout.amount
+            .format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() }
+            .orMaskWithStars(isBalanceHidden)
         // The payout always lands in the month after the one it was earned in
         val earnedMonth = payout.endDate.minusMonths(1)
         return TangemPayCashbackUM.Banner(

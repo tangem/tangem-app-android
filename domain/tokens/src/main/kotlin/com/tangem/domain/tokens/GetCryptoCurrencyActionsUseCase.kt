@@ -1,10 +1,11 @@
 package com.tangem.domain.tokens
 
+import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.stories.StoriesRepository
@@ -27,14 +28,14 @@ import kotlinx.coroutines.flow.*
 /**
  * Use case for retrieving actions available for a specific cryptocurrency in a user's wallet.
  *
- * @param rampManager          the manager for handling ramp state operations
+ * @property rampManager       the manager for handling ramp state operations
  * @param walletManagersFacade the facade for managing wallet operations
  * @property stakingRepository the repository for staking-related data
  * @property storiesRepository   the repository for stories content
  * @property dispatchers       the coroutine dispatcher provider for managing concurrency
  */
 class GetCryptoCurrencyActionsUseCase(
-    rampManager: RampStateManager,
+    private val rampManager: RampStateManager,
     walletManagersFacade: WalletManagersFacade,
     private val stakingRepository: StakingRepository,
     private val storiesRepository: StoriesRepository,
@@ -67,7 +68,7 @@ class GetCryptoCurrencyActionsUseCase(
         yieldSupplyAvailability: YieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
     ): Flow<TokenActionsState> {
         return when {
-            cryptoCurrencyStatus.currency.network.derivationPath is Network.DerivationPath.Joint -> {
+            cryptoCurrencyStatus.currency.isJoint -> {
                 getStakingAvailabilityFlow(
                     userWalletId = userWallet.walletId,
                     currency = cryptoCurrencyStatus.currency,
@@ -77,7 +78,6 @@ class GetCryptoCurrencyActionsUseCase(
                             userWallet = userWallet,
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
                             stakingAvailability = stakingAvailability,
-                            yieldSupplyAvailability = yieldSupplyAvailability,
                         )
                     }
             }
@@ -108,23 +108,11 @@ class GetCryptoCurrencyActionsUseCase(
                         )
                     }
             }
-            else -> {
-                combine(
-                    flow = getStakingAvailabilityFlow(
-                        userWalletId = userWallet.walletId,
-                        currency = cryptoCurrencyStatus.currency,
-                    ),
-                    flow2 = getSwapStoryContent(),
-                ) { stakingAvailability, swapStoryContent ->
-                    commonActionsFactory.create(
-                        userWallet = userWallet,
-                        cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        stakingAvailability = stakingAvailability,
-                        yieldSupplyAvailability = yieldSupplyAvailability,
-                        shouldShowSwapStories = swapStoryContent != null,
-                    )
-                }
-            }
+            else -> getCommonActionsFlow(
+                userWallet = userWallet,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                yieldSupplyAvailability = yieldSupplyAvailability,
+            )
         }
             .map { states ->
                 TokenActionsState(
@@ -134,6 +122,30 @@ class GetCryptoCurrencyActionsUseCase(
                 )
             }
             .flowOn(dispatchers.default)
+    }
+
+    private fun getCommonActionsFlow(
+        userWallet: UserWallet,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        yieldSupplyAvailability: YieldSupplyAvailability,
+    ): Flow<Set<TokenActionsState.ActionState>> {
+        return combine(
+            flow = getStakingAvailabilityFlow(
+                userWalletId = userWallet.walletId,
+                currency = cryptoCurrencyStatus.currency,
+            ),
+            flow2 = getSwapStoryContent(),
+            flow3 = isExpressUnreachableFlow(userWalletId = userWallet.walletId),
+        ) { stakingAvailability, swapStoryContent, isExpressUnreachable ->
+            commonActionsFactory.create(
+                userWallet = userWallet,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                stakingAvailability = stakingAvailability,
+                yieldSupplyAvailability = yieldSupplyAvailability,
+                shouldShowSwapStories = swapStoryContent != null,
+                isExpressUnreachable = isExpressUnreachable,
+            )
+        }
     }
 
     private fun getStakingAvailabilityFlow(
@@ -149,6 +161,12 @@ class GetCryptoCurrencyActionsUseCase(
     private fun getSwapStoryContent(): Flow<StoryContent?> {
         return storiesRepository.getStoryById(StoryContentIds.STORY_FIRST_TIME_SWAP.id)
             .conflate()
+            .distinctUntilChanged()
+    }
+
+    private fun isExpressUnreachableFlow(userWalletId: UserWalletId): Flow<Boolean> {
+        return rampManager.getExpressInitializationStatus(userWalletId)
+            .map { it is Lce.Error }
             .distinctUntilChanged()
     }
 }

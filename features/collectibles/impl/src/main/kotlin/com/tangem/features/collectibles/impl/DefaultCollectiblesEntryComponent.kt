@@ -17,6 +17,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.collectibles.api.CollectiblesEntryComponent
+import com.tangem.features.collectibles.impl.confirmorder.CollectiblesConfirmOrderComponent
 import com.tangem.features.collectibles.impl.machinedetails.CollectiblesMachineDetailsComponent
 import com.tangem.features.collectibles.impl.main.CollectiblesMainComponent
 import com.tangem.features.collectibles.impl.onboarding.CollectiblesOnboardingComponent
@@ -33,6 +34,7 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
     private val storiesComponentFactory: CollectiblesStoriesComponent.Factory,
     private val mainComponentFactory: CollectiblesMainComponent.Factory,
     private val machineDetailsComponentFactory: CollectiblesMachineDetailsComponent.Factory,
+    private val confirmOrderComponentFactory: CollectiblesConfirmOrderComponent.Factory,
 ) : CollectiblesEntryComponent, AppComponentContext by context {
 
     private val stackNavigation = StackNavigation<CollectiblesRoute>()
@@ -88,6 +90,14 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
             is CollectiblesRoute.MachineDetails -> machineDetailsComponentFactory.create(
                 context = childContext,
                 params = CollectiblesMachineDetailsComponent.Params(externalId = route.externalId),
+            )
+            is CollectiblesRoute.ConfirmOrder -> confirmOrderComponentFactory.create(
+                context = childContext,
+                params = CollectiblesConfirmOrderComponent.Params(
+                    userWalletId = params.userWalletId,
+                    externalId = route.externalId,
+                    isTurboEnabled = route.isTurboEnabled,
+                ),
             )
         }
     }

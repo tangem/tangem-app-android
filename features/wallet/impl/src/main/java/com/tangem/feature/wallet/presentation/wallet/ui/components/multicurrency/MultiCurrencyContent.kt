@@ -252,6 +252,7 @@ private fun LazyListScope.portfolioItem(
                             addDefaultPadding = false,
                             lastIndex = lastIndex,
                             backgroundColor = TangemTheme.colors3.bg.secondary,
+                            groupKey = listItem.tokenRowUM.id,
                         ),
                     visible = listItem.isExpanded,
                 ) {
@@ -322,6 +323,7 @@ private fun LazyListScope.accountItem(
                 addDefaultPadding = false,
                 lastIndex = effectiveLastIndex,
                 backgroundColor = TangemTheme.colors3.bg.secondary,
+                groupKey = listItem.tokenRowUM.id,
             )
         if (listItem.isCollapsable) {
             PortfolioRowItem(
@@ -388,18 +390,28 @@ internal fun PortfolioRowItem(
             },
         ) { isExpandedWrapped ->
             val animatedContentScope = this
+            val currentItem by rememberUpdatedState(item)
 
             val composables = remember {
                 SharedTokenRowComposables(
                     icon = { modifier ->
                         val size =
                             if (isExpandedWrapped) AccountIconSize.ExtraSmall else AccountIconSize.Default
-                        val headIcon = item.tokenRowUM.headIconUM
+                        val shouldShowPendingOperation = !isExpandedWrapped
+                        val headIcon = currentItem.tokenRowUM.headIconUM
                         val sizedHeadIcon = if (headIcon is TangemIconUM.Currency) {
                             headIcon.copy(
                                 currencyIconState = when (val currencyIconState = headIcon.currencyIconState) {
-                                    is CurrencyIconState.CryptoPortfolio.Icon -> currencyIconState.copy(size = size)
-                                    is CurrencyIconState.CryptoPortfolio.Letter -> currencyIconState.copy(size = size)
+                                    is CurrencyIconState.CryptoPortfolio.Icon -> currencyIconState.copy(
+                                        size = size,
+                                        hasPendingOperation = currencyIconState.hasPendingOperation &&
+                                            shouldShowPendingOperation,
+                                    )
+                                    is CurrencyIconState.CryptoPortfolio.Letter -> currencyIconState.copy(
+                                        size = size,
+                                        hasPendingOperation = currencyIconState.hasPendingOperation &&
+                                            shouldShowPendingOperation,
+                                    )
                                     else -> currencyIconState
                                 },
                             )
@@ -437,7 +449,7 @@ internal fun PortfolioRowItem(
                             derivedStateOf { lerp(startStyle, stopStyle, animationFraction.value) }
                         }
 
-                        val resizedTitle = when (val titleUM = item.tokenRowUM.titleUM) {
+                        val resizedTitle = when (val titleUM = currentItem.tokenRowUM.titleUM) {
                             is TangemTokenRowUM.TitleUM.Content -> titleUM.copy(
                                 text = styledStringReference(
                                     titleUM.text.resolveReference(),
@@ -531,6 +543,7 @@ private fun LazyListScope.nonContentAccountItem(listItem: TokensListItemUM2.Port
                     currentIndex = 1,
                     lastIndex = 1,
                     backgroundColor = TangemTheme.colors3.bg.secondary,
+                    groupKey = listItem.tokenRowUM.id,
                 ),
             visible = listItem.isExpanded,
         ) {

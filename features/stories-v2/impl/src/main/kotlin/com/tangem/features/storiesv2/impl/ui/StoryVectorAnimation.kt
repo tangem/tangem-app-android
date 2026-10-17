@@ -1,7 +1,6 @@
 package com.tangem.features.storiesv2.impl.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LongState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -18,7 +17,7 @@ import com.tangem.features.storiesv2.impl.content.StoryV2MediaRef
 @Composable
 internal fun StoryVectorAnimation(
     source: StoryV2MediaRef,
-    positionMs: LongState,
+    positionMs: () -> Long,
     durationMs: Long,
     contentMode: StoryV2ContentMode,
     modifier: Modifier = Modifier,
@@ -35,8 +34,8 @@ internal fun StoryVectorAnimation(
         composition = composition,
         progress = {
             when {
-                compositionDurationMs > 0f -> (positionMs.longValue / compositionDurationMs).coerceIn(0f, 1f)
-                durationMs > 0L -> (positionMs.longValue.toFloat() / durationMs).coerceIn(0f, 1f)
+                compositionDurationMs > 0f -> (positionMs() / compositionDurationMs).coerceIn(0f, 1f)
+                durationMs > 0L -> (positionMs().toFloat() / durationMs).coerceIn(0f, 1f)
                 else -> 0f
             }
         },

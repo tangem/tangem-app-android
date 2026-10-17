@@ -54,5 +54,6 @@ dependencies {
     testImplementation(deps.test.truth)
     testImplementation(projects.domain.legacy)
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
     // endregion
 }

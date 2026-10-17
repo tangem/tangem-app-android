@@ -1,6 +1,7 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.ksp)
     id("configuration")
@@ -10,6 +11,7 @@ android {
     namespace = "com.tangem.data.account"
 }
 dependencies {
+    implementation(projects.core.remote)
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)
@@ -75,6 +77,7 @@ dependencies {
     // endregion
 
     // region Test
+    testImplementation(deps.kotlin.serialization)
     testImplementation(deps.test.turbine)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)

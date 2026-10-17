@@ -27,7 +27,6 @@ import com.tangem.features.polymarket.impl.placeprediction.model.PlacePrediction
 import com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
-import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 
 internal class PlacePredictionPreviewProvider : PreviewParameterProvider<PlacePredictionUM> {
 
@@ -117,16 +116,20 @@ private fun previewState(
     balance: BigDecimal = BigDecimal("30000"),
     tradingPermission: TradingPermissionUM = TradingPermissionUM.Allowed,
     minAmount: BigDecimal? = null,
-    order: OrderSideUM = OrderSideUM.Buy(balance = balance, hasSufficientBalance = false),
+    order: OrderSideUM = OrderSideUM.Buy(
+        balance = balance,
+        hasSufficientBalance = false,
+        isAddFundsEnabled = tradingPermission != TradingPermissionUM.Restricted,
+    ),
 ): PlacePredictionUM = PlacePredictionUM(
     market = MarketHeaderUM(
         title = "Will Uzbekistan win the 2026 FIFA World Cup?",
         imageUrl = null,
         outcomeTitle = "No",
-        outcomePriceCents = 85,
+        outcomePrice = "85¢",
         resolutionDateMillis = RESOLUTION_AT,
     ),
-    collateral = CollateralUM(tokenSymbol = "pUSD", iconState = CurrencyIconState.Empty()),
+    collateral = CollateralUM(tokenSymbol = "pUSD"),
     order = order,
     amountValue = amountValue,
     slippage = SlippageUM(percent = DEFAULT_SLIPPAGE_PERCENT, isDefault = true),

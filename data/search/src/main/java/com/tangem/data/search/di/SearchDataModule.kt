@@ -4,14 +4,14 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.adapter
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.data.search.model.SearchHistoryDTO
 import com.tangem.data.search.repository.DefaultSearchRepository
 import com.tangem.data.search.store.DefaultSearchHistoryStore
 import com.tangem.data.search.store.SearchHistoryStore
-import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.create
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.search.repository.SearchRepository
@@ -32,7 +32,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 internal object SearchDataModule {
 
-    @OptIn(ExperimentalStdlibApi::class)
     @Provides
     @Singleton
     fun provideSearchHistoryDataStore(
@@ -41,10 +40,14 @@ internal object SearchDataModule {
         appScope: AppCoroutineScope,
         dataStoreFactory: AppDataStoreFactory,
     ): DataStore<SearchHistoryDTO> {
+        if (dataStoreFactory.isKotlinxDataStoreEnabled) {
+            return dataStoreFactory.create(defaultValue = SearchHistoryDTO(), fileName = "search_history")
+        }
+
         return dataStoreFactory.create(
             serializer = MoshiDataStoreSerializer(
                 defaultValue = SearchHistoryDTO(),
-                adapter = moshi.adapter<SearchHistoryDTO>(),
+                adapter = moshi.adapter(SearchHistoryDTO::class.java),
             ),
             produceFile = { context.dataStoreFile(fileName = "search_history") },
             scope = appScope,

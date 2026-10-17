@@ -21,6 +21,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -159,6 +161,7 @@ private fun FeeSelectorItems(
                 .fillMaxWidth()
                 .selectedBorder(isSelected = isSelected)
                 .clickableSingle(onClick = { intents.onFeeItemSelected(item) })
+                .semantics { selected = isSelected }
                 .background(TangemTheme.colors.background.action)
             when (item) {
                 is FeeItem.Custom -> CustomFeeBlock(
