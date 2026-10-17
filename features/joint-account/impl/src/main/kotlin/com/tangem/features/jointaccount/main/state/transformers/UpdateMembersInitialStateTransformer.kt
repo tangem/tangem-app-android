@@ -9,10 +9,6 @@ internal class UpdateMembersInitialStateTransformer(
 ) : Transformer<JointAccountMembersUM> {
 
     override fun transform(prevState: JointAccountMembersUM): JointAccountMembersUM = prevState.copy(
-        topBar = JointAccountMembersUM.TopBarUM.Dismissible(
-            canArchive = false,
-            onArchiveClick = {},
-            onCloseClick = onCloseClick,
-        ),
+        topBar = JointAccountMembersUM.TopBarUM.Dismissible(onCloseClick = onCloseClick),
     )
 }
