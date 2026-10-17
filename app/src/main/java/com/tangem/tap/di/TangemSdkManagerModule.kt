@@ -10,6 +10,7 @@ import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
 import com.tangem.tap.domain.sdk.impl.MockTangemSdkManager
 import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
@@ -41,6 +42,7 @@ internal class TangemSdkManagerModule {
         onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
         analyticsEventHandler: AnalyticsEventHandler,
         analyticsErrorHandler: AnalyticsErrorHandler,
+        cardContextInterceptorFactory: CardContextInterceptor.Factory,
         cardRepository: CardRepository,
         derivationsHelper: DerivationsHelper,
         walletRegistrationLauncher: Lazy<WalletRegistrationLauncher>,
@@ -59,6 +61,7 @@ internal class TangemSdkManagerModule {
                 onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                 analyticsEventHandler = analyticsEventHandler,
                 analyticsErrorHandler = analyticsErrorHandler,
+                cardContextInterceptorFactory = cardContextInterceptorFactory,
                 cardRepository = cardRepository,
                 derivationsHelper = derivationsHelper,
                 walletRegistrationLauncher = walletRegistrationLauncher,
