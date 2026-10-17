@@ -62,12 +62,15 @@ internal class TangemPayMainBlockConverterTest {
     }
 
     @Test
-    fun `GIVEN loaded account without cards WHEN convert THEN block is temporary unavailable`() {
+    fun `GIVEN loaded account without cards WHEN convert THEN subtitle is zero cards count`() {
         // Act
         val result = converter.convert(paymentAccount(loadedValue(cardsCount = 0)))
 
         // Assert
-        assertThat(result).isEqualTo(TangemPayMainUM.TemporaryUnavailable)
+        val content = result as TangemPayMainUM.Content
+        assertThat(content.subtitle).isEqualTo(
+            pluralReference(id = R.plurals.tangempay_cards_count, count = 0, formatArgs = wrappedList(0)),
+        )
     }
 
     @Test
