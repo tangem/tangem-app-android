@@ -40,4 +40,6 @@ internal data class UserWalletPublicInformation(
     val hotWalletId: HotWalletId? = null,
     @Json(name = "backedUp")
     val backedUp: Boolean? = null,
+    @Json(name = "isSocialBackupCompleted")
+    val isSocialBackupCompleted: Boolean? = null,
 )

@@ -1,43 +1,46 @@
 package com.tangem.data.visa.utils
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonReader
-import com.squareup.moshi.JsonWriter
-import com.squareup.moshi.Moshi
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.remote.json.NetworkJsonFactory
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.spend.datasource.pay.models.response.TangemPayTxHistoryResponse
+import com.tangem.spend.datasource.pay.models.response.TangemPayTxHistoryResponse.Transaction
 import com.tangem.test.core.ProvideTestModels
+import io.mockk.clearMocks
+import io.mockk.mockk
+import io.mockk.verify
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.util.Currency
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayTxHistoryItemConverterTest {
 
-    private val moshi = Moshi.Builder()
-        .add(BigDecimal::class.java, BigDecimalTestAdapter())
-        .add(DateTime::class.java, DateTimeTestAdapter())
-        .build()
+    private val json = NetworkJsonFactory.create()
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
-    private val refundAdapter = moshi.adapter(TangemPayTxHistoryResponse.Refund::class.java)
-    private val collateralAdapter = moshi.adapter(TangemPayTxHistoryResponse.Collateral::class.java)
-    private val transactionAdapter = moshi.adapter(TangemPayTxHistoryResponse.Transaction::class.java)
+    private val converter = TangemPayTxHistoryItemConverter(json = json, analytics = analytics)
 
-    private val converter = TangemPayTxHistoryItemConverter(moshi)
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(analytics)
+    }
 
     @Test
     fun `GIVEN refund transaction WHEN convert THEN spend item with negative amounts`() {
         // Arrange
         val refund = refund()
-        val transaction = TangemPayTxHistoryResponse.Transaction(id = TX_ID, type = "refund", refund = refund)
+        val transaction = Transaction.Refund(id = TX_ID, refund = refund)
         val expected = TangemPayTxHistoryItem.Spend(
             id = TX_ID,
-            jsonRepresentation = refundAdapter.toJson(refund),
+            jsonRepresentation = json.encodeToString(TangemPayTxHistoryResponse.RefundData.serializer(), refund),
             date = POSTED_AT.withZone(DateTimeZone.getDefault()),
             amount = BigDecimal("-15.00"),
             currency = Currency.getInstance("USD"),
@@ -79,7 +82,7 @@ internal class TangemPayTxHistoryItemConverterTest {
             cashback = BigDecimal("7.50"),
             postedAt = null,
         )
-        val transaction = TangemPayTxHistoryResponse.Transaction(id = TX_ID, type = "refund", refund = refund)
+        val transaction = Transaction.Refund(id = TX_ID, refund = refund)
 
         // Act
         val actual = converter.convert(transaction) as TangemPayTxHistoryItem.Spend
@@ -92,9 +95,44 @@ internal class TangemPayTxHistoryItemConverterTest {
     }
 
     @Test
-    fun `GIVEN transaction without payload WHEN convert THEN null`() {
+    fun `GIVEN transaction of unknown type WHEN convert THEN null and the type is reported once`() {
         // Arrange
-        val transaction = TangemPayTxHistoryResponse.Transaction(id = TX_ID, type = "brand_new_type")
+        val transaction = Transaction.Unknown(id = TX_ID, type = "transfer")
+
+        // Act
+        val first = converter.convert(transaction)
+        val second = converter.convert(transaction.copy(id = "other"))
+
+        // Assert
+        assertThat(first).isNull()
+        assertThat(second).isNull()
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.UnknownTransactionType(type = "transfer")) }
+    }
+
+    @Test
+    fun `GIVEN transactions of two unknown types WHEN convert THEN each type is reported`() {
+        // Act
+        converter.convert(Transaction.Unknown(id = TX_ID, type = "transfer"))
+        converter.convert(Transaction.Unknown(id = "other", type = null))
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.UnknownTransactionType(type = "transfer")) }
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.UnknownTransactionType(type = null)) }
+    }
+
+    @Test
+    fun `GIVEN known type without payload WHEN convert THEN nothing is reported`() {
+        // Act
+        converter.convert(Transaction.Payment(id = TX_ID, payment = null))
+
+        // Assert
+        verify(exactly = 0) { analytics.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN known type without payload WHEN convert THEN null`() {
+        // Arrange
+        val transaction = Transaction.Refund(id = TX_ID, refund = null)
 
         // Act
         val actual = converter.convert(transaction)
@@ -106,7 +144,7 @@ internal class TangemPayTxHistoryItemConverterTest {
     @Test
     fun `GIVEN collateral json with cashback kind WHEN parsed and converted THEN cashback collateral item`() {
         // Arrange
-        val json = """
+        val rawJson = """
             {
               "id": "$TX_ID",
               "type": "collateral",
@@ -121,10 +159,13 @@ internal class TangemPayTxHistoryItemConverterTest {
               }
             }
         """.trimIndent()
-        val transaction = requireNotNull(transactionAdapter.fromJson(json))
+        val transaction = json.decodeFromString(Transaction.serializer(), rawJson) as Transaction.Collateral
         val expected = TangemPayTxHistoryItem.Collateral(
             id = TX_ID,
-            jsonRepresentation = collateralAdapter.toJson(transaction.collateral),
+            jsonRepresentation = json.encodeToString(
+                TangemPayTxHistoryResponse.CollateralData.serializer(),
+                requireNotNull(transaction.collateral),
+            ),
             date = POSTED_AT.withZone(DateTimeZone.getDefault()),
             amount = BigDecimal("19.00"),
             currency = Currency.getInstance("USD"),
@@ -139,23 +180,75 @@ internal class TangemPayTxHistoryItemConverterTest {
         assertThat(actual).isEqualTo(expected)
     }
 
-    @ParameterizedTest
-    @ProvideTestModels
-    fun `GIVEN collateral kind and amount WHEN convert THEN type follows kind and falls back to amount sign`(
-        model: CollateralTypeModel,
-    ) {
-        // Arrange
-        val transaction = TangemPayTxHistoryResponse.Transaction(
-            id = TX_ID,
-            type = "collateral",
-            collateral = collateral(kind = model.kind, amount = model.amount),
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CollateralType {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN collateral kind and amount WHEN convert THEN type follows kind and falls back to amount sign`(
+            model: CollateralTypeModel,
+        ) {
+            // Arrange
+            val transaction = Transaction.Collateral(
+                id = TX_ID,
+                collateral = collateral(kind = model.kind, amount = model.amount),
+            )
+
+            // Act
+            val actual = converter.convert(transaction) as TangemPayTxHistoryItem.Collateral
+
+            // Assert
+            assertThat(actual.type).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            CollateralTypeModel(
+                kind = "DEPOSIT",
+                amount = BigDecimal("50.00"),
+                expected = TangemPayTxHistoryItem.Type.Deposit,
+            ),
+            CollateralTypeModel(
+                kind = "WITHDRAWAL",
+                amount = BigDecimal("-20.00"),
+                expected = TangemPayTxHistoryItem.Type.Withdrawal,
+            ),
+            CollateralTypeModel(
+                kind = "CASHBACK",
+                amount = BigDecimal("19.00"),
+                expected = TangemPayTxHistoryItem.Type.Cashback,
+            ),
+            CollateralTypeModel(
+                kind = "cashback",
+                amount = BigDecimal("19.00"),
+                expected = TangemPayTxHistoryItem.Type.Cashback,
+            ),
+            CollateralTypeModel(
+                kind = null,
+                amount = BigDecimal("50.00"),
+                expected = TangemPayTxHistoryItem.Type.Deposit,
+            ),
+            CollateralTypeModel(
+                kind = null,
+                amount = BigDecimal.ZERO,
+                expected = TangemPayTxHistoryItem.Type.Deposit,
+            ),
+            CollateralTypeModel(
+                kind = null,
+                amount = BigDecimal("-20.00"),
+                expected = TangemPayTxHistoryItem.Type.Withdrawal,
+            ),
+            CollateralTypeModel(
+                kind = "REBATE",
+                amount = BigDecimal("50.00"),
+                expected = TangemPayTxHistoryItem.Type.Deposit,
+            ),
+            CollateralTypeModel(
+                kind = "REBATE",
+                amount = BigDecimal("-20.00"),
+                expected = TangemPayTxHistoryItem.Type.Withdrawal,
+            ),
         )
-
-        // Act
-        val actual = converter.convert(transaction) as TangemPayTxHistoryItem.Collateral
-
-        // Assert
-        assertThat(actual.type).isEqualTo(model.expected)
     }
 
     data class CollateralTypeModel(
@@ -164,55 +257,7 @@ internal class TangemPayTxHistoryItemConverterTest {
         val expected: TangemPayTxHistoryItem.Type,
     )
 
-    private fun provideTestModels() = listOf(
-        CollateralTypeModel(
-            kind = "DEPOSIT",
-            amount = BigDecimal("50.00"),
-            expected = TangemPayTxHistoryItem.Type.Deposit,
-        ),
-        CollateralTypeModel(
-            kind = "WITHDRAWAL",
-            amount = BigDecimal("-20.00"),
-            expected = TangemPayTxHistoryItem.Type.Withdrawal,
-        ),
-        CollateralTypeModel(
-            kind = "CASHBACK",
-            amount = BigDecimal("19.00"),
-            expected = TangemPayTxHistoryItem.Type.Cashback,
-        ),
-        CollateralTypeModel(
-            kind = "cashback",
-            amount = BigDecimal("19.00"),
-            expected = TangemPayTxHistoryItem.Type.Cashback,
-        ),
-        CollateralTypeModel(
-            kind = null,
-            amount = BigDecimal("50.00"),
-            expected = TangemPayTxHistoryItem.Type.Deposit,
-        ),
-        CollateralTypeModel(
-            kind = null,
-            amount = BigDecimal.ZERO,
-            expected = TangemPayTxHistoryItem.Type.Deposit,
-        ),
-        CollateralTypeModel(
-            kind = null,
-            amount = BigDecimal("-20.00"),
-            expected = TangemPayTxHistoryItem.Type.Withdrawal,
-        ),
-        CollateralTypeModel(
-            kind = "REBATE",
-            amount = BigDecimal("50.00"),
-            expected = TangemPayTxHistoryItem.Type.Deposit,
-        ),
-        CollateralTypeModel(
-            kind = "REBATE",
-            amount = BigDecimal("-20.00"),
-            expected = TangemPayTxHistoryItem.Type.Withdrawal,
-        ),
-    )
-
-    private fun collateral(kind: String?, amount: BigDecimal) = TangemPayTxHistoryResponse.Collateral(
+    private fun collateral(kind: String?, amount: BigDecimal) = TangemPayTxHistoryResponse.CollateralData(
         amount = amount,
         currency = "usdc",
         chainId = 137L,
@@ -222,16 +267,96 @@ internal class TangemPayTxHistoryItemConverterTest {
         kind = kind,
     )
 
+    @Test
+    fun `GIVEN local currency that is not an ISO code WHEN convert THEN the local currency is dropped`() {
+        // Arrange
+        val transaction = Transaction.Refund(id = TX_ID, refund = refund(localCurrency = UNSUPPORTED_CURRENCY))
+
+        // Act
+        val actual = converter.convert(transaction) as TangemPayTxHistoryItem.Spend
+
+        // Assert
+        assertThat(actual.localCurrency).isNull()
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class UnsupportedCurrency {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN currency that is not an ISO code WHEN convert THEN the transaction is kept in USD`(
+            model: CurrencyModel,
+        ) {
+            // Act
+            val actual = converter.convert(model.transaction)
+
+            // Assert
+            assertThat(actual?.currency).isEqualTo(Currency.getInstance("USD"))
+        }
+
+        private fun provideTestModels() = listOf(
+            CurrencyModel(
+                name = "spend",
+                transaction = Transaction.Spend(
+                    id = TX_ID,
+                    spend = TangemPayTxHistoryResponse.SpendData(
+                        amount = BigDecimal("-15.00"),
+                        currency = UNSUPPORTED_CURRENCY,
+                        receipt = false,
+                        merchantName = "Spotify",
+                        status = "COMPLETED",
+                        authorizedAt = AUTHORIZED_AT,
+                        postedAt = POSTED_AT,
+                    ),
+                ),
+            ),
+            CurrencyModel(
+                name = "refund",
+                transaction = Transaction.Refund(id = TX_ID, refund = refund(currency = UNSUPPORTED_CURRENCY)),
+            ),
+            CurrencyModel(
+                name = "payment",
+                transaction = Transaction.Payment(
+                    id = TX_ID,
+                    payment = TangemPayTxHistoryResponse.PaymentData(
+                        amount = BigDecimal("50"),
+                        currency = UNSUPPORTED_CURRENCY,
+                        status = "COMPLETED",
+                        postedAt = POSTED_AT,
+                    ),
+                ),
+            ),
+            CurrencyModel(
+                name = "fee",
+                transaction = Transaction.Fee(
+                    id = TX_ID,
+                    fee = TangemPayTxHistoryResponse.FeeData(
+                        amount = BigDecimal("2"),
+                        currency = UNSUPPORTED_CURRENCY,
+                        postedAt = POSTED_AT,
+                    ),
+                ),
+            ),
+        )
+    }
+
+    internal data class CurrencyModel(val name: String, val transaction: Transaction) {
+        override fun toString(): String = name
+    }
+
     private fun refund(
         amount: BigDecimal = BigDecimal("-15.00"),
+        currency: String = "USD",
         localAmount: BigDecimal? = BigDecimal("-13.50"),
+        localCurrency: String? = "EUR",
         cashback: BigDecimal? = BigDecimal("-7.50"),
         postedAt: DateTime? = POSTED_AT,
-    ) = TangemPayTxHistoryResponse.Refund(
+    ) = TangemPayTxHistoryResponse.RefundData(
         amount = amount,
-        currency = "USD",
+        currency = currency,
         localAmount = localAmount,
-        localCurrency = "EUR",
+        localCurrency = localCurrency,
         sourceTransactionId = "fd5861d7-6e9d-42b6-ab7e-9687a861b18e",
         merchantName = "Spotify Premium Renewal",
         merchantCategory = "Entertainment",
@@ -252,24 +377,11 @@ internal class TangemPayTxHistoryItemConverterTest {
         cashbackCurrencyCode = "USD",
     )
 
-    private class BigDecimalTestAdapter : JsonAdapter<BigDecimal>() {
-        override fun fromJson(reader: JsonReader): BigDecimal = BigDecimal(reader.nextString())
-        override fun toJson(writer: JsonWriter, value: BigDecimal?) {
-            writer.value(value?.toPlainString())
-        }
-    }
-
-    private class DateTimeTestAdapter : JsonAdapter<DateTime>() {
-        override fun fromJson(reader: JsonReader): DateTime = DateTime.parse(reader.nextString())
-        override fun toJson(writer: JsonWriter, value: DateTime?) {
-            writer.value(value?.toString())
-        }
-    }
-
     private companion object {
         const val TX_ID = "2257c149-33f8-4439-b9b8-57ed85ef35a3"
         const val TX_HASH = "0x5e1c0b0c9f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f708192a3b4c5d6e7f80910"
         const val WALLET_ADDRESS = "0x8f2b1c3d4e5f60718293a4b5c6d7e8f901a2b3c4"
+        const val UNSUPPORTED_CURRENCY = "USDC"
         val AUTHORIZED_AT: DateTime = DateTime.parse("2026-08-28T12:08:53.939Z")
         val POSTED_AT: DateTime = DateTime.parse("2026-08-28T12:08:54.013Z")
     }

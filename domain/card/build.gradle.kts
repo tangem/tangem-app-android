@@ -30,13 +30,13 @@ dependencies {
     // endregion
 
     // region Domain
-    implementation(projects.domain.core)
     implementation(projects.domain.demo.models)
     // endregion
 
     // region Domain models
     api(projects.domain.models)
     api(projects.domain.visa.models)
+    implementation(projects.domain.moneyAccount.models)
     // endregion
 
     // region Libs

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+        `external` is not debuggable, so without this the Macrobenchmark module cannot read the app's
+        trace and every measurement fails with ERROR_NOT_PROFILEABLE. Scoped to this build type, so
+        `release` shipped to users stays unprofileable.
+    -->
+    <application>
+        <profileable
+            android:shell="true"
+            tools:targetApi="29" />
+    </application>
+
+</manifest>

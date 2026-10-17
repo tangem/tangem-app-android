@@ -16,7 +16,6 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
 
     fun onboarding(): StoryV2Composition = StoryV2Composition(
         id = ONBOARDING_ID,
-        version = ONBOARDING_VERSION,
         origin = StoryV2Origin.BUNDLED,
         // A step of the wallet creation flow, not a screen to sit through: it loops until the viewer acts.
         endBehavior = StoryV2EndBehavior.LOOP,
@@ -85,7 +84,6 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
 
     private companion object {
         const val ONBOARDING_ID = "onboarding"
-        const val ONBOARDING_VERSION = 2
         const val BUY_URL = "https://buy.tangem.com"
 
         /** Resolved by the host: onboarding starts the card scan from here. */

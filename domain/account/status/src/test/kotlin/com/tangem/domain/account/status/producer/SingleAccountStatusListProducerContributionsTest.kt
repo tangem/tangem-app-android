@@ -50,9 +50,8 @@ import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
  * Covers the **wiring** of the balance-contributions seam inside the status producer — the part the factory and
  * provider unit tests cannot reach: which flow feeds the status.
  *
- * The registered [BalanceContributionProvider]s are the only source of extra balances; the typed `stakingBalance`
- * field is never back-filled, and readers reach the balance through the accessor that resolves it out of the
- * contributions.
+ * The registered [BalanceContributionProvider]s are the only source of extra balances, and readers reach the
+ * balance through the accessor that resolves it out of the contributions.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SingleAccountStatusListProducerContributionsTest {
@@ -70,9 +69,7 @@ internal class SingleAccountStatusListProducerContributionsTest {
         // Assert
         assertThat(status.value.contributions).hasSize(1)
         assertThat(status.value.contributions.single().totalDeltaCryptoAmount()).isEqualTo(REWARDS)
-        // the typed field is never back-filled; Axis-2 readers reach the balance through the accessor, which
-        // resolves it out of the contributions
-        assertThat(status.value.stakingBalance).isNull()
+        // Axis-2 readers reach the balance through the accessor, which resolves it out of the contributions
         assertThat(status.value.stakingBalanceData).isEqualTo(status.value.contributions.single())
     }
 
@@ -84,7 +81,6 @@ internal class SingleAccountStatusListProducerContributionsTest {
         // Assert — the guard short-circuits to an empty frame instead of combining zero flows, which would emit
         // nothing at all and stall the whole status.
         assertThat(status.value.contributions).isEmpty()
-        assertThat(status.value.stakingBalance).isNull()
     }
 
     /** Drives the producer end to end and returns the single currency status it built. */

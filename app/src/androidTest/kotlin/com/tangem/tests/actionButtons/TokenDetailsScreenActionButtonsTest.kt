@@ -32,6 +32,7 @@ import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Ignore
 import org.junit.Test
+import com.tangem.screens.onOperationIsUnavailableDialog
 
 @HiltAndroidTest
 class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
@@ -181,6 +182,58 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             }
             step("Assert token symbol: '$tokenSymbol' is displayed") {
                 onSwapTokenScreen { swapTokenSymbol(tokenSymbol).assertIsDisplayed() }
+            }
+        }
+    }
+
+    @AllureId("4461")
+    @DisplayName("Action buttons (token details screen): 'Swap' shows an unavailability alert on Express error")
+    @Test
+    fun swapUnavailableOnExpressErrorTest() {
+        val tokenTitle = "Polygon"
+        val assetsScenarioName = "express_api_assets"
+        val assetsErrorState = "Error"
+
+        setupHooks().run {
+            step("Set WireMock scenario: '$assetsScenarioName' to state: '$assetsErrorState'") {
+                setWireMockScenarioState(scenarioName = assetsScenarioName, state = assetsErrorState)
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Assert token '$tokenTitle' is displayed") {
+                onMainScreen { tokenWithTitleAndAddress(tokenTitle).assertIsDisplayed() }
+            }
+            step("Click on token with name: '$tokenTitle'") {
+                openTokenDetailsFromTokenList(tokenTitle)
+            }
+            step("Assert 'Swap' button is enabled") {
+                onTokenDetailsScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { swapButton.assertIsEnabled() }
+                }
+            }
+            step("Click on 'Swap' button") {
+                onTokenDetailsScreen { swapButton.performClick() }
+            }
+            step("Assert swap unavailability alert is displayed") {
+                onOperationIsUnavailableDialog {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { text.assertIsDisplayed() }
+                }
+            }
+            step("Assert 'Swap' screen is not displayed") {
+                onSwapTokenScreen { title.assertDoesNotExist() }
+            }
+            step("Click on 'OK' button") {
+                onOperationIsUnavailableDialog { okButton.clickWithAssertion() }
+            }
+            step("Assert swap unavailability alert is not displayed") {
+                onOperationIsUnavailableDialog { text.assertDoesNotExist() }
+            }
+            step("Assert 'Token details' screen is displayed") {
+                onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
             }
         }
     }

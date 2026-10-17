@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     api(projects.core.local)
+    implementation(projects.core.remote)
     api(projects.core.utils)
     api(projects.domain.core)
     api(deps.arrow.core)
@@ -19,5 +20,6 @@ dependencies {
     api(deps.test.truth)
     api(deps.test.turbine)
     api(deps.moshi)
+    implementation(deps.moshi.kotlin)
     api(deps.kotlin.serialization)
 }

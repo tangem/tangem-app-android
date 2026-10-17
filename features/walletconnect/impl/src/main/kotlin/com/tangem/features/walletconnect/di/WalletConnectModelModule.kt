@@ -46,6 +46,11 @@ internal interface WalletConnectModelModule {
 
     @Binds
     @IntoMap
+    @ClassKey(McpSessionInfoModel::class)
+    fun bindMcpSessionInfoModel(model: McpSessionInfoModel): Model
+
+    @Binds
+    @IntoMap
     @ClassKey(WcSignTransactionModel::class)
     fun bindWcSignTransactionModel(model: WcSignTransactionModel): Model
 

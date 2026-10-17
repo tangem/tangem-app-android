@@ -2,6 +2,7 @@ package com.tangem.domain.models.account
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.Serializable
 
@@ -32,6 +33,10 @@ sealed class CollectiblesAccountStatusValue {
 
     val fiatBalance: SerializedBigDecimal?
         get() = balance?.fiatAmount
+
+    /** What the funding flows act on; `null` until the vault has been read. */
+    val cryptoCurrencyStatus: CryptoCurrencyStatus?
+        get() = balance?.cryptoCurrencyStatus(source = source)
 
     val totalFiatBalance: TotalFiatBalance
         get() = when (this) {
