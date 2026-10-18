@@ -237,6 +237,16 @@
         "source": "https://github.com/tangem/tangem-yield-module-contracts/",
         "name": "supplyTopUp"
     },
+    "0xb4701e3e": {
+        "info": "yieldModule",
+        "source": "https://github.com/tangem/tangem-yield-module-contracts/",
+        "name": "claimMerklRewardsOwner"
+    },
+    "0xbebc896c": {
+        "info": "yieldModule",
+        "source": "https://github.com/tangem/tangem-yield-module-contracts/",
+        "name": "claimMerklRewards"
+    },
     "0xf9609f08": {
         "info": "P2PEthPool",
         "source": "https://docs.p2p.org/",

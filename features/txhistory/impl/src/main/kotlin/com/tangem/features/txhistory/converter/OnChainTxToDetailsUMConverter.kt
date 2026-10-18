@@ -294,10 +294,15 @@ internal class OnChainTxToDetailsUMConverter(
      * direction (Aave leads on "Supplied"/enter, the asset leads on "Returned"/exit and on a withdraw — mirroring the
      * states in the design); an approval shows the approved token, which in a coin's history is not the viewed
      * currency — the same distinction [approveAmountText] draws for the amount; every other type shows the single
-     * token avatar. A non-withdraw yield Send is a plain transfer and stays unpaired.
+     * token avatar. A non-withdraw yield Send is a plain transfer and stays unpaired. An incentive reward received on
+     * the token pairs it with the Merkl icon.
      */
     private fun TxInfo.amountIcon(): TxHistoryDetailsUM.AmountIconUM {
         val asset = TxHistoryDetailsUM.AmountIconUM.Item.Currency(iconStateConverter.convert(currency))
+        if (type is TransactionType.IncentiveClaim && currency is CryptoCurrency.Token) {
+            val merkl = TxHistoryDetailsUM.AmountIconUM.Item.Resource(R.drawable.img_merkl_22)
+            return TxHistoryDetailsUM.AmountIconUM.OverlappingPair(leading = asset, trailing = merkl)
+        }
         val aave = TxHistoryDetailsUM.AmountIconUM.Item.Resource(R.drawable.img_aave_22)
         return when (val type = type) {
             is TransactionType.YieldSupply.Enter ->
@@ -412,6 +417,7 @@ internal class OnChainTxToDetailsUMConverter(
         if (isFeeOnly(currency)) return false
         val isPlainSend = (type as? TransactionType.YieldSupply.Send)?.isYieldSupplyWithdraw == false
         val isProtocolType = type is TransactionType.YieldSupply ||
+            type is TransactionType.IncentiveClaim ||
             type is TransactionType.Staking ||
             type is TransactionType.Approve
         return !isProtocolType || isPlainSend
@@ -483,8 +489,12 @@ private fun TxInfo.signedAmount(currency: CryptoCurrency): String {
 }
 
 /** Type glyph. Unlike the history list, the failed state keeps the type glyph (only the color changes). */
+@Suppress("CyclomaticComplexMethod")
 private fun TxInfo.headerIcon(currency: CryptoCurrency): TxIcon {
     if (isFeeOnlyOperation(currency)) return TxIcon.Vector(Icons.ic_percent_20)
+    if (type is TransactionType.IncentiveClaim && currency is CryptoCurrency.Coin) {
+        return TxIcon.Vector(Icons.ic_lightning_20)
+    }
     return when (val type = type) {
         is TransactionType.Approve -> TxIcon.Vector(Icons.ic_success_20)
         is TransactionType.GaslessFee,
