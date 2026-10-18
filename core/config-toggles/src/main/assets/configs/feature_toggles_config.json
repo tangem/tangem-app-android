@@ -110,5 +110,9 @@
     {
         "name": "AND_18834_YIELD_MODULE_V3_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1822_SOLANA_PNFT_AND_METAPLEX_CORE_ENABLED",
+        "version": "undefined"
     }
 ]
