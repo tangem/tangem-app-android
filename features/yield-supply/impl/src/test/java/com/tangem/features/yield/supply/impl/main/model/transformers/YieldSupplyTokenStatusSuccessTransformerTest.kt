@@ -199,7 +199,7 @@ internal class YieldSupplyTokenStatusSuccessTransformerTest {
 
     private fun campaign(hasActiveCampaign: Boolean) = YieldIncentiveCampaign(
         hasActiveCampaign = hasActiveCampaign,
-        rewardsApr = BigDecimal("1.5"),
+        rewardsApy = BigDecimal("1.5"),
         totalApyEst = BigDecimal("7.0"),
     )
 }
