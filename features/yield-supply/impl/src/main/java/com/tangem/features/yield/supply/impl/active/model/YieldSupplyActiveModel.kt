@@ -337,7 +337,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private fun onApyInfoClick() {
         val breakdown = uiState.value.apyBreakdown ?: return
         slotNavigation.activate(
-            YieldSupplyActiveRoute.AboutApy(baseApy = breakdown.baseApy, rewardsApr = breakdown.rewardsApr),
+            YieldSupplyActiveRoute.AboutApy(baseApy = breakdown.baseApy, rewardsApy = breakdown.rewardsApy),
         )
     }
 

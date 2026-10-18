@@ -31,11 +31,11 @@ internal object YieldMarketTokenConverter : Converter<YieldSupplyMarketTokenDto,
      */
     private fun YieldSupplyMarketTokenDto.toCampaign(): YieldIncentiveCampaign? {
         val hasActiveCampaign = hasActiveCampaign ?: return null
-        val totalApyEst = totalApyEst ?: return null
+        val totalApyEst = grossTotalApyEst ?: return null
 
         return YieldIncentiveCampaign(
             hasActiveCampaign = hasActiveCampaign,
-            rewardsApr = rewardsApr.orZero(),
+            rewardsApy = grossRewardsApy.orZero(),
             totalApyEst = totalApyEst,
         )
     }
