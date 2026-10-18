@@ -180,6 +180,28 @@ internal class BsdkOnChainHistoryTest {
     }
 
     @Test
+    fun `GIVEN a USD quote WHEN an incoming incentive reward is worth less than a cent THEN it is shown`() = runTest {
+        // Arrange
+        val reward = createTxInfo(
+            txHash = "incentive-reward",
+            amount = BigDecimal("0.000001"),
+            isOutgoing = false,
+            type = TxInfo.TransactionType.IncentiveClaim,
+        )
+
+        // Act
+        val states = collect(
+            batchState = state(txs = listOf(reward), status = PaginationStatus.EndOfPagination),
+            usdQuote = QUOTE,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        val items = (states.last() as HistoryState.Content).items
+        assertThat(items).containsExactly(OnChainTx.BSDK(reward))
+    }
+
+    @Test
     fun `GIVEN a USD quote WHEN an outgoing tx is worth less than a cent THEN it is shown`() = runTest {
         // Arrange
         val tiny = createTxInfo(txHash = "tiny-send", amount = BigDecimal("0.000001"), isOutgoing = true)
