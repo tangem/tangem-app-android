@@ -76,6 +76,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             is TransactionType.YieldSupply.Enter -> pillConverter.convert(PillInput(value, uiStatus, YieldEnterSpec))
             is TransactionType.YieldSupply.Exit -> pillConverter.convert(PillInput(value, uiStatus, YieldExitSpec))
             is TransactionType.YieldSupply.Topup -> pillConverter.convert(PillInput(value, uiStatus, YieldSupplySpec))
+            is TransactionType.IncentiveClaim -> incentiveClaim(value, uiStatus)
             // endregion
 
             // region Content
@@ -223,6 +224,24 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     } else {
         transferContent(tx, uiStatus)
     }
+
+    /** The reward reads as coming from Merkl rather than from the module contract that relayed it. */
+    private fun incentiveClaim(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM =
+        if (currency is CryptoCurrency.Coin) {
+            pillConverter.convert(PillInput(tx, uiStatus, IncentiveClaimSpec))
+        } else {
+            buildContent(
+                tx = tx,
+                uiStatus = uiStatus,
+                title = titleConverter.convert(tx),
+                icon = tx.directionalIcon(),
+                subtitle = ContentSubtitle.Provider(
+                    direction = if (tx.isOutgoing) ContentSubtitle.Direction.TO else ContentSubtitle.Direction.FROM,
+                    name = resourceReference(R.string.yield_module_incentives_provider),
+                    iconResId = R.drawable.img_merkl_22,
+                ),
+            )
+        }
 
     private fun unknownOperationContent(
         tx: TxInfo,
@@ -511,6 +530,7 @@ private fun TransactionType.feeSubtitleResId(): Int? = when (this) {
     TransactionType.Transfer,
     TransactionType.UnknownOperation,
     is TransactionType.YieldSupply.Send,
+    TransactionType.IncentiveClaim,
     -> null
 }
 
