@@ -35,10 +35,12 @@ import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
+import com.tangem.features.yield.supply.impl.common.formatter.formatApy
 import com.tangem.common.ui.earn.EarnBlockUM
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.features.yield.supply.impl.main.model.converter.YieldSupplyToEarnBlockConverter
 import com.tangem.features.yield.supply.impl.main.model.transformers.YieldSupplyTokenStatusSuccessTransformer
+import com.tangem.utils.StringsSigns
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
@@ -288,7 +290,8 @@ internal class YieldSupplyModel @Inject constructor(
                             resourceReference(
                                 R.string.yield_module_token_details_earn_notification_apy,
                             ),
-                            stringReference(" ${tokenStatus.effectiveApy}%"),
+                            stringReference(StringsSigns.WHITE_SPACE),
+                            tokenStatus.effectiveApy.formatApy(),
                         ),
                         onClick = ::onActiveClick,
                         shouldShowWarningIcon = shouldShowWarningIcon,
