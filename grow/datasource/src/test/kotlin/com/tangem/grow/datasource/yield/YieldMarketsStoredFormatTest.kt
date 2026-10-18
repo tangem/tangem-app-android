@@ -74,13 +74,13 @@ internal class YieldMarketsStoredFormatTest {
                     maxFeeNative = BigDecimal("0.00000001"),
                     maxFeeUSD = BigDecimal("0.5"),
                     hasActiveCampaign = false,
-                    rewardsApr = BigDecimal("1"),
-                    totalApyEst = BigDecimal("5.25"),
+                    grossRewardsApy = BigDecimal("1"),
+                    grossTotalApyEst = BigDecimal("5.25"),
                 ),
             ),
             json = """[{"tokenAddress":"0xtoken","tokenSymbol":"USDT","tokenName":"Tether","apy":"4.25",""" +
                 """"decimals":6,"isActive":true,"chainId":1,"maxFeeNative":"1E-8","maxFeeUSD":"0.5",""" +
-                """"hasActiveCampaign":false,"rewardsApr":"1","totalApyEst":"5.25"}]""",
+                """"hasActiveCampaign":false,"grossRewardsApy":"1","grossTotalApyEst":"5.25"}]""",
         ),
         FormatModel(
             value = listOf(YieldSupplyMarketTokenDto(tokenAddress = "0xtoken")),
