@@ -33,22 +33,21 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
-import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.ds2.fade.TangemFade
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
@@ -57,14 +56,14 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
-import com.tangem.features.polymarket.impl.common.ui.PolymarketEmptyListPrompt
+import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardSkeleton
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardSkeletonHeight
-import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
-import com.tangem.features.polymarket.impl.common.ui.PolymarketNextPageLoader
-import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBar
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBarClearance
+import com.tangem.features.polymarket.impl.common.ui.PolymarketNextPageLoader
+import com.tangem.features.polymarket.impl.common.ui.PolymarketEmptyListPrompt
+import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
@@ -73,10 +72,6 @@ import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPos
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
-import java.math.BigDecimal
-import kotlin.math.ceil
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
@@ -84,6 +79,10 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlin.math.ceil
+import java.math.BigDecimal
 
 // Feed layout: the scrolling header is item 0, the tab band — while loading or with categories — is item 1.
 private const val TAB_BAND_INDEX = 1
@@ -463,7 +462,7 @@ private fun CategoryTab(tab: PolymarketCategoryTabUM) {
         if (tab.icon != null) {
             Icon(
                 modifier = Modifier.size(20.dp),
-                painter = rememberVectorPainter(tab.icon),
+                imageVector = tab.icon.tabIcon,
                 tint = if (tab.isSelected) TangemTheme.colors3.icon.primary else TangemTheme.colors3.icon.secondary,
                 contentDescription = null,
             )
@@ -655,7 +654,7 @@ private fun previewCategories() = persistentListOf(
     PolymarketCategoryTabUM(
         id = 1,
         label = "Trending",
-        icon = PolymarketCategoryIcon.TRENDING.tabIcon,
+        icon = PolymarketCategoryIcon.TRENDING,
         isSelected = true,
         onClick = {},
     ),
@@ -669,7 +668,7 @@ private fun previewCategories() = persistentListOf(
     PolymarketCategoryTabUM(
         id = 3,
         label = "Sport",
-        icon = PolymarketCategoryIcon.SPORTS.tabIcon,
+        icon = PolymarketCategoryIcon.SPORTS,
         isSelected = false,
         onClick = {},
     ),

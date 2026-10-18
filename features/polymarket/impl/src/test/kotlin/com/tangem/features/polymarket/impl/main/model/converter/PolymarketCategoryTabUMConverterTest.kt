@@ -3,7 +3,6 @@ package com.tangem.features.polymarket.impl.main.model.converter
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
-import com.tangem.features.polymarket.impl.main.ui.tabIcon
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -33,13 +32,13 @@ internal class PolymarketCategoryTabUMConverterTest {
     }
 
     @Test
-    fun `GIVEN categories with and without an icon WHEN convert THEN only the known one gets a tab icon`() {
+    fun `GIVEN categories with and without an icon WHEN convert THEN each tab keeps its category icon`() {
         // Act
         val actual = converter.convert(input(selectedCategoryId = 1))
 
         // Assert
         assertThat(actual.map { it.id to it.icon })
-            .containsExactly(1 to PolymarketCategoryIcon.TRENDING.tabIcon, 2 to null)
+            .containsExactly(1 to PolymarketCategoryIcon.TRENDING, 2 to null)
             .inOrder()
     }
 

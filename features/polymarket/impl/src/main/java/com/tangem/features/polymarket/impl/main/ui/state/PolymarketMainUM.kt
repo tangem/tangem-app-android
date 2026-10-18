@@ -1,9 +1,9 @@
 package com.tangem.features.polymarket.impl.main.ui.state
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -59,7 +59,7 @@ internal data class PolymarketFeedScrollPosition(val index: Int, val offset: Int
 internal data class PolymarketCategoryTabUM(
     val id: Int,
     val label: String,
-    val icon: ImageVector?,
+    val icon: PolymarketCategoryIcon?,
     val isSelected: Boolean,
     val onClick: () -> Unit,
 )
