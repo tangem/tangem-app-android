@@ -20,12 +20,12 @@ interface ResolveYieldModePromoUseCase {
 
 sealed interface YieldModePromoResolution {
 
-    /** A matched token still has its balance or Yield Mode state loading. */
+    /** A token on a Yield Mode network still has its balance or Yield Mode state loading. */
     data object Waiting : YieldModePromoResolution
 
     data object NoEligibleToken : YieldModePromoResolution
 
-    /** The Earn list has no usable top offer for the global arm. */
+    /** The Earn list has no usable top offer for the global arm, or every matched token failed to refresh. */
     data object DataNotReady : YieldModePromoResolution
 
     data class Ready(

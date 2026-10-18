@@ -9,6 +9,7 @@ import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.earn.EarnToken
 import com.tangem.domain.models.earn.EarnYieldOffers
+import com.tangem.domain.models.network.Network
 import com.tangem.features.yield.supply.api.promobottomsheet.ResolveYieldModePromoUseCase
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoOffer
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoResolution
@@ -34,16 +35,27 @@ internal class DefaultResolveYieldModePromoUseCase @Inject constructor() : Resol
             .filterKeys { key -> key in yieldSupplyApy }
 
         if (positions.isEmpty()) return YieldModePromoResolution.NoEligibleToken
-        // Yield Mode can stay active on a token whose market has left the catalog, so every token has to load first
-        if (tokens.any { it.isLoading() }) return YieldModePromoResolution.Waiting
-        if (tokens.any { it.value.yieldSupplyStatus?.isActive == true }) return YieldModePromoResolution.NoEligibleToken
+        // Yield Mode can stay active on a token whose market left the catalog, so all tokens of its networks count
+        val yieldModeTokens = tokens.filter { it.currency.network.isYieldModeSupported() }
+        if (yieldModeTokens.any { it.isLoading() }) return YieldModePromoResolution.Waiting
+        if (yieldModeTokens.any { it.value.yieldSupplyStatus?.isActive == true }) {
+            return YieldModePromoResolution.NoEligibleToken
+        }
 
         val candidate = positions
             .mapNotNull { (key, accountStatuses) ->
                 candidateOrNull(key = key, accountStatuses = accountStatuses, apy = yieldSupplyApy.getValue(key))
             }
             .minWithOrNull(BEST_FIRST)
-            ?: return YieldModePromoResolution.NoEligibleToken
+
+        if (candidate == null) {
+            val hasFailedRefresh = positions.values.any { accountStatuses -> accountStatuses.any { it.isFailed() } }
+            return if (hasFailedRefresh) {
+                YieldModePromoResolution.DataNotReady
+            } else {
+                YieldModePromoResolution.NoEligibleToken
+            }
+        }
 
         val globalMaxApy = earnOffers.best?.toOffer(earnOffers.total)
             ?: return YieldModePromoResolution.DataNotReady
@@ -76,9 +88,17 @@ internal class DefaultResolveYieldModePromoUseCase @Inject constructor() : Resol
         return value is CryptoCurrencyStatus.Loading || value.sources.networkSource == StatusSource.CACHE
     }
 
-    // A refresh that failed over a cached value keeps it as ONLY_CACHE instead of an error state
+    /**
+     * A refresh that failed over a cached value keeps it as ONLY_CACHE instead of an error state.
+     * A missing derivation is the state of one account, not a failure: the position is summed without it.
+     */
     private fun CryptoCurrencyStatus.isFailed(): Boolean {
-        return value.isError || value.sources.networkSource == StatusSource.ONLY_CACHE
+        val isFailedState = value.isError && value !is CryptoCurrencyStatus.MissedDerivation
+        return isFailedState || value.sources.networkSource == StatusSource.ONLY_CACHE
+    }
+
+    private fun Network.isYieldModeSupported(): Boolean {
+        return Blockchain.fromNetworkId(rawId) in Blockchain.yieldSupplySupportedBlockchains()
     }
 
     private fun EarnToken.toOffer(tokensCount: Int): YieldModePromoOffer? {
