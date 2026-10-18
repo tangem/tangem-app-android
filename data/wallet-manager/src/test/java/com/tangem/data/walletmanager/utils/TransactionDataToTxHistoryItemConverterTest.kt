@@ -12,6 +12,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.Address
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -158,6 +159,12 @@ internal class TransactionDataToTxHistoryItemConverterTest {
                 currency = coin,
                 expected = TxInfo.TransactionType.YieldSupply.Enter(USDC_CONTRACT),
             ),
+            // A Merkl claim is no Aave call: it stays a claim in the coin's history instead of a fee row
+            FallbackModel(
+                transaction = merklClaim(),
+                currency = coin,
+                expected = TxInfo.TransactionType.IncentiveClaim,
+            ),
             // An ordinary transfer keeps its type whatever it moved
             FallbackModel(
                 transaction = transaction(
@@ -192,6 +199,12 @@ internal class TransactionDataToTxHistoryItemConverterTest {
         extras = EthereumTransactionExtras(callData = callData),
     )
 
+    private fun merklClaim(): TransactionData.Uncompiled = transaction(
+        amount = Amount(token = sdkUsdc, value = BigDecimal.ZERO),
+        fee = coinFee(BigDecimal("0.01")),
+        extras = EthereumTransactionExtras(callData = MerklClaimCallData.fromHex(MERKL_CLAIM_CALL_DATA)),
+    )
+
     private fun transaction(
         amount: Amount,
         fee: Fee?,
@@ -217,5 +230,6 @@ internal class TransactionDataToTxHistoryItemConverterTest {
         const val OWN_ADDRESS = "0x3333333333333333333333333333333333333333"
         const val FOREIGN_ADDRESS = "0x4444444444444444444444444444444444444444"
         const val TX_HASH = "0xhash"
+        const val MERKL_CLAIM_CALL_DATA = "0xb4701e3e0001"
     }
 }
