@@ -1,10 +1,6 @@
 package com.tangem.domain.polymarket.model
 
-/**
- * Category icon the BFF names by key in `Category.icon`; the client draws it from the design system.
- *
- * @property key value of `Category.icon`, matched case-sensitively
- */
+/** @property key value of the BFF `Category.icon`, matched case-sensitively */
 enum class PolymarketCategoryIcon(val key: String) {
     WORLD("world"),
     GEOPOLITICS("geopolitics"),

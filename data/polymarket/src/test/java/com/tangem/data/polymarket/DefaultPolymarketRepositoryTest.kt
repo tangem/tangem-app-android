@@ -168,6 +168,30 @@ internal class DefaultPolymarketRepositoryTest {
             }
     }
 
+    @Test
+    fun `GIVEN categories response WHEN getCategories THEN maps to domain categories in order`() = runTest {
+        // Arrange
+        coEvery { api.getCategories(locale = null) } returns ApiResponse.Success(
+            PolymarketCategoriesResponse(
+                categories = listOf(
+                    PolymarketCategoryDto(id = 1, label = "Trending", icon = "trending"),
+                    PolymarketCategoryDto(id = 2, label = "Sport", icon = null),
+                ),
+            ),
+        )
+
+        // Act
+        val result = repository.getCategories()
+
+        // Assert
+        assertThat(result).isEqualTo(
+            listOf(
+                PolymarketCategory(id = 1, label = "Trending", icon = PolymarketCategoryIcon.TRENDING),
+                PolymarketCategory(id = 2, label = "Sport", icon = null),
+            ).right(),
+        )
+    }
+
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class GetCategoryIcon {
