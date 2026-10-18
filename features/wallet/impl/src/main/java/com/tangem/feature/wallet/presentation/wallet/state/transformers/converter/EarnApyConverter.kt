@@ -35,14 +35,11 @@ internal class EarnApyConverter(
                 )
             }?.value
             if (yieldSupplyApy != null) {
-                val isActive = value.value.yieldSupplyStatus?.isActive == true
-                return EarnApyInfo(
-                    text = resourceReference(
-                        R.string.yield_module_earn_badge,
-                        wrappedList(yieldSupplyApy),
-                    ),
-                    isActive = isActive,
-                    apy = yieldSupplyApy.toString(),
+                return earnApyInfo(
+                    badgeRes = R.string.yield_module_earn_badge,
+                    // Unlike a staking rate, the yield APY arrives in percent
+                    rate = yieldSupplyApy.movePointLeft(PERCENT_POINT_SHIFT),
+                    isActive = value.value.yieldSupplyStatus?.isActive == true,
                 )
             }
         }
@@ -60,20 +57,18 @@ internal class EarnApyConverter(
                 -> R.string.yield_module_earn_badge
             }
             if (stakingInfo.rate != null) {
-                val apyString = stakingInfo.rate.format { percent(withPercentSign = false) }
-                return EarnApyInfo(
-                    text = resourceReference(
-                        rewardTypeRes,
-                        wrappedList(apyString),
-                    ),
-                    isActive = stakingInfo.isActive,
-                    apy = apyString,
-                )
+                return earnApyInfo(badgeRes = rewardTypeRes, rate = stakingInfo.rate, isActive = stakingInfo.isActive)
             }
         }
 
         return null
     }
+
+    private fun earnApyInfo(badgeRes: Int, rate: BigDecimal, isActive: Boolean) = EarnApyInfo(
+        text = resourceReference(badgeRes, wrappedList(rate.formatEarnRate())),
+        isActive = isActive,
+        rate = rate,
+    )
 
     private fun findStakingRate(
         currencyStatus: CryptoCurrencyStatus,
@@ -137,9 +132,16 @@ internal class EarnApyConverter(
         val rewardType: RewardType?,
     )
 
+    /** @property rate a fraction: `0.05` is 5% */
     data class EarnApyInfo(
         val text: TextReference?,
         val isActive: Boolean,
-        val apy: String?,
+        val rate: BigDecimal,
     )
+
+    companion object {
+        const val PERCENT_POINT_SHIFT = 2
+    }
 }
+
+internal fun BigDecimal.formatEarnRate(): String = format { percent(canBeLower = true, withPercentSign = false) }
