@@ -50,6 +50,7 @@ internal class DefaultMcpRepositoryTest {
         appScope = appScope,
         dispatchers = TestingCoroutineDispatcherProvider(),
         mcpClientConverter = McpClientConverter(),
+        agentStore = mockk(),
     )
 
     @BeforeEach
