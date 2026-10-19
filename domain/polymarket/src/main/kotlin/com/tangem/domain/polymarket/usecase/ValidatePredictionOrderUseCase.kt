@@ -5,6 +5,8 @@ import arrow.core.raise.either
 import arrow.core.raise.Raise
 import arrow.core.raise.ensure
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PredictionOrder
 import com.tangem.domain.polymarket.model.PredictionOrderDraft
 import com.tangem.domain.polymarket.model.PredictionOrderSide
@@ -22,13 +24,19 @@ class ValidatePredictionOrderUseCase {
         draft: PredictionOrderDraft,
         depositWalletAddress: String,
         marketTokenId: String,
+        marketVersion: PolymarketMarketVersion,
         isNegRisk: Boolean,
         quoteReceivedAtMillis: Long,
         nowMillis: Long,
     ): Either<PredictionOrderValidationError, Unit> = either {
         val order = signedOrder.order
 
-        ensureMarket(draft = draft, marketTokenId = marketTokenId, isNegRisk = isNegRisk)
+        ensureMarket(
+            signedOrder = signedOrder,
+            draft = draft,
+            marketTokenId = marketTokenId,
+            expectedDomain = PolymarketExchangeDomain.of(version = marketVersion, isNegRisk = isNegRisk),
+        )
         ensureLegs(order = order, draft = draft)
         ensurePrice(draft = draft)
         ensureIdentity(order = order, draft = draft, depositWalletAddress = depositWalletAddress)
@@ -43,11 +51,18 @@ class ValidatePredictionOrderUseCase {
         ensure(age in 0..MAX_QUOTE_AGE_MILLIS) { PredictionOrderValidationError.StaleQuote(ageMillis = age) }
     }
 
-    private fun ValidationRaise.ensureMarket(draft: PredictionOrderDraft, marketTokenId: String, isNegRisk: Boolean) {
-        ensure(draft.tokenId == marketTokenId && draft.isNegRisk == isNegRisk) {
+    private fun ValidationRaise.ensureMarket(
+        signedOrder: PredictionSignedOrder,
+        draft: PredictionOrderDraft,
+        marketTokenId: String,
+        expectedDomain: PolymarketExchangeDomain?,
+    ) {
+        val isExpectedDomain = expectedDomain != null && draft.domain == expectedDomain &&
+            signedOrder.domain == expectedDomain
+        ensure(draft.tokenId == marketTokenId && isExpectedDomain) {
             PredictionOrderValidationError.MarketMismatch(
                 expectedTokenId = marketTokenId,
-                isNegRiskExpected = isNegRisk,
+                expectedDomain = expectedDomain,
             )
         }
     }
@@ -68,7 +83,7 @@ class ValidatePredictionOrderUseCase {
         ensure(order.tokenId == draft.tokenId.toBigIntegerOrNull()) {
             PredictionOrderValidationError.MarketMismatch(
                 expectedTokenId = draft.tokenId,
-                isNegRiskExpected = draft.isNegRisk,
+                expectedDomain = draft.domain,
             )
         }
     }
