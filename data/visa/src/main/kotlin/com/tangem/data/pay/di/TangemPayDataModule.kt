@@ -3,6 +3,7 @@ package com.tangem.data.pay.di
 import android.content.Context
 import androidx.datastore.dataStoreFile
 import com.tangem.core.local.datastore.DeleteObsoleteFileMigration
+import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.pay.DefaultTangemPayEligibilityManager
 import com.tangem.data.pay.TangemPayUserWalletDataCleaner
 import com.tangem.data.pay.converter.PaymentAccountStatusValueDMConverter
@@ -13,6 +14,7 @@ import com.tangem.data.pay.repository.*
 import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.DefaultPaymentAccountRecentsStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
+import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
@@ -20,6 +22,8 @@ import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawWithSwapUseCase
 import com.tangem.core.remote.json.NetworkJson
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.store.entity.CashbackSummaryDM
 import com.tangem.spend.datasource.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -74,10 +78,6 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindKycRepository(repository: DefaultKycRepository): KycRepository
-
-    @Binds
-    @Singleton
-    fun bindTangemPaySwapRepository(repository: DefaultTangemPayWithdrawRepository): TangemPayWithdrawRepository
 
     @Binds
     @Singleton
@@ -629,6 +629,33 @@ internal interface TangemPayDataModule {
         fun provideTangemPayResidencyRepository(
             repository: DefaultTangemPayResidencyRepository,
         ): TangemPayResidencyRepository = CachingTangemPayResidencyRepository(origin = repository)
+
+        @Suppress("LongParameterList")
+        @Provides
+        @Singleton
+        fun provideTangemPayWithdrawRepository(
+            tangemPayApi: TangemPayApi,
+            requestHelper: TangemPayRequestPerformer,
+            authDataSource: TangemPayAuthDataSource,
+            quotesFetcher: QuotesFetcher,
+            tangemPayStorage: TangemPayStorage,
+            swapRepository: SwapRepository,
+            orderRepository: CustomerOrderRepository,
+            withdrawSourceResolver: WithdrawSourceResolver,
+            withdrawPollingScope: AppCoroutineScope,
+        ): TangemPayWithdrawRepository {
+            return DefaultTangemPayWithdrawRepository(
+                tangemPayApi = tangemPayApi,
+                requestHelper = requestHelper,
+                authDataSource = authDataSource,
+                quotesFetcher = quotesFetcher,
+                tangemPayStorage = tangemPayStorage,
+                swapRepository = swapRepository,
+                orderRepository = orderRepository,
+                withdrawSourceResolver = withdrawSourceResolver,
+                withdrawPollingScope = withdrawPollingScope,
+            )
+        }
 
         @Provides
         @Singleton
