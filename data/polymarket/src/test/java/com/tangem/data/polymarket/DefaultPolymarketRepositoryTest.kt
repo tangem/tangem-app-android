@@ -713,7 +713,6 @@ internal class DefaultPolymarketRepositoryTest {
                 ownerAddress = OWNER,
                 credentials = SYNC_CREDENTIALS,
                 signedOrder = signedOrder(),
-                isNegRisk = false,
             )
 
             // Assert
@@ -735,7 +734,6 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
-            isNegRisk = false,
         )
 
         // Assert
@@ -745,14 +743,16 @@ internal class DefaultPolymarketRepositoryTest {
     @Test
     fun `GIVEN an order signed for the other exchange WHEN placeOrder THEN nothing is sent`() = runTest {
         // Arrange
-        val standardExchangeOrder = signedOrder(signature = standardExchangeSignature())
+        val standardExchangeOrder = signedOrder(
+            signature = standardExchangeSignature(),
+            domain = PolymarketExchangeDomain.NEG_RISK_CTF,
+        )
 
         // Act
         val result = repository.placeOrder(
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = standardExchangeOrder,
-            isNegRisk = true,
         )
 
         // Assert
@@ -772,7 +772,6 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
-            isNegRisk = false,
         )
 
         // Assert
@@ -791,7 +790,6 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
-            isNegRisk = false,
         )
 
         // Assert
@@ -810,7 +808,6 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
-            isNegRisk = false,
         )
 
         // Assert
@@ -1370,6 +1367,7 @@ internal class DefaultPolymarketRepositoryTest {
         fun signedOrder(
             signature: String = standardExchangeSignature(),
             salt: Long = 1_234_567_890L,
+            domain: PolymarketExchangeDomain = PolymarketExchangeDomain.CTF,
         ): PredictionSignedOrder =
             PredictionSignedOrder(
             order = PredictionOrder(
@@ -1386,6 +1384,7 @@ internal class DefaultPolymarketRepositoryTest {
                 builder = "0xbuilder",
             ),
             signature = signature,
+            domain = domain,
         )
 
         fun placeOrderResponse(
@@ -1425,10 +1424,10 @@ internal class DefaultPolymarketRepositoryTest {
             volume24hr = null,
             liquidity = null,
             totalMarketsCount = 0,
+            isNegRisk = false,
             isLive = false,
             displayMode = "plain_markets",
             markets = emptyList(),
-            isNegRisk = false,
         )
     }
 }
