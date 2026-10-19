@@ -86,6 +86,7 @@ internal open class TxDetailsConverterTestBase {
         isBalanceHidden: Boolean = false,
         networkTokens: Set<CryptoCurrency.Token> = emptySet(),
         fiatConversion: FiatConversion = FiatConversion.NONE,
+        currency: CryptoCurrency = this.currency,
     ) = OnChainTxToDetailsUMConverter(
         currency = currency,
         onCopyAddress = copiedAddresses::add,

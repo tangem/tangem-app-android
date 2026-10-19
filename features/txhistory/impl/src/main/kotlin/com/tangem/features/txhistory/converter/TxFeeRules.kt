@@ -28,10 +28,13 @@ import java.math.BigDecimal
 
 /**
  * Whether the fee was paid by the counterparty, which drops the fee row: an incoming plain transfer. A non-withdraw
- * [TransactionType.YieldSupply.Send] is a plain transfer too and follows the same rule.
+ * [TransactionType.YieldSupply.Send] is a plain transfer too and follows the same rule. So does an incentive reward
+ * received on the token: a sponsored claim is paid by the backend, and the owner's own claim shows its fee on the
+ * coin's side of the same transaction.
  */
 internal fun TxInfo.hasForeignFee(): Boolean = !isOutgoing && (
     type is TransactionType.Transfer ||
+        type is TransactionType.IncentiveClaim ||
         (type as? TransactionType.YieldSupply.Send)?.isYieldSupplyWithdraw == false
     )
 

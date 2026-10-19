@@ -871,6 +871,49 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
+    fun `GIVEN incentive claim in coin history WHEN convert THEN incentive claim pill`() {
+        // Arrange
+        val tx = txInfo(type = TransactionType.IncentiveClaim, isOutgoing = true, amount = BigDecimal.ZERO)
+
+        // Act
+        val result = coinConverter.convert(tx) as TransactionItemUM.Pill
+
+        // Assert
+        val expected = TransactionItemUM.Pill(
+            txHash = TX_HASH,
+            kind = TransactionItemUM.PillKind.INCENTIVE_CLAIM,
+            status = TransactionItemUM.Content.Status.Confirmed,
+            label = resRef(R.string.transaction_history_incentive_rewards_claimed),
+            amount = null,
+            currencySymbol = null,
+            subtitle = null,
+            timestamp = TIMESTAMP,
+            onClick = result.onClick,
+            isSuccess = true,
+        )
+        assertThat(result).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN incoming incentive reward in token history WHEN convert THEN received row from Merkl`() {
+        // Arrange
+        val tx = txInfo(type = TransactionType.IncentiveClaim, isOutgoing = false, amount = BigDecimal("0.0042"))
+
+        // Act
+        val result = tokenConverter.convert(tx) as TransactionItemUM.Content
+
+        // Assert
+        assertThat(result.title).isEqualTo(resRef(R.string.common_received))
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Provider(
+                direction = ContentSubtitle.Direction.FROM,
+                name = resRef(R.string.yield_module_incentives_provider),
+                iconResId = R.drawable.img_merkl_22,
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN YieldSupply Send not withdraw and incoming WHEN convert THEN received title`() {
         val tx = txInfo(
             type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
