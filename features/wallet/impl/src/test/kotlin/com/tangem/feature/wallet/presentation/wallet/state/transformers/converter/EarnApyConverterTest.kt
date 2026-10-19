@@ -8,7 +8,9 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.staking.BalanceItem
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.model.StakingAvailability
@@ -19,9 +21,12 @@ import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.model.stakekit.Yield
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
+import java.util.Locale
 
 /**
  * Tests the earn-badge APY resolution: which rate a token's badge shows and whether it counts as already earning.
@@ -35,6 +40,42 @@ import java.math.BigDecimal
 internal class EarnApyConverterTest {
 
     private val currency = MockCryptoCurrencyFactory().createCoin(Blockchain.Solana)
+    private val yieldToken = MockCryptoCurrencyFactory().createToken(
+        blockchain = Blockchain.Monad,
+        contractAddress = "0x754704bc059f8c67012fed69bc8a327a5aafb603",
+    )
+    private var originalLocale: Locale = Locale.getDefault()
+
+    @BeforeEach
+    fun setUp() {
+        originalLocale = Locale.getDefault()
+        Locale.setDefault(Locale.US)
+    }
+
+    @AfterEach
+    fun tearDown() {
+        Locale.setDefault(originalLocale)
+    }
+
+    @Test
+    fun `GIVEN a yield apy in percent with a long scale WHEN convert THEN badge shows two decimals of the fraction`() {
+        // Arrange
+        val converter = EarnApyConverter(
+            yieldModuleApyMap = mapOf(yieldToken.yieldSupplyKey() to BigDecimal("5.851295672613467")),
+            stakingApyMap = emptyMap(),
+        )
+
+        // Act
+        val actual = converter.convert(status(currency = yieldToken))
+
+        // Assert
+        val expected = EarnApyConverter.EarnApyInfo(
+            text = resourceReference(R.string.yield_module_earn_badge, wrappedList("5.85")),
+            isActive = false,
+            rate = BigDecimal("0.05851295672613467"),
+        )
+        assertThat(actual).isEqualTo(expected)
+    }
 
     @Test
     fun `GIVEN Full availability AND the stake arrives as a contribution WHEN convert THEN badge is active`() {
@@ -163,7 +204,10 @@ internal class EarnApyConverterTest {
         stakingApyMap = mapOf(currency to availability),
     )
 
-    private fun status(stakingBalance: StakingBalance.Data? = null): CryptoCurrencyStatus = CryptoCurrencyStatus(
+    private fun status(
+        stakingBalance: StakingBalance.Data? = null,
+        currency: CryptoCurrency = this.currency,
+    ): CryptoCurrencyStatus = CryptoCurrencyStatus(
         currency = currency,
         value = CryptoCurrencyStatus.Loaded(
             amount = BigDecimal.ONE,
@@ -232,12 +276,13 @@ internal class EarnApyConverterTest {
         isActive: Boolean,
         badgeRes: Int = R.string.yield_module_earn_badge,
     ): EarnApyConverter.EarnApyInfo {
-        val apyString = BigDecimal(rate).format { percent(withPercentSign = false) }
+        val rateValue = BigDecimal(rate)
+        val rateText = rateValue.format { percent(canBeLower = true, withPercentSign = false) }
 
         return EarnApyConverter.EarnApyInfo(
-            text = resourceReference(badgeRes, wrappedList(apyString)),
+            text = resourceReference(badgeRes, wrappedList(rateText)),
             isActive = isActive,
-            apy = apyString,
+            rate = rateValue,
         )
     }
 

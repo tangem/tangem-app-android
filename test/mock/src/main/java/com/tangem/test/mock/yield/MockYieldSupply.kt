@@ -48,11 +48,11 @@ object MockYieldSupply {
 
     fun campaign(
         hasActiveCampaign: Boolean = true,
-        rewardsApr: BigDecimal = BigDecimal("1.5"),
+        rewardsApy: BigDecimal = BigDecimal("1.5"),
         totalApyEst: BigDecimal = BigDecimal("5.5"),
     ) = YieldIncentiveCampaign(
         hasActiveCampaign = hasActiveCampaign,
-        rewardsApr = rewardsApr,
+        rewardsApy = rewardsApy,
         totalApyEst = totalApyEst,
     )
 

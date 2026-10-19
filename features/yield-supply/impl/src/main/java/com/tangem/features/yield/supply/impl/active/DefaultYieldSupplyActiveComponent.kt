@@ -168,7 +168,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
             appComponentContext = factoryContext,
             params = YieldSupplyAboutApyComponent.Params(
                 baseApy = route.baseApy,
-                rewardsApr = route.rewardsApr,
+                rewardsApy = route.rewardsApy,
                 onDismiss = model::onUnguardedSheetDismiss,
             ),
         )
