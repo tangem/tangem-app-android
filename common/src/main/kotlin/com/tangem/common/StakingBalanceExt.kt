@@ -10,7 +10,8 @@ import java.math.BigDecimal
  * Works for both StakeKit and P2PEthPool providers.
  *
  * Returns sum of all staking-related balances including rewards
- * (staked + unstaking + withdrawable + rewards).
+ * (staked + unstaking + withdrawable + rewards). For P2PEthPool the staked amount already includes the
+ * auto-compounded rewards, so they are not added again.
  *
  * When [BlockchainUtils.isIncludeStakingTotalBalance] is false, the staked balance
  * is already included in the main wallet balance, so we only return rewards.
@@ -19,11 +20,10 @@ fun StakingBalance.Data.getTotalWithRewardsStakingBalance(blockchainId: String):
     return when (this) {
         is StakingBalance.Data.StakeKit -> getTotalWithRewardsStakingBalanceStakeKit(blockchainId)
         is StakingBalance.Data.P2PEthPool -> {
-            val rewards = totalRewards
             if (BlockchainUtils.isIncludeStakingTotalBalance(blockchainId)) {
-                totalStaked + unstakingAmount + withdrawableAmount + rewards
+                totalStaked + unstakingAmount + withdrawableAmount
             } else {
-                rewards
+                totalRewards
             }
         }
     }
