@@ -22,6 +22,7 @@ import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
@@ -50,6 +51,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val eligibilityManager: TangemPayEligibilityManager,
     private val onboardingStarter: TangemPayOnboardingStarter,
     private val featureToggles: TangemPayFeatureToggles,
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val uiMessageSender: UiMessageSender,
 ) : Model(), TangemPayWalletSelectorComponent.Listener {
@@ -121,6 +123,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
                     isLoading = false,
                     onClick = ::onGetCardClick,
                 ),
+                isUnifiedOnboarding = moneyAccountFeatureToggles.isMoneyAccountsEnabled,
             )
         }
     }
