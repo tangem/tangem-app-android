@@ -86,12 +86,14 @@ internal class BsdkOnChainHistory @AssistedInject constructor(
      * spam, an exchange remainder, a rounding leftover. What they sent themselves is always their own business, and an
      * approve carries no value at all (its worth is the allowance it grants, not its amount), so neither is ever dust.
      * Neither is a staking operation the user performed themselves: a claimed Tron reward is worth a fraction of a
-     * cent, and cutting it would hide the very rows the staking history is made of.
+     * cent, and cutting it would hide the very rows the staking history is made of. The same goes for an incentive
+     * reward, however small: delivering it is the whole point of the claim.
      */
     private fun isDust(txInfo: TxInfo, usdQuote: BigDecimal): Boolean = when {
         txInfo.isOutgoing -> false
         txInfo.type is TxInfo.TransactionType.Approve -> false
         txInfo.type is TxInfo.TransactionType.Staking -> false
+        txInfo.type is TxInfo.TransactionType.IncentiveClaim -> false
         else -> txInfo.amount * usdQuote < DUST_THRESHOLD_USD
     }
 
