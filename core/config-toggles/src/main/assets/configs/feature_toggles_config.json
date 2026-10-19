@@ -174,5 +174,9 @@
     {
         "name": "TWI_1760_SUPPORT_CHAT_DEEPLINK_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1762_YIELD_MODE_PROMO_ENABLED",
+        "version": "undefined"
     }
 ]

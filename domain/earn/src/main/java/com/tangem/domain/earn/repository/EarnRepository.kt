@@ -1,11 +1,13 @@
 package com.tangem.domain.earn.repository
 
+import arrow.core.Either
 import com.tangem.domain.earn.model.EarnFilter
 import com.tangem.domain.earn.model.EarnTokensBatchFlow
 import com.tangem.domain.earn.model.EarnTokensBatchingContext
 import com.tangem.domain.models.earn.EarnNetworks
 import com.tangem.domain.models.earn.EarnTokensCatalog
 import com.tangem.domain.models.earn.EarnTopToken
+import com.tangem.domain.models.earn.EarnYieldOffers
 import kotlinx.coroutines.flow.Flow
 
 interface EarnRepository {
@@ -34,6 +36,8 @@ interface EarnRepository {
     suspend fun fetchEarnTokensCatalog()
 
     fun observeEarnTokensCatalog(): Flow<EarnTokensCatalog?>
+
+    suspend fun getYieldOffers(): Either<Throwable, EarnYieldOffers>
 
     fun observeEarnFilter(): Flow<EarnFilter>
 
