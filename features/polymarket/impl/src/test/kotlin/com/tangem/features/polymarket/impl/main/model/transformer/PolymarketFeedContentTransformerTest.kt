@@ -249,7 +249,7 @@ internal class PolymarketFeedContentTransformerTest {
                     ),
                 ),
             categories = persistentListOf(
-                PolymarketCategoryTabUM(id = 1, label = "Politics", isSelected = true, onClick = {}),
+                PolymarketCategoryTabUM(id = 1, label = "Politics", icon = null, isSelected = true, onClick = {}),
             ),
             content = PolymarketMainUM.ContentUM.Loading,
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
