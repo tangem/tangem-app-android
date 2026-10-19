@@ -5,6 +5,8 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import arrow.core.raise.either
+import arrow.core.raise.ensure
+import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
 import com.tangem.blockchain.common.BlockchainError
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionData
@@ -35,6 +37,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -45,6 +48,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
+import java.util.Base64
 
 /**
  * Adapter over the blockchain SDK's `CollectiblesVaultProvider`, which `WalletManager` implements by delegation —
@@ -338,6 +342,49 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                 }
                 .mapLeft { error -> signingFailure ?: error.toVaultFailure(userWallet) }
                 .bind()
+        }
+    }
+
+    override suspend fun sendWithOwnerSignature(
+        userWallet: UserWallet,
+        transaction: String,
+    ): Either<CollectiblesAccountError, String> = withContext(dispatchers.io) {
+        either {
+            val bytes = Either.catch { Base64.getDecoder().decode(transaction) }
+                .mapLeft { GachaVaultError.Unexpected(it).asFailure() }
+                .bind()
+
+            // TODO Update after new firmware [REDACTED_JIRA]
+            //  Pending: how to apply the check to older cards only, Tangem 3.0 cards don't need it
+            if (userWallet is UserWallet.Cold) ensureCardCanSign(bytes).bind()
+
+            val network = networkProvider.create(userWallet).mapLeft { it.asFailure() }.bind()
+            val walletManager = vaultWalletManager(userWalletId = userWallet.walletId, network = network)
+                .mapLeft { error -> error.toVaultFailure(userWallet) }
+                .bind()
+
+            val transactionData = TransactionData.Compiled(value = TransactionData.Compiled.Data.Bytes(bytes))
+
+            walletManager.send(transactionData, userWallet.signer())
+                .toEither()
+                .map { result -> result.hash }
+                .onLeft { error ->
+                    TangemLogger.e("GachaVaultRepository: owner transaction failed: ${error.customMessage}")
+                }
+                .mapLeft { error -> error.toVaultFailure(userWallet) }
+                .bind()
+        }
+    }
+
+    /** A card signs at most this much message, so a larger one is refused before the tap. */
+    private fun ensureCardCanSign(transaction: ByteArray): Either<CollectiblesAccountError, Unit> = either {
+        val message = Either.catch { SolanaTransactionHelper.extractMessage(transaction) }
+            .mapLeft { GachaVaultError.Unexpected(it).asFailure() }
+            .bind()
+
+        ensure(message.size <= SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES) {
+            TangemLogger.e("GachaVaultRepository: owner transaction message is ${message.size} B, too large for a card")
+            GachaVaultError.TransactionTooLarge.asFailure()
         }
     }
 
