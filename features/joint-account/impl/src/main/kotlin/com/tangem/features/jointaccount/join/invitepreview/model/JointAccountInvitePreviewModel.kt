@@ -5,6 +5,7 @@ import arrow.core.Either
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.decompose.router.slot.navigate
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -28,6 +29,7 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelecto
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.jointaccount.join.confirmation.ui.state.JointAccountJoinConfirmationUM
+import com.tangem.features.jointaccount.join.invitepreview.entity.JointAccountInvitePreviewSheetConfig
 import com.tangem.features.jointaccount.join.invitepreview.state.JointAccountInvitePreviewStateController
 import com.tangem.features.jointaccount.join.invitepreview.state.transformers.SetContentTransformer
 import com.tangem.features.jointaccount.join.invitepreview.state.transformers.SetFailedTransformer
@@ -80,8 +82,7 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
 
     private val params = paramsContainer.require<JointAccountJoinChildParams>()
 
-    val portfolioSelectorNavigation = SlotNavigation<Unit>()
-    val memberCardNavigation: SlotNavigation<MemberCardConfig> = SlotNavigation()
+    val bottomSheetNavigation: SlotNavigation<JointAccountInvitePreviewSheetConfig> = SlotNavigation()
 
     val portfolioFetcher: PortfolioFetcher by lazy {
         portfolioFetcherFactory.create(
@@ -91,8 +92,8 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     }
 
     val portfolioSelectorCallback = object : PortfolioSelectorComponent.BottomSheetCallback {
-        override val onDismiss: () -> Unit = { portfolioSelectorNavigation.dismiss() }
-        override val onBack: () -> Unit = { portfolioSelectorNavigation.dismiss() }
+        override val onDismiss: () -> Unit = { bottomSheetNavigation.dismiss() }
+        override val onBack: () -> Unit = { bottomSheetNavigation.dismiss() }
     }
 
     /** The wallet picked in the selector, if any */
@@ -185,6 +186,7 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
                             preview = preview,
                             wallets = unlockedWallets.value,
                             selectedWallet = selectedWallet.value,
+                            onRequiredApprovalsClick = ::onRequiredApprovalsClick,
                             onCreatorInfoClick = ::onCreatorInfoClick,
                             onContinueClick = ::onContinueClick,
                             onWalletRowClick = ::onWalletRowClick,
@@ -243,21 +245,38 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     private fun dismissSelectorOnPick() {
         pickedWallet
             .filterNotNull()
-            .onEach { portfolioSelectorNavigation.dismiss() }
+            .onEach {
+                bottomSheetNavigation.navigate { config ->
+                    config.takeUnless { it is JointAccountInvitePreviewSheetConfig.WalletSelector }
+                }
+            }
             .launchIn(modelScope)
+    }
+
+    private fun onRequiredApprovalsClick() {
+        val state = uiState.value as? JointAccountInvitePreviewUM.Content ?: return
+
+        bottomSheetNavigation.activate(
+            JointAccountInvitePreviewSheetConfig.AboutSignatures(
+                threshold = state.requiredToSign,
+                total = state.totalMembers,
+            ),
+        )
     }
 
     private fun onCreatorInfoClick() {
         val state = uiState.value as? JointAccountInvitePreviewUM.Content ?: return
 
-        memberCardNavigation.activate(
-            MemberCardConfig(
-                avatar = JointAccountMembersUM.MemberAvatarUM(
-                    monogram = state.creatorName.take(1).uppercase(),
-                    color = state.accountIcon.color,
+        bottomSheetNavigation.activate(
+            JointAccountInvitePreviewSheetConfig.CreatorCard(
+                card = MemberCardConfig(
+                    avatar = JointAccountMembersUM.MemberAvatarUM(
+                        monogram = state.creatorName.take(1).uppercase(),
+                        color = state.accountIcon.color,
+                    ),
+                    name = stringReference(state.creatorName),
+                    address = state.creatorAddress,
                 ),
-                name = stringReference(state.creatorName),
-                address = state.creatorAddress,
             ),
         )
     }
@@ -273,7 +292,7 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     }
 
     private fun onWalletRowClick() {
-        portfolioSelectorNavigation.activate(Unit)
+        bottomSheetNavigation.activate(JointAccountInvitePreviewSheetConfig.WalletSelector)
     }
 
     private fun onContinueClick() {
