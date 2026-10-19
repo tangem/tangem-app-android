@@ -45,6 +45,7 @@ dependencies {
     testImplementation(deps.test.truth)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
     testImplementation(projects.domain.card)
     // endregion
 }
