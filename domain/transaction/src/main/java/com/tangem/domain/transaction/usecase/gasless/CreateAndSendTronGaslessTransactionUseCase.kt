@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.blockchain.blockchains.tron.TronTransactionExtras
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
@@ -43,6 +44,7 @@ class CreateAndSendTronGaslessTransactionUseCase(
     private val tronGaslessTransactionRepository: TronGaslessTransactionRepository,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val gaslessSignerProvider: GaslessSignerProvider,
+    private val currentTimeMillis: () -> Long = System::currentTimeMillis,
 ) {
 
     suspend operator fun invoke(
@@ -107,6 +109,7 @@ class CreateAndSendTronGaslessTransactionUseCase(
                 val quotedFee = fee.requireTronQuote()
                 val network = resolveFeeTokenNetwork(userWallet, fee)
                 val feeToken = fee.requireFeeToken()
+                swapTransaction.requireMatches(swap)
                 val quote = quoteForFinalSwap(
                     userWallet = userWallet,
                     quotedFee = quotedFee,
@@ -205,7 +208,7 @@ class CreateAndSendTronGaslessTransactionUseCase(
             ?: error("Tron gasless: transaction amount is null")
         val isQuoteForThisTransfer = amountRaw == quotedFee.quotedAmountRaw &&
             original.destinationAddress == quotedFee.quotedToAddress
-        if (isQuoteForThisTransfer) return quotedFee
+        if (isQuoteForThisTransfer && quotedFee.isUsableForSubmit()) return quotedFee
 
         val refreshed = tronGaslessTransactionRepository.estimate(
             TronGaslessEstimateParams(
@@ -217,23 +220,17 @@ class CreateAndSendTronGaslessTransactionUseCase(
                 feeTokenContract = feeToken.contractAddress,
             ),
         )
-        if (refreshed.compensationAmountRaw > quotedFee.compensationAmountRaw) {
-            TangemLogger.e(
-                "Tron gasless compensation grew from ${quotedFee.compensationAmountRaw} to " +
-                    "${refreshed.compensationAmountRaw} while re-quoting $amountRaw to ${original.destinationAddress}",
-            )
-            raise(SendTransactionError.GaslessFeeIncreased)
-        }
+        ensureCompensationNotGrown(quotedFee, refreshed) { "$amountRaw to ${original.destinationAddress}" }
         return refreshed
     }
 
-    private suspend fun quoteForFinalApprove(
+    private suspend fun Raise<SendTransactionError>.quoteForFinalApprove(
         userWallet: UserWallet,
         quotedFee: TronGaslessQuote,
         approve: TronGaslessApprove,
         feeToken: Token,
     ): TronGaslessQuote {
-        if (quotedFee.quotedApprove == approve) return quotedFee
+        if (quotedFee.quotedApprove == approve && quotedFee.isUsableForSubmit()) return quotedFee
 
         val refreshed = tronGaslessTransactionRepository.estimateApprove(
             TronGaslessApproveEstimateParams(
@@ -242,20 +239,17 @@ class CreateAndSendTronGaslessTransactionUseCase(
                 feeTokenContract = feeToken.contractAddress,
             ),
         )
-        require(refreshed.compensationAmountRaw <= quotedFee.compensationAmountRaw) {
-            "Tron gasless compensation grew from ${quotedFee.compensationAmountRaw} to " +
-                "${refreshed.compensationAmountRaw} while re-quoting the approval of ${approve.spenderAddress}"
-        }
+        ensureCompensationNotGrown(quotedFee, refreshed) { "the approval of ${approve.spenderAddress}" }
         return refreshed
     }
 
-    private suspend fun quoteForFinalSwap(
+    private suspend fun Raise<SendTransactionError>.quoteForFinalSwap(
         userWallet: UserWallet,
         quotedFee: TronGaslessQuote,
         swap: TronGaslessSwap,
         feeToken: Token,
     ): TronGaslessQuote {
-        if (quotedFee.quotedSwap == swap) return quotedFee
+        if (quotedFee.quotedSwap == swap && quotedFee.isUsableForSubmit()) return quotedFee
 
         val refreshed = tronGaslessTransactionRepository.estimateSwap(
             TronGaslessSwapEstimateParams(
@@ -264,10 +258,42 @@ class CreateAndSendTronGaslessTransactionUseCase(
                 feeTokenContract = feeToken.contractAddress,
             ),
         )
-        require(refreshed.compensationAmountRaw <= quotedFee.compensationAmountRaw) {
-            "Tron gasless compensation grew from ${quotedFee.compensationAmountRaw} to " +
-                "${refreshed.compensationAmountRaw} while re-quoting the swap through ${swap.routerAddress}"
-        }
+        ensureCompensationNotGrown(quotedFee, refreshed) { "the swap through ${swap.routerAddress}" }
         return refreshed
+    }
+
+    /**
+     * The backend drops a quote at [TronGaslessQuote.expiresAtEpochMs] and rejects its submit, so a quote
+     * that would lapse during the card tap and the submit is re-quoted instead of signed.
+     */
+    private fun TronGaslessQuote.isUsableForSubmit(): Boolean =
+        expiresAtEpochMs - currentTimeMillis() > QUOTE_SUBMIT_MARGIN_MS
+
+    private fun Raise<SendTransactionError>.ensureCompensationNotGrown(
+        quotedFee: TronGaslessQuote,
+        refreshed: TronGaslessQuote,
+        requoted: () -> String,
+    ) {
+        if (refreshed.compensationAmountRaw > quotedFee.compensationAmountRaw) {
+            TangemLogger.e(
+                "Tron gasless compensation grew from ${quotedFee.compensationAmountRaw} to " +
+                    "${refreshed.compensationAmountRaw} while re-quoting ${requoted()}",
+            )
+            raise(SendTransactionError.GaslessFeeIncreased)
+        }
+    }
+
+    /** Signing a swap other than the quoted one would submit it under a quote priced for different calldata. */
+    private fun TransactionData.Uncompiled.requireMatches(swap: TronGaslessSwap) {
+        val callDataHex = (extras as? TronTransactionExtras)?.callData?.dataHex?.removePrefix("0x")
+        require(
+            sourceAddress == swap.fromAddress &&
+                destinationAddress == swap.routerAddress &&
+                callDataHex.equals(swap.callDataHex, ignoreCase = true),
+        ) { "Tron gasless swap transaction differs from the quoted swap through ${swap.routerAddress}" }
+    }
+
+    private companion object {
+        const val QUOTE_SUBMIT_MARGIN_MS = 30_000L
     }
 }
