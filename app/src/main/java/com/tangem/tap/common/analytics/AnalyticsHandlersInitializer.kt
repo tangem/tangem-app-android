@@ -15,7 +15,9 @@ import javax.inject.Singleton
  * Creates analytics SDK handlers (and so initializes the SDKs) off the main thread at app start.
  *
  * SDKs hook the activity lifecycle when they are initialized (push-opened tracking, foreground sessions, app open),
- * so the first activity must call [awaitInitialized] before its `super.onCreate`.
+ * so an activity that can start the process from outside the app (today only `MainActivity`) must call
+ * [awaitInitialized] before its `super.onCreate`. Services and receivers don't need to wait: events are queued until
+ * the handlers are ready.
  */
 @Singleton
 class AnalyticsHandlersInitializer @Inject constructor(
@@ -26,7 +28,11 @@ class AnalyticsHandlersInitializer @Inject constructor(
 
     private val initialized = CountDownLatch(1)
 
+    @Volatile
+    private var isStarted = false
+
     fun initialize() {
+        isStarted = true
         appScope.launch(dispatchers.io) {
             try {
                 handlers.get()
@@ -38,8 +44,12 @@ class AnalyticsHandlersInitializer @Inject constructor(
         }
     }
 
-    /** Blocks until [initialize] has finished; a hung SDK must not freeze the first screen, hence the timeout. */
+    /**
+     * Blocks until [initialize] has finished; a hung SDK must not freeze the first screen, hence the timeout. Returns
+     * immediately if [initialize] was never called (e.g. a test application that skips app initialization).
+     */
     fun awaitInitialized() {
+        if (!isStarted) return
         if (!initialized.await(AWAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
             TangemLogger.e("Analytics handlers initialization did not finish in $AWAIT_TIMEOUT_SECONDS s")
         }
