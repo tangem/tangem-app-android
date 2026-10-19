@@ -22,9 +22,6 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 
-    /* Project - Domain */
-    implementation(projects.domain.feed.search)
-
     /* Compose */
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)

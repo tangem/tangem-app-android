@@ -61,7 +61,6 @@ internal fun FeedSearchBarHeader(
                     if (isActive) onExpandSheet()
                 },
                 onClearClick = { searchBarController.onQueryChange("") },
-                onSubmit = searchBarController::onSubmit,
                 onCloseClick = searchBarController::onClose,
             ),
             modifier = Modifier

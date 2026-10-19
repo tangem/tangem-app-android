@@ -24,9 +24,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.extensions.compose.stack.Children
-import com.arkivanov.decompose.extensions.compose.stack.animation.slide
-import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
@@ -41,6 +38,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.ds2.animation.WithoutMaterialWhileAnimating
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.extensions.dropWhenNoRoom
@@ -135,7 +133,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
 
     init {
         componentScope.launch {
-            searchBarController.searchScreenRequests.collect(::onSearchScreenRequest)
+            searchBarController.isSearchScreenRequested.collect(::onSearchScreenRequest)
         }
         componentScope.launch {
             feedEntryController.pendingEntry.filterNotNull().collect(::onEntryRequested)
@@ -209,6 +207,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
         val stackState by stack.subscribeAsState()
         val expandSheet by rememberUpdatedState(onExpandSheet)
         val keyboardController = LocalSoftwareKeyboardController.current
+        val isKeyboardVisible by rememberIsKeyboardVisible()
 
         LaunchedEffect(Unit) {
             expandSheetRequests.receiveAsFlow().collect { expandSheet() }
@@ -216,19 +215,27 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
 
         BackHandler(
             enabled = bottomSheetState.value == BottomSheetState.EXPANDED &&
-                stackState.active.configuration !is FeedHomeRoute,
+                stackState.active.configuration !is FeedHomeRoute &&
+                !isKeyboardVisible,
         ) {
             onChildBack()
         }
 
-        Children(
+        // not left to the keyboard: the search opens on typing, and the back callback re-registered then
+        // lands above the keyboard's own, so back would drop the search typed so far
+        BackHandler(enabled = isKeyboardVisible) {
+            keyboardController?.hide()
+        }
+
+        FeedStackContent(
             stack = stackState,
             modifier = modifier
                 .dropWhenNoRoom(minRoom = contentPadding.calculateTopPadding() + 8.dp)
-                .onEachTouch { keyboardController?.hide() },
-            animation = stackAnimation(slide()),
-        ) { child ->
-            child.instance.Content(
+                .onEachTouch {
+                    if (stackState.active.configuration !is FeedRoute.Search) keyboardController?.hide()
+                },
+        ) { screen ->
+            screen.Content(
                 bottomSheetState = bottomSheetState,
                 contentPadding = contentPadding,
                 onExpandSheet = onExpandSheet,
