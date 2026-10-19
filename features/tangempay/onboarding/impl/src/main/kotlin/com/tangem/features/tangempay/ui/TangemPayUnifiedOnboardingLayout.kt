@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.ui
 
 import android.content.res.Configuration
+import androidx.annotation.StringRes
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,7 +17,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -34,6 +34,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
@@ -52,6 +53,7 @@ internal fun TangemPayUnifiedOnboardingLayout(
     isGetStartedLoading: Boolean,
     onGetStartedClick: () -> Unit,
     onTermsClick: () -> Unit,
+    onTermsAndFeesClick: () -> Unit,
     onCloseClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -92,14 +94,21 @@ internal fun TangemPayUnifiedOnboardingLayout(
                     )
                 },
             ) {
-                TangemButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    variant = TangemButton.Variant.Primary,
-                    size = TangemButton.Size.X12,
-                    text = resourceReference(R.string.common_get_started),
-                    isLoading = isGetStartedLoading,
-                    onClick = onGetStartedClick,
-                )
+                TangemButtonGroup(modifier = Modifier.fillMaxWidth()) {
+                    TangemButton(
+                        variant = TangemButton.Variant.Secondary,
+                        size = TangemButton.Size.X12,
+                        text = resourceReference(R.string.tangempay_unified_onboarding_terms_button),
+                        onClick = onTermsAndFeesClick,
+                    )
+                    TangemButton(
+                        variant = TangemButton.Variant.Primary,
+                        size = TangemButton.Size.X12,
+                        text = resourceReference(R.string.common_get_started),
+                        isLoading = isGetStartedLoading,
+                        onClick = onGetStartedClick,
+                    )
+                }
             }
         },
     ) { contentPadding ->
@@ -143,9 +152,6 @@ private fun UnifiedOnboardingContent(scrollState: ScrollState, contentPadding: P
 
 @Composable
 private fun UnifiedOnboardingSections() {
-    val primary = TangemTheme.colors3.text.primary
-    val secondary = TangemTheme.colors3.text.secondary
-
     Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
         Section(header = stringResourceSafe(R.string.tangempay_unified_onboarding_payment_account_header)) {
             Row(
@@ -157,9 +163,9 @@ private fun UnifiedOnboardingSections() {
                         .weight(1f)
                         .fillMaxHeight(),
                     caption = stringResourceSafe(R.string.tangempay_unified_onboarding_cashback_caption),
-                    text = twoToneText(
-                        first = stringResourceSafe(R.string.tangempay_unified_onboarding_cashback_title) to primary,
-                        second = stringResourceSafe(R.string.tangempay_unified_onboarding_cashback_subtitle) to secondary,
+                    text = highlightedArgText(
+                        formatResId = R.string.tangempay_unified_onboarding_cashback_title,
+                        dimmedArg = stringResourceSafe(R.string.tangempay_unified_onboarding_cashback_subtitle),
                     ),
                 )
                 FeatureCard(
@@ -167,18 +173,20 @@ private fun UnifiedOnboardingSections() {
                         .weight(1f)
                         .fillMaxHeight(),
                     caption = stringResourceSafe(R.string.tangempay_unified_onboarding_payment_account_caption),
-                    text = twoToneText(
-                        first = stringResourceSafe(R.string.tangempay_unified_onboarding_payment_account_title) to primary,
-                        second = stringResourceSafe(R.string.tangempay_unified_onboarding_payment_account_subtitle_android) to secondary,
+                    text = highlightedArgText(
+                        formatResId = R.string.tangempay_unified_onboarding_payment_account_title,
+                        dimmedArg = stringResourceSafe(
+                            R.string.tangempay_unified_onboarding_payment_account_subtitle_android,
+                        ),
                     ),
                 )
             }
             FeatureCard(
                 modifier = Modifier.fillMaxWidth(),
                 caption = stringResourceSafe(R.string.tangempay_unified_onboarding_fees_caption),
-                text = twoToneText(
-                    first = stringResourceSafe(R.string.tangempay_unified_onboarding_fees_title) to primary,
-                    second = stringResourceSafe(R.string.tangempay_unified_onboarding_fees_subtitle) to secondary,
+                text = highlightedArgText(
+                    formatResId = R.string.tangempay_unified_onboarding_fees_title,
+                    dimmedArg = stringResourceSafe(R.string.tangempay_unified_onboarding_fees_subtitle),
                 ),
             )
         }
@@ -186,9 +194,9 @@ private fun UnifiedOnboardingSections() {
             FeatureCard(
                 modifier = Modifier.fillMaxWidth(),
                 caption = stringResourceSafe(R.string.tangempay_unified_onboarding_money_account_caption),
-                text = twoToneText(
-                    first = stringResourceSafe(R.string.tangempay_unified_onboarding_money_account_title) to primary,
-                    second = stringResourceSafe(R.string.tangempay_unified_onboarding_money_account_subtitle) to secondary,
+                text = highlightedArgText(
+                    formatResId = R.string.tangempay_unified_onboarding_money_account_title,
+                    dimmedArg = stringResourceSafe(R.string.tangempay_unified_onboarding_money_account_subtitle),
                 ),
             )
         }
@@ -196,9 +204,9 @@ private fun UnifiedOnboardingSections() {
             FeatureCard(
                 modifier = Modifier.fillMaxWidth(),
                 caption = stringResourceSafe(R.string.tangempay_unified_onboarding_plan_caption),
-                text = twoToneText(
-                    first = stringResourceSafe(R.string.tangempay_unified_onboarding_plan_subtitle) to secondary,
-                    second = stringResourceSafe(R.string.tangempay_unified_onboarding_plan_title) to primary,
+                text = highlightedArgText(
+                    formatResId = R.string.tangempay_unified_onboarding_plan_title,
+                    dimmedArg = stringResourceSafe(R.string.tangempay_unified_onboarding_plan_subtitle),
                 ),
             )
         }
@@ -243,13 +251,15 @@ private fun FeatureCard(caption: String, text: AnnotatedString, modifier: Modifi
     }
 }
 
-private fun twoToneText(
-    first: Pair<String, Color>,
-    second: Pair<String, Color>,
-): AnnotatedString = buildAnnotatedString {
-    withStyle(SpanStyle(color = first.second)) { append(first.first) }
-    append(" ")
-    withStyle(SpanStyle(color = second.second)) { append(second.first) }
+@Composable
+private fun highlightedArgText(@StringRes formatResId: Int, dimmedArg: String): AnnotatedString {
+    val text = stringResourceSafe(formatResId, dimmedArg)
+    val dimmedColor = TangemTheme.colors3.text.secondary
+    return buildAnnotatedString {
+        withStyle(SpanStyle(color = TangemTheme.colors3.text.primary)) { append(text) }
+        val start = text.indexOf(dimmedArg)
+        if (start >= 0) addStyle(SpanStyle(color = dimmedColor), start, start + dimmedArg.length)
+    }
 }
 
 @Preview(widthDp = 360, heightDp = 800)
@@ -261,6 +271,7 @@ private fun TangemPayUnifiedOnboardingLayoutPreview() {
             isGetStartedLoading = false,
             onGetStartedClick = {},
             onTermsClick = {},
+            onTermsAndFeesClick = {},
             onCloseClick = {},
             modifier = Modifier.fillMaxSize(),
         )
