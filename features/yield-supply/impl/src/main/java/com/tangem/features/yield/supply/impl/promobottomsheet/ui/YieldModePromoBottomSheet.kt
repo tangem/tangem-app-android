@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -63,8 +64,11 @@ internal fun YieldModePromoBottomSheet(state: YieldModePromoBottomSheetUM) {
         title = { content ->
             TangemModal.TopNavigation(
                 endButton = {
+                    val closeLabel = stringResourceSafe(R.string.common_close)
                     TangemButton.Close(
-                        modifier = Modifier.testTag(YieldSupplyTestTags.PROMO_BOTTOM_SHEET_CLOSE_BUTTON),
+                        modifier = Modifier
+                            .testTag(YieldSupplyTestTags.PROMO_BOTTOM_SHEET_CLOSE_BUTTON)
+                            .semantics { contentDescription = closeLabel },
                         onClick = content.onCloseClick,
                     )
                 },
