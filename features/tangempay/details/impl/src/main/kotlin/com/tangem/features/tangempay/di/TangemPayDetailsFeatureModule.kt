@@ -2,12 +2,14 @@ package com.tangem.features.tangempay.di
 
 import com.tangem.features.tangempay.account.DefaultTangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.details.DefaultTangemPayBankTransferOnrampDetailsComponent
+import com.tangem.features.tangempay.addfunds.va.bank.DefaultTangemPayBankingDetailsErrorComponent
 import com.tangem.features.tangempay.campaign.DefaultTangemPayCampaignIssueCardComponent
 import com.tangem.features.tangempay.card.details.CardDetailsEventListener
 import com.tangem.features.tangempay.card.details.DefaultCardDetailsEventListener
 import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.cashback.impl.DefaultTangemPayCashbackComponent
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent
+import com.tangem.features.tangempay.components.TangemPayBankingDetailsErrorComponent
 import com.tangem.features.tangempay.components.TangemPayCampaignIssueCardComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
@@ -63,4 +65,10 @@ internal interface TangemPayDetailsFeatureModule {
     fun bindTangemPayBankTransferOnrampDetailsComponentFactory(
         factory: DefaultTangemPayBankTransferOnrampDetailsComponent.Factory,
     ): TangemPayBankTransferOnrampDetailsComponent.Factory
+
+    @Binds
+    @Singleton
+    fun bindTangemPayBankingDetailsErrorComponentFactory(
+        factory: DefaultTangemPayBankingDetailsErrorComponent.Factory,
+    ): TangemPayBankingDetailsErrorComponent.Factory
 }
