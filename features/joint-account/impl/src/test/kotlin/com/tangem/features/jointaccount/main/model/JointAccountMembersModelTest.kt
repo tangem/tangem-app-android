@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.dismiss
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -38,8 +39,7 @@ import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatche
 import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
-import com.tangem.features.jointaccount.main.entity.AboutSignaturesConfig
-import com.tangem.features.jointaccount.main.entity.ActivationConfirmationConfig
+import com.tangem.features.jointaccount.main.entity.JointAccountMembersSheetConfig
 import com.tangem.features.jointaccount.main.state.JointAccountMembersStateController
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
@@ -226,13 +226,13 @@ internal class JointAccountMembersModelTest {
         every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns
             flowOf(MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID))
         val model = createModel()
-        val openedSheets = model.aboutSignaturesNavigation.trackSlot()
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
 
         // Act
         model.uiState.value.summaryCard!!.onApprovalsInfoClick()
 
         // Assert
-        assertThat(openedSheets.last()).isEqualTo(AboutSignaturesConfig(threshold = 2, total = THREE_SLOTS))
+        assertThat(openedSheets.last()).isEqualTo(JointAccountMembersSheetConfig.AboutSignatures(threshold = 2, total = THREE_SLOTS))
     }
 
     @Test
@@ -273,16 +273,55 @@ internal class JointAccountMembersModelTest {
     }
 
     @Test
-    fun `GIVEN free slot with an invite WHEN slot invite clicked THEN the link is shared`() = runTest {
+    fun `GIVEN free slot with an invite WHEN slot invite clicked THEN the invite sheet opens without sharing`() =
+        runTest {
+            // Arrange
+            stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
+            stubAccountRecord()
+            val model = createModel()
+            val openedSheets = model.bottomSheetNavigation.trackSlot()
+            val expected = JointAccountMembersSheetConfig.InviteMember(
+                message = resourceReference(
+                    id = CoreUiR.string.joint_account_invite_member_message,
+                    formatArgs = wrappedList(stringReference(ACCOUNT_NAME), "$INVITE_LINK_PREFIX$INVITE_A"),
+                ),
+            )
+
+            // Act
+            model.uiState.value.freeSlots.first().action!!.onClick()
+
+            // Assert
+            assertThat(openedSheets.last()).isEqualTo(expected)
+            verify(exactly = 0) { shareManager.shareTrackedText(text = any()) }
+        }
+
+    @Test
+    fun `GIVEN account record not arrived yet WHEN model created THEN no slot can be invited`() = runTest {
         // Arrange
         stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
 
         // Act
-        val slot = createModel().uiState.value.freeSlots.first()
-        slot.action!!.onClick()
+        val slots = createModel().uiState.value.freeSlots
 
         // Assert
-        verify(exactly = 1) { shareManager.shareTrackedText(text = "$INVITE_LINK_PREFIX$INVITE_A") }
+        assertThat(slots.map { it.action }).containsExactly(null, null)
+    }
+
+    @Test
+    fun `GIVEN invite sheet WHEN share clicked THEN the message is shared and the sheet stays open`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
+        stubAccountRecord()
+        val model = createModel()
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+        model.uiState.value.freeSlots.first().action!!.onClick()
+
+        // Act
+        model.onShareInviteClick(message = INVITE_A_MESSAGE)
+
+        // Assert
+        verify(exactly = 1) { shareManager.shareTrackedText(text = INVITE_A_MESSAGE) }
+        assertThat(openedSheets.last()).isNotNull()
     }
 
     @Test
@@ -292,8 +331,8 @@ internal class JointAccountMembersModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.freeSlots.first().action!!.onClick()
-        sharedTexts.emit("$INVITE_LINK_PREFIX$INVITE_A")
+        model.onShareInviteClick(message = INVITE_A_MESSAGE)
+        sharedTexts.emit(INVITE_A_MESSAGE)
         advanceUntilIdle()
 
         // Assert
@@ -322,7 +361,7 @@ internal class JointAccountMembersModelTest {
             val model = createModel()
 
             // Act
-            sharedTexts.emit("$INVITE_LINK_PREFIX$INVITE_A")
+            sharedTexts.emit(INVITE_A_MESSAGE)
             runCurrent()
             accounts.value = listOf(account.copy(source = StatusSource.CACHE))
             advanceUntilIdle()
@@ -347,13 +386,27 @@ internal class JointAccountMembersModelTest {
     }
 
     @Test
+    fun `GIVEN a link that only starts with the invite's WHEN it is reported THEN no invite is recorded`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
+        createModel()
+
+        // Act
+        sharedTexts.emit("Join my joint account\n$INVITE_LINK_PREFIX${INVITE_A}-other")
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { markInviteSharedUseCase(any(), any(), any()) }
+    }
+
+    @Test
     fun `GIVEN the share sheet is dismissed WHEN no target is picked THEN the slot stays not invited`() = runTest {
         // Arrange
         stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
         val model = createModel()
 
         // Act
-        model.uiState.value.freeSlots.first().action!!.onClick()
+        model.onShareInviteClick(message = INVITE_A_MESSAGE)
         advanceUntilIdle()
 
         // Assert
@@ -363,17 +416,17 @@ internal class JointAccountMembersModelTest {
     }
 
     @Test
-    fun `GIVEN an invited slot WHEN invite clicked again THEN the same link is shared`() = runTest {
+    fun `GIVEN an invited slot WHEN shared again THEN the same message is shared`() = runTest {
         // Arrange
         stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
         sharedInvites.value = setOf(INVITE_A)
         val model = createModel()
 
         // Act
-        model.uiState.value.freeSlots.first().action!!.onClick()
+        model.onShareInviteClick(message = INVITE_A_MESSAGE)
 
         // Assert
-        verify(exactly = 1) { shareManager.shareTrackedText(text = "$INVITE_LINK_PREFIX$INVITE_A") }
+        verify(exactly = 1) { shareManager.shareTrackedText(text = INVITE_A_MESSAGE) }
         assertThat(model.uiState.value.freeSlots.first().status)
             .isEqualTo(resourceReference(CoreUiR.string.joint_account_invite_members_invited))
     }
@@ -506,7 +559,7 @@ internal class JointAccountMembersModelTest {
 
         // Act
         val model = createModel()
-        val openedConfirmations = model.activationConfirmationNavigation.trackSlot()
+        val openedConfirmations = model.bottomSheetNavigation.trackSlot()
         model.uiState.value.footer!!.button.onClick()
         advanceUntilIdle()
 
@@ -598,11 +651,11 @@ internal class JointAccountMembersModelTest {
 
         // Act
         val model = createModel()
-        val openedConfirmations = model.activationConfirmationNavigation.trackSlot()
+        val openedConfirmations = model.bottomSheetNavigation.trackSlot()
         model.uiState.value.footer!!.button.onClick()
 
         // Assert
-        assertThat(openedConfirmations.last()!!.walletInteractionIconRes).isNull()
+        assertThat((openedConfirmations.last() as JointAccountMembersSheetConfig.ActivationConfirmation).walletInteractionIconRes).isNull()
     }
 
     @Test
@@ -618,7 +671,7 @@ internal class JointAccountMembersModelTest {
 
         // Act
         val model = createModel()
-        val openedConfirmations = model.activationConfirmationNavigation.trackSlot()
+        val openedConfirmations = model.bottomSheetNavigation.trackSlot()
         model.uiState.value.footer!!.button.onClick()
         model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
         runCurrent()
@@ -648,11 +701,11 @@ internal class JointAccountMembersModelTest {
 
             // Act — confirm, dismiss the sheet mid-flight, reopen it and confirm again
             val model = createModel()
-            val openedConfirmations = model.activationConfirmationNavigation.trackSlot()
+            val openedConfirmations = model.bottomSheetNavigation.trackSlot()
             model.uiState.value.footer!!.button.onClick()
             model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
             runCurrent()
-            model.activationConfirmationNavigation.dismiss()
+            model.bottomSheetNavigation.dismiss()
             model.uiState.value.footer!!.button.onClick()
             model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
             runCurrent()
@@ -735,7 +788,7 @@ internal class JointAccountMembersModelTest {
         coEvery { getInvitesUseCase(any(), any()) } returns listOf(INVITE_A)
 
         val model = createModel(cryptoAccountId = null)
-        val openedConfirmations = model.activationConfirmationNavigation.trackSlot()
+        val openedConfirmations = model.bottomSheetNavigation.trackSlot()
         model.uiState.value.footer!!.button.onClick()
         assertThat(openedConfirmations.last()).isNotNull()
 
@@ -748,6 +801,11 @@ internal class JointAccountMembersModelTest {
     }
 
     /** Mirrors what a real `childSlot` would track, since bare [SlotNavigation] only relays events. */
+    private fun stubAccountRecord() {
+        every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns
+            flowOf(MockAccounts.createJointAccount(name = ACCOUNT_NAME, userWalletId = USER_WALLET_ID))
+    }
+
     private fun <C : Any> SlotNavigation<C>.trackSlot(): List<C?> {
         val tracked = mutableListOf<C?>()
         subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
@@ -831,6 +889,8 @@ internal class JointAccountMembersModelTest {
         const val THREE_SLOTS = 3
         const val INVITE_A = "invite-a"
         const val INVITE_LINK_PREFIX = "https://tangem.com/joint-account/join/"
+        const val INVITE_A_MESSAGE = "Join my joint account “Family savings” in Tangem\n$INVITE_LINK_PREFIX$INVITE_A"
+        const val ACCOUNT_NAME = "Family savings"
         const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
 
         val creator = JointAccount.Member(
