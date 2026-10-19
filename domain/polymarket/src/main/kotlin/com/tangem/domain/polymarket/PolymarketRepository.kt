@@ -71,7 +71,6 @@ interface PolymarketRepository {
         ownerAddress: String,
         credentials: PolymarketApiCredentials,
         signedOrder: PredictionSignedOrder,
-        isNegRisk: Boolean,
     ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult>
 
     suspend fun getOrderQuote(

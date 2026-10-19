@@ -86,9 +86,10 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
         .catchOn(dispatchers.io) {
             val context = signingContext(userWalletId).getOrElse { return@catchOn it.left() }
             val order = payload.toOrder()
+            val domain = PolymarketExchangeDomain.v1(isNegRisk = payload.draft.isNegRisk)
             val digest = PolymarketErc7739SignatureBuilder.digest(
                 order = order,
-                domain = PolymarketExchangeDomain.v1(isNegRisk = payload.draft.isNegRisk),
+                domain = domain,
                 depositWalletAddress = order.maker,
             )
 
@@ -100,8 +101,9 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
                 signature = PolymarketErc7739SignatureBuilder.wrap(
                     innerSignature = inner,
                     order = order,
-                    domain = PolymarketExchangeDomain.v1(isNegRisk = payload.draft.isNegRisk),
+                    domain = domain,
                 ),
+                domain = domain,
             ).right()
         }
         .getOrElse { it.toSigningError().left() }
