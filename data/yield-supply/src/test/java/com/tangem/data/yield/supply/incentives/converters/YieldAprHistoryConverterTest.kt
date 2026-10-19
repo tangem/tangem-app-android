@@ -20,8 +20,8 @@ internal class YieldAprHistoryConverterTest {
                 YieldAprHistoryPointDto(
                     date = "2026-07-31",
                     baseApy = BigDecimal("3.2"),
-                    rewardsApr = BigDecimal("1.19"),
-                    totalApyEst = BigDecimal("4.39"),
+                    grossRewardsApy = BigDecimal("1.19"),
+                    grossTotalApyEst = BigDecimal("4.39"),
                     isCarriedForward = true,
                 ),
             ),
@@ -39,7 +39,7 @@ internal class YieldAprHistoryConverterTest {
                     YieldAprHistory.Point(
                         date = LocalDate(year = 2026, monthNumber = 7, dayOfMonth = 31),
                         baseApy = BigDecimal("3.2"),
-                        rewardsApr = BigDecimal("1.19"),
+                        rewardsApy = BigDecimal("1.19"),
                         totalApyEst = BigDecimal("4.39"),
                         isCarriedForward = true,
                     ),
