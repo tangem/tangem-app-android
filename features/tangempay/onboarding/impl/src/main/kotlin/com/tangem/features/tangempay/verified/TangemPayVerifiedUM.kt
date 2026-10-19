@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.verified
 
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.TextReference
 import javax.annotation.concurrent.Immutable
@@ -29,6 +30,7 @@ internal sealed interface TangemPayVerifiedUM {
 
     data class ButtonUM(
         val text: TextReference,
+        val iconEnd: TangemIconUM?,
         val onClick: () -> Unit,
     )
 }

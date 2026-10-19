@@ -91,6 +91,7 @@ private fun StatusContent(state: TangemPayVerifiedUM.Content, animated: Boolean)
                         variant = TangemButton.Variant.Secondary,
                         size = TangemButton.Size.X12,
                         text = button.text,
+                        iconEnd = button.iconEnd,
                         onClick = button.onClick,
                     )
                 }
@@ -98,6 +99,7 @@ private fun StatusContent(state: TangemPayVerifiedUM.Content, animated: Boolean)
                     variant = TangemButton.Variant.Primary,
                     size = TangemButton.Size.X12,
                     text = state.primaryButton.text,
+                    iconEnd = state.primaryButton.iconEnd,
                     onClick = state.primaryButton.onClick,
                 )
             }
