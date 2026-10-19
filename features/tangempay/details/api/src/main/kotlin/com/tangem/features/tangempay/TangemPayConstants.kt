@@ -10,6 +10,10 @@ object TangemPayConstants {
     @VisibleForTesting
     const val TERMS_AND_LIMITS_URL = "https://tangem.com/docs/en/tangem-visa-tariffs.pdf"
 
+    private const val PAERA_TERMS_AND_FEES_URL = "https://paera.com/tangempay"
+
+    fun tangemPayLink(): String = "$PAERA_TERMS_AND_FEES_URL?t=${System.currentTimeMillis()}"
+
     fun privacyPolicyLink(): String = "$PRIVACY_POLICY_URL?t=${System.currentTimeMillis()}"
 
     fun termsAndLimitsLink(): String = "$TERMS_AND_LIMITS_URL?t=${System.currentTimeMillis()}"
