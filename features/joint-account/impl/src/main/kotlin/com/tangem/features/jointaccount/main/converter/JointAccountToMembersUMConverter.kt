@@ -57,7 +57,7 @@ internal class JointAccountToMembersUMConverter(
             name: TextReference,
             address: String,
         ) -> Unit,
-        val onInviteClick: (inviteId: String) -> Unit,
+        val onInviteClick: (inviteId: String, accountName: TextReference) -> Unit,
         val onActivateClick: (cryptoAccountId: String) -> Unit,
         val onApprovalsInfoClick: (threshold: Int, total: Int) -> Unit,
         val onCloseClick: () -> Unit,
@@ -85,15 +85,15 @@ internal class JointAccountToMembersUMConverter(
         val remainingInvites = invites
             .filterNot { invite -> invite.lowercase() in redeemedInvites }
 
+        val accountName = value.accountName?.toUM()?.value
         val freeSlotsCount = (account.membersCount - account.members.size).coerceAtLeast(minimumValue = 0)
         val freeSlots = List(size = freeSlotsCount) { index ->
             val invite = remainingInvites.getOrNull(index)
             freeSlot(
                 index = index,
                 number = account.members.size + index,
-                invite = invite,
                 isInvited = invite in value.sharedInvites,
-                phase = phase,
+                action = slotAction(invite = invite, accountName = accountName, phase = phase),
             )
         }
 
@@ -215,9 +215,8 @@ internal class JointAccountToMembersUMConverter(
     private fun freeSlot(
         index: Int,
         number: Int,
-        invite: String?,
         isInvited: Boolean,
-        phase: MembersScreenPhase,
+        action: JointAccountMembersUM.SlotActionUM?,
     ): JointAccountMembersUM.MemberUM.FreeSlot {
         val status = if (isInvited) {
             CoreUiR.string.joint_account_invite_members_invited
@@ -231,19 +230,24 @@ internal class JointAccountToMembersUMConverter(
                 formatArgs = wrappedList(number),
             ),
             status = resourceReference(status),
-            action = slotAction(invite = invite, phase = phase),
+            action = action,
         )
     }
 
     /**
      * Always [JointAccountMembersUM.SlotActionUM.Invite]: offering Resend needs to know that a shared link expired,
-     * and neither the backend nor the local invite store tracks that yet.
+     * and neither the backend nor the local invite store tracks that yet. Absent until the account's name arrives:
+     * the invite message names the account.
      */
-    private fun slotAction(invite: String?, phase: MembersScreenPhase): JointAccountMembersUM.SlotActionUM? {
+    private fun slotAction(
+        invite: String?,
+        accountName: TextReference?,
+        phase: MembersScreenPhase,
+    ): JointAccountMembersUM.SlotActionUM? {
         val canInvite = phase.stage != MembersScreenPhase.Stage.Completed && phase.isThisDeviceCreator
-        if (!canInvite || invite == null) return null
+        if (!canInvite || invite == null || accountName == null) return null
 
-        return JointAccountMembersUM.SlotActionUM.Invite(onClick = { callbacks.onInviteClick(invite) })
+        return JointAccountMembersUM.SlotActionUM.Invite(onClick = { callbacks.onInviteClick(invite, accountName) })
     }
 }
 
