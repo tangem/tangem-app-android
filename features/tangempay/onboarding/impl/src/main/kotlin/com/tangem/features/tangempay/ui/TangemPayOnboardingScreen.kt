@@ -37,14 +37,24 @@ internal fun TangemPayOnboardingScreen(state: TangemPayOnboardingScreenState, mo
             onBack = state.onBack,
             modifier = modifier,
         )
-        is TangemPayOnboardingScreenState.Content -> TangemPayOnboardingLayout(
-            modifier = modifier,
-            isGetCardLoading = state.buttonConfig.isLoading,
-            onGetCardClick = state.buttonConfig.onClick,
-            onTermsClick = state.onTermsClick,
-            getCardIcon = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24),
-            onCloseClick = state.onBack,
-        )
+        is TangemPayOnboardingScreenState.Content -> if (state.isUnifiedOnboarding) {
+            TangemPayUnifiedOnboardingLayout(
+                modifier = modifier,
+                isGetStartedLoading = state.buttonConfig.isLoading,
+                onGetStartedClick = state.buttonConfig.onClick,
+                onTermsClick = state.onTermsClick,
+                onCloseClick = state.onBack,
+            )
+        } else {
+            TangemPayOnboardingLayout(
+                modifier = modifier,
+                isGetCardLoading = state.buttonConfig.isLoading,
+                onGetCardClick = state.buttonConfig.onClick,
+                onTermsClick = state.onTermsClick,
+                getCardIcon = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24),
+                onCloseClick = state.onBack,
+            )
+        }
         is TangemPayOnboardingScreenState.NotAvailable ->
             TangemPayOnboardingUnavailable(onBack = state.onBack, modifier = modifier)
     }
@@ -144,11 +154,19 @@ private class TangemPayOnboardingScreenStateProvider :
                 onBack = {},
                 onTermsClick = {},
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(isLoading = false, onClick = {}),
+                isUnifiedOnboarding = false,
             ),
             TangemPayOnboardingScreenState.Content(
                 onBack = {},
                 onTermsClick = {},
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(isLoading = true, onClick = {}),
+                isUnifiedOnboarding = false,
+            ),
+            TangemPayOnboardingScreenState.Content(
+                onBack = {},
+                onTermsClick = {},
+                buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(isLoading = false, onClick = {}),
+                isUnifiedOnboarding = true,
             ),
             TangemPayOnboardingScreenState.NotAvailable(onBack = {}),
         ),
