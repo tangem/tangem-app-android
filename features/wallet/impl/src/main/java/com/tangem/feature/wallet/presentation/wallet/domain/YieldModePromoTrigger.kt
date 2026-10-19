@@ -3,6 +3,9 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
+import arrow.core.raise.Raise
+import arrow.core.raise.either
+import arrow.core.raise.ensure
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -17,15 +20,19 @@ import com.tangem.features.yield.supply.api.promobottomsheet.GetYieldModePromoVa
 import com.tangem.features.yield.supply.api.promobottomsheet.ResolveYieldModePromoUseCase
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoOffer
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoResolution
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -69,26 +76,43 @@ internal class YieldModePromoTrigger @Inject constructor(
         if (yieldSupplyRepository.isYieldModePromoBottomSheetShown()) return null
         if (isSurfaceBusy.value || isBusyOutsideSlot()) return skip(SkipReason.SurfaceBusy)
 
-        val ready = raceAgainstEnd(isSurfaceBusy, interruptions) { resolve(userWalletId, yieldSupplyApy) }
-            .getOrElse { return skip(it) }
-        if (isSurfaceBusy.value) return skip(SkipReason.SurfaceBusy)
+        val endSignals = merge(
+            isSurfaceBusy.filter { it }.map { SkipReason.SurfaceBusy },
+            interruptions.map { SkipReason.Interrupted },
+            walletDeepLinkActionListener.isOpenedByLinkOrPush.filter { it }.map { SkipReason.Interrupted },
+        )
 
-        // Reading the variant may wait for the experiments to load, so the user can still end the check meanwhile
-        return raceAgainstEnd(isSurfaceBusy, interruptions) {
-            ready.offerFor(getYieldModePromoVariantUseCase()).right()
-        }.getOrElse { return skip(it) }
+        return coroutineScope {
+            // Latches the first end signal, so one that lands between the two waits still ends the check
+            val end = MutableStateFlow<SkipReason?>(null)
+            val endWatcher = launch { end.value = endSignals.first() }
+
+            val result = either {
+                val ready = untilEnd(end) { resolve(userWalletId, yieldSupplyApy) }.bind()
+                ensureNotEnded(end, isSurfaceBusy)
+                // Reading the variant may wait for the experiments to load, so the check can still end meanwhile
+                val offer = untilEnd(end) { ready.offerFor(getYieldModePromoVariantUseCase()).right() }.bind()
+                ensureNotEnded(end, isSurfaceBusy)
+                offer
+            }
+            endWatcher.cancel()
+
+            result.getOrElse(::skip)
+        }
     }
 
-    private suspend fun <T> raceAgainstEnd(
-        isSurfaceBusy: StateFlow<Boolean>,
-        interruptions: Flow<Unit>,
+    private suspend fun <T> untilEnd(
+        end: StateFlow<SkipReason?>,
         block: suspend () -> Either<SkipReason, T>,
     ): Either<SkipReason, T> = merge<Either<SkipReason, T>>(
         flow { emit(block()) },
-        isSurfaceBusy.filter { it }.map { SkipReason.SurfaceBusy.left() },
-        interruptions.map { SkipReason.Interrupted.left() },
-        walletDeepLinkActionListener.isOpenedByLinkOrPush.filter { it }.map { SkipReason.Interrupted.left() },
+        end.filterNotNull().map { it.left() },
     ).first()
+
+    private fun Raise<SkipReason>.ensureNotEnded(end: StateFlow<SkipReason?>, isSurfaceBusy: StateFlow<Boolean>) {
+        end.value?.let { raise(it) }
+        ensure(!isSurfaceBusy.value) { SkipReason.SurfaceBusy }
+    }
 
     private suspend fun resolve(
         userWalletId: UserWalletId,

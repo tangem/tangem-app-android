@@ -223,6 +223,29 @@ internal class YieldModePromoTriggerTest {
     }
 
     @Test
+    fun `GIVEN an interruption right after the balances load WHEN findOffer THEN skipped as interrupted`() = runTest {
+        // Arrange
+        val interruptions = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+        val loadedStatusList: AccountStatusList = mockk { every { flattenPersonalCurrencies() } returns statuses }
+        val statusLists = MutableStateFlow(statusList)
+        every { singleAccountStatusListSupplier(userWalletId) } returns statusLists
+        every { resolveYieldModePromoUseCase(statuses, yieldSupplyApy, earnOffers) } returnsMany listOf(
+            YieldModePromoResolution.Waiting,
+            ready,
+        )
+        val result = async { createTrigger().findOfferWithDefaults(interruptions = interruptions) }
+        runCurrent()
+
+        // Act
+        statusLists.value = loadedStatusList
+        interruptions.tryEmit(Unit)
+
+        // Assert
+        assertThat(result.await()).isNull()
+        assertThat(sentEvents).containsExactly(PromoScreenSkipped(SkipReason.Interrupted))
+    }
+
+    @Test
     fun `GIVEN the surface gets busy as the offer is ready WHEN findOffer THEN skipped as busy before the variant`() =
         runTest {
             // Arrange
