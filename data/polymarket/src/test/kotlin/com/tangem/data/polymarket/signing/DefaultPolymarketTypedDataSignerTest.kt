@@ -24,6 +24,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.derivation.POLYMARKET_OWNER_DERIVATION_PATH
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
 import com.tangem.domain.polymarket.model.PolymarketOnboardingSignatures
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderDraft
@@ -385,7 +386,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
             // Assert
             val expectedDigest = PolymarketErc7739SignatureBuilder.digest(
                 order = result.getOrNull()!!.order,
-                isNegRisk = false,
+                domain = PolymarketExchangeDomain.CTF,
                 depositWalletAddress = DEPOSIT_WALLET,
             )
             assertThat(hashes.captured).hasSize(1)
@@ -429,7 +430,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
                 val expected = PolymarketErc7739SignatureBuilder.wrap(
                     innerSignature = inner,
                     order = result.getOrNull()!!.order,
-                    isNegRisk = false,
+                    domain = PolymarketExchangeDomain.CTF,
                 )
                 assertThat(result.getOrNull()!!.signature).isEqualTo(expected)
                 assertThat(result.getOrNull()!!.signature).isNotEqualTo(inner)
