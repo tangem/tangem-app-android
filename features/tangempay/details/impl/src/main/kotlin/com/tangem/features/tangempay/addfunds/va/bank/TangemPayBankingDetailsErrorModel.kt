@@ -4,7 +4,7 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
+import com.tangem.features.tangempay.components.TangemPayBankingDetailsErrorComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,17 +14,16 @@ import javax.inject.Inject
 
 @Stable
 @ModelScoped
-internal class TangemPayVaBankingDetailsErrorModel @Inject constructor(
+internal class TangemPayBankingDetailsErrorModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
 ) : Model() {
 
-    private val params = paramsContainer.require<TangemPayVaBankingDetailsErrorComponent.Params>()
+    private val params = paramsContainer.require<TangemPayBankingDetailsErrorComponent.Params>()
 
-    val uiState: StateFlow<TangemPayVaBankingDetailsErrorUM>
+    val uiState: StateFlow<TangemPayBankingDetailsErrorUM>
         field = MutableStateFlow(
-            TangemPayVaBankingDetailsErrorUM(
+            TangemPayBankingDetailsErrorUM(
                 isRetryLoading = false,
                 onRetryClick = ::onRetryClick,
                 onContactSupportClick = params.onContactSupport,
@@ -40,7 +39,7 @@ internal class TangemPayVaBankingDetailsErrorModel @Inject constructor(
         if (uiState.value.isRetryLoading) return
         uiState.update { it.copy(isRetryLoading = true) }
         modelScope.launch {
-            getBankCredentialsUseCase(params.userWalletId, params.productInstanceId)
+            params.retry()
                 .onRight { credentials -> params.onResolved(credentials) }
                 .onLeft { uiState.update { state -> state.copy(isRetryLoading = false) } }
         }
