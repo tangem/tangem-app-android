@@ -33,7 +33,10 @@ internal class PolymarketOrderDigestTest {
     fun `GIVEN the standard exchange WHEN its domain is hashed THEN it matches the value in its bytecode`() {
         // Assert
         assertThat(
-            PolymarketOrderTypedDataBuilder.domainSeparator(PolymarketExchangeDomain.CTF).toHexString().lowercase().let { "0x$it" },
+            PolymarketOrderTypedDataBuilder.domainSeparator(PolymarketExchangeDomain.CTF)
+                .toHexString()
+                .lowercase()
+                .let { "0x$it" },
         ).isEqualTo("0x3264e159346253e26a64e00b69032db0e7d32f94628de3e6eecb50304d7af3d2")
     }
 
@@ -41,7 +44,10 @@ internal class PolymarketOrderDigestTest {
     fun `GIVEN the neg-risk exchange WHEN its domain is hashed THEN it matches the value in its bytecode`() {
         // Assert
         assertThat(
-            PolymarketOrderTypedDataBuilder.domainSeparator(PolymarketExchangeDomain.NEG_RISK_CTF).toHexString().lowercase().let { "0x$it" },
+            PolymarketOrderTypedDataBuilder.domainSeparator(PolymarketExchangeDomain.NEG_RISK_CTF)
+                .toHexString()
+                .lowercase()
+                .let { "0x$it" },
         ).isEqualTo("0x9b858f53327b0bd13af8ec14cfb35234fb9eb7b0504d1a4e61f433840d30e81a")
     }
 
@@ -108,7 +114,10 @@ internal class PolymarketOrderDigestTest {
     /** The expected digest comes from a separate implementation (Python, pycryptodome), not from this code. */
     fun `GIVEN an order on a standard market WHEN hashed THEN it matches the independent digest`() {
         // Act
-        val actual = PolymarketOrderTypedDataBuilder.digest(order = createOrder(), domain = PolymarketExchangeDomain.CTF)
+        val actual = PolymarketOrderTypedDataBuilder.digest(
+            order = createOrder(),
+            domain = PolymarketExchangeDomain.CTF,
+        )
 
         // Assert
         assertThat(actual.toHexString().lowercase().let { "0x$it" })
@@ -118,7 +127,10 @@ internal class PolymarketOrderDigestTest {
     @Test
     fun `GIVEN the same order on a neg-risk market WHEN hashed THEN only the domain changes the digest`() {
         // Act
-        val actual = PolymarketOrderTypedDataBuilder.digest(order = createOrder(), domain = PolymarketExchangeDomain.NEG_RISK_CTF)
+        val actual = PolymarketOrderTypedDataBuilder.digest(
+            order = createOrder(),
+            domain = PolymarketExchangeDomain.NEG_RISK_CTF,
+        )
 
         // Assert
         assertThat(actual.toHexString().lowercase().let { "0x$it" })
@@ -128,10 +140,16 @@ internal class PolymarketOrderDigestTest {
     @Test
     fun `GIVEN an order WHEN hashed by hand THEN two independent typed-data encoders agree`() {
         // Arrange
-        val json = PolymarketOrderTypedDataBuilder.buildOrderJson(order = createOrder(), domain = PolymarketExchangeDomain.CTF)
+        val json = PolymarketOrderTypedDataBuilder.buildOrderJson(
+            order = createOrder(),
+            domain = PolymarketExchangeDomain.CTF,
+        )
 
         // Act
-        val manual = PolymarketOrderTypedDataBuilder.digest(order = createOrder(), domain = PolymarketExchangeDomain.CTF)
+        val manual = PolymarketOrderTypedDataBuilder.digest(
+            order = createOrder(),
+            domain = PolymarketExchangeDomain.CTF,
+        )
 
         // Assert
         assertThat(EthereumUtils.makeTypedDataHash(json).toHexString()).isEqualTo(manual.toHexString())
