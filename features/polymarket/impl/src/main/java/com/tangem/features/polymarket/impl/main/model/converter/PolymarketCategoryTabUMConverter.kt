@@ -20,6 +20,7 @@ internal class PolymarketCategoryTabUMConverter(
             PolymarketCategoryTabUM(
                 id = category.id,
                 label = category.label,
+                icon = category.icon,
                 isSelected = category.id == value.selectedCategoryId,
                 onClick = { onCategoryClick(category.id) },
             )

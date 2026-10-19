@@ -40,6 +40,7 @@ import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketClobAsset
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketCategory
+import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketEvent
@@ -102,7 +103,13 @@ internal class DefaultPolymarketRepository @Inject constructor(
         safeApiCall(
             call = {
                 polymarketApi.getCategories(locale = null).bind().categories
-                    .map { PolymarketCategory(id = it.id, label = it.label, iconUrl = it.icon) }
+                    .map { category ->
+                        PolymarketCategory(
+                            id = category.id,
+                            label = category.label,
+                            icon = PolymarketCategoryIcon.fromKey(category.icon),
+                        )
+                    }
                     .right()
             },
             onError = { DataError.NetworkError.NoInternetConnection.left() },
