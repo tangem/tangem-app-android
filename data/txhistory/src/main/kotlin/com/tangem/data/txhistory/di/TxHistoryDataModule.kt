@@ -6,11 +6,13 @@ import com.tangem.data.txhistory.fetcher.DefaultTxHistoryFetcherUtils
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils
 import com.tangem.data.txhistory.list.DefaultHistoryTxListManager
 import com.tangem.data.txhistory.repository.DefaultExpressHistoryRepository
+import com.tangem.data.txhistory.repository.DefaultJointOperationHistoryRepository
 import com.tangem.data.txhistory.repository.DefaultTxHistoryRepository
 import com.tangem.data.txhistory.repository.RefactoredTxHistoryRepository
 import com.tangem.data.txhistory.repository.factory.DefaultTokenInfoRepository
 import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
 import com.tangem.domain.txhistory.list.HistoryTxListManager
+import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository
 import com.tangem.domain.txhistory.repository.TokenInfoRepository
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
@@ -42,6 +44,12 @@ internal interface TxHistoryDataModule {
     @Binds
     @Singleton
     fun provideExpressHistoryRepository(default: DefaultExpressHistoryRepository): ExpressHistoryRepository
+
+    @Binds
+    @Singleton
+    fun provideJointOperationHistoryRepository(
+        default: DefaultJointOperationHistoryRepository,
+    ): JointOperationHistoryRepository
 
     @Binds
     @Singleton
