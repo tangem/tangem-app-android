@@ -89,7 +89,7 @@ internal class NFTDetailsModel @Inject constructor(
                 blockchain = params.nftAsset.network.name,
                 standard = when (val id = params.nftAsset.id) {
                     is NFTAsset.Identifier.EVM -> id.contractType.name
-                    is NFTAsset.Identifier.Solana -> id.tokenStandard?.toString()
+                    is NFTAsset.Identifier.Solana -> id.tokenStandard
                     is NFTAsset.Identifier.TON -> null
                     is NFTAsset.Identifier.Unknown -> null
                 },
