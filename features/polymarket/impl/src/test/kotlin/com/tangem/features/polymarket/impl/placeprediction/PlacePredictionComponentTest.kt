@@ -142,7 +142,7 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         // Assert
         assertThat(status.viewPosition.value).isEqualTo(ViewPositionUM.Available)
         coVerify(exactly = 2) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
-        coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any(), any()) }
+        coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
         coVerify(exactly = 1) { getQuoteUseCase(any()) }
         verify(exactly = 1) { router.pop(any()) }
         lifecycle.destroy()
