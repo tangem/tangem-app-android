@@ -71,12 +71,7 @@ internal class PolymarketActivityUMConverter(
                 },
             ),
             iconUrl = activity.historyIconUrl,
-            onClick = when (activity.type) {
-                PolymarketActivity.Type.BUY, PolymarketActivity.Type.SELL, PolymarketActivity.Type.REDEEM -> {
-                    onActivityClick?.let { { it(activity) } }
-                }
-                else -> null
-            },
+            onClick = onActivityClick?.let { { it(activity) } },
         )
     }
 }

@@ -1,12 +1,16 @@
 package com.tangem.features.polymarket.impl.history.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,6 +39,9 @@ import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_32
+import com.tangem.core.ui.res.generated.icons.ic_arrow_up_32
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardIcon
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivityDetailsUM
 
@@ -128,7 +135,24 @@ private fun ActivityDetailsSummary(state: PolymarketActivityDetailsUM, modifier:
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         val iconModifier = Modifier.padding(bottom = 16.dp).size(72.dp)
-        PolymarketCardIcon(iconUrl = state.iconUrl, modifier = iconModifier)
+        if (state.fundingDirection == null) {
+            PolymarketCardIcon(iconUrl = state.iconUrl, modifier = iconModifier)
+        } else {
+            Box(
+                modifier = iconModifier.background(TangemTheme.colors3.bg.transparent.primary, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = when (state.fundingDirection) {
+                        PolymarketActivityDetailsUM.FundingDirection.Deposit -> Icons.ic_arrow_down_32
+                        PolymarketActivityDetailsUM.FundingDirection.Withdraw -> Icons.ic_arrow_up_32
+                    },
+                    contentDescription = null,
+                    tint = TangemTheme.colors3.icon.secondary,
+                    modifier = Modifier.size(32.dp),
+                )
+            }
+        }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             state.headline?.let { ActivityHeadline(it) }
             state.amount?.let { ActivityHeadline(it) }
