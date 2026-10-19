@@ -4,6 +4,7 @@ data class TangemPayWithdrawState(
     val orderId: String,
     val exchangeData: TangemPayWithdrawExchangeState?,
     val txHash: String? = null,
+    val createdAtMillis: Long,
 )
 
 data class TangemPayWithdrawExchangeState(
