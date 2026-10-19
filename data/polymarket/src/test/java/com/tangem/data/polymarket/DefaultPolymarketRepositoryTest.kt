@@ -194,7 +194,7 @@ internal class DefaultPolymarketRepositoryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class GetCategoryIcon {
+    inner class GetCategoriesIcon {
 
         @ParameterizedTest
         @ProvideTestModels
@@ -216,9 +216,28 @@ internal class DefaultPolymarketRepositoryTest {
                 )
             }
 
-        private fun provideTestModels() = PolymarketCategoryIcon.entries.map { icon ->
-            CategoryIconModel(key = icon.key, expected = icon)
-        } + listOf(
+        private fun provideTestModels() = listOf(
+            CategoryIconModel(key = "world", expected = PolymarketCategoryIcon.WORLD),
+            CategoryIconModel(key = "geopolitics", expected = PolymarketCategoryIcon.GEOPOLITICS),
+            CategoryIconModel(key = "elections", expected = PolymarketCategoryIcon.ELECTIONS),
+            CategoryIconModel(key = "soccer", expected = PolymarketCategoryIcon.SOCCER),
+            CategoryIconModel(key = "nba", expected = PolymarketCategoryIcon.NBA),
+            CategoryIconModel(key = "nfl", expected = PolymarketCategoryIcon.NFL),
+            CategoryIconModel(key = "hockey", expected = PolymarketCategoryIcon.HOCKEY),
+            CategoryIconModel(key = "tennis", expected = PolymarketCategoryIcon.TENNIS),
+            CategoryIconModel(key = "formula1", expected = PolymarketCategoryIcon.FORMULA_1),
+            CategoryIconModel(key = "tech", expected = PolymarketCategoryIcon.TECH),
+            CategoryIconModel(key = "economy", expected = PolymarketCategoryIcon.ECONOMY),
+            CategoryIconModel(key = "mentions", expected = PolymarketCategoryIcon.MENTIONS),
+            CategoryIconModel(key = "trending", expected = PolymarketCategoryIcon.TRENDING),
+            CategoryIconModel(key = "new", expected = PolymarketCategoryIcon.NEW),
+            CategoryIconModel(key = "politics", expected = PolymarketCategoryIcon.POLITICS),
+            CategoryIconModel(key = "sports", expected = PolymarketCategoryIcon.SPORTS),
+            CategoryIconModel(key = "esports", expected = PolymarketCategoryIcon.ESPORTS),
+            CategoryIconModel(key = "culture", expected = PolymarketCategoryIcon.CULTURE),
+            CategoryIconModel(key = "weather", expected = PolymarketCategoryIcon.WEATHER),
+            CategoryIconModel(key = "finance", expected = PolymarketCategoryIcon.FINANCE),
+            CategoryIconModel(key = "crypto", expected = PolymarketCategoryIcon.CRYPTO),
             CategoryIconModel(key = "astrology", expected = null),
             CategoryIconModel(key = "Politics", expected = null),
             CategoryIconModel(key = "https://cdn.example.com/icons/politics.svg", expected = null),
