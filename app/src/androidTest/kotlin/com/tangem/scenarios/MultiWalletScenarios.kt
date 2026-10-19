@@ -110,6 +110,10 @@ fun BaseTestCase.selectTokenInAccountOnWalletTab(walletName: String, accountName
         awaitSuccess { onBuyTokenScreen { walletTab(walletName).assertIsDisplayed() } }
         onBuyTokenScreen { walletTab(walletName).performClick() }
     }
+    // The tab and its token list come from one state update, so a selected tab means its list is shown.
+    step("Assert wallet tab '$walletName' is selected") {
+        awaitSuccess { onBuyTokenScreen { walletTab(walletName).assertIsSelected() } }
+    }
     selectTokenInAccount(accountName = accountName, tokenName = tokenName)
 }
 
