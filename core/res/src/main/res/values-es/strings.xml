@@ -499,6 +499,7 @@
   <string name="common_sign">Firme</string>
   <string name="common_sign_and_send">Firme y envíe</string>
   <string name="common_skip">Saltar</string>
+  <string name="common_slippage">Deslizamiento</string>
   <string name="common_something_went_wrong">Algo salió mal</string>
   <string name="common_stake">Stake</string>
   <string name="common_staked">En staking</string>
@@ -1360,6 +1361,7 @@
   <string name="markets_yield_supply_banner_title">Activar Modo Rendimiento</string>
   <string name="mobile_wallet_requires_min_os_warning_body">Debes actualizar a %1$s para crear una mobile wallet</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Mobile Wallet requiere %1$s o posterior</string>
+  <string name="money_account_onboarding_disclaimer">Tangem Pay es una empresa de tecnología financiera, no un banco. Los servicios bancarios los presta SSB, miembro de la FDIC. Los fondos depositados en SSB son elegibles para la cobertura del seguro de la FDIC de hasta 250 000 USD por depositante y por banco asegurado, con sujeción a las limitaciones aplicables y a las normas de la FDIC.</string>
   <string name="news_all_news">Todas las noticias</string>
   <string name="news_like">Me Gusta</string>
   <plurals name="news_published_hours_ago">
@@ -2049,7 +2051,10 @@
   <string name="support_selector_view_chat_button">Abrir chat</string>
   <string name="support_selector_view_email_button">Abrir correo</string>
   <string name="swap_approve_description">Al aprobar, permites que el contrato inteligente use tus tokens en futuras transacciones.</string>
+  <string name="swap_custom_slippage_info">El deslizamiento no se puede personalizar con este proveedor y, en casos excepcionales, puede alcanzar hasta un %s.</string>
   <string name="swap_detailed_mode">Modo detallado</string>
+  <string name="swap_exchange_rates_info_text">Lo que se muestra incluye la tarifa del proveedor de servicios.</string>
+  <string name="swap_exchange_rates_info_title">Tipos de cambio</string>
   <string name="swap_fixed_rate">Tasa Fija</string>
   <string name="swap_give_permission_fee_footer">La red cobrará una tasa de aprobación del token para verificar que usted autoriza el uso de su token para el intercambio.</string>
   <string name="swap_in_progress">Intercambio en curso</string>
@@ -2059,6 +2064,10 @@
   <string name="swap_search_tooltip_description">Busque cualquier token, incluso si aún no está en su lista.</string>
   <string name="swap_search_tooltip_title">Utilice la búsqueda para encontrar lo que necesite</string>
   <string name="swap_simple_mode">Modo sencillo</string>
+  <string name="swap_slippage_error">Cantidad no soportada</string>
+  <string name="swap_slippage_info_text">es la diferencia entre el precio de ejecución esperado y el real causada por cambios en el precio de mercado o la liquidez.</string>
+  <string name="swap_slippage_warning_text">El intercambio podría fallar si se alcanza el umbral de deslizamiento.</string>
+  <string name="swap_slippage_warning_title">Se ha establecido el deslizamiento en %s</string>
   <string name="swap_story_fifth_subtitle">Siéntase seguro con una asistencia permanente que le ayudará con cualquier problema</string>
   <string name="swap_story_fifth_title">Siempre aquí</string>
   <string name="swap_story_first_subtitle">Múltiples proveedores de confianza en un solo lugar: intercambie cualquier activo sin esfuerzo en su billetera</string>
@@ -2530,6 +2539,7 @@
   <string name="tangempay_remove_account_alert_title">¿Eliminar cuenta?</string>
   <string name="tangempay_residency_all_country">Cambiar país</string>
   <string name="tangempay_residency_all_state">Seleccionar otro estado</string>
+  <string name="tangempay_residency_search_empty">Sin resultados. Pruebe a cambiar la búsqueda</string>
   <string name="tangempay_residency_suggested_country">País sugerido</string>
   <string name="tangempay_residency_suggested_state"> Estado sugerido</string>
   <string name="tangempay_residency_title_country">País de residencia</string>
@@ -2786,6 +2796,11 @@
   <string name="user_wallet_list_rename_popup_title">Renombrar la billetera</string>
   <string name="user_wallet_list_unlock_all">Desbloquear todo</string>
   <string name="user_wallet_list_unlock_all_with">Desbloquear todo con %s</string>
+  <string name="virtual_account_requisites_bank_address">Dirección del banco</string>
+  <string name="virtual_account_requisites_bank_name">Nombre del banco</string>
+  <string name="virtual_account_requisites_beneficiary_address">Dirección del beneficiario</string>
+  <string name="virtual_account_requisites_beneficiary_name">Nombre del beneficiario</string>
+  <string name="virtual_account_requisites_routing_number">Routing number</string>
   <string name="visa_balance_limits_details_aml_verified">AML verificado</string>
   <string name="visa_balance_limits_details_available">Disponible</string>
   <string name="visa_balance_limits_details_blocked">Bloqueado</string>
