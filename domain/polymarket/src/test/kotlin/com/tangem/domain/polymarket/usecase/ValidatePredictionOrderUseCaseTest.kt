@@ -1,6 +1,7 @@
 package com.tangem.domain.polymarket.usecase
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
 import com.tangem.domain.polymarket.model.PredictionOrder
 import com.tangem.domain.polymarket.model.PredictionOrderDraft
 import com.tangem.domain.polymarket.model.PredictionOrderSide
@@ -188,7 +189,11 @@ internal class ValidatePredictionOrderUseCaseTest {
     }
 
     private fun validate(input: Input) = useCase(
-        signedOrder = PredictionSignedOrder(order = input.order, signature = input.signature),
+        signedOrder = PredictionSignedOrder(
+            order = input.order,
+            signature = input.signature,
+            domain = PolymarketExchangeDomain.CTF,
+        ),
         draft = input.draft,
         depositWalletAddress = input.depositWalletAddress,
         marketTokenId = input.marketTokenId,
