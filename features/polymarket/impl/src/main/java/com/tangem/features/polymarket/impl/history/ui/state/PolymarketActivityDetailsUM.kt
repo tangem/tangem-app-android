@@ -9,6 +9,7 @@ import kotlinx.collections.immutable.ImmutableList
 internal data class PolymarketActivityDetailsUM(
     val title: TextReference,
     val date: TextReference,
+    val headline: TextReference?,
     val amount: TextReference?,
     val marketTitle: TextReference?,
     val iconUrl: String?,
