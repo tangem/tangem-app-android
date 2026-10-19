@@ -9,7 +9,12 @@ data class CollectibleBuybackOffer(
     val expiresAt: Instant?,
 )
 
-/** The same pair the purchase sends: the owner holds the card and gets the USDC back. */
+/**
+ * @property fromAddress the owner key that holds the won card; Collector Crypt's `playerAddress`
+ * @property nftAddress the mint address of the card being sold back
+ * @property toAddress the user's USDC vault, Collector Crypt's `altRecipient`: the payout lands where the spins
+ *   are paid from, so it shows in the collectibles balance
+ */
 data class GenerateBuybackTxParams(
     val fromAddress: String,
     val nftAddress: String,
