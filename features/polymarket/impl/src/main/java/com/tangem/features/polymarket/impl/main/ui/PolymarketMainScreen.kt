@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -30,6 +30,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.LocalPinnableContainer
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
@@ -43,6 +46,7 @@ import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -208,16 +212,15 @@ private fun PolymarketMainScaffold(
                 modifier = Modifier.height(frostHeight),
             )
 
-            if (isTabBandPinned) {
-                CategoryTabBar(
-                    categories = state.categories,
-                    isLoading = state.isCategoriesLoading,
-                    state = tabRowState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = topPadding),
-                )
-            }
+            CategoryTabBar(
+                categories = state.categories,
+                isLoading = state.isCategoriesLoading,
+                state = tabRowState,
+                isShown = isTabBandPinned,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = topPadding),
+            )
         },
     ) { contentPadding ->
         TangemPullToRefreshSlidingContainer(
@@ -269,17 +272,15 @@ private fun FeedList(
             }
 
             if (state.isCategoriesLoading || state.categories.isNotEmpty()) {
-                // While pinned the overlay draws the band; the spacer keeps the feed's geometry.
+                // While pinned the overlay draws the band; the unplaced inline band keeps the feed's geometry.
                 item(key = KEY_TAB_BAND) {
-                    if (isTabBandPinned) {
-                        Spacer(modifier = Modifier.height(TabBandHeight))
-                    } else {
-                        CategoryTabBar(
-                            categories = state.categories,
-                            isLoading = state.isCategoriesLoading,
-                            state = tabRowState,
-                        )
-                    }
+                    KeepItemComposed()
+                    CategoryTabBar(
+                        categories = state.categories,
+                        isLoading = state.isCategoriesLoading,
+                        state = tabRowState,
+                        isShown = !isTabBandPinned,
+                    )
                 }
             }
 
@@ -410,6 +411,7 @@ private fun CategoryTabBar(
     categories: ImmutableList<PolymarketCategoryTabUM>,
     isLoading: Boolean,
     state: ScrollState,
+    isShown: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val tabs = remember(categories, isLoading) {
@@ -419,8 +421,28 @@ private fun CategoryTabBar(
         tabs = tabs,
         scrollState = state,
         contentPadding = TabBandPadding,
-        modifier = modifier.height(TabBandHeight),
+        modifier = modifier
+            .placedOnlyWhen(isShown)
+            .height(TabBandHeight),
     )
+}
+
+private fun Modifier.placedOnlyWhen(isPlaced: Boolean) = this
+    .conditional(!isPlaced) { clearAndSetSemantics {} }
+    .layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
+        layout(placeable.width, placeable.height) {
+            if (isPlaced) placeable.place(x = 0, y = 0)
+        }
+    }
+
+@Composable
+private fun KeepItemComposed() {
+    val pinnableContainer = LocalPinnableContainer.current
+    DisposableEffect(pinnableContainer) {
+        val pinnedHandle = pinnableContainer?.pin()
+        onDispose { pinnedHandle?.release() }
+    }
 }
 
 private fun loadingTabs(): ImmutableList<TangemTabItemUM> =
