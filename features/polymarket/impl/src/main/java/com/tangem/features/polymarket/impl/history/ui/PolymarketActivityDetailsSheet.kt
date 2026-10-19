@@ -130,6 +130,7 @@ private fun ActivityDetailsSummary(state: PolymarketActivityDetailsUM, modifier:
         val iconModifier = Modifier.padding(bottom = 16.dp).size(72.dp)
         PolymarketCardIcon(iconUrl = state.iconUrl, modifier = iconModifier)
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            state.headline?.let { ActivityHeadline(it) }
             state.amount?.let { ActivityHeadline(it) }
         }
         state.marketTitle?.let { title ->
