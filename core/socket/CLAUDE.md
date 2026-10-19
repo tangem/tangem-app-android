@@ -109,6 +109,9 @@ closes `idleTimeout` (5 s) after the last collector leaves.
 - **REST stays the source of truth.** A socket overlays updates on a REST snapshot; on
   `SocketState.Connected` after a gap, re-fetch the snapshot. Keep polling as a fallback while the state
   is `Connecting` / `WaitingToRetry`.
+  If even a fast reconnect must trigger a refetch, increment a `StateFlow<Long>` revision in
+  `SocketSpec.onConnected` and compare revisions in the consumer. This callback must not block; it
+  records the handshake, while the consumer owns the REST request. A conflated `state()` may miss a gap.
 - **Fakes:** `FakeXxx` exposes a `MutableSharedFlow` per `@Receive` function, a `xxxSent` list per
   `@Send` function and `sendResult`. The processor rejects names that would clash with those properties or
   their JVM accessors, e.g. `@Receive fun isConnected()`.

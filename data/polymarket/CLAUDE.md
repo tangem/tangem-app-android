@@ -32,6 +32,14 @@ for metadata and for quotes whose status is not LIVE. After 60 seconds without a
 a fresh subscription snapshot, allowing 5 seconds for a response before marking the quote STALE.
 The grace period is a client policy; the spec only fixes the 60-second watchdog threshold.
 
+Sports state follows section 2 of the same spec ([REDACTED_TASK_KEY]): REST `dataFetchedAt` competes with WS
+`last_update` (or receive time). Repeated frames refresh liveness but not presentation. Live scores
+fall back to REST after 60 seconds of silence; finished scores do not expire. Source timestamps accept
+ISO-8601 and epoch seconds/milliseconds defensively: `last_update` was absent in the 19.10 live sample.
+`ObservePolymarketSportsStateUseCase` retains REST team indices with home/away sides; consumers must use
+the same mapping for score and price buttons. Its nonzero `resnapshotRevision` changes after reconnect;
+the screen owns the resulting REST fetch. Reading connection revisions alone never opens the socket.
+
 Discovery and open-position sports metadata was checked against `tangem-09.10.2026-api-docs.json` on
 09.10.2026. Sports fields are optional and nullable; `live` is required. Keep scores and periods as raw
 provider strings and teams in provider order. `dataFetchedAt` dates the backend's snapshot, not game end.
