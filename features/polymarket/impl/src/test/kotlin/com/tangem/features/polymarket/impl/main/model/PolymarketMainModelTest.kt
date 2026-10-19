@@ -1609,8 +1609,8 @@ internal class PolymarketMainModelTest {
     )
 
     private fun categories(): List<PolymarketCategory> = listOf(
-        PolymarketCategory(id = 1, label = "Trending", iconUrl = null),
-        PolymarketCategory(id = 2, label = "Sport", iconUrl = null),
+        PolymarketCategory(id = 1, label = "Trending", icon = null),
+        PolymarketCategory(id = 2, label = "Sport", icon = null),
     )
 
     private fun createEvent(id: String = "event-1"): PolymarketEvent = createPolymarketEvent(
