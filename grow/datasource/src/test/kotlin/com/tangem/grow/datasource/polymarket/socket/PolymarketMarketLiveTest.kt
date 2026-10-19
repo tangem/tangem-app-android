@@ -39,6 +39,8 @@ import kotlin.time.Duration.Companion.seconds
  * Opt-in check against the public market server. Set POLYMARKET_SMOKE_ASSET_IDS to two comma-separated,
  * currently tradable token IDs and run this class with testDebugUnitTest --rerun-tasks.
  * No credentials or wallet are needed. Ordinary unit-test runs skip this check.
+ * For actively updating markets, POLYMARKET_SMOKE_REQUIRE_BEST_QUOTES=true also requires best_bid_ask
+ * after the initial subscription, adding an asset, resubscribing and reconnecting.
  */
 @Tag("live")
 internal class PolymarketMarketLiveTest {
@@ -50,6 +52,7 @@ internal class PolymarketMarketLiveTest {
         val input = System.getenv("POLYMARKET_SMOKE_ASSET_IDS")
         assumeTrue(!input.isNullOrBlank(), "Set POLYMARKET_SMOKE_ASSET_IDS to opt into the live server check")
         assumeFalse(BuildConfig.MOCK_DATA_SOURCE, "Run this check in the debug variant")
+        val requireBestQuotes = System.getenv("POLYMARKET_SMOKE_REQUIRE_BEST_QUOTES").toBoolean()
         val assetIds = requireNotNull(input).split(',').map(String::trim)
         require(assetIds.size == 2 && assetIds.distinct().size == 2 && assetIds.all { it.matches(Regex("[0-9]+")) }) {
             "POLYMARKET_SMOKE_ASSET_IDS must contain two different numeric token IDs"
@@ -83,8 +86,10 @@ internal class PolymarketMarketLiveTest {
                 // Act
                 val first = scope.collectAsset(subscriptions, assetIds[0])
                 val initial = first.awaitBook()
+                if (requireBestQuotes) first.awaitBestBidAsk()
                 val second = scope.collectAsset(subscriptions, assetIds[1])
                 val added = second.awaitBook()
+                if (requireBestQuotes) second.awaitBestBidAsk()
                 val channel = channels.single()
 
                 // Allow the production text heartbeat to run before requesting another server response.
@@ -93,6 +98,7 @@ internal class PolymarketMarketLiveTest {
                 delay(3.seconds)
                 val resubscribed = scope.collectAsset(subscriptions, assetIds[0])
                 val afterHeartbeat = resubscribed.awaitBook()
+                if (requireBestQuotes) resubscribed.awaitBestBidAsk()
                 assertThat(connectionsOpened).isEqualTo(1)
                 println("Live market: initial, added and resubscribed assets received snapshots")
 
@@ -103,6 +109,10 @@ internal class PolymarketMarketLiveTest {
                 foreground.value = true
                 val restoredSecond = second.awaitBook()
                 val restoredFirst = resubscribed.awaitBook()
+                if (requireBestQuotes) {
+                    second.awaitBestBidAsk()
+                    resubscribed.awaitBestBidAsk()
+                }
                 println("Live market: both subscriptions restored after foreground reconnect")
 
                 second.job.cancelAndJoin()
@@ -165,6 +175,13 @@ internal class PolymarketMarketLiveTest {
             while (true) {
                 val event = events.receive()
                 if (event is PolymarketMarketEventDto.Book) return event
+            }
+        }
+
+        suspend fun awaitBestBidAsk(): PolymarketMarketEventDto.BestBidAsk {
+            while (true) {
+                val event = events.receive()
+                if (event is PolymarketMarketEventDto.BestBidAsk) return event
             }
         }
 

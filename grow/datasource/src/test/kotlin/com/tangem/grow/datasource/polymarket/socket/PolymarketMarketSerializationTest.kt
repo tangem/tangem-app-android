@@ -118,7 +118,7 @@ internal class PolymarketMarketSerializationTest {
             ),
             EncodeModel(
                 operation = PolymarketMarketSubscriptionUpdateDto.Operation.SUBSCRIBE,
-                expected = """{"assets_ids":["a","b"],"operation":"subscribe"}""",
+                expected = """{"assets_ids":["a","b"],"operation":"subscribe","custom_feature_enabled":true}""",
             ),
             EncodeModel(
                 operation = PolymarketMarketSubscriptionUpdateDto.Operation.UNSUBSCRIBE,

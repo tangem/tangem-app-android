@@ -141,7 +141,7 @@ internal class PolymarketMarketSubscriptionsTest {
         // Assert
         assertFrames(
             """{"assets_ids":["a","b"],"type":"market","custom_feature_enabled":true}""",
-            """{"assets_ids":["c"],"operation":"subscribe"}""",
+            """{"assets_ids":["c"],"operation":"subscribe","custom_feature_enabled":true}""",
             """{"assets_ids":["a"],"operation":"unsubscribe"}""",
         )
         verify(exactly = 1) { transport.open(any()) }

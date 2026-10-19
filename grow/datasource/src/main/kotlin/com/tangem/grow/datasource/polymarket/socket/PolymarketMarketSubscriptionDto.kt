@@ -21,6 +21,9 @@ data class PolymarketMarketSubscriptionUpdateDto(
     @SerialName("operation") val operation: Operation,
 ) {
 
+    @SerialName("custom_feature_enabled")
+    val isCustomFeatureEnabled: Boolean? = if (operation == Operation.SUBSCRIBE) true else null
+
     @Serializable
     enum class Operation {
         @SerialName("subscribe")
