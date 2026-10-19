@@ -5,5 +5,6 @@ interface SwapFeatureToggles {
     val isChooseTokenPulseEnabled: Boolean
     val isExpressCategoriesGeoBlockingEnabled: Boolean
     val isTronGaslessSwapEnabled: Boolean
+    val isTronGaslessDexSwapEnabled: Boolean
     val isCustomSlippageEnabled: Boolean
 }

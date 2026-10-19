@@ -81,6 +81,8 @@ internal class SwapDomainModule {
         walletManagersFacade: WalletManagersFacade,
         @SwapDexGasLimit patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
         wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase,
+        getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
+        isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
     ): DexSwapFeeCalculator = DexSwapFeeCalculator(
         getFeeUseCase = getFeeUseCase,
         getEthSpecificFeeUseCase = getEthSpecificFeeUseCase,
@@ -89,6 +91,8 @@ internal class SwapDomainModule {
         walletManagersFacade = walletManagersFacade,
         patchEthGasLimitForSwap = patchEthGasLimitForSwap,
         wrapYieldSwapCallDataWithUpgradeUseCase = wrapYieldSwapCallDataWithUpgradeUseCase,
+        getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
+        isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
     )
 
     @Provides
