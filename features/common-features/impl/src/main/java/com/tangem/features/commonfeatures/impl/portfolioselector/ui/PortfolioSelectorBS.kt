@@ -110,6 +110,7 @@ internal fun PortfolioSelectorModal(
             content = TangemBottomSheetConfigContent.Empty,
         ),
         onBack = onBack,
+        showDragIndicator = false,
         title = {
             TangemModal.TopNavigation(title = state.title, onClose = onDismiss)
         },
