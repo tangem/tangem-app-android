@@ -3,7 +3,7 @@ package com.tangem.features.jointaccount.main.model
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
-import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.decompose.router.slot.navigate
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -11,6 +11,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
@@ -36,8 +37,7 @@ import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatche
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.converter.JointAccountToMembersUMConverter
-import com.tangem.features.jointaccount.main.entity.AboutSignaturesConfig
-import com.tangem.features.jointaccount.main.entity.ActivationConfirmationConfig
+import com.tangem.features.jointaccount.main.entity.JointAccountMembersSheetConfig
 import com.tangem.features.jointaccount.main.entity.MemberCardConfig
 import com.tangem.features.jointaccount.main.state.JointAccountMembersStateController
 import com.tangem.features.jointaccount.main.state.transformers.*
@@ -81,18 +81,22 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private val params = paramsContainer.require<JointAccountMembersComponent.Params>()
 
-    val bottomSheetNavigation: SlotNavigation<MemberCardConfig> = SlotNavigation()
-    val activationConfirmationNavigation: SlotNavigation<ActivationConfirmationConfig> = SlotNavigation()
-    val aboutSignaturesNavigation: SlotNavigation<AboutSignaturesConfig> = SlotNavigation()
+    val bottomSheetNavigation: SlotNavigation<JointAccountMembersSheetConfig> = SlotNavigation()
 
     private val converterCallbacks = JointAccountToMembersUMConverter.Callbacks(
         onMemberInfoClick = { avatar, name, address ->
-            onMemberInfoClick(MemberCardConfig(avatar = avatar, name = name, address = address))
+            bottomSheetNavigation.activate(
+                JointAccountMembersSheetConfig.MemberCard(
+                    card = MemberCardConfig(avatar = avatar, name = name, address = address),
+                ),
+            )
         },
-        onInviteClick = { inviteId -> inviteSharing.share(inviteId) },
+        onInviteClick = ::onInviteClick,
         onActivateClick = ::onActivateClick,
         onApprovalsInfoClick = { threshold, total ->
-            aboutSignaturesNavigation.activate(AboutSignaturesConfig(threshold = threshold, total = total))
+            bottomSheetNavigation.activate(
+                JointAccountMembersSheetConfig.AboutSignatures(threshold = threshold, total = total),
+            )
         },
         onCloseClick = ::onCloseClick,
     )
@@ -103,7 +107,7 @@ internal class JointAccountMembersModel @Inject constructor(
     val uiState: StateFlow<JointAccountMembersUM>
         get() = stateController.uiState
 
-    /** The account a currently open [activationConfirmationNavigation] sheet, if any, was opened for. */
+    /** The account a currently open activation confirmation sheet, if any, was opened for. */
     private var confirmedAccountId: String? = null
 
     private val isResumed = MutableStateFlow(false)
@@ -261,7 +265,7 @@ internal class JointAccountMembersModel @Inject constructor(
         if (openConfirmationId != resolvedAccountId) {
             confirmedAccountId = null
             isConfirmingActivation.value = false
-            activationConfirmationNavigation.dismiss()
+            dismissActivationConfirmation()
         }
     }
 
@@ -281,8 +285,8 @@ internal class JointAccountMembersModel @Inject constructor(
 
         confirmedAccountId = cryptoAccountId
         isConfirmingActivation.value = false
-        activationConfirmationNavigation.activate(
-            ActivationConfirmationConfig(
+        bottomSheetNavigation.activate(
+            JointAccountMembersSheetConfig.ActivationConfirmation(
                 cryptoAccountId = cryptoAccountId,
                 walletInteractionIconRes = userWallet?.let(::walletInterationIcon),
             ),
@@ -302,13 +306,13 @@ internal class JointAccountMembersModel @Inject constructor(
             if (account == null) {
                 TangemLogger.e("Joint account activation failed: no account behind the shown members list")
                 isConfirmingActivation.value = false
-                activationConfirmationNavigation.dismiss()
+                dismissActivationConfirmation()
                 showActivationError()
                 return@launch
             }
 
             val result = activateJointAccountUseCase(account = account)
-            activationConfirmationNavigation.dismiss()
+            dismissActivationConfirmation()
             result
                 .onLeft { error ->
                     // On success the loader stays until the activated account takes the button away
@@ -316,6 +320,12 @@ internal class JointAccountMembersModel @Inject constructor(
                     onActivationError(error)
                 }
                 .onRight { onActivated() }
+        }
+    }
+
+    private fun dismissActivationConfirmation() {
+        bottomSheetNavigation.navigate { config ->
+            config.takeUnless { it is JointAccountMembersSheetConfig.ActivationConfirmation }
         }
     }
 
@@ -363,8 +373,16 @@ internal class JointAccountMembersModel @Inject constructor(
         )
     }
 
-    private fun onMemberInfoClick(config: MemberCardConfig) {
-        bottomSheetNavigation.activate(config)
+    private fun onInviteClick(inviteId: String, accountName: TextReference) {
+        bottomSheetNavigation.activate(
+            JointAccountMembersSheetConfig.InviteMember(
+                message = inviteSharing.message(inviteId = inviteId, accountName = accountName),
+            ),
+        )
+    }
+
+    fun onShareInviteClick(message: String) {
+        inviteSharing.share(message = message)
     }
 
     fun onCopyAddressClick(address: String) {
