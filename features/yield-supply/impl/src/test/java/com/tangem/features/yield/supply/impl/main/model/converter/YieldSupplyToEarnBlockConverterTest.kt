@@ -2,13 +2,82 @@ package com.tangem.features.yield.supply.impl.main.model.converter
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.earn.EarnBlockUM
+import com.tangem.core.ui.extensions.combinedReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
+import com.tangem.utils.StringsSigns
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.util.Locale
+import com.tangem.core.res.R as CoreResR
 
 internal class YieldSupplyToEarnBlockConverterTest {
 
     private val converter = YieldSupplyToEarnBlockConverter()
+    private var originalLocale: Locale = Locale.getDefault()
+
+    @BeforeEach
+    fun setUp() {
+        originalLocale = Locale.getDefault()
+        Locale.setDefault(Locale.US)
+    }
+
+    @AfterEach
+    fun tearDown() {
+        Locale.setDefault(originalLocale)
+    }
+
+    @Test
+    fun `GIVEN Available with a long backend apy scale WHEN convert THEN title shows two decimals`() {
+        // Arrange
+        val available = YieldSupplyUM.Available(
+            apy = "5.851295672613467",
+            apyText = stringReference(""),
+            title = stringReference("Yield Mode"),
+            onClick = {},
+            onLearnMoreClick = {},
+        )
+
+        // Act
+        val result = converter.convert(available) as EarnBlockUM.Content
+
+        // Assert
+        assertThat(result.titleUM.text).isEqualTo(
+            resourceReference(
+                id = CoreResR.string.yield_module_token_details_earn_notification_subtitle,
+                formatArgs = wrappedList(stringReference("5.85")),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN Content with a long backend apy scale WHEN convert THEN subtitle shows two decimals`() {
+        // Arrange
+        val content = YieldSupplyUM.Content(
+            apy = "5.851295672613467",
+            title = stringReference("Yield Mode"),
+            subtitle = stringReference(""),
+            rewardsApy = stringReference(""),
+            onClick = {},
+            shouldShowWarningIcon = false,
+            shouldShowInfoIcon = false,
+        )
+
+        // Act
+        val result = converter.convert(content) as EarnBlockUM.Content
+
+        // Assert
+        assertThat((result.subtitleUM as EarnBlockUM.SubtitleUM.Text).text).isEqualTo(
+            combinedReference(
+                resourceReference(CoreResR.string.yield_module_earn_sheet_current_apy_title),
+                stringReference(StringsSigns.WHITE_SPACE),
+                stringReference("5.85%"),
+            ),
+        )
+    }
 
     @Test
     fun `GIVEN Initial WHEN convert THEN null`() {
