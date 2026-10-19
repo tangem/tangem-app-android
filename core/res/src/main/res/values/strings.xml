@@ -1920,11 +1920,16 @@
   <string name="prediction_history_fees">Fees</string>
   <string name="prediction_history_funds_added">Funds Added</string>
   <string name="prediction_history_go_to_predict">Go to Predict</string>
+  <string name="prediction_history_loss">Loss</string>
   <string name="prediction_history_notional_gross">Notional Gross</string>
+  <string name="prediction_history_prediction_lost">Your Prediction Loss</string>
+  <string name="prediction_history_prediction_split">Your Prediction Split</string>
+  <string name="prediction_history_prediction_won">Your Prediction Won</string>
   <string name="prediction_history_price">Price</string>
   <string name="prediction_history_redeemed">Redeemed</string>
   <string name="prediction_history_sold">Sold</string>
   <string name="prediction_history_title">History</string>
+  <string name="prediction_history_won_description">Because you won in “%s”</string>
   <string name="prediction_main_available_balance">Available Balance</string>
   <string name="prediction_main_data_outdated">Data may be outdated.</string>
   <string name="prediction_main_empty_events">No events yet</string>

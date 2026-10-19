@@ -142,6 +142,27 @@ internal class PolymarketHistoryModelTest {
         }
     }
 
+    @Test
+    fun `GIVEN a loss without event metadata WHEN opening details THEN hides amount and navigation`() = runTest {
+        // Arrange
+        val model = createModel()
+        val activity = createHistoryActivity(type = PolymarketActivity.Type.REDEEM)
+            .copy(redeemResult = PolymarketActivity.RedeemResult.LOST)
+        state.value = PolymarketActivityState(listOf(activity), status = PaginationStatus.EndOfPagination)
+        runCurrent()
+
+        // Act
+        val content = model.uiState.value.content as Content.Data
+        requireNotNull(content.groups.single().activities.single().onClick).invoke()
+
+        val details = requireNotNull(model.uiState.value.details)
+        // Assert
+        assertThat(details.amount).isNull()
+        assertThat(details.onGoToPrediction).isNull()
+        model.uiState.value.onDismissDetails()
+        assertThat(model.uiState.value.details).isNull()
+    }
+
 
     private fun TestScope.createModel(): PolymarketHistoryModel {
         every { createSession(wallet) } returns session
