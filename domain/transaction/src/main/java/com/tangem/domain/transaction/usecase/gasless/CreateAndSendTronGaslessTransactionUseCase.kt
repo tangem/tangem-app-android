@@ -11,6 +11,7 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.domain.account.status.utils.CryptoCurrencyOperations.getCryptoCurrency
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
@@ -18,15 +19,20 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.mapToGaslessSendError
 import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.tron.TronGaslessApprove
+import com.tangem.domain.transaction.models.tron.TronGaslessApproveEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
+import com.tangem.domain.transaction.models.tron.TronGaslessSubmitResult
+import com.tangem.domain.transaction.models.tron.TronGaslessSwap
+import com.tangem.domain.transaction.models.tron.TronGaslessSwapEstimateParams
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.logging.TangemLogger
 
 /**
- * Builds the compensation token transfer, signs it together with the original transfer in ONE signing
- * session (single NFC tap, compensation first), submits the signed pair to the gasless backend, and
- * returns the ORIGINAL transaction hash.
+ * Builds the compensation token transfer, signs it together with the original transaction (a token
+ * transfer or an exact token approval) in ONE signing session (single NFC tap, compensation first),
+ * submits the signed pair to the gasless backend, and returns the ORIGINAL transaction hash.
  *
  * The flow is non-atomic (compensation broadcasts before the original); success is reported only when
  * the original transfer broadcasts. Tron does not use the EVM EIP-712/7702 gasless machinery.
@@ -46,56 +52,37 @@ class CreateAndSendTronGaslessTransactionUseCase(
     ): Either<SendTransactionError, String> = either {
         catch(
             block = {
-                val quotedFee = (fee.gaslessProtocolData as? GaslessProtocolData.Tron)?.quote
-                    ?: error("Tron gasless quote is missing")
-
-                // Resolved as in the EVM flow, so both send paths agree on the account the fee token comes from.
-                val network = singleAccountListSupplier.getSyncOrNull(userWalletId = userWallet.walletId)
-                    .getCryptoCurrency(currencyId = fee.feeTokenId, network = null)
-                    .getOrElse { error("Token for fee not found") }
-                    .network
+                val quotedFee = fee.requireTronQuote()
+                val network = resolveFeeTokenNetwork(userWallet, fee)
                 val original = transactionData.requireUncompiled()
                 if (original.amount.type !is AmountType.Token) error("Tron gasless requires a token transfer")
 
-                // The fee token the user selected (may differ from the sent one); the displayed fee
-                // amount is denominated in it by [GetTronGaslessFeeUseCase].
-                val feeToken = (fee.transactionFee.normal.amount.type as? AmountType.Token)?.token
-                    ?: error("Tron gasless fee must be denominated in a token")
-
-                val quote = quoteForFinalAmount(
+                val feeToken = fee.requireFeeToken()
+                val approve = original.tronGaslessApproveOrNull()
+                val quote = if (approve != null) {
+                    quoteForFinalApprove(
+                        userWallet = userWallet,
+                        quotedFee = quotedFee,
+                        approve = approve,
+                        feeToken = feeToken,
+                    )
+                } else {
+                    quoteForFinalAmount(
+                        userWallet = userWallet,
+                        quotedFee = quotedFee,
+                        original = original,
+                        feeToken = feeToken,
+                    )
+                }
+                val compensationTx = createCompensationTransaction(
                     userWallet = userWallet,
-                    quotedFee = quotedFee,
-                    original = original,
+                    network = network,
+                    quote = quote,
                     feeToken = feeToken,
                 )
 
-                // Fail loudly on a backend token mismatch so it cannot silently transfer
-                // the wrong asset to the fee recipient (base58 addresses, case-sensitive).
-                require(feeToken.contractAddress == quote.compensationToken) {
-                    "Tron gasless compensation token (${quote.compensationToken}) differs from the fee " +
-                        "token (${feeToken.contractAddress})"
-                }
-
-                // Built from the raw base-unit amount to avoid decimal drift vs the quote.
-                val compensationValue = quote.compensationAmountRaw.toBigDecimal()
-                    .movePointLeft(feeToken.decimals)
-                val compensationTx = transactionRepository.createTransferTransaction(
-                    amount = Amount(token = feeToken, value = compensationValue),
-                    fee = null,
-                    memo = null,
-                    destination = quote.feeRecipient,
-                    userWalletId = userWallet.walletId,
-                    network = network,
-                )
-
                 // One signing session (single NFC tap): compensation FIRST, then the original transfer.
-                val signed = walletManagersFacade.signTronGaslessTransactions(
-                    userWalletId = userWallet.walletId,
-                    network = network,
-                    transactionDataList = listOf(compensationTx, original),
-                    signer = gaslessSignerProvider(userWallet),
-                ) ?: error("Tron gasless signing failed")
-                require(signed.size == 2) { "Expected 2 signed transactions, got ${signed.size}" }
+                val signed = sign(userWallet, network, listOf(compensationTx, original))
 
                 val result = tronGaslessTransactionRepository.submit(
                     userWalletId = userWallet.walletId,
@@ -103,14 +90,109 @@ class CreateAndSendTronGaslessTransactionUseCase(
                     signedCompensationTx = signed[0],
                     signedOriginalTx = signed[1],
                 )
-
-                if (result.originalTxHash.isBlank() || result.status.contains("FAIL", ignoreCase = true)) {
-                    error("Tron gasless original transaction failed: status=${result.status}")
-                }
-                result.originalTxHash
+                result.requireOriginalTxHash()
             },
             catch = { raise(it.mapToGaslessSendError()) },
         )
+    }
+
+    suspend fun sendSwap(
+        userWallet: UserWallet,
+        swap: TronGaslessSwap,
+        swapTransaction: TransactionData.Uncompiled,
+        fee: TransactionFeeExtended,
+    ): Either<SendTransactionError, String> = either {
+        catch(
+            block = {
+                val quotedFee = fee.requireTronQuote()
+                val network = resolveFeeTokenNetwork(userWallet, fee)
+                val feeToken = fee.requireFeeToken()
+                val quote = quoteForFinalSwap(
+                    userWallet = userWallet,
+                    quotedFee = quotedFee,
+                    swap = swap,
+                    feeToken = feeToken,
+                )
+                val compensationTx = createCompensationTransaction(
+                    userWallet = userWallet,
+                    network = network,
+                    quote = quote,
+                    feeToken = feeToken,
+                )
+
+                val signed = sign(userWallet, network, listOf(compensationTx, swapTransaction))
+
+                val result = tronGaslessTransactionRepository.submit(
+                    userWalletId = userWallet.walletId,
+                    quoteId = quote.quoteId,
+                    signedCompensationTx = signed[0],
+                    signedOriginalTx = signed[1],
+                )
+                result.requireOriginalTxHash()
+            },
+            catch = { raise(it.mapToGaslessSendError()) },
+        )
+    }
+
+    private fun TransactionFeeExtended.requireTronQuote(): TronGaslessQuote =
+        (gaslessProtocolData as? GaslessProtocolData.Tron)?.quote ?: error("Tron gasless quote is missing")
+
+    private fun TransactionFeeExtended.requireFeeToken(): Token =
+        (transactionFee.normal.amount.type as? AmountType.Token)?.token
+            ?: error("Tron gasless fee must be denominated in a token")
+
+    // Resolved as in the EVM flow, so both send paths agree on the account the fee token comes from.
+    private suspend fun resolveFeeTokenNetwork(userWallet: UserWallet, fee: TransactionFeeExtended): Network =
+        singleAccountListSupplier.getSyncOrNull(userWalletId = userWallet.walletId)
+            .getCryptoCurrency(currencyId = fee.feeTokenId, network = null)
+            .getOrElse { error("Token for fee not found") }
+            .network
+
+    private suspend fun createCompensationTransaction(
+        userWallet: UserWallet,
+        network: Network,
+        quote: TronGaslessQuote,
+        feeToken: Token,
+    ): TransactionData.Uncompiled {
+        // Fail loudly on a backend token mismatch so it cannot silently transfer
+        // the wrong asset to the fee recipient (base58 addresses, case-sensitive).
+        require(feeToken.contractAddress == quote.compensationToken) {
+            "Tron gasless compensation token (${quote.compensationToken}) differs from the fee " +
+                "token (${feeToken.contractAddress})"
+        }
+
+        // Built from the raw base-unit amount to avoid decimal drift vs the quote.
+        val compensationValue = quote.compensationAmountRaw.toBigDecimal().movePointLeft(feeToken.decimals)
+        return transactionRepository.createTransferTransaction(
+            amount = Amount(token = feeToken, value = compensationValue),
+            fee = null,
+            memo = null,
+            destination = quote.feeRecipient,
+            userWalletId = userWallet.walletId,
+            network = network,
+        )
+    }
+
+    private suspend fun sign(
+        userWallet: UserWallet,
+        network: Network,
+        legs: List<TransactionData.Uncompiled>,
+    ): List<String> {
+        val signed = walletManagersFacade.signTronGaslessTransactions(
+            userWalletId = userWallet.walletId,
+            network = network,
+            transactionDataList = legs,
+            signer = gaslessSignerProvider(userWallet),
+        ) ?: error("Tron gasless signing failed")
+        require(signed.size == legs.size) { "Expected ${legs.size} signed transactions, got ${signed.size}" }
+        return signed
+    }
+
+    private fun TronGaslessSubmitResult.requireOriginalTxHash(): String {
+        if (originalTxHash.isBlank() || status.contains("FAIL", ignoreCase = true)) {
+            error("Tron gasless original transaction failed: status=$status")
+        }
+        return originalTxHash
     }
 
     private suspend fun Raise<SendTransactionError>.quoteForFinalAmount(
@@ -141,6 +223,50 @@ class CreateAndSendTronGaslessTransactionUseCase(
                     "${refreshed.compensationAmountRaw} while re-quoting $amountRaw to ${original.destinationAddress}",
             )
             raise(SendTransactionError.GaslessFeeIncreased)
+        }
+        return refreshed
+    }
+
+    private suspend fun quoteForFinalApprove(
+        userWallet: UserWallet,
+        quotedFee: TronGaslessQuote,
+        approve: TronGaslessApprove,
+        feeToken: Token,
+    ): TronGaslessQuote {
+        if (quotedFee.quotedApprove == approve) return quotedFee
+
+        val refreshed = tronGaslessTransactionRepository.estimateApprove(
+            TronGaslessApproveEstimateParams(
+                userWalletId = userWallet.walletId,
+                approve = approve,
+                feeTokenContract = feeToken.contractAddress,
+            ),
+        )
+        require(refreshed.compensationAmountRaw <= quotedFee.compensationAmountRaw) {
+            "Tron gasless compensation grew from ${quotedFee.compensationAmountRaw} to " +
+                "${refreshed.compensationAmountRaw} while re-quoting the approval of ${approve.spenderAddress}"
+        }
+        return refreshed
+    }
+
+    private suspend fun quoteForFinalSwap(
+        userWallet: UserWallet,
+        quotedFee: TronGaslessQuote,
+        swap: TronGaslessSwap,
+        feeToken: Token,
+    ): TronGaslessQuote {
+        if (quotedFee.quotedSwap == swap) return quotedFee
+
+        val refreshed = tronGaslessTransactionRepository.estimateSwap(
+            TronGaslessSwapEstimateParams(
+                userWalletId = userWallet.walletId,
+                swap = swap,
+                feeTokenContract = feeToken.contractAddress,
+            ),
+        )
+        require(refreshed.compensationAmountRaw <= quotedFee.compensationAmountRaw) {
+            "Tron gasless compensation grew from ${quotedFee.compensationAmountRaw} to " +
+                "${refreshed.compensationAmountRaw} while re-quoting the swap through ${swap.routerAddress}"
         }
         return refreshed
     }
