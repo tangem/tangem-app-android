@@ -34,7 +34,7 @@ class FirebaseAnalyticsHandler(
         val errorParams = errorConverter.convert(event.exception).toMutableMap()
         errorParams.putAll(event.params)
 
-        client.logException(event.exception, event.params)
+        client.logException(event.exception, errorParams)
     }
 
     override fun sendErrorEvent(event: AnalyticsEvent) {
