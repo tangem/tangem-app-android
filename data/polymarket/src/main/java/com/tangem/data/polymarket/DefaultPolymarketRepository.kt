@@ -204,11 +204,11 @@ internal class DefaultPolymarketRepository @Inject constructor(
         ownerAddress: String,
         credentials: PolymarketApiCredentials,
         signedOrder: PredictionSignedOrder,
-        isNegRisk: Boolean,
     ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult> = withContext(dispatchers.io) {
-        val domain = PolymarketExchangeDomain.v1(isNegRisk = isNegRisk)
-        if (!signedOrder.isSignedFor(domain)) {
-            return@withContext PredictionPlaceOrderError.NotSent(detail = "Order not signed for $domain").left()
+        if (!signedOrder.isSignedFor(signedOrder.domain)) {
+            return@withContext PredictionPlaceOrderError.NotSent(
+                detail = "Order not signed for ${signedOrder.domain}",
+            ).left()
         }
 
         val json = Either

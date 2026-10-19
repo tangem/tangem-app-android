@@ -161,7 +161,7 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         assertThat(dialog.captured.secondAction).isNotNull()
         assertThat(summary.uiState.value).isEqualTo(accepted.copy(submit = SubmitUM.Idle))
         verify(exactly = 0) { router.popTo(any<PlacePredictionRoute>(), any()) }
-        coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any()) }
         coVerify(exactly = 1) { getQuoteUseCase(any()) }
     }
 }

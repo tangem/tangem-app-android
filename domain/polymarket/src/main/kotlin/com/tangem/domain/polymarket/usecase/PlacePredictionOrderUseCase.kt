@@ -32,17 +32,15 @@ class PlacePredictionOrderUseCase(
     suspend operator fun invoke(
         addresses: PolymarketAddresses,
         signedOrder: PredictionSignedOrder,
-        isNegRisk: Boolean,
         version: PolymarketMarketVersion,
     ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult> =
         credentialsLock.withLock(addresses.userWalletId) {
-            place(addresses = addresses, signedOrder = signedOrder, isNegRisk = isNegRisk, version = version)
+            place(addresses = addresses, signedOrder = signedOrder, version = version)
         }
 
     private suspend fun place(
         addresses: PolymarketAddresses,
         signedOrder: PredictionSignedOrder,
-        isNegRisk: Boolean,
         version: PolymarketMarketVersion,
     ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult> {
         val credentials = getApiCredentials(userWalletId = addresses.userWalletId)
@@ -61,7 +59,6 @@ class PlacePredictionOrderUseCase(
             ownerAddress = addresses.ownerAddress,
             credentials = credentials,
             signedOrder = signedOrder,
-            isNegRisk = isNegRisk,
         ).onLeft { error ->
             if (error is PredictionPlaceOrderError.Unauthorized) {
                 invalidateCredentials(userWalletId = addresses.userWalletId)
