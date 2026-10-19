@@ -227,6 +227,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                     },
                     onCloseFlow = router::pop,
                     analyticsSendSource = model.analyticsSendSource,
+                    intentId = params.intentId,
                 ),
                 feeSelectorComponentFactory = feeSelectorComponentFactory,
             )
