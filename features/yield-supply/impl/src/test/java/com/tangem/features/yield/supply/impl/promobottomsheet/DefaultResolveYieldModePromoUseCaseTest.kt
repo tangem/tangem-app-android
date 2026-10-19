@@ -280,6 +280,7 @@ internal class DefaultResolveYieldModePromoUseCaseTest {
     private fun provideStillLoadingStatuses() = listOf(
         CryptoCurrencyStatus(usdtInCardAccount, CryptoCurrencyStatus.Loading),
         MockYieldSupply.loadedStatus(usdtInCardAccount, networkSource = StatusSource.CACHE),
+        MockYieldSupply.loadedStatus(usdtInCardAccount, quoteSource = StatusSource.CACHE),
         CryptoCurrencyStatus(usdc, CryptoCurrencyStatus.Loading),
         MockYieldSupply.loadedStatus(
             usdc,
