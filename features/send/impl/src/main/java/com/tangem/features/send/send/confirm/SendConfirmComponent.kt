@@ -219,6 +219,7 @@ internal class SendConfirmComponent(
         val onSendTransaction: () -> Unit,
         /** Closes the whole flow, not just the current step. */
         val onCloseFlow: () -> Unit,
+        val intentId: String?,
     )
 
     interface ModelCallback {
