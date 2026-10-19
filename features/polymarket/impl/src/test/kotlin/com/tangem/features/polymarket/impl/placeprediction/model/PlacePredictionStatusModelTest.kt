@@ -185,7 +185,7 @@ internal class PlacePredictionStatusModelTest : PlacePredictionModelTestBase() {
     fun `GIVEN the exchange found no match WHEN place clicked THEN view position is hidden`() = runTest {
         // Arrange
         coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
-        coEvery { placeOrderUseCase(any(), any(), any(), any()) } returns
+        coEvery { placeOrderUseCase(any(), any(), any()) } returns
             PredictionPlaceOrderError.NoLiquidity(detail = "no orders found to match with FAK order").left()
         val amountModel = createAmountModel(testScope = this)
         advanceUntilIdle()
