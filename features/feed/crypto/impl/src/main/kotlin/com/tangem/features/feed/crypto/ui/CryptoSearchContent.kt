@@ -3,10 +3,8 @@ package com.tangem.features.feed.crypto.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +22,7 @@ import com.tangem.features.feed.crypto.impl.R
 import com.tangem.features.feed.crypto.ui.state.CryptoSearchUM
 import com.tangem.features.feed.crypto.ui.state.MarketSearchUM
 import com.tangem.features.feed.crypto.ui.state.PortfolioSearchUM
+import com.tangem.features.feed.ui.FeedSearchListState
 import com.tangem.features.feed.ui.FeedSearchNoResults
 import com.tangem.features.feed.ui.FeedSearchSectionHeader
 
@@ -41,22 +40,19 @@ private const val MARKET_SHIMMER_COUNT = 10
 @Composable
 internal fun CryptoSearchContent(
     state: CryptoSearchUM,
-    listState: LazyListState,
+    listState: FeedSearchListState,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp
     val hasPortfolio = state.portfolio is PortfolioSearchUM.Content
 
-    // legacy behaviour: a new query is a different result set, so start reading it from the top. Keyed
-    // on the query and not on the market state, which deliberately stays Content while the query is
-    // refined and so would never re-trigger this
-    LaunchedEffect(state.query, hasPortfolio) {
-        listState.requestScrollToItem(0)
-    }
+    // keyed on the query and not on the market state, which deliberately stays Content while the query
+    // is refined and so would never re-trigger this
+    listState.ScrollToTopOnNewResults(results = state.query to hasPortfolio)
 
     LazyColumn(
-        state = listState,
+        state = listState.lazyListState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             start = 16.dp,
@@ -77,7 +73,7 @@ internal fun CryptoSearchContent(
     }
 
     InfiniteListHandler(
-        listState = listState,
+        listState = listState.lazyListState,
         buffer = LOAD_NEXT_PAGE_ON_END_INDEX,
         triggerLoadMoreCheckOnItemsCountChange = true,
         onLoadMore = remember(state.market) {
