@@ -49,6 +49,7 @@ import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketEventsPage
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketSearchBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketSearchBatchingContext
@@ -205,10 +206,9 @@ internal class DefaultPolymarketRepository @Inject constructor(
         signedOrder: PredictionSignedOrder,
         isNegRisk: Boolean,
     ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult> = withContext(dispatchers.io) {
-        if (!signedOrder.isSignedFor(isNegRisk = isNegRisk)) {
-            return@withContext PredictionPlaceOrderError.NotSent(
-                detail = "Order signed for the ${if (isNegRisk) "standard" else "neg-risk"} exchange",
-            ).left()
+        val domain = PolymarketExchangeDomain.v1(isNegRisk = isNegRisk)
+        if (!signedOrder.isSignedFor(domain)) {
+            return@withContext PredictionPlaceOrderError.NotSent(detail = "Order not signed for $domain").left()
         }
 
         val json = Either
@@ -549,8 +549,8 @@ internal class DefaultPolymarketRepository @Inject constructor(
             PredictionOrderQuoteError.Unknown(httpCode = null, detail = cause.message ?: message)
     }
 
-    private fun PredictionSignedOrder.isSignedFor(isNegRisk: Boolean): Boolean {
-        val expected = PolymarketOrderTypedDataBuilder.domainSeparator(isNegRisk = isNegRisk)
+    private fun PredictionSignedOrder.isSignedFor(domain: PolymarketExchangeDomain): Boolean {
+        val expected = PolymarketOrderTypedDataBuilder.domainSeparator(domain)
             .toHexString()
             .lowercase()
         val tail = signature.removePrefix(PolymarketContracts.HEX_PREFIX)
