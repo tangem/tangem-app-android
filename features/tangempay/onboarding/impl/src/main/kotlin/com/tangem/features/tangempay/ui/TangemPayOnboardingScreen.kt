@@ -43,6 +43,7 @@ internal fun TangemPayOnboardingScreen(state: TangemPayOnboardingScreenState, mo
                 isGetStartedLoading = state.buttonConfig.isLoading,
                 onGetStartedClick = state.buttonConfig.onClick,
                 onTermsClick = state.onTermsClick,
+                onTermsAndFeesClick = state.onTermsAndFeesClick,
                 onCloseClick = state.onBack,
             )
         } else {
@@ -153,18 +154,21 @@ private class TangemPayOnboardingScreenStateProvider :
             TangemPayOnboardingScreenState.Content(
                 onBack = {},
                 onTermsClick = {},
+                onTermsAndFeesClick = {},
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(isLoading = false, onClick = {}),
                 isUnifiedOnboarding = false,
             ),
             TangemPayOnboardingScreenState.Content(
                 onBack = {},
                 onTermsClick = {},
+                onTermsAndFeesClick = {},
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(isLoading = true, onClick = {}),
                 isUnifiedOnboarding = false,
             ),
             TangemPayOnboardingScreenState.Content(
                 onBack = {},
                 onTermsClick = {},
+                onTermsAndFeesClick = {},
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(isLoading = false, onClick = {}),
                 isUnifiedOnboarding = true,
             ),

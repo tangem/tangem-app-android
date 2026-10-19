@@ -119,6 +119,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
             TangemPayOnboardingScreenState.Content(
                 onBack = state.onBack,
                 onTermsClick = ::onTermsClick,
+                onTermsAndFeesClick = ::onTermsAndFeesClick,
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(
                     isLoading = false,
                     onClick = ::onGetCardClick,
@@ -162,6 +163,10 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private fun onTermsClick() {
         analytics.send(TangemPayAnalyticsEvents.ViewTermsClicked())
         urlOpener.openUrl(TangemPayConstants.termsAndLimitsLink())
+    }
+
+    private fun onTermsAndFeesClick() {
+        urlOpener.openUrl(TangemPayConstants.tangemPayLink())
     }
 
     private fun onGetCardClick() {
