@@ -637,8 +637,8 @@ internal class DefaultYieldSupplyRepositoryTest {
         maxFeeNative = BigDecimal("0.005"),
         maxFeeUSD = BigDecimal("12.34"),
         hasActiveCampaign = hasActiveCampaign,
-        rewardsApr = hasActiveCampaign?.let { BigDecimal("1.5") },
-        totalApyEst = hasActiveCampaign?.let { BigDecimal("7") },
+        grossRewardsApy = hasActiveCampaign?.let { BigDecimal("1.5") },
+        grossTotalApyEst = hasActiveCampaign?.let { BigDecimal("7") },
     )
 
     private fun supportedChains() = Blockchain.yieldSupplySupportedBlockchains()
