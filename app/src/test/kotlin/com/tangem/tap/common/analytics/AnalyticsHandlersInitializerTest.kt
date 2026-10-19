@@ -52,6 +52,20 @@ internal class AnalyticsHandlersInitializerTest {
         assertThat(awaited.isSuccess).isTrue()
     }
 
+    @Test
+    fun `GIVEN initialize never called WHEN await THEN returns immediately`() = runTest {
+        // Arrange
+        val initializer = createInitializer(handlers = Lazy { emptySet() })
+
+        // Act
+        val startedAt = System.nanoTime()
+        initializer.awaitInitialized()
+        val elapsedMs = (System.nanoTime() - startedAt) / 1_000_000
+
+        // Assert
+        assertThat(elapsedMs).isLessThan(500L)
+    }
+
     private fun TestScope.createInitializer(handlers: Lazy<Set<AnalyticsHandler>>) = AnalyticsHandlersInitializer(
         handlers = handlers,
         appScope = TestAppCoroutineScope(testScope = this),
