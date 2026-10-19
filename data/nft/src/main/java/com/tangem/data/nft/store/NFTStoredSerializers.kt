@@ -2,6 +2,7 @@ package com.tangem.data.nft.store
 
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
+import com.tangem.blockchain.nft.models.SolanaNFTTokenStandard
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.serialization.SerializedBigInteger
 import kotlinx.serialization.KSerializer
@@ -16,8 +17,10 @@ import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -100,7 +103,7 @@ internal object NFTAssetIdentifierSerializer : LabeledSerializer<NFTAsset.Identi
         TON_LABEL -> NFTAsset.Identifier.TON(tokenAddress = json.requireString("tokenAddress"))
         SOLANA_LABEL -> NFTAsset.Identifier.Solana(
             tokenAddress = json.requireString("tokenAddress"),
-            tokenStandard = json.optString("tokenStandard")?.toInt(),
+            tokenStandard = json.solanaTokenStandard(),
         )
         else -> NFTAsset.Identifier.Unknown
     }
@@ -117,6 +120,16 @@ internal object NFTAssetIdentifierSerializer : LabeledSerializer<NFTAsset.Identi
             value.tokenStandard?.let { put("tokenStandard", it) }
         }
         NFTAsset.Identifier.Unknown -> throw SerializationException("Unknown NFT asset can't be stored")
+    }
+
+    /** Caches written before the wallet NFTs endpoint store the Metaplex enum index instead of the name. */
+    private fun JsonObject.solanaTokenStandard(): String? {
+        val primitive = this["tokenStandard"] as? JsonPrimitive ?: return null
+        return if (primitive.isString) {
+            primitive.content
+        } else {
+            SolanaNFTTokenStandard.fromMetaplexIndex(primitive.intOrNull)
+        }
     }
 }
 
