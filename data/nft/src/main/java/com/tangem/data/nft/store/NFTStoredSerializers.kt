@@ -17,10 +17,8 @@ import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -103,7 +101,7 @@ internal object NFTAssetIdentifierSerializer : LabeledSerializer<NFTAsset.Identi
         TON_LABEL -> NFTAsset.Identifier.TON(tokenAddress = json.requireString("tokenAddress"))
         SOLANA_LABEL -> NFTAsset.Identifier.Solana(
             tokenAddress = json.requireString("tokenAddress"),
-            tokenStandard = json.solanaTokenStandard(),
+            tokenStandard = normalizeLegacySolanaTokenStandard(json.optString("tokenStandard")),
         )
         else -> NFTAsset.Identifier.Unknown
     }
@@ -121,16 +119,16 @@ internal object NFTAssetIdentifierSerializer : LabeledSerializer<NFTAsset.Identi
         }
         NFTAsset.Identifier.Unknown -> throw SerializationException("Unknown NFT asset can't be stored")
     }
+}
 
-    /** Caches written before the wallet NFTs endpoint store the Metaplex enum index instead of the name. */
-    private fun JsonObject.solanaTokenStandard(): String? {
-        val primitive = this["tokenStandard"] as? JsonPrimitive ?: return null
-        return if (primitive.isString) {
-            primitive.content
-        } else {
-            SolanaNFTTokenStandard.fromMetaplexIndex(primitive.intOrNull)
-        }
-    }
+/**
+ * Caches written before the wallet NFTs endpoint stored the Metaplex enum index instead of the name. Shared by
+ * both cache serializers (kotlinx here, Moshi via [SolanaIdentifierJsonAdapterFactory]) so a numeric-looking value
+ * maps to its name on either path; anything else (already a name, or unrecognized) is kept as is.
+ */
+internal fun normalizeLegacySolanaTokenStandard(rawValue: String?): String? {
+    val metaplexIndex = rawValue?.toIntOrNull() ?: return rawValue
+    return SolanaNFTTokenStandard.fromMetaplexIndex(metaplexIndex)
 }
 
 /** Writes a JSON object whose first field is the `"bc"` label, the layout of Moshi's polymorphic adapter. */

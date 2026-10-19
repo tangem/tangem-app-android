@@ -45,9 +45,9 @@ internal class NFTStoredFormatTest {
                 .withSubtype(NFTAsset.Identifier.Solana::class.java, "sol")
                 .withDefaultValue(NFTAsset.Identifier.Unknown),
         )
+        .add(SolanaIdentifierJsonAdapterFactory)
         .build()
 
-    /** Same config the production DataStore uses, via [com.tangem.test.core.datastore.createAppDataStoreFactory]. */
     private val json: Json = NetworkJsonFactory.create()
 
     private val collectionsSerializer = ListSerializer(NFTCollectionSerializer)
@@ -186,21 +186,55 @@ internal class NFTStoredFormatTest {
         )
     }
 
-    @Test
-    fun `GIVEN solana asset cached with a numeric token standard WHEN decoded THEN standard is named`() {
-        // Arrange
-        val legacyJson = """{"bc":"sol","tokenAddress":"SoLtoken","tokenStandard":4}"""
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class LegacySolanaTokenStandard {
 
-        // Act
-        val decoded = json.decodeFromString(NFTAssetIdentifierSerializer, legacyJson)
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN legacy token standard WHEN decoded by kotlinx THEN standard is normalized`(
+            model: LegacyTokenStandardModel,
+        ) {
+            // Arrange
+            val legacyJson = """{"bc":"sol","tokenAddress":"SoLtoken","tokenStandard":${model.rawJson}}"""
 
-        // Assert
-        assertThat(decoded).isEqualTo(
-            NFTAsset.Identifier.Solana(tokenAddress = "SoLtoken", tokenStandard = "ProgrammableNft"),
+            // Act
+            val decoded = json.decodeFromString(NFTAssetIdentifierSerializer, legacyJson)
+
+            // Assert
+            assertThat(decoded).isEqualTo(
+                NFTAsset.Identifier.Solana(tokenAddress = "SoLtoken", tokenStandard = model.expected),
+            )
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN legacy token standard WHEN decoded by Moshi THEN standard is normalized`(
+            model: LegacyTokenStandardModel,
+        ) {
+            // Arrange
+            val legacyJson = """{"bc":"sol","tokenAddress":"SoLtoken","tokenStandard":${model.rawJson}}"""
+
+            // Act
+            val decoded = moshi.adapter(NFTAsset.Identifier::class.java).fromJson(legacyJson)
+
+            // Assert
+            assertThat(decoded).isEqualTo(
+                NFTAsset.Identifier.Solana(tokenAddress = "SoLtoken", tokenStandard = model.expected),
+            )
+        }
+
+        private fun provideTestModels() = listOf(
+            LegacyTokenStandardModel(rawJson = "4", expected = "ProgrammableNft"),
+            LegacyTokenStandardModel(rawJson = "\"ProgrammableNft\"", expected = "ProgrammableNft"),
+            LegacyTokenStandardModel(rawJson = "null", expected = null),
+            LegacyTokenStandardModel(rawJson = "\"garbage\"", expected = "garbage"),
         )
     }
 
     data class CollectionsModel(val value: List<NFTCollection>, val json: String)
+
+    data class LegacyTokenStandardModel(val rawJson: String, val expected: String?)
 
     data class PricesModel(val value: List<NFTPriceId>, val json: String)
 
