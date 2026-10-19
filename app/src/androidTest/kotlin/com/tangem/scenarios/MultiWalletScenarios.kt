@@ -3,6 +3,7 @@ package com.tangem.scenarios
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
+import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.screens.*
@@ -101,6 +102,37 @@ fun BaseTestCase.selectReceiveTokenOnWallet(token: String, walletName: String) {
     }
     step("Click on token with name '$token'") {
         onBuyTokenScreen { tokenWithTitle(token).performClick() }
+    }
+}
+
+fun BaseTestCase.selectTokenInAccountOnWalletTab(walletName: String, accountName: String, tokenName: String) {
+    step("Select wallet tab '$walletName'") {
+        awaitSuccess { onBuyTokenScreen { walletTab(walletName).assertIsDisplayed() } }
+        onBuyTokenScreen { walletTab(walletName).performClick() }
+    }
+    selectTokenInAccount(accountName = accountName, tokenName = tokenName)
+}
+
+// An expanded account shows a header that is not a token row, so only a collapsed one can be clicked open.
+fun BaseTestCase.selectTokenInAccount(accountName: String, tokenName: String) {
+    step("Expand account '$accountName' unless '$tokenName' is displayed") {
+        awaitSuccess {
+            onSwapSelectTokenScreen {
+                if (!tokenWithName(tokenName).isDisplayedSafely()) tokenWithName(accountName).assertIsDisplayed()
+            }
+        }
+        var isTokenShown = false
+        onSwapSelectTokenScreen { isTokenShown = tokenWithName(tokenName).isDisplayedSafely() }
+        if (!isTokenShown) {
+            onSwapSelectTokenScreen {
+                tokenWithName(accountName).clickAndWaitFor(composeTestRule) {
+                    onSwapSelectTokenScreen { tokenWithName(tokenName).assertIsDisplayed() }
+                }
+            }
+        }
+    }
+    step("Click on token '$tokenName'") {
+        onSwapSelectTokenScreen { tokenWithName(tokenName).performClick() }
     }
 }
 
