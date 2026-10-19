@@ -6,7 +6,6 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.pay.TangemPayEligibility
 import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.repository.TangemPayResidencyRepository
 import com.tangem.domain.visa.error.VisaApiError
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -18,23 +17,25 @@ import org.junit.jupiter.api.Test
 
 internal class GetTangemPayProductsAvailabilityUseCaseTest {
 
-    private val residencyRepository: TangemPayResidencyRepository = mockk()
+    private val checkTangemPayEligibilityForCustomerUseCase: CheckTangemPayEligibilityForCustomerUseCase = mockk()
 
-    private val useCase = GetTangemPayProductsAvailabilityUseCase(residencyRepository = residencyRepository)
+    private val useCase = GetTangemPayProductsAvailabilityUseCase(
+        checkTangemPayEligibilityForCustomerUseCase = checkTangemPayEligibilityForCustomerUseCase,
+    )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(residencyRepository)
+        clearMocks(checkTangemPayEligibilityForCustomerUseCase)
     }
 
     @Test
     fun `GIVEN eligibility checks succeed WHEN invoke THEN returns only available products`() = runTest {
         // Arrange
         coEvery {
-            residencyRepository.checkEligibilityForCustomer(USER_WALLET_ID, TangemPayProduct.BANKING_ACCOUNT)
+            checkTangemPayEligibilityForCustomerUseCase(USER_WALLET_ID, TangemPayProduct.BANKING_ACCOUNT)
         } returns eligibility(isAvailable = false).right()
         coEvery {
-            residencyRepository.checkEligibilityForCustomer(USER_WALLET_ID, TangemPayProduct.PAYMENT_ACCOUNT)
+            checkTangemPayEligibilityForCustomerUseCase(USER_WALLET_ID, TangemPayProduct.PAYMENT_ACCOUNT)
         } returns eligibility(isAvailable = true).right()
 
         // Act
@@ -43,8 +44,8 @@ internal class GetTangemPayProductsAvailabilityUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(setOf(TangemPayProduct.PAYMENT_ACCOUNT).right())
         coVerify(exactly = 1) {
-            residencyRepository.checkEligibilityForCustomer(USER_WALLET_ID, TangemPayProduct.BANKING_ACCOUNT)
-            residencyRepository.checkEligibilityForCustomer(USER_WALLET_ID, TangemPayProduct.PAYMENT_ACCOUNT)
+            checkTangemPayEligibilityForCustomerUseCase(USER_WALLET_ID, TangemPayProduct.BANKING_ACCOUNT)
+            checkTangemPayEligibilityForCustomerUseCase(USER_WALLET_ID, TangemPayProduct.PAYMENT_ACCOUNT)
         }
     }
 
@@ -52,10 +53,10 @@ internal class GetTangemPayProductsAvailabilityUseCaseTest {
     fun `GIVEN one eligibility check fails WHEN invoke THEN returns Left with its error`() = runTest {
         // Arrange
         coEvery {
-            residencyRepository.checkEligibilityForCustomer(USER_WALLET_ID, TangemPayProduct.BANKING_ACCOUNT)
+            checkTangemPayEligibilityForCustomerUseCase(USER_WALLET_ID, TangemPayProduct.BANKING_ACCOUNT)
         } returns eligibility(isAvailable = true).right()
         coEvery {
-            residencyRepository.checkEligibilityForCustomer(USER_WALLET_ID, TangemPayProduct.PAYMENT_ACCOUNT)
+            checkTangemPayEligibilityForCustomerUseCase(USER_WALLET_ID, TangemPayProduct.PAYMENT_ACCOUNT)
         } returns VisaApiError.Unspecified.left()
 
         // Act
