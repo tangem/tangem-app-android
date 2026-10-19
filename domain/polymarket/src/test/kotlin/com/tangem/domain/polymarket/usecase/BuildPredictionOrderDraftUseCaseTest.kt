@@ -1,19 +1,30 @@
 package com.tangem.domain.polymarket.usecase
 
+import arrow.core.Either
 import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain.Companion.CTF
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain.Companion.EXCHANGE_V3
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain.Companion.NEG_RISK_CTF
 import com.tangem.domain.polymarket.model.PolymarketMarketVersion
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion.V1
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion.V2
 import com.tangem.domain.polymarket.model.PredictionOrderDraftError
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class BuildPredictionOrderDraftUseCaseTest {
 
     private val useCase = BuildPredictionOrderDraftUseCase()
@@ -200,21 +211,135 @@ internal class BuildPredictionOrderDraftUseCaseTest {
     }
 
     @Test
-    fun `GIVEN a neg-risk market WHEN built THEN the draft carries the flag for the domain choice`() {
+    fun `GIVEN a quote WHEN built THEN the draft keeps the asset and the builder code`() {
         // Act
         val actual = useCase(
             quote = createQuote(),
             assetId = ASSET_ID,
-            isNegRisk = true,
+            isNegRisk = false,
             side = PredictionOrderSide.BUY,
         )
 
         // Assert
         val draft = requireNotNull(actual.getOrNull())
-        assertThat(draft.isNegRisk).isTrue()
         assertThat(draft.tokenId).isEqualTo(ASSET_ID)
         assertThat(draft.builderCode).isEqualTo(BUILDER_CODE)
     }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN the quoted exchange domain WHEN built THEN only a combination from the table is signed for`(
+        model: DomainModel,
+    ) {
+        // Arrange
+        val quote = createQuote(
+            version = model.version,
+            exchange = model.exchange,
+            signingDomainVersion = model.signingDomainVersion,
+        )
+
+        // Act
+        val actual = useCase(
+            quote = quote,
+            assetId = ASSET_ID,
+            isNegRisk = model.isNegRisk,
+            side = PredictionOrderSide.BUY,
+        )
+
+        // Assert
+        assertThat(actual.map { it.domain }).isEqualTo(model.expected)
+    }
+
+    @Suppress("LongMethod")
+    private fun provideTestModels(): List<DomainModel> = listOf(
+        DomainModel(
+            version = PolymarketMarketVersion.V1,
+            isNegRisk = false,
+            exchange = CTF_EXCHANGE,
+            signingDomainVersion = "2",
+            expected = PolymarketExchangeDomain.CTF.right(),
+        ),
+        DomainModel(
+            version = PolymarketMarketVersion.V1,
+            isNegRisk = false,
+            exchange = CTF_EXCHANGE.lowercase(),
+            signingDomainVersion = "2",
+            expected = PolymarketExchangeDomain.CTF.right(),
+        ),
+        DomainModel(
+            version = PolymarketMarketVersion.V1,
+            isNegRisk = true,
+            exchange = NEG_RISK_CTF_EXCHANGE,
+            signingDomainVersion = "2",
+            expected = PolymarketExchangeDomain.NEG_RISK_CTF.right(),
+        ),
+        DomainModel(
+            version = PolymarketMarketVersion.V2,
+            isNegRisk = false,
+            exchange = EXCHANGE_V3_ADDRESS,
+            signingDomainVersion = "3",
+            expected = PolymarketExchangeDomain.EXCHANGE_V3.right(),
+        ),
+        DomainModel(
+            version = PolymarketMarketVersion.V2,
+            isNegRisk = true,
+            exchange = EXCHANGE_V3_ADDRESS,
+            signingDomainVersion = "3",
+            expected = PolymarketExchangeDomain.EXCHANGE_V3.right(),
+        ),
+        DomainModel(
+            version = PolymarketMarketVersion.UNKNOWN,
+            isNegRisk = false,
+            exchange = null,
+            signingDomainVersion = null,
+            expected = PredictionOrderDraftError.UnknownMarketVersion.left(),
+        ),
+        DomainModel(
+            version = PolymarketMarketVersion.UNKNOWN,
+            isNegRisk = false,
+            exchange = EXCHANGE_V3_ADDRESS,
+            signingDomainVersion = "3",
+            expected = PredictionOrderDraftError.UnknownMarketVersion.left(),
+        ),
+        mismatch(V1, isNegRisk = false, NEG_RISK_CTF_EXCHANGE, "2", CTF),
+        mismatch(V1, isNegRisk = true, CTF_EXCHANGE, "2", NEG_RISK_CTF),
+        mismatch(V1, isNegRisk = false, CTF_EXCHANGE, "3", CTF),
+        mismatch(V1, isNegRisk = false, EXCHANGE_V3_ADDRESS, "3", CTF),
+        mismatch(V1, isNegRisk = false, FOREIGN_EXCHANGE, "2", CTF),
+        mismatch(V1, isNegRisk = false, null, null, CTF),
+        mismatch(V2, isNegRisk = false, CTF_EXCHANGE, "2", EXCHANGE_V3),
+        mismatch(V2, isNegRisk = true, NEG_RISK_CTF_EXCHANGE, "2", EXCHANGE_V3),
+        mismatch(V2, isNegRisk = false, EXCHANGE_V3_ADDRESS, "2", EXCHANGE_V3),
+        mismatch(V2, isNegRisk = false, FOREIGN_EXCHANGE, "3", EXCHANGE_V3),
+        mismatch(V2, isNegRisk = false, null, null, EXCHANGE_V3),
+    )
+
+    @Suppress("LongParameterList")
+    private fun mismatch(
+        version: PolymarketMarketVersion,
+        isNegRisk: Boolean,
+        exchange: String?,
+        signingDomainVersion: String?,
+        expected: PolymarketExchangeDomain,
+    ) = DomainModel(
+        version = version,
+        isNegRisk = isNegRisk,
+        exchange = exchange,
+        signingDomainVersion = signingDomainVersion,
+        expected = PredictionOrderDraftError.ExchangeMismatch(
+            expected = expected,
+            quotedExchange = exchange,
+            quotedDomainVersion = signingDomainVersion,
+        ).left(),
+    )
+
+    internal data class DomainModel(
+        val version: PolymarketMarketVersion,
+        val isNegRisk: Boolean,
+        val exchange: String?,
+        val signingDomainVersion: String?,
+        val expected: Either<PredictionOrderDraftError, PolymarketExchangeDomain>,
+    )
 
     private fun createQuote(
         status: PredictionQuoteStatus = PredictionQuoteStatus.FULL,
@@ -222,6 +347,9 @@ internal class BuildPredictionOrderDraftUseCaseTest {
         shares: BigDecimal = BigDecimal("97.95918"),
         notional: BigDecimal = BigDecimal("72.00"),
         worstCasePrice: BigDecimal = BigDecimal("0.735"),
+        version: PolymarketMarketVersion = PolymarketMarketVersion.V1,
+        exchange: String? = CTF_EXCHANGE,
+        signingDomainVersion: String? = "2",
     ): PredictionOrderQuote = PredictionOrderQuote(
         status = status,
         side = side,
@@ -241,14 +369,18 @@ internal class BuildPredictionOrderDraftUseCaseTest {
         minOrderAmount = BigDecimal.ONE,
         tickSize = BigDecimal("0.001"),
         isLive = false,
-        version = PolymarketMarketVersion.V1,
-        exchange = PolymarketContracts.CTF_EXCHANGE,
-        signingDomainVersion = "2",
+        version = version,
+        exchange = exchange,
+        signingDomainVersion = signingDomainVersion,
     )
 
     private companion object {
         const val ASSET_ID = "1116017998421700000000000000000000000000000000000000000000000000047"
         const val BUILDER_CODE = "0x00000000000000000000000000000000000000000000000000000000000000aa"
         const val COMPARISON_SCALE = 6
+        const val CTF_EXCHANGE = "0xE111180000d2663C0091e4f400237545B87B996B"
+        const val NEG_RISK_CTF_EXCHANGE = "0xe2222d279d744050d28e00520010520000310F59"
+        const val EXCHANGE_V3_ADDRESS = "0xe3333700cA9d93003F00f0F71f8515005F6c00Aa"
+        const val FOREIGN_EXCHANGE = "0x000000000000000000000000000000000000dEaD"
     }
 }
