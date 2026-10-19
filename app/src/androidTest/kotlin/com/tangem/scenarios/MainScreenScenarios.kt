@@ -129,11 +129,8 @@ fun BaseTestCase.readDisplayedTokenBalance(tokenName: String): BigDecimal {
     return checkNotNull(balance)
 }
 
-// The pull leaves the header expanded, which pushes the lower token rows off the screen.
 fun BaseTestCase.pullToRefreshDisplayedWallet() {
     onMainScreen { pullToRefreshOnScreenPage() }
-    waitForIdle()
-    onMainScreen { collapseOnScreenPageHeader() }
     waitForIdle()
 }
 
