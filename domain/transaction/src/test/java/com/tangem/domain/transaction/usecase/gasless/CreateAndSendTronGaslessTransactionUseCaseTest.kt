@@ -8,6 +8,8 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.smartcontract.CompiledSmartContractCallData
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
@@ -59,6 +61,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
         tronGaslessTransactionRepository = tronGaslessTransactionRepository,
         singleAccountListSupplier = singleAccountListSupplier,
         gaslessSignerProvider = gaslessSignerProvider,
+        currentTimeMillis = { NOW_MS },
     )
 
     private val userWallet = MockUserWalletFactory.create()
@@ -93,8 +96,9 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
         energy = 1,
         bandwidth = 1,
         trxCost = BigDecimal("1"),
-        expiresAtEpochMs = 1,
+        expiresAtEpochMs = NOW_MS + 120_000,
     )
+    private val expiredQuote = quote.copy(expiresAtEpochMs = NOW_MS + 10_000)
     private val fee = TransactionFeeExtended(
         transactionFee = TransactionFee.Single(
             normal = Fee.Common(amount = Amount(token = sentToken, value = BigDecimal("2.75"))),
@@ -228,6 +232,23 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
     }
 
     @Test
+    fun `GIVEN quote expiring before submit WHEN invoke THEN re-quotes the same transfer`() = runTest {
+        // Arrange
+        val expiringFee = fee.copy(gaslessProtocolData = GaslessProtocolData.Tron(quote = expiredQuote))
+        coEvery { tronGaslessTransactionRepository.estimate(any()) } returns quote.copy(quoteId = "q_2")
+        coEvery { tronGaslessTransactionRepository.submit(any(), "q_2", any(), any()) } returns
+            TronGaslessSubmitResult(compensationTxHash = "hComp", originalTxHash = "hOrig", status = "BROADCAST")
+
+        // Act
+        val result = useCase(userWallet, originalTx, expiringFee)
+
+        // Assert
+        assertThat(result.getOrNull()).isEqualTo("hOrig")
+        coVerify(exactly = 1) { tronGaslessTransactionRepository.estimate(any()) }
+        coVerify(exactly = 1) { tronGaslessTransactionRepository.submit(any(), "q_2", any(), any()) }
+    }
+
+    @Test
     fun `GIVEN amount reduced by the fee after quoting WHEN invoke THEN re-quotes and submits the fresh quote`() =
         runTest {
             // Arrange — sending the whole balance: the send step lowers the transfer by the compensation.
@@ -345,6 +366,11 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             fee = null,
             sourceAddress = "TFrom",
             destinationAddress = "TRouter",
+            extras = TronTransactionExtras(callData = CompiledSmartContractCallData("4c279d6b".hexToBytes())),
+        )
+        private val refreshedSwap = swap.copy(callDataHex = "4c279d6c")
+        private val refreshedSwapTx = swapTx.copy(
+            extras = TronTransactionExtras(callData = CompiledSmartContractCallData("4c279d6c".hexToBytes())),
         )
         private val swapQuote = quote.copy(quotedToAddress = "TRouter", quotedSwap = swap)
         private val swapFee = fee.copy(gaslessProtocolData = GaslessProtocolData.Tron(quote = swapQuote))
@@ -390,7 +416,6 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
         @Test
         fun `GIVEN route refreshed after quoting WHEN sendSwap THEN re-quotes the new route`() = runTest {
             // Arrange
-            val refreshedSwap = swap.copy(callDataHex = "4c279d6c")
             coEvery { tronGaslessTransactionRepository.estimateSwap(any()) } returns
                 swapQuote.copy(quoteId = "q_2", quotedSwap = refreshedSwap)
             coEvery {
@@ -399,7 +424,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             coEvery { tronGaslessTransactionRepository.submit(any(), any(), any(), any()) } returns submitted
 
             // Act
-            val result = useCase.sendSwap(userWallet, refreshedSwap, swapTx, swapFee)
+            val result = useCase.sendSwap(userWallet, refreshedSwap, refreshedSwapTx, swapFee)
 
             // Assert
             assertThat(result.getOrNull()).isEqualTo("hSwap")
@@ -418,7 +443,6 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
         @Test
         fun `GIVEN re-quoted compensation grew WHEN sendSwap THEN error and nothing is signed`() = runTest {
             // Arrange
-            val refreshedSwap = swap.copy(callDataHex = "4c279d6c")
             coEvery { tronGaslessTransactionRepository.estimateSwap(any()) } returns swapQuote.copy(
                 quoteId = "q_2",
                 quotedSwap = refreshedSwap,
@@ -426,12 +450,47 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             )
 
             // Act
-            val result = useCase.sendSwap(userWallet, refreshedSwap, swapTx, swapFee)
+            val result = useCase.sendSwap(userWallet, refreshedSwap, refreshedSwapTx, swapFee)
 
             // Assert
-            assertThat(result.isLeft()).isTrue()
+            assertThat(result.leftOrNull()).isEqualTo(SendTransactionError.GaslessFeeIncreased)
             coVerify(exactly = 0) { walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any()) }
         }
+
+        @Test
+        fun `GIVEN quote expiring before submit WHEN sendSwap THEN re-quotes the unchanged route`() = runTest {
+            // Arrange
+            val expiringFee = fee.copy(
+                gaslessProtocolData = GaslessProtocolData.Tron(quote = swapQuote.copy(expiresAtEpochMs = NOW_MS)),
+            )
+            coEvery { tronGaslessTransactionRepository.estimateSwap(any()) } returns swapQuote.copy(quoteId = "q_2")
+            coEvery {
+                walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any())
+            } returns listOf("signedComp", "signedSwap")
+            coEvery { tronGaslessTransactionRepository.submit(any(), any(), any(), any()) } returns submitted
+
+            // Act
+            val result = useCase.sendSwap(userWallet, swap, swapTx, expiringFee)
+
+            // Assert
+            assertThat(result.getOrNull()).isEqualTo("hSwap")
+            coVerify(exactly = 1) { tronGaslessTransactionRepository.estimateSwap(any()) }
+            coVerify { tronGaslessTransactionRepository.submit(any(), "q_2", any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN transaction calldata differs from the quoted swap WHEN sendSwap THEN error before quoting and signing`() =
+            runTest {
+                // Act
+                val result = useCase.sendSwap(userWallet, swap, refreshedSwapTx, swapFee)
+
+                // Assert
+                assertThat(result.isLeft()).isTrue()
+                coVerify(exactly = 0) { tronGaslessTransactionRepository.estimateSwap(any()) }
+                coVerify(exactly = 0) {
+                    walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any())
+                }
+            }
     }
 
     @Nested
@@ -523,8 +582,32 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
             val result = useCase(userWallet, approvalTx, staleFee)
 
             // Assert
-            assertThat(result.isLeft()).isTrue()
+            assertThat(result.leftOrNull()).isEqualTo(SendTransactionError.GaslessFeeIncreased)
             coVerify(exactly = 0) { walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any()) }
         }
+
+        @Test
+        fun `GIVEN quote for this approval expiring before submit WHEN invoke THEN re-quotes the approval`() = runTest {
+            // Arrange
+            val expiringFee = fee.copy(
+                gaslessProtocolData = GaslessProtocolData.Tron(quote = expiredQuote.copy(quotedApprove = approve)),
+            )
+            coEvery { tronGaslessTransactionRepository.estimateApprove(any()) } returns
+                quote.copy(quoteId = "q_2", quotedApprove = approve)
+            coEvery { tronGaslessTransactionRepository.submit(any(), "q_2", any(), any()) } returns
+                TronGaslessSubmitResult(compensationTxHash = "hComp", originalTxHash = "hOrig", status = "BROADCAST")
+
+            // Act
+            val result = useCase(userWallet, approvalTx, expiringFee)
+
+            // Assert
+            assertThat(result.getOrNull()).isEqualTo("hOrig")
+            coVerify(exactly = 1) { tronGaslessTransactionRepository.estimateApprove(any()) }
+            coVerify(exactly = 1) { tronGaslessTransactionRepository.submit(any(), "q_2", any(), any()) }
+        }
+    }
+
+    private companion object {
+        const val NOW_MS = 1_780_489_000_000L
     }
 }
