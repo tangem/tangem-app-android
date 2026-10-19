@@ -13,6 +13,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
@@ -52,7 +53,11 @@ internal fun FeedStackContent(
             transitionSpec = { feedScreenTransition() },
         ) { target ->
             saveableStateHolder.SaveableStateProvider(key = target.active.configuration.stateKey()) {
-                content(target.active.instance)
+                // a route popped and pushed again mid-transition is a new component under the same key:
+                // without a fresh subtree its effects would not restart for the new model
+                key(target.active.instance) {
+                    content(target.active.instance)
+                }
             }
         }
 
