@@ -83,9 +83,14 @@ internal class DefaultResolveYieldModePromoUseCase @Inject constructor() : Resol
         )
     }
 
-    // Cached values are replaced on the first refresh of the launch, so they don't count as received yet
+    /**
+     * Cached values are replaced on the first refresh of the launch, so they don't count as received yet.
+     * A cached quote counts too: the fiat amount it gives breaks APY ties.
+     */
     private fun CryptoCurrencyStatus.isLoading(): Boolean {
-        return value is CryptoCurrencyStatus.Loading || value.sources.networkSource == StatusSource.CACHE
+        return value is CryptoCurrencyStatus.Loading ||
+            value.sources.networkSource == StatusSource.CACHE ||
+            value.sources.quoteSource == StatusSource.CACHE
     }
 
     /**
