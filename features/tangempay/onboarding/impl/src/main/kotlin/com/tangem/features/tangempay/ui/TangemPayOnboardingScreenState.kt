@@ -4,19 +4,19 @@ import javax.annotation.concurrent.Immutable
 
 @Immutable
 internal sealed class TangemPayOnboardingScreenState {
+
     abstract val onBack: () -> Unit
 
     data class Loading(override val onBack: () -> Unit) : TangemPayOnboardingScreenState()
+
     data class Content(
         override val onBack: () -> Unit,
         val onTermsClick: () -> Unit,
         val buttonConfig: ButtonConfig,
+        val isUnifiedOnboarding: Boolean,
     ) : TangemPayOnboardingScreenState() {
         data class ButtonConfig(val isLoading: Boolean, val onClick: () -> Unit)
     }
 
-    /**
-     * Shown when the user is not eligible for Tangem Pay. [onBack] also backs the "Got it" button.
-     */
     data class NotAvailable(override val onBack: () -> Unit) : TangemPayOnboardingScreenState()
 }
