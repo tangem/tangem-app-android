@@ -10,6 +10,8 @@ import com.tangem.domain.polymarket.model.PolymarketActivity.Type
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigDecimal
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -101,6 +103,25 @@ internal class PolymarketActivityDetailsConverterTest {
         assertThat(result.rows).isEmpty()
         assertThat(result.onGoToPrediction).isNull()
     }
+    @ParameterizedTest
+    @EnumSource(value = Type::class, names = ["DEPOSIT", "WITHDRAW"])
+    fun `GIVEN funding activity WHEN opening details THEN shows only its direction and signed amount`(type: Type) {
+        // Arrange
+        val activity = historyTrade(type).copy(amount = BigDecimal("200.01"))
+
+        // Act
+        val result = converter.convert(activity) {}
+
+        // Assert
+        assertThat(result.amount).isEqualTo(stringReference(if (type == Type.DEPOSIT) "$200.01" else "-$200.01"))
+        assertThat(result.fundingDirection).isNotNull()
+        assertThat(result.marketTitle).isNull()
+        assertThat(result.outcome).isNull()
+        assertThat(result.outcomePrice).isNull()
+        assertThat(result.rows).isEmpty()
+        assertThat(result.onGoToPrediction).isNull()
+    }
+
     @Test
     fun `GIVEN a redeemed loss without an order WHEN opening details THEN does not invent stake or entry price`() {
         // Arrange
