@@ -1,5 +1,6 @@
 package com.tangem.data.txhistory.list.chain
 
+import com.tangem.data.txhistory.list.FinishedJointTransfers
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressAsset.ID as ExpressAssetId
@@ -57,6 +58,9 @@ internal class BsdkOnChainHistoryTest {
     }
     private val repository = mockk<TxHistoryRepositoryV2>()
     private val currencyUSDQuote = mockk<GetCurrencyUSDQuoteUseCase>()
+    private val finishedJointTransfers = mockk<FinishedJointTransfers> {
+        every { observe(any(), any(), any()) } returns flowOf(emptyList())
+    }
 
     // region state mapping
 
@@ -355,6 +359,7 @@ internal class BsdkOnChainHistoryTest {
         return BsdkOnChainHistory(
             repository = repository,
             currencyUSDQuote = currencyUSDQuote,
+            finishedJointTransfers = finishedJointTransfers,
             env = HistoryEnvironment(
                 userWalletId = userWalletId,
                 currency = currency,
