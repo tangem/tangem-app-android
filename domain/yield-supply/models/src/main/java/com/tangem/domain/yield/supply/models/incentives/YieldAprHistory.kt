@@ -14,7 +14,7 @@ data class YieldAprHistory(
     data class Point(
         val date: LocalDate,
         val baseApy: BigDecimal,
-        val rewardsApr: BigDecimal,
+        val rewardsApy: BigDecimal,
         val totalApyEst: BigDecimal,
         val isCarriedForward: Boolean,
     )
