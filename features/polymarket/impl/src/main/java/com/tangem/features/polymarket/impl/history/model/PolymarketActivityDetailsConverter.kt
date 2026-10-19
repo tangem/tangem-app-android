@@ -9,6 +9,7 @@ import com.tangem.core.ui.format.bigdecimal.anyDecimals
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.polymarket.model.PolymarketActivity
+import com.tangem.domain.polymarket.model.PolymarketActivity.RedeemResult
 import com.tangem.domain.polymarket.model.PolymarketActivity.Type
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
@@ -37,11 +38,17 @@ internal class PolymarketActivityDetailsConverter(
 ) {
 
     fun convert(activity: PolymarketActivity, onGoToPrediction: (() -> Unit)?): PolymarketActivityDetailsUM {
+        val isRedemption = activity.type == Type.REDEEM
+        val isLoss = isRedemption && activity.redeemResult == RedeemResult.LOST
         val outcome = activity.market?.outcome?.takeIf { it.isNotBlank() }
         return PolymarketActivityDetailsUM(
-            title = activity.rowType().title(),
+            title = when {
+                isLoss -> resourceReference(R.string.prediction_history_loss)
+                else -> activity.rowType().title()
+            },
             date = stringReference(dateFormatter.format(activity.occurredAt)),
-            amount = stringReference(activity.detailsAmount()),
+            headline = if (isRedemption) redemptionHeadline(activity.redeemResult) else null,
+            amount = if (isLoss) null else stringReference(activity.detailsAmount()),
             marketTitle = activity.marketTitle.takeIf { it.isNotBlank() }?.let(
                 ::stringReference,
             ),
@@ -53,9 +60,20 @@ internal class PolymarketActivityDetailsConverter(
                 outcome.equals("Yes", ignoreCase = true) -> TangemBadge.Status.Success
                 else -> polymarketOutcomeAccent(activity.market?.outcomeIndex, outcome.orEmpty()).toBadgeStatus()
             },
-            rows = tradeRows(activity),
+            rows = if (isRedemption) {
+                emptyList<Row>().toImmutableList()
+            } else {
+                tradeRows(activity)
+            },
             onGoToPrediction = onGoToPrediction,
         )
+    }
+
+    private fun redemptionHeadline(result: RedeemResult?) = when (result) {
+        RedeemResult.WON -> resourceReference(R.string.prediction_history_prediction_won)
+        RedeemResult.LOST -> resourceReference(R.string.prediction_history_prediction_lost)
+        RedeemResult.SPLIT -> resourceReference(R.string.prediction_history_prediction_split)
+        null -> null
     }
 
     private fun PolymarketActivity.detailsAmount(): String {
