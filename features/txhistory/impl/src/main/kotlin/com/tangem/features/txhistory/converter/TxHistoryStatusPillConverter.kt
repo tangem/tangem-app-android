@@ -56,6 +56,7 @@ internal class TxHistoryStatusPillConverter(
             subtitle = tx.buildPillSubtitle(uiStatus, spec),
             timestamp = tx.timestampInMillis,
             onClick = { txHistoryUiActions.openTxInExplorer(tx.txHash) },
+            isSuccess = spec.isSuccessWhenSettled && uiStatus.isSettled(),
         )
     }
 
@@ -74,6 +75,7 @@ internal data class PillSpec(
     val confirmedSplit: PillConfirmedSplit? = null,
     /** DeFi provider named after the label ("Supplied **to: Aave**"); `null` for pills that name no provider. */
     val provider: PillProvider? = null,
+    val isSuccessWhenSettled: Boolean = false,
 )
 
 /**
@@ -223,6 +225,18 @@ internal val YieldExitSpec = PillSpec(
         label = R.string.common_yield_mode_inline,
         value = R.string.common_disabled,
     ),
+)
+
+internal val IncentiveClaimSpec = PillSpec(
+    kind = PillKind.INCENTIVE_CLAIM,
+    labels = PillLabels(
+        confirmed = R.string.transaction_history_incentive_rewards_claimed,
+        pending = R.string.transaction_history_claiming_incentive_rewards,
+        failedBase = R.string.transaction_history_status_incentive_rewards_claim_failed,
+        hasFailedTemplate = false,
+    ),
+    amount = PillAmount.NEVER,
+    isSuccessWhenSettled = true,
 )
 
 /** The counterparty tail: a spec-wide provider, or the spender an approval granted its allowance to. */
