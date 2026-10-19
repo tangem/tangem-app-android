@@ -49,6 +49,7 @@ import com.tangem.grow.datasource.polymarket.relayer.models.PolymarketNonceRespo
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketCategory
+import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
 import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketSearchConfig
@@ -168,12 +169,12 @@ internal class DefaultPolymarketRepositoryTest {
     }
 
     @Test
-    fun `GIVEN categories response WHEN getCategories THEN maps to domain categories`() = runTest {
+    fun `GIVEN categories response WHEN getCategories THEN maps to domain categories in order`() = runTest {
         // Arrange
         coEvery { api.getCategories(locale = null) } returns ApiResponse.Success(
             PolymarketCategoriesResponse(
                 categories = listOf(
-                    PolymarketCategoryDto(id = 1, label = "Trending", icon = "https://img/trending.png"),
+                    PolymarketCategoryDto(id = 1, label = "Trending", icon = "trending"),
                     PolymarketCategoryDto(id = 2, label = "Sport", icon = null),
                 ),
             ),
@@ -185,11 +186,66 @@ internal class DefaultPolymarketRepositoryTest {
         // Assert
         assertThat(result).isEqualTo(
             listOf(
-                PolymarketCategory(id = 1, label = "Trending", iconUrl = "https://img/trending.png"),
-                PolymarketCategory(id = 2, label = "Sport", iconUrl = null),
+                PolymarketCategory(id = 1, label = "Trending", icon = PolymarketCategoryIcon.TRENDING),
+                PolymarketCategory(id = 2, label = "Sport", icon = null),
             ).right(),
         )
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetCategoriesIcon {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an icon key WHEN getCategories THEN maps it to the category icon`(model: CategoryIconModel) =
+            runTest {
+                // Arrange
+                coEvery { api.getCategories(locale = null) } returns ApiResponse.Success(
+                    PolymarketCategoriesResponse(
+                        categories = listOf(PolymarketCategoryDto(id = 7, label = "Label", icon = model.key)),
+                    ),
+                )
+
+                // Act
+                val result = repository.getCategories()
+
+                // Assert
+                assertThat(result).isEqualTo(
+                    listOf(PolymarketCategory(id = 7, label = "Label", icon = model.expected)).right(),
+                )
+            }
+
+        private fun provideTestModels() = listOf(
+            CategoryIconModel(key = "world", expected = PolymarketCategoryIcon.WORLD),
+            CategoryIconModel(key = "geopolitics", expected = PolymarketCategoryIcon.GEOPOLITICS),
+            CategoryIconModel(key = "elections", expected = PolymarketCategoryIcon.ELECTIONS),
+            CategoryIconModel(key = "soccer", expected = PolymarketCategoryIcon.SOCCER),
+            CategoryIconModel(key = "nba", expected = PolymarketCategoryIcon.NBA),
+            CategoryIconModel(key = "nfl", expected = PolymarketCategoryIcon.NFL),
+            CategoryIconModel(key = "hockey", expected = PolymarketCategoryIcon.HOCKEY),
+            CategoryIconModel(key = "tennis", expected = PolymarketCategoryIcon.TENNIS),
+            CategoryIconModel(key = "formula1", expected = PolymarketCategoryIcon.FORMULA_1),
+            CategoryIconModel(key = "tech", expected = PolymarketCategoryIcon.TECH),
+            CategoryIconModel(key = "economy", expected = PolymarketCategoryIcon.ECONOMY),
+            CategoryIconModel(key = "mentions", expected = PolymarketCategoryIcon.MENTIONS),
+            CategoryIconModel(key = "trending", expected = PolymarketCategoryIcon.TRENDING),
+            CategoryIconModel(key = "new", expected = PolymarketCategoryIcon.NEW),
+            CategoryIconModel(key = "politics", expected = PolymarketCategoryIcon.POLITICS),
+            CategoryIconModel(key = "sports", expected = PolymarketCategoryIcon.SPORTS),
+            CategoryIconModel(key = "esports", expected = PolymarketCategoryIcon.ESPORTS),
+            CategoryIconModel(key = "culture", expected = PolymarketCategoryIcon.CULTURE),
+            CategoryIconModel(key = "weather", expected = PolymarketCategoryIcon.WEATHER),
+            CategoryIconModel(key = "finance", expected = PolymarketCategoryIcon.FINANCE),
+            CategoryIconModel(key = "crypto", expected = PolymarketCategoryIcon.CRYPTO),
+            CategoryIconModel(key = "astrology", expected = null),
+            CategoryIconModel(key = "Politics", expected = null),
+            CategoryIconModel(key = "https://cdn.example.com/icons/politics.svg", expected = null),
+            CategoryIconModel(key = null, expected = null),
+        )
+    }
+
+    data class CategoryIconModel(val key: String?, val expected: PolymarketCategoryIcon?)
 
     @Test
     fun `GIVEN network exception WHEN getCategories THEN returns left no internet`() = runTest {
