@@ -58,6 +58,7 @@ internal class DefaultGiveApprovalComponent @AssistedInject constructor(
             analyticsCategoryName = CommonSendAnalyticEvents.APPROVE_CATEGORY,
             analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.Approve,
             userWalletId = params.userWalletId,
+            isTronGaslessSupported = params.isTronGaslessSupported,
         ),
         onResult = model::onFeeResult,
     )
