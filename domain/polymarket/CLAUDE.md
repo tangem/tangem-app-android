@@ -79,9 +79,13 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 
 - Relayer batches (approvals, withdrawal, claim) carry `deadline = now + 600 s`. Known gap: the tracker's
   `resend` of a persisted withdrawal skips the expiry check that `confirm` does.
-- Orders use `signatureType = 3` (deposit wallet) wrapped in ERC-7739; the exchange `verifyingContract`
-  is chosen by `isNegRisk`. The signed order is re-validated against the draft, the deposit wallet, the
-  market and the quote age (60 s) before it is sent.
+- Orders use `signatureType = 3` (deposit wallet) wrapped in ERC-7739. The exchange and its domain version
+  come from the quote, but only as `PolymarketExchangeDomain.of(quote.version, isNegRisk)` allows: V1 →
+  CTF or neg-risk CTF exchange, domain `"2"`; V2 → ExchangeV3, domain `"3"`; unknown → never signed. Any
+  other `exchange` / `signingDomainVersion` is refused while the draft is built — before the card is asked —
+  and the draft carries the table's constants, never the quoted strings. The signed order is re-validated
+  against the draft, the domain, the deposit wallet, the market and the quote age (60 s) before it is sent,
+  and the repository checks the signature tail against the domain once more.
 - SELL: `makerAmount = shares`, `takerAmount = collateral`; BUY the reverse.
 - A claim signs only redeem calls the BFF served, and only after `PredictionRedeemCallValidator` accepted
   them against the position: one adapter `redeemPositions` call on the root collection of the condition for
