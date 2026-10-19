@@ -16,9 +16,12 @@ internal data class PolymarketActivityDetailsUM(
     val outcome: TextReference?,
     val outcomeStatus: TangemBadge.Status,
     val outcomePrice: TextReference? = null,
+    val fundingDirection: FundingDirection? = null,
     val rows: ImmutableList<Row>,
     val onGoToPrediction: (() -> Unit)?,
 ) {
+    enum class FundingDirection { Deposit, Withdraw }
+
     @Immutable
     data class Row(val title: TextReference, val value: TextReference)
 }
