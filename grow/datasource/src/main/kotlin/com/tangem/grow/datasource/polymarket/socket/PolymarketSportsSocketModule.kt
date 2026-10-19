@@ -16,13 +16,17 @@ internal object PolymarketSportsSocketModule {
 
     @Provides
     @Singleton
-    fun providePolymarketSportsSocket(factory: SocketChannelFactory): PolymarketSportsSocket {
+    fun providePolymarketSportsSocket(
+        factory: SocketChannelFactory,
+        connections: PolymarketSportsConnections,
+    ): PolymarketSportsSocket {
         if (BuildConfig.MOCK_DATA_SOURCE) return FakePolymarketSportsSocket()
 
         return factory.createPolymarketSportsSocket(
             SocketSpec(
                 url = "wss://sports-api.polymarket.com/ws",
                 keepAlive = KeepAlive.ServerSends(text = "ping", reply = "pong"),
+                onConnected = connections::connected,
             ),
         )
     }
