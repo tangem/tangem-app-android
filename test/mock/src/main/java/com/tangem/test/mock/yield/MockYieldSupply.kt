@@ -201,6 +201,7 @@ object MockYieldSupply {
         fiatAmount: BigDecimal = BigDecimal.ONE,
         yieldSupplyStatus: YieldSupplyStatus? = null,
         networkSource: StatusSource = StatusSource.ACTUAL,
+        quoteSource: StatusSource = StatusSource.ACTUAL,
     ) = CryptoCurrencyStatus(
         currency = currency,
         value = CryptoCurrencyStatus.Loaded(
@@ -217,7 +218,7 @@ object MockYieldSupply {
                     type = NetworkAddress.Address.Type.Primary,
                 ),
             ),
-            sources = CryptoCurrencyStatus.Sources(networkSource = networkSource),
+            sources = CryptoCurrencyStatus.Sources(networkSource = networkSource, quoteSource = quoteSource),
         ),
     )
 
