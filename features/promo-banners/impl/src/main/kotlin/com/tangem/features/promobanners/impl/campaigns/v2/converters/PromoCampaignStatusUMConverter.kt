@@ -61,7 +61,7 @@ internal class PromoCampaignStatusUMConverter(
             wrappedList(campaign.content.name),
         ),
         description = null,
-        details = outcome.payout?.let { payout ->
+        details = outcome.payout?.takeIf { outcome.coverage == Coverage.Partial }?.let { payout ->
             PromoCampaignStatusUM.Details.Recipient(
                 walletName = recipientWalletName,
                 tokenIcon = recipientIcon,
