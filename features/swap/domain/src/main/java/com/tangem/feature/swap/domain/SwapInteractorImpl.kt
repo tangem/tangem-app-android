@@ -58,6 +58,7 @@ import com.tangem.domain.transaction.models.tron.canPayNativeFee
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldModuleAddressProvider
@@ -127,6 +128,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private val yieldModuleAddressProvider: YieldModuleAddressProvider,
     private val recordTokenTransferFromSwapUseCase: RecordTokenTransferFromSwapUseCase,
     private val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
+    private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
 ) : SwapInteractor {
 
     private val getSelectedAppCurrencyUseCase by lazy(LazyThreadSafetyMode.NONE) {
@@ -2106,7 +2108,8 @@ internal class SwapInteractorImpl @Inject constructor(
                         val permissionState = state.permissionState
                         val balanceStatus = if (
                             permissionState is PermissionDataState.PermissionRequired &&
-                            quoteBalanceStatus is SwapBalanceStatus.Pending
+                            quoteBalanceStatus is SwapBalanceStatus.Pending &&
+                            !isTronGaslessApprovalAvailable(fromSwapCurrencyStatus)
                         ) {
                             checkSeparateApprovalFeeCoverage(
                                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -2526,6 +2529,14 @@ internal class SwapInteractorImpl @Inject constructor(
                 )
             },
         )
+    }
+
+    /** A Tron approval of a token the gasless service relays is paid in that token, so TRX need not cover it. */
+    private suspend fun isTronGaslessApprovalAvailable(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean {
+        if (!swapFeatureToggles.isTronGaslessDexSwapEnabled) return false
+        val token = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token ?: return false
+        return isTron(token.network.rawId) &&
+            isTronGaslessSupportedUseCase(fromSwapCurrencyStatus.userWalletId, token.network, token)
     }
 
     /**
