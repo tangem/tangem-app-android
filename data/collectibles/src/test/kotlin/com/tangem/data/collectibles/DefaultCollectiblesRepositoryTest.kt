@@ -30,6 +30,7 @@ import com.tangem.grow.datasource.collectibles.models.response.BuybackAvailabili
 import com.tangem.grow.datasource.collectibles.models.response.BuybackStatusResponse
 import com.tangem.grow.datasource.collectibles.models.response.BuybackStatusResponse.BuybackStatusDTO
 import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse
+import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse.CollectibleTxStatusDTO
 import com.tangem.grow.datasource.collectibles.models.response.GenerateBuybackDataResponse
 import com.tangem.grow.datasource.collectibles.models.response.GeneratePurchaseTxResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachineCategoriesResponse
@@ -337,7 +338,7 @@ internal class DefaultCollectiblesRepositoryTest {
             runTest {
                 // Arrange
                 coEvery { collectiblesApi.purchaseTxSent(any(), any()) } returns
-                    ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = "purchase-tx-hash"))
+                    ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = CollectibleTxStatusDTO.PURCHASE_TX_HASH))
 
                 // Act
                 val actual = repository.reportPurchaseTxSent(userWalletId, txId = "tx-id", txHash = "hash")
@@ -382,7 +383,7 @@ internal class DefaultCollectiblesRepositoryTest {
             } returns ApiResponse.Success(
                 CollectibleTxResponse(
                     txId = "tx-id",
-                    status = "pack-opened",
+                    status = CollectibleTxStatusDTO.PACK_OPENED,
                     nftWon = CollectibleTxResponse.NftWonDTO(
                         nftAddress = "nft",
                         gradingCompany = "PSA",
@@ -427,7 +428,7 @@ internal class DefaultCollectiblesRepositoryTest {
         fun `GIVEN no card in the answer WHEN openPack THEN only the status is returned`() = runTest {
             // Arrange
             coEvery { collectiblesApi.openPack(any(), any(), any()) } returns
-                ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = "pack-opened"))
+                ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = CollectibleTxStatusDTO.PACK_OPENED))
 
             // Act
             val actual = repository.openPack(userWalletId, txId = "tx-id")

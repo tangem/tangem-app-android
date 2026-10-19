@@ -11,4 +11,7 @@ sealed class GachaVaultError(override val errorCode: Int) : UniversalError {
     data object WalletUnavailable : GachaVaultError(errorCode = 109001002)
 
     data class Unexpected(val cause: Throwable) : GachaVaultError(errorCode = 109001003)
+
+    /** The transaction is larger than a card can sign, so it is refused before the tap. */
+    data object TransactionTooLarge : GachaVaultError(errorCode = 109001004)
 }
