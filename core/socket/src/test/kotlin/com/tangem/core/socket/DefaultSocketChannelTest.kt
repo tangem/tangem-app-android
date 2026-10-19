@@ -27,6 +27,45 @@ internal class DefaultSocketChannelTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     @Test
+    fun `GIVEN fast reconnects WHEN state collection misses the gap THEN successful handshakes are still recorded`() =
+        runTest {
+            // Arrange
+            var revision = 0L
+            val channel = createChannel(SocketSpec(url = URL, backoff = Backoff { 0.seconds }, onConnected = { revision++ }))
+            collect(channel)
+            transport.connections.single().serverOpens()
+            runCurrent()
+            val before = channel.state.value
+
+            // Act
+            transport.connections.single().serverCloses(code = 1001)
+            runCurrent()
+            transport.connections.last().serverOpens()
+            runCurrent()
+
+            // Assert
+            assertThat(before).isEqualTo(SocketState.Connected)
+            assertThat(channel.state.value).isEqualTo(before)
+            assertThat(revision).isEqualTo(2)
+        }
+
+    @Test
+    fun `GIVEN failed initial subscription WHEN opening THEN no successful connection is reported`() = runTest {
+        // Arrange
+        var revision = 0
+        val channel = createChannel(SocketSpec(url = URL, onOpen = { error("subscription failed") }, onConnected = { revision++ }))
+        collect(channel)
+
+        // Act
+        transport.connections.single().serverOpens()
+        runCurrent()
+
+        // Assert
+        assertThat(revision).isEqualTo(0)
+        assertThat(channel.state.value).isInstanceOf(SocketState.WaitingToRetry::class.java)
+    }
+
+    @Test
     fun `GIVEN no collectors WHEN channel created THEN no connection is opened`() = runTest {
         // Arrange
         val channel = createChannel(SocketSpec(url = URL))

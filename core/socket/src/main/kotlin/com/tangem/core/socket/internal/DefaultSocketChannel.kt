@@ -209,6 +209,7 @@ internal class DefaultSocketChannel(
                             synchronized(sendLock) { isOnOpenRunning = true }
                             val openError = runAttemptCatching {
                                 withTimeout(ON_OPEN_TIMEOUT) { spec.onOpen(ConnectionSession(opened)) }
+                                spec.onConnected()
                             }
                                 .exceptionOrNull()
                             if (openError != null) {

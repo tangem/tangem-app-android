@@ -3,7 +3,12 @@ package com.tangem.data.polymarket
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PolymarketLiveScore
 import com.tangem.grow.datasource.polymarket.socket.FakePolymarketSportsSocket
+import com.tangem.grow.datasource.polymarket.socket.PolymarketSportsConnections
 import com.tangem.grow.datasource.polymarket.socket.models.SportsResultDto
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.every
+import io.mockk.mockk
+import java.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -17,7 +22,12 @@ import org.junit.jupiter.params.provider.ValueSource
 internal class DefaultPolymarketLiveScoresRepositoryTest {
 
     private val socket = FakePolymarketSportsSocket()
-    private val repository = DefaultPolymarketLiveScoresRepository(sportsSocket = socket)
+    private val clock: PolymarketSportsClock = mockk {
+        every { now() } returns Instant.EPOCH
+    }
+    private val repository = DefaultPolymarketLiveScoresRepository(
+        socket, PolymarketSportsConnections(), clock, TestingCoroutineDispatcherProvider(),
+    )
 
     @Test
     fun `GIVEN broadcast of several games WHEN observing some game ids THEN only their scores are emitted`() =
@@ -42,7 +52,7 @@ internal class DefaultPolymarketLiveScoresRepositoryTest {
         }
 
     @Test
-    fun `GIVEN a game rebroadcast unchanged between other games WHEN observing it THEN only its changes are emitted`() =
+    fun `GIVEN a game rebroadcast unchanged between other games WHEN observing it THEN repeats retain freshness`() =
         runTest {
             // Arrange
             val received = mutableListOf<PolymarketLiveScore>()
@@ -62,8 +72,34 @@ internal class DefaultPolymarketLiveScoresRepositoryTest {
             assertThat(received.map { it.gameId to it.score }).containsExactly(
                 "100" to "1-0",
                 "300" to "0-3",
+                "100" to "1-0",
                 "100" to "2-0",
+                "300" to "0-3",
             ).inOrder()
+        }
+
+    @Test
+    fun `GIVEN an unchanged score WHEN it arrives later THEN receive time advances independently of source time`() =
+        runTest {
+            // Arrange
+            every { clock.now() } returnsMany listOf(Instant.ofEpochSecond(10), Instant.ofEpochSecond(40))
+            val received = mutableListOf<PolymarketLiveScore>()
+            val job = launch(UnconfinedTestDispatcher(testScheduler)) {
+                repository.observeLiveScores(setOf("100")).toList(received)
+            }
+            val frame = result(100, "1-0").copy(lastUpdate = kotlinx.serialization.json.JsonPrimitive("1970-01-01T00:00:05Z"))
+
+            // Act
+            socket.results.emit(frame)
+            socket.results.emit(frame)
+            job.cancel()
+
+            // Assert
+            assertThat(received.map { it.lastSeenAt }).containsExactly(
+                Instant.ofEpochSecond(10), Instant.ofEpochSecond(40),
+            ).inOrder()
+            assertThat(received.map { it.updatedAt }).containsExactly(Instant.ofEpochSecond(5), Instant.ofEpochSecond(5))
+            assertThat(socket.results.subscriptionCount.value).isEqualTo(0)
         }
 
     @Test
