@@ -2,31 +2,23 @@ package com.tangem.features.polymarket.impl.main.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -38,22 +30,21 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.haze.ProvideHaze
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
@@ -74,6 +65,7 @@ import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -94,17 +86,14 @@ private val ScrollIdleDebounce = 500.milliseconds
 
 private val ScrollRestoreTimeout = 2.seconds
 
-/** Fixed height of the category tab band: 40dp pills + 8dp vertical padding. */
-private val TabBandHeight = 56.dp
+/** Fixed height of the category tab band: 36dp pills + 8dp vertical padding. */
+private val TabBandHeight = 52.dp
+
+private val TabBandPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+
+private const val LOADING_TAB_COUNT = 6
 
 private val FeedItemSpacing = 12.dp
-
-private val TabShape = RoundedCornerShape(percent = 50)
-
-// Top rim highlight approximating the glass edge (the real border is a shader in the design).
-private val TabRimBrush = Brush.verticalGradient(
-    colors = listOf(Color.White.copy(alpha = 0.2f), Color.Transparent),
-)
 
 @Suppress("LongParameterList")
 @Composable
@@ -124,7 +113,7 @@ internal fun PolymarketMainScreen(
     val listState = rememberLazyListState()
 
     // Shared by the inline and the pinned band, so its horizontal scroll survives docking.
-    val tabRowState = rememberLazyListState()
+    val tabRowState = rememberScrollState()
 
     val hasTabBand = state.isCategoriesLoading || state.categories.isNotEmpty()
 
@@ -184,7 +173,7 @@ private fun PolymarketMainScaffold(
     state: PolymarketMainUM,
     positions: (@Composable (Modifier) -> Unit)?,
     listState: LazyListState,
-    tabRowState: LazyListState,
+    tabRowState: ScrollState,
     isTabBandPinned: Boolean,
     onBackClick: () -> Unit,
     onHistoryClick: () -> Unit,
@@ -254,7 +243,7 @@ private fun FeedList(
     state: PolymarketMainUM,
     positions: (@Composable (Modifier) -> Unit)?,
     listState: LazyListState,
-    tabRowState: LazyListState,
+    tabRowState: ScrollState,
     isTabBandPinned: Boolean,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
@@ -420,61 +409,30 @@ private fun LazyListState.isTabBandPinned(): Boolean {
 private fun CategoryTabBar(
     categories: ImmutableList<PolymarketCategoryTabUM>,
     isLoading: Boolean,
-    state: LazyListState,
+    state: ScrollState,
     modifier: Modifier = Modifier,
 ) {
-    if (isLoading) {
-        PolymarketCategoryTabsSkeleton(modifier = modifier.fillMaxWidth().height(TabBandHeight))
-        return
+    val tabs = remember(categories, isLoading) {
+        if (isLoading) loadingTabs() else categories.map { it.toTangemTabItemUM() }.toImmutableList()
     }
-    LazyRow(
+    TangemTabNavigation(
+        tabs = tabs,
+        scrollState = state,
+        contentPadding = TabBandPadding,
         modifier = modifier.height(TabBandHeight),
-        state = state,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        items(items = categories, key = { it.id }) { tab ->
-            CategoryTab(tab = tab)
-        }
-    }
+    )
 }
 
-@Composable
-private fun CategoryTab(tab: PolymarketCategoryTabUM) {
-    // No backdrop blur on purpose: it would re-blur every frame under the sticky band.
-    val background = if (tab.isSelected) {
-        Modifier
-            .clip(TabShape)
-            .background(TangemTheme.colors3.bg.tertiary)
-            .border(width = 1.dp, brush = TabRimBrush, shape = TabShape)
-    } else {
-        Modifier.clip(TabShape)
-    }
-    Row(
-        modifier = Modifier
-            .heightIn(min = 40.dp)
-            .then(background)
-            .clickable(onClick = tab.onClick)
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (tab.icon != null) {
-            Icon(
-                modifier = Modifier.size(20.dp),
-                imageVector = tab.icon.tabIcon,
-                tint = if (tab.isSelected) TangemTheme.colors3.icon.primary else TangemTheme.colors3.icon.secondary,
-                contentDescription = null,
-            )
-        }
-        Text(
-            text = tab.label,
-            color = if (tab.isSelected) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
-            style = TangemTheme.typography3.body.medium,
-            maxLines = 1,
-        )
-    }
-}
+private fun loadingTabs(): ImmutableList<TangemTabItemUM> =
+    List(LOADING_TAB_COUNT) { index -> TangemTabItemUM.Loading(id = "loading_$index") }.toImmutableList()
+
+private fun PolymarketCategoryTabUM.toTangemTabItemUM() = TangemTabItemUM.Content(
+    id = id.toString(),
+    label = stringReference(label),
+    iconStart = icon?.let { TangemIconUM.Icon(imageVector = it.tabIcon) },
+    isSelected = isSelected,
+    onClick = onClick,
+)
 
 @Preview(name = "Content Light", showBackground = true, widthDp = 360)
 @Preview(
