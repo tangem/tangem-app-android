@@ -1,6 +1,7 @@
 package com.tangem.data.polymarket.builder
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
 import com.tangem.domain.polymarket.model.PredictionOrder
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
@@ -95,6 +96,7 @@ internal class PolymarketPlaceOrderBodyBuilderTest {
                 builder = "0xbuilder",
             ),
             signature = "0xsig",
+            domain = PolymarketExchangeDomain.CTF,
         )
 
     private companion object {
