@@ -1136,6 +1136,23 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
+    fun `GIVEN incentive reward received on the token with fee WHEN convert THEN no network-fee row`() {
+        // Arrange
+        val token = mockCurrencyFactory.createToken(Blockchain.Ethereum)
+        val tx = txInfo(
+            type = TransactionType.IncentiveClaim,
+            isOutgoing = false,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val rows = onChainConverter(currency = token).convert(tx).rows
+
+        // Assert
+        assertThat(rows).isEmpty()
+    }
+
+    @Test
     fun `GIVEN incoming ClaimRewards with fee WHEN convert THEN network-fee row shown`() {
         // Staking claims are isOutgoing = false yet the user paid the gas — the fee stays (only plain Transfers hide it).
         // Arrange
@@ -1533,6 +1550,54 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(pair.leading).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Item.Currency::class.java)
         assertThat(pair.trailing).isEqualTo(TxHistoryDetailsUM.AmountIconUM.Item.Resource(R.drawable.img_aave_22))
         assertThat(amountBlock.label).isNull()
+    }
+
+    @Test
+    fun `GIVEN incentive reward on the token WHEN convert THEN Merkl paired with the asset and no counterparty`() {
+        // Arrange
+        val token = mockCurrencyFactory.createToken(Blockchain.Ethereum)
+        val tx = txInfo(
+            type = TransactionType.IncentiveClaim,
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(USER_ADDRESS),
+        )
+
+        // Act
+        val result = onChainConverter(currency = token).convert(tx)
+
+        // Assert
+        assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_received))
+        assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
+        assertThat(result.amountBlock.amount.resolveString()).startsWith("+ ")
+        val pair = result.amountBlock.icon as TxHistoryDetailsUM.AmountIconUM.OverlappingPair
+        assertThat(pair.leading).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Item.Currency::class.java)
+        assertThat(pair.trailing).isEqualTo(TxHistoryDetailsUM.AmountIconUM.Item.Resource(R.drawable.img_merkl_22))
+        assertThat(result.counterparty).isNull()
+        assertThat(result.header.menu.map { it.title })
+            .doesNotContain(resourceReference(R.string.yield_module_explore_sheet_explore_aave_button_title))
+    }
+
+    @Test
+    fun `GIVEN incentive claim on the coin WHEN convert THEN no Explore Aave row and no counterparty`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.IncentiveClaim,
+            isOutgoing = true,
+            amount = BigDecimal.ZERO,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(USER_ADDRESS),
+        )
+
+        // Act
+        val result = converter.convert(tx)
+
+        // Assert
+        assertThat(result.header.title)
+            .isEqualTo(resourceReference(R.string.transaction_history_incentive_rewards_claimed))
+        assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_lightning_20))
+        assertThat(result.amountBlock.icon).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Single::class.java)
+        assertThat(result.counterparty).isNull()
+        assertThat(result.header.menu.map { it.title })
+            .doesNotContain(resourceReference(R.string.yield_module_explore_sheet_explore_aave_button_title))
     }
 
     @Test
