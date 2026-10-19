@@ -56,6 +56,9 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     private val isOrderMockMode: Boolean
         get() = isMockMode && System.getProperty(UITEST_ORDER_FROM_API_KEY) != "1"
 
+    private val isAuthMockMode: Boolean
+        get() = isMockMode && System.getProperty(UITEST_REAL_AUTH_KEY) != "1"
+
     override suspend fun validateDeeplink(link: String): Either<UniversalError, Boolean> = real.validateDeeplink(link)
 
     override suspend fun isTangemPayInitialDataProduced(userWalletId: UserWalletId): Boolean {
@@ -64,7 +67,7 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     }
 
     override suspend fun produceInitialData(userWalletId: UserWalletId) {
-        if (isMockMode) {
+        if (isAuthMockMode) {
             // Credentials come from MockAwareTangemPayStorage, but the "this wallet is a Paera customer" flag
             // is the real thing the enrollment writes — without it the wallet keeps the cached 404 answer and
             // no Payment account ever appears after accepting the offer.
@@ -226,6 +229,7 @@ internal class MockAwareOnboardingRepository @Inject constructor(
 
     private companion object {
         const val UITEST_ORDER_FROM_API_KEY = "uitest.tangempay.onboarding_order_from_api"
+        const val UITEST_REAL_AUTH_KEY = "uitest.tangempay.real_auth"
         const val MOCK_ORDER_ID = "mock-order-id"
         const val MOCK_VA_ORDER_ID = "mock-va-order-id"
     }

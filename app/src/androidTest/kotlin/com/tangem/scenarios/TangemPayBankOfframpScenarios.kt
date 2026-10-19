@@ -1,7 +1,6 @@
 package com.tangem.scenarios
 
 import android.text.format.DateFormat
-import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.test.espresso.Espresso
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TangemPayBankOfframpOrder
@@ -9,7 +8,6 @@ import com.tangem.common.constants.TangemPayBankRecipient
 import com.tangem.common.constants.TangemPayBankRoute
 import com.tangem.common.constants.TangemPayBankRoutes
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO
-import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
@@ -18,8 +16,6 @@ import com.tangem.common.utils.findWireMockRequestBodies
 import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
-import com.tangem.screens.onHotWalletAccessCodeScreen
-import com.tangem.screens.unlockDialogAccessCodeInputMatcher
 import com.tangem.screens.tangempay.TangemPayBankWithdrawField
 import com.tangem.screens.tangempay.onTangemPayBankRecipientsScreen
 import com.tangem.screens.tangempay.onTangemPayBankWithdrawAmountScreen
@@ -349,18 +345,9 @@ fun BaseTestCase.fillTangemPayBankDetails(recipient: TangemPayBankRecipient) {
     clickTangemPayBankWithdrawFormContinue()
 }
 
-@OptIn(ExperimentalTestApi::class)
 fun BaseTestCase.sendTangemPayBankWithdrawal(accessCode: String) {
     clickTangemPayBankWithdrawSend()
-    step("Enter access code") {
-        // Raw Compose on purpose: the dialog content waits for frames a 10 s Kakao retry would not advance.
-        composeTestRule.waitUntilAtLeastOneExists(unlockDialogAccessCodeInputMatcher, WAIT_UNTIL_TIMEOUT)
-        onHotWalletAccessCodeScreen { unlockDialogAccessCodeInput.performTextInput(accessCode) }
-    }
-    step("Dismiss keyboard") {
-        Espresso.closeSoftKeyboard()
-        waitForIdle()
-    }
+    enterHotWalletUnlockAccessCode(accessCode)
 }
 
 fun BaseTestCase.clickTangemPayBankWithdrawSend() {

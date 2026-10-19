@@ -3,6 +3,7 @@ package com.tangem.screens
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasAnyDescendant as withAnyDescendant
 import com.tangem.common.BaseTestCase
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R
@@ -335,6 +336,16 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
     val emptyReceiveFiatAmount: KNode = child {
         hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD))
         hasTestTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT)
+        useUnmergedTree = true
+    }
+
+    // Add funds renders both cards read-only, so the source card is told apart by its 'You send' header.
+    val sourceSelectTokenIcon: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.SELECT_TOKEN_ICON)
+        hasAnyAncestor(
+            withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD) and
+                withAnyDescendant(withText(getResourceString(R.string.swapping_from_title_v2), substring = true)),
+        )
         useUnmergedTree = true
     }
 

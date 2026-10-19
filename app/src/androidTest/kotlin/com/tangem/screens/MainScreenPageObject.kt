@@ -171,6 +171,38 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         }
     }
 
+    fun collapseOnScreenPageHeader() {
+        onScreenPage()?.performTouchInput {
+            swipeUp(startY = visibleSize.height * 0.6f, endY = visibleSize.height * 0.1f)
+        }
+    }
+
+    fun pullToRefreshOnScreenPage() {
+        checkNotNull(onScreenPage()) { "No wallet page is on screen" }.performTouchInput {
+            swipeDown(startY = 0f, endY = visibleSize.height.toFloat() * 6f, durationMillis = 800)
+        }
+    }
+
+    fun clickOnScreenAccountSection(accountName: String) {
+        val matcher = withTestTag(MainScreenTestTags.ACCOUNT_LIST_ITEM) and hasAnyDescendant(withText(accountName))
+        checkNotNull(onScreenPageChild(matcher)) { "Account '$accountName' is not on the on-screen wallet page" }
+            .performClick()
+    }
+
+    fun clickOnScreenTangemPayTile() {
+        checkNotNull(onScreenPageChild(withTestTag(TangemPayTestTags.MAIN_SCREEN_TILE))) {
+            "Tangem Pay tile is not on the on-screen wallet page"
+        }.performClick()
+    }
+
+    fun isTokenOnScreenPage(tokenName: String): Boolean = onScreenTokenRow(tokenName) != null
+
+    fun onScreenTokenCryptoAmount(tokenName: String): String? =
+        onScreenTokenRow(tokenName)?.fetchSemanticsNode()?.firstTextForTestTag(TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT)
+
+    private fun onScreenTokenRow(tokenName: String): SemanticsNodeInteraction? =
+        onScreenPageChild(withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM) and hasAnyDescendant(withText(tokenName)))
+
     private fun swipeCurrentPage(toPrevious: Boolean) {
         onScreenPage()?.performTouchInput { if (toPrevious) swipeRight() else swipeLeft() }
     }
