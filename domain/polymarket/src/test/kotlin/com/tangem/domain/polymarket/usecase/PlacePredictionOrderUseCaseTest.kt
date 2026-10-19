@@ -11,6 +11,7 @@ import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketClobAsset
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
 import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PredictionOrder
 import com.tangem.domain.polymarket.model.PredictionOrderSide
@@ -53,10 +54,10 @@ internal class PlacePredictionOrderUseCaseTest {
     fun `GIVEN credentials are stored WHEN invoke THEN places the order of the owner address`() = runTest {
         // Arrange
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
-        coEvery { repository.placeOrder(OWNER, CREDENTIALS, signedOrder, isNegRisk = false) } returns RESULT.right()
+        coEvery { repository.placeOrder(OWNER, CREDENTIALS, signedOrder) } returns RESULT.right()
 
         // Act
-        val actual = useCase(addresses = ADDRESSES, signedOrder = signedOrder, isNegRisk = false, version = V1)
+        val actual = useCase(addresses = ADDRESSES, signedOrder = signedOrder, version = V1)
 
         // Assert
         assertThat(actual).isEqualTo(RESULT.right())
@@ -67,11 +68,11 @@ internal class PlacePredictionOrderUseCaseTest {
     fun `GIVEN the exchange answers unauthorized WHEN invoke THEN clears the credentials`() = runTest {
         // Arrange
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
-        coEvery { repository.placeOrder(OWNER, CREDENTIALS, signedOrder, isNegRisk = false) } returns
+        coEvery { repository.placeOrder(OWNER, CREDENTIALS, signedOrder) } returns
             PredictionPlaceOrderError.Unauthorized(detail = "Unauthorized/Invalid api key").left()
 
         // Act
-        val actual = useCase(addresses = ADDRESSES, signedOrder = signedOrder, isNegRisk = false, version = V1)
+        val actual = useCase(addresses = ADDRESSES, signedOrder = signedOrder, version = V1)
 
         // Assert
         assertThat(actual).isEqualTo(
@@ -84,11 +85,11 @@ internal class PlacePredictionOrderUseCaseTest {
     fun `GIVEN the order itself is refused WHEN invoke THEN keeps the credentials`() = runTest {
         // Arrange
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
-        coEvery { repository.placeOrder(OWNER, CREDENTIALS, signedOrder, isNegRisk = false) } returns
+        coEvery { repository.placeOrder(OWNER, CREDENTIALS, signedOrder) } returns
             PredictionPlaceOrderError.Rejected(detail = "invalid order").left()
 
         // Act
-        useCase(addresses = ADDRESSES, signedOrder = signedOrder, isNegRisk = false, version = V1)
+        useCase(addresses = ADDRESSES, signedOrder = signedOrder, version = V1)
 
         // Assert
         coVerify(exactly = 0) { credentialsStore.clear(any()) }
@@ -100,11 +101,11 @@ internal class PlacePredictionOrderUseCaseTest {
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns null
 
         // Act
-        val actual = useCase(addresses = ADDRESSES, signedOrder = signedOrder, isNegRisk = false, version = V1)
+        val actual = useCase(addresses = ADDRESSES, signedOrder = signedOrder, version = V1)
 
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(PredictionPlaceOrderError.Unauthorized::class.java)
-        coVerify(exactly = 0) { repository.placeOrder(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { repository.placeOrder(any(), any(), any()) }
         coVerify(exactly = 0) { credentialsStore.clear(any()) }
     }
 
@@ -112,10 +113,10 @@ internal class PlacePredictionOrderUseCaseTest {
     fun `GIVEN a BUY WHEN invoke THEN no balance is refreshed before the order`() = runTest {
         // Arrange
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
-        coEvery { repository.placeOrder(OWNER, CREDENTIALS, signedOrder, isNegRisk = false) } returns RESULT.right()
+        coEvery { repository.placeOrder(OWNER, CREDENTIALS, signedOrder) } returns RESULT.right()
 
         // Act
-        useCase(addresses = ADDRESSES, signedOrder = signedOrder, isNegRisk = false, version = V1)
+        useCase(addresses = ADDRESSES, signedOrder = signedOrder, version = V1)
 
         // Assert
         coVerify(exactly = 0) { repository.syncBalanceAllowance(any(), any(), any()) }
@@ -130,16 +131,16 @@ internal class PlacePredictionOrderUseCaseTest {
         val sell = signedOrder(PredictionOrderSide.SELL)
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
         coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, model.expectedAsset) } returns Unit.right()
-        coEvery { repository.placeOrder(OWNER, CREDENTIALS, sell, isNegRisk = true) } returns RESULT.right()
+        coEvery { repository.placeOrder(OWNER, CREDENTIALS, sell) } returns RESULT.right()
 
         // Act
-        val actual = useCase(addresses = ADDRESSES, signedOrder = sell, isNegRisk = true, version = model.version)
+        val actual = useCase(addresses = ADDRESSES, signedOrder = sell, version = model.version)
 
         // Assert
         assertThat(actual).isEqualTo(RESULT.right())
         coVerifyOrder {
             repository.syncBalanceAllowance(OWNER, CREDENTIALS, model.expectedAsset)
-            repository.placeOrder(OWNER, CREDENTIALS, sell, isNegRisk = true)
+            repository.placeOrder(OWNER, CREDENTIALS, sell)
         }
     }
 
@@ -149,14 +150,14 @@ internal class PlacePredictionOrderUseCaseTest {
         val sell = signedOrder(PredictionOrderSide.SELL)
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
         coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, any()) } returns PolymarketAuthError.Network.left()
-        coEvery { repository.placeOrder(OWNER, CREDENTIALS, sell, isNegRisk = false) } returns RESULT.right()
+        coEvery { repository.placeOrder(OWNER, CREDENTIALS, sell) } returns RESULT.right()
 
         // Act
-        val actual = useCase(addresses = ADDRESSES, signedOrder = sell, isNegRisk = false, version = V1)
+        val actual = useCase(addresses = ADDRESSES, signedOrder = sell, version = V1)
 
         // Assert
         assertThat(actual).isEqualTo(RESULT.right())
-        coVerify(exactly = 1) { repository.placeOrder(OWNER, CREDENTIALS, sell, isNegRisk = false) }
+        coVerify(exactly = 1) { repository.placeOrder(OWNER, CREDENTIALS, sell) }
     }
 
     @Test
@@ -166,10 +167,10 @@ internal class PlacePredictionOrderUseCaseTest {
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
         coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, any()) } returns
             PolymarketAuthError.InvalidSignature.left()
-        coEvery { repository.placeOrder(OWNER, CREDENTIALS, sell, isNegRisk = false) } returns RESULT.right()
+        coEvery { repository.placeOrder(OWNER, CREDENTIALS, sell) } returns RESULT.right()
 
         // Act
-        useCase(addresses = ADDRESSES, signedOrder = sell, isNegRisk = false, version = V1)
+        useCase(addresses = ADDRESSES, signedOrder = sell, version = V1)
 
         // Assert
         coVerify(exactly = 0) { credentialsStore.clear(any()) }
@@ -190,6 +191,7 @@ internal class PlacePredictionOrderUseCaseTest {
             builder = "",
         ),
         signature = "0xsig",
+        domain = PolymarketExchangeDomain.CTF,
     )
 
     data class SellSyncTestModel(val version: PolymarketMarketVersion, val expectedAsset: PolymarketClobAsset)
