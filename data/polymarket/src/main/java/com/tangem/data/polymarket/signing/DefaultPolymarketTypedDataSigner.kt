@@ -29,7 +29,6 @@ import com.tangem.domain.polymarket.derivation.POLYMARKET_OWNER_DERIVATION_PATH
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketOnboardingSignatures
 import com.tangem.domain.polymarket.model.PolymarketSigningError
-import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
 import com.tangem.domain.polymarket.model.PredictionOrder
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import com.tangem.domain.polymarket.signing.PolymarketApprovalsPayload
@@ -86,10 +85,9 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
         .catchOn(dispatchers.io) {
             val context = signingContext(userWalletId).getOrElse { return@catchOn it.left() }
             val order = payload.toOrder()
-            val domain = PolymarketExchangeDomain.v1(isNegRisk = payload.draft.isNegRisk)
             val digest = PolymarketErc7739SignatureBuilder.digest(
                 order = order,
-                domain = domain,
+                domain = payload.draft.domain,
                 depositWalletAddress = order.maker,
             )
 
@@ -101,9 +99,9 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
                 signature = PolymarketErc7739SignatureBuilder.wrap(
                     innerSignature = inner,
                     order = order,
-                    domain = domain,
+                    domain = payload.draft.domain,
                 ),
-                domain = domain,
+                domain = payload.draft.domain,
             ).right()
         }
         .getOrElse { it.toSigningError().left() }

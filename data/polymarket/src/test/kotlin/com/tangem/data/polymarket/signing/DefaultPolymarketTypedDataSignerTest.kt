@@ -509,7 +509,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
         private fun orderPayload(): PredictionOrderPayload = PredictionOrderPayload(
             draft = PredictionOrderDraft(
                 tokenId = "1116017998421700000000000000000000000000000000000000000000000000047",
-                isNegRisk = false,
+                domain = PolymarketExchangeDomain.CTF,
                 side = PredictionOrderSide.BUY,
                 makerAmount = BigInteger("72000000"),
                 takerAmount = BigInteger("97959180"),
