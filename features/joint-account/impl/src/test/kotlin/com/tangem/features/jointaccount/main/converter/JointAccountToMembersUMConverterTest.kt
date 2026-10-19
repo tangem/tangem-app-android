@@ -33,7 +33,7 @@ import com.tangem.core.ui.R as CoreUiR
 internal class JointAccountToMembersUMConverterTest {
 
     private val onMemberInfoClick: (JointAccountMembersUM.MemberAvatarUM, TextReference, String) -> Unit = mockk(relaxed = true)
-    private val onInviteClick: (String) -> Unit = mockk(relaxed = true)
+    private val onInviteClick: (String, TextReference) -> Unit = mockk(relaxed = true)
     private val onActivateClick: (String) -> Unit = mockk(relaxed = true)
     private val onApprovalsInfoClick: (Int, Int) -> Unit = mockk(relaxed = true)
     private val onCloseClick: () -> Unit = mockk(relaxed = true)
@@ -116,8 +116,8 @@ internal class JointAccountToMembersUMConverterTest {
             slots.forEach { it.action!!.onClick() }
 
             // Assert
-            verify(exactly = 1) { onInviteClick(INVITE_A) }
-            verify(exactly = 1) { onInviteClick(INVITE_B) }
+            verify(exactly = 1) { onInviteClick(INVITE_A, ACCOUNT_NAME_REFERENCE) }
+            verify(exactly = 1) { onInviteClick(INVITE_B, ACCOUNT_NAME_REFERENCE) }
         }
 
         @Test
@@ -133,8 +133,8 @@ internal class JointAccountToMembersUMConverterTest {
             slot.action!!.onClick()
 
             // Assert
-            verify(exactly = 1) { onInviteClick(INVITE_A) }
-            verify(exactly = 0) { onInviteClick(INVITE_B) }
+            verify(exactly = 1) { onInviteClick(INVITE_A, ACCOUNT_NAME_REFERENCE) }
+            verify(exactly = 0) { onInviteClick(INVITE_B, ACCOUNT_NAME_REFERENCE) }
         }
 
         @Test
@@ -150,8 +150,24 @@ internal class JointAccountToMembersUMConverterTest {
             slot.action!!.onClick()
 
             // Assert
-            verify(exactly = 1) { onInviteClick(INVITE_A) }
-            verify(exactly = 0) { onInviteClick(INVITE_B) }
+            verify(exactly = 1) { onInviteClick(INVITE_A, ACCOUNT_NAME_REFERENCE) }
+            verify(exactly = 0) { onInviteClick(INVITE_B, ACCOUNT_NAME_REFERENCE) }
+        }
+
+        @Test
+        fun `GIVEN account name not arrived yet WHEN convert THEN no slot can be invited`() {
+            // Arrange
+            val input = input(
+                account = pendingAccount(members = listOf(creator)),
+                invites = listOf(INVITE_A, INVITE_B),
+                accountName = null,
+            )
+
+            // Act
+            val slots = converter.convert(input).freeSlots
+
+            // Assert
+            assertThat(slots.map { it.action }).containsExactly(null, null)
         }
 
         @Test
@@ -525,7 +541,11 @@ internal class JointAccountToMembersUMConverterTest {
         @Test
         fun `GIVEN account record not arrived yet WHEN convert THEN no card`() {
             // Arrange
-            val input = input(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
+            val input = input(
+                account = pendingAccount(members = listOf(creator)),
+                invites = listOf(INVITE_A),
+                accountName = null,
+            )
 
             // Act
             val state = converter.convert(input)
@@ -546,7 +566,7 @@ internal class JointAccountToMembersUMConverterTest {
         invites: List<String>,
         ownAddress: String? = null,
         sharedInvites: Set<String> = emptySet(),
-        accountName: AccountName? = null,
+        accountName: AccountName? = ACCOUNT_NAME,
         accountIcon: CryptoPortfolioIcon? = null,
     ) = JointAccountToMembersUMConverter.Input(
         account = account,
@@ -582,6 +602,7 @@ internal class JointAccountToMembersUMConverterTest {
 
         val NO_OP: () -> Unit = {}
         val ACCOUNT_NAME = AccountName.Custom(value = "Family savings").getOrNull()!!
+        val ACCOUNT_NAME_REFERENCE = stringReference(ACCOUNT_NAME.value)
         val ACCOUNT_ICON = CryptoPortfolioIcon.ofCustomAccount(
             value = CryptoPortfolioIcon.Icon.Family,
             color = CryptoPortfolioIcon.Color.CandyGrapeFizz,
