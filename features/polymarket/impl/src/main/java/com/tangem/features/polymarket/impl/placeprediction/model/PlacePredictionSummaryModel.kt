@@ -184,7 +184,6 @@ internal class PlacePredictionSummaryModel @Inject constructor(
             placePredictionOrderUseCase(
                 addresses = addresses,
                 signedOrder = signedOrder,
-                isNegRisk = isNegRisk,
                 version = frozen.quote.version,
             )
         }
