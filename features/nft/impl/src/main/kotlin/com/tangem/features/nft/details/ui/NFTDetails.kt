@@ -48,17 +48,19 @@ internal fun NFTDetails(state: NFTDetailsUM, modifier: Modifier = Modifier) {
             }
         }
 
-        PrimaryButton(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    bottom = 16.dp,
-                )
-                .fillMaxWidth(),
-            text = stringResourceSafe(id = R.string.common_send),
-            onClick = state.onSendClick,
-        )
+        if (state.isSendAvailable) {
+            PrimaryButton(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        bottom = 16.dp,
+                    )
+                    .fillMaxWidth(),
+                text = stringResourceSafe(id = R.string.common_send),
+                onClick = state.onSendClick,
+            )
+        }
     }
 }
