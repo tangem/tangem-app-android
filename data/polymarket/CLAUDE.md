@@ -44,7 +44,8 @@ provider strings and teams in provider order. `dataFetchedAt` dates the backend'
   (mirrors `py-clob-client`). `requestPath` is verbatim — leading slash, no query string. The passphrase
   travels in the clear and is not part of the HMAC. `GET price` is public: send no auth headers.
 - **`ClobAuth` EIP-712 domain has no `verifyingContract`; the `DepositWallet` batch domain does.** The CTF
-  and neg-risk exchanges share name and version and differ only in `verifyingContract`.
+  and neg-risk exchanges share name and version `"2"` and differ only in `verifyingContract`; ExchangeV3 (V2
+  markets) keeps the name with version `"3"`. Its separator is what the contract answers to `domainSeparator()`.
 - **ERC-7739 is not in the Blockchain SDK** — it is ported here. The order signature is the inner `R‖S‖V`
   followed by the exchange domain separator, the order struct hash, the type description and its 2-byte
   length. A byte-level mistake surfaces only as a CLOB rejection, so change the builders vector-first: the
