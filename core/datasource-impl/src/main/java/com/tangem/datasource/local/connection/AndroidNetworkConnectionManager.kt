@@ -6,7 +6,12 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import androidx.core.content.ContextCompat
 import com.tangem.core.local.connection.NetworkConnectionManager
+import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import javax.inject.Inject
 
 internal class AndroidNetworkConnectionManager @Inject constructor(
@@ -16,8 +21,37 @@ internal class AndroidNetworkConnectionManager @Inject constructor(
     override val isOnline: Boolean
         get() = isNetworkAvailable()
 
+    override val isOnlineFlow: Flow<Boolean> = callbackFlow {
+        val connectivityManager = connectivityManager()
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+                trySend(isNetworkAvailable())
+            }
+
+            override fun onLost(network: Network) {
+                trySend(connectivityManager?.activeNetwork != network && isNetworkAvailable())
+            }
+        }
+
+        trySend(isNetworkAvailable())
+
+        val isRegistered = try {
+            connectivityManager?.registerDefaultNetworkCallback(callback) != null
+        } catch (e: RuntimeException) {
+            TangemLogger.e("Network callback not registered, connection changes are not observed", e)
+            false
+        }
+
+        awaitClose {
+            if (isRegistered) runCatching { connectivityManager?.unregisterNetworkCallback(callback) }
+        }
+    }.distinctUntilChanged()
+
+    private fun connectivityManager(): ConnectivityManager? =
+        ContextCompat.getSystemService(applicationContext, ConnectivityManager::class.java)
+
     private fun isNetworkAvailable(): Boolean {
-        val connectivityManager = ContextCompat.getSystemService(applicationContext, ConnectivityManager::class.java)
+        val connectivityManager = connectivityManager()
 
         // Network that is currently in use (several networks can be presented at the same time)
         val defaultNetwork: Network = connectivityManager?.activeNetwork ?: return false
