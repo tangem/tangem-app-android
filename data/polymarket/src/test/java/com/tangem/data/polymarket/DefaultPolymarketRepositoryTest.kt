@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteFeesResponse
@@ -1363,7 +1364,7 @@ internal class DefaultPolymarketRepositoryTest {
         )
 
         fun standardExchangeSignature(): String = "0x" + "11".repeat(n = 65) +
-            PolymarketOrderTypedDataBuilder.domainSeparator(isNegRisk = false)
+            PolymarketOrderTypedDataBuilder.domainSeparator(PolymarketExchangeDomain.CTF)
                 .joinToString(separator = "") { byte -> "%02x".format(byte) }
 
         fun signedOrder(
