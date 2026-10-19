@@ -200,8 +200,19 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     fun onScreenTokenCryptoAmount(tokenName: String): String? =
         onScreenTokenRow(tokenName)?.fetchSemanticsNode()?.firstTextForTestTag(TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT)
 
-    private fun onScreenTokenRow(tokenName: String): SemanticsNodeInteraction? =
-        onScreenPageChild(withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM) and hasAnyDescendant(withText(tokenName)))
+    // A row below the screen edge has zero clipped bounds, so its unclipped position decides the page.
+    private fun onScreenTokenRow(tokenName: String): SemanticsNodeInteraction? {
+        val page = onScreenPage()?.fetchSemanticsNode()?.boundsInRoot ?: return null
+        val matcher = withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM) and hasAnyDescendant(withText(tokenName))
+        val nodes = semanticsProvider.onAllNodes(matcher, useUnmergedTree = true)
+        repeat(times = nodes.fetchSemanticsNodes().size) { index ->
+            val centerX = runCatching {
+                nodes[index].fetchSemanticsNode().let { it.positionInRoot.x + it.size.width / 2f }
+            }.getOrNull()
+            if (centerX != null && centerX >= page.left && centerX < page.right) return nodes[index]
+        }
+        return null
+    }
 
     private fun swipeCurrentPage(toPrevious: Boolean) {
         onScreenPage()?.performTouchInput { if (toPrevious) swipeRight() else swipeLeft() }
