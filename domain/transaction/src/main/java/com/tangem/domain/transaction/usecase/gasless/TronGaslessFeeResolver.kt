@@ -109,7 +109,7 @@ class TronGaslessFeeResolver(
         transactionData: TransactionData,
     ): Either<GetFeeError, TransactionFeeExtended>? {
         if (feeToken !is CryptoCurrency.Token) return null
-        if (transactionData.tronGaslessTokenContractOrNull() == null) return null
+        if (transactionData.tronGaslessFeeTokenContractOrNull() == null) return null
         if (!isTronGaslessSupportedUseCase(userWalletId, feeToken.network, feeToken)) return null
 
         return getTronGaslessFeeUseCase(
@@ -153,7 +153,7 @@ class TronGaslessFeeResolver(
         accountStatusList: AccountStatusList,
         fallbackStatus: CryptoCurrencyStatus?,
     ): CryptoCurrencyStatus? {
-        val contractAddress = transactionData.tronGaslessTokenContractOrNull() ?: return null
+        val contractAddress = transactionData.tronGaslessFeeTokenContractOrNull() ?: return null
         fun CryptoCurrencyStatus.isSentToken(): Boolean {
             val token = currency as? CryptoCurrency.Token ?: return false
             return token.network.id == network.id && token.contractAddress == contractAddress
