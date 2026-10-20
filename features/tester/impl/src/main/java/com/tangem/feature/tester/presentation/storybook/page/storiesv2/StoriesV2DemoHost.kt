@@ -122,9 +122,7 @@ private class StorybookAppComponentContext(
 
     override val navigationProvider: AppNavigationProvider = object : AppNavigationProvider {
         private val navigation = StackNavigation<Route>()
-        override val stack: List<Route> = emptyList()
         override fun getOrCreate(): StackNavigation<Route> = navigation
-        override fun updateStack(stack: List<Route>) = Unit
     }
 
     override val router: Router = DummyRouter()

@@ -10,22 +10,12 @@ import com.arkivanov.decompose.router.stack.StackNavigation
  */
 interface AppNavigationProvider {
 
-    /** Routes of the stack driven by [getOrCreate], as last reported through [updateStack]. */
-    val stack: List<Route>
-
     /**
      * Gets or creates a StackNavigation instance.
      *
      * @return The StackNavigation instance.
      */
     fun getOrCreate(): StackNavigation<Route>
-
-    /**
-     * Reports the current routes of the stack driven by [getOrCreate]. Called by the component that owns the stack.
-     *
-     * @param stack The current routes, from the bottom to the top.
-     */
-    fun updateStack(stack: List<Route>)
 }
 
 /**

@@ -5,9 +5,11 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.arkivanov.essenty.instancekeeper.InstanceKeeper
+import com.tangem.core.decompose.utils.stack
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
@@ -74,7 +76,9 @@ internal class DefaultRouter(
         )
     }
 
-    override fun contains(route: Route): Boolean = route in navigationProvider.stack
+    override suspend fun contains(route: Route): Boolean = withContext(dispatchers.mainImmediate) {
+        route in navigation.stack()
+    }
 
     private fun popTo(predicate: (Route) -> Boolean, onComplete: (isSuccess: Boolean) -> Unit) {
         navigateSafely(onComplete) { complete ->

@@ -1,7 +1,6 @@
 package com.tangem.feature.swap
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.account.Account
@@ -32,7 +31,6 @@ internal class StateBuilderInitialStateTest {
     private val appCurrencyProvider: Provider<AppCurrency> = mockk()
     private val isAccountsModeProvider: Provider<Boolean> = mockk()
     private val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork = mockk()
-    private val router: Router = mockk()
 
     private lateinit var sut: StateBuilder
 
@@ -50,7 +48,6 @@ internal class StateBuilderInitialStateTest {
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
             isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
-            router = router,
             isChooseTokenPulseEnabled = false,
         )
     }

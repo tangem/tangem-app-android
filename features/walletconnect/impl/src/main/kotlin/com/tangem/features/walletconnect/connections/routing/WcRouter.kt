@@ -45,5 +45,5 @@ internal class WcRouter(
         /** Not allowed */
     }
 
-    override fun contains(route: Route): Boolean = false
+    override suspend fun contains(route: Route): Boolean = false
 }
