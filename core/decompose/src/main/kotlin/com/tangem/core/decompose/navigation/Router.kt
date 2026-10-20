@@ -57,6 +57,7 @@ interface Router {
 
     /**
      * Pops routes from the navigation stack until the ***last*** route of [routeClass] that satisfies [predicate].
+     * Succeeds when such a route ends up on top, including when it already was.
      *
      * @param routeClass The class of the route to pop to.
      * @param predicate The condition the route to pop to must satisfy.

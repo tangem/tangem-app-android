@@ -8,6 +8,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class RouterExtTest {
@@ -37,6 +38,46 @@ internal class RouterExtTest {
         assertThat(stack).containsExactlyElementsIn(model.expectedStack).inOrder()
     }
 
+    @ParameterizedTest
+    @MethodSource("provideMatchingModels")
+    fun popToOrReplaceCurrentMatching(model: PopToOrReplaceCurrentModel) {
+        // Arrange
+        var stack = model.initialStack
+        val navigation: StackNavigation<Route> = mockk()
+        every { navigation.navigate(any(), any()) } answers {
+            val transformer = firstArg<(List<Route>) -> List<Route>>()
+            val callback = secondArg<(List<Route>, List<Route>) -> Unit>()
+            val oldStack = stack
+            stack = transformer(oldStack)
+            callback(stack, oldStack)
+        }
+        val navigationProvider: AppNavigationProvider = mockk {
+            every { getOrCreate() } returns navigation
+        }
+        val router = DefaultRouter(navigationProvider, TestingCoroutineDispatcherProvider())
+
+        // Act
+        router.popToOrReplaceCurrent(Details(id = 1)) { it.id == 1 }
+
+        // Assert
+        assertThat(stack).containsExactlyElementsIn(model.expectedStack).inOrder()
+    }
+
+    private fun provideMatchingModels() = listOf(
+        PopToOrReplaceCurrentModel(
+            initialStack = listOf(Wallet, Details(id = 1, flag = true)),
+            expectedStack = listOf(Wallet, Details(id = 1, flag = true)),
+        ),
+        PopToOrReplaceCurrentModel(
+            initialStack = listOf(Wallet, Details(id = 1, flag = true), Send),
+            expectedStack = listOf(Wallet, Details(id = 1, flag = true)),
+        ),
+        PopToOrReplaceCurrentModel(
+            initialStack = listOf(Wallet, Details(id = 2), Send),
+            expectedStack = listOf(Wallet, Details(id = 2), Details(id = 1)),
+        ),
+    )
+
     private fun provideTestModels() = listOf(
         PopToOrReplaceCurrentModel(
             initialStack = listOf(Wallet, Send),
@@ -62,4 +103,5 @@ internal class RouterExtTest {
     private data object Send : Route
     private data object TokenDetails : Route
     private data object OtherTokenDetails : Route
+    private data class Details(val id: Int, val flag: Boolean = false) : Route
 }

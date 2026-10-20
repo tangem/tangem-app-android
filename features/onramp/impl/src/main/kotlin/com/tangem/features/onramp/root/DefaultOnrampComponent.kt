@@ -91,12 +91,20 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
                 params = OnrampRedirectComponent.Params(
                     userWalletId = params.userWalletId,
                     onBack = navigation::pop,
-                    onSuccess = { txId -> router.replaceCurrent(AppRoute.OnrampSuccess(txId)) },
+                    onSuccess = ::openSuccess,
                     cryptoCurrency = config.cryptoCurrency,
                     onrampProviderWithQuote = config.quote,
                 ),
             )
         }
+
+    // A marketing banner can open another onramp flow over this one, so all of them give way to the success screen
+    private fun openSuccess(txId: String) {
+        val successRoute = AppRoute.OnrampSuccess(txId)
+        router.popToMatching(AppRoute::class, predicate = { it !is AppRoute.Onramp }) { isOnrampFlowClosed ->
+            if (isOnrampFlowClosed) router.push(successRoute) else router.replaceCurrent(successRoute)
+        }
+    }
 
     @AssistedFactory
     interface Factory : OnrampComponent.Factory {

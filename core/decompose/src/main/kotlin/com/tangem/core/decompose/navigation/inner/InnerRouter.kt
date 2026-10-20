@@ -97,13 +97,11 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
         onComplete: (Boolean) -> Unit,
     ) {
         if (T::class.java.isAssignableFrom(routeClass.java)) {
+            val matches: (Route) -> Boolean = { route -> routeClass.safeCast(route)?.let(predicate) == true }
+
             stackNavigation.navigate(
-                transformer = { stack ->
-                    stack
-                        .dropLastWhile { route -> routeClass.safeCast(route)?.let(predicate) != true }
-                        .ifEmpty { stack }
-                },
-                onComplete = { newStack, oldStack -> onComplete(newStack.size < oldStack.size) },
+                transformer = { stack -> stack.dropLastWhile { !matches(it) }.ifEmpty { stack } },
+                onComplete = { newStack, _ -> onComplete(newStack.lastOrNull()?.let(matches) == true) },
             )
         } else {
             fallBackRouter.popToMatching(routeClass, predicate, onComplete)
