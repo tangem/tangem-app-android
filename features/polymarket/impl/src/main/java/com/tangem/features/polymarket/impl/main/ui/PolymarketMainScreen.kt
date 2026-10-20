@@ -267,6 +267,7 @@ private fun FeedList(
                 PolymarketMainHeader(
                     balance = state.balance,
                     isAwaitingFunds = state.isAwaitingFunds,
+                    isRegionRestricted = state.isRegionRestricted,
                     positions = positions,
                 )
             }
