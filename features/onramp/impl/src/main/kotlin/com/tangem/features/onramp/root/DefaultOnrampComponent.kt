@@ -15,6 +15,7 @@ import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.onramp.component.OnrampComponent
 import com.tangem.features.onramp.main.OnrampMainComponent
@@ -98,15 +99,20 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
             )
         }
 
-    // A marketing banner or a buy deep link can open another onramp flow, so the success screen replaces all of them
     private fun openSuccess(txId: String) {
-        router.navigate(
-            transformer = { stack -> stack.filterNot { it is AppRoute.Onramp } + AppRoute.OnrampSuccess(txId) },
-        )
+        router.navigate(transformer = { stack -> stack.withOnrampSuccess(txId) })
     }
 
     @AssistedFactory
     interface Factory : OnrampComponent.Factory {
         override fun create(context: AppComponentContext, params: OnrampComponent.Params): DefaultOnrampComponent
     }
+}
+
+/**
+ * Replaces every onramp flow in the stack with the success screen of [txId]: a marketing banner or a buy deep link can
+ * open another onramp flow over this one, and none of them should be reachable after the purchase.
+ */
+internal fun List<Route>.withOnrampSuccess(txId: String): List<Route> {
+    return filterNot { it is AppRoute.Onramp } + AppRoute.OnrampSuccess(txId)
 }
