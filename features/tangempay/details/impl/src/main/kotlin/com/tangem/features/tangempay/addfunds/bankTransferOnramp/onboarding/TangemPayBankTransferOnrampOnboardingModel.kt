@@ -22,6 +22,7 @@ import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayO
 import com.tangem.features.tangempay.common.ifLoadedOrNull
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.withCacheBypass
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -63,7 +64,7 @@ internal class TangemPayBankTransferOnrampOnboardingModel @Inject constructor(
                 fees = TangemPayOnrampFeesUM.Loading,
                 isLoading = false,
                 onContinueClick = ::onContinueClick,
-                onTermsClick = { urlOpener.openUrl(VIRTUAL_ACCOUNT_TERMS_OF_USE_URL) },
+                onTermsClick = { urlOpener.openUrl(VIRTUAL_ACCOUNT_TERMS_OF_USE_URL.withCacheBypass()) },
                 onCloseClick = ::onCloseClick,
             ),
         )

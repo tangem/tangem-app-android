@@ -10,6 +10,7 @@ import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.pay.TangemPayEligibilityType
+import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
@@ -55,6 +56,9 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     private val isOrderMockMode: Boolean
         get() = isMockMode && System.getProperty(UITEST_ORDER_FROM_API_KEY) != "1"
 
+    private val isAuthMockMode: Boolean
+        get() = isMockMode && System.getProperty(UITEST_REAL_AUTH_KEY) != "1"
+
     override suspend fun validateDeeplink(link: String): Either<UniversalError, Boolean> = real.validateDeeplink(link)
 
     override suspend fun isTangemPayInitialDataProduced(userWalletId: UserWalletId): Boolean {
@@ -63,7 +67,7 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     }
 
     override suspend fun produceInitialData(userWalletId: UserWalletId) {
-        if (isMockMode) {
+        if (isAuthMockMode) {
             // Credentials come from MockAwareTangemPayStorage, but the "this wallet is a Paera customer" flag
             // is the real thing the enrollment writes — without it the wallet keeps the cached 404 answer and
             // no Payment account ever appears after accepting the offer.
@@ -214,8 +218,18 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     override suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean =
         real.isTangemPayDeactivated(userWalletId)
 
+    override suspend fun storeCustomerResidency(userWalletId: UserWalletId, residency: TangemPayCustomerResidency) =
+        real.storeCustomerResidency(userWalletId, residency)
+
+    override suspend fun getCustomerResidency(userWalletId: UserWalletId): TangemPayCustomerResidency? =
+        real.getCustomerResidency(userWalletId)
+
+    override suspend fun clearCustomerResidency(userWalletId: UserWalletId) =
+        real.clearCustomerResidency(userWalletId)
+
     private companion object {
         const val UITEST_ORDER_FROM_API_KEY = "uitest.tangempay.onboarding_order_from_api"
+        const val UITEST_REAL_AUTH_KEY = "uitest.tangempay.real_auth"
         const val MOCK_ORDER_ID = "mock-order-id"
         const val MOCK_VA_ORDER_ID = "mock-va-order-id"
     }

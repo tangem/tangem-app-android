@@ -86,9 +86,9 @@ internal class PromoEnrollAnalyticsResolverTest {
             ),
         ),
         ResolveModel(
-            name = "ineligible main wallet in a successful response is unavailable without code",
+            name = "ineligible main wallet in a successful response is unavailable with code 200",
             result = listOf(registered(mainWalletId, PromoRegistrationStatus.Ineligible)).right(),
-            expected = EnrollError(campaign, EnrollError.Reason.Unavailable, errorCode = null),
+            expected = EnrollError(campaign, EnrollError.Reason.Unavailable, errorCode = 200),
         ),
         ResolveModel(
             name = "404 is unavailable",
