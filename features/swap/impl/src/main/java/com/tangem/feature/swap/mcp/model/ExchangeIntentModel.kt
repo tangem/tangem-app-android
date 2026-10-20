@@ -1,6 +1,9 @@
 package com.tangem.feature.swap.mcp.model
 
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.utils.pushOrReplaceCurrent
@@ -27,8 +30,6 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
@@ -61,8 +62,11 @@ internal class ExchangeIntentModel @Inject constructor(
     private var loaded: LoadedExchange? = null
     private var isFinished = false
 
-    val uiState: StateFlow<ExchangeIntentUM>
-        field = MutableStateFlow<ExchangeIntentUM>(ExchangeIntentUM.Loading)
+    val offerSlotNavigation = SlotNavigation<ExchangeIntentUM>()
+
+    /** The offer on screen, for a sheet slot recreated with its component while the model is retained. */
+    val shownOffer: ExchangeIntentUM?
+        get() = loaded?.offer
 
     init {
         TangemLogger.i("Exchange intent received: id=${params.intentId}")
@@ -70,7 +74,9 @@ internal class ExchangeIntentModel @Inject constructor(
     }
 
     fun onClose() {
-        if (finish()) router.pop()
+        if (!finish()) return
+        offerSlotNavigation.dismiss()
+        router.pop()
     }
 
     override fun onDestroy() {
@@ -109,8 +115,8 @@ internal class ExchangeIntentModel @Inject constructor(
         ) ?: return close(reason = "the amount of the intent is malformed")
 
         currentCoroutineContext().ensureActive()
-        loaded = LoadedExchange(walletId = walletId, intent = intent, holdings = holdings)
-        uiState.value = offer
+        loaded = LoadedExchange(walletId = walletId, intent = intent, holdings = holdings, offer = offer)
+        offerSlotNavigation.activate(offer)
     }
 
     /** Not knowing the agent must not hold the offer back, so a slow or failed lookup gives the unknown agent. */
@@ -141,6 +147,7 @@ internal class ExchangeIntentModel @Inject constructor(
         )
 
         openSwap(route)
+        offerSlotNavigation.dismiss()
         router.pop()
     }
 
@@ -159,5 +166,6 @@ internal class ExchangeIntentModel @Inject constructor(
         val walletId: UserWalletId,
         val intent: ExchangeIntent,
         val holdings: ExchangeIntentHoldings.Both,
+        val offer: ExchangeIntentUM,
     )
 }
