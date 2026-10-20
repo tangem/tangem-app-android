@@ -1,5 +1,7 @@
 package com.tangem.screens
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.hasAnyDescendant
@@ -94,6 +96,11 @@ class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         useUnmergedTree = true
     }
 
+    val autoClaimedRewardsText: KNode = child {
+        hasText(getResourceString(CoreResR.string.staking_solana_details_auto_claiming_rewards_daily_text))
+        useUnmergedTree = true
+    }
+
     val yourStakesTitle: KNode = child {
         hasText(getResourceString(StakingImplR.string.staking_your_stakes))
         useUnmergedTree = true
@@ -128,6 +135,18 @@ class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
     fun activeStakingPendingIconOfValidator(validatorName: String): KNode = child {
         hasTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_PENDING_ICON)
         hasAnyAncestor(activeStakingRowMatcher(validatorName))
+        useUnmergedTree = true
+    }
+
+    fun pendingStakeAmountOfValidator(validatorName: String, amount: String): KNode = child {
+        addSemanticsMatcher(cryptoAmountMatcher(amount))
+        hasAnyAncestor(pendingStakingRowMatcher(validatorName))
+        useUnmergedTree = true
+    }
+
+    fun settledStakeAmountOfValidator(validatorName: String, amount: String): KNode = child {
+        addSemanticsMatcher(cryptoAmountMatcher(amount))
+        hasAnyAncestor(settledStakingRowMatcher(validatorName))
         useUnmergedTree = true
     }
 
@@ -173,6 +192,22 @@ class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
     }
 
 }
+
+private val pendingIconMatcher: SemanticsMatcher = withTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_PENDING_ICON)
+
+private fun cryptoAmountMatcher(amount: String): SemanticsMatcher {
+    val amountAtEnd = Regex("(^|\\s)${Regex.escape(amount)}$")
+    return SemanticsMatcher("text ends with crypto amount '$amount'") { node ->
+        val text = node.config.getOrNull(SemanticsProperties.Text)?.joinToString("").orEmpty()
+        amountAtEnd.containsMatchIn(text.replace('\u00A0', ' '))
+    }
+}
+
+private fun pendingStakingRowMatcher(validatorName: String): SemanticsMatcher =
+    activeStakingRowMatcher(validatorName) and hasAnyDescendant(pendingIconMatcher)
+
+private fun settledStakingRowMatcher(validatorName: String): SemanticsMatcher =
+    activeStakingRowMatcher(validatorName) and hasAnyDescendant(pendingIconMatcher).not()
 
 private fun activeStakingRowMatcher(validatorName: String): SemanticsMatcher =
     withTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_BLOCK) and

@@ -162,7 +162,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
 
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 @Stable
 @ModelScoped
 internal class SwapModel @Inject constructor(
@@ -399,6 +399,7 @@ internal class SwapModel @Inject constructor(
     private var isAmountChangedByUser: Boolean = false
     private var lastPermissionNotificationTokens: Pair<String, String>? = null
     private var lastGeoRestrictionTokens: Pair<String, String>? = null
+    private var lastNotEnoughFeeTokens: Pair<String, String>? = null
     private val lowSlippageNoticeAnalytics = LowSlippageNoticeAnalytics(analyticsEventHandler)
 
     private var preselectedFromCurrency: CryptoCurrency? = null
@@ -1166,20 +1167,7 @@ internal class SwapModel @Inject constructor(
         )
         singleTaskScheduler.cancelTask()
         if (amount.isBlank()) {
-            uiState = stateBuilder.createQuotesEmptyAmountState(
-                uiStateHolder = uiState,
-                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                emptyAmountState = SwapState.EmptyAmountState(
-                    zeroAmountEquivalent = stringReference(
-                        BigDecimal.ZERO.format {
-                            fiat(
-                                fiatCurrencyCode = selectedAppCurrencyFlow.value.code,
-                                fiatCurrencySymbol = selectedAppCurrencyFlow.value.symbol,
-                            )
-                        },
-                    ),
-                ),
-            )
+            setupBlankAmountUiState(fromSwapCurrencyStatus)
             return
         }
 
@@ -1373,6 +1361,7 @@ internal class SwapModel @Inject constructor(
         feeSelectorRepository.state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
         uiState = stateBuilder.addNotification(uiState, null) { startLoadingQuotesFromLastState() }
         lastGeoRestrictionTokens = null
+        lastNotEnoughFeeTokens = null
         lowSlippageNoticeAnalytics.reset()
     }
 
@@ -1389,6 +1378,7 @@ internal class SwapModel @Inject constructor(
                 sendAnalyticsForNotifications(provider, fromSwapCurrencyStatus.status, toSwapCurrencyStatus.status)
                 updatePermissionNotificationState(state)
                 updateGeoRestrictionNotificationState(state)
+                updateNotEnoughFeeNotificationState(state)
                 lowSlippageNoticeAnalytics.onQuotesLoaded(
                     state = state,
                     notifications = uiState.notifications,
@@ -1398,15 +1388,11 @@ internal class SwapModel @Inject constructor(
             is SwapState.Transfer -> Unit
             is SwapState.EmptyAmountState -> {
                 setupEmptyAmountUiState(state, fromSwapCurrencyStatus)
-                lastPermissionNotificationTokens = null
-                lastGeoRestrictionTokens = null
-                lowSlippageNoticeAnalytics.reset()
+                resetNoticeAnalyticsGuards()
             }
             is SwapState.SwapError -> {
                 setupErrorUiState(provider, state)
-                lastPermissionNotificationTokens = null
-                lastGeoRestrictionTokens = null
-                lowSlippageNoticeAnalytics.reset()
+                resetNoticeAnalyticsGuards()
             }
         }
     }
@@ -1453,15 +1439,6 @@ internal class SwapModel @Inject constructor(
         fromToken: CryptoCurrencyStatus,
         toToken: CryptoCurrencyStatus?,
     ) {
-        if (uiState.notifications.any { it is SwapNotificationUM.Error.UnableToCoverFeeWarning }) {
-            analyticsEventHandler.send(
-                SwapEvents.NoticeNotEnoughFee(
-                    token = fromToken.currency.symbol,
-                    blockchain = fromToken.currency.network.name,
-                    balance = AnalyticsParam.TokenBalanceState.fromAmount(fromToken.value.amount),
-                ),
-            )
-        }
         if (toToken != null && uiState.notifications.any { it is SwapNotificationUM.Warning.HighPriceImpact }) {
             analyticsEventHandler.send(
                 SwapEvents.HighPriceImpact(
@@ -1526,6 +1503,56 @@ internal class SwapModel @Inject constructor(
                 lastGeoRestrictionTokens = currentTokenPair
             }
         }
+    }
+
+    @VisibleForTesting
+    fun updateNotEnoughFeeNotificationState(state: SwapState.QuotesLoadedState) {
+        val fromStatus = state.fromTokenInfo.swapCurrencyStatus.status
+        val fromCurrency = fromStatus.currency
+        val toCurrency = state.toTokenInfo.swapCurrencyStatus.currency
+        val currentTokenPair = Pair(fromCurrency.id.value, toCurrency.id.value)
+
+        when {
+            uiState.notifications.none { it is SwapNotificationUM.Error.UnableToCoverFeeWarning } -> {
+                lastNotEnoughFeeTokens = null
+            }
+            lastNotEnoughFeeTokens != currentTokenPair -> {
+                analyticsEventHandler.send(
+                    SwapEvents.NoticeNotEnoughFee(
+                        token = fromCurrency.symbol,
+                        blockchain = fromCurrency.network.name,
+                        balance = AnalyticsParam.TokenBalanceState.fromAmount(fromStatus.value.amount),
+                    ),
+                )
+                lastNotEnoughFeeTokens = currentTokenPair
+            }
+        }
+    }
+
+    @VisibleForTesting
+    fun setupBlankAmountUiState(fromSwapCurrencyStatus: SwapCurrencyStatus) {
+        uiState = stateBuilder.createQuotesEmptyAmountState(
+            uiStateHolder = uiState,
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            emptyAmountState = SwapState.EmptyAmountState(
+                zeroAmountEquivalent = stringReference(
+                    BigDecimal.ZERO.format {
+                        fiat(
+                            fiatCurrencyCode = selectedAppCurrencyFlow.value.code,
+                            fiatCurrencySymbol = selectedAppCurrencyFlow.value.symbol,
+                        )
+                    },
+                ),
+            ),
+        )
+        resetNoticeAnalyticsGuards()
+    }
+
+    private fun resetNoticeAnalyticsGuards() {
+        lastPermissionNotificationTokens = null
+        lastGeoRestrictionTokens = null
+        lastNotEnoughFeeTokens = null
+        lowSlippageNoticeAnalytics.reset()
     }
 
     private fun setupEmptyAmountUiState(

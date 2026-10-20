@@ -80,6 +80,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
         },
         onExit = ::back,
         onWalletSelectorRequested = ::openWalletSelector,
+        shouldKeepBackStack = params is TangemPayOnboardingComponent.Params.FromBannerInSettings,
     )
 
     init {
@@ -105,7 +106,6 @@ internal class TangemPayOnboardingModel @Inject constructor(
                         callbacks = starterCallbacks,
                     )
                 }
-                // FromBanner* and mobile-onboard skip the backend validation that Params.Deeplink performs.
                 is TangemPayOnboardingComponent.Params.FromBannerInSettings,
                 is TangemPayOnboardingComponent.Params.FromBannerOnMain,
                 -> showOnboarding()
