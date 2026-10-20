@@ -56,7 +56,6 @@ import kotlin.time.Duration.Companion.minutes
 internal class ExpressTxToDetailsUMConverter(
     private val currency: CryptoCurrency,
     private val onGoToProvider: (String) -> Unit,
-    private val onCopyAddress: (String) -> Unit,
     private val lookup: TxHistoryLookupContext,
     private val menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM>,
     private val isBalanceHidden: Boolean,
@@ -97,7 +96,7 @@ internal class ExpressTxToDetailsUMConverter(
                 ),
                 statusStyle = swap.tx.status.headerStatusStyle(),
                 subtitle = headerSubtitle(swap.timestampMillis),
-                menu = menu.withCopyAddress(swap.tx.payoutAddress, onCopyAddress),
+                menu = menu,
             ),
             isBalanceHidden = isBalanceHidden,
             from = swap.tx.fromAsset.toAssetUM(
@@ -170,7 +169,7 @@ internal class ExpressTxToDetailsUMConverter(
                 ),
                 statusStyle = onramp.tx.status.headerStatusStyle(),
                 subtitle = headerSubtitle(onramp.timestampMillis),
-                menu = menu.withCopyAddress(onramp.tx.payoutAddress, onCopyAddress),
+                menu = menu,
             ),
             isBalanceHidden = isBalanceHidden,
             from = onramp.tx.fromFiat.toFiatAssetUM(
