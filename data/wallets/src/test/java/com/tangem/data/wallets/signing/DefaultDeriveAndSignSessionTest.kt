@@ -109,7 +109,7 @@ internal class DefaultDeriveAndSignSessionTest {
             )
         }
         coVerify(exactly = 1) {
-            tangemSdkManager.runTaskAsync<Unit>(any(), any(), any(), any(), any(), any(), any())
+            tangemSdkManager.runTaskAsync<Unit>(any(), any(), any(), any(), any(), any(), registerColdWallet = true)
         }
     }
 
