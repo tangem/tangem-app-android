@@ -29,7 +29,7 @@ internal class SeedPhraseCheckUiStateBuilder(
             MultiWalletSeedPhraseUM.GeneratedWordsCheck.WordField(
                 index = shownIndex,
                 word = TextFieldValue(""),
-                error = false,
+                isError = false,
                 onChange = { changeField ->
                     updateUiState { st ->
                         val newState = st.copy(
@@ -42,11 +42,11 @@ internal class SeedPhraseCheckUiStateBuilder(
                             }.toImmutableList(),
                         )
 
-                        val allFieldsCorrect = newState.allFieldsCorrect()
-                        readyToImport(allFieldsCorrect)
+                        val areAllFieldsCorrect = newState.allFieldsCorrect()
+                        readyToImport(areAllFieldsCorrect)
 
                         newState.copy(
-                            createWalletButtonEnabled = allFieldsCorrect,
+                            isCreateWalletButtonEnabled = areAllFieldsCorrect,
                         )
                     }
                 },
@@ -55,12 +55,12 @@ internal class SeedPhraseCheckUiStateBuilder(
 
         return MultiWalletSeedPhraseUM.GeneratedWordsCheck(
             wordFields = wordFields,
-            createWalletButtonEnabled = false,
-            createWalletButtonProgress = false,
+            isCreateWalletButtonEnabled = false,
+            isCreateWalletButtonInProgress = false,
             onCreateWalletButtonClick = {
                 val currentState = currentUiState() as? MultiWalletSeedPhraseUM.GeneratedWordsCheck
                     ?: return@GeneratedWordsCheck
-                if (currentState.createWalletButtonEnabled) {
+                if (currentState.isCreateWalletButtonEnabled) {
                     importWallet()
                 }
             },
@@ -71,11 +71,11 @@ internal class SeedPhraseCheckUiStateBuilder(
         newText: TextFieldValue,
         shownIndex: Int,
     ): MultiWalletSeedPhraseUM.GeneratedWordsCheck.WordField {
-        val correct = checkWordField(word = newText.text, shownIndex = shownIndex)
+        val isCorrect = checkWordField(word = newText.text, shownIndex = shownIndex)
 
         return copy(
             word = newText,
-            error = correct.not(),
+            isError = isCorrect.not(),
         )
     }
 

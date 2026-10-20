@@ -2,30 +2,13 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>BooleanPropertyNaming:DefaultWcRequestService.kt$DefaultWcRequestService$val noHaveCached = cachedRequest.none { (_, hashParams) -&gt; hash == hashParams }</ID>
-    <ID>BooleanPropertyNaming:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$val haveEmptyDto = emptyNetworksDto.isNotEmpty()</ID>
-    <ID>BooleanPropertyNaming:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$val haveEmptySessions = emptyNetworkSessions.isNotEmpty()</ID>
-    <ID>BooleanPropertyNaming:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$val haveSomeUnknown = unknownStoredSessions.isNotEmpty()</ID>
-    <ID>BooleanPropertyNaming:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$val haveSomeUnknownSdkSessions = unknownSdkSessions.isNotEmpty()</ID>
     <ID>CastNullableToNonNullableType:WcEthSendTransactionUseCase.kt$WcEthSendTransactionUseCase$as</ID>
     <ID>CastNullableToNonNullableType:WcEthSignTransactionUseCase.kt$WcEthSignTransactionUseCase$as</ID>
-    <ID>NoNameShadowing:CaipNamespaceDelegate.kt$CaipNamespaceDelegate$optionalNamespaces</ID>
-    <ID>NoNameShadowing:CaipNamespaceDelegate.kt$CaipNamespaceDelegate$requiredNamespaces</ID>
-    <ID>NoNameShadowing:WcSolanaNetwork.kt$WcSolanaNetwork$request</ID>
     <ID>NullCheckOnMutableProperty:WcEthSendTransactionUseCase.kt$WcEthSendTransactionUseCase$if (dAppFee != null) return dAppFee</ID>
     <ID>NullCheckOnMutableProperty:WcEthSignTransactionUseCase.kt$WcEthSignTransactionUseCase$if (dAppFee != null) return dAppFee</ID>
-    <ID>NullableBooleanCheck:DefaultWcPairService.kt$DefaultWcPairService$existSessionTopic(request.uri).getOrNull() ?: false</ID>
     <ID>SuspendFunSwallowedCancellation:DefaultWcPairService.kt$DefaultWcPairService$runCatching</ID>
     <ID>SuspendFunSwallowedCancellation:DefaultWcPairUseCase.kt$DefaultWcPairUseCase$runCatching</ID>
     <ID>UseAnyOrNoneInsteadOfFind:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$find { it.sdkModel.topic == dto.topic }</ID>
-    <ID>UseEmptyCounterpart:AssociateNetworksDelegate.kt$AssociateNetworksDelegate.Companion$listOf()</ID>
-    <ID>UseEmptyCounterpart:WcAppMetaDataConverter.kt$WcAppMetaDataConverter$listOf()</ID>
-    <ID>UseEmptyCounterpart:WcNetworksConverter.kt$WcNetworksConverter$listOf()</ID>
-    <ID>UseEmptyCounterpart:WcSdkSessionConverter.kt$WcSdkSessionConverter$listOf()</ID>
-    <ID>UseOrEmpty:AssociateNetworksDelegate.kt$AssociateNetworksDelegate.Companion$proposal.chains ?: listOf()</ID>
-    <ID>UseOrEmpty:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$storeSession.url ?: sdkSession.metaData?.url ?: ""</ID>
-    <ID>UseOrEmpty:WcNetworksConverter.kt$WcNetworksConverter$getAccountStatus(accountId) ?.flattenCurrencies() ?.map { it.currency } ?.filterIsInstance&lt;CryptoCurrency.Coin&gt;() ?.map(CryptoCurrency.Coin::network) ?: emptyList()</ID>
-    <ID>UseOrEmpty:WcSdkSessionConverter.kt$WcSdkSessionConverter$session.chains ?: listOf()</ID>
     <ID>UselessCallOnNotNull:DefaultWcRequestUseCaseFactory.kt$DefaultWcRequestUseCaseFactory$error.code().orEmpty()</ID>
   </CurrentIssues>
 </SmellBaseline>

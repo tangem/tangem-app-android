@@ -124,7 +124,7 @@ private fun TokenHeader(
 private fun NetworkRow(state: AddTokenUM.Network, modifier: Modifier = Modifier) {
     TangemRowContainer(
         modifier
-            .clickable(enabled = state.editable, onClick = state.onClick)
+            .clickable(enabled = state.isEditable, onClick = state.onClick)
             .background(
                 color = TangemTheme.colors2.surface.level3,
                 shape = RoundedCornerShape(20.dp),
@@ -153,7 +153,7 @@ private fun NetworkRow(state: AddTokenUM.Network, modifier: Modifier = Modifier)
             style = TangemTheme.typography2.bodyMedium16,
             color = TangemTheme.colors2.text.neutral.primary,
         )
-        if (state.editable) {
+        if (state.isEditable) {
             Icon(
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.TAIL)
@@ -191,7 +191,7 @@ private fun AddButton(state: AddTokenUM.Button, modifier: Modifier = Modifier) {
         isEnabled = state.isEnabled,
         size = TangemButtonSize.X12,
         shape = TangemButtonShape.Rounded,
-        isLoading = state.showProgress,
+        isLoading = state.shouldShowProgress,
     )
 }
 

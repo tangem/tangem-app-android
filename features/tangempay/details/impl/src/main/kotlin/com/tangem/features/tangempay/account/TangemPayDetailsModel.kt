@@ -520,7 +520,7 @@ internal class TangemPayDetailsModel @Inject constructor(
                 shouldShowWarning = true,
                 cryptoCurrency = data.currency,
                 userWalletId = data.walletId,
-                showMemoDisclaimer = false,
+                shouldShowMemoDisclaimer = false,
                 receiveAddress = data.receiveAddress,
             )
             bottomSheetNavigation.activate(TangemPayDetailsNavigation.Receive(config))
