@@ -72,6 +72,10 @@
         "version": "6.4.1"
     },
     {
+        "name": "TWI_1850_TRON_GASLESS_DEX_SWAP_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE",
         "version": "undefined"
     },
