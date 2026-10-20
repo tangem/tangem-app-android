@@ -20,6 +20,7 @@ internal data class PolymarketMainUM(
     val isCategoriesLoading: Boolean = false,
     val pendingScrollPosition: PolymarketFeedScrollPosition? = null,
     val isAwaitingFunds: Boolean = false,
+    val isRegionRestricted: Boolean = false,
 ) {
 
     @Immutable
