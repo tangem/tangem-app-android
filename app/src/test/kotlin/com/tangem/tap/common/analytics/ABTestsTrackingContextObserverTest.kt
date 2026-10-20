@@ -23,7 +23,7 @@ internal class ABTestsTrackingContextObserverTest {
         walletId = UserWalletId("00aa"),
         hotWalletId = mockk(relaxed = true),
         wallets = null,
-        backedUp = false,
+        isBackedUp = false,
     )
 
     @BeforeEach

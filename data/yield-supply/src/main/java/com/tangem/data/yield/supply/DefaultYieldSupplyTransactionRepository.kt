@@ -61,14 +61,14 @@ internal class DefaultYieldSupplyTransactionRepository(
             cryptoCurrency = cryptoCurrency,
         ) ?: error("Calculated yield contract address is null")
 
-        val maxNetworkFee = maxNetworkFee.convertToSdkAmount(cryptoCurrencyStatus)
+        val sdkMaxNetworkFee = maxNetworkFee.convertToSdkAmount(cryptoCurrencyStatus)
 
         return buildEnterTransactions(
             walletManager = walletManager,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             existingYieldAddress = existingYieldContractAddress,
             calculatedYieldContractAddress = calculatedYieldContractAddress,
-            maxNetworkFee = maxNetworkFee,
+            maxNetworkFee = sdkMaxNetworkFee,
         )
     }
 
@@ -159,15 +159,15 @@ internal class DefaultYieldSupplyTransactionRepository(
 
         val amount = getEnterAmount(cryptoCurrency, yieldSupplyStatus)
 
-        val emptyContractAddress = existingYieldAddress == null || existingYieldAddress == EthereumUtils.ZERO_ADDRESS
-        val activeYieldContractAddress = if (emptyContractAddress) {
+        val isContractAddressEmpty = existingYieldAddress == null || existingYieldAddress == EthereumUtils.ZERO_ADDRESS
+        val activeYieldContractAddress = if (isContractAddressEmpty) {
             calculatedYieldContractAddress
         } else {
             existingYieldAddress
         }
 
         when {
-            yieldSupplyStatus == null || emptyContractAddress -> {
+            yieldSupplyStatus == null || isContractAddressEmpty -> {
                 enterTransactions.add(
                     createDeployTransaction(
                         walletManager = walletManager,
@@ -567,9 +567,9 @@ internal class DefaultYieldSupplyTransactionRepository(
                 contractAddress = cryptoCurrency.contractAddress,
                 decimals = cryptoCurrency.decimals,
             ),
-            isActive = yieldSupplyStatus?.isActive ?: false,
-            isInitialized = yieldSupplyStatus?.isInitialized ?: false,
-            isAllowedToSpend = yieldSupplyStatus?.isAllowedToSpend ?: false,
+            isActive = yieldSupplyStatus?.isActive == true,
+            isInitialized = yieldSupplyStatus?.isInitialized == true,
+            isAllowedToSpend = yieldSupplyStatus?.isAllowedToSpend == true,
         ),
     )
 }

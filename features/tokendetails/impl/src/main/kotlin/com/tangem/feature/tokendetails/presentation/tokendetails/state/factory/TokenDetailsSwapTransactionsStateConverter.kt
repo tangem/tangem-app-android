@@ -87,7 +87,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                         hasLongTime = statusModel?.hasLongTime,
                         providerName = transaction.provider.name,
                     )
-                    val showProviderLink = getShowProviderLink(notification, transaction.status)
+                    val shouldShowProviderLink = getShowProviderLink(notification, transaction.status)
                     result.add(
                         ExchangeUM(
                             fromUserWalletId = UserWalletId(swapTransaction.fromUserWalletId),
@@ -95,7 +95,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                             statuses = getStatuses(statusModel?.status),
                             notification = notification,
                             activeStatus = statusModel?.status,
-                            showProviderLink = showProviderLink,
+                            shouldShowProviderLink = shouldShowProviderLink,
                             fromCryptoCurrency = fromCryptoCurrency,
                             toCryptoCurrency = toCryptoCurrency,
                             info = createStateInfo(
@@ -107,7 +107,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                                 toFiatAmount = toFiatAmount,
                                 fromFiatAmount = fromFiatAmount,
                             ),
-                            hasLongTime = transaction.status?.hasLongTime ?: false,
+                            hasLongTime = transaction.status?.hasLongTime == true,
                         ),
                     )
                 }
@@ -128,12 +128,12 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             hasLongTime = statusModel.hasLongTime,
             providerName = tx.provider.name,
         )
-        val showProviderLink = getShowProviderLink(notification, statusModel)
+        val shouldShowProviderLink = getShowProviderLink(notification, statusModel)
         return tx.copy(
             activeStatus = statusModel.status,
             notification = notification,
             statuses = getStatuses(statusModel.status, hasFailed),
-            showProviderLink = showProviderLink,
+            shouldShowProviderLink = shouldShowProviderLink,
             info = tx.info.copy(
                 txExternalId = statusModel.txExternalId,
                 txExternalUrl = statusModel.txExternalUrl,

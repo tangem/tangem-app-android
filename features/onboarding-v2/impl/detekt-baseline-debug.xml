@@ -2,47 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>BooleanPropertyNaming:MultiWalletAccessCodeComponent.kt$MultiWalletAccessCodeComponent$val showBs by showBs.collectAsStateWithLifecycle()</ID>
-    <ID>BooleanPropertyNaming:MultiWalletAccessCodeUM.kt$MultiWalletAccessCodeUM$val atLeast4CharError: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:MultiWalletAccessCodeUM.kt$MultiWalletAccessCodeUM$val codesNotMatchError: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:MultiWalletBackupUM.kt$MultiWalletBackupUM$val addBackupButtonEnabled: Boolean = true</ID>
-    <ID>BooleanPropertyNaming:MultiWalletBackupUM.kt$MultiWalletBackupUM$val addBackupButtonLoading: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:MultiWalletBackupUM.kt$MultiWalletBackupUM$val finalizeButtonEnabled: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:MultiWalletBackupUM.kt$MultiWalletBackupUMDialog$val warningCancelColor: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:MultiWalletCreateWalletModel.kt$MultiWalletCreateWalletModel$val cardDoesNotSupportBackup = result.data.card.settings.isBackupAllowed.not()</ID>
-    <ID>BooleanPropertyNaming:MultiWalletCreateWalletUM.kt$MultiWalletCreateWalletUM$val showOtherOptionsButton: Boolean</ID>
-    <ID>BooleanPropertyNaming:MultiWalletFinalizeUM.kt$MultiWalletFinalizeUM$val scanPrimary: Boolean = true</ID>
-    <ID>BooleanPropertyNaming:MultiWalletSeedPhraseUM.kt$MultiWalletSeedPhraseUM.GeneratedWordsCheck$val createWalletButtonEnabled: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:MultiWalletSeedPhraseUM.kt$MultiWalletSeedPhraseUM.GeneratedWordsCheck$val createWalletButtonProgress: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:MultiWalletSeedPhraseUM.kt$MultiWalletSeedPhraseUM.GeneratedWordsCheck.WordField$val error: Boolean</ID>
-    <ID>BooleanPropertyNaming:MultiWalletSeedPhraseUM.kt$MultiWalletSeedPhraseUM.Import$val createWalletEnabled: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:MultiWalletSeedPhraseUM.kt$MultiWalletSeedPhraseUM.Import$val createWalletProgress: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:MultiWalletUpgradeWalletModel.kt$MultiWalletUpgradeWalletModel$val cardDoesNotSupportBackup = result.data.card.settings.isBackupAllowed.not()</ID>
-    <ID>BooleanPropertyNaming:OnboardingDialogUM.kt$OnboardingDialogUM$val dismissWarningColor: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:OnboardingDone.kt$var showConfetti by remember { mutableStateOf(false) }</ID>
-    <ID>BooleanPropertyNaming:OnboardingMultiWalletComponent.kt$OnboardingMultiWalletComponent.Params$val withSeedPhraseFlow: Boolean</ID>
-    <ID>BooleanPropertyNaming:OnboardingNoteCreateWalletUM.kt$OnboardingNoteCreateWalletUM$val createWalletInProgress: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:OnboardingRoute.kt$OnboardingRoute.MultiWallet$val withSeedPhraseFlow: Boolean</ID>
-    <ID>BooleanPropertyNaming:OnboardingStepperComponent.kt$OnboardingStepperComponent.StepperState$val showProgress: Boolean</ID>
-    <ID>BooleanPropertyNaming:OnboardingTwin.kt$var toggle by remember { mutableStateOf(false) }</ID>
-    <ID>BooleanPropertyNaming:OnboardingTwinModel.kt$OnboardingTwinModel$val twinningInProgress = state is OnboardingTwinUM.ScanCard &amp;&amp; (state.step == OnboardingTwinUM.ScanCard.Step.Second || state.step == OnboardingTwinUM.ScanCard.Step.Third)</ID>
-    <ID>BooleanPropertyNaming:OnboardingTwinUM.kt$OnboardingTwinUM.ResetWarning$val acceptToggle: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:OnboardingVisaAccessCodeUM.kt$OnboardingVisaAccessCodeUM$val accessCodeHidden: Boolean = true</ID>
-    <ID>BooleanPropertyNaming:OnboardingVisaAccessCodeUM.kt$OnboardingVisaAccessCodeUM$val atLeastMinCharsError: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:OnboardingVisaAccessCodeUM.kt$OnboardingVisaAccessCodeUM$val buttonLoading: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:OnboardingVisaAccessCodeUM.kt$OnboardingVisaAccessCodeUM$val codesNotMatchError: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:OnboardingVisaApproveUM.kt$OnboardingVisaApproveUM$val approveButtonLoading: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:OnboardingVisaPinCodeUM.kt$OnboardingVisaPinCodeUM$val submitButtonEnabled: Boolean = true</ID>
-    <ID>BooleanPropertyNaming:OnboardingVisaPinCodeUM.kt$OnboardingVisaPinCodeUM$val submitButtonLoading: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:OnboardingVisaRoute.kt$OnboardingVisaRoute.PinCode$val pinCodeValidationError: Boolean</ID>
-    <ID>BooleanPropertyNaming:OnboardingVisaRoute.kt$OnboardingVisaRoute.TangemWalletApproveOption$val allowNavigateBack: Boolean</ID>
-    <ID>BooleanPropertyNaming:OnboardingVisaWelcomeUM.kt$OnboardingVisaWelcomeUM$val continueButtonLoading: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:SeedPhraseCheckUiStateBuilder.kt$SeedPhraseCheckUiStateBuilder$val allFieldsCorrect = newState.allFieldsCorrect()</ID>
-    <ID>BooleanPropertyNaming:SeedPhraseCheckUiStateBuilder.kt$SeedPhraseCheckUiStateBuilder$val correct = checkWordField(word = newText.text, shownIndex = shownIndex)</ID>
-    <ID>BooleanPropertyNaming:SeedPhraseState.kt$SeedPhraseState$val readyToImport: Boolean</ID>
-    <ID>BooleanPropertyNaming:Wallet1ChooseOptionModel.kt$Wallet1ChooseOptionModel$private var skipClicked = false</ID>
-    <ID>BooleanPropertyNaming:WalletArtwork.kt$WalletArtworksState.Leapfrog$val threeCards: Boolean = true</ID>
-    <ID>BooleanPropertyNaming:WalletArtwork.kt$WalletArtworksState.Stack$val threeCards: Boolean = true</ID>
     <ID>CanBeNonNullable:DefaultOnboardingTwinComponent.kt$DefaultOnboardingTwinComponent.TwinInnerNavigationState$override val stackMaxSize: Int? = 5</ID>
     <ID>MaxChainedCallsOnSameLine:MultiWalletCreateWalletModel.kt$MultiWalletCreateWalletModel$result.data.card.settings.isBackupAllowed.not()</ID>
     <ID>MaxChainedCallsOnSameLine:MultiWalletUpgradeWalletModel.kt$MultiWalletUpgradeWalletModel$result.data.card.settings.isBackupAllowed.not()</ID>
@@ -51,18 +10,7 @@
     <ID>MaxChainedCallsOnSameLine:OnboardingVisaAccessCodeModel.kt$OnboardingVisaAccessCodeModel$result.data.signedActivationData.dataToSign.request.activationOrderInfo.orderId</ID>
     <ID>MaxChainedCallsOnSameLine:OnboardingVisaAccessCodeModel.kt$OnboardingVisaAccessCodeModel$result.data.signedActivationData.dataToSign.request.cardWalletAddress</ID>
     <ID>MaxChainedCallsOnSameLine:Wallet1ChooseOptionModel.kt$Wallet1ChooseOptionModel$params.multiWalletState.value.currentScanResponse.card.canSkipBackup</ID>
-    <ID>NoNameShadowing:MultiWalletCreateWalletModel.kt$MultiWalletCreateWalletModel${ it.copy(resultUserWallet = userWallet) }</ID>
-    <ID>NoNameShadowing:MultiWalletUpgradeWalletModel.kt$MultiWalletUpgradeWalletModel${ it.copy(resultUserWallet = userWallet) }</ID>
-    <ID>NoNameShadowing:Wallet1ChooseOptionModel.kt$Wallet1ChooseOptionModel${ it.copy(resultUserWallet = userWallet) }</ID>
     <ID>PropertyUsedBeforeDeclaration:MultiWalletCreateWalletModel.kt$MultiWalletCreateWalletModel$onDone</ID>
     <ID>UnreachableCode:OnboardingNoteCreateWalletModel.kt$OnboardingNoteCreateWalletModel$params.childParams.commonState.value.scanResponse ?: return@launch</ID>
-    <ID>UseEmptyCounterpart:OnboardingEntryEvent.kt$OnboardingEntryEvent$mapOf()</ID>
-    <ID>UseEmptyCounterpart:OnboardingEvent.kt$OnboardingEvent$mapOf()</ID>
-    <ID>UseEmptyCounterpart:OnboardingEvent.kt$OnboardingEvent.Backup$mapOf()</ID>
-    <ID>UseEmptyCounterpart:OnboardingEvent.kt$OnboardingEvent.Twins$mapOf()</ID>
-    <ID>UseEmptyCounterpart:OnboardingVisaAnalyticsEvent.kt$OnboardingVisaAnalyticsEvent$mapOf()</ID>
-    <ID>UseEmptyCounterpart:VisaAnalyticsEvent.kt$VisaAnalyticsEvent$mapOf()</ID>
-    <ID>UseEmptyCounterpart:WalletArtwork.kt$listOf()</ID>
-    <ID>UseOrEmpty:OnboardingVisaPinCode.kt$value.getOrNull(index)?.toString() ?: ""</ID>
   </CurrentIssues>
 </SmellBaseline>

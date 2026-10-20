@@ -69,7 +69,7 @@ class DefaultTxHistoryRepository @Inject constructor(
                         userWalletId = userWalletId,
                         currency = currency,
                         pageSize = pageSize,
-                        refresh = refresh,
+                        isRefresh = refresh,
                     ),
                     txHistoryItemsStore = txHistoryItemsStore,
                     walletManagersFacade = walletManagersFacade,

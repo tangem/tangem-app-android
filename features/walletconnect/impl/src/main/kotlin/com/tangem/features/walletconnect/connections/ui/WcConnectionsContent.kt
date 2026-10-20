@@ -299,7 +299,7 @@ private fun NewConnectionFooter(onClick: () -> Unit, modifier: Modifier = Modifi
 
 @Composable
 private fun ConnectionsTopBar(config: WcConnectionsTopAppBarConfig, showEndButton: Boolean) {
-    var showDropdownMenu by rememberSaveable { mutableStateOf(false) }
+    var shouldShowDropdownMenu by rememberSaveable { mutableStateOf(false) }
 
     TangemTopNavigation(
         title = resourceReference(R.string.wc_connections),
@@ -311,16 +311,16 @@ private fun ConnectionsTopBar(config: WcConnectionsTopAppBarConfig, showEndButto
                 TangemButton.GroupEntry(
                     imageVector = Icons.ic_dots_horizontal_20,
                     modifier = Modifier.testTag(WalletConnectScreenTestTags.MORE_BUTTON),
-                    onClick = { showDropdownMenu = true },
+                    onClick = { shouldShowDropdownMenu = true },
                 )
                 TangemDropdownMenu(
-                    expanded = showDropdownMenu,
+                    expanded = shouldShowDropdownMenu,
                     modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
-                    onDismissRequest = { showDropdownMenu = false },
+                    onDismissRequest = { shouldShowDropdownMenu = false },
                     content = {
                         TangemDropdownItem(
                             item = config.disconnectAllItem,
-                            dismissParent = { showDropdownMenu = false },
+                            dismissParent = { shouldShowDropdownMenu = false },
                         )
                     },
                 )

@@ -285,5 +285,5 @@ internal class PolymarketActivitySessionTest {
     private fun activity(id: String = "activity") = mockk<PolymarketActivity> { every { this@mockk.id } returns id }
 
     private fun page(items: List<PolymarketActivity> = emptyList(), last: Boolean = true) =
-        BatchFetchResult.Success(data = items, empty = items.isEmpty(), last = last)
+        BatchFetchResult.Success(data = items, isEmpty = items.isEmpty(), isLast = last)
 }
