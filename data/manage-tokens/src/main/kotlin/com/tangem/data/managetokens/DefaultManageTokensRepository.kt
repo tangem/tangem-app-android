@@ -138,8 +138,8 @@ internal class DefaultManageTokensRepository(
 
         return BatchFetchResult.Success(
             data = items,
-            empty = items.isEmpty(),
-            last = items.size < request.limit,
+            isEmpty = items.isEmpty(),
+            isLast = items.size < request.limit,
         )
     }
 
@@ -247,8 +247,8 @@ internal class DefaultManageTokensRepository(
         val accountDerivation = accountDTO?.toAccountDerivation()
             ?: return BatchFetchResult.Success(
                 data = emptyList(),
-                empty = true,
-                last = true,
+                isEmpty = true,
+                isLast = true,
             )
 
         val items = managedCryptoCurrencyFactory.createTestnetWithCustomTokens(
@@ -270,8 +270,8 @@ internal class DefaultManageTokensRepository(
 
         return BatchFetchResult.Success(
             data = items,
-            empty = items.isEmpty(),
-            last = true,
+            isEmpty = items.isEmpty(),
+            isLast = true,
         )
     }
 

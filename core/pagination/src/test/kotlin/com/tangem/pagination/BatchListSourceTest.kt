@@ -25,7 +25,7 @@ internal class BatchListSourceTest {
         val requested = mutableListOf<Int>()
         val (source, actions) = createSource { offset ->
             requested += offset
-            BatchFetchResult.Success(listOf(offset), empty = false, last = false)
+            BatchFetchResult.Success(listOf(offset), isEmpty = false, isLast = false)
         }
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             source.state.collect { state ->
@@ -45,7 +45,7 @@ internal class BatchListSourceTest {
         assertThat(source.state.value).isEqualTo(
             BatchListState(
                 data = listOf(Batch(0, listOf(0)), Batch(1, listOf(1)), Batch(2, listOf(2))),
-                status = PaginationStatus.Paginating(BatchFetchResult.Success(listOf(2), empty = false, last = false)),
+                status = PaginationStatus.Paginating(BatchFetchResult.Success(listOf(2), isEmpty = false, isLast = false)),
             ),
         )
     }
@@ -58,7 +58,7 @@ internal class BatchListSourceTest {
         val (source, actions) = createSource { offset ->
             requested += offset
             if (offset > 0) response.await()
-            BatchFetchResult.Success(listOf(offset), empty = false, last = offset > 0)
+            BatchFetchResult.Success(listOf(offset), isEmpty = false, isLast = offset > 0)
         }
         actions.emit(BatchAction.Reload("positions"))
         runCurrent()
@@ -83,7 +83,7 @@ internal class BatchListSourceTest {
         val response = CompletableDeferred<Unit>()
         val (source, actions) = createSource { offset ->
             if (offset > 0) withContext(NonCancellable) { response.await() }
-            BatchFetchResult.Success(listOf(offset), empty = false, last = offset > 0)
+            BatchFetchResult.Success(listOf(offset), isEmpty = false, isLast = offset > 0)
         }
         actions.emit(BatchAction.Reload("positions"))
         runCurrent()

@@ -121,6 +121,33 @@ internal class BankWithdrawFormValidatorTest {
             expected = BankWithdrawFieldError.InvalidFormat,
         ),
         withCountry(BankWithdrawFormField.PostalCode, "SW1A 1AA", country = "GB", expected = null),
+        withCountry(BankWithdrawFormField.PostalCode, "10115", country = "DE", expected = null),
+        withCountry(BankWithdrawFormField.PostalCode, "00-950", country = "PL", expected = null),
+        withCountry(BankWithdrawFormField.PostalCode, "1".repeat(20), country = "DE", expected = null),
+        withCountry(
+            BankWithdrawFormField.PostalCode,
+            "1".repeat(21),
+            country = "DE",
+            expected = BankWithdrawFieldError.InvalidFormat,
+        ),
+        withCountry(
+            BankWithdrawFormField.PostalCode,
+            "#$%&*!",
+            country = "DE",
+            expected = BankWithdrawFieldError.InvalidFormat,
+        ),
+        withCountry(
+            BankWithdrawFormField.PostalCode,
+            "Ωμέγα",
+            country = "DE",
+            expected = BankWithdrawFieldError.InvalidFormat,
+        ),
+        withCountry(
+            BankWithdrawFormField.PostalCode,
+            "10115😀",
+            country = "DE",
+            expected = BankWithdrawFieldError.InvalidFormat,
+        ),
         single(BankWithdrawFormField.BankPostalCode, "10001", expected = null),
         single(BankWithdrawFormField.BankPostalCode, "1234", expected = BankWithdrawFieldError.InvalidFormat),
         withCountry(

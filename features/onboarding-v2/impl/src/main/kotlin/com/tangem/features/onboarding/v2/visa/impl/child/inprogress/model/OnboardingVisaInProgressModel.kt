@@ -143,7 +143,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
                     Params.DoneEvent.NavigateTo(
                         OnboardingVisaRoute.PinCode(
                             activationOrderInfo = remoteState.activationOrderInfo,
-                            pinCodeValidationError = false,
+                            hasPinCodeValidationError = false,
                         ),
                     ),
                 )
@@ -154,7 +154,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
                     Params.DoneEvent.NavigateTo(
                         OnboardingVisaRoute.PinCode(
                             activationOrderInfo = remoteState.activationOrderInfo,
-                            pinCodeValidationError = true,
+                            hasPinCodeValidationError = true,
                         ),
                     ),
                 )
