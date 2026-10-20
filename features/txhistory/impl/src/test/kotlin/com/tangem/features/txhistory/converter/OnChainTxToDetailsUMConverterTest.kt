@@ -282,8 +282,8 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN own account counterparty WHEN convert THEN Copy address is still offered`() {
-        // Arrange — the card reads "to <my account>", but the menu row copies that account's address all the same.
+    fun `GIVEN own account counterparty WHEN convert THEN no Copy address row`() {
+        // Arrange — the tx reads "Transferred", not "Sent", so the address behind the card is not offered for copy.
         val ownConverter = onChainConverter(
             lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
         )
@@ -297,10 +297,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val menu = ownConverter.convert(tx).header.menu
 
         // Assert
-        assertThat(menu).hasSize(1)
-
-        (menu[0].action as TxHistoryDetailsUM.MenuItemUM.Action.Direct).onClick()
-        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
+        assertThat(menu).isEmpty()
     }
 
     @Test
@@ -861,12 +858,11 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert — an own portfolio outranks the address book.
         assertThat(counterparty?.avatar).isInstanceOf(TxHistoryDetailsUM.CounterpartyAvatar.Account::class.java)
 
-        counterparty?.onCopyClick?.invoke()
-        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
+        assertThat(counterparty?.onCopyClick).isNull()
     }
 
     @Test
-    fun `GIVEN Transfer to own Payment account WHEN convert THEN payment counterparty card copies its address`() {
+    fun `GIVEN Transfer to own Payment account WHEN convert THEN payment counterparty card is not tappable`() {
         // Arrange — the recipient address belongs to the user's own Tangem Pay (Payment) account.
         val ownConverter = onChainConverter(
             lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownPaymentAccount)),
@@ -880,12 +876,11 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Act
         val counterparty = ownConverter.convert(tx).counterparty
 
-        // Assert — resolved as own Payment account (not an external address): Visa avatar and name, address still copied.
+        // Assert — resolved as own Payment account (not an external address): Visa avatar and name, and an own
+        // portfolio is not an address the user copies.
         assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.PaymentAccount)
         assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
-
-        counterparty?.onCopyClick?.invoke()
-        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
+        assertThat(counterparty?.onCopyClick).isNull()
     }
 
     @Test
@@ -943,7 +938,24 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN Transfer to own account WHEN convert THEN account counterparty card copies its address`() {
+    fun `GIVEN on-chain swap WHEN convert THEN counterparty card is not tappable and no Copy address row`() {
+        // Arrange — a swap names the address it interacted with, not a recipient the user chose.
+        val tx = txInfo(
+            type = TransactionType.Swap,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(EXTERNAL_ADDRESS),
+        )
+
+        // Act
+        val result = converter.convert(tx)
+
+        // Assert
+        assertThat(result.counterparty?.onCopyClick).isNull()
+        assertThat(result.header.menu).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN Transfer to own account WHEN convert THEN account counterparty card is not tappable`() {
         // Arrange — the counterparty resolves to the user's own account, so the card shows its name and avatar.
         val ownConverter = onChainConverter(
             lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
@@ -966,9 +978,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
                 icon = CryptoPortfolioIconConverter.convert(ownAccount.icon),
             ),
         )
-
-        counterparty?.onCopyClick?.invoke()
-        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
+        assertThat(counterparty?.onCopyClick).isNull()
     }
 
     @Test
@@ -997,9 +1007,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
                 deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
             ),
         )
-
-        counterparty?.onCopyClick?.invoke()
-        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
+        assertThat(counterparty?.onCopyClick).isNull()
     }
 
     @Test
