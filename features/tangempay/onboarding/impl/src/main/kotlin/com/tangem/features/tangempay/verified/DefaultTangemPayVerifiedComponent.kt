@@ -40,17 +40,14 @@ internal class DefaultTangemPayVerifiedComponent @AssistedInject constructor(
         childFactory = ::child,
     )
 
-    private val verifiedContent = object : ComposableContentComponent {
-        @Composable
-        override fun Content(modifier: Modifier) {
-            val state by model.uiState.collectAsStateWithLifecycle()
-            TangemThemeRedesign {
-                TangemPayVerifiedScreen(
-                    state = state,
-                    animated = true,
-                    modifier = modifier,
-                )
-            }
+    private val verifiedContent = ComposableContentComponent { modifier ->
+        val state by model.uiState.collectAsStateWithLifecycle()
+        TangemThemeRedesign {
+            TangemPayVerifiedScreen(
+                state = state,
+                animated = true,
+                modifier = modifier,
+            )
         }
     }
 
