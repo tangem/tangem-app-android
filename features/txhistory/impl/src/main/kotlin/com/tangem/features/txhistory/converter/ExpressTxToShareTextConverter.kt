@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.explorerHash
+import com.tangem.domain.txhistory.model.idToCopy
 import com.tangem.features.txhistory.impl.R
 import com.tangem.utils.converter.Converter
 
@@ -33,8 +34,8 @@ import com.tangem.utils.converter.Converter
  * ID: 8edc9b5f-...
  * ```
  *
- * The shared id is the express deal's own [ExpressTx.txId], the same one the "Transaction ID" row copies — support
- * finds the deal and every on-chain leg tied to it by that id, not by the provider's external one.
+ * The shared id is [idToCopy] — the same one the header menu's "Swap ID" / "Onramp ID" row copies, so a deal reads
+ * the same whether it was shared or copied.
  *
  * A line whose data is absent is dropped rather than left blank — an onramp has no pay-in address (the fiat was paid by
  * card) and an unresolved provider has no name to print.
@@ -48,7 +49,7 @@ internal class ExpressTxToShareTextConverter : Converter<ExpressTx, TextReferenc
             receivedAmount = value.tx.toAsset.formatAmount(),
             receivedToAddress = value.tx.payoutAddress,
             provider = value.provider,
-            id = value.txId,
+            id = value.idToCopy,
             onChainHash = value.onChainHashOrNull(),
         )
         is ExpressTx.Onramp -> buildShareText(
@@ -57,7 +58,7 @@ internal class ExpressTxToShareTextConverter : Converter<ExpressTx, TextReferenc
             receivedAmount = value.tx.toAsset.formatAmount(),
             receivedToAddress = value.tx.payoutAddress,
             provider = value.provider,
-            id = value.txId,
+            id = value.idToCopy,
             onChainHash = value.onChainHashOrNull(),
         )
     }

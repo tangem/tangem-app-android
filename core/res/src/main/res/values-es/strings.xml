@@ -1361,6 +1361,17 @@
   <string name="markets_yield_supply_banner_title">Activar Modo Rendimiento</string>
   <string name="mobile_wallet_requires_min_os_warning_body">Debes actualizar a %1$s para crear una mobile wallet</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Mobile Wallet requiere %1$s o posterior</string>
+  <string name="money_account_main_status_dialog_activating_description">Estamos preparando tu cuenta. Esto puede tardar un poco</string>
+  <string name="money_account_main_status_dialog_activating_title">Creando tu cuenta bancaria</string>
+  <string name="money_account_main_status_dialog_country_not_supported_description">Estamos trabajando para llegar a más regiones. ¿Necesitas ayuda?</string>
+  <string name="money_account_main_status_dialog_country_not_supported_title">Aún no disponible en tu región</string>
+  <string name="money_account_main_status_dialog_hide_account">Ocultar cuenta de la pantalla de inicio</string>
+  <string name="money_account_main_status_dialog_join_waitlist">Unirse a la lista de espera</string>
+  <string name="money_account_main_status_dialog_verification_declined_description">Lo sentimos, no pudimos verificar tu identidad con la información proporcionada</string>
+  <string name="money_account_main_status_dialog_verification_declined_title">No pudimos verificar tu identidad</string>
+  <string name="money_account_main_status_dialog_verification_description">Esto suele tardar unos minutos. Puedes consultar el estado a continuación</string>
+  <string name="money_account_main_status_dialog_verification_title">Verificando tu identidad</string>
+  <string name="money_account_main_status_dialog_view_status">Ver estado</string>
   <string name="money_account_onboarding_disclaimer">Tangem Pay es una empresa de tecnología financiera, no un banco. Los servicios bancarios los presta SSB, miembro de la FDIC. Los fondos depositados en SSB son elegibles para la cobertura del seguro de la FDIC de hasta 250 000 USD por depositante y por banco asegurado, con sujeción a las limitaciones aplicables y a las normas de la FDIC.</string>
   <string name="news_all_news">Todas las noticias</string>
   <string name="news_like">Me Gusta</string>

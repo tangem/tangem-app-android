@@ -143,7 +143,7 @@ internal class TangemPayWaitlistModelTest {
         model.uiState.value.onPrivacyPolicyClick()
 
         // Assert
-        verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/privacy-policy/") }
+        verify(exactly = 1) { urlOpener.openUrl(match { it.startsWith("https://tangem.com/docs/en/privacy-policy.pdf") }) }
         model.onDestroy()
     }
 

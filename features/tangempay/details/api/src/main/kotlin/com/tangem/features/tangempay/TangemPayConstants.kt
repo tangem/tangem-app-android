@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay
 
 import androidx.annotation.VisibleForTesting
+import com.tangem.utils.withCacheBypass
 
 object TangemPayConstants {
 
@@ -12,9 +13,9 @@ object TangemPayConstants {
 
     private const val PAERA_TERMS_AND_FEES_URL = "https://paera.com/tangempay"
 
-    fun tangemPayLink(): String = "$PAERA_TERMS_AND_FEES_URL?t=${System.currentTimeMillis()}"
+    fun tangemPayLink(): String = PAERA_TERMS_AND_FEES_URL.withCacheBypass()
 
-    fun privacyPolicyLink(): String = "$PRIVACY_POLICY_URL?t=${System.currentTimeMillis()}"
+    fun privacyPolicyLink(): String = PRIVACY_POLICY_URL.withCacheBypass()
 
-    fun termsAndLimitsLink(): String = "$TERMS_AND_LIMITS_URL?t=${System.currentTimeMillis()}"
+    fun termsAndLimitsLink(): String = TERMS_AND_LIMITS_URL.withCacheBypass()
 }

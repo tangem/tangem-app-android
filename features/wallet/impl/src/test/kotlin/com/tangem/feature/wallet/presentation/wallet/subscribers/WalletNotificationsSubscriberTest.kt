@@ -156,32 +156,7 @@ internal class WalletNotificationsSubscriberTest {
     }
 
     @Test
-    fun `GIVEN upgrade banner stays then reappears WHEN notifications re-emit THEN prefetch once per appearance`() =
-        runTest {
-            // Arrange
-            val notifications = MutableStateFlow(snapshot(upgradeNotifications()))
-            every { getWalletNotificationsFactory.create(any(), any()) } returns notifications
-            every { getWalletNotificationsCarouselFactory.create(any(), any()) } returns flowOf(snapshot())
-            val dispatcher = UnconfinedTestDispatcher(testScheduler)
-            val scope = CoroutineScope(dispatcher)
-            subscriber.subscribe(scope, dispatcher)
-            advanceUntilIdle()
-
-            // Act
-            notifications.value = snapshot(upgradeNotifications())
-            advanceUntilIdle()
-            notifications.value = snapshot()
-            advanceUntilIdle()
-            notifications.value = snapshot(upgradeNotifications())
-            advanceUntilIdle()
-            scope.cancel()
-
-            // Assert
-            verify(exactly = 2) { hardwareUpgradeLauncher.prefetch() }
-        }
-
-    @Test
-    fun `GIVEN no upgrade banner WHEN subscribed THEN upgrade story prefetch is not requested`() = runTest {
+    fun `GIVEN a wallet that is not hot WHEN subscribed THEN upgrade story is not prefetched`() = runTest {
         // Arrange
         every { getWalletNotificationsCarouselFactory.create(any(), any()) } returns flowOf(snapshot())
 
@@ -194,6 +169,37 @@ internal class WalletNotificationsSubscriberTest {
 
         // Assert
         verify(exactly = 0) { hardwareUpgradeLauncher.prefetch() }
+    }
+
+    @Test
+    fun `GIVEN a hot wallet WHEN subscribed THEN upgrade story is prefetched`() = runTest {
+        // Arrange
+        val hotWallet: UserWallet.Hot = mockk(relaxed = true)
+        every { hotWallet.walletId } returns WALLET_ID
+        every { getWalletNotificationsCarouselFactory.create(any(), any()) } returns flowOf(snapshot())
+        val hotWalletSubscriber = WalletNotificationsSubscriber(
+            userWallet = hotWallet,
+            stateHolder = stateHolder,
+            clickIntents = clickIntents,
+            getWalletNotificationsFactory = getWalletNotificationsFactory,
+            getWalletNotificationsCarouselFactory = getWalletNotificationsCarouselFactory,
+            getPendingJointOperationsFlowFactory = getPendingJointOperationsFlowFactory,
+            walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
+            walletWarningsSingleEventSender = walletWarningsSingleEventSender,
+            getStoryContentUseCase = getStoryContentUseCase,
+            hardwareUpgradeLauncher = hardwareUpgradeLauncher,
+            promoBannersFeatureToggles = promoBannersFeatureToggles,
+        )
+
+        // Act
+        val dispatcher = UnconfinedTestDispatcher(testScheduler)
+        val scope = CoroutineScope(dispatcher)
+        hotWalletSubscriber.subscribe(scope, dispatcher)
+        advanceUntilIdle()
+        scope.cancel()
+
+        // Assert
+        verify(exactly = 1) { hardwareUpgradeLauncher.prefetch() }
     }
 
     @Nested
@@ -550,17 +556,6 @@ internal class WalletNotificationsSubscriberTest {
         notifications: ImmutableList<WalletNotificationUM>,
         balanceState: NotificationsBalanceState = NotificationsBalanceState.Settled,
     ) = WalletNotificationsSnapshot(notifications = notifications, balanceState = balanceState)
-
-    /** Capturing lambdas, as in production: each list is a new value, so the flow re-emits it. */
-    private fun upgradeNotifications(): ImmutableList<WalletNotificationUM> {
-        val clickTarget = Any()
-        return persistentListOf(
-            WalletNotificationUM.UpgradeHotWalletPromo(
-                onLaterClick = { clickTarget.hashCode() },
-                onUpgradeClick = { clickTarget.hashCode() },
-            ),
-        )
-    }
 
     private fun yieldBoostCarousel(): ImmutableList<WalletNotificationUM> = persistentListOf(
         WalletNotificationUM.YieldBoostPromo(onExploreClick = {}, onLaterClick = {}),
