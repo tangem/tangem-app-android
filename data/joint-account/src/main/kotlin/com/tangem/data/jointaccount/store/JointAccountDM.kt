@@ -24,6 +24,7 @@ internal data class JointAccountDM(
         val address: String,
         val role: String,
         val inviteId: String? = null,
+        val isVerified: Boolean = false,
     )
 
     @Serializable
