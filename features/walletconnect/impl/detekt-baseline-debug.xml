@@ -2,32 +2,15 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>BooleanPropertyNaming:WcAppInfoBS.kt$var connectionRequestExpanded by remember { mutableStateOf(false) }</ID>
-    <ID>BooleanPropertyNaming:WcConnectButtonProgressTransformer.kt$WcConnectButtonProgressTransformer$private val showProgress: Boolean</ID>
-    <ID>BooleanPropertyNaming:WcConnectionsContent.kt$var showDropdownMenu by rememberSaveable { mutableStateOf(false) }</ID>
-    <ID>BooleanPropertyNaming:WcNetworkInfoItem.kt$WcNetworkInfoItem.Checkable$val checked: Boolean</ID>
-    <ID>BooleanPropertyNaming:WcNetworkInfoItem.kt$WcNetworkInfoItem.Checkable$val enabled: Boolean = true</ID>
-    <ID>BooleanPropertyNaming:WcNetworkInfoItem.kt$WcNetworkInfoItem.Checked$val enabled: Boolean = true</ID>
-    <ID>BooleanPropertyNaming:WcPrimaryButtonConfig.kt$WcPrimaryButtonConfig$val enabled: Boolean</ID>
-    <ID>BooleanPropertyNaming:WcPrimaryButtonConfig.kt$WcPrimaryButtonConfig$val showProgress: Boolean</ID>
-    <ID>BooleanPropertyNaming:WcSelectNetworksCheckedTransformer.kt$WcSelectNetworksCheckedTransformer$val doneButtonEnabled = available.any { it.checked } || prevState.required.isNotEmpty()</ID>
-    <ID>BooleanPropertyNaming:WcSelectNetworksModel.kt$WcSelectNetworksModel$val doneButtonEnabled = params.missingRequiredNetworks.isEmpty() &amp;&amp; (params.requiredNetworks.isNotEmpty() || params.availableNetworks.isNotEmpty())</ID>
-    <ID>BooleanPropertyNaming:WcSelectNetworksModel.kt$WcSelectNetworksModel$val editEnabled = params.missingRequiredNetworks.isEmpty()</ID>
-    <ID>BooleanPropertyNaming:WcSelectNetworksUM.kt$WcSelectNetworksUM$val doneButtonEnabled: Boolean</ID>
-    <ID>BooleanPropertyNaming:WcSendTransactionUM.kt$WcSendTransactionItemUM$val sendEnabled: Boolean</ID>
     <ID>CanBeNonNullable:WcNavigationUtils.kt$feeSelectorComponentFactory: FeeSelectorComponent.Factory? = null</ID>
     <ID>MaxChainedCallsOnSameLine:WcConnectedAppInfoModel.kt$WcConnectedAppInfoModel$session.sdkModel.appMetaData.icons.firstOrNull().orEmpty()</ID>
     <ID>MaxChainedCallsOnSameLine:WcTransactionAppInfoContentUMConverter.kt$WcTransactionAppInfoContentUMConverter$value.session.sdkModel.appMetaData.icons.firstOrNull().orEmpty()</ID>
     <ID>NamedArguments:WcAddEthereumChainModalBottomSheetContent.kt$WcAddEthereumChainModalBottomSheetContent(state, {}, {}, {})</ID>
     <ID>NamedArguments:WcAlertsFactory.kt$WcAlertsFactory$createMaliciousDAppAlert(alertType.description, alertType.onClick, alertType.iconType, alertType.iconBgType)</ID>
     <ID>NamedArguments:WcSendTransactionModel.kt$WcSendTransactionModel$buildUiState(securityCheck, useCase, signState, isApprovalMethod)</ID>
-    <ID>NoNameShadowing:WcNavigationUtils.kt$model</ID>
     <ID>UnnecessaryAbstractClass:WcCommonTransactionComponentDelegate.kt$WcCommonTransactionComponentDelegate$WcCommonTransactionComponentDelegate</ID>
-    <ID>UnnecessaryLet:WcSendTransactionModel.kt$WcSendTransactionModel$let { stackNavigation.pushNew(WcTransactionRoutes.CustomAllowance) }</ID>
     <ID>UnsafeCallOnNullableType:WcAddNetworkComponent.kt$WcAddNetworkComponent$content!!</ID>
     <ID>UnsafeCallOnNullableType:WcSignTransactionComponent.kt$WcSignTransactionComponent$content!!</ID>
     <ID>UnsafeCallOnNullableType:WcTransactionRequestInfoComponent.kt$WcTransactionRequestInfoComponent$content!!</ID>
-    <ID>UseOrEmpty:WcSpendAllowanceUMConverter.kt$WcSpendAllowanceUMConverter$value.approvedAmount.amount?.currencySymbol ?: ""</ID>
-    <ID>UseOrEmpty:WcTransactionCheckErrorItem.kt$notification.text?.resolveReference() ?: ""</ID>
   </CurrentIssues>
 </SmellBaseline>

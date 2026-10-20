@@ -2,10 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>BooleanPropertyNaming:SendTransactionUseCase.kt$SendTransactionUseCase$val linkedTerminal = cardSdkConfigRepository.isLinkedTerminal()</ID>
-    <ID>BooleanPropertyNaming:ValidateWalletAddressUseCase.kt$ValidateWalletAddressUseCase$val current = isCurrentAddress(addressToValidate)</ID>
     <ID>NamedArguments:SendTransactionUseCase.kt$SendTransactionUseCase$invoke(listOf(txData), userWallet, network, TransactionSender.MultipleTransactionSendMode.DEFAULT)</ID>
-    <ID>NullableBooleanCheck:ValidateWalletAddressUseCase.kt$ValidateWalletAddressUseCase$currencyAddresses?.any { it.value == toValidate } ?: true</ID>
-    <ID>UnnecessaryLet:RetryIncompleteTransactionUseCase.kt$RetryIncompleteTransactionUseCase$let { raise(IncompleteTransactionError.SendError(it)) }</ID>
   </CurrentIssues>
 </SmellBaseline>

@@ -95,7 +95,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         currentState = { state.value },
         currentUiState = { _uiState.value },
         updateUiState = { block -> updateUiStateSpecific(block) },
-        readyToImport = { ready -> state.update { it.copy(readyToImport = ready) } },
+        readyToImport = { ready -> state.update { it.copy(isReadyToImport = ready) } },
 
         // =============================================
         // | DON'T FIXME  !!! MODIFY WITH CAUTION !!!  |
@@ -117,7 +117,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         modelScope = modelScope,
         mnemonicRepository = mnemonicRepository,
         updateUiState = { block -> updateUiStateSpecific(block) },
-        readyToImport = { ready -> state.update { it.copy(readyToImport = ready) } },
+        readyToImport = { ready -> state.update { it.copy(isReadyToImport = ready) } },
         importWallet = { mnemonic, passphrase ->
             analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ButtonImport())
             importWallet(
@@ -154,7 +154,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
             generatedWords12 = null,
             generatedWords24 = null,
             generatedWordsType = GeneratedWordsType.Words12,
-            readyToImport = false,
+            isReadyToImport = false,
         )
     }
 
@@ -215,7 +215,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     // =============================================
     private fun importWallet(mnemonic: Mnemonic, passphrase: String?, generatedSeedPhrase: Boolean) {
         val currentState = state.value
-        if (currentState.readyToImport.not()) return
+        if (currentState.isReadyToImport.not()) return
 
         val scanResponse = params.parentParams.scanResponse
 

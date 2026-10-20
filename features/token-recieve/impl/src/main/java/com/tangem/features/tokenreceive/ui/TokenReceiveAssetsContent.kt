@@ -76,7 +76,7 @@ internal fun TokenReceiveAssetsContent(assetsUM: ReceiveAssetsUM) {
         AddressBlock(assetsUM = assetsUM)
         SpacerH(16.dp)
         Info(
-            showMemoDisclaimer = assetsUM.showMemoDisclaimer,
+            showMemoDisclaimer = assetsUM.shouldShowMemoDisclaimer,
             notificationConfigs = assetsUM.notificationConfigs,
             currencyIconState = assetsUM.currencyIconState,
         )

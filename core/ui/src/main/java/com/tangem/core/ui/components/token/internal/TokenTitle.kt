@@ -65,7 +65,7 @@ private fun ContentTitle(state: TokenTitleState.Content, textStyle: TextStyle, m
 
         YieldSupplyApyLabel(
             apy = state.earnApy,
-            isActive = state.earnApyIsActive,
+            isActive = state.isEarnApyActive,
             modifier = Modifier
                 .align(alignment = Alignment.CenterVertically),
         )

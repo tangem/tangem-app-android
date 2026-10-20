@@ -508,7 +508,7 @@ internal class DefaultSocialBackupRepositoryTest {
             walletId = UserWalletId(stringValue = id),
             hotWalletId = mockk(),
             wallets = null,
-            backedUp = false,
+            isBackedUp = false,
             isSocialBackupCompleted = isSocialBackupCompleted,
         )
 

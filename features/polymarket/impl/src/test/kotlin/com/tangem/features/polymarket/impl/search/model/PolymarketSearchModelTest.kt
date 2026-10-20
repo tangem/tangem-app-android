@@ -293,8 +293,8 @@ internal class PolymarketSearchModelTest {
 
     private fun successResult(last: Boolean) = BatchFetchResult.Success(
         data = listOf(createEvent()),
-        empty = false,
-        last = last,
+        isEmpty = false,
+        isLast = last,
     )
 
     private fun createEvent(id: String = "event-1"): PolymarketEvent = createPolymarketEvent(

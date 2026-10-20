@@ -47,8 +47,8 @@ internal class SetCryptoCurrencyActionsTransformer(
                 when (action) {
                     is TokenActionsState.ActionState.Buy -> {
                         WalletManageButton.Buy(
-                            enabled = true,
-                            dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
+                            isEnabled = true,
+                            shouldDimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onBuyClick(
                                     accountId = accountId,
@@ -60,8 +60,8 @@ internal class SetCryptoCurrencyActionsTransformer(
                     }
                     is TokenActionsState.ActionState.Receive -> {
                         WalletManageButton.Receive(
-                            enabled = true,
-                            dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
+                            isEnabled = true,
+                            shouldDimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onReceiveClick(
                                     accountId,
@@ -75,8 +75,8 @@ internal class SetCryptoCurrencyActionsTransformer(
                     }
                     is TokenActionsState.ActionState.Sell -> {
                         WalletManageButton.Sell(
-                            enabled = true,
-                            dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
+                            isEnabled = true,
+                            shouldDimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onSellClick(
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -87,8 +87,8 @@ internal class SetCryptoCurrencyActionsTransformer(
                     }
                     is TokenActionsState.ActionState.Send -> {
                         WalletManageButton.Send(
-                            enabled = true,
-                            dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
+                            isEnabled = true,
+                            shouldDimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onSendClick(
                                     accountId = accountId,

@@ -73,7 +73,7 @@ class HotUserWalletBuilder @AssistedInject constructor(
             walletId = UserWalletIdBuilder.walletPublicKey(wallets.first().publicKey),
             hotWalletId = hotWalletId,
             wallets = wallets,
-            backedUp = false,
+            isBackedUp = false,
         )
     }
 

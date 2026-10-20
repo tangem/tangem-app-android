@@ -37,7 +37,7 @@ internal class QuickTopUpBlockFactory @Inject constructor() {
 
         val isOnrampAvailable = when (val availability = onrampAvailability.getOrNull()) {
             is OnrampAvailability.Available -> true
-            is OnrampAvailability.ConfirmResidency -> availability.country.onrampAvailable
+            is OnrampAvailability.ConfirmResidency -> availability.country.isOnrampAvailable
             else -> false
         }
         if (!isOnrampAvailable) return null

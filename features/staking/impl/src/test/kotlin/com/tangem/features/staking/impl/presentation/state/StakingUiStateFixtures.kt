@@ -13,7 +13,7 @@ import io.mockk.mockk
  * a mocked data class, so applying a transformer to a mocked state would read nothing.
  */
 internal fun createAssentConfirmationUiState(
-    actionType: StakingActionCommonType = StakingActionCommonType.Exit(partiallyUnstakeDisabled = false),
+    actionType: StakingActionCommonType = StakingActionCommonType.Exit(isPartiallyUnstakeDisabled = false),
 ) = StakingUiState(
     title = TextReference.EMPTY,
     subtitle = null,

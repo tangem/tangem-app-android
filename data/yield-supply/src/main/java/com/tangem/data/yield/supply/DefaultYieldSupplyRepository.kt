@@ -151,7 +151,7 @@ internal class DefaultYieldSupplyRepository(
                 return@withContext false
             }
 
-            (walletManager as? YieldSupplyProvider)?.isSupported() ?: false
+            (walletManager as? YieldSupplyProvider)?.isSupported() == true
         }
 
     override suspend fun activateProtocol(

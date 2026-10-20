@@ -79,7 +79,7 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
         _uiState.update { state ->
             state.copy(
                 accessCodeFirst = textFieldValue,
-                atLeast4CharError = false,
+                hasAtLeast4CharError = false,
             )
         }
     }
@@ -88,7 +88,7 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
         _uiState.update { state ->
             state.copy(
                 accessCodeSecond = textFieldValue,
-                codesNotMatchError = false,
+                hasCodesNotMatchError = false,
             )
         }
     }
@@ -103,12 +103,12 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
                     _uiState.update { state ->
                         state.copy(
                             step = MultiWalletAccessCodeUM.Step.ConfirmAccessCode,
-                            atLeast4CharError = false,
+                            hasAtLeast4CharError = false,
                         )
                     }
                 } else {
                     _uiState.update {
-                        it.copy(atLeast4CharError = true)
+                        it.copy(hasAtLeast4CharError = true)
                     }
                 }
 
@@ -135,7 +135,7 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
             return true
         } else {
             _uiState.update {
-                it.copy(codesNotMatchError = true)
+                it.copy(hasCodesNotMatchError = true)
             }
             return false
         }

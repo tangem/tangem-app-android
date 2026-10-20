@@ -34,7 +34,7 @@ class ListenToFlipsUseCase(
                             ),
                         )
                     },
-                    catch = { send(HideBalancesError.DataError(it).left()) },
+                    catch = { throwable -> send(HideBalancesError.DataError(throwable).left()) },
                 )
             } else {
                 send(HideBalancesError.HidingDisabled.left())

@@ -88,7 +88,7 @@ fun AddTokenContent(state: AddTokenUM, modifier: Modifier = Modifier) {
 private fun NetworkRow(state: AddTokenUM.Network, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
-            .clickable(enabled = state.editable, onClick = state.onClick)
+            .clickable(enabled = state.isEditable, onClick = state.onClick)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -113,7 +113,7 @@ private fun NetworkRow(state: AddTokenUM.Network, modifier: Modifier = Modifier)
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.primary1,
         )
-        if (state.editable) {
+        if (state.isEditable) {
             Icon(
                 modifier = Modifier
                     .size(width = 18.dp, height = 24.dp)
@@ -139,7 +139,7 @@ private fun AddButton(state: AddTokenUM.Button, modifier: Modifier = Modifier) {
         iconResId = endIcon.iconResId,
         onClick = state.onConfirmClick,
         enabled = state.isEnabled,
-        showProgress = state.showProgress,
+        showProgress = state.shouldShowProgress,
     )
 }
 
@@ -180,14 +180,14 @@ internal class PreviewProvider : PreviewParameterProvider<AddTokenUM> {
         get() = AddTokenUM.Network(
             icon = R.drawable.img_eth_22,
             name = stringReference("Ethereum"),
-            editable = true,
+            isEditable = true,
             onClick = {},
         )
 
     val button
         get() = AddTokenUM.Button(
             isEnabled = false,
-            showProgress = false,
+            shouldShowProgress = false,
             isTangemIconVisible = false,
             text = resourceReference(R.string.common_add),
             onConfirmClick = { },
@@ -226,7 +226,7 @@ internal class PreviewProvider : PreviewParameterProvider<AddTokenUM> {
             ),
             AddTokenUM(
                 tokenToAdd = tokenState,
-                network = networkUM.copy(editable = false),
+                network = networkUM.copy(isEditable = false),
                 portfolio = wallet.copy(isMultiChoice = false),
                 button = button.copy(
                     isEnabled = true,

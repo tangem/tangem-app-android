@@ -32,7 +32,7 @@ class StakeKitIntegration(
 
     override val preferredTargets: List<StakingTarget> = yield.preferredValidators.map { it.toStakingTarget() }
 
-    override val areAllTargetsFull: Boolean = yield.allValidatorsFull
+    override val areAllTargetsFull: Boolean = yield.areAllValidatorsFull
 
     // Enter/Exit Args
 
@@ -90,7 +90,7 @@ class StakeKitIntegration(
         return StakingActionArgs(
             amountRequirement = amountArg?.let { arg ->
                 StakingAmountRequirement(
-                    isRequired = arg.required,
+                    isRequired = arg.isRequired,
                     minimum = arg.minimum,
                     maximum = arg.maximum,
                 )

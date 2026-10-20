@@ -16,7 +16,7 @@ internal class CountryConverter(
         alpha3 = value.alpha3,
         continent = value.continent,
         defaultCurrency = currencyConverter.convert(value.defaultCurrency),
-        onrampAvailable = value.onrampAvailable,
+        isOnrampAvailable = value.onrampAvailable,
     )
 
     override fun convertBack(value: OnrampCountry): OnrampCountryDTO = OnrampCountryDTO(
@@ -26,6 +26,6 @@ internal class CountryConverter(
         alpha3 = value.alpha3,
         continent = value.continent,
         defaultCurrency = currencyConverter.convertBack(value.defaultCurrency),
-        onrampAvailable = value.onrampAvailable,
+        onrampAvailable = value.isOnrampAvailable,
     )
 }

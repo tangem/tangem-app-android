@@ -72,7 +72,7 @@ internal class OnboardingVisaModel @Inject constructor(
                 OnboardingVisaRoute.TangemWalletApproveOption(
                     foundWalletCardId = foundWalletCardId,
                     preparationDataForApprove = preparationDataForApprove,
-                    allowNavigateBack = false,
+                    canNavigateBack = false,
                 )
             } else {
                 OnboardingVisaRoute.ChooseWallet(
@@ -103,7 +103,7 @@ internal class OnboardingVisaModel @Inject constructor(
                     OnboardingVisaRoute.TangemWalletApproveOption(
                         preparationDataForApprove = route.preparationDataForApprove,
                         foundWalletCardId = null,
-                        allowNavigateBack = true,
+                        canNavigateBack = true,
                     )
                 OnboardingVisaChooseWalletComponent.Params.Event.OtherWallet ->
                     OnboardingVisaRoute.OtherWalletApproveOption(
@@ -124,7 +124,7 @@ internal class OnboardingVisaModel @Inject constructor(
             is OnboardingVisaRoute.OtherWalletApproveOption,
             -> stackNavigation.pop()
             is OnboardingVisaRoute.TangemWalletApproveOption -> {
-                if (currentRoute.allowNavigateBack) {
+                if (currentRoute.canNavigateBack) {
                     stackNavigation.pop()
                 }
             }
