@@ -6,9 +6,9 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.account.BankCredentials
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.tangempay.bankCredentials
+import com.tangem.features.tangempay.components.TangemPayBankingDetailsErrorComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Called
 import io.mockk.clearMocks
@@ -17,34 +17,33 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
-internal class TangemPayVaBankingDetailsErrorModelTest {
+@OptIn(ExperimentalCoroutinesApi::class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+internal class TangemPayBankingDetailsErrorModelTest {
 
-    private val userWalletId = UserWalletId("1234567890ABCDEF")
-    private val productInstanceId = "pi_1"
-
-    private val getBankCredentialsUseCase: GetBankCredentialsUseCase = mockk()
+    private val retry: suspend () -> Either<VisaApiError, BankCredentials> = mockk()
     private val onDismiss: () -> Unit = mockk(relaxed = true)
     private val onContactSupport: () -> Unit = mockk(relaxed = true)
     private val onResolved: (BankCredentials) -> Unit = mockk(relaxed = true)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(getBankCredentialsUseCase, onDismiss, onContactSupport, onResolved)
+        clearMocks(retry, onDismiss, onContactSupport, onResolved)
     }
 
     @Test
-    fun `GIVEN refetch succeeds WHEN retry THEN onResolved called with credentials`() = runTest {
+    fun `GIVEN retry succeeds WHEN retry clicked THEN credentials handed to onResolved`() = runTest {
         // Arrange
         val credentials = bankCredentials()
-        coEvery {
-            getBankCredentialsUseCase(userWalletId, productInstanceId)
-        } returns credentials.right()
+        coEvery { retry() } returns credentials.right()
         val model = createModel()
 
         // Act
@@ -56,11 +55,9 @@ internal class TangemPayVaBankingDetailsErrorModelTest {
     }
 
     @Test
-    fun `GIVEN refetch still fails WHEN retry THEN onResolved not called and loading reset`() = runTest {
+    fun `GIVEN retry fails WHEN retry clicked THEN onResolved not called and loading reset`() = runTest {
         // Arrange
-        coEvery {
-            getBankCredentialsUseCase(userWalletId, productInstanceId)
-        } returns VisaApiError.Unspecified.left()
+        coEvery { retry() } returns VisaApiError.Unspecified.left()
         val model = createModel()
 
         // Act
@@ -73,52 +70,48 @@ internal class TangemPayVaBankingDetailsErrorModelTest {
     }
 
     @Test
-    fun `GIVEN refetch in progress WHEN retry twice THEN fetch invoked once and loading shown`() = runTest {
+    fun `GIVEN retry in flight WHEN retry clicked twice THEN retried once and loading shown`() = runTest {
         // Arrange
         val pending = CompletableDeferred<Either<VisaApiError, BankCredentials>>()
-        coEvery {
-            getBankCredentialsUseCase(userWalletId, productInstanceId)
-        } coAnswers { pending.await() }
+        coEvery { retry() } coAnswers { pending.await() }
         val model = createModel()
 
         // Act
-        model.uiState.value.onRetryClick() // starts loading, fetch suspends
+        model.uiState.value.onRetryClick()
         advanceUntilIdle()
-        model.uiState.value.onRetryClick() // gated by isRetryLoading — must be ignored
+        model.uiState.value.onRetryClick()
         advanceUntilIdle()
 
         // Assert
         assertThat(model.uiState.value.isRetryLoading).isTrue()
-        coVerify(exactly = 1) { getBankCredentialsUseCase(userWalletId, productInstanceId) }
-
-        pending.complete(bankCredentials().right()) // let the in-flight call finish cleanly
+        coVerify(exactly = 1) { retry() }
+        pending.complete(bankCredentials().right())
         advanceUntilIdle()
     }
 
-    private fun bankCredentials() = BankCredentials(
-        type = "ACH",
-        beneficiaryName = "Test Beneficiary",
-        beneficiaryAddress = "Addr",
-        beneficiaryBankName = "Bank",
-        beneficiaryBankAddress = "Bank Addr",
-        accountNumber = "123",
-        routingNumber = "456",
-        transferMessage = null,
-        depositFee = null,
-        depositLimit = null,
-    )
+    @Test
+    fun `GIVEN sheet shown WHEN dismissed or support clicked THEN callbacks invoked`() = runTest {
+        // Arrange
+        val model = createModel()
 
-    private fun TestScope.createModel() = TangemPayVaBankingDetailsErrorModel(
+        // Act
+        model.onDismiss()
+        model.uiState.value.onContactSupportClick()
+
+        // Assert
+        verify(exactly = 1) { onDismiss() }
+        verify(exactly = 1) { onContactSupport() }
+    }
+
+    private fun TestScope.createModel() = TangemPayBankingDetailsErrorModel(
         paramsContainer = MutableParamsContainer(
-            TangemPayVaBankingDetailsErrorComponent.Params(
-                userWalletId = userWalletId,
-                productInstanceId = productInstanceId,
+            TangemPayBankingDetailsErrorComponent.Params(
+                retry = retry,
                 onDismiss = onDismiss,
                 onContactSupport = onContactSupport,
                 onResolved = onResolved,
             ),
         ),
         dispatchers = createTestingCoroutineDispatcherProvider(),
-        getBankCredentialsUseCase = getBankCredentialsUseCase,
     )
 }

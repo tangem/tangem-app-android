@@ -34,6 +34,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
+import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -43,6 +44,7 @@ import com.tangem.domain.models.quote.PriceChange
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.interactor.PredictionWithdrawalFailure
@@ -97,7 +99,9 @@ import kotlinx.coroutines.flow.flowOf
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -960,64 +964,83 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         model.onDestroy()
     }
 
+    @ParameterizedTest
+    @MethodSource("provideAccountTopUps")
+    fun `GIVEN an account top-up WHEN the state is built THEN the receive card is locked and the title is Add funds`(
+        topUp: AccountTopUp,
+    ) = runTest {
+        // Arrange
+        stubResolvedTopUpPair(toAccount = topUp.createAccount(userWalletId))
+
+        // Act
+        val model = createModel(accountFlow = topUp.accountFlow)
+        advanceUntilIdle()
+
+        // Assert
+        val receiveCard = model.uiState.receiveCardData as SwapCardState.SwapCardData
+        assertThat(receiveCard.isSelectionLocked).isTrue()
+        assertThat(model.uiState.titleId).isEqualTo(R.string.common_add_funds)
+        assertThat(model.uiState.changeCardsButtonState).isEqualTo(ChangeCardsButtonState.HIDDEN)
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideAccountTopUps")
+    fun `GIVEN an account top-up with accounts mode off WHEN the state is built THEN both cards show account names`(
+        topUp: AccountTopUp,
+    ) = runTest {
+        // Arrange
+        val (from, _) = stubResolvedTopUpPair(toAccount = topUp.createAccount(userWalletId))
+
+        // Act
+        val model = createModel(accountFlow = topUp.accountFlow)
+        advanceUntilIdle()
+
+        // Assert
+        val sendTitle = (model.uiState.sendCardData as SwapCardState.SwapCardData).type.accountTitleUM
+        val receiveTitle = (model.uiState.receiveCardData as SwapCardState.SwapCardData).type.accountTitleUM
+        assertThat((sendTitle as AccountTitleUM.Account).name).isEqualTo(from.account.accountName.toUM().value)
+        assertThat(receiveTitle).isEqualTo(
+            AccountTitleUM.Account(
+                prefixText = resourceReference(R.string.swapping_to_account_title),
+                name = resourceReference(topUp.nameId),
+                icon = topUp.icon,
+            ),
+        )
+        model.onDestroy()
+    }
+
     @Test
-    fun `GIVEN a prediction top-up WHEN the state is built THEN the receive card is locked and the title is Add funds`() =
+    fun `GIVEN a money top-up WHEN the account balance changes THEN the receive currency takes the new balance`() =
         runTest {
             // Arrange
-            stubResolvedTopUpPair()
-
-            // Act
-            val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
-            advanceUntilIdle()
-
-            // Assert
-            val receiveCard = model.uiState.receiveCardData as SwapCardState.SwapCardData
-            assertThat(receiveCard.isSelectionLocked).isTrue()
-            assertThat(model.uiState.titleId).isEqualTo(R.string.common_add_funds)
-            assertThat(model.uiState.changeCardsButtonState).isEqualTo(ChangeCardsButtonState.HIDDEN)
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN a prediction top-up with accounts mode off WHEN the state is built THEN both cards show account names`() =
-        runTest {
-            // Arrange
-            val (from, collateral) = stubResolvedTopUpPair()
-
-            // Act
-            val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
-            advanceUntilIdle()
-
-            // Assert
-            val sendTitle = (model.uiState.sendCardData as SwapCardState.SwapCardData).type.accountTitleUM
-            val receiveTitle = (model.uiState.receiveCardData as SwapCardState.SwapCardData).type.accountTitleUM
-            assertThat((sendTitle as AccountTitleUM.Account).name).isEqualTo(from.account.accountName.toUM().value)
-            assertThat((receiveTitle as AccountTitleUM.Account).icon).isEqualTo(AccountIconUM.Prediction)
-            assertThat(receiveTitle.name).isEqualTo(resourceReference(R.string.prediction_account_title))
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN a collectibles top-up with accounts mode off WHEN the state is built THEN both cards show account names`() =
-        runTest {
-            // Arrange
-            val (from, _) = stubResolvedTopUpPair(toAccount = Account.Collectibles(userWalletId))
-
-            // Act
-            val model = createModel(accountFlow = AccountFlow.CollectiblesTopUp)
-            advanceUntilIdle()
-
-            // Assert
-            val sendTitle = (model.uiState.sendCardData as SwapCardState.SwapCardData).type.accountTitleUM
-            val receiveTitle = (model.uiState.receiveCardData as SwapCardState.SwapCardData).type.accountTitleUM
-            assertThat((sendTitle as AccountTitleUM.Account).name).isEqualTo(from.account.accountName.toUM().value)
-            assertThat(receiveTitle).isEqualTo(
-                AccountTitleUM.Account(
-                    prefixText = resourceReference(R.string.swapping_to_account_title),
-                    name = resourceReference(R.string.collectibles_main_title),
-                    icon = AccountIconUM.Collectibles,
-                ),
+            val accountToken = usdcPolygonToken()
+            val wallet = accountFlowUserWallet()
+            val updatedValue = moneyAccountValue(accountToken, BigDecimal("7.5"))
+            val to = SwapCurrencyStatus(
+                userWallet = wallet,
+                status = requireNotNull(moneyAccountValue(accountToken, BigDecimal.ONE).cryptoCurrencyStatus),
+                account = Account.Money(userWalletId),
             )
+            coEvery {
+                initialCurrenciesResolver.invoke(
+                    userWalletId = any(),
+                    initialCryptoCurrency = any(),
+                    swapCurrencyPosition = any(),
+                    accountFlow = any(),
+                    initialToCryptoCurrency = any(),
+                )
+            } returns (buildSwapCurrencyStatus(wallet) to to)
+            every { singleAccountStatusSupplier(any()) } returns flowOf(
+                AccountStatus.Money(account = Account.Money(userWalletId), value = updatedValue),
+            )
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.MoneyTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.dataState.toSwapCurrencyStatus?.status).isEqualTo(updatedValue.cryptoCurrencyStatus)
             model.onDestroy()
         }
 
@@ -1239,12 +1262,15 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         model.onDestroy()
     }
 
-    @Test
-    fun `GIVEN a collectibles top-up WHEN the transfer is sent THEN the vault is read again`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideAccountTopUps")
+    fun `GIVEN an account top-up WHEN the transfer is sent THEN only the target account is read again`(
+        topUp: AccountTopUp,
+    ) = runTest {
         // Arrange
         val model = createTopUpTransferModel(
-            accountFlow = AccountFlow.CollectiblesTopUp,
-            toAccount = Account.Collectibles(userWalletId),
+            accountFlow = topUp.accountFlow,
+            toAccount = topUp.createAccount(userWalletId),
         )
 
         // Act
@@ -1252,20 +1278,22 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) {
+        coVerify(exactly = topUp.collectiblesReads) {
             collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWalletId))
         }
-        verify(exactly = 0) { predictionFundingWindow.open(any()) }
-        verify { router.replaceAll(SwapRoute.Success) }
+        coVerify(exactly = topUp.moneyReads) { moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(userWalletId)) }
         model.onDestroy()
     }
 
-    @Test
-    fun `GIVEN a collectibles top-up WHEN the swap is sent THEN the vault is read again`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideAccountTopUps")
+    fun `GIVEN an account top-up WHEN the swap is sent THEN only the target account is read again`(
+        topUp: AccountTopUp,
+    ) = runTest {
         // Arrange
         val model = createTopUpSwapModel(
-            accountFlow = AccountFlow.CollectiblesTopUp,
-            toAccount = Account.Collectibles(userWalletId),
+            accountFlow = topUp.accountFlow,
+            toAccount = topUp.createAccount(userWalletId),
         )
 
         // Act
@@ -1273,25 +1301,41 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) {
+        coVerify(exactly = topUp.collectiblesReads) {
             collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWalletId))
         }
+        coVerify(exactly = topUp.moneyReads) { moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(userWalletId)) }
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN a prediction top-up WHEN the transfer is sent THEN the collectibles vault is not read`() = runTest {
-        // Arrange
-        val model = createTopUpTransferModel(accountFlow = AccountFlow.PredictionTopUp)
+    fun `GIVEN a money top-up sent WHEN the screen closes before the delay THEN the account is read after the delay`() =
+        runTest {
+            // Arrange
+            var reads = 0
+            coEvery { moneyAccountStatusFetcher(any<MoneyAccountStatusFetcher.Params>()) } coAnswers {
+                reads++
+                Unit.right()
+            }
+            val model = createTopUpTransferModel(
+                accountFlow = AccountFlow.MoneyTopUp,
+                toAccount = Account.Money(userWalletId),
+            )
+            model.uiState.swapButton.onClick()
+            runCurrent()
 
-        // Act
-        model.uiState.swapButton.onClick()
-        advanceUntilIdle()
+            // Act
+            model.onDestroy()
+            advanceTimeBy(ACCOUNT_REFRESH_DELAY_MILLIS - 1)
+            runCurrent()
+            val readsBeforeDelay = reads
+            advanceTimeBy(1)
+            runCurrent()
 
-        // Assert
-        coVerify(exactly = 0) { collectiblesAccountStatusFetcher(any()) }
-        model.onDestroy()
-    }
+            // Assert
+            assertThat(readsBeforeDelay).isEqualTo(0)
+            assertThat(reads).isEqualTo(1)
+        }
 
     @ParameterizedTest
     @MethodSource("provideTransferFeeTypes")
@@ -2298,6 +2342,30 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         onProviderClick = {},
     )
 
+    class AccountTopUp(
+        val accountFlow: AccountFlow,
+        val nameId: Int,
+        val icon: AccountIconUM,
+        val collectiblesReads: Int,
+        val moneyReads: Int,
+        val createAccount: (UserWalletId) -> Account,
+    ) {
+        override fun toString(): String = accountFlow.toString()
+    }
+
+    private fun moneyAccountValue(token: CryptoCurrency.Token, amount: BigDecimal) =
+        MoneyAccountStatusValue.Account.Active(
+            source = StatusSource.ACTUAL,
+            cryptoCurrency = token,
+            balance = MoneyAccountStatusValue.Balance(
+                cryptoAmount = amount,
+                depositAddress = "0xdeposit",
+                currencyCode = "USD",
+                fiatRate = BigDecimal.ONE,
+            ),
+            customerId = "customer",
+        )
+
     private fun stubResolvedTopUpPair(
         toAccount: Account = Account.Prediction(userWalletId),
     ): Pair<SwapCurrencyStatus, SwapCurrencyStatus> {
@@ -2746,6 +2814,36 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             AnalyticsParam.FeeType.Custom,
             AnalyticsParam.FeeType.Fixed,
         )
+
+        @JvmStatic
+        fun provideAccountTopUps() = listOf(
+            AccountTopUp(
+                accountFlow = AccountFlow.PredictionTopUp,
+                nameId = R.string.prediction_account_title,
+                icon = AccountIconUM.Prediction,
+                collectiblesReads = 0,
+                moneyReads = 0,
+                createAccount = { userWalletId -> Account.Prediction(userWalletId) },
+            ),
+            AccountTopUp(
+                accountFlow = AccountFlow.CollectiblesTopUp,
+                nameId = R.string.collectibles_main_title,
+                icon = AccountIconUM.Collectibles,
+                collectiblesReads = 1,
+                moneyReads = 0,
+                createAccount = { userWalletId -> Account.Collectibles(userWalletId) },
+            ),
+            AccountTopUp(
+                accountFlow = AccountFlow.MoneyTopUp,
+                nameId = R.string.money_account_main_name,
+                icon = AccountIconUM.Money,
+                collectiblesReads = 0,
+                moneyReads = 1,
+                createAccount = { userWalletId -> Account.Money(userWalletId) },
+            ),
+        )
+
+        const val ACCOUNT_REFRESH_DELAY_MILLIS = 11_000L
 
         const val OWNER_ADDRESS = "0xOwner"
         const val DEPOSIT_WALLET_ADDRESS = "0xDepositWallet"
