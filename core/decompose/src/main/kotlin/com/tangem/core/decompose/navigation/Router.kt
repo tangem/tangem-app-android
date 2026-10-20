@@ -70,6 +70,15 @@ interface Router {
     )
 
     /**
+     * Replaces the navigation stack with the one [transformer] builds from the current stack. Prefer the dedicated
+     * operations; use it only when the new stack depends on routes deeper than the top one.
+     *
+     * @param transformer Builds the new stack from the current one.
+     * @param onComplete The callback to be invoked when the operation is complete.
+     */
+    fun navigate(transformer: (stack: List<Route>) -> List<Route>, onComplete: (isSuccess: Boolean) -> Unit = {})
+
+    /**
      * Checks whether the [route] is in the navigation stack, including the stacks this router falls back to.
      *
      * @param route The route to look for.

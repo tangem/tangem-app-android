@@ -108,6 +108,22 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
         }
     }
 
+    override fun navigate(transformer: (stack: List<Route>) -> List<Route>, onComplete: (Boolean) -> Unit) {
+        var isApplied = false
+        stackNavigation.navigate(
+            transformer = { stack ->
+                val newStack = transformer(stack)
+                if (newStack.all { it is T }) {
+                    isApplied = true
+                    newStack.filterIsInstance<T>()
+                } else {
+                    stack
+                }
+            },
+            onComplete = { _, _ -> onComplete(isApplied) },
+        )
+    }
+
     override suspend fun contains(route: Route): Boolean {
         if (route !is T) return fallBackRouter.contains(route)
 
