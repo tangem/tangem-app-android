@@ -56,7 +56,6 @@ import kotlin.time.Duration.Companion.minutes
 internal class ExpressTxToDetailsUMConverter(
     private val currency: CryptoCurrency,
     private val onGoToProvider: (String) -> Unit,
-    private val onCopyAddress: (String) -> Unit,
     private val lookup: TxHistoryLookupContext,
     private val menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM>,
     private val isBalanceHidden: Boolean,
@@ -97,7 +96,7 @@ internal class ExpressTxToDetailsUMConverter(
                 ),
                 statusStyle = swap.tx.status.headerStatusStyle(),
                 subtitle = headerSubtitle(swap.timestampMillis),
-                menu = menu.withCopyAddress(swap.tx.payoutAddress, onCopyAddress),
+                menu = menu,
             ),
             isBalanceHidden = isBalanceHidden,
             from = swap.tx.fromAsset.toAssetUM(
@@ -170,7 +169,7 @@ internal class ExpressTxToDetailsUMConverter(
                 ),
                 statusStyle = onramp.tx.status.headerStatusStyle(),
                 subtitle = headerSubtitle(onramp.timestampMillis),
-                menu = menu.withCopyAddress(onramp.tx.payoutAddress, onCopyAddress),
+                menu = menu,
             ),
             isBalanceHidden = isBalanceHidden,
             from = onramp.tx.fromFiat.toFiatAssetUM(
@@ -589,7 +588,7 @@ private fun BigDecimal?.takeIfPositive(): BigDecimal? = this?.takeIf { it > BigD
 // region Amount signs
 
 /** Leading sign of the pay-in / "You send" leg: always `−` — the funds left regardless of how the deal ended. */
-private const val OUTGOING_SIGN = "${StringsSigns.MINUS} "
+private const val OUTGOING_SIGN = "${StringsSigns.DASH_SIGN} "
 
 /**
  * Leading sign of the payout / "You receive" leg: `~` while in flight (the final received amount is still an estimate),
