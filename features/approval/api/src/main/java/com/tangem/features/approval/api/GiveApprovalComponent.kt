@@ -19,6 +19,7 @@ interface GiveApprovalComponent : ComposableBottomSheetComponent, ComposableModu
         val feeFooter: TextReference,
         val isHoldToConfirm: Boolean = false,
         val isResetApproval: Boolean = false,
+        val isTronGaslessSupported: Boolean = false,
         val callback: Callback,
     )
 
