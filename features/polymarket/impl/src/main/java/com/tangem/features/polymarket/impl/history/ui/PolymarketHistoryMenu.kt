@@ -21,7 +21,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_dots_vertical_20
 
 @Composable
-internal fun PolymarketHistoryMenu(onDownloadClick: () -> Unit) {
+internal fun PolymarketHistoryMenu(onDownloadClick: () -> Unit, isExporting: Boolean = false) {
     var isExpanded by remember { mutableStateOf(false) }
     Box {
         TangemButton(
@@ -30,6 +30,8 @@ internal fun PolymarketHistoryMenu(onDownloadClick: () -> Unit) {
             iconStart = TangemIconUM.Icon(Icons.ic_dots_vertical_20),
             contentDescription = stringResourceSafe(R.string.common_more),
             onClick = { isExpanded = true },
+            isLoading = isExporting,
+            isEnabled = !isExporting,
         )
         TangemContextMenu(
             expanded = isExpanded,
