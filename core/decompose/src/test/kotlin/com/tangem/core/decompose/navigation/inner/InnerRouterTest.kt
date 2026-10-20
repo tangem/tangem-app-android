@@ -61,6 +61,50 @@ internal class InnerRouterTest {
     }
 
     @Test
+    fun `GIVEN transformer of inner routes WHEN navigate THEN inner stack is rebuilt`() {
+        // Arrange
+        var stack = listOf<InnerRoute>(InnerRoute.First, InnerRoute.Second)
+        every { stackNavigation.navigate(any(), any()) } answers {
+            val transformer = firstArg<(List<InnerRoute>) -> List<InnerRoute>>()
+            val callback = secondArg<(List<InnerRoute>, List<InnerRoute>) -> Unit>()
+            val oldStack = stack
+            stack = transformer(oldStack)
+            callback(stack, oldStack)
+        }
+        val results = mutableListOf<Boolean>()
+        val router = context.InnerRouter(stackNavigation = stackNavigation, fallBackRouter = fallBackRouter)
+
+        // Act
+        router.navigate(transformer = { it.filterNot { route -> route == InnerRoute.First } }) { results += it }
+
+        // Assert
+        assertThat(stack).containsExactly(InnerRoute.Second)
+        assertThat(results).containsExactly(true)
+    }
+
+    @Test
+    fun `GIVEN transformer adding an outer route WHEN navigate THEN inner stack is unchanged and completion fails`() {
+        // Arrange
+        var stack = listOf<InnerRoute>(InnerRoute.First)
+        every { stackNavigation.navigate(any(), any()) } answers {
+            val transformer = firstArg<(List<InnerRoute>) -> List<InnerRoute>>()
+            val callback = secondArg<(List<InnerRoute>, List<InnerRoute>) -> Unit>()
+            val oldStack = stack
+            stack = transformer(oldStack)
+            callback(stack, oldStack)
+        }
+        val results = mutableListOf<Boolean>()
+        val router = context.InnerRouter(stackNavigation = stackNavigation, fallBackRouter = fallBackRouter)
+
+        // Act
+        router.navigate(transformer = { it + OuterRoute }) { results += it }
+
+        // Assert
+        assertThat(stack).containsExactly(InnerRoute.First)
+        assertThat(results).containsExactly(false)
+    }
+
+    @Test
     fun `GIVEN outer route class WHEN popToMatching THEN fallback router pops`() {
         // Arrange
         val predicate: (OuterRoute) -> Boolean = { true }
