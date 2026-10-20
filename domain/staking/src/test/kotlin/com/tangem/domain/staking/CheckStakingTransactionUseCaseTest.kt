@@ -22,10 +22,14 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CheckStakingTransactionUseCaseTest {
@@ -70,329 +74,493 @@ internal class CheckStakingTransactionUseCaseTest {
         simulation = SimulationResult.FailedToSimulate,
     )
 
-    // ───────────────────────────── early-exit paths ─────────────────────────────
-
-    @Test
-    fun `GIVEN null unsigned tx WHEN invoke THEN UNSAFE and no analytics`() = runTest {
-        assertThat(useCase(NetworkType.BINANCE, "0xaa", null, "BNB", "BSC", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.UNSAFE)
-        verify(exactly = 0) { analyticsEventHandler.send(any()) }
+    private fun stubBlockAid(validation: ValidationResult) {
+        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns blockAidResult(validation).right()
     }
 
-    // ───────────────────────────── EVM paths ────────────────────────────────────
-
-    @Test
-    fun `GIVEN evm not recognized locally WHEN invoke THEN UNSAFE and blockaid not called`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.BINANCE, "{}") } returns false
-
-        assertThat(useCase(NetworkType.BINANCE, "0xaa", "{}", "BNB", "BSC", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.UNSAFE)
-        coVerify(exactly = 0) { blockAidVerifier.verifyTransaction(any()) }
+    private fun stubRecognized(network: NetworkType, unsigned: String, recognized: Boolean) {
+        every { recognizer.isRecognizedStakingTransaction(network, unsigned) } returns recognized
     }
 
-    @Test
-    fun `GIVEN evm not recognized WHEN invoke THEN event has Blockaid not performed and Mobile_check false`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.BINANCE, "{}") } returns false
-
-        useCase(NetworkType.BINANCE, "0xaa", "{}", "BNB", "BSC", "StakeKit")
-
-        verify {
+    private fun verifyScamEvent(token: String, blockchain: String, blockaid: String, mobileCheck: String) {
+        verify(exactly = 1) {
             analyticsEventHandler.send(
-                match<StakingAnalyticsEvent.ScamVerification> {
-                    it.blockaid == "Not performed" && it.mobileCheck == "false"
-                },
+                StakingAnalyticsEvent.ScamVerification(
+                    token = token,
+                    blockchain = blockchain,
+                    provider = "StakeKit",
+                    blockaid = blockaid,
+                    mobileCheck = mobileCheck,
+                ),
             )
         }
     }
 
-    @Test
-    fun `GIVEN evm recognized AND blockaid SAFE WHEN invoke THEN SAFE`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.BINANCE, "{}") } returns true
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns blockAidResult(ValidationResult.SAFE).right()
+    private suspend fun checkEvm(unsigned: String? = "{}") =
+        useCase(NetworkType.BINANCE, "0xaa", unsigned, "BNB", "BSC", "StakeKit")
 
-        assertThat(useCase(NetworkType.BINANCE, "0xaa", "{}", "BNB", "BSC", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.SAFE)
-    }
+    private suspend fun checkEthereum() = useCase(NetworkType.ETHEREUM, "0xaa", "{}", "ETH", "Ethereum", "StakeKit")
 
-    @Test
-    fun `GIVEN evm recognized AND blockaid SAFE WHEN invoke THEN event has Blockaid Safe and Mobile_check true`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.BINANCE, "{}") } returns true
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns blockAidResult(ValidationResult.SAFE).right()
+    private suspend fun checkSolana(unsigned: String? = "00") =
+        useCase(NetworkType.SOLANA, "0xaa", unsigned, "SOL", "Solana", "StakeKit")
 
-        useCase(NetworkType.BINANCE, "0xaa", "{}", "BNB", "BSC", "StakeKit")
+    private suspend fun checkTron() = useCase(NetworkType.TRON, "addr", "{}", "TRX", "Tron", "StakeKit")
 
-        verify {
-            analyticsEventHandler.send(
-                match<StakingAnalyticsEvent.ScamVerification> {
-                    it.blockaid == "Safe" && it.mobileCheck == "true"
-                },
-            )
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class NullPayload {
+
+        @Test
+        fun `GIVEN null unsigned tx WHEN invoke THEN UNSAFE and no analytics`() = runTest {
+            // Act
+            val actual = checkEvm(unsigned = null)
+
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.UNSAFE)
+            verify(exactly = 0) { analyticsEventHandler.send(any()) }
+        }
+
+        @Test
+        fun `GIVEN null unsigned tx WHEN invoke THEN non-fatal not sent`() = runTest {
+            // Act
+            checkSolana(unsigned = null)
+
+            // Assert
+            verify(exactly = 0) { analyticsExceptionHandler.sendException(any()) }
         }
     }
 
-    @Test
-    fun `GIVEN evm recognized AND blockaid WARNING WHEN invoke THEN WARNING`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.BINANCE, "{}") } returns true
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns blockAidResult(ValidationResult.WARNING).right()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Binance {
 
-        assertThat(useCase(NetworkType.BINANCE, "0xaa", "{}", "BNB", "BSC", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.WARNING)
-    }
+        @Test
+        fun `GIVEN evm not recognized locally WHEN invoke THEN UNSAFE and blockaid not called`() = runTest {
+            // Arrange
+            stubRecognized(NetworkType.BINANCE, "{}", recognized = false)
 
-    @Test
-    fun `GIVEN evm recognized AND blockaid WARNING WHEN invoke THEN event has Blockaid Warning`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.BINANCE, "{}") } returns true
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns blockAidResult(ValidationResult.WARNING).right()
+            // Act
+            val actual = checkEvm()
 
-        useCase(NetworkType.BINANCE, "0xaa", "{}", "BNB", "BSC", "StakeKit")
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.UNSAFE)
+            coVerify(exactly = 0) { blockAidVerifier.verifyTransaction(any()) }
+        }
 
-        verify {
-            analyticsEventHandler.send(
-                match<StakingAnalyticsEvent.ScamVerification> {
-                    it.blockaid == "Warning" && it.mobileCheck == "true"
-                },
-            )
+        @Test
+        fun `GIVEN evm not recognized WHEN invoke THEN event has Blockaid not performed and Mobile_check false`() =
+            runTest {
+                // Arrange
+                stubRecognized(NetworkType.BINANCE, "{}", recognized = false)
+
+                // Act
+                checkEvm()
+
+                // Assert
+                verifyScamEvent("BNB", "BSC", blockaid = "Not performed", mobileCheck = "false")
+            }
+
+        @Test
+        fun `GIVEN evm recognized AND blockaid SAFE WHEN invoke THEN SAFE`() = runTest {
+            // Arrange
+            stubRecognized(NetworkType.BINANCE, "{}", recognized = true)
+            stubBlockAid(ValidationResult.SAFE)
+
+            // Act
+            val actual = checkEvm()
+
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.SAFE)
+            verify(exactly = 1) { requestFactory.create(NetworkType.BINANCE, "0xaa", "{}") }
+        }
+
+        @Test
+        fun `GIVEN evm recognized AND blockaid SAFE WHEN invoke THEN event has Blockaid Safe and Mobile_check true`() =
+            runTest {
+                // Arrange
+                stubRecognized(NetworkType.BINANCE, "{}", recognized = true)
+                stubBlockAid(ValidationResult.SAFE)
+
+                // Act
+                checkEvm()
+
+                // Assert
+                verifyScamEvent("BNB", "BSC", blockaid = "Safe", mobileCheck = "true")
+            }
+
+        @Test
+        fun `GIVEN evm recognized AND blockaid WARNING WHEN invoke THEN WARNING`() = runTest {
+            // Arrange
+            stubRecognized(NetworkType.BINANCE, "{}", recognized = true)
+            stubBlockAid(ValidationResult.WARNING)
+
+            // Act
+            val actual = checkEvm()
+
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.WARNING)
+        }
+
+        @Test
+        fun `GIVEN evm recognized AND blockaid WARNING WHEN invoke THEN event has Blockaid Warning`() = runTest {
+            // Arrange
+            stubRecognized(NetworkType.BINANCE, "{}", recognized = true)
+            stubBlockAid(ValidationResult.WARNING)
+
+            // Act
+            checkEvm()
+
+            // Assert
+            verifyScamEvent("BNB", "BSC", blockaid = "Warning", mobileCheck = "true")
+        }
+
+        @Test
+        fun `GIVEN evm recognized AND blockaid UNSAFE WHEN invoke THEN UNSAFE`() = runTest {
+            // Arrange
+            stubRecognized(NetworkType.BINANCE, "{}", recognized = true)
+            stubBlockAid(ValidationResult.UNSAFE)
+
+            // Act
+            val actual = checkEvm()
+
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.UNSAFE)
+        }
+
+        @Test
+        fun `GIVEN evm recognized AND blockaid UNSAFE WHEN invoke THEN event has Blockaid Unsafe`() = runTest {
+            // Arrange
+            stubRecognized(NetworkType.BINANCE, "{}", recognized = true)
+            stubBlockAid(ValidationResult.UNSAFE)
+
+            // Act
+            checkEvm()
+
+            // Assert
+            verifyScamEvent("BNB", "BSC", blockaid = "Unsafe", mobileCheck = "true")
+        }
+
+        @Test
+        fun `GIVEN evm recognized AND blockaid FAILED_TO_VALIDATE WHEN invoke THEN SAFE`() = runTest {
+            // Arrange
+            stubRecognized(NetworkType.BINANCE, "{}", recognized = true)
+            stubBlockAid(ValidationResult.FAILED_TO_VALIDATE)
+
+            // Act
+            val actual = checkEvm()
+
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.SAFE)
+        }
+
+        @Test
+        fun `GIVEN evm recognized AND blockaid FAILED_TO_VALIDATE WHEN invoke THEN event has Blockaid Failed to validate`() =
+            runTest {
+                // Arrange
+                stubRecognized(NetworkType.BINANCE, "{}", recognized = true)
+                stubBlockAid(ValidationResult.FAILED_TO_VALIDATE)
+
+                // Act
+                checkEvm()
+
+                // Assert
+                verifyScamEvent("BNB", "BSC", blockaid = "Failed to validate", mobileCheck = "true")
+            }
+
+        @Test
+        fun `GIVEN evm recognized AND blockaid returns left WHEN invoke THEN SAFE`() = runTest {
+            // Arrange
+            stubRecognized(NetworkType.BINANCE, "{}", recognized = true)
+            coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns RuntimeException("network").left()
+
+            // Act
+            val actual = checkEvm()
+
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.SAFE)
+        }
+
+        @Test
+        fun `GIVEN evm recognized AND blockaid throws WHEN invoke THEN SAFE`() = runTest {
+            // Arrange
+            stubRecognized(NetworkType.BINANCE, "{}", recognized = true)
+            coEvery { blockAidVerifier.verifyTransaction(transactionData) } throws RuntimeException("boom")
+
+            // Act
+            val actual = checkEvm()
+
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.SAFE)
         }
     }
 
-    @Test
-    fun `GIVEN evm recognized AND blockaid UNSAFE WHEN invoke THEN UNSAFE`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.BINANCE, "{}") } returns true
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns blockAidResult(ValidationResult.UNSAFE).right()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Ethereum {
 
-        assertThat(useCase(NetworkType.BINANCE, "0xaa", "{}", "BNB", "BSC", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.UNSAFE)
-    }
+        @Test
+        fun `GIVEN ethereum WHEN invoke THEN blockaid called without local recognition`() = runTest {
+            // Arrange
+            stubBlockAid(ValidationResult.SAFE)
 
-    @Test
-    fun `GIVEN evm recognized AND blockaid UNSAFE WHEN invoke THEN event has Blockaid Unsafe`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.BINANCE, "{}") } returns true
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns blockAidResult(ValidationResult.UNSAFE).right()
+            // Act
+            val actual = checkEthereum()
 
-        useCase(NetworkType.BINANCE, "0xaa", "{}", "BNB", "BSC", "StakeKit")
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.SAFE)
+            coVerify(exactly = 1) { blockAidVerifier.verifyTransaction(transactionData) }
+            verify(exactly = 0) { recognizer.isRecognizedStakingTransaction(any(), any()) }
+        }
 
-        verify {
-            analyticsEventHandler.send(
-                match<StakingAnalyticsEvent.ScamVerification> {
-                    it.blockaid == "Unsafe" && it.mobileCheck == "true"
-                },
-            )
+        @Test
+        fun `GIVEN ethereum AND blockaid SAFE WHEN invoke THEN event Blockaid Safe and Mobile_check true`() = runTest {
+            // Arrange
+            stubBlockAid(ValidationResult.SAFE)
+
+            // Act
+            checkEthereum()
+
+            // Assert
+            verifyScamEvent("ETH", "Ethereum", blockaid = "Safe", mobileCheck = "true")
+        }
+
+        @Test
+        fun `GIVEN ethereum AND blockaid UNSAFE WHEN invoke THEN UNSAFE`() = runTest {
+            // Arrange
+            stubBlockAid(ValidationResult.UNSAFE)
+
+            // Act
+            val actual = checkEthereum()
+
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.UNSAFE)
+        }
+
+        @Test
+        fun `GIVEN ethereum AND blockaid no answer WHEN invoke THEN SAFE`() = runTest {
+            // Arrange
+            coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns RuntimeException("network").left()
+
+            // Act
+            val actual = checkEthereum()
+
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.SAFE)
+        }
+
+        @Test
+        fun `GIVEN ethereum WHEN invoke THEN request built with network address and payload`() = runTest {
+            // Arrange
+            stubBlockAid(ValidationResult.SAFE)
+
+            // Act
+            useCase(NetworkType.ETHEREUM, "0xaa", "{}", "ETH", "Ethereum", "StakeKit")
+
+            // Assert
+            verify(exactly = 1) { requestFactory.create(NetworkType.ETHEREUM, "0xaa", "{}") }
         }
     }
 
-    @Test
-    fun `GIVEN evm recognized AND blockaid FAILED_TO_VALIDATE WHEN invoke THEN SAFE`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.BINANCE, "{}") } returns true
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns blockAidResult(ValidationResult.FAILED_TO_VALIDATE).right()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Solana {
 
-        assertThat(useCase(NetworkType.BINANCE, "0xaa", "{}", "BNB", "BSC", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.SAFE)
-    }
+        @Test
+        fun `GIVEN solana recognized AND blockaid SAFE WHEN invoke THEN SAFE`() = runTest {
+            // Arrange
+            stubRecognized(NetworkType.SOLANA, "00", recognized = true)
+            stubBlockAid(ValidationResult.SAFE)
 
-    @Test
-    fun `GIVEN evm recognized AND blockaid FAILED_TO_VALIDATE WHEN invoke THEN event has Blockaid Failed to validate`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.BINANCE, "{}") } returns true
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns blockAidResult(ValidationResult.FAILED_TO_VALIDATE).right()
+            // Act
+            val actual = checkSolana()
 
-        useCase(NetworkType.BINANCE, "0xaa", "{}", "BNB", "BSC", "StakeKit")
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.SAFE)
+            verify(exactly = 1) { requestFactory.create(NetworkType.SOLANA, "0xaa", "00") }
+        }
 
-        verify {
-            analyticsEventHandler.send(
-                match<StakingAnalyticsEvent.ScamVerification> {
-                    it.blockaid == "Failed to validate" && it.mobileCheck == "true"
-                },
-            )
+        @Test
+        fun `GIVEN blockaid throws CancellationException WHEN invoke THEN exception rethrown`() = runTest {
+            // Arrange
+            stubRecognized(NetworkType.SOLANA, "00", recognized = true)
+            coEvery { blockAidVerifier.verifyTransaction(transactionData) } throws CancellationException("cancelled")
+
+            // Act
+            val error = runCatching { checkSolana() }.exceptionOrNull()
+
+            // Assert
+            assertThat(error).isInstanceOf(CancellationException::class.java)
+            verify(exactly = 0) { analyticsEventHandler.send(any()) }
+            verify(exactly = 0) { analyticsExceptionHandler.sendException(any()) }
+        }
+
+        @Test
+        fun `GIVEN request factory throws WHEN invoke THEN SAFE with failed to validate event`() = runTest {
+            // Arrange
+            stubRecognized(NetworkType.SOLANA, "00", recognized = true)
+            every { requestFactory.create(NetworkType.SOLANA, any(), any()) } throws
+                IllegalArgumentException("unsupported")
+
+            // Act
+            val actual = checkSolana()
+
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.SAFE)
+            coVerify(exactly = 0) { blockAidVerifier.verifyTransaction(any()) }
+            verifyScamEvent("SOL", "Solana", blockaid = "Failed to validate", mobileCheck = "true")
         }
     }
 
-    @Test
-    fun `GIVEN evm recognized AND blockaid returns left WHEN invoke THEN SAFE`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.BINANCE, "{}") } returns true
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns RuntimeException("network").left()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Tron {
 
-        assertThat(useCase(NetworkType.BINANCE, "0xaa", "{}", "BNB", "BSC", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.SAFE)
+        @Test
+        fun `GIVEN tron recognized WHEN invoke THEN SAFE and blockaid not called`() = runTest {
+            // Arrange
+            stubRecognized(NetworkType.TRON, "{}", recognized = true)
+
+            // Act
+            val actual = checkTron()
+
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.SAFE)
+            coVerify(exactly = 0) { blockAidVerifier.verifyTransaction(any()) }
+        }
+
+        @Test
+        fun `GIVEN tron recognized WHEN invoke THEN event has Blockaid not performed and Mobile_check true`() =
+            runTest {
+                // Arrange
+                stubRecognized(NetworkType.TRON, "{}", recognized = true)
+
+                // Act
+                checkTron()
+
+                // Assert
+                verifyScamEvent("TRX", "Tron", blockaid = "Not performed", mobileCheck = "true")
+            }
     }
 
-    @Test
-    fun `GIVEN evm recognized AND blockaid throws WHEN invoke THEN SAFE`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.BINANCE, "{}") } returns true
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } throws RuntimeException("boom")
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Cosmos {
 
-        assertThat(useCase(NetworkType.BINANCE, "0xaa", "{}", "BNB", "BSC", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.SAFE)
-    }
+        @Test
+        fun `GIVEN cosmos not recognized WHEN invoke THEN UNSAFE and non-fatal sent`() = runTest {
+            // Arrange
+            stubRecognized(NetworkType.COSMOS, "00", recognized = false)
 
-    // ───────────────────────────── Ethereum (Blockaid-only) ─────────────────────
+            // Act
+            val actual = useCase(NetworkType.COSMOS, "addr", "00", "ATOM", "Cosmos", "StakeKit")
 
-    @Test
-    fun `GIVEN ethereum WHEN invoke THEN blockaid called without local recognition`() = runTest {
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns blockAidResult(ValidationResult.SAFE).right()
-
-        val result = useCase(NetworkType.ETHEREUM, "0xaa", "{}", "ETH", "Ethereum", "StakeKit")
-
-        assertThat(result).isEqualTo(StakingTransactionVerdict.SAFE)
-        coVerify(exactly = 1) { blockAidVerifier.verifyTransaction(transactionData) }
-        verify(exactly = 0) { recognizer.isRecognizedStakingTransaction(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN ethereum AND blockaid SAFE WHEN invoke THEN event Blockaid Safe and Mobile_check true`() = runTest {
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns blockAidResult(ValidationResult.SAFE).right()
-
-        useCase(NetworkType.ETHEREUM, "0xaa", "{}", "ETH", "Ethereum", "StakeKit")
-
-        verify {
-            analyticsEventHandler.send(
-                match<StakingAnalyticsEvent.ScamVerification> {
-                    it.blockaid == "Safe" && it.mobileCheck == "true"
-                },
-            )
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.UNSAFE)
+            verifyScamEvent("ATOM", "Cosmos", blockaid = "Not performed", mobileCheck = "false")
+            verify(exactly = 1) {
+                analyticsExceptionHandler.sendException(
+                    match<ExceptionAnalyticsEvent> {
+                        it.exception is SuspiciousStakingTransactionException && it.params["verdict"] == "UNSAFE"
+                    },
+                )
+            }
         }
     }
 
-    @Test
-    fun `GIVEN ethereum AND blockaid UNSAFE WHEN invoke THEN UNSAFE`() = runTest {
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns blockAidResult(ValidationResult.UNSAFE).right()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Cardano {
 
-        assertThat(useCase(NetworkType.ETHEREUM, "0xaa", "{}", "ETH", "Ethereum", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.UNSAFE)
-    }
+        @Test
+        fun `GIVEN cardano not recognized WHEN invoke THEN UNSAFE`() = runTest {
+            // Arrange
+            stubRecognized(NetworkType.CARDANO, "00", recognized = false)
 
-    @Test
-    fun `GIVEN ethereum AND blockaid no answer WHEN invoke THEN SAFE`() = runTest {
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns RuntimeException("network").left()
+            // Act
+            val actual = useCase(NetworkType.CARDANO, "addr", "00", "ADA", "Cardano", "StakeKit")
 
-        assertThat(useCase(NetworkType.ETHEREUM, "0xaa", "{}", "ETH", "Ethereum", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.SAFE)
-    }
-
-    // ───────────────────────────── Solana paths ─────────────────────────────────
-
-    @Test
-    fun `GIVEN solana recognized AND blockaid SAFE WHEN invoke THEN SAFE`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.SOLANA, "00") } returns true
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns blockAidResult(ValidationResult.SAFE).right()
-
-        assertThat(useCase(NetworkType.SOLANA, "0xaa", "00", "SOL", "Solana", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.SAFE)
-    }
-
-    @Test
-    fun `GIVEN solana not recognized WHEN invoke THEN UNSAFE`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.SOLANA, "00") } returns false
-
-        assertThat(useCase(NetworkType.SOLANA, "0xaa", "00", "SOL", "Solana", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.UNSAFE)
-    }
-
-    // ───────────────────────────── Local-only chains ─────────────────────────────
-
-    @Test
-    fun `GIVEN tron recognized WHEN invoke THEN SAFE`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.TRON, "{}") } returns true
-
-        assertThat(useCase(NetworkType.TRON, "addr", "{}", "TRX", "Tron", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.SAFE)
-    }
-
-    @Test
-    fun `GIVEN tron recognized WHEN invoke THEN event has Blockaid not performed and Mobile_check true`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.TRON, "{}") } returns true
-
-        useCase(NetworkType.TRON, "addr", "{}", "TRX", "Tron", "StakeKit")
-
-        verify {
-            analyticsEventHandler.send(
-                match<StakingAnalyticsEvent.ScamVerification> {
-                    it.blockaid == "Not performed" && it.mobileCheck == "true"
-                },
-            )
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.UNSAFE)
         }
     }
 
-    @Test
-    fun `GIVEN cardano not recognized WHEN invoke THEN UNSAFE`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.CARDANO, "00") } returns false
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class PassThrough {
 
-        assertThat(useCase(NetworkType.CARDANO, "addr", "00", "ADA", "Cardano", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.UNSAFE)
-    }
+        @ParameterizedTest
+        @EnumSource(
+            NetworkType::class,
+            names = ["ETHEREUM", "BINANCE", "SOLANA", "TRON", "COSMOS", "CARDANO"],
+            mode = EnumSource.Mode.EXCLUDE,
+        )
+        fun `GIVEN network without verification WHEN invoke THEN SAFE without checks`(network: NetworkType) = runTest {
+            // Act
+            val actual = useCase(network, "addr", "00", "T", "B", "StakeKit")
 
-    // ───────────────────────────── Pass-through ─────────────────────────────────
-
-    @Test
-    fun `GIVEN unsupported network ton WHEN invoke THEN SAFE pass-through and no analytics`() = runTest {
-        assertThat(useCase(NetworkType.TON, "addr", "00", "TON", "TON", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.SAFE)
-        verify(exactly = 0) { analyticsEventHandler.send(any()) }
-    }
-
-    @Test
-    fun `GIVEN polygon WHEN invoke THEN SAFE pass-through with no checks and no analytics`() = runTest {
-        assertThat(useCase(NetworkType.POLYGON, "0xaa", "{}", "MATIC", "Polygon", "StakeKit"))
-            .isEqualTo(StakingTransactionVerdict.SAFE)
-        verify(exactly = 0) { recognizer.isRecognizedStakingTransaction(any(), any()) }
-        coVerify(exactly = 0) { blockAidVerifier.verifyTransaction(any()) }
-        verify(exactly = 0) { analyticsEventHandler.send(any()) }
-    }
-
-    // ───────────────────────────── Firebase non-fatal ───────────────────────────
-
-    @Test
-    fun `GIVEN verdict UNSAFE WHEN invoke THEN non-fatal sent with verdict param`() = runTest {
-        every { recognizer.isRecognizedStakingTransaction(NetworkType.SOLANA, "00") } returns false
-
-        useCase(NetworkType.SOLANA, "0xaa", "00", "SOL", "Solana", "StakeKit")
-
-        verify {
-            analyticsExceptionHandler.sendException(
-                match<ExceptionAnalyticsEvent> {
-                    it.exception is SuspiciousStakingTransactionException &&
-                        it.params["verdict"] == "UNSAFE" &&
-                        it.params["blockchain"] == "Solana" &&
-                        it.params["token"] == "SOL" &&
-                        it.params["provider"] == "StakeKit"
-                },
-            )
+            // Assert
+            assertThat(actual).isEqualTo(StakingTransactionVerdict.SAFE)
+            verify(exactly = 0) { recognizer.isRecognizedStakingTransaction(any(), any()) }
+            coVerify(exactly = 0) { blockAidVerifier.verifyTransaction(any()) }
+            verify(exactly = 0) { analyticsEventHandler.send(any()) }
+            verify(exactly = 0) { analyticsExceptionHandler.sendException(any()) }
         }
     }
 
-    @Test
-    fun `GIVEN verdict WARNING WHEN invoke THEN non-fatal sent with verdict param`() = runTest {
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns blockAidResult(ValidationResult.WARNING).right()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class NonFatalReporting {
 
-        useCase(NetworkType.ETHEREUM, "0xaa", "{}", "ETH", "Ethereum", "StakeKit")
+        @Test
+        fun `GIVEN verdict UNSAFE WHEN invoke THEN non-fatal sent with verdict param`() = runTest {
+            // Arrange
+            stubRecognized(NetworkType.SOLANA, "00", recognized = false)
 
-        verify {
-            analyticsExceptionHandler.sendException(
-                match<ExceptionAnalyticsEvent> {
-                    it.exception is SuspiciousStakingTransactionException && it.params["verdict"] == "WARNING"
-                },
-            )
+            // Act
+            checkSolana()
+
+            // Assert
+            verify {
+                analyticsExceptionHandler.sendException(
+                    match<ExceptionAnalyticsEvent> {
+                        it.exception is SuspiciousStakingTransactionException &&
+                            it.params["verdict"] == "UNSAFE" &&
+                            it.params["blockchain"] == "Solana" &&
+                            it.params["token"] == "SOL" &&
+                            it.params["provider"] == "StakeKit"
+                    },
+                )
+            }
         }
-    }
 
-    @Test
-    fun `GIVEN verdict SAFE WHEN invoke THEN non-fatal not sent`() = runTest {
-        coEvery { blockAidVerifier.verifyTransaction(transactionData) } returns blockAidResult(ValidationResult.SAFE).right()
+        @Test
+        fun `GIVEN verdict WARNING WHEN invoke THEN non-fatal sent with verdict param`() = runTest {
+            // Arrange
+            stubBlockAid(ValidationResult.WARNING)
 
-        useCase(NetworkType.ETHEREUM, "0xaa", "{}", "ETH", "Ethereum", "StakeKit")
+            // Act
+            checkEthereum()
 
-        verify(exactly = 0) { analyticsExceptionHandler.sendException(any()) }
-    }
+            // Assert
+            verify {
+                analyticsExceptionHandler.sendException(
+                    match<ExceptionAnalyticsEvent> {
+                        it.exception is SuspiciousStakingTransactionException && it.params["verdict"] == "WARNING"
+                    },
+                )
+            }
+        }
 
-    @Test
-    fun `GIVEN null unsigned tx WHEN invoke THEN non-fatal not sent`() = runTest {
-        useCase(NetworkType.SOLANA, "0xaa", null, "SOL", "Solana", "StakeKit")
+        @Test
+        fun `GIVEN verdict SAFE WHEN invoke THEN non-fatal not sent`() = runTest {
+            // Arrange
+            stubBlockAid(ValidationResult.SAFE)
 
-        verify(exactly = 0) { analyticsExceptionHandler.sendException(any()) }
-    }
+            // Act
+            checkEthereum()
 
-    @Test
-    fun `GIVEN polygon pass-through WHEN invoke THEN non-fatal not sent`() = runTest {
-        useCase(NetworkType.POLYGON, "0xaa", "{}", "MATIC", "Polygon", "StakeKit")
-
-        verify(exactly = 0) { analyticsExceptionHandler.sendException(any()) }
+            // Assert
+            verify(exactly = 0) { analyticsExceptionHandler.sendException(any()) }
+        }
     }
 }
