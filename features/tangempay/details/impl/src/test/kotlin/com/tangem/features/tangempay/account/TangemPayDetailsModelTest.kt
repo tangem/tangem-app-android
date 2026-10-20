@@ -406,6 +406,22 @@ internal class TangemPayDetailsModelTest {
         }
 
     @Test
+    fun `GIVEN banking details error sheet WHEN retry loads credentials THEN product instance credentials returned`() =
+        runTest {
+            // Arrange
+            coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns BANK_CREDENTIALS.right()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            val actual = model.loadBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(BANK_CREDENTIALS.right())
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN loaded status WHEN banking details error shown THEN details error event sent`() = runTest {
         // GIVEN
         val model = createModel(testScope = this)
@@ -1407,10 +1423,7 @@ internal class TangemPayDetailsModelTest {
                 // Assert
                 assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VaBankingDetailsError>())
                     .containsExactly(
-                        TangemPayDetailsNavigation.VaBankingDetailsError(
-                            userWalletId = userWalletId,
-                            productInstanceId = PRODUCT_INSTANCE_ID,
-                        ),
+                        TangemPayDetailsNavigation.VaBankingDetailsError(productInstanceId = PRODUCT_INSTANCE_ID),
                     )
                 payModel.onDestroy()
             }
@@ -1485,10 +1498,7 @@ internal class TangemPayDetailsModelTest {
                 // Assert
                 assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VaBankingDetailsError>())
                     .containsExactly(
-                        TangemPayDetailsNavigation.VaBankingDetailsError(
-                            userWalletId = userWalletId,
-                            productInstanceId = PRODUCT_INSTANCE_ID,
-                        ),
+                        TangemPayDetailsNavigation.VaBankingDetailsError(productInstanceId = PRODUCT_INSTANCE_ID),
                     )
                 verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
                 payModel.onDestroy()
@@ -1562,10 +1572,7 @@ internal class TangemPayDetailsModelTest {
             // Assert
             assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VaBankingDetailsError>())
                 .containsExactly(
-                    TangemPayDetailsNavigation.VaBankingDetailsError(
-                        userWalletId = userWalletId,
-                        productInstanceId = PRODUCT_INSTANCE_ID,
-                    ),
+                    TangemPayDetailsNavigation.VaBankingDetailsError(productInstanceId = PRODUCT_INSTANCE_ID),
                 )
             verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaDetailsErrorShowed>()) }
             payModel.onDestroy()
