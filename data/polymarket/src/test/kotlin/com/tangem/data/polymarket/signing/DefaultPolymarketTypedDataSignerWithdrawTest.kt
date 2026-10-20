@@ -56,6 +56,7 @@ internal class DefaultPolymarketTypedDataSignerWithdrawTest {
         cardSdkConfigRepository = cardSdkConfigRepository,
         hotSignerFactory = hotSignerFactory,
         addressFactory = PolymarketAddressFactory(),
+        digestFactory = PolymarketDigestFactory(),
         formatter = PolymarketSignatureFormatter(),
         dispatchers = TestingCoroutineDispatcherProvider(),
     )

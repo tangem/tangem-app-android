@@ -17,7 +17,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.interactor.CheckNewPolymarketAccountAllowedInteractor
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
-import com.tangem.domain.polymarket.model.PolymarketDerivationError
+import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketNewAccountAllowance
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
@@ -219,7 +219,7 @@ internal class PolymarketOnboardingModelTest {
                 gateResolves(PolymarketEntry.Undetermined)
                 every { runOnboardingUseCase(userWalletId) } returns flowOf(
                     PolymarketOnboardingProgress.Failed(
-                        error = PolymarketOnboardingError.Derivation(PolymarketDerivationError.UserCancelled),
+                        error = PolymarketOnboardingError.Signing(PolymarketSigningError.UserCancelled),
                         isRetryable = true,
                     ),
                 )
@@ -918,7 +918,7 @@ internal class PolymarketOnboardingModelTest {
             delay(RESOLUTION_DELAY_MILLIS)
             emit(
                 PolymarketOnboardingProgress.Failed(
-                    error = PolymarketOnboardingError.Derivation(PolymarketDerivationError.UserCancelled),
+                    error = PolymarketOnboardingError.Signing(PolymarketSigningError.UserCancelled),
                     isRetryable = true,
                 ),
             )
