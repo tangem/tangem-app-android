@@ -210,12 +210,12 @@ internal class DefaultRouterTest {
 
         // Assert
         assertThat(logs).containsExactly(
-            "Info AppRouter Push RouteC",
-            "Info AppRouter Replace a current route with RouteB",
-            "Info AppRouter Pop to RouteA",
-            "Info AppRouter Replace all routes with [RouteA, RouteB]",
-            "Info AppRouter Pop route",
-            "Info AppRouter Pop to ${RouteA::class}",
+            "Info Router Push RouteC",
+            "Info Router Replace a current route with RouteB",
+            "Info Router Pop to RouteA",
+            "Info Router Replace all routes with [RouteA, RouteB]",
+            "Info Router Pop route",
+            "Info Router Pop to ${RouteA::class}",
         ).inOrder()
     }
 
