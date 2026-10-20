@@ -9,9 +9,9 @@ import com.tangem.google.GoogleServicesHelper
 import com.tangem.google.auth.GoogleAuthError
 import com.tangem.google.auth.GoogleAuthScope
 import com.tangem.google.auth.GoogleAuthorizer
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Default [GoogleDriveTokenProvider]:
@@ -29,7 +29,6 @@ import kotlin.coroutines.cancellation.CancellationException
  */
 internal class DefaultGoogleDriveTokenProvider(
     private val authorizer: GoogleAuthorizer,
-    private val api: GoogleDriveApi,
     private val context: Context,
     private val networkConnectionManager: NetworkConnectionManager,
     private val scopes: List<GoogleAuthScope> = listOf(DRIVE_FILE_SCOPE),
@@ -37,67 +36,60 @@ internal class DefaultGoogleDriveTokenProvider(
 
     private val authMutex = Mutex()
 
-    private var cachedToken: String? = null
+    private val cachedTokens = mutableMapOf<String?, String>()
+
+    override suspend fun currentAccountName(): String? = currentCoroutineContext()[GoogleDriveAccount].accountName()
 
     override suspend fun getAccessToken(interactive: Boolean): Either<GoogleAuthError, String> {
         if (!GoogleServicesHelper.checkGoogleServicesAvailability(context)) {
             return GoogleAuthError.Unavailable.left()
         }
+        val requested = currentCoroutineContext()[GoogleDriveAccount]
 
         // serialize authorization so two concurrent cache misses don't open two account pickers
         return authMutex.withLock {
-            cachedToken?.let { return@withLock it.right() }
+            // a token cached under `null` belongs to whichever account Google picked, not the one about to be chosen
+            val isAccountPickPending = interactive && requested == null && authorizer.selectedAccountName == null
+            if (!isAccountPickPending) cachedTokens[requested.accountName()]?.let { return@withLock it.right() }
             if (!networkConnectionManager.isOnline) return@withLock GoogleAuthError.NetworkError.left()
 
-            authorizer.authorize(scopes = scopes, interactive = interactive).map { result ->
-                cachedToken = result.accessToken
-                result.accessToken
+            val result = if (requested != null) {
+                authorizer.authorizeAccount(accountName = requested.name, scopes = scopes, interactive = interactive)
+            } else {
+                authorizer.authorize(scopes = scopes, interactive = interactive)
+            }
+            result.map { authResult ->
+                // read only now: the account picker may have just pinned the account
+                cachedTokens[requested.accountName()] = authResult.accessToken
+                authResult.accessToken
             }
         }
     }
 
     override suspend fun invalidate() {
-        authMutex.withLock { dropAuthorization() }
+        authMutex.withLock {
+            cachedTokens.values.forEach { authorizer.clearToken(it) }
+            cachedTokens.clear()
+            authorizer.clearAuthorization()
+        }
     }
 
     override suspend fun invalidateToken() {
-        authMutex.withLock { dropToken() }
-    }
-
-    override suspend fun switchAccount(accountName: String) {
+        val requested = currentCoroutineContext()[GoogleDriveAccount]
         authMutex.withLock {
-            dropAuthorization()
-            authorizer.selectAccount(accountName)
+            cachedTokens.remove(requested.accountName())?.let { authorizer.clearToken(it) }
         }
     }
 
-    override suspend fun signOut() {
+    override suspend fun switchAccount(accountName: String?) {
         authMutex.withLock {
-            cachedToken?.let { revokeQuietly(it) }
-            dropAuthorization()
+            if (authorizer.selectedAccountName == accountName) return@withLock
+            authorizer.clearAuthorization()
+            accountName?.let(authorizer::selectAccount)
         }
     }
 
-    private suspend fun dropAuthorization() {
-        dropToken()
-        authorizer.clearAuthorization()
-    }
-
-    private suspend fun dropToken() {
-        cachedToken?.let { authorizer.clearToken(it) }
-        cachedToken = null
-    }
-
-    @Suppress("TooGenericExceptionCaught", "SwallowedException")
-    private suspend fun revokeQuietly(token: String) {
-        try {
-            api.revokeToken(token)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            // best-effort: local sign-out proceeds even if the remote revoke fails
-        }
-    }
+    private fun GoogleDriveAccount?.accountName(): String? = if (this != null) name else authorizer.selectedAccountName
 
     companion object {
         val DRIVE_FILE_SCOPE = GoogleAuthScope("https://www.googleapis.com/auth/drive.file")
