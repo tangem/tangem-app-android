@@ -20,7 +20,6 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.session.DeviceRegistrar
@@ -36,8 +35,6 @@ import dagger.hilt.EntryPoints
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-
-lateinit var walletsRepository: WalletsRepository
 
 val foregroundActivityObserver = ForegroundActivityObserver
 
@@ -166,8 +163,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
                     }
             }
         }
-        walletsRepository = entryPoint.getWalletsRepository()
-
         apiConfigsManager.initialize()
 
         TangemLogger.i("APP STARTED")
