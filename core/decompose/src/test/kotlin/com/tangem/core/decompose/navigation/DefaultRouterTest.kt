@@ -201,6 +201,19 @@ internal class DefaultRouterTest {
     }
 
     @Test
+    fun `GIVEN matching route on top WHEN popToMatching THEN stack is unchanged and completion is successful`() {
+        // Arrange
+        stack = listOf(RouteA, Details(id = 1, flag = true))
+
+        // Act
+        router.popToMatching(Details::class, predicate = { it.id == 1 }, onComplete = onComplete)
+
+        // Assert
+        assertThat(stack).containsExactly(RouteA, Details(id = 1, flag = true)).inOrder()
+        assertThat(results).containsExactly(true)
+    }
+
+    @Test
     fun `GIVEN no route satisfying the predicate WHEN popToMatching THEN stack is unchanged and completion fails`() {
         // Arrange
         stack = listOf(RouteA, Details(id = 2), RouteB)
