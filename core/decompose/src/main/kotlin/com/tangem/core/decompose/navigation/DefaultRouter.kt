@@ -70,10 +70,14 @@ internal class DefaultRouter(
         predicate: (R) -> Boolean,
         onComplete: (isSuccess: Boolean) -> Unit,
     ) {
-        popTo(
-            predicate = { route -> routeClass.safeCast(route)?.let(predicate) != true },
-            onComplete = onComplete,
-        )
+        val matches: (Route) -> Boolean = { route -> routeClass.safeCast(route)?.let(predicate) == true }
+
+        navigateSafely(onComplete) { complete ->
+            navigate(
+                transformer = { stack -> stack.dropLastWhile { !matches(it) }.ifEmpty { stack } },
+                onComplete = { newStack, _ -> complete(newStack.lastOrNull()?.let(matches) == true) },
+            )
+        }
     }
 
     override suspend fun contains(route: Route): Boolean = withContext(dispatchers.mainImmediate) {
