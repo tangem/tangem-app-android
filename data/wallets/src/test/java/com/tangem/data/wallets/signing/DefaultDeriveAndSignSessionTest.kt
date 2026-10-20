@@ -436,6 +436,31 @@ internal class DefaultDeriveAndSignSessionTest {
         }
 
     @Test
+    fun `GIVEN an unlock established elsewhere and the first prompt is cancelled WHEN the block signs again THEN asks again`() =
+        runTest {
+            // Arrange
+            val wallet = hotWallet()
+            coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns storedDerivedKey()
+            every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returns mockk()
+            val unlock: UnlockHotWallet = mockk()
+            coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } throws TangemSdkError.UserCancelled() andThen
+                unlock
+            coEvery { hotWalletAccessor.signHashesReusingContextualUnlock(HOT_WALLET_ID, any()) } returns signedData()
+
+            // Act
+            val actual = sut.run(wallet, SEED_KEY, PATH) {
+                sign(listOf(HASH))
+                sign(listOf(HASH))
+            }
+
+            // Assert
+            assertThat((actual.getOrNull() as CompletionResult.Success).data).containsExactly(SIG)
+            coVerify(exactly = 2) { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) }
+            coVerify(exactly = 1) { hotWalletAccessor.signHashesReusingContextualUnlock(HOT_WALLET_ID, any()) }
+            verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
+        }
+
+    @Test
     fun `GIVEN the block throws before signing WHEN run on hot THEN returns Left and no unlock is cleared`() = runTest {
         // Arrange
         val wallet = hotWallet()
