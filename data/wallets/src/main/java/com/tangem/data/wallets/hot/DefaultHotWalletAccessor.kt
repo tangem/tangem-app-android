@@ -75,8 +75,22 @@ class DefaultHotWalletAccessor @Inject constructor(
         return tangemHotSdk.exportMnemonic(unlockHotWallet = unlockHotWallet)
     }
 
-    override suspend fun unlockContextual(hotWalletId: HotWalletId): UnlockHotWallet = hotSdkRequest(hotWalletId) {
-        storeContextUnlock(it)
+    override suspend fun unlockContextual(hotWalletId: HotWalletId): UnlockHotWallet {
+        var stored: UnlockHotWallet? = null
+        var isCompleted = false
+        return try {
+            hotSdkRequest(hotWalletId) { unlock -> storeContextUnlock(unlock).also { stored = it } }
+                .also { isCompleted = true }
+        } finally {
+            val orphaned = stored
+            if (!isCompleted && orphaned != null) removeContextualUnlock(hotWalletId, orphaned)
+        }
+    }
+
+    private fun removeContextualUnlock(hotWalletId: HotWalletId, unlock: UnlockHotWallet) {
+        if (contextualUnlockHotWallet.remove(hotWalletId, unlock)) {
+            scope.launch { tangemHotSdk.clearUnlockContext(hotWalletId) }
+        }
     }
 
     override suspend fun unlockContextual(hotWalletId: HotWalletId, auth: HotAuth): UnlockHotWallet =

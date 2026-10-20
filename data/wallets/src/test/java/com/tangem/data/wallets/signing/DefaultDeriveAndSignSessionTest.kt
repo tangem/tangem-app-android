@@ -388,7 +388,7 @@ internal class DefaultDeriveAndSignSessionTest {
                 val second: UnlockHotWallet = mockk()
                 coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
                 every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany
-                    listOf(null, null, second)
+                    listOf(null, null, null, second)
                 coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } returnsMany listOf(first, second)
                 coEvery { hotWalletAccessor.derivePublicKeysWithUnlock(first, any()) } returns derivedResponse()
                 coEvery { hotWalletAccessor.signHashesWithUnlock(second, any()) } returns signedData()
@@ -420,20 +420,43 @@ internal class DefaultDeriveAndSignSessionTest {
         }
 
         @Test
-        fun `GIVEN the unlock fails after it was stored WHEN run THEN the stored unlock is cleared`() = runTest {
-            // Arrange
-            val wallet = hotWallet()
-            coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-            every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany listOf(null, mockk())
-            coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } throws IllegalStateException("save failed")
+        fun `GIVEN another flow unlocks while the prompt fails WHEN run THEN that unlock is left in place`() =
+            runTest {
+                // Arrange
+                val wallet = hotWallet()
+                coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
+                every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany listOf(null, mockk())
+                coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } throws IllegalStateException("failed")
 
-            // Act
-            val actual = sut.run(wallet, SEED_KEY, PATH) { SignRequest(value = VALUE, hashes = listOf(HASH)) }
+                // Act
+                val actual = sut.run(wallet, SEED_KEY, PATH) { SignRequest(value = VALUE, hashes = listOf(HASH)) }
 
-            // Assert
-            assertThat(actual.leftOrNull()).isEqualTo(DeriveAndSignError.Unknown)
-            verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(HOT_WALLET_ID) }
-        }
+                // Assert
+                assertThat(actual.leftOrNull()).isEqualTo(DeriveAndSignError.Unknown)
+                verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
+            }
+
+        @Test
+        fun `GIVEN a foreign unlock is cleared during prepare WHEN run ends THEN the run's new unlock is cleared`() =
+            runTest {
+                // Arrange
+                val wallet = hotWallet()
+                val first: UnlockHotWallet = mockk()
+                val second: UnlockHotWallet = mockk()
+                coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
+                every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany
+                    listOf(mockk(), null, null, second)
+                coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } returnsMany listOf(first, second)
+                coEvery { hotWalletAccessor.derivePublicKeysWithUnlock(first, any()) } returns derivedResponse()
+                coEvery { hotWalletAccessor.signHashesWithUnlock(second, any()) } returns signedData()
+
+                // Act
+                val actual = sut.run(wallet, SEED_KEY, PATH) { SignRequest(value = VALUE, hashes = listOf(HASH)) }
+
+                // Assert
+                assertThat(actual.getOrNull()?.signatures).containsExactly(SIG)
+                verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(HOT_WALLET_ID) }
+            }
 
         @Test
         fun `GIVEN another flow replaced the run's unlock WHEN run ends THEN the replacement is left in place`() =
@@ -524,7 +547,7 @@ internal class DefaultDeriveAndSignSessionTest {
                     derivedKeys = emptyMap(),
                 ),
             ),
-            backedUp = true,
+            isBackedUp = true,
         )
 
         fun storedDerivedKey() = ExtendedPublicKeysMap(mapOf(PATH to DERIVED_KEY))
