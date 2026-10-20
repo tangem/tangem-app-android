@@ -618,14 +618,8 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideGetCurrentTariffUseCase(
-            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
-            paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
-        ): GetCurrentTariffUseCase {
-            return GetCurrentTariffUseCase(
-                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
-                paymentAccountStatusSupplier = paymentAccountStatusSupplier,
-            )
+        fun provideGetCurrentTariffUseCase(onboardingRepository: OnboardingRepository): GetCurrentTariffUseCase {
+            return GetCurrentTariffUseCase(onboardingRepository = onboardingRepository)
         }
 
         @Provides

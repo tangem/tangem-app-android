@@ -1,5 +1,7 @@
 package com.tangem.features.tangempay.verified
 
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -9,6 +11,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.pay.usecase.GetTangemPayProductsAvailabilityUseCase
 import com.tangem.features.tangempay.components.TangemPayVerifiedComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -34,6 +37,8 @@ internal class TangemPayVerifiedModel @Inject constructor(
         onNotifyClick = ::onNotifyClick,
         onCloseClick = ::onCloseClick,
     )
+
+    val stackNavigation = StackNavigation<TangemPayVerifiedRoute>()
 
     val uiState: StateFlow<TangemPayVerifiedUM>
         field = MutableStateFlow<TangemPayVerifiedUM>(TangemPayVerifiedUM.Loading(onCloseClick = ::onCloseClick))
@@ -68,6 +73,10 @@ internal class TangemPayVerifiedModel @Inject constructor(
     }
 
     private fun onChoosePlanClick() {
+        stackNavigation.pushNew(TangemPayVerifiedRoute.SelectPlan)
+    }
+
+    fun onPlanSelected(transition: TangemPayTariffPlanTransition) {
         // TODO v_rodionov: #[REDACTED_TASK_KEY]
     }
 
