@@ -1,4 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="money_account_main_status_dialog_activating_description">계좌를 준비하고 있습니다. 시간이 다소 걸릴 수 있습니다</string>
+  <string name="money_account_main_status_dialog_activating_title">은행 계좌 개설 중</string>
+  <string name="money_account_main_status_dialog_country_not_supported_description">더 많은 지역으로 서비스를 확대하기 위해 노력하고 있습니다. 도움이 필요하신가요?</string>
+  <string name="money_account_main_status_dialog_country_not_supported_title">아직 해당 지역에서 이용할 수 없습니다</string>
+  <string name="money_account_main_status_dialog_hide_account">홈 화면에서 계좌 숨기기</string>
+  <string name="money_account_main_status_dialog_join_waitlist">대기자 명단에 등록</string>
+  <string name="money_account_main_status_dialog_verification_declined_description">죄송합니다. 제공하신 정보로는 본인 인증을 완료할 수 없었습니다</string>
+  <string name="money_account_main_status_dialog_verification_declined_title">본인 인증에 실패했습니다</string>
+  <string name="money_account_main_status_dialog_verification_description">보통 몇 분 정도 소요됩니다. 아래에서 상태를 확인할 수 있습니다</string>
+  <string name="money_account_main_status_dialog_verification_title">본인 인증 진행 중</string>
+  <string name="money_account_main_status_dialog_view_status">상태 보기</string>
+  <string name="money_account_onboarding_disclaimer">Tangem Pay는 금융 기술 회사이며 은행이 아닙니다. 은행 서비스는 FDIC 회원사인 SSB가 제공합니다. SSB에 예치된 자금은 해당 제한 사항 및 FDIC 규정에 따라 예금자 1인당, 보험 가입 은행별로 최대 250,000달러까지 FDIC 보험 적용 대상이 될 수 있습니다.</string>
+  <string name="tangempay_residency_search_empty">검색 결과가 없습니다. 검색어를 변경해 주세요</string>
   <string name="tangempay_withdraw_bank_source_subtitle">%1$s · %2$s</string>
+  <string name="virtual_account_requisites_bank_address">은행 주소</string>
+  <string name="virtual_account_requisites_bank_name">은행 이름</string>
+  <string name="virtual_account_requisites_beneficiary_address">수취인 주소</string>
+  <string name="virtual_account_requisites_beneficiary_name">수취인 이름</string>
+  <string name="virtual_account_requisites_routing_number">Routing number</string>
 </resources>
