@@ -30,6 +30,7 @@ import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import javax.inject.Inject
 
@@ -140,7 +141,10 @@ class TangemPayEligibilityTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityStartedState)
             }
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO' to '$channelsErrorState'") {
-                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsErrorState)
+                assertTrue(
+                    "WireMock should switch '$TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO' to '$channelsErrorState'",
+                    setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsErrorState),
+                )
             }
             val channelsRequestsBefore = getTangemPayEligibilityChannelsRequestCount()
             step("Open 'Main' screen with existing hot wallet") {
