@@ -2,28 +2,21 @@ package com.tangem.features.jointaccount.main
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.core.ui.R
+import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import kotlinx.collections.immutable.ImmutableList
 
 /**
- * UI model for the joint-account "Invite members" / "Members" screen.
+ * UI model for the joint-account "Invite members" / "Confirm the account" / "Members" screen.
  *
- * Which fields are populated depends entirely on the account's own data — its `Status` and whether this
- * device holds its invites — not on how the screen was opened. There is no "mode": hiding an action means
- * simply not wiring it here for the current account state.
+ * Which fields are populated depends entirely on the account's own data — its status, whether this device holds
+ * its invites and whether this wallet has confirmed the account — not on how the screen was opened.
  *
- * @property topBar          which affordance leaves the screen and what it shows — see [TopBarUM].
- * @property header          the in-content title; `null` once the account is active — its title moves into
- * [topBar] instead.
- * @property summaryCard     the account's name, icon, joining progress and approval rule; `null` until the
- * account's own record (name and icon) arrives.
- * @property joined          members who have already joined, in display order.
- * @property freeSlots       slots still waiting to be filled, in display order.
- * @property membersLabel    section label shown above [joined]; `null` hides it (nobody joined).
- * @property waitingLabel    section label shown above [freeSlots]; `null` hides it (no free slots).
- * @property footer        the "Verify account" footer pinned to the bottom of the screen; `null` once the
- * account is active — see [FooterUM].
+ * @property header      `null` once the account is active — its title moves into [topBar].
+ * @property summaryCard `null` until the account's own record (name and icon) arrives.
+ * @property footer      `null` once the account is active.
  */
 @Immutable
 data class JointAccountMembersUM(
@@ -37,91 +30,50 @@ data class JointAccountMembersUM(
     val footer: FooterUM?,
 ) {
 
-    /** The top bar's affordance for leaving the screen. */
     @Immutable
     sealed interface TopBarUM {
 
-        /**
-         * Top-right close "X" — dismisses the working (collecting/activating) view.
-         *
-         * @property onCloseClick leave the screen and return to the wallet.
-         */
+        /** Top-right close "X" of the collecting / confirming view. */
         data class Dismissible(
             val onCloseClick: () -> Unit,
         ) : TopBarUM
 
-        /**
-         * Centered title with a top-left back arrow — the account is active, this is now a plain read-only
-         * roster.
-         *
-         * @property title        screen title ("Members").
-         * @property onBackClick  leave the screen and return to the wallet.
-         */
+        /** Centered title with a back arrow — the read-only roster of an active account. */
         data class Titled(
             val title: TextReference,
             val onBackClick: () -> Unit,
         ) : TopBarUM
     }
 
-    /**
-     * The in-content title shown above the member list.
-     *
-     * @property title screen title ("Invite members" while collecting).
-     */
+    /** The in-content title above the member list; only the confirming view has a [subtitle]. */
     data class HeaderUM(
         val title: TextReference,
+        val subtitle: TextReference? = null,
     )
 
-    /**
-     * The account summary card above the member list.
-     *
-     * @property icon                 account icon, the same as on the wallet screen.
-     * @property name                 account name.
-     * @property progress             joining progress, e.g. "1 of 5 members joined".
-     * @property approvals            approval rule, e.g. "Any 2 of 5".
-     * @property onApprovalsInfoClick explain how the approval rule works.
-     */
+    /** The account summary card: [membersCount] is "5 members", [approvals] is "Any 2 of 5". */
     data class SummaryCardUM(
         val icon: AccountIconUM.CryptoPortfolio,
         val name: TextReference,
-        val progress: TextReference,
+        val membersCount: TextReference,
         val approvals: TextReference,
         val onApprovalsInfoClick: () -> Unit,
     )
 
-    /**
-     * The footer pinned to the bottom of the screen.
-     *
-     * @property hint   how many members still need to join, shown above [button]; `null` hides it.
-     * @property button the "Verify account" button.
-     */
+    /** [button] is `null` once this wallet has confirmed the account — only the [hint] remains. */
     data class FooterUM(
         val hint: TextReference?,
-        val button: VerifyButtonUM,
+        val button: ConfirmButtonUM?,
     )
 
-    /**
-     * "Verify account" button.
-     *
-     * @property isEnabled     the button can be pressed — only the creator, once every slot is filled.
-     * @property isLoading     the activation is being signed and sent.
-     * @property walletIconRes wallet-interaction icon at the end of the button — a card for a cold wallet, which
-     * signs with a tap; `null` for a hot wallet.
-     * @property onClick       sign and activate the account.
-     */
-    data class VerifyButtonUM(
+    /** "Confirm shared address" button. */
+    data class ConfirmButtonUM(
         val isEnabled: Boolean,
         val isLoading: Boolean,
-        val walletIconRes: Int?,
         val onClick: () -> Unit,
     )
 
-    /**
-     * Avatar for a joined member: a colored circle with the member's initial.
-     *
-     * @property monogram single-letter initial rendered inside the circle.
-     * @property color    circle color, reusing the account-icon color palette.
-     */
+    /** A colored circle with the member's initial, reusing the account-icon palette. */
     data class MemberAvatarUM(
         val monogram: String,
         val color: CryptoPortfolioIcon.Color,
@@ -132,51 +84,61 @@ data class JointAccountMembersUM(
 
         val id: String
 
-        /**
-         * A member who has already joined.
-         *
-         * @property avatar      colored monogram avatar.
-         * @property name        member's display name.
-         * @property isYou       this wallet is the member — a "You" chip follows the name.
-
-         * @property status      membership status ("Joined").
-         * @property onInfoClick open the member card with the full owner address.
-         */
+        /** A member who has already joined; [onInfoClick] opens the member card with the full owner address. */
         data class Joined(
             override val id: String,
             val avatar: MemberAvatarUM,
             val name: TextReference,
             val isYou: Boolean,
             val isCreator: Boolean,
-            val status: TextReference,
+            val status: MemberStatusUM,
             val onInfoClick: () -> Unit,
         ) : MemberUM
 
-        /**
-         * A free slot waiting to be filled.
-         *
-         * @property title  slot title ("Member 2").
-         * @property status slot status ("Not invited").
-         * @property action the button the slot offers; `null` shows none (not the creator, or nothing to share).
-         */
+        /** A free slot waiting to be filled; [action] is `null` when this device cannot invite. */
         data class FreeSlot(
             override val id: String,
             val title: TextReference,
-            val status: TextReference,
+            val status: SlotStatusUM,
             val action: SlotActionUM?,
         ) : MemberUM
     }
 
-    /** The button of a free slot. */
+    /** The status badge of a joined member: "Joined" while collecting, the confirmation state while confirming. */
+    enum class MemberStatusUM(val text: TextReference, val badgeStatus: TangemBadge.Status) {
+        Joined(
+            text = TextReference.Res(R.string.joint_account_members_role_joined),
+            badgeStatus = TangemBadge.Status.Info,
+        ),
+        NotConfirmed(
+            text = TextReference.Res(R.string.joint_account_members_status_not_confirmed),
+            badgeStatus = TangemBadge.Status.Neutral,
+        ),
+        Confirmed(
+            text = TextReference.Res(R.string.joint_account_members_status_confirmed),
+            badgeStatus = TangemBadge.Status.Info,
+        ),
+    }
+
+    @Immutable
+    sealed interface SlotStatusUM {
+
+        data object NotInvited : SlotStatusUM
+
+        /** [label] is "Invited", or the invite's deadline when the backend reports one ("Until tomorrow, 13:15"). */
+        data class Invited(val label: TextReference) : SlotStatusUM
+
+        data object Expired : SlotStatusUM
+    }
+
     @Immutable
     sealed interface SlotActionUM {
 
-        val onClick: () -> Unit
+        data class Invite(val onClick: () -> Unit) : SlotActionUM
 
-        /** "Invite" — share this slot's invite link via the system share sheet. */
-        data class Invite(override val onClick: () -> Unit) : SlotActionUM
+        data class ReInvite(val onClick: () -> Unit) : SlotActionUM
 
-        /** "Resend" — share this slot's invite link again. */
-        data class Resend(override val onClick: () -> Unit) : SlotActionUM
+        /** A new invite is being issued for this slot. */
+        data object Loading : SlotActionUM
     }
 }
