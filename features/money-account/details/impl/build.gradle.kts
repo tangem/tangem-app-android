@@ -21,6 +21,9 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 
+    /** Common */
+    implementation(projects.common.routing)
+
     /** Domain */
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)

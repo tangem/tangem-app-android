@@ -5,6 +5,7 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_government_20
 import com.tangem.core.ui.res.generated.icons.ic_grid_20
 import com.tangem.features.moneyaccount.details.impl.R
@@ -13,6 +14,7 @@ import kotlinx.collections.immutable.toImmutableList
 
 internal class MoneyAccountAddFundsOptionsUMConverter(
     private val depositAddress: String?,
+    private val onSwapClick: () -> Unit,
     private val onReceiveClick: (depositAddress: String) -> Unit,
     private val onBankTransferClick: () -> Unit,
 ) : Converter<MoneyAccountAddFundsOptionsUMConverter.Input, MoneyAccountAddFundsOptionsUM> {
@@ -21,10 +23,21 @@ internal class MoneyAccountAddFundsOptionsUMConverter(
 
     override fun convert(value: Input): MoneyAccountAddFundsOptionsUM = MoneyAccountAddFundsOptionsUM(
         items = listOfNotNull(
+            swapItem(),
             receiveItem(),
             bankTransferItem(isLoading = value.isBankTransferLoading),
         ).toImmutableList(),
     )
+
+    private fun swapItem(): MoneyAccountAddFundsOptionUM? {
+        if (depositAddress == null) return null
+        return MoneyAccountAddFundsOptionUM(
+            icon = brandIcon(Icons.ic_arrow_refresh_20),
+            title = resourceReference(R.string.tangempay_topup_swap_title),
+            description = resourceReference(R.string.money_account_add_funds_swap_description),
+            onClick = onSwapClick,
+        )
+    }
 
     private fun receiveItem(): MoneyAccountAddFundsOptionUM? {
         val depositAddress = depositAddress ?: return null
