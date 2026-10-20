@@ -1,5 +1,6 @@
 package com.tangem.scenarios
 
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasTestTag
@@ -12,10 +13,12 @@ import androidx.test.espresso.Espresso
 import arrow.core.getOrElse
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
+import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ACCESS_CODE
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_WALLET_CREATION
@@ -35,6 +38,7 @@ import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.BaseDialogTestTags
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
+import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
@@ -57,7 +61,7 @@ import kotlin.reflect.KClass
 private val FIAT_BALANCE_REGEX = """^\D\d[\d,]*\.\d{2}$""".toRegex()
 
 /** Token pickers label the Pay account row with `Account.accountName`, not with the 'Payment account' UI string. */
-private val PAY_ACCOUNT_ROW_NAME: String
+val PAY_ACCOUNT_ROW_NAME: String
     get() = Account.Payment(UserWalletId(stringValue = PAY_ACCOUNT_WALLET_ID_STUB)).accountName.value
 
 private const val PAY_ACCOUNT_WALLET_ID_STUB = "00"
@@ -68,6 +72,8 @@ private const val PAY_ENABLED_ENDPOINT = "/bff-v2/v1/customer/pay-enabled"
 private const val ACCESS_TOKEN_EXPIRES_AT_KEY = "uitest.tangempay.access_token_expires_at"
 
 private const val PER_WALLET_CUSTOMER_KEY = "uitest.tangempay.per_wallet_customer"
+
+private const val REAL_AUTH_KEY = "uitest.tangempay.real_auth"
 
 private const val PAYMENT_STATUS_READ_TIMEOUT_MILLIS = 1_000L
 
@@ -86,6 +92,14 @@ fun enableTangemPayPerWalletCustomers() {
 
 fun disableTangemPayPerWalletCustomers() {
     System.clearProperty(PER_WALLET_CUSTOMER_KEY)
+}
+
+fun enableTangemPayRealAuth() {
+    System.setProperty(REAL_AUTH_KEY, "1")
+}
+
+fun disableTangemPayRealAuth() {
+    System.clearProperty(REAL_AUTH_KEY)
 }
 
 fun BaseTestCase.openTangemPay() {
@@ -185,6 +199,51 @@ fun BaseTestCase.setTangemPayMultiNetworkScenarios() {
     }
     step("Set WireMock scenario '$balanceScenario' to '$balanceMultiNetworkState'") {
         setWireMockScenarioState(balanceScenario, balanceMultiNetworkState)
+    }
+    step("Set WireMock scenario '$historyScenario' to '$historyEmptyState'") {
+        setWireMockScenarioState(historyScenario, historyEmptyState)
+    }
+}
+
+fun BaseTestCase.setTangemPayCrossWalletSwapScenarios() {
+    val eligibilityPaeraCustomerState = "PaeraCustomer"
+    val userTokensTetherState = "USDT"
+    val ethCallScenario = "eth_call_api"
+    val ethBalanceScenario = "eth_network_balance"
+    val startedState = "Started"
+    val expressAssetsScenario = "express_api_assets"
+    val expressPayTetherState = "PayUsdtEthereum"
+    val exchangeStatusScenario = "exchange_status_provider"
+    val exchangeStatusChangellyState = "Changelly"
+    val quotesWithUsdtAndUsdcState = "USDTAndUSDC"
+    val balanceScenario = "tangem_pay_balance_update"
+    val balanceInitialState = "InitialBalance"
+    val historyScenario = "tangem_pay_transaction_history"
+    val historyEmptyState = "InitialEmpty"
+
+    step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityPaeraCustomerState'") {
+        setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityPaeraCustomerState)
+    }
+    step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$userTokensTetherState'") {
+        setWireMockScenarioState(USER_TOKENS_API_SCENARIO, userTokensTetherState)
+    }
+    step("Set WireMock scenario '$ethCallScenario' to '$startedState'") {
+        setWireMockScenarioState(ethCallScenario, startedState)
+    }
+    step("Set WireMock scenario '$ethBalanceScenario' to '$startedState'") {
+        setWireMockScenarioState(ethBalanceScenario, startedState)
+    }
+    step("Set WireMock scenario '$expressAssetsScenario' to '$expressPayTetherState'") {
+        setWireMockScenarioState(expressAssetsScenario, expressPayTetherState)
+    }
+    step("Set WireMock scenario '$exchangeStatusScenario' to '$exchangeStatusChangellyState'") {
+        setWireMockScenarioState(exchangeStatusScenario, exchangeStatusChangellyState)
+    }
+    step("Set WireMock scenario '$QUOTES_API_SCENARIO' to '$quotesWithUsdtAndUsdcState'") {
+        setWireMockScenarioState(QUOTES_API_SCENARIO, quotesWithUsdtAndUsdcState)
+    }
+    step("Set WireMock scenario '$balanceScenario' to '$balanceInitialState'") {
+        setWireMockScenarioState(balanceScenario, balanceInitialState)
     }
     step("Set WireMock scenario '$historyScenario' to '$historyEmptyState'") {
         setWireMockScenarioState(historyScenario, historyEmptyState)
@@ -368,6 +427,40 @@ fun BaseTestCase.assertTangemPaySessionExpiredBanner() {
     }
     step("Assert 'Renew session' button is displayed on the banner") {
         onTangemPayMainScreen { renewSessionButton.assertIsDisplayed() }
+    }
+}
+
+fun BaseTestCase.renewTangemPaySession(accessCode: String) {
+    step("Click on 'Renew session' button") {
+        onTangemPayMainScreen { renewSessionButton.performClick() }
+    }
+    enterHotWalletUnlockAccessCode(accessCode)
+}
+
+@OptIn(ExperimentalTestApi::class)
+fun BaseTestCase.enterHotWalletUnlockAccessCode(accessCode: String) {
+    step("Enter access code") {
+        // Raw Compose on purpose: the dialog content waits for frames a 10 s Kakao retry would not advance.
+        composeTestRule.waitUntilAtLeastOneExists(unlockDialogAccessCodeInputMatcher, WAIT_UNTIL_TIMEOUT)
+        onHotWalletAccessCodeScreen { unlockDialogAccessCodeInput.performTextInput(accessCode) }
+    }
+    step("Dismiss keyboard") {
+        Espresso.closeSoftKeyboard()
+        waitForIdle()
+    }
+}
+
+fun BaseTestCase.assertTangemPayRenewSessionAvailableAfterFailure() {
+    step("Assert 'Renew session' button stops loading") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onTangemPayMainScreen { renewSessionProgress.assertDoesNotExist() }
+        }
+    }
+    step("Assert 'Renew session' button is displayed") {
+        onTangemPayMainScreen { renewSessionButton.assertIsDisplayed() }
+    }
+    step("Assert error dialog is not displayed") {
+        onDialog { dialogContainer.assertDoesNotExist() }
     }
 }
 
@@ -801,27 +894,35 @@ fun BaseTestCase.openTangemPayWithdrawReadyToConfirm(receiveToken: String, amoun
 
 // The withdraw HoldToConfirm re-disables during the ~10s quote refresh; re-hold each poll until it takes.
 fun BaseTestCase.confirmTangemPayWithdrawByHolding(accessCode: String) {
-    val buttonOutsideDialog = hasTestTag(BaseButtonTestTags.BUTTON) and
-        !hasAnyAncestor(hasTestTag(BaseDialogTestTags.CONTAINER))
+    // Scoped to the swap screen: the token details screen under it stays composed with buttons of its own.
+    val swapScreenButton = hasTestTag(BaseButtonTestTags.BUTTON) and
+        !hasAnyAncestor(hasTestTag(BaseDialogTestTags.CONTAINER)) and
+        hasAnyAncestor(hasTestTag(SwapTokenScreenTestTags.CONTAINER))
     val accessCodeInput = hasTestTag(HotWalletAccessCodeTestTags.ACCESS_CODE_INPUT)
-    val swapInProgress = hasText(getResourceString(CoreUiR.string.swap_in_progress))
+    val inProgressTitle = hasText(getResourceString(CoreUiR.string.swap_in_progress)) or
+        hasText(getResourceString(CoreUiR.string.transfer_in_progress_title))
     val withdrawErrorDialog = hasTestTag(BaseDialogTestTags.CONTAINER) and
         hasAnyDescendant(hasText(getResourceString(CoreResR.string.common_unknown_error)))
+    // The tree is briefly gone while the success screen replaces the swap screen.
+    fun isConfirmationStarted(): Boolean = runCatching {
+        composeTestRule.onAllNodes(accessCodeInput).fetchSemanticsNodes().isNotEmpty() ||
+            composeTestRule.onAllNodes(inProgressTitle, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+    }.getOrDefault(false)
+
     composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
         // Raw Compose on purpose: a Kakao check here waits out Kaspresso's 10 s flaky-safety retry.
         if (runCatching { composeTestRule.onNode(withdrawErrorDialog).assertExists() }.isSuccess) {
             return@waitUntil true
         }
-        val buttons = composeTestRule.onAllNodes(buttonOutsideDialog)
-        val count = buttons.fetchSemanticsNodes().size
-        if (count > 0) {
-            // HoldToConfirm is always last — withdraw renders an extra BASE_BUTTON for notifications.
-            runCatching {
-                buttons[count - 1].performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
-            }
+        // Checked before the hold: on the success screen the last button is 'Close'.
+        if (isConfirmationStarted()) return@waitUntil true
+        // HoldToConfirm is always last — withdraw renders an extra BASE_BUTTON for notifications.
+        runCatching {
+            val buttons = composeTestRule.onAllNodes(swapScreenButton)
+            val count = buttons.fetchSemanticsNodes().size
+            if (count > 0) buttons[count - 1].performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
         }
-        composeTestRule.onAllNodes(accessCodeInput).fetchSemanticsNodes().isNotEmpty() ||
-            composeTestRule.onAllNodes(swapInProgress, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        isConfirmationStarted()
     }
     if (composeTestRule.onAllNodes(accessCodeInput).fetchSemanticsNodes().isNotEmpty()) {
         composeTestRule.onNode(accessCodeInput).performTextInput(accessCode)
@@ -1368,6 +1469,15 @@ fun BaseTestCase.assertTangemPayTileOfDisplayedWallet(tileSubtitle: String, fiat
 fun BaseTestCase.openTangemPayFromTileWithSubtitle(tileSubtitle: String) {
     step("Click on Tangem Pay tile with '$tileSubtitle'") {
         onTangemPayMainScreen { tileWithSubtitle(tileSubtitle).performClick() }
+    }
+    step("Assert payment account balance is displayed") {
+        awaitSuccess { onTangemPayMainScreen { balance.assertIsDisplayed() } }
+    }
+}
+
+fun BaseTestCase.openTangemPayOfDisplayedWallet() {
+    step("Click on Tangem Pay tile") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) { onMainScreen { clickOnScreenTangemPayTile() } }
     }
     step("Assert payment account balance is displayed") {
         awaitSuccess { onTangemPayMainScreen { balance.assertIsDisplayed() } }
