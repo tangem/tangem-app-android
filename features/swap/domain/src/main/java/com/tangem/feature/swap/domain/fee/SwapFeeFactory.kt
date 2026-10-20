@@ -80,13 +80,7 @@ object SwapFeeFactory {
      *
      * The native-coin `otherNativeFee` is **not** folded here: a gasless fee is
      * token-denominated, and a native addend cannot be summed into a token fee (different
-     * currency). DEX gasless is currently unreachable (`SwapModel.loadFeeExtended` returns a
-     * `GaslessError` for DEX/DEX_BRIDGE), so this branch never carries a non-zero `otherNativeFee`
-     * today — the guard below is defensive.
-     *
-     * TODO [REDACTED_TASK_KEY]: when DEX gasless support lands, surface/charge the native `otherNativeFee`
-     *  separately here instead of folding it into the token gas fee. Tie-in with the
-     *  "TODO support gasless in DEX/DEX_BRIDGE" note in `SwapModel.loadFeeExtended`.
+     * currency).
      */
     fun fromLoadedExtended(
         transactionFeeResult: TransactionFeeResult.LoadedExtended,
