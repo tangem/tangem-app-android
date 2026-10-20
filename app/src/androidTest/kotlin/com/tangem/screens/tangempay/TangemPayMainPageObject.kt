@@ -2,6 +2,7 @@ package com.tangem.screens.tangempay
 
 import androidx.annotation.StringRes
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.performSemanticsAction
@@ -18,6 +19,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasProgressBarRangeInfo as withProgressBarRangeInfo
 import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
 
@@ -229,6 +231,13 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
     val renewSessionButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_sync_needed_button)))
+        useUnmergedTree = true
+    }
+
+    val renewSessionProgress: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_sync_needed_button)))
+        hasAnyDescendant(withProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate))
         useUnmergedTree = true
     }
 
