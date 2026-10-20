@@ -105,8 +105,8 @@ internal fun AddExistingWalletImportContent(state: AddExistingWalletImportUM, mo
                     .padding(16.dp)
                     .fillMaxWidth(),
                 text = stringResourceSafe(id = R.string.common_import),
-                enabled = state.importWalletEnabled,
-                showProgress = state.importWalletProgress,
+                enabled = state.isImportWalletEnabled,
+                showProgress = state.isImportWalletInProgress,
                 onClick = state.importWalletClick,
             )
         }
@@ -248,12 +248,12 @@ private fun PreviewAddExistingWalletImportContent() {
                 onPassphraseInfoClick = {},
                 wordsErrorText = null,
                 invalidWords = persistentListOf(),
-                importWalletEnabled = false,
-                importWalletProgress = false,
+                isImportWalletEnabled = false,
+                isImportWalletInProgress = false,
                 importWalletClick = {},
                 suggestionsList = persistentListOf(),
                 onSuggestionClick = {},
-                readyToImport = false,
+                isReadyToImport = false,
             ),
         )
     }

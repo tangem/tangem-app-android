@@ -5,6 +5,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.features.tangempay.campaign.TangemPayCampaignModel
 import com.tangem.features.tangempay.hotwallet.TangemPayHotWalletOnboardingModel
 import com.tangem.features.tangempay.model.TangemPayOnboardingModel
+import com.tangem.features.tangempay.verified.TangemPayVerifiedModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -29,4 +30,9 @@ internal interface TangemPayOnboardingModelsModule {
     @IntoMap
     @ClassKey(TangemPayCampaignModel::class)
     fun bindTangemPayCampaignModel(model: TangemPayCampaignModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayVerifiedModel::class)
+    fun bindTangemPayVerifiedModel(model: TangemPayVerifiedModel): Model
 }

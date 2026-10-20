@@ -194,8 +194,8 @@ internal class TxHistoryListManagerTest {
             fetchCount++
             return BatchFetchResult.Success(
                 data = wrapper,
-                empty = wrapper.items.isEmpty(),
-                last = spec.isLast,
+                isEmpty = wrapper.items.isEmpty(),
+                isLast = spec.isLast,
             )
         }
     }

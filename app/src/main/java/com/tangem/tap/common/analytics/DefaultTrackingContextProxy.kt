@@ -7,6 +7,7 @@ import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.common.analytics.paramsInterceptor.HotWalletContextInterceptor
 import com.tangem.tap.common.analytics.paramsInterceptor.LinkedCardContextInterceptor
 
@@ -17,6 +18,7 @@ internal class DefaultTrackingContextProxy(
     private val paramsInterceptorHolder: ParamsInterceptorHolder,
     private val userIdHandler: AnalyticsUserIdHandler,
     private val observers: Set<TrackingContextProxy.Observer>,
+    private val cardContextInterceptorFactory: CardContextInterceptor.Factory,
 ) : TrackingContextProxy {
 
     override fun setContext(scanResponse: ScanResponse) {
@@ -29,7 +31,7 @@ internal class DefaultTrackingContextProxy(
         when (userWallet) {
             is UserWallet.Cold -> {
                 paramsInterceptorHolder.removeParamsInterceptor(HotWalletContextInterceptor.id())
-                paramsInterceptorHolder.addParamsInterceptor(LinkedCardContextInterceptor(userWallet.scanResponse))
+                paramsInterceptorHolder.addParamsInterceptor(createLinkedCardContext(userWallet.scanResponse))
             }
             is UserWallet.Hot -> {
                 paramsInterceptorHolder.removeParamsInterceptor(LinkedCardContextInterceptor.id())
@@ -45,7 +47,7 @@ internal class DefaultTrackingContextProxy(
         val currentContext = removeCurrentContext()
 
         val newContext = when (userWallet) {
-            is UserWallet.Cold -> LinkedCardContextInterceptor(userWallet.scanResponse, parent = currentContext)
+            is UserWallet.Cold -> createLinkedCardContext(userWallet.scanResponse, parent = currentContext)
             is UserWallet.Hot -> HotWalletContextInterceptor(parent = currentContext)
         }
 
@@ -76,7 +78,7 @@ internal class DefaultTrackingContextProxy(
             userIdHandler.setUserId(userWalletId.stringValue)
         }
 
-        val newContext = LinkedCardContextInterceptor(scanResponse, parent = removeCurrentContext())
+        val newContext = createLinkedCardContext(scanResponse, parent = removeCurrentContext())
         paramsInterceptorHolder.addParamsInterceptor(newContext)
 
         observers.forEach { it.addContext(scanResponse) }
@@ -98,6 +100,16 @@ internal class DefaultTrackingContextProxy(
         previousContext?.let(paramsInterceptorHolder::addParamsInterceptor)
 
         observers.forEach { it.removeContext() }
+    }
+
+    private fun createLinkedCardContext(
+        scanResponse: ScanResponse,
+        parent: ParamsInterceptor? = null,
+    ): LinkedCardContextInterceptor {
+        return LinkedCardContextInterceptor(
+            contextInterceptor = cardContextInterceptorFactory.create(scanResponse),
+            parent = parent,
+        )
     }
 
     private fun removeCurrentContext(): ParamsInterceptor? {

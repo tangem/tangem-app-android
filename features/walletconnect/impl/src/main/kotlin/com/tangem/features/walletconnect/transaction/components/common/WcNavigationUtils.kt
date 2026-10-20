@@ -42,38 +42,38 @@ internal fun getWcCommonScreen(
         )
         is WcTransactionRoutes.SelectFee -> {
             requireNotNull(feeSelectorComponentFactory) { "feeSelectorComponentFactory must not be null" }
-            val model = model as? WcSendTransactionModel ?: error("model must be WcSendTransactionModel")
-            val state = model.uiState.value ?: error("in this step state should be not null")
+            val sendModel = model as? WcSendTransactionModel ?: error("model must be WcSendTransactionModel")
+            val state = sendModel.uiState.value ?: error("in this step state should be not null")
             feeSelectorComponentFactory.create(
                 context = appComponentContext,
-                onDismiss = model::popBack,
+                onDismiss = sendModel::popBack,
                 params = FeeSelectorDetailsParams(
                     state = state.feeSelectorUM,
-                    onLoadFee = model::loadFee,
-                    feeCryptoCurrencyStatus = model.cryptoCurrencyStatus,
-                    cryptoCurrencyStatus = model.cryptoCurrencyStatus,
-                    callback = model,
-                    feeStateConfiguration = model.feeStateConfiguration,
+                    onLoadFee = sendModel::loadFee,
+                    feeCryptoCurrencyStatus = sendModel.cryptoCurrencyStatus,
+                    cryptoCurrencyStatus = sendModel.cryptoCurrencyStatus,
+                    callback = sendModel,
+                    feeStateConfiguration = sendModel.feeStateConfiguration,
                     feeDisplaySource = FeeDisplaySource.BottomSheet,
                     analyticsCategoryName = WcAnalyticEvents.WC_CATEGORY_NAME,
                     analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.WalletConnect,
-                    userWalletId = model.userWallet.walletId,
+                    userWalletId = sendModel.userWallet.walletId,
                 ),
             )
         }
         is WcTransactionRoutes.MultipleTransactions -> {
-            val model = model as? WcSendTransactionModel ?: error("model must be WcSendTransactionModel")
+            val sendModel = model as? WcSendTransactionModel ?: error("model must be WcSendTransactionModel")
             WcSendMultipleTransactionsComponent(
                 appComponentContext = appComponentContext,
-                model = model,
-                onConfirm = { model.onMultiTransactionConfirm() },
+                model = sendModel,
+                onConfirm = { sendModel.onMultiTransactionConfirm() },
             )
         }
         WcTransactionRoutes.TransactionProcess -> {
-            val model = model as? WcSendTransactionModel ?: error("model must be WcSendTransactionModel")
+            val sendModel = model as? WcSendTransactionModel ?: error("model must be WcSendTransactionModel")
             WcSendingProcessComponent(
                 appComponentContext = appComponentContext,
-                model = model,
+                model = sendModel,
             )
         }
     }

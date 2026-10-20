@@ -15,8 +15,8 @@ import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
 /**
- * Router of the root stack. Every operation runs on the main thread; a navigation failure is logged and reported as
- * `onComplete(false)` instead of being thrown.
+ * Router of the root stack. Every operation is logged and runs on the main thread; a navigation failure is logged and
+ * reported as `onComplete(false)` instead of being thrown.
  */
 internal class DefaultRouter(
     private val navigationProvider: AppNavigationProvider,
@@ -29,15 +29,18 @@ internal class DefaultRouter(
         get() = navigationProvider.getOrCreate()
 
     override fun push(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
+        logger.i("Push $route")
         navigateSafely(onComplete) { complete -> pushNew(route, complete) }
     }
 
     override fun replaceCurrent(route: Route, onComplete: (Boolean) -> Unit) {
+        logger.i("Replace a current route with $route")
         navigateSafely(onComplete) { complete -> this.replaceCurrent(route, { complete(true) }) }
     }
 
     override fun replaceAll(vararg routes: Route, onComplete: (isSuccess: Boolean) -> Unit) {
         val newRoutes = routes.toList()
+        logger.i("Replace all routes with ${newRoutes.ifEmpty { "<empty>" }}")
 
         navigateSafely(onComplete) { complete ->
             navigate(
@@ -48,10 +51,12 @@ internal class DefaultRouter(
     }
 
     override fun pop(onComplete: (isSuccess: Boolean) -> Unit) {
+        logger.i("Pop route")
         navigateSafely(onComplete) { complete -> this.pop(complete) }
     }
 
     override fun popTo(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
+        logger.i("Pop to $route")
         popTo(
             predicate = { it != route },
             onComplete = onComplete,
@@ -59,6 +64,7 @@ internal class DefaultRouter(
     }
 
     override fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit) {
+        logger.i("Pop to $routeClass")
         popTo(
             predicate = { it::class != routeClass },
             onComplete = onComplete,
@@ -70,6 +76,7 @@ internal class DefaultRouter(
         predicate: (R) -> Boolean,
         onComplete: (isSuccess: Boolean) -> Unit,
     ) {
+        logger.i("Pop to the last matching $routeClass")
         val matches: (Route) -> Boolean = { route -> routeClass.safeCast(route)?.let(predicate) == true }
 
         navigateSafely(onComplete) { complete ->
@@ -82,7 +89,10 @@ internal class DefaultRouter(
 
     override fun navigate(transformer: (stack: List<Route>) -> List<Route>, onComplete: (isSuccess: Boolean) -> Unit) {
         navigateSafely(onComplete) { complete ->
-            navigate(transformer = transformer, onComplete = { _, _ -> complete(true) })
+            navigate(
+                transformer = { stack -> transformer(stack).also { logger.i("Rebuild the stack to $it") } },
+                onComplete = { _, _ -> complete(true) },
+            )
         }
     }
 

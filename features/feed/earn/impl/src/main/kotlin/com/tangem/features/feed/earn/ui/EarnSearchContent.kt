@@ -3,10 +3,8 @@ package com.tangem.features.feed.earn.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -21,6 +19,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.features.feed.earn.ui.state.EarnSearchListUM
 import com.tangem.features.feed.earn.ui.state.EarnSearchPortfolioUM
 import com.tangem.features.feed.earn.ui.state.EarnSearchUM
+import com.tangem.features.feed.ui.FeedSearchListState
 import com.tangem.features.feed.ui.FeedSearchNoResults
 import com.tangem.features.feed.ui.FeedSearchSectionHeader
 
@@ -29,20 +28,17 @@ private const val EARN_SHIMMER_COUNT = 8
 @Composable
 internal fun EarnSearchContent(
     state: EarnSearchUM,
-    listState: LazyListState,
+    listState: FeedSearchListState,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp
     val hasPortfolio = state.portfolio is EarnSearchPortfolioUM.Content
 
-    // a new query is a different result set, so start reading it from the top
-    LaunchedEffect(state.query, hasPortfolio) {
-        listState.requestScrollToItem(0)
-    }
+    listState.ScrollToTopOnNewResults(results = state.query to hasPortfolio)
 
     LazyColumn(
-        state = listState,
+        state = listState.lazyListState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             start = 16.dp,
