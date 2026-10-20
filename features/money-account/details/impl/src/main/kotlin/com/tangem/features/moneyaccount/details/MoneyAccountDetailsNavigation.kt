@@ -11,4 +11,7 @@ internal sealed class MoneyAccountDetailsNavigation {
 
     @Serializable
     data class Receive(val config: TokenReceiveConfig) : MoneyAccountDetailsNavigation()
+
+    @Serializable
+    data object BankDetailsError : MoneyAccountDetailsNavigation()
 }
