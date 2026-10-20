@@ -120,7 +120,7 @@ internal class TokenListStateConverter(
                 is WalletTokensListState.ContentState.Content -> tokensListState.items
                 is WalletTokensListState.ContentState.Loading -> tokensListState.items
                 is WalletTokensListState.ContentState.Locked -> tokensListState.items
-                is WalletTokensListState.Empty -> listOf()
+                is WalletTokensListState.Empty -> emptyList()
             }
             val onEmptyAction = PortfolioItemContentUM.Empty.Action(
                 text = resourceReference(id = R.string.onboarding_add_tokens),

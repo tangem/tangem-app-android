@@ -2,7 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>BooleanPropertyNaming:TxHistoryPagingSource.kt$TxHistoryPagingSource.Params$val refresh: Boolean</ID>
     <ID>SuspendFunSwallowedCancellation:TxHistoryPageBatchFetcher.kt$TxHistoryPageBatchFetcher$runCatching</ID>
   </CurrentIssues>
 </SmellBaseline>

@@ -55,7 +55,7 @@ internal class ExcludedBlockchainsViewModel @Inject constructor(
         popBack = {},
         search = getInitialSearchBar(),
         blockchains = getBlockchains(),
-        showRecoverWarning = !excludedBlockchainsManager.isMatchLocalConfig(),
+        shouldShowRecoverWarning = !excludedBlockchainsManager.isMatchLocalConfig(),
         appVersion = appInfoProvider.appVersion,
         onRestartClick = {},
         onRecoverClick = ::recoverLocalConfig,
@@ -111,7 +111,7 @@ internal class ExcludedBlockchainsViewModel @Inject constructor(
 
                     mutableBlockchains[index] = mutableBlockchains[index].copy(isExcluded = isExcluded)
                 },
-                showRecoverWarning = !excludedBlockchainsManager.isMatchLocalConfig(),
+                shouldShowRecoverWarning = !excludedBlockchainsManager.isMatchLocalConfig(),
             )
         }
     }

@@ -3,7 +3,5 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>CanBeNonNullable:FetchWalletAccountsErrorHandler.kt$FetchWalletAccountsErrorHandler$savedAccountsResponse: GetWalletAccountsResponse?</ID>
-    <ID>NoNameShadowing:GetWalletAccountsResponseExt.kt$tokens</ID>
-    <ID>UnnecessaryLet:DefaultAccountsCRUDRepository.kt$DefaultAccountsCRUDRepository$let(AccountName::invoke)</ID>
   </CurrentIssues>
 </SmellBaseline>

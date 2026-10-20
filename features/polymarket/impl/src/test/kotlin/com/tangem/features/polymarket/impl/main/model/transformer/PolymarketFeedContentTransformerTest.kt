@@ -109,7 +109,7 @@ internal class PolymarketFeedContentTransformerTest {
             FooterModel(status = PaginationStatus.NextBatchLoading, expected = PolymarketFeedFooterUM.Loading::class),
             FooterModel(
                 status = PaginationStatus.Paginating(
-                    lastResult = BatchFetchResult.Success(data = batchOf(createEvent()), empty = false, last = false),
+                    lastResult = BatchFetchResult.Success(data = batchOf(createEvent()), isEmpty = false, isLast = false),
                 ),
                 expected = PolymarketFeedFooterUM.None::class,
             ),
@@ -139,7 +139,7 @@ internal class PolymarketFeedContentTransformerTest {
             EmptyFeedModel(status = PaginationStatus.EndOfPagination),
             EmptyFeedModel(
                 status = PaginationStatus.Paginating(
-                    lastResult = BatchFetchResult.Success(data = batchOf(), empty = true, last = false),
+                    lastResult = BatchFetchResult.Success(data = batchOf(), isEmpty = true, isLast = false),
                 ),
             ),
         )

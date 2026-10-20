@@ -56,7 +56,7 @@ internal class PolymarketEventsBatchFetcher(
             ?: lastConfig
             ?: error("fetchFirst() must be called before fetchNext()")
 
-        if (lastResult is BatchFetchResult.Success && lastResult.last && overrideRequestParams == null) {
+        if (lastResult is BatchFetchResult.Success && lastResult.isLast && overrideRequestParams == null) {
             return BatchFetchResult.Error(EndOfPaginationException())
         }
 
@@ -89,8 +89,8 @@ internal class PolymarketEventsBatchFetcher(
                 nextCursor = page.cursor
                 return BatchFetchResult.Success(
                     data = PolymarketEventsBatch(events = page.events, requestCursor = requestCursor),
-                    empty = page.events.isEmpty(),
-                    last = !hasMore || page.events.isEmpty(),
+                    isEmpty = page.events.isEmpty(),
+                    isLast = !hasMore || page.events.isEmpty(),
                 )
             }
 

@@ -794,7 +794,7 @@ internal class StakingModel @Inject constructor(
         val networkId = cryptoCurrencyStatus.currency.network.rawId
         val preferredValidators = (integration as? StakeKitIntegration)?.targets
             ?.filterIsInstance<StakingTarget.Validator>()
-            ?.filter { it.delegate.preferred }
+            ?.filter { it.delegate.isPreferred }
             .orEmpty()
         val pendingActions = activeStake.pendingActions.mapNotNull { action ->
             if (action.type in listOf(StakingActionType.RESTAKE, StakingActionType.STAKE) &&

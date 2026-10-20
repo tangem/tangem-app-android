@@ -164,7 +164,7 @@ internal class DefaultColdMapDerivationsRepository @Inject constructor(
     private fun getUpdatedDerivedKeys(oldKeys: DerivedKeys, newKeys: DerivedKeys): DerivedKeys {
         return (oldKeys.keys + newKeys.keys).toSet()
             .associateWith { walletKey ->
-                val oldDerivations = ExtendedPublicKeysMap(oldKeys[walletKey] ?: emptyMap())
+                val oldDerivations = ExtendedPublicKeysMap(oldKeys[walletKey].orEmpty())
                 val newDerivations = newKeys[walletKey] ?: ExtendedPublicKeysMap(emptyMap())
 
                 ExtendedPublicKeysMap(oldDerivations + newDerivations)

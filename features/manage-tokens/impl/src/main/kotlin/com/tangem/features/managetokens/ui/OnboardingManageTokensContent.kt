@@ -94,7 +94,7 @@ private fun FloatingActionButton(config: OnboardingManageTokensUM.ActionButtonCo
         is OnboardingManageTokensUM.ActionButtonConfig.Later -> SecondaryButton(
             modifier = modifier,
             text = stringResourceSafe(id = R.string.common_later),
-            showProgress = config.showProgress,
+            showProgress = config.shouldShowProgress,
             onClick = config.onClick,
         )
     }
@@ -105,19 +105,19 @@ private fun ContinueButton(
     config: OnboardingManageTokensUM.ActionButtonConfig.Continue,
     modifier: Modifier = Modifier,
 ) {
-    if (config.showTangemIcon) {
+    if (config.shouldShowTangemIcon) {
         PrimaryButtonIconEnd(
             modifier = modifier,
             text = stringResourceSafe(id = R.string.common_continue),
             iconResId = R.drawable.ic_tangem_24,
-            showProgress = config.showProgress,
+            showProgress = config.shouldShowProgress,
             onClick = config.onClick,
         )
     } else {
         PrimaryButton(
             modifier = modifier,
             text = stringResourceSafe(id = R.string.common_continue),
-            showProgress = config.showProgress,
+            showProgress = config.shouldShowProgress,
             onClick = config.onClick,
         )
     }

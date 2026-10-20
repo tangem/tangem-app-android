@@ -56,7 +56,7 @@ internal class EarnTokensBatchFetcherTest {
         val result = fetcher.fetchFirst(config())
 
         // Assert
-        assertThat((result as BatchFetchResult.Success).last).isFalse()
+        assertThat((result as BatchFetchResult.Success).isLast).isFalse()
     }
 
     @Test
@@ -73,7 +73,7 @@ internal class EarnTokensBatchFetcherTest {
 
             // Assert
             assertThat(result.data).isEmpty()
-            assertThat(result.last).isFalse()
+            assertThat(result.isLast).isFalse()
         }
 
     @Test
@@ -85,7 +85,7 @@ internal class EarnTokensBatchFetcherTest {
         val result = fetcher.fetchFirst(config())
 
         // Assert
-        assertThat((result as BatchFetchResult.Success).last).isTrue()
+        assertThat((result as BatchFetchResult.Success).isLast).isTrue()
     }
 
     @Test
@@ -100,7 +100,7 @@ internal class EarnTokensBatchFetcherTest {
         val result = fetcher.fetchFirst(config())
 
         // Assert
-        assertThat((result as BatchFetchResult.Success).last).isTrue()
+        assertThat((result as BatchFetchResult.Success).isLast).isTrue()
     }
 
     @Test
@@ -117,7 +117,7 @@ internal class EarnTokensBatchFetcherTest {
             val result = fetcher.fetchFirst(config())
 
             // Assert
-            assertThat((result as BatchFetchResult.Success).last).isFalse()
+            assertThat((result as BatchFetchResult.Success).isLast).isFalse()
         }
 
     private fun config() = EarnTokensListConfig(type = null, networks = null, isForEarn = false)

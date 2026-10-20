@@ -313,7 +313,7 @@ internal class CollectiblesMachineDetailsModelTest {
         batchListState.value = createNftsBatchListState(
             batches = listOf(listOf(createNft())),
             status = PaginationStatus.Paginating(
-                BatchFetchResult.Success(data = listOf(createNft()), empty = false, last = false),
+                BatchFetchResult.Success(data = listOf(createNft()), isEmpty = false, isLast = false),
             ),
         )
         runCurrent()
@@ -332,7 +332,7 @@ internal class CollectiblesMachineDetailsModelTest {
         val model = startModel()
         batchListState.value = createNftsBatchListState(
             status = PaginationStatus.Paginating(
-                BatchFetchResult.Success(data = listOf(createNft()), empty = false, last = true),
+                BatchFetchResult.Success(data = listOf(createNft()), isEmpty = false, isLast = true),
             ),
         )
         runCurrent()

@@ -4,11 +4,13 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.polymarket.model.PolymarketActivity
 import com.tangem.domain.polymarket.model.PolymarketActivityFilter
 import com.tangem.domain.polymarket.model.PolymarketActivityState
@@ -21,14 +23,19 @@ import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import java.io.File
 
 @ModelScoped
 internal class PolymarketHistoryModel @Inject constructor(
@@ -36,11 +43,16 @@ internal class PolymarketHistoryModel @Inject constructor(
     private val router: Router,
     paramsContainer: ParamsContainer,
     createSession: CreatePolymarketActivitySessionUseCase,
+    private val exportActivity: PolymarketActivityExport,
+    private val messageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<PolymarketHistoryComponent.Params>()
     private val session = createSession(params.userWalletId)
     private val converter = PolymarketActivityUMConverter()
+    private val exportFiles = Channel<File>(Channel.BUFFERED)
+    val exports = exportFiles.receiveAsFlow()
+    private var exportJob: Job? = null
     private val detailsConverter = PolymarketActivityDetailsConverter()
     private val searchPlaceholder = TangemSearch.State(
         placeholderText = resourceReference(R.string.common_search),
@@ -85,7 +97,7 @@ internal class PolymarketHistoryModel @Inject constructor(
         return Content.Data(
             groups = withContext(dispatchers.default) { converter.convert(state.items, ::openDetails) },
             search = searchPlaceholder,
-            onDownloadCsvClick = {},
+            onDownloadCsvClick = ::exportCsv,
             nextPage = nextPage(state),
         )
     }
@@ -136,7 +148,27 @@ internal class PolymarketHistoryModel @Inject constructor(
     }.toImmutableList()
 
     private fun onBackClick() {
+        exportJob?.cancel()
         router.pop()
+    }
+
+    private fun exportCsv() {
+        if (uiState.value.isExporting) return
+        val filter = session.state.value.filter
+        uiState.update { it.copy(isExporting = true) }
+        exportJob = modelScope.launch {
+            try {
+                runSuspendCatching { exportActivity(params.userWalletId, filter) }
+                    .onSuccess { exportFiles.send(it) }
+                    .onFailure { onExportShareFailed() }
+            } finally {
+                uiState.update { it.copy(isExporting = false) }
+            }
+        }
+    }
+
+    fun onExportShareFailed() {
+        messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_something_went_wrong)))
     }
 
     private fun openDetails(activity: PolymarketActivity) {

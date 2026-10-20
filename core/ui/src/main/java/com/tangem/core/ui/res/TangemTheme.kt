@@ -87,8 +87,6 @@ fun TangemTheme(
 
     // we don't want to override system bar colors in case of fragment bottom sheets for example
     if (overrideSystemBarColors) {
-        val systemUiController = rememberSystemUiController()
-
         SideEffect {
             systemUiController.setSystemBarsColor(
                 color = Color.Transparent,

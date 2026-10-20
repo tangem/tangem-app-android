@@ -263,7 +263,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val result = converter.convert(expressSwap(status = ExpressExchangeStatus.Exchanging))
 
         // Assert
-        assertThat(result.from?.amount?.resolveString()).startsWith("- ")
+        assertThat(result.from?.amount?.resolveString()).startsWith("— ")
         assertThat(result.from?.isFaded).isFalse()
         // Receive amount is still an estimate while in flight: `~`, not `+`, and not struck through.
         assertThat(result.to?.amount?.resolveString()).startsWith("~ ")
@@ -279,7 +279,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val result = converter.convert(expressSwap(status = ExpressExchangeStatus.Finished))
 
         // Assert
-        assertThat(result.from?.amount?.resolveString()).startsWith("- ")
+        assertThat(result.from?.amount?.resolveString()).startsWith("— ")
         assertThat(result.to?.amount?.resolveString()).startsWith("+ ")
         assertThat(result.from?.isFaded).isFalse()
         assertThat(result.to?.isFaded).isFalse()
@@ -291,7 +291,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val result = converter.convert(expressSwap(status = ExpressExchangeStatus.Failed))
 
         // Assert — the spent leg stands as sent; only the never-received leg is struck through, with no sign.
-        assertThat(result.from?.amount?.resolveString()).startsWith("- ")
+        assertThat(result.from?.amount?.resolveString()).startsWith("— ")
         assertThat(result.from?.isFaded).isFalse()
         assertThat(result.to?.isFaded).isTrue()
         assertThat(result.to?.amount?.resolveString()).doesNotContain("+")
@@ -304,7 +304,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val result = converter.convert(expressSwap(status = ExpressExchangeStatus.Refunded))
 
         // Assert
-        assertThat(result.from?.amount?.resolveString()).startsWith("- ")
+        assertThat(result.from?.amount?.resolveString()).startsWith("— ")
         assertThat(result.from?.isFaded).isFalse()
         assertThat(result.to?.isFaded).isTrue()
         assertThat(result.to?.amount?.resolveString()).doesNotContain("+")

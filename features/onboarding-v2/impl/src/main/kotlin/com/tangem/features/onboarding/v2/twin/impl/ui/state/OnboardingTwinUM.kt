@@ -20,7 +20,7 @@ internal sealed class OnboardingTwinUM {
     }
 
     data class ResetWarning(
-        val acceptToggle: Boolean = false,
+        val isAcceptToggled: Boolean = false,
         val onAcceptClick: (Boolean) -> Unit = {},
         val onContinueClick: () -> Unit = {},
     ) : OnboardingTwinUM() {

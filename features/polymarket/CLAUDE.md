@@ -96,8 +96,7 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 
 ## History
 
-BUY / WITHDRAW are outgoing, SELL / DEPOSIT / REDEEM incoming, a lost redemption shows a dash. Search and
-CSV are inert placeholders.
-
-Activity details use `TangemModal`; outcome price appears only when an order provides it.
-LOST hides its amount until the activity API supplies the lost stake.
+BUY / WITHDRAW are outgoing, SELL / DEPOSIT / REDEEM incoming, a lost redemption shows a dash.
+CSV exports every page of the selected filter independently of list pagination, deduplicating IDs.
+Search is an inert placeholder. Activity details use `TangemModal`; LOST hides its amount until the
+activity API supplies the lost stake, and outcome price appears only when an order provides it.

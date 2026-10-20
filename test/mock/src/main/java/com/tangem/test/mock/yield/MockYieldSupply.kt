@@ -1,7 +1,11 @@
 package com.tangem.test.mock.yield
 
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.incentives.YieldClaimCalldata
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentiveCampaign
@@ -138,11 +142,16 @@ object MockYieldSupply {
         totalNetUsd = totalNetUsd,
     )
 
-    fun network(id: String = NETWORK_ID, name: String = "Ethereum", currencySymbol: String = "ETH") = Network(
-        id = Network.ID(value = id, derivationPath = Network.DerivationPath.None),
+    fun network(
+        id: String = NETWORK_ID,
+        name: String = "Ethereum",
+        currencySymbol: String = "ETH",
+        derivationPath: Network.DerivationPath = Network.DerivationPath.None,
+    ) = Network(
+        id = Network.ID(value = id, derivationPath = derivationPath),
         name = name,
         currencySymbol = currencySymbol,
-        derivationPath = Network.DerivationPath.None,
+        derivationPath = derivationPath,
         isTestnet = false,
         standardType = Network.StandardType.Unspecified("UNSPECIFIED"),
         hasFiatFeeRate = true,
@@ -184,5 +193,39 @@ object MockYieldSupply {
         decimals = 18,
         iconUrl = null,
         isCustom = false,
+    )
+
+    fun loadedStatus(
+        currency: CryptoCurrency = token(),
+        amount: BigDecimal = BigDecimal.ONE,
+        fiatAmount: BigDecimal = BigDecimal.ONE,
+        yieldSupplyStatus: YieldSupplyStatus? = null,
+        networkSource: StatusSource = StatusSource.ACTUAL,
+        quoteSource: StatusSource = StatusSource.ACTUAL,
+    ) = CryptoCurrencyStatus(
+        currency = currency,
+        value = CryptoCurrencyStatus.Loaded(
+            amount = amount,
+            fiatAmount = fiatAmount,
+            fiatRate = BigDecimal.ONE,
+            priceChange = BigDecimal.ZERO,
+            yieldSupplyStatus = yieldSupplyStatus,
+            hasCurrentNetworkTransactions = false,
+            pendingTransactions = emptySet(),
+            networkAddress = NetworkAddress.Single(
+                defaultAddress = NetworkAddress.Address(
+                    value = USER_ADDRESS,
+                    type = NetworkAddress.Address.Type.Primary,
+                ),
+            ),
+            sources = CryptoCurrencyStatus.Sources(networkSource = networkSource, quoteSource = quoteSource),
+        ),
+    )
+
+    fun activeYieldSupplyStatus() = YieldSupplyStatus(
+        isActive = true,
+        isInitialized = true,
+        isAllowedToSpend = true,
+        effectiveProtocolBalance = null,
     )
 }

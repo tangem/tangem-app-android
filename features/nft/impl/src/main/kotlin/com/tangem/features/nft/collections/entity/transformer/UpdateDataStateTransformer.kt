@@ -95,7 +95,7 @@ internal class UpdateDataStateTransformer(
             }
             result.toPersistentList()
         } else {
-            val mainAccountCollection = walletNFTCollections.collections.values.firstOrNull() ?: listOf()
+            val mainAccountCollection = walletNFTCollections.collections.values.firstOrNull().orEmpty()
             createNFTsUM(mainAccountCollection).toPersistentList()
         }
 
@@ -201,6 +201,5 @@ internal class UpdateDataStateTransformer(
             ?.collections
             ?.filterIsInstance<NFTCollectionUM>()
             ?.firstOrNull { it.id == this.collectionIdProvider() }
-            ?.isExpanded
-            ?: false
+            ?.isExpanded == true
 }

@@ -3,7 +3,6 @@ package com.tangem.domain.polymarket.usecase
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.polymarket.model.PolymarketAuthError
-import com.tangem.domain.polymarket.model.PolymarketDerivationError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PolymarketWalletError
@@ -15,18 +14,6 @@ import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PolymarketOnboardingErrorMappingTest {
-
-    @ParameterizedTest
-    @ProvideTestModels
-    fun `GIVEN a derivation error WHEN mapped THEN it is wrapped without losing the cause`(
-        cause: PolymarketDerivationError,
-    ) {
-        // Act
-        val actual = cause.toOnboardingError()
-
-        // Assert
-        assertThat(actual).isEqualTo(PolymarketOnboardingError.Derivation(cause))
-    }
 
     @Test
     fun `GIVEN a non-network wallet error WHEN mapped THEN it is wrapped without losing the cause`() {
@@ -113,6 +100,7 @@ internal class PolymarketOnboardingErrorMappingTest {
         private fun provideTestModels() = listOf(
             PolymarketSigningError.NotDerived,
             PolymarketSigningError.MissingWallet,
+            PolymarketSigningError.DerivationUnsupported,
             PolymarketSigningError.UserCancelled,
             PolymarketSigningError.CardError,
             PolymarketSigningError.Unknown,
@@ -139,14 +127,12 @@ internal class PolymarketOnboardingErrorMappingTest {
             RetryModel(PolymarketOnboardingError.Wallet(PolymarketWalletError.Unauthorized), false),
             RetryModel(PolymarketOnboardingError.Signing(PolymarketSigningError.NotDerived), false),
             RetryModel(PolymarketOnboardingError.Signing(PolymarketSigningError.MissingWallet), false),
-            RetryModel(PolymarketOnboardingError.Derivation(PolymarketDerivationError.MissingWallet), false),
             RetryModel(
-                error = PolymarketOnboardingError.Derivation(PolymarketDerivationError.DerivationUnsupported),
+                error = PolymarketOnboardingError.Signing(PolymarketSigningError.DerivationUnsupported),
                 retryable = false,
             ),
             RetryModel(PolymarketOnboardingError.Signing(PolymarketSigningError.UserCancelled), true),
             RetryModel(PolymarketOnboardingError.Signing(PolymarketSigningError.CardError), true),
-            RetryModel(PolymarketOnboardingError.Derivation(PolymarketDerivationError.UserCancelled), true),
             RetryModel(PolymarketOnboardingError.Wallet(PolymarketWalletError.WalletNotDeployed), true),
             RetryModel(
                 error = PolymarketOnboardingError.Wallet(PolymarketWalletError.RelayerRejected.DeadlineTooSoon),
@@ -162,12 +148,4 @@ internal class PolymarketOnboardingErrorMappingTest {
     }
 
     internal data class RetryModel(val error: PolymarketOnboardingError, val retryable: Boolean)
-
-    private fun provideTestModels() = listOf(
-        PolymarketDerivationError.MissingWallet,
-        PolymarketDerivationError.UserCancelled,
-        PolymarketDerivationError.DerivationUnsupported,
-        PolymarketDerivationError.CardError,
-        PolymarketDerivationError.Unknown,
-    )
 }

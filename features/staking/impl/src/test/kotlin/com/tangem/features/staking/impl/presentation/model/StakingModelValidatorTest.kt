@@ -170,7 +170,7 @@ internal class StakingModelValidatorTest : StakingModelTestBase() {
             val constraints = PendingActionConstraints(
                 type = StakingActionType.CLAIM_REWARDS,
                 amountArg = PendingAction.PendingActionArgs.Amount(
-                    required = true,
+                    isRequired = true,
                     minimum = BigDecimal.TEN,
                     maximum = null,
                 ),

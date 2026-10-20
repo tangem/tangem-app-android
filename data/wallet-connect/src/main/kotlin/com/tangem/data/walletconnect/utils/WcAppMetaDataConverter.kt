@@ -11,10 +11,10 @@ internal object WcAppMetaDataConverter : Converter<WcAppMetaDataConverter.Input,
             name = "",
             description = "",
             url = "",
-            icons = listOf(),
+            icons = emptyList(),
             redirect = null,
             appLink = null,
-            linkMode = false,
+            isLinkMode = false,
             verifyUrl = null,
         )
 
@@ -26,7 +26,7 @@ internal object WcAppMetaDataConverter : Converter<WcAppMetaDataConverter.Input,
             icons = value.peerMetaData.icons,
             redirect = value.peerMetaData.redirect,
             appLink = value.peerMetaData.appLink,
-            linkMode = value.peerMetaData.linkMode,
+            isLinkMode = value.peerMetaData.linkMode,
             verifyUrl = value.peerMetaData.verifyUrl,
         )
     }

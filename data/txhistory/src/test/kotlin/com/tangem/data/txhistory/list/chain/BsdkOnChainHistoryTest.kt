@@ -389,7 +389,7 @@ internal class BsdkOnChainHistoryTest {
 
     private fun paginating(empty: Boolean): PaginationStatus<PaginationWrapper<TxInfo>> {
         val wrapper = PaginationWrapper<TxInfo>(Page.Initial, Page.LastPage, items = emptyList())
-        return PaginationStatus.Paginating(BatchFetchResult.Success(data = wrapper, empty = empty, last = false))
+        return PaginationStatus.Paginating(BatchFetchResult.Success(data = wrapper, isEmpty = empty, isLast = false))
     }
 
     /** An incoming transfer worth $0.001 at [QUOTE] — under the cent the filter cuts at. */

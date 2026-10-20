@@ -36,7 +36,7 @@ interface HotWalletAccessCodeAttemptsRepository {
 
     data class AttemptId(
         val hotWalletId: HotWalletId,
-        val auth: Boolean,
+        val isAuth: Boolean,
     )
 
     sealed interface Attempts {
