@@ -98,11 +98,11 @@ private fun ResetWarning(state: OnboardingTwinUM.ResetWarning, modifier: Modifie
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = { state.onAcceptClick(!state.acceptToggle) },
+                        onClick = { state.onAcceptClick(!state.isAcceptToggled) },
                     ),
             ) {
-                IconToggleButton(checked = state.acceptToggle, onCheckedChange = state.onAcceptClick) {
-                    AnimatedContent(targetState = state.acceptToggle, label = "Update checked state") { checked ->
+                IconToggleButton(checked = state.isAcceptToggled, onCheckedChange = state.onAcceptClick) {
+                    AnimatedContent(targetState = state.isAcceptToggled, label = "Update checked state") { checked ->
                         Icon(
                             painter = painterResource(
                                 if (checked) {
@@ -135,7 +135,7 @@ private fun ResetWarning(state: OnboardingTwinUM.ResetWarning, modifier: Modifie
                 .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
                 .fillMaxWidth(),
             text = stringResourceSafe(R.string.common_continue),
-            enabled = state.acceptToggle,
+            enabled = state.isAcceptToggled,
             onClick = state.onContinueClick,
         )
     }
@@ -245,12 +245,12 @@ private fun PreviewScanCard() {
 @Composable
 private fun PreviewResetWarning() {
     TangemThemePreview {
-        var toggle by remember { mutableStateOf(false) }
+        var isToggled by remember { mutableStateOf(false) }
 
         OnboardingTwin(
             OnboardingTwinUM.ResetWarning(
-                acceptToggle = toggle,
-                onAcceptClick = { toggle = it },
+                isAcceptToggled = isToggled,
+                onAcceptClick = { isToggled = it },
             ),
         )
     }

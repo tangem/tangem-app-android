@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>UnnecessaryLet:ItemsBuilder.kt$ItemsBuilder$let(::add)</ID>
-  </CurrentIssues>
-</SmellBaseline>

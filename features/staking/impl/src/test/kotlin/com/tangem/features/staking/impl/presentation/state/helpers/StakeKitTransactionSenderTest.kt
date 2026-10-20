@@ -40,24 +40,18 @@ import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Covers the build/validate reuse logic of [StakeKitTransactionSender]: a build validated in
  * [StakeKitTransactionSender.validate] is reused in [StakeKitTransactionSender.send] only when the
- * inputs are unchanged AND the build is not stale. Solana is reused only within a 50s TTL of when it
- * was built (its recentBlockhash expires) and rebuilt + re-validated afterwards. The contract under
- * test: the transaction that is sent is always the transaction that was security-validated, and UNSAFE
- * always blocks.
+ * inputs are unchanged. The contract under test: the transaction that is sent is always the transaction
+ * that was security-validated, and UNSAFE always blocks.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -77,13 +71,6 @@ internal class StakeKitTransactionSenderTest {
     private val integration: StakeKitIntegration = mockk(relaxed = true)
     private val userWallet: UserWallet = mockk(relaxed = true)
 
-    // Controllable wall clock: the test moves [currentTime] between validate() and send() to exercise
-    // the Solana TTL deterministically.
-    private var currentTime: Instant = BASE_TIME
-    private val clock = object : Clock {
-        override fun now(): Instant = currentTime
-    }
-
     @BeforeEach
     fun setUp() {
         clearMocks(
@@ -101,7 +88,6 @@ internal class StakeKitTransactionSenderTest {
             integration,
             userWallet,
         )
-        currentTime = BASE_TIME
         every { stakingBalanceUpdaterFactory.create(any(), any(), any()) } returns balanceUpdater
         coEvery {
             sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
@@ -121,10 +107,8 @@ internal class StakeKitTransactionSenderTest {
         var constructError: StakingError? = null
 
         // Act
-        currentTime = BASE_TIME
         stubState(model.validateState)
         sender.validate()
-        currentTime = BASE_TIME + model.elapsedBeforeSend
         stubState(model.sendState)
         sender.send(sendCallbacks(onConstructError = { constructError = it }))
 
@@ -189,25 +173,10 @@ internal class StakeKitTransactionSenderTest {
             expectedScans = 1,
         ),
         ReuseCase(
-            label = "solana within TTL → reused",
+            label = "solana, unchanged inputs → reused (blockhash is refreshed by the SDK before signing)",
             network = NetworkType.SOLANA,
-            elapsedBeforeSend = 10.seconds,
             expectedBuilds = 1,
             expectedScans = 1,
-        ),
-        ReuseCase(
-            label = "solana past TTL → rebuilt + re-validated",
-            network = NetworkType.SOLANA,
-            elapsedBeforeSend = 60.seconds,
-            expectedBuilds = 2,
-            expectedScans = 2,
-        ),
-        ReuseCase(
-            label = "solana with clock jumped backward → rebuilt (non-monotonic guard)",
-            network = NetworkType.SOLANA,
-            elapsedBeforeSend = (-5).seconds,
-            expectedBuilds = 2,
-            expectedScans = 2,
         ),
         ReuseCase(
             label = "amount changed between validate and send → rebuilt",
@@ -239,9 +208,9 @@ internal class StakeKitTransactionSenderTest {
             blocked = true,
         ),
         ReuseCase(
-            label = "unsafe on solana rebuilt past TTL → blocked, not sent",
+            label = "unsafe on solana rebuilt after amount change → blocked, not sent",
             network = NetworkType.SOLANA,
-            elapsedBeforeSend = 60.seconds,
+            sendState = StateArgs(cryptoAmount = BigDecimal("11")),
             verdict = StakingTransactionVerdict.UNSAFE,
             expectedBuilds = 2,
             expectedScans = 2,
@@ -262,7 +231,6 @@ internal class StakeKitTransactionSenderTest {
         saveUnsubmittedHashUseCase = saveUnsubmittedHashUseCase,
         isFeeApproximateUseCase = isFeeApproximateUseCase,
         checkStakingTransactionUseCase = checkStakingTransactionUseCase,
-        clock = clock,
         cryptoCurrencyStatusProvider = statusProvider,
         userWallet = userWallet,
         integration = integration,
@@ -366,7 +334,7 @@ internal class StakeKitTransactionSenderTest {
         val cryptoAmount: BigDecimal = BigDecimal.TEN,
         val feeValue: BigDecimal = BigDecimal.ONE,
         val validatorAddress: String = "VALIDATOR",
-        val actionType: StakingActionCommonType = StakingActionCommonType.Enter(skipEnterAmount = false),
+        val actionType: StakingActionCommonType = StakingActionCommonType.Enter(shouldSkipEnterAmount = false),
         val pendingAction: PendingAction? = null,
         val reduceAmountBy: BigDecimal? = null,
     )
@@ -376,7 +344,6 @@ internal class StakeKitTransactionSenderTest {
         val network: NetworkType,
         val validateState: StateArgs = StateArgs(),
         val sendState: StateArgs = StateArgs(),
-        val elapsedBeforeSend: Duration = Duration.ZERO,
         val verdict: StakingTransactionVerdict = StakingTransactionVerdict.SAFE,
         val expectedBuilds: Int,
         val expectedScans: Int,
@@ -388,6 +355,5 @@ internal class StakeKitTransactionSenderTest {
     private companion object {
         const val ACCOUNT_ADDRESS = "ACCOUNT_ADDRESS"
         const val FRESH_ADDRESS = "FRESH_ADDRESS"
-        val BASE_TIME: Instant = Instant.fromEpochSeconds(1_700_000_000)
     }
 }

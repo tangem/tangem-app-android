@@ -15,13 +15,13 @@ data class AddTokenUM(
     data class Network(
         @DrawableRes val icon: Int,
         val name: TextReference,
-        val editable: Boolean,
+        val isEditable: Boolean,
         val onClick: () -> Unit,
     )
 
     data class Button(
         val isEnabled: Boolean,
-        val showProgress: Boolean,
+        val shouldShowProgress: Boolean,
         val isTangemIconVisible: Boolean,
         val onConfirmClick: () -> Unit,
         val text: TextReference,

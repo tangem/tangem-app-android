@@ -218,7 +218,7 @@ internal class MultiWalletFinalizeModelTest {
 
             val state = model.uiState.value
             Assertions.assertEquals(MultiWalletFinalizeUM.Step.Primary, state.step)
-            Assertions.assertEquals(true, state.scanPrimary)
+            Assertions.assertEquals(true, state.shouldScanPrimary)
             Assertions.assertEquals(false, state.isRing)
             Assertions.assertEquals("primary-id-aaaa".lastMaskedExpected(), state.cardNumber)
         }
@@ -236,7 +236,7 @@ internal class MultiWalletFinalizeModelTest {
 
             val state = model.uiState.value
             Assertions.assertEquals(MultiWalletFinalizeUM.Step.Primary, state.step)
-            Assertions.assertEquals(true, state.scanPrimary)
+            Assertions.assertEquals(true, state.shouldScanPrimary)
             Assertions.assertEquals(true, state.isRing)
         }
 
@@ -255,7 +255,7 @@ internal class MultiWalletFinalizeModelTest {
 
         val state = model.uiState.value
         Assertions.assertEquals(MultiWalletFinalizeUM.Step.BackupDevice1, state.step)
-        Assertions.assertEquals(false, state.scanPrimary)
+        Assertions.assertEquals(false, state.shouldScanPrimary)
         Assertions.assertEquals("backup-1-bbbb".lastMaskedExpected(), state.cardNumber)
     }
 
@@ -274,7 +274,7 @@ internal class MultiWalletFinalizeModelTest {
 
         val state = model.uiState.value
         Assertions.assertEquals(MultiWalletFinalizeUM.Step.BackupDevice2, state.step)
-        Assertions.assertEquals(false, state.scanPrimary)
+        Assertions.assertEquals(false, state.shouldScanPrimary)
         Assertions.assertEquals("backup-2-cccc".lastMaskedExpected(), state.cardNumber)
     }
 
@@ -360,7 +360,7 @@ internal class MultiWalletFinalizeModelTest {
 
         val state = model.uiState.value
         Assertions.assertEquals(MultiWalletFinalizeUM.Step.BackupDevice1, state.step)
-        Assertions.assertEquals(false, state.scanPrimary)
+        Assertions.assertEquals(false, state.shouldScanPrimary)
         Assertions.assertEquals("backup-1-bbbb".lastMaskedExpected(), state.cardNumber)
         Assertions.assertEquals(false, state.isRing)
         Assertions.assertEquals(
@@ -642,7 +642,7 @@ internal class MultiWalletFinalizeModelTest {
         verify { tangemSdkManager.clearProductType() }
         coVerify(exactly = 0) { onboardingRepository.saveUnfinishedFinalizeOnboarding(any()) }
         Assertions.assertEquals(stateBefore.step, model.uiState.value.step)
-        Assertions.assertEquals(stateBefore.scanPrimary, model.uiState.value.scanPrimary)
+        Assertions.assertEquals(stateBefore.shouldScanPrimary, model.uiState.value.shouldScanPrimary)
         Assertions.assertEquals(emptyList<MultiWalletFinalizeComponent.Event>(), events)
     }
 

@@ -109,7 +109,7 @@ internal class ImportSeedPhraseUiStateBuilder(
 
         updateUiState { state ->
             state.copy(
-                createWalletEnabled = false,
+                isCreateWalletEnabled = false,
                 wordsErrorText = null,
             )
         }
@@ -124,7 +124,7 @@ internal class ImportSeedPhraseUiStateBuilder(
                 state.copy(
                     invalidWords = invalidWords.toImmutableList(),
                     wordsErrorText = resourceReference(R.string.onboarding_seed_mnemonic_wrong_words),
-                    createWalletEnabled = false,
+                    isCreateWalletEnabled = false,
                 )
             }
             return
@@ -137,7 +137,7 @@ internal class ImportSeedPhraseUiStateBuilder(
                 state.copy(
                     invalidWords = emptyList<String>().toImmutableList(),
                     wordsErrorText = null,
-                    createWalletEnabled = true,
+                    isCreateWalletEnabled = true,
                 )
             }
             readyToImport(true)
@@ -148,13 +148,13 @@ internal class ImportSeedPhraseUiStateBuilder(
                 updateUiState { state ->
                     state.copy(
                         wordsErrorText = resourceReference(R.string.onboarding_seed_mnemonic_invalid_checksum),
-                        createWalletEnabled = false,
+                        isCreateWalletEnabled = false,
                     )
                 }
             } else {
                 updateUiState { state ->
                     state.copy(
-                        createWalletEnabled = false,
+                        isCreateWalletEnabled = false,
                         wordsErrorText = null,
                     )
                 }

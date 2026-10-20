@@ -76,8 +76,8 @@ internal class QrScanningModel @Inject constructor(
     override fun onQrScanned(qrCode: String, source: QrResultSource) {
         if (qrCode.isNotBlank()) {
             modelScope.launch(dispatchers.mainImmediate) {
-                val qrCode = RawQrResult(qrCode, source, params.source)
-                emitQrScannedEventUseCase.invoke(qrCode)
+                val qrResult = RawQrResult(qrCode, source, params.source)
+                emitQrScannedEventUseCase.invoke(qrResult)
             }
             if (!isScanned) {
                 router.pop()

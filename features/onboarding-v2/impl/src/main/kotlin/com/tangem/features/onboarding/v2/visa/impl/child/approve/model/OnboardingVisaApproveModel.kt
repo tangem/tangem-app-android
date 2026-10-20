@@ -114,6 +114,6 @@ internal class OnboardingVisaApproveModel @Inject constructor(
     }
 
     private fun loading(state: Boolean) {
-        _uiState.update { it.copy(approveButtonLoading = state) }
+        _uiState.update { it.copy(isApproveButtonLoading = state) }
     }
 }

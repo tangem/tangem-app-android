@@ -7,7 +7,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
 import com.tangem.domain.polymarket.model.PolymarketAddresses
-import com.tangem.domain.polymarket.model.PolymarketDerivationError
+import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
@@ -76,7 +76,7 @@ internal class DerivePolymarketAddressesUseCaseTest {
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN owner derivation fails WHEN invoke THEN wraps the cause and never derives a wallet`(
-        cause: PolymarketDerivationError,
+        cause: PolymarketSigningError,
     ) = runTest {
         // Arrange
         coEvery { eoaDeriver.deriveOwnerEoa(userWalletId) } returns cause.left()
@@ -85,16 +85,16 @@ internal class DerivePolymarketAddressesUseCaseTest {
         val actual = useCase(userWalletId = userWalletId)
 
         // Assert
-        assertThat(actual).isEqualTo(PolymarketOnboardingError.Derivation(cause).left())
+        assertThat(actual).isEqualTo(PolymarketOnboardingError.Signing(cause).left())
         verify(exactly = 0) { depositWalletDeriver.deriveDepositWallet(any()) }
     }
 
     private fun provideTestModels() = listOf(
-        PolymarketDerivationError.MissingWallet,
-        PolymarketDerivationError.UserCancelled,
-        PolymarketDerivationError.DerivationUnsupported,
-        PolymarketDerivationError.CardError,
-        PolymarketDerivationError.Unknown,
+        PolymarketSigningError.MissingWallet,
+        PolymarketSigningError.UserCancelled,
+        PolymarketSigningError.DerivationUnsupported,
+        PolymarketSigningError.CardError,
+        PolymarketSigningError.Unknown,
     )
 
     @Nested

@@ -77,7 +77,7 @@ internal class DefaultYieldSupplyRepository(
         val marketDtos = plain.overlaidWith(getIncentivisedMarkets(chains))
 
         store.store(marketDtos)
-        marketDtos.map(YieldMarketTokenConverter::convert)
+        marketDtos.map(YieldMarketTokenConverter::convert).enrichNetworkIds()
     }
 
     /**
@@ -151,7 +151,7 @@ internal class DefaultYieldSupplyRepository(
                 return@withContext false
             }
 
-            (walletManager as? YieldSupplyProvider)?.isSupported() ?: false
+            (walletManager as? YieldSupplyProvider)?.isSupported() == true
         }
 
     override suspend fun activateProtocol(
