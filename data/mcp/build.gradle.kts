@@ -30,4 +30,5 @@ dependencies {
     implementation(deps.retrofit)
 
     testImplementation(projects.test.core)
+    testImplementation(deps.androidx.datastore.core)
 }
