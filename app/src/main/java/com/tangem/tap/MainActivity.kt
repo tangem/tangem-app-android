@@ -44,7 +44,9 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
 import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
+import com.tangem.domain.wallets.backup.WalletCardsBackupDeliveryScheduler
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.google.auth.GoogleAuthActivityResultBridge
@@ -53,7 +55,6 @@ import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.analytics.events.Push
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
-import com.tangem.tap.domain.backup.WalletCardsBackupSender
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.routing.component.RoutingComponent
@@ -128,7 +129,10 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     internal lateinit var hotWalletFeatureToggles: HotWalletFeatureToggles
 
     @Inject
-    internal lateinit var walletCardsBackupSender: WalletCardsBackupSender
+    internal lateinit var onboardingV2FeatureToggles: OnboardingV2FeatureToggles
+
+    @Inject
+    internal lateinit var walletCardsBackupDeliveryScheduler: WalletCardsBackupDeliveryScheduler
 
     @Inject
     internal lateinit var lockUserWalletsTimer: LockUserWalletsTimer
@@ -178,7 +182,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         initContent()
 
         sendStakingUnsubmittedHashes()
-        walletCardsBackupSender.start()
+        sendPendingWalletCardsBackups()
         checkGoogleServicesAvailability()
 
         lifecycle.addObserver(WindowObscurationObserver)
@@ -419,6 +423,12 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
                 .onLeft { TangemLogger.e(it.toString()) }
                 .onRight { TangemLogger.d("Submitting hashes succeeded") }
         }
+    }
+
+    private fun sendPendingWalletCardsBackups() {
+        if (onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled.not()) return
+
+        walletCardsBackupDeliveryScheduler.schedule()
     }
 
     private fun checkGoogleServicesAvailability() {
