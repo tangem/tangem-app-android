@@ -90,7 +90,7 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
                     callback = model,
                     onDismiss = ::dismiss,
                     notificationConfigs = model.state.value.notificationConfigs,
-                    showMemoDisclaimer = model.params.config.showMemoDisclaimer,
+                    shouldShowMemoDisclaimer = model.params.config.shouldShowMemoDisclaimer,
                     fullName = model.params.config.cryptoCurrency.network.name,
                     tokenName = model.getTokenName(),
                     currencyIconState = model.state.value.iconState,

@@ -25,6 +25,9 @@ data class PredictionOrderQuote(
     val minOrderAmount: BigDecimal?,
     val tickSize: BigDecimal,
     val isLive: Boolean,
+    val version: PolymarketMarketVersion,
+    val exchange: String?,
+    val signingDomainVersion: String?,
 ) {
 
     /** @return the floor for the collateral the user types on a buy; a sell has none. */

@@ -9,7 +9,6 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.TangemSiteShareUrlBuilder
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
 import com.tangem.common.ui.charts.state.sorted
@@ -19,6 +18,7 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
@@ -114,7 +114,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val getNewsUseCase: GetNewsUseCase,
     private val shareManager: ShareManager,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val messageSender: UiMessageSender,
 ) : Model() {
 
@@ -492,7 +492,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     }
 
     private fun openTokenDetails(result: AddToPortfolioManager.Result) {
-        appRouter.push(
+        router.push(
             AppRoute.CurrencyDetails(
                 userWalletId = result.wallet.walletId,
                 currency = result.addedCurrency.currency,

@@ -1,26 +1,27 @@
 package com.tangem.features.jointaccount.main.converter
 
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.jointaccount.model.JointAccount
+import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
-import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 
 /**
  * Maps a [JointAccount] (plus the invites this device holds) to [JointAccountMembersUM].
  *
- * Every visual difference on the screen — title, progress line, the "Share invites safely" banner, the
- * archive menu, the activation CTA — is driven by two things only: [JointAccount.status] and whether this
- * wallet is the account's creator (see [MembersScreenPhase]). There is no separate "mode": the wallet row,
- * account settings and the deep link all push the same route, and whichever phase the account's own data
- * resolves to is what renders, regardless of entry point.
+ * Every visual difference on the screen — title, top bar, the activation CTA — is driven by two things only:
+ * [JointAccount.status] and whether this wallet is the account's creator (see [MembersScreenPhase]). There is
+ * no separate "mode": the wallet row, account settings and the deep link all push the same route, and whichever
+ * phase the account's own data resolves to is what renders, regardless of entry point.
  *
  * The wallet recognises itself among the members by [Input.ownAddress], the owner address derived from the keys
  * on the device: the backend lists every member the same way for everyone and marks nobody as "you".
@@ -35,6 +36,8 @@ internal class JointAccountToMembersUMConverter(
      * @property ownAddress    this wallet's owner address in the account, null while its key is not derived yet
      * @property walletIconRes wallet-interaction icon of the activate button, null for a hot wallet
      * @property isActivating  the activation is being signed and sent
+     * @property accountName   the account's name from its own record, null until that record arrives
+     * @property accountIcon   the account's icon from its own record, null until that record arrives
      */
     data class Input(
         val account: JointAccount,
@@ -43,6 +46,8 @@ internal class JointAccountToMembersUMConverter(
         val ownAddress: String?,
         val walletIconRes: Int? = null,
         val isActivating: Boolean = false,
+        val accountName: AccountName? = null,
+        val accountIcon: CryptoPortfolioIcon? = null,
     )
 
     /** Every side effect the converted state can trigger. */
@@ -52,10 +57,9 @@ internal class JointAccountToMembersUMConverter(
             name: TextReference,
             address: String,
         ) -> Unit,
-        val onInviteClick: (inviteId: String) -> Unit,
+        val onInviteClick: (inviteId: String, accountName: TextReference) -> Unit,
         val onActivateClick: (cryptoAccountId: String) -> Unit,
-        val onShareSafelyClick: () -> Unit,
-        val onArchiveClick: (cryptoAccountId: String) -> Unit,
+        val onApprovalsInfoClick: (threshold: Int, total: Int) -> Unit,
         val onCloseClick: () -> Unit,
     )
 
@@ -81,36 +85,43 @@ internal class JointAccountToMembersUMConverter(
         val remainingInvites = invites
             .filterNot { invite -> invite.lowercase() in redeemedInvites }
 
+        val accountName = value.accountName?.toUM()?.value
         val freeSlotsCount = (account.membersCount - account.members.size).coerceAtLeast(minimumValue = 0)
         val freeSlots = List(size = freeSlotsCount) { index ->
             val invite = remainingInvites.getOrNull(index)
-            freeSlot(index = index, invite = invite, isInvited = invite in value.sharedInvites, phase = phase)
+            freeSlot(
+                index = index,
+                number = account.members.size + index,
+                isInvited = invite in value.sharedInvites,
+                action = slotAction(invite = invite, accountName = accountName, phase = phase),
+            )
         }
 
         return JointAccountMembersUM(
-            topBar = topBar(phase = phase, cryptoAccountId = account.cryptoAccountId),
-            header = header(phase = phase, joined = account.members.size, total = account.membersCount),
-            shareSafely = shareSafely(phase),
+            topBar = topBar(phase = phase),
+            header = header(phase = phase),
+            summaryCard = summaryCard(input = value),
             joined = joined.toImmutableList(),
             freeSlots = freeSlots.toImmutableList(),
-            otherMembersLabel = if (freeSlots.isNotEmpty()) {
-                resourceReference(CoreUiR.string.joint_account_invite_members_other_members)
+            membersLabel = if (joined.isNotEmpty()) {
+                resourceReference(CoreUiR.string.joint_account_members_title)
             } else {
                 null
             },
-            activateButton = activateButton(phase = phase, input = value),
+            waitingLabel = if (freeSlots.isNotEmpty()) {
+                resourceReference(CoreUiR.string.joint_account_invite_members_waiting_to_join)
+            } else {
+                null
+            },
+            footer = footer(phase = phase, input = value),
         )
     }
 
-    private fun topBar(phase: MembersScreenPhase, cryptoAccountId: String): JointAccountMembersUM.TopBarUM =
+    private fun topBar(phase: MembersScreenPhase): JointAccountMembersUM.TopBarUM =
         if (phase.stage == MembersScreenPhase.Stage.Completed) {
             JointAccountMembersUM.TopBarUM.Titled(title = title(phase), onBackClick = callbacks.onCloseClick)
         } else {
-            JointAccountMembersUM.TopBarUM.Dismissible(
-                canArchive = phase.isThisDeviceCreator,
-                onArchiveClick = { callbacks.onArchiveClick(cryptoAccountId) },
-                onCloseClick = callbacks.onCloseClick,
-            )
+            JointAccountMembersUM.TopBarUM.Dismissible(onCloseClick = callbacks.onCloseClick)
         }
 
     private fun title(phase: MembersScreenPhase): TextReference = when {
@@ -120,35 +131,56 @@ internal class JointAccountToMembersUMConverter(
         else -> resourceReference(CoreUiR.string.joint_account_invite_members_waiting_title)
     }
 
-    private fun header(phase: MembersScreenPhase, joined: Int, total: Int): JointAccountMembersUM.HeaderUM? {
+    private fun header(phase: MembersScreenPhase): JointAccountMembersUM.HeaderUM? {
         if (phase.stage == MembersScreenPhase.Stage.Completed) return null
 
-        return JointAccountMembersUM.HeaderUM(
-            title = title(phase),
+        return JointAccountMembersUM.HeaderUM(title = title(phase))
+    }
+
+    private fun summaryCard(input: Input): JointAccountMembersUM.SummaryCardUM? {
+        val name = input.accountName ?: return null
+        val icon = input.accountIcon ?: return null
+        val account = input.account
+
+        return JointAccountMembersUM.SummaryCardUM(
+            icon = CryptoPortfolioIconConverter.convert(icon),
+            name = name.toUM().value,
             progress = resourceReference(
-                id = CoreUiR.string.joint_account_invite_members_subtitle,
-                formatArgs = wrappedList(joined, total),
+                id = CoreUiR.string.joint_account_invite_members_joined_progress,
+                formatArgs = wrappedList(account.members.size, account.membersCount),
             ),
+            approvals = resourceReference(
+                id = CoreUiR.string.joint_account_invite_members_approvals_value,
+                formatArgs = wrappedList(account.threshold, account.membersCount),
+            ),
+            onApprovalsInfoClick = { callbacks.onApprovalsInfoClick(account.threshold, account.membersCount) },
         )
     }
 
-    private fun shareSafely(phase: MembersScreenPhase): JointAccountMembersUM.ShareSafelyUM? {
-        if (phase.stage != MembersScreenPhase.Stage.Collecting || !phase.isThisDeviceCreator) return null
+    /** "Verify account" runs the activation until the verification flow exists. */
+    private fun footer(phase: MembersScreenPhase, input: Input): JointAccountMembersUM.FooterUM? {
+        if (phase.stage == MembersScreenPhase.Stage.Completed) return null
 
-        return JointAccountMembersUM.ShareSafelyUM(
-            title = resourceReference(CoreUiR.string.joint_account_invite_members_safety_title),
-            description = resourceReference(CoreUiR.string.joint_account_invite_members_safety_subtitle),
-            onClick = callbacks.onShareSafelyClick,
-        )
-    }
+        val account = input.account
+        val missingMembers = account.membersCount - account.members.size
+        val hint = if (phase.stage == MembersScreenPhase.Stage.Collecting && missingMembers > 0) {
+            pluralReference(
+                id = CoreUiR.plurals.joint_account_invite_members_still_need_to_join,
+                count = missingMembers,
+                formatArgs = wrappedList(missingMembers),
+            )
+        } else {
+            null
+        }
 
-    private fun activateButton(phase: MembersScreenPhase, input: Input): JointAccountMembersUM.ActivateButtonUM? {
-        if (phase.stage != MembersScreenPhase.Stage.ReadyToActivate || !phase.isThisDeviceCreator) return null
-
-        return JointAccountMembersUM.ActivateButtonUM(
-            walletIconRes = input.walletIconRes,
-            isLoading = input.isActivating,
-            onClick = { callbacks.onActivateClick(input.account.cryptoAccountId) },
+        return JointAccountMembersUM.FooterUM(
+            hint = hint,
+            button = JointAccountMembersUM.VerifyButtonUM(
+                isEnabled = phase.stage == MembersScreenPhase.Stage.ReadyToActivate && phase.isThisDeviceCreator,
+                isLoading = input.isActivating,
+                walletIconRes = input.walletIconRes,
+                onClick = { callbacks.onActivateClick(account.cryptoAccountId) },
+            ),
         )
     }
 
@@ -164,24 +196,11 @@ internal class JointAccountToMembersUMConverter(
             id = member.address,
             avatar = avatar,
             name = name,
-            role = role(member = member, isOwn = isOwn),
+            isYou = isOwn,
+            isCreator = member.role == JointAccount.Role.CREATOR,
+            status = resourceReference(CoreUiR.string.joint_account_members_role_joined),
             onInfoClick = { callbacks.onMemberInfoClick(avatar, name, member.address) },
         )
-    }
-
-    private fun role(member: JointAccount.Member, isOwn: Boolean): TextReference {
-        val isCreator = member.role == JointAccount.Role.CREATOR
-
-        return when {
-            isCreator && isOwn -> combinedReference(
-                resourceReference(CoreUiR.string.joint_account_members_role_you),
-                stringReference(" ${StringsSigns.DOT} "),
-                resourceReference(CoreUiR.string.joint_account_invite_members_creator),
-            )
-            isOwn -> resourceReference(CoreUiR.string.joint_account_members_role_you)
-            isCreator -> resourceReference(CoreUiR.string.joint_account_invite_members_creator)
-            else -> resourceReference(CoreUiR.string.joint_account_members_role_joined)
-        }
     }
 
     private fun avatar(member: JointAccount.Member, index: Int): JointAccountMembersUM.MemberAvatarUM {
@@ -195,9 +214,9 @@ internal class JointAccountToMembersUMConverter(
 
     private fun freeSlot(
         index: Int,
-        invite: String?,
+        number: Int,
         isInvited: Boolean,
-        phase: MembersScreenPhase,
+        action: JointAccountMembersUM.SlotActionUM?,
     ): JointAccountMembersUM.MemberUM.FreeSlot {
         val status = if (isInvited) {
             CoreUiR.string.joint_account_invite_members_invited
@@ -206,13 +225,29 @@ internal class JointAccountToMembersUMConverter(
         }
         return JointAccountMembersUM.MemberUM.FreeSlot(
             id = "slot_$index",
-            title = resourceReference(CoreUiR.string.joint_account_invite_members_member),
+            title = resourceReference(
+                id = CoreUiR.string.joint_account_invite_members_member_number,
+                formatArgs = wrappedList(number),
+            ),
             status = resourceReference(status),
-            canInvite = phase.stage != MembersScreenPhase.Stage.Completed &&
-                phase.isThisDeviceCreator &&
-                invite != null,
-            onInviteClick = { invite?.let(callbacks.onInviteClick) },
+            action = action,
         )
+    }
+
+    /**
+     * Always [JointAccountMembersUM.SlotActionUM.Invite]: offering Resend needs to know that a shared link expired,
+     * and neither the backend nor the local invite store tracks that yet. Absent until the account's name arrives:
+     * the invite message names the account.
+     */
+    private fun slotAction(
+        invite: String?,
+        accountName: TextReference?,
+        phase: MembersScreenPhase,
+    ): JointAccountMembersUM.SlotActionUM? {
+        val canInvite = phase.stage != MembersScreenPhase.Stage.Completed && phase.isThisDeviceCreator
+        if (!canInvite || invite == null || accountName == null) return null
+
+        return JointAccountMembersUM.SlotActionUM.Invite(onClick = { callbacks.onInviteClick(invite, accountName) })
     }
 }
 

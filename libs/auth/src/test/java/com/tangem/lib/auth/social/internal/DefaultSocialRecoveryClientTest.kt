@@ -12,6 +12,7 @@ import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
+import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.lib.auth.session.WalletRegistrar
@@ -103,7 +104,15 @@ internal class DefaultSocialRecoveryClientTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(api, authApi, deviceKeyManager, nonceDecryptor, attestationProvider, sessionTokensStore)
+        clearMocks(
+            api,
+            authApi,
+            deviceKeyManager,
+            nonceDecryptor,
+            attestationProvider,
+            sessionTokensStore,
+            walletRegistrar,
+        )
         // the store answers with the set that ends up in effect
         coEvery { sessionTokensStore.save(any()) } answers { firstArg() }
         mockkAndroidBase64()
@@ -112,6 +121,7 @@ internal class DefaultSocialRecoveryClientTest {
         coEvery { nonceDecryptor.decryptNonce(CIPHERED_NONCE) } returns NONCE
         coEvery { attestationProvider.getAttestationToken(any()) } returns null
         coEvery { sessionTokensStore.get() } returns Some(sessionTokens())
+        coEvery { walletRegistrar.markRegistered(any()) } returns Either.Right(Unit)
     }
 
     @AfterEach
@@ -298,7 +308,30 @@ internal class DefaultSocialRecoveryClientTest {
         val sealed = JavaBase64.getDecoder().decode(request.captured.encryptedRecoveryKey)
         assertThat(decryptWithKms(sealed)).isEqualTo(recoveryKey)
         coVerify(exactly = 1) { sessionTokensStore.save(any()) }
+        coVerify(exactly = 1) { walletRegistrar.markRegistered(WALLET_ID) }
     }
+
+    @Test
+    fun `GIVEN the registration marker cannot be stored WHEN registerBinding THEN the binding still succeeds`() =
+        runTest {
+            // Arrange
+            stubRegistrationNonce()
+            coEvery { api.getRecoveryPublicKey() } returns kmsKeySuccess(RecoveryKeyRsaCipher.SUPPORTED_ALGORITHM)
+            coEvery { api.registerWalletBinding(any()) } returns tokenSuccess()
+            coEvery { walletRegistrar.markRegistered(WALLET_ID) } returns
+                Either.Left(WalletRegistrationError.PersistenceFailed(IllegalStateException()))
+
+            // Act
+            val result = client.registerBinding(
+                walletId = WALLET_ID,
+                providerIdToken = ID_TOKEN,
+                recoveryKey = ByteArray(size = 32),
+                signer = signer,
+            )
+
+            // Assert — the binding is in place; a missing marker only costs one more plain registration
+            assertThat(result.isRight()).isTrue()
+        }
 
     @ParameterizedTest
     @NullSource
@@ -396,6 +429,7 @@ internal class DefaultSocialRecoveryClientTest {
 
         // Assert — reporting success would leave the app holding the superseded session
         assertThat(result.leftOrNull()).isInstanceOf(SocialRecoveryError.Unknown::class.java)
+        coVerify(exactly = 0) { walletRegistrar.markRegistered(any()) }
     }
 
     @Test
@@ -437,6 +471,20 @@ internal class DefaultSocialRecoveryClientTest {
             // Assert — a binding made before the toggle flipped is still on the server
             assertThat(result.leftOrNull()).isEqualTo(SocialRecoveryError.NoActiveSession)
         }
+
+    @Test
+    fun `GIVEN the wallet is not registered on this device WHEN unbindWallet THEN WalletNotRegistered`() = runTest {
+        // Arrange
+        coEvery {
+            walletRegistrar.unregister(walletId = WALLET_ID, shouldDeleteSocialRecovery = true)
+        } returns Either.Left(WalletRegistrationError.Api(AuthError.NotFound(problem = null)))
+
+        // Act
+        val result = client.unbindWallet(WALLET_ID)
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(SocialRecoveryError.WalletNotRegistered)
+    }
 
     @Test
     fun `GIVEN a bound wallet WHEN unbindWallet THEN it is unregistered together with its social recovery`() =

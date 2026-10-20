@@ -26,6 +26,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationRecipientListUM
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
@@ -176,9 +177,9 @@ internal class SendConfirmModelTest : SendModelTestBase() {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `WHEN send THEN use gasless use case only for token-currency fee`(model: DispatchModel) = runTest {
+        fun `WHEN send THEN use gasless use case only for a gasless fee`(model: DispatchModel) = runTest {
             // Arrange
-            val state = if (model.isTokenCurrencyFee) gaslessFeeState() else normalFeeState()
+            val state = if (model.isGaslessFee) gaslessFeeState() else normalFeeState()
             val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
             every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
             createSendConfirmModel(this, confirmParams(state))
@@ -189,7 +190,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             advanceUntilIdle()
 
             // Assert
-            if (model.isTokenCurrencyFee) {
+            if (model.isGaslessFee) {
                 coVerify(exactly = 1) { createAndSendGaslessTransactionUseCase(any(), any(), any()) }
                 coVerify(exactly = 0) { sendTransactionUseCase(any(), any(), any()) }
             } else {
@@ -199,8 +200,8 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         }
 
         private fun provideTestModels() = listOf(
-            DispatchModel(isTokenCurrencyFee = true),
-            DispatchModel(isTokenCurrencyFee = false),
+            DispatchModel(isGaslessFee = true),
+            DispatchModel(isGaslessFee = false),
         )
     }
 
@@ -323,14 +324,6 @@ internal class SendConfirmModelTest : SendModelTestBase() {
     @Nested
     inner class TronGaslessMaxSend {
 
-        @BeforeEach
-        fun stubTronGaslessSend() {
-            // The shared base leaves this one relaxed, which yields an Either that blows up on fold().
-            coEvery {
-                createAndSendTronGaslessTransactionUseCase(any(), any(), any(), any())
-            } returns "txHash".right()
-        }
-
         @Test
         fun `GIVEN max amount and Tron gasless fee in the sent token WHEN send THEN amount reduced by the fee`() =
             runTest {
@@ -360,8 +353,8 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             }
 
         @Test
-        fun `GIVEN Tron gasless quote WHEN send THEN dispatched through the Tron gasless use case`() = runTest {
-            // Arrange
+        fun `GIVEN Tron gasless quote WHEN send THEN dispatched through the gasless use case`() = runTest {
+            // Arrange — the model only decides gasless vs regular; the protocol is picked inside the use case.
             coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns true.right()
             val sut = createSendConfirmModel(this, tronGaslessParams())
             advanceUntilIdle()
@@ -371,8 +364,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) { createAndSendTronGaslessTransactionUseCase(any(), any(), any(), any()) }
-            coVerify(exactly = 0) { createAndSendGaslessTransactionUseCase(any(), any(), any()) }
+            coVerify(exactly = 1) { createAndSendGaslessTransactionUseCase(any(), any(), any()) }
             coVerify(exactly = 0) { sendTransactionUseCase(any(), any(), any()) }
         }
 
@@ -563,6 +555,26 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         }
 
         @Test
+        fun `GIVEN a sent operation WHEN the success button is clicked THEN the whole flow is closed`() = runTest {
+            // Arrange
+            val onCloseFlow: () -> Unit = mockk(relaxed = true)
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
+            coEvery { jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any()) } returns Unit.right()
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = {}, onCloseFlow = onCloseFlow))
+            advanceUntilIdle()
+            sut.onSendClick()
+            advanceUntilIdle()
+            val successUM = sut.uiState.value.confirmUM as ConfirmUM.Success
+
+            // Act
+            sut.primaryButtonUM(successUM).onClick()
+
+            // Assert
+            verify(exactly = 1) { onCloseFlow() }
+        }
+
+        @Test
         fun `GIVEN the whole balance entered WHEN onSendClick THEN the operation sends the balance minus the fee`() =
             runTest {
                 // Arrange — the Safe pays the fee from the same balance, so the entered maximum has to shrink by it
@@ -663,6 +675,27 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // Assert
             verify(exactly = 1) { sendConfirmAlertFactory.getJointNetworkStateMovedState() }
         }
+
+        @Test
+        fun `GIVEN blockaid flags the operation WHEN onSendClick THEN the dangerous transaction alert is shown`() =
+            runTest {
+                // Arrange
+                val onSendTransaction: () -> Unit = mockk(relaxed = true)
+                coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+                coEvery {
+                    jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any())
+                } returns JointOperationCreateError.Malicious.left()
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = onSendTransaction))
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { sendConfirmAlertFactory.getJointMaliciousState() }
+                verify(exactly = 0) { onSendTransaction() }
+            }
 
         @Test
         fun `GIVEN the composition mismatches WHEN onSendClick THEN the sending blocked alert is shown`() = runTest {
@@ -862,6 +895,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         /** Confirm starts empty so the model builds the real Content with the signatures itself */
         private fun jointConfirmParams(
             onSendTransaction: () -> Unit,
+            onCloseFlow: () -> Unit = {},
             enteredAmount: BigDecimal = BigDecimal.ONE,
             transactionFeeExtended: TransactionFeeExtended? = null,
             feeCryptoCurrencyStatus: CryptoCurrencyStatus = loadedFeeStatus,
@@ -879,6 +913,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             ).copy(
                 accountFlow = MutableStateFlow(jointAccount),
                 onSendTransaction = onSendTransaction,
+                onCloseFlow = onCloseFlow,
             ),
         )
     }
@@ -905,6 +940,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         transactionFeeExtended = TransactionFeeExtended(
             transactionFee = TransactionFee.Single(normal = tokenFee()),
             feeTokenId = testCryptoCurrency.id,
+            gaslessProtocolData = GaslessProtocolData.Evm,
         ),
     )
 
@@ -917,7 +953,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         transactionFeeExtended = TransactionFeeExtended(
             transactionFee = TransactionFee.Single(normal = tronGaslessFee()),
             feeTokenId = tronUsdt.id,
-            tronGaslessQuote = mockk(relaxed = true),
+            gaslessProtocolData = GaslessProtocolData.Tron(quote = mockk(relaxed = true)),
         ),
         enteredAmount = TRON_BALANCE,
         feeCryptoCurrencyStatus = tronUsdtStatus,
@@ -1014,7 +1050,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
 
     data class CheckFeeResultModel(val checkResult: Boolean, val expectedSendInitiated: Boolean)
 
-    data class DispatchModel(val isTokenCurrencyFee: Boolean)
+    data class DispatchModel(val isGaslessFee: Boolean)
 
     private companion object {
         val TRON_BALANCE: BigDecimal = BigDecimal("24.929183")

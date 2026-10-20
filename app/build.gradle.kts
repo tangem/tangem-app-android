@@ -175,7 +175,6 @@ dependencies {
     implementation(projects.domain.quotes)
     implementation(projects.domain.notifications)
     implementation(projects.domain.notifications.models)
-    implementation(projects.domain.feed.search)
     implementation(projects.domain.swap)
     implementation(projects.domain.swap.models)
     implementation(projects.domain.walletManager)
@@ -190,7 +189,6 @@ dependencies {
     implementation(projects.domain.assetsdiscovery)
     implementation(projects.domain.search)
     implementation(projects.domain.socialLogin)
-    implementation(projects.domain.feed.search)
     implementation(projects.domain.cloudBackup)
 
     implementation(projects.common)
@@ -285,7 +283,6 @@ dependencies {
     implementation(projects.data.news)
     implementation(projects.data.earn)
     implementation(projects.data.search)
-    implementation(projects.data.feed.search)
 
     implementation(projects.common.ui)
 

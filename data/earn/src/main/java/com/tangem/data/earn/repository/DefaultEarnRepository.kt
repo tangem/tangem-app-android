@@ -30,6 +30,7 @@ import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList")
 internal class DefaultEarnRepository(
@@ -142,6 +143,23 @@ internal class DefaultEarnRepository(
         return earnTokensCatalogStore.get()
     }
 
+    override suspend fun getYieldOffers(): Either<Throwable, EarnYieldOffers> = Either.catch {
+        withContext(dispatchers.io) {
+            // The same request as the Earn screen's first page with the Yield Mode filter and all networks
+            val response = tangemTechApi.getEarnTokens(
+                isForEarn = false,
+                page = FIRST_PAGE.toString(),
+                limit = YIELD_OFFERS_LIMIT,
+                type = YIELD_TYPE,
+            ).getOrThrow()
+
+            EarnYieldOffers(
+                total = checkNotNull(response.meta.total) { "Earn list response has no total" },
+                best = response.items.firstOrNull()?.let(EarnTokenConverter::convert),
+            )
+        }
+    }
+
     override fun observeEarnFilter(): Flow<EarnFilter> {
         return earnFilterStore.get()
     }
@@ -175,6 +193,8 @@ internal class DefaultEarnRepository(
         internal const val FIRST_PAGE = 1
         private const val INITIAL_BATCH_KEY = 0
         private const val CATALOG_PAGE_SIZE = 50
+        private const val YIELD_OFFERS_LIMIT = 20
+        private const val YIELD_TYPE = "yield"
     }
 }
 

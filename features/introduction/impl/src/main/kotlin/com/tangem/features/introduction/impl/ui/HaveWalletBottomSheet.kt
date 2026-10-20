@@ -47,10 +47,18 @@ import com.tangem.features.introduction.impl.ui.state.HaveWalletUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
 import com.tangem.core.ui.R as CoreUiR
 
-/** `null` while a row of the sheet is still running, so the sheet cannot be closed out from under it */
-private fun closeButton(isBusy: Boolean, onClick: () -> Unit): (@Composable () -> Unit)? {
-    if (isBusy) return null
-    return { TangemButton.Close(onClick = onClick) }
+/**
+ * `null` while a row of the sheet is still running, so the sheet cannot be closed out from under it. A social
+ * sign-in keeps the button in place but inactive instead: it runs on the Options step, whose bar would otherwise
+ * shift as the button goes.
+ */
+internal fun sheetCloseButton(
+    isSigningInSocially: Boolean,
+    isBusy: Boolean,
+    onClick: () -> Unit,
+): (@Composable () -> Unit)? {
+    if (isBusy && !isSigningInSocially) return null
+    return { TangemButton.Close(isEnabled = !isSigningInSocially, onClick = onClick) }
 }
 
 @Composable
@@ -74,7 +82,11 @@ internal fun HaveWalletBottomSheet(config: TangemBottomSheetConfig) {
         title = { content ->
             TangemModal.TopNavigation(
                 startButton = { StepBackButton(onBack = (content.step as? HaveWalletUM.Step.Import)?.onBack) },
-                endButton = closeButton(isBusy = isBusy, onClick = content.onCloseClick),
+                endButton = sheetCloseButton(
+                    isSigningInSocially = content.isSigningInSocially,
+                    isBusy = content.isBusy,
+                    onClick = content.onCloseClick,
+                ),
                 contentColumn = { StepTitle(step = content.step) },
             )
         },

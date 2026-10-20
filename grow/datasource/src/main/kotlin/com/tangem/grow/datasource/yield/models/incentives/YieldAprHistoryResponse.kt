@@ -15,7 +15,7 @@ data class YieldAprHistoryResponse(
 data class YieldAprHistoryPointDto(
     @Json(name = "date") val date: String? = null,
     @Json(name = "baseApy") val baseApy: BigDecimal? = null,
-    @Json(name = "rewardsApr") val rewardsApr: BigDecimal? = null,
-    @Json(name = "totalApyEst") val totalApyEst: BigDecimal? = null,
+    @Json(name = "grossRewardsApy") val grossRewardsApy: BigDecimal? = null,
+    @Json(name = "grossTotalApyEst") val grossTotalApyEst: BigDecimal? = null,
     @Json(name = "carriedForward") val isCarriedForward: Boolean? = null,
 )

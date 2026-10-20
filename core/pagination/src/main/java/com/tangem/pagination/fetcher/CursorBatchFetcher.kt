@@ -42,9 +42,9 @@ class CursorBatchFetcher<TRequestParams : Any, TItem : Any>(
 
         val result = runCatching {
             subFetcher.fetch(request = request, lastResult = null, isFirstBatchFetching = true)
-        }.getOrElse {
+        }.getOrElse { throwable ->
             currentCoroutineContext().ensureActive()
-            return BatchFetchResult.Error(it)
+            return BatchFetchResult.Error(throwable)
         }
 
         lastRequest.value = request
@@ -57,7 +57,7 @@ class CursorBatchFetcher<TRequestParams : Any, TItem : Any>(
     ): BatchFetchResult<List<TItem>> {
         val lastRequest = requireNotNull(lastRequest.value) { "fetchFirst() must be called before fetchNext()" }
 
-        if (lastResult is BatchFetchResult.Success && lastResult.last && overrideRequestParams == null) {
+        if (lastResult is BatchFetchResult.Success && lastResult.isLast && overrideRequestParams == null) {
             return BatchFetchResult.Error(EndOfPaginationException())
         }
 
@@ -81,9 +81,9 @@ class CursorBatchFetcher<TRequestParams : Any, TItem : Any>(
 
         val result = runCatching {
             subFetcher.fetch(request = nextReq, lastResult = lastResult, isFirstBatchFetching = false)
-        }.getOrElse {
+        }.getOrElse { throwable ->
             currentCoroutineContext().ensureActive()
-            return BatchFetchResult.Error(it)
+            return BatchFetchResult.Error(throwable)
         }
 
         this.lastRequest.value = nextReq

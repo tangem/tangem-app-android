@@ -17,6 +17,8 @@ dependencies {
     implementation(projects.features.marketing.api)
 
     /** Core */
+    implementation(projects.core.abTests)
+    implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.res)
     implementation(projects.core.ui)
@@ -57,6 +59,7 @@ dependencies {
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.feedback)
     implementation(projects.domain.marketing.models)
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
     implementation(projects.common)
     implementation(projects.domain.account)
@@ -74,9 +77,11 @@ dependencies {
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.datetime)
+    implementation(deps.jodatime)
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.annotation)
     implementation(deps.androidx.appCompat)
     implementation(deps.arrow.core)

@@ -54,9 +54,13 @@ internal fun darkColors3() =
             inverse = TangemColorPalette.Neutral.`5`,
             base = TangemColorPalette.Base.black,
             disabled = TangemColorPalette.Neutral.`70`,
-            opaque = TangemColors3.Bg.Opaque(
+            transparent = TangemColors3.Bg.Transparent(
                 primary = TangemColorPalette.Opaque.BaseWhite.`5`,
                 secondary = TangemColorPalette.Opaque.BaseWhite.`10`,
+                onMaterial = TangemColors3.Bg.Transparent.OnMaterial(
+                    primary = Color(0x992C2C2C),
+                    secondary = Color(0xCC2C2C2C),
+                ),
             ),
             status = TangemColors3.Bg.Status(
                 success = TangemColorPalette.Green.`50`,
@@ -70,15 +74,23 @@ internal fun darkColors3() =
             ),
             accent = TangemColors3.Bg.Accent(
                 blue = TangemColorPalette.Blue.`50`,
+                blueSubtle = TangemColorPalette.Blue.`90`,
                 violet = TangemColorPalette.Violet.`50`,
+                violetSubtle = TangemColorPalette.Violet.`90`,
                 red = TangemColorPalette.Red.`50`,
+                redSubtle = TangemColorPalette.Red.`90`,
                 orange = TangemColorPalette.Orange.`50`,
+                orangeSubtle = TangemColorPalette.Orange.`90`,
                 yellow = TangemColorPalette.Yellow.`50`,
+                yellowSubtle = TangemColorPalette.Yellow.`90`,
                 green = TangemColorPalette.Green.`50`,
+                greenSubtle = TangemColorPalette.Green.`90`,
                 neutral = TangemColorPalette.Neutral.`50`,
+                neutralSubtle = TangemColorPalette.Neutral.`90`,
             ),
             special = TangemColors3.Bg.Special(
                 control = TangemColorPalette.Opaque.BaseWhite.`10`,
+                switch = TangemColorPalette.Neutral.`70`,
             ),
         ),
         icon = TangemColors3.Icon(
@@ -127,12 +139,19 @@ internal fun darkColors3() =
             ),
             accent = TangemColors3.Border.Accent(
                 blue = TangemColorPalette.Blue.`40`,
+                blueSubtle = TangemColorPalette.Blue.`80`,
                 violet = TangemColorPalette.Violet.`40`,
+                violetSubtle = TangemColorPalette.Violet.`80`,
                 red = TangemColorPalette.Red.`40`,
+                redSubtle = TangemColorPalette.Red.`80`,
                 orange = TangemColorPalette.Orange.`40`,
+                orangeSubtle = TangemColorPalette.Orange.`80`,
                 yellow = TangemColorPalette.Yellow.`40`,
+                yellowSubtle = TangemColorPalette.Yellow.`80`,
                 green = TangemColorPalette.Green.`40`,
+                greenSubtle = TangemColorPalette.Green.`80`,
                 neutral = TangemColorPalette.Neutral.`40`,
+                neutralSubtle = TangemColorPalette.Neutral.`80`,
             ),
         ),
         overlay = TangemColors3.Overlay(

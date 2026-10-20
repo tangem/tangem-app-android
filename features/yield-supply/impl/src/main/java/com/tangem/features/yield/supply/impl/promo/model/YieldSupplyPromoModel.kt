@@ -4,11 +4,11 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.TangemSiteUrlBuilder
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -31,7 +31,7 @@ internal class YieldSupplyPromoModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val analytics: AnalyticsEventHandler,
     private val urlOpener: UrlOpener,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val getBoostedApyUseCase: GetBoostedApyUseCase,
     private val boostStoryPreloader: YieldBoostStoryPreloader,
 ) : Model(), YieldSupplyPromoClickIntents {
@@ -53,7 +53,7 @@ internal class YieldSupplyPromoModel @Inject constructor(
     }
 
     override fun onBackClick() {
-        appRouter.pop()
+        router.pop()
     }
 
     override fun onVariableRateInfoClick() {

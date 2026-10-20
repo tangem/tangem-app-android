@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.deeplink
 
+import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import arrow.core.Either
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
@@ -47,6 +48,9 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
     private val walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk()
     private val walletBalanceFetcher: WalletBalanceFetcher = mockk()
+    private val jointAccountCompromisedAlert: JointAccountCompromisedAlert = mockk {
+        coEvery { showIfCompromised(userWalletId = any(), accountId = any()) } returns false
+    }
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
     private val singleAccountListFetcher: SingleAccountListFetcher = mockk()
 
@@ -326,7 +330,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["income_transaction", "promo", "unknown", "joint_tx_sent"])
+    @ValueSource(strings = ["income_transaction", "promo", "unknown", "joint_tx_sent", "support_message"])
     fun `GIVEN type WHEN handle deeplink THEN token details deeplink not triggered`(type: String) = runTest {
         val queryParams = mapOf(
             WALLET_ID_KEY to "011",
@@ -674,6 +678,35 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
     }
 
     @Test
+    fun `GIVEN account_id of a compromised joint account WHEN handle deeplink THEN alert and redirect to main`() =
+        runTest {
+            // Arrange
+            val userWalletId = UserWalletId("011")
+            val cryptoCurrency = mockCryptoCurrency(derivation = Network.DerivationPath.Joint(value = "888888"))
+            val jointAccount = MockAccounts.createJointAccount(
+                cryptoCurrencies = listOf(cryptoCurrency),
+                userWalletId = userWalletId,
+            )
+            mockMultiCurrencyWallet(userWalletId)
+            coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId) } returns AccountList.empty(userWalletId)
+                .plus(jointAccount).getOrNull()!!
+            coEvery {
+                jointAccountCompromisedAlert.showIfCompromised(userWalletId, jointAccount.accountId.value)
+            } returns true
+
+            // Act
+            createHandler(
+                scope = this,
+                defaultQueryParams() - DERIVATION_PATH_KEY + (ACCOUNT_ID_KEY to jointAccount.accountId.value),
+            )
+            advanceUntilIdle()
+
+            // Assert
+            verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+            verify(exactly = 0) { appRouter.push(route = any(), onComplete = any()) }
+        }
+
+    @Test
     fun `GIVEN account_id has no matching account WHEN handle deeplink THEN redirect to main`() = runTest {
         val userWalletId = UserWalletId("011")
         mockMultiCurrencyWallet(userWalletId)
@@ -803,6 +836,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
             walletBalanceFetcher = walletBalanceFetcher,
             singleAccountListSupplier = singleAccountListSupplier,
             singleAccountListFetcher = singleAccountListFetcher,
+            jointAccountCompromisedAlert = jointAccountCompromisedAlert,
         )
     }
 }

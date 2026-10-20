@@ -33,7 +33,7 @@ internal class UpdateDataStateTransformer(
     )
 
     private fun Network.transform(enabled: Boolean): NFTNetworkUM {
-        val custom = derivationPath is Network.DerivationPath.Custom
+        val isCustom = derivationPath is Network.DerivationPath.Custom
         return NFTNetworkUM(
             id = id.toString(),
             chainRowUM = ChainRowUM(
@@ -43,9 +43,9 @@ internal class UpdateDataStateTransformer(
                     url = null,
                     fallbackResId = iconResId,
                     isGrayscale = !enabled,
-                    shouldShowCustomBadge = custom,
+                    shouldShowCustomBadge = isCustom,
                 ),
-                shouldShowCustom = custom,
+                shouldShowCustom = isCustom,
                 isEnabled = enabled,
             ),
             onItemClick = {

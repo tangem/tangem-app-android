@@ -3,7 +3,6 @@ package com.tangem.domain.models.account
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.Serializable
 
@@ -38,43 +37,11 @@ data class CollectiblesVaultBalance(
 
     fun cryptoCurrencyStatus(source: StatusSource): CryptoCurrencyStatus = CryptoCurrencyStatus(
         currency = usdcToken,
-        value = buildValue(source = source),
+        value = depositCryptoCurrencyStatusValue(
+            amount = usdcAmount,
+            fiatRate = usdcFiatRate,
+            depositAddress = ataAddress,
+            source = source,
+        ),
     )
-
-    private fun buildValue(source: StatusSource): CryptoCurrencyStatus.Value {
-        val networkAddress = NetworkAddress.Single(
-            defaultAddress = NetworkAddress.Address(
-                type = NetworkAddress.Address.Type.Primary,
-                value = ataAddress,
-            ),
-        )
-        val sources = CryptoCurrencyStatus.Sources(
-            networkSource = source,
-            quoteSource = source,
-            stakingBalanceSource = source,
-        )
-
-        return if (usdcFiatRate != null) {
-            CryptoCurrencyStatus.Loaded(
-                amount = usdcAmount,
-                fiatAmount = usdcAmount.multiply(usdcFiatRate),
-                fiatRate = usdcFiatRate,
-                priceChange = SerializedBigDecimal.ZERO,
-                networkAddress = networkAddress,
-                sources = sources,
-                pendingTransactions = emptySet(),
-                yieldSupplyStatus = null,
-                hasCurrentNetworkTransactions = false,
-            )
-        } else {
-            CryptoCurrencyStatus.NoQuote(
-                amount = usdcAmount,
-                networkAddress = networkAddress,
-                yieldSupplyStatus = null,
-                sources = sources,
-                pendingTransactions = emptySet(),
-                hasCurrentNetworkTransactions = false,
-            )
-        }
-    }
 }

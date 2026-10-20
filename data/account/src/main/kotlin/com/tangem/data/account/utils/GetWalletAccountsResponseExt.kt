@@ -40,12 +40,12 @@ internal fun List<WalletAccountDTO>.assignTokens(
         val accountTokens = enrichedTokensByAccountId[accountDTO.id].orEmpty()
         val isMainAccount = !accountDTO.isJoint && accountDTO.derivationIndex == DerivationIndex.Main.value
 
-        val tokens = if (isMainAccount) {
+        val assignedTokens = if (isMainAccount) {
             val existingAccountIds = map(WalletAccountDTO::id).toSet()
             val unexistingAccountIds = enrichedTokensByAccountId.keys - existingAccountIds
 
-            val customTokens = unexistingAccountIds.flatMap {
-                enrichedTokensByAccountId[it].orEmpty().map { token ->
+            val customTokens = unexistingAccountIds.flatMap { accountId ->
+                enrichedTokensByAccountId[accountId].orEmpty().map { token ->
                     // Tokens from unexisting accounts should be copied to the main account
                     token.copy(accountId = accountDTO.id)
                 }
@@ -56,7 +56,7 @@ internal fun List<WalletAccountDTO>.assignTokens(
             accountTokens
         }
 
-        accountDTO.copy(tokens = accountDTO.tokens.orEmpty() + tokens)
+        accountDTO.copy(tokens = accountDTO.tokens.orEmpty() + assignedTokens)
     }
 }
 

@@ -387,6 +387,32 @@ class BlockAidMapperTest {
         Truth.assertThat(tx["data"]).isEqualTo("0xdeadbeef")
     }
 
+    @Test
+    fun `GIVEN a dApp domain WHEN map to evm request THEN the domain is the metadata`() {
+        // Act
+        val request = mapper.mapToEvmRequest(evmTransactionData(domainUrl = "https://app.example"))
+
+        // Assert
+        Truth.assertThat(request.metadata).isEqualTo(TransactionMetadata(domain = "https://app.example"))
+    }
+
+    @Test
+    fun `GIVEN no dApp domain WHEN map to evm request THEN the metadata says non dApp`() {
+        // Act
+        val request = mapper.mapToEvmRequest(evmTransactionData(domainUrl = null))
+
+        // Assert
+        Truth.assertThat(request.metadata).isEqualTo(TransactionMetadata(isNonDapp = true))
+    }
+
+    private fun evmTransactionData(domainUrl: String?) = TransactionData(
+        chain = "polygon",
+        accountAddress = "0xSAFE",
+        method = "eth_signTransaction",
+        domainUrl = domainUrl,
+        params = TransactionParams.Evm(params = "[{\"from\":\"0xSAFE\",\"to\":\"0xTO\"}]"),
+    )
+
     private fun createSuccessScanResponse(exposures: List<Exposure>, assetsDiffs: List<AssetDiff>) =
         TransactionScanResponse(
             validation = ValidationResponse(status = "Success", resultType = "Benign", description = ""),

@@ -90,7 +90,7 @@ private fun AddressInfoContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(CircleShape)
-                .background(TangemTheme.colors3.bg.opaque.primary)
+                .background(TangemTheme.colors3.bg.transparent.primary)
                 .clickableSingle(onClick = onDeleteAddress),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,

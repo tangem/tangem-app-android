@@ -2,8 +2,11 @@ package com.tangem.data.mcp.repository
 
 import android.util.Base64
 import arrow.core.Either
+import arrow.core.getOrElse
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.data.mcp.converter.McpClientConverter
 import com.tangem.data.mcp.converter.toDomain
+import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
@@ -12,6 +15,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.data.mcp.api.McpApi
 import com.tangem.data.mcp.api.models.request.McpDeviceVerificationConsent
 import com.tangem.data.mcp.api.models.response.McpSessionResponse
+import com.tangem.data.mcp.store.McpAgentStore
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -29,12 +33,25 @@ internal class DefaultMcpRepository @Inject constructor(
     private val mcpApi: McpApi,
     private val appScope: AppCoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val mcpClientConverter: McpClientConverter,
+    private val agentStore: McpAgentStore,
 ) : McpRepository {
 
     private val sessions = MutableStateFlow<List<McpSession>>(value = emptyList())
     private val loadJobHolder = JobHolder()
 
     override fun getSessions(): Flow<List<McpSession>> = sessions.onStart { loadSessions(force = false) }
+
+    override suspend fun getAgent(clientId: String): McpAgent {
+        agentStore.getOrNull(clientId)?.let { return it }
+
+        return mcpApi.getClient(clientId = clientId)
+            .toEither()
+            .map(mcpClientConverter::convert)
+            .onRight { agentStore.store(it) }
+            .onLeft { TangemLogger.withTag(TAG).e("Agent $clientId cannot be looked up, treating it as unknown", it) }
+            .getOrElse { McpAgent.unknown(clientId) }
+    }
 
     override suspend fun getDeviceVerification(userCode: String): Either<Throwable, McpDeviceVerification> {
         val response = mcpApi.getDeviceVerification(userCode = userCode)

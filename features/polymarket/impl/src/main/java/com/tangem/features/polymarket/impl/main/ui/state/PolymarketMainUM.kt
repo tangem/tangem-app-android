@@ -3,10 +3,12 @@ package com.tangem.features.polymarket.impl.main.ui.state
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
 import kotlinx.collections.immutable.ImmutableList
 
 /**
- * @property categories empty when the backend could not serve them — the feed then runs unfiltered
+ * @property categories empty while they load and when the backend could not serve them — the feed is then not
+ *  requested and [content] shows the reload prompt
  * @property pendingScrollPosition applied by the screen once the returned-to category is laid out, then cleared
  */
 @Immutable
@@ -30,7 +32,10 @@ internal data class PolymarketMainUM(
             val footer: PolymarketFeedFooterUM,
         ) : ContentUM
 
-        /** Also an empty category: the design shows one reload prompt for both. */
+        /** The category has no events: the first page came back empty and ended the feed. */
+        data object Empty : ContentUM
+
+        /** A failed request — of the categories or of the first page; the prompt retries whichever failed. */
         data class Error(val onReloadClick: () -> Unit) : ContentUM
     }
 }
@@ -49,10 +54,12 @@ internal sealed interface PolymarketFeedFooterUM {
 @Immutable
 internal data class PolymarketFeedScrollPosition(val index: Int, val offset: Int)
 
+/** @property icon drawn before the label, `null` shows the label alone */
 @Immutable
 internal data class PolymarketCategoryTabUM(
     val id: Int,
     val label: String,
+    val icon: PolymarketCategoryIcon?,
     val isSelected: Boolean,
     val onClick: () -> Unit,
 )

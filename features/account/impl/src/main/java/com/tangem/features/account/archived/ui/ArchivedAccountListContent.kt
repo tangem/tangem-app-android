@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIconPreviewData
 import com.tangem.common.ui.account.AccountRowLegacy
 import com.tangem.core.res.R
@@ -48,7 +49,7 @@ internal fun ArchivedAccountListContent(state: AccountArchivedUM, modifier: Modi
         AppBarWithBackButton(
             text = stringResourceSafe(R.string.account_archived_title),
             onBackClick = state.onCloseClick,
-            modifier = Modifier.height(TangemTheme.dimens.size56),
+            modifier = Modifier.height(56.dp),
         )
 
         Column(
@@ -86,7 +87,7 @@ private fun ArchiveAccountError(state: AccountArchivedUM.Error, modifier: Modifi
         contentAlignment = Alignment.Center,
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -115,7 +116,7 @@ private fun ArchiveAccountContent(state: AccountArchivedUM.Content, modifier: Mo
                 item = account,
                 modifier = Modifier.roundedShapeItemDecoration(
                     backgroundColor = TangemTheme.colors.background.primary,
-                    radius = TangemTheme.dimens.radius20,
+                    radius = 20.dp,
                     currentIndex = index,
                     addDefaultPadding = true,
                     lastIndex = state.accounts.lastIndex,
@@ -131,10 +132,10 @@ private fun ArchivedAccountRow(item: ArchivedAccountUM, modifier: Modifier = Mod
         modifier = modifier
             .fillMaxWidth()
             .clickable(enabled = !item.isLoading, onClick = item.onClick)
-            .padding(all = TangemTheme.dimens.spacing12)
+            .padding(all = 12.dp)
             .testTag(ArchivedAccountsScreenTestTags.ARCHIVED_ACCOUNT_ITEM),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         val subtitle = stringResourceSafe(
             id = R.string.account_label_tokens_info,

@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.grid.entity.EnumeratedTwoColumnGridItem
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -33,12 +34,12 @@ fun EnumeratedTwoColumnGrid(items: ImmutableList<EnumeratedTwoColumnGridItem>, m
         items = items,
     ) { item ->
         Row(
-            modifier = Modifier.padding(all = TangemTheme.dimens.size8),
+            modifier = Modifier.padding(all = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (LocalLayoutDirection.current == LayoutDirection.Ltr) {
                 Text(
-                    modifier = Modifier.width(TangemTheme.dimens.size40),
+                    modifier = Modifier.width(40.dp),
                     text = "${item.index}.",
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.secondary,
@@ -55,7 +56,7 @@ fun EnumeratedTwoColumnGrid(items: ImmutableList<EnumeratedTwoColumnGridItem>, m
                     color = TangemTheme.colors.text.primary1,
                 )
                 Text(
-                    modifier = Modifier.width(TangemTheme.dimens.size40),
+                    modifier = Modifier.width(40.dp),
                     text = "${item.index}.",
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.secondary,

@@ -119,7 +119,7 @@ private fun Content(contentPadding: PaddingValues, state: NewsDetailsUM, backgro
                                 .align(Alignment.BottomCenter)
                                 .windowInsetsPadding(WindowInsets.navigationBars),
                             colors = TangemPagerIndicatorColors.copy(
-                                overlay = TangemTheme.colors3.bg.opaque.secondary.copy(PAGER_BG_ALPHA),
+                                overlay = TangemTheme.colors3.bg.transparent.secondary.copy(PAGER_BG_ALPHA),
                             ),
                             hazeState = localHaze,
                         )

@@ -44,15 +44,15 @@ class GetOnrampQuotesUseCase(
      * 2. Smallest difference between entered amount and required min/max amount
      */
     private fun Sequence<Map.Entry<PaymentMethodType, List<OnrampQuote>>>.sortByRate() = map { grouped ->
-        grouped.value.sortedByDescending {
-            when (it) {
-                is OnrampQuote.Data -> it.toAmount.value
+        grouped.value.sortedByDescending { quote ->
+            when (quote) {
+                is OnrampQuote.Data -> quote.toAmount.value
                 is OnrampQuote.Error -> null
                 // negative difference to sort both when data and unavailable is present
                 is OnrampQuote.AmountError -> {
-                    when (val error = it.error) {
-                        is OnrampError.AmountError.TooSmallError -> it.fromAmount.value - error.requiredAmount
-                        is OnrampError.AmountError.TooBigError -> error.requiredAmount - it.fromAmount.value
+                    when (val error = quote.error) {
+                        is OnrampError.AmountError.TooSmallError -> quote.fromAmount.value - error.requiredAmount
+                        is OnrampError.AmountError.TooBigError -> error.requiredAmount - quote.fromAmount.value
                     }
                 }
             }

@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
@@ -60,13 +61,13 @@ inline fun ChainRowContainer(
 ) {
     RowContentContainer(
         modifier = modifier
-            .heightIn(min = TangemTheme.dimens.size68)
-            .padding(vertical = TangemTheme.dimens.spacing8)
+            .heightIn(min = 68.dp)
+            .padding(vertical = 8.dp)
             .padding(
-                start = TangemTheme.dimens.spacing8,
-                end = TangemTheme.dimens.spacing12,
+                start = 8.dp,
+                end = 12.dp,
             ),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
         icon = icon,
         text = text,
         action = action,

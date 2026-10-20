@@ -40,6 +40,7 @@ internal class TxHistoryAnalyticsMappersTest : TxDetailsConverterTestBase() {
             TypeModel(onChain(TransactionType.Staking.Stake), expected = "Staking"),
             TypeModel(onChain(TransactionType.Staking.Unstake), expected = "Staking"),
             TypeModel(onChain(TransactionType.YieldSupply.Topup), expected = "Yield Supply"),
+            TypeModel(onChain(TransactionType.IncentiveClaim), expected = "Incentive Claim"),
             TypeModel(onChain(TransactionType.GaslessFee), expected = "Gasless Fee"),
             TypeModel(onChain(TransactionType.Operation(name = "Mint")), expected = "Mint"),
             TypeModel(onChain(TransactionType.UnknownOperation), expected = "Unknown"),
