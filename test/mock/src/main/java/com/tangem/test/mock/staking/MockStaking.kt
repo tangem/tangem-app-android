@@ -86,7 +86,7 @@ object MockStaking {
         network = NetworkType.ETHEREUM,
         symbol = "POL",
         decimals = 18,
-        coinGeckoId = "matic-network",
+        coinGeckoId = "polygon-ecosystem-token",
         address = POLYGON_CONTRACT,
     )
 
