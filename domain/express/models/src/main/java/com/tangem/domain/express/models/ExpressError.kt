@@ -35,6 +35,8 @@ sealed class ExpressError : Throwable() {
     /** The exchange intent exists, but belongs to another wallet than the one that asked for it. */
     data class IntentOfAnotherWalletError(override val code: Int) : ExpressError()
 
+    data class IntentNotFoundError(override val code: Int) : ExpressError()
+
     sealed class AmountError : ExpressError() {
         abstract val amount: BigDecimal
 
