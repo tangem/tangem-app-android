@@ -208,7 +208,6 @@ internal class DefaultDeriveAndSignSession @Inject constructor(
 
     private inner class RunScopedUnlock(private val hotWalletId: HotWalletId) {
 
-        private var isRequestedByThisRun = false
         private var wasUnlockedBeforeRun = false
         private var establishedByThisRun: UnlockHotWallet? = null
 
@@ -216,19 +215,15 @@ internal class DefaultDeriveAndSignSession @Inject constructor(
             val established = establishedByThisRun
             if (established != null && hotWalletAccessor.getContextualUnlock(hotWalletId) != null) return established
 
-            if (!isRequestedByThisRun) {
-                isRequestedByThisRun = true
-                wasUnlockedBeforeRun = hotWalletAccessor.getContextualUnlock(hotWalletId) != null
-            }
+            wasUnlockedBeforeRun = hotWalletAccessor.getContextualUnlock(hotWalletId) != null
             return hotWalletAccessor.unlockContextual(hotWalletId).also { establishedByThisRun = it }
         }
 
         fun clearIfEstablished() {
-            if (!isRequestedByThisRun || wasUnlockedBeforeRun) return
+            val established = establishedByThisRun ?: return
+            if (wasUnlockedBeforeRun) return
 
-            val current = hotWalletAccessor.getContextualUnlock(hotWalletId) ?: return
-            val established = establishedByThisRun
-            if (established == null || current === established) {
+            if (hotWalletAccessor.getContextualUnlock(hotWalletId) === established) {
                 hotWalletAccessor.clearContextualUnlock(hotWalletId)
             }
         }
