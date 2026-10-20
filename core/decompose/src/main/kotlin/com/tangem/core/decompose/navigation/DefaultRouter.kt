@@ -20,7 +20,7 @@ internal class DefaultRouter(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : Router, InstanceKeeper.Instance {
 
-    private val logger = TangemLogger.withTag("AppRouter")
+    private val logger = TangemLogger.withTag("Router")
 
     private val navigation: StackNavigation<Route>
         get() = navigationProvider.getOrCreate()
