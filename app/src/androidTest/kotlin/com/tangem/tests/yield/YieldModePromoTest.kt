@@ -13,6 +13,7 @@ import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.core.res.R as CoreResR
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Test
 
@@ -23,6 +24,7 @@ class YieldModePromoTest : BaseTestCase() {
         FeatureToggles.TWI_1762_YIELD_MODE_PROMO_ENABLED.rawName to true,
     )
 
+    @AllureId("12893")
     @DisplayName("Yield mode promo: the main screen offers the best APY among the wallet's tokens")
     @Test
     fun promoShownOnMainScreenTest() {
