@@ -35,6 +35,7 @@ import com.tangem.domain.polymarket.usecase.CreatePolymarketActivitySessionUseCa
 import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
 import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.usecase.GetAllPolymarketActivityUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCase
@@ -61,7 +62,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 internal object PolymarketDomainModule {
 
     @Provides
@@ -74,6 +75,16 @@ internal object PolymarketDomainModule {
         repository = repository,
         deriveAddresses = deriveAddresses,
         dispatchers = dispatchers,
+    )
+
+    @Provides
+    @Singleton
+    fun provideGetAllPolymarketActivityUseCase(
+        repository: PolymarketActivityRepository,
+        deriveAddresses: DerivePolymarketAddressesUseCase,
+    ): GetAllPolymarketActivityUseCase = GetAllPolymarketActivityUseCase(
+        repository = repository,
+        deriveAddresses = deriveAddresses,
     )
 
     @Provides

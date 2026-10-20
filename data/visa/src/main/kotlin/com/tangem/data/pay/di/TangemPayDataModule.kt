@@ -354,6 +354,20 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideGetTangemPayProductsAvailabilityUseCase(
+            checkTangemPayEligibilityForCustomerUseCase: CheckTangemPayEligibilityForCustomerUseCase,
+        ): GetTangemPayProductsAvailabilityUseCase {
+            return GetTangemPayProductsAvailabilityUseCase(checkTangemPayEligibilityForCustomerUseCase)
+        }
+
+        @Provides
+        fun provideGetTangemPayProductsAvailabilityForCountryUseCase(
+            checkTangemPayEligibilityUseCase: CheckTangemPayEligibilityUseCase,
+        ): GetTangemPayProductsAvailabilityForCountryUseCase {
+            return GetTangemPayProductsAvailabilityForCountryUseCase(checkTangemPayEligibilityUseCase)
+        }
+
+        @Provides
         fun provideJoinTangemPayWaitlistUseCase(
             waitlistRepository: TangemPayWaitlistRepository,
         ): JoinTangemPayWaitlistUseCase {

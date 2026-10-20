@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.data.yield.supply.converters.YieldMarketTokenConverter
 import com.tangem.core.remote.response.ApiResponse
@@ -109,7 +110,7 @@ internal class DefaultYieldSupplyRepositoryTest {
     }
 
     @Test
-    fun `GIVEN api returns markets WHEN updateMarkets THEN stores dtos and returns domain`() = runTest {
+    fun `GIVEN api returns markets WHEN updateMarkets THEN stores dtos and returns them with network ids`() = runTest {
         // Arrange
         val dto = marketDto(chainId = 1)
         coEvery { yieldSupplyApi.getYieldMarkets(any()) } returns ApiResponse.Success(
@@ -120,7 +121,7 @@ internal class DefaultYieldSupplyRepositoryTest {
         val result = repository.updateMarkets()
 
         // Assert
-        assertThat(result).containsExactly(YieldMarketTokenConverter.convert(dto))
+        assertThat(result).containsExactly(YieldMarketTokenConverter.convert(dto).copy(backendId = "ethereum"))
         coVerify(exactly = 1) { store.store(listOf(dto)) }
     }
 
@@ -139,7 +140,7 @@ internal class DefaultYieldSupplyRepositoryTest {
         val result = incentivisedRepository.updateMarkets()
 
         // Assert
-        assertThat(result).containsExactly(YieldMarketTokenConverter.convert(incentivised))
+        assertThat(result).containsExactly(YieldMarketTokenConverter.convert(incentivised).copy(backendId = "ethereum"))
         coVerify(exactly = 1) { store.store(listOf(incentivised)) }
         coVerify(exactly = 1) { yieldSupplyApi.getYieldMarkets(supportedChains()) }
         coVerify(exactly = 1) { yieldIncentivesApi.getIncentiveMarkets(chainId = supportedChains(), isForEarn = null) }
@@ -191,8 +192,8 @@ internal class DefaultYieldSupplyRepositoryTest {
 
             // Assert — the incentivised row wins where the two overlap
             assertThat(result).containsExactly(
-                YieldMarketTokenConverter.convert(incentivised),
-                YieldMarketTokenConverter.convert(legacyElsewhere),
+                YieldMarketTokenConverter.convert(incentivised).copy(backendId = "ethereum"),
+                YieldMarketTokenConverter.convert(legacyElsewhere).copy(backendId = Blockchain.Polygon.toNetworkId()),
             )
             coVerify(exactly = 1) { store.store(listOf(incentivised, legacyElsewhere)) }
         }
@@ -232,7 +233,7 @@ internal class DefaultYieldSupplyRepositoryTest {
             val result = incentivisedRepository.updateMarkets()
 
             // Assert
-            assertThat(result).containsExactly(YieldMarketTokenConverter.convert(dto))
+            assertThat(result).containsExactly(YieldMarketTokenConverter.convert(dto).copy(backendId = "ethereum"))
             coVerify(exactly = 1) { store.store(listOf(dto)) }
         }
 
@@ -268,7 +269,9 @@ internal class DefaultYieldSupplyRepositoryTest {
             val result = incentivisedRepository.updateMarkets()
 
             // Assert
-            assertThat(result).containsExactly(YieldMarketTokenConverter.convert(incentivised))
+            assertThat(result).containsExactly(
+                YieldMarketTokenConverter.convert(incentivised).copy(backendId = "ethereum"),
+            )
         }
 
     @Test
