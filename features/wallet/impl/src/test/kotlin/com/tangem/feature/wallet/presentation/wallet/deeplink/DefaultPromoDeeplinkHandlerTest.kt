@@ -24,6 +24,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
+import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.domain.wallets.models.PromoCodeActivation
 import com.tangem.domain.wallets.models.PromoPayout
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
@@ -35,6 +36,7 @@ import com.tangem.feature.wallet.deeplink.DefaultPromoDeeplinkHandler
 import com.tangem.feature.wallet.deeplink.analytics.PromoActivationError
 import com.tangem.feature.wallet.deeplink.analytics.PromoBannerAnalytics
 import com.tangem.feature.wallet.impl.R
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -49,7 +51,9 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
@@ -520,6 +524,150 @@ class DefaultPromoDeeplinkHandlerTest {
             analyticsEventHandler.send(
                 failedWith(PromoActivationError.CampaignExpired),
             )
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ReferralBinding {
+
+        private val promoCode = "PROMO123"
+        private val refcode = "REFCODE"
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(
+                appsFlyerRepository,
+                bindRefcodeWithWalletUseCase,
+                activatePromoCodeUseCase,
+                getSelectedWalletSyncUseCase,
+                multiNetworkStatusSupplier,
+                multiWalletCryptoCurrenciesSupplier,
+            )
+        }
+
+        @Test
+        fun `GIVEN ref without promo code WHEN init THEN refcode is stored and bound`() = runTest {
+            // Arrange
+            every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(mockUserWallet("ABCDEF"))
+            arrangeBinding()
+            val expected = AppsFlyerConversionData(refcode = refcode, campaign = null)
+
+            // Act
+            createHandler(queryParams = mapOf(DeeplinkConst.REF_KEY to refcode))
+            advanceUntilIdle()
+
+            // Assert
+            coVerifyOrder {
+                appsFlyerRepository.storeIfAbsent(expected)
+                bindRefcodeWithWalletUseCase.invoke(expected)
+            }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN invalid ref WHEN init THEN refcode is neither stored nor bound`(invalidRef: String) = runTest {
+            // Arrange
+            every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(mockUserWallet("ABCDEF"))
+
+            // Act
+            createHandler(queryParams = mapOf(DeeplinkConst.REF_KEY to invalidRef))
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { appsFlyerRepository.storeIfAbsent(any()) }
+            coVerify(exactly = 0) { bindRefcodeWithWalletUseCase.invoke(any()) }
+        }
+
+        @Test
+        fun `GIVEN valid ref and campaign with promo code WHEN activation succeeds THEN refcode is stored and bound`() =
+            runTest {
+                // Arrange
+                arrangeBitcoinActivation(result = Either.Right(activation))
+                arrangeBinding()
+                val expected = AppsFlyerConversionData(refcode = refcode, campaign = "spring")
+
+                // Act
+                createHandler(
+                    queryParams = mapOf(
+                        DeeplinkConst.PROMO_CODE_KEY to promoCode,
+                        DeeplinkConst.REF_KEY to refcode,
+                        DeeplinkConst.CAMPAIGN_KEY to "spring",
+                    ),
+                )
+                advanceUntilIdle()
+
+                // Assert
+                coVerifyOrder {
+                    appsFlyerRepository.storeIfAbsent(expected)
+                    bindRefcodeWithWalletUseCase.invoke(expected)
+                }
+            }
+
+        @Test
+        fun `GIVEN valid ref and null literal campaign WHEN init THEN refcode is bound without campaign`() = runTest {
+            // Arrange
+            every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(mockUserWallet("ABCDEF"))
+            arrangeBinding()
+            val expected = AppsFlyerConversionData(refcode = refcode, campaign = null)
+
+            // Act
+            createHandler(queryParams = mapOf(DeeplinkConst.REF_KEY to refcode, DeeplinkConst.CAMPAIGN_KEY to "null"))
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { appsFlyerRepository.storeIfAbsent(expected) }
+            coVerify(exactly = 1) { bindRefcodeWithWalletUseCase.invoke(expected) }
+        }
+
+        @Test
+        fun `GIVEN ref with surrounding spaces WHEN init THEN trimmed refcode is bound`() = runTest {
+            // Arrange
+            every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(mockUserWallet("ABCDEF"))
+            arrangeBinding()
+            val expected = AppsFlyerConversionData(refcode = refcode, campaign = null)
+
+            // Act
+            createHandler(queryParams = mapOf(DeeplinkConst.REF_KEY to " $refcode "))
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { appsFlyerRepository.storeIfAbsent(expected) }
+            coVerify(exactly = 1) { bindRefcodeWithWalletUseCase.invoke(expected) }
+        }
+
+        @Test
+        fun `GIVEN valid ref WHEN promo activation fails THEN refcode is still stored and bound`() = runTest {
+            // Arrange
+            arrangeBitcoinActivation(result = Either.Left(ActivatePromoCodeError.InvalidPromoCode))
+            arrangeBinding()
+            val expected = AppsFlyerConversionData(refcode = refcode, campaign = null)
+
+            // Act
+            createHandler(
+                queryParams = mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode, DeeplinkConst.REF_KEY to refcode),
+            )
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { appsFlyerRepository.storeIfAbsent(expected) }
+            coVerify(exactly = 1) { bindRefcodeWithWalletUseCase.invoke(expected) }
+        }
+
+        private fun provideTestModels() = listOf("null", "NULL", " ", "")
+
+        private fun arrangeBitcoinActivation(result: Either<ActivatePromoCodeError, PromoCodeActivation>) {
+            every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(mockUserWallet("ABCDEF"))
+            val btcStatus = buildNetworkStatus(rawNetworkId = Blockchain.Bitcoin.toNetworkId(), address = "bc1qxyz")
+            coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatus))
+            val btcCoin = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.toNetworkId())
+            coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(btcCoin)
+            coEvery { activatePromoCodeUseCase.invoke(any(), "bc1qxyz", promoCode, null) } returns result
+        }
+
+        private fun arrangeBinding() {
+            coEvery { appsFlyerRepository.storeIfAbsent(any()) } just runs
+            coEvery { bindRefcodeWithWalletUseCase.invoke(any()) } returns Either.Right(Unit)
         }
     }
 
