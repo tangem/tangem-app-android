@@ -65,7 +65,6 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     private val expressConverter = ExpressTxToDetailsUMConverter(
         currency = currency,
         onGoToProvider = onGoToProvider,
-        onCopyAddress = onCopyAddress,
         lookup = lookup,
         menu = menu,
         refundCurrency = refundCurrency,
