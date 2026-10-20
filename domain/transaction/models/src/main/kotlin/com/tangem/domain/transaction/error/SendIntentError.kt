@@ -10,6 +10,10 @@ sealed class SendIntentError(override val message: String) : Throwable(message) 
     data class AlreadyCompleted(val intentId: String) :
         SendIntentError("Intent $intentId is already completed with another transaction")
 
+    /** The service failed on its side (HTTP 5xx) reading the intent, so reading it again may help. */
+    data class ServerError(val intentId: String, val httpCode: Int) :
+        SendIntentError("Service failed with HTTP $httpCode reading intent $intentId")
+
     /** The amount is not a positive decimal number. */
     data class MalformedAmount(val intentId: String, val amount: String) :
         SendIntentError("Intent $intentId carries a malformed amount: $amount")
