@@ -25,7 +25,7 @@ internal class MultiWalletActionButtonsSubscriber @AssistedInject constructor(
         stateController.update(
             UpdateMultiWalletActionButtonBadgeTransformer(
                 userWalletId = userWallet.walletId,
-                showSwapBadge = isSwapStoriesNotNull,
+                shouldShowSwapBadge = isSwapStoriesNotNull,
             ),
         )
     }

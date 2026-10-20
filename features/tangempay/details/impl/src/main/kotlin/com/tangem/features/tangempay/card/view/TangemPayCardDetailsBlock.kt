@@ -275,10 +275,10 @@ private fun CardBgWrapper(
                 rotationY = rotateCardY
                 cameraDistance = zAxisDistance
             }
-            .clip(RoundedCornerShape(TangemTheme.dimens2.x5))
+            .clip(RoundedCornerShape(20.dp))
             .border(
                 width = 1.dp,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+                shape = RoundedCornerShape(20.dp),
                 color = TangemTheme.colors3.border.primary,
             )
             .background(CardBackgroundColor),
@@ -376,7 +376,7 @@ private fun CardTopBlock(modifier: Modifier = Modifier) {
             color = TangemTheme.colors3.text.staticDark.primary,
         )
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens2.x5),
+            modifier = Modifier.size(20.dp),
             imageVector = ImageVector.vectorResource(R.drawable.ic_cloud_fill_16),
             tint = TangemTheme.colors3.icon.staticDark,
             contentDescription = null,
@@ -425,7 +425,7 @@ private fun DisplayOnlyCardDisplayName(state: DisplayNameState.Display, modifier
                 condition = state.isEditingEnabled,
                 modifier = { clickable(onClick = state.onClick) },
             ),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -438,7 +438,7 @@ private fun DisplayOnlyCardDisplayName(state: DisplayNameState.Display, modifier
             Icon(
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_edit_card_20),
                 contentDescription = null,
-                modifier = Modifier.size(TangemTheme.dimens2.x5),
+                modifier = Modifier.size(20.dp),
                 tint = TangemTheme.colors3.icon.staticDark,
             )
         }

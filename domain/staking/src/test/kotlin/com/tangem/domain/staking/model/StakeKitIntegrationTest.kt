@@ -31,16 +31,16 @@ internal class StakeKitIntegrationTest {
 
     private val dummyEnter = Yield.Args.Enter(
         addresses = Yield.Args.Enter.Addresses(
-            address = AddressArgument(required = false),
+            address = AddressArgument(isRequired = false),
         ),
         args = emptyMap(),
     )
 
     private val dummyArgs = Yield.Args(enter = dummyEnter, exit = null)
 
-    private val dummyStatus = Yield.Status(enter = true, exit = null)
+    private val dummyStatus = Yield.Status(canEnter = true, canExit = null)
 
-    private val dummyEnabled = Yield.Metadata.Enabled(enabled = true)
+    private val dummyEnabled = Yield.Metadata.Enabled(isEnabled = true)
 
     private fun buildYield(
         warmupPeriod: Yield.Metadata.Period,
@@ -70,7 +70,7 @@ internal class StakeKitIntegrationTest {
                 rewardClaiming = Yield.Metadata.RewardClaiming.AUTO,
                 defaultValidator = null,
                 minimumStake = null,
-                supportsMultipleValidators = false,
+                isMultipleValidatorsSupported = false,
                 revshare = dummyEnabled,
                 fee = dummyEnabled,
             ),

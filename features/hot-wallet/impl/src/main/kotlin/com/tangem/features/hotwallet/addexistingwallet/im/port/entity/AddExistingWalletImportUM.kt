@@ -12,10 +12,10 @@ internal data class AddExistingWalletImportUM(
     val onPassphraseInfoClick: () -> Unit,
     val wordsErrorText: TextReference?,
     val invalidWords: ImmutableList<String>,
-    val importWalletEnabled: Boolean,
-    val importWalletProgress: Boolean,
+    val isImportWalletEnabled: Boolean,
+    val isImportWalletInProgress: Boolean,
     val importWalletClick: () -> Unit,
     val suggestionsList: ImmutableList<String>,
     val onSuggestionClick: (String) -> Unit,
-    val readyToImport: Boolean,
+    val isReadyToImport: Boolean,
 )
