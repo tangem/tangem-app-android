@@ -2,7 +2,6 @@ package com.tangem.features.feed.search.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -10,64 +9,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.unit.Dp
-import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.shtorka.LocalShtorkaSurfaceOpacity
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.feed.nav.FeedEmptySearchComponent
-import com.tangem.features.feed.search.ui.state.RecentQueryUM
 import com.tangem.features.feed.ui.FeedTabRow
 import com.tangem.features.feed.ui.FeedTabUM
 import com.tangem.features.feed.v2.FeedV2Component
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.ImmutableList
-
-/**
- * Shown while the query is blank. There is no tab row in this state — searching has not started, so
- * there is no scope to pick.
- */
-@Composable
-internal fun FeedSearchPlaceholder(
-    recentQueries: ImmutableList<RecentQueryUM>,
-    marketList: FeedEmptySearchComponent?,
-    bottomSheetState: State<BottomSheetState>,
-    contentPadding: PaddingValues,
-    modifier: Modifier = Modifier,
-) {
-    val recent: @Composable () -> Unit = {
-        if (recentQueries.isNotEmpty()) {
-            FeedSearchRecent(queries = recentQueries)
-        }
-    }
-
-    SearchScreenScaffold(
-        fadeHeight = contentPadding.calculateTopPadding(),
-        modifier = modifier,
-    ) { contentModifier ->
-        if (marketList == null) {
-            Column(modifier = contentModifier.padding(top = contentPadding.calculateTopPadding())) {
-                recent()
-            }
-        } else {
-            marketList.Content(
-                bottomSheetState = bottomSheetState,
-                contentPadding = contentPadding,
-                modifier = contentModifier,
-                header = recent,
-            )
-        }
-    }
-}
 
 /**
  * Search results: the feed's tab row over the selected tab's own list. The row is the same set and
