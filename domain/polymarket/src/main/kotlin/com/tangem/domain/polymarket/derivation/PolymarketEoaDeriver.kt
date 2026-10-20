@@ -2,7 +2,7 @@ package com.tangem.domain.polymarket.derivation
 
 import arrow.core.Either
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PolymarketDerivationError
+import com.tangem.domain.polymarket.model.PolymarketSigningError
 
 /**
  * The Polymarket owner-EOA derivation path. Must match iOS/SDK byte-for-byte — pinned by a unit test.
@@ -19,7 +19,7 @@ interface PolymarketEoaDeriver {
      * Derives the owner EOA, deriving the key on the wallet when it is not stored yet — which opens a card
      * session on Cold and unlocks the seed on Hot. Only ever reach this from an explicit user action.
      */
-    suspend fun deriveOwnerEoa(userWalletId: UserWalletId): Either<PolymarketDerivationError, String>
+    suspend fun deriveOwnerEoa(userWalletId: UserWalletId): Either<PolymarketSigningError, String>
 
     /**
      * The owner EOA if the key is already stored on this device, `null` otherwise.
