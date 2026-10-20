@@ -11,7 +11,6 @@ import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.data.polymarket.builder.PolymarketErc7739SignatureBuilder
-import com.tangem.data.polymarket.derivation.PolymarketAddressFactory
 import com.tangem.data.polymarket.secp256k1SeedKey
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
@@ -24,12 +23,10 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.derivation.POLYMARKET_OWNER_DERIVATION_PATH
 import com.tangem.domain.polymarket.approval.PolymarketContracts
-import com.tangem.domain.polymarket.model.PolymarketOnboardingSignatures
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrder
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import com.tangem.domain.polymarket.signing.PolymarketApprovalsPayload
-import com.tangem.domain.polymarket.signing.PolymarketClobAuthData
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.domain.polymarket.signing.PredictionOrderPayload
 import com.tangem.domain.wallets.derivations.DerivationsRepository
@@ -43,31 +40,10 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
     private val derivationsRepository: DerivationsRepository,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val hotSignerFactory: TangemHotWalletSigner.Factory,
-    private val addressFactory: PolymarketAddressFactory,
     private val digestFactory: PolymarketDigestFactory,
     private val formatter: PolymarketSignatureFormatter,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketTypedDataSigner {
-
-    override suspend fun signOnboarding(
-        userWalletId: UserWalletId,
-        clobAuth: PolymarketClobAuthData,
-        approvals: PolymarketApprovalsPayload,
-    ): Either<PolymarketSigningError, PolymarketOnboardingSignatures> = Either
-        .catchOn(dispatchers.io) {
-            val context = signingContext(userWalletId).getOrElse { return@catchOn it.left() }
-            val clobDigest = clobDigest(context, clobAuth)
-            val batchDigest = digestFactory.relayedBatch(approvals)
-
-            val signatures = sign(context, listOf(clobDigest, batchDigest))
-                .getOrElse { return@catchOn it.left() }
-
-            PolymarketOnboardingSignatures(
-                l1Signature = formatter.format(signatures[0], clobDigest, context.publicKey),
-                batchSignature = formatter.format(signatures[1], batchDigest, context.publicKey),
-            ).right()
-        }
-        .getOrElse { it.toPolymarketSigningError().left() }
 
     override suspend fun signOrder(
         userWalletId: UserWalletId,
@@ -111,19 +87,6 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
         builder = draft.builderCode,
     )
 
-    override suspend fun signClobAuth(
-        userWalletId: UserWalletId,
-        clobAuth: PolymarketClobAuthData,
-    ): Either<PolymarketSigningError, String> = Either
-        .catchOn(dispatchers.io) {
-            val context = signingContext(userWalletId).getOrElse { return@catchOn it.left() }
-            val digest = clobDigest(context, clobAuth)
-            val signatures = sign(context, listOf(digest)).getOrElse { return@catchOn it.left() }
-
-            formatter.format(signatures[0], digest, context.publicKey).right()
-        }
-        .getOrElse { it.toPolymarketSigningError().left() }
-
     override suspend fun signRelayedBatch(
         userWalletId: UserWalletId,
         payload: PolymarketApprovalsPayload,
@@ -150,9 +113,6 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
             publicKey = publicKey(seedKey = seedKey, ownerKey = ownerKey),
         ).right()
     }
-
-    private fun clobDigest(context: SigningContext, clobAuth: PolymarketClobAuthData): ByteArray =
-        digestFactory.clobAuth(addressFactory.createAddress(context.ownerKey), clobAuth)
 
     private suspend fun sign(
         context: SigningContext,

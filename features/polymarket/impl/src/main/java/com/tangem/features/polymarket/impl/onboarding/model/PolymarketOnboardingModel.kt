@@ -169,7 +169,6 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private fun render(progress: PolymarketOnboardingProgress) {
         when (progress) {
-            PolymarketOnboardingProgress.Deriving,
             PolymarketOnboardingProgress.AwaitingSignature,
             is PolymarketOnboardingProgress.Working,
             -> updateAction { it.copyInProgress(isInProgress = true) }
