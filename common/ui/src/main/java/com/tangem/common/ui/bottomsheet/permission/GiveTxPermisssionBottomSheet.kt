@@ -108,7 +108,7 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             onClick = content.onCancel,
-            enabled = data.cancelButton.enabled,
+            enabled = data.cancelButton.isEnabled,
         )
 
         SpacerH16()

@@ -13,5 +13,5 @@ data class WcSession(
     val sdkModel: WcSdkSession,
     val securityStatus: CheckDAppResult,
     val connectingTime: Long?,
-    val showWalletInfo: Boolean,
+    val shouldShowWalletInfo: Boolean,
 )

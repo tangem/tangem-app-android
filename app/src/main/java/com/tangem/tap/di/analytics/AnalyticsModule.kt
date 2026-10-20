@@ -11,6 +11,7 @@ import com.tangem.tap.common.analytics.DefaultTrackingContextProxy
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAppInstanceIdProvider
 import com.tangem.tap.common.analytics.handlers.opentelemetry.DefaultOtelFeatureToggles
 import com.tangem.tap.common.analytics.handlers.opentelemetry.OtelFeatureToggles
+import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,10 +29,12 @@ internal object AnalyticsModule {
         paramsInterceptorHolder: ParamsInterceptorHolder,
         userIdHandler: AnalyticsUserIdHandler,
         observers: Set<@JvmSuppressWildcards TrackingContextProxy.Observer>,
+        cardContextInterceptorFactory: CardContextInterceptor.Factory,
     ): TrackingContextProxy = DefaultTrackingContextProxy(
         paramsInterceptorHolder = paramsInterceptorHolder,
         userIdHandler = userIdHandler,
         observers = observers,
+        cardContextInterceptorFactory = cardContextInterceptorFactory,
     )
 
     @Provides

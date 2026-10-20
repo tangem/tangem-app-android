@@ -122,7 +122,7 @@ internal class PolymarketFeedPoller(
                 BatchAction.UpdateBatches(
                     keys = setOf(key),
                     updateRequest = PolymarketEventsUpdateRequest(batchKey = key, config = config),
-                    async = true,
+                    isAsync = true,
                     operationId = REFRESH_OPERATION_PREFIX + key,
                 ),
             )

@@ -479,7 +479,7 @@ internal class ExchangeIntentOfferConverterTest {
         from: CryptoCurrency = usdt,
         to: CryptoCurrency = pol,
         onProceed: () -> Unit = {},
-    ): ExchangeIntentUM.Offer? = converter.convert(
+    ): ExchangeIntentUM? = converter.convert(
         ExchangeIntentOfferConverter.Input(intent = intent, from = from, to = to, agent = agent, onProceed = onProceed),
     )
 

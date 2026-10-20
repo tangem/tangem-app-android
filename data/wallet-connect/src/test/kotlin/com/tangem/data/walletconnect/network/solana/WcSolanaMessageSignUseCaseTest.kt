@@ -59,7 +59,7 @@ internal class WcSolanaMessageSignUseCaseTest {
                 namespaces = mapOf(),
                 appMetaData = WcAppMetaData(name = "", description = "", url = "", icons = listOf(), redirect = ""),
             ),
-            showWalletInfo = false,
+            shouldShowWalletInfo = false,
         ),
     )
 

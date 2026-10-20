@@ -34,6 +34,7 @@ class ExpressErrorConverter(
 
                 2320 -> error.toProviderDifferentAmountError()
 
+                2600 -> ExpressError.IntentNotFoundError(code = error.code)
                 2610 -> ExpressError.IntentOfAnotherWalletError(code = error.code)
                 else -> ExpressError.DataError(error.code, error.description)
             }

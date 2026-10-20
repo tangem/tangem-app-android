@@ -87,7 +87,7 @@ internal fun OnboardingVisaWelcome(state: OnboardingVisaWelcomeUM, modifier: Mod
                         .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                         .fillMaxWidth(),
                     text = stringResourceSafe(R.string.visa_onboarding_welcome_back_button_title),
-                    showProgress = state.continueButtonLoading,
+                    showProgress = state.isContinueButtonLoading,
                     iconResId = R.drawable.ic_tangem_24,
                     onClick = state.onContinueClick,
                 )

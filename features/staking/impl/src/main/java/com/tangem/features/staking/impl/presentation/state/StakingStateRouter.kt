@@ -24,10 +24,10 @@ internal class StakingStateRouter(
         when (stateController.value.currentStep) {
             StakingStep.InitialInfo -> when (val actionType = stateController.value.actionType) {
                 is StakingActionCommonType.Enter -> {
-                    if (actionType.skipEnterAmount) showConfirmation() else showAmount()
+                    if (actionType.shouldSkipEnterAmount) showConfirmation() else showAmount()
                 }
                 is StakingActionCommonType.Exit -> {
-                    if (actionType.partiallyUnstakeDisabled) showConfirmation() else showAmount()
+                    if (actionType.isPartiallyUnstakeDisabled) showConfirmation() else showAmount()
                 }
                 StakingActionCommonType.Pending.Other,
                 StakingActionCommonType.Pending.Rewards,
@@ -58,11 +58,11 @@ internal class StakingStateRouter(
             StakingStep.Confirmation -> {
                 when (val actionType = uiState.actionType) {
                     is StakingActionCommonType.Enter -> {
-                        if (actionType.skipEnterAmount) showInitial() else showAmount()
+                        if (actionType.shouldSkipEnterAmount) showInitial() else showAmount()
                     }
                     is StakingActionCommonType.Pending -> showInitial()
                     is StakingActionCommonType.Exit -> {
-                        if (actionType.partiallyUnstakeDisabled) showInitial() else showAmount()
+                        if (actionType.isPartiallyUnstakeDisabled) showInitial() else showAmount()
                     }
                 }
             }

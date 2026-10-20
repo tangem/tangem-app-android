@@ -108,7 +108,7 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
                         .fillMaxWidth(),
                     isVisible = state.hasChanges,
                     showProgress = state.isSavingInProgress,
-                    showIcon = state.needToInteractWithColdWallet,
+                    showIcon = state.shouldInteractWithColdWallet,
                     onClick = state.saveChanges,
                 )
             }

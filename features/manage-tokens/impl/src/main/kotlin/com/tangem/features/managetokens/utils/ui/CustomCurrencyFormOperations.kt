@@ -25,7 +25,7 @@ internal fun CustomTokenFormUM.updateTokenForm(
 
 internal fun CustomTokenFormUM.updateWithProgress(
     showProgress: Boolean,
-    isWasFilled: Boolean = this.tokenForm?.wasFilled ?: false,
+    isWasFilled: Boolean = this.tokenForm?.wasFilled == true,
     canAddToken: Boolean = this.canAddToken,
     walletInteractionIcon: Int? = this.walletInteractionIcon,
     clearNotifications: Boolean = false,

@@ -357,7 +357,7 @@ internal class UserWalletItemUMConverterTest {
             walletId = UserWalletId(stringValue = "011"),
             hotWalletId = HotWalletId(value = "hot", authType = HotWalletId.AuthType.NoPassword),
             wallets = if (isLocked) null else emptyList(),
-            backedUp = backedUp,
+            isBackedUp = backedUp,
         )
     }
 }

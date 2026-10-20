@@ -18,7 +18,7 @@ import com.tangem.feature.wallet.impl.R
 internal sealed class DraggableItem {
     abstract val id: Any
     abstract val roundingModeUM: RoundingModeUM
-    abstract val showShadow: Boolean
+    abstract val shouldShowShadow: Boolean
 
     /**
      * Item for network group header.
@@ -34,7 +34,7 @@ internal sealed class DraggableItem {
         val networkName: String,
         val accountId: String = "",
         override val roundingModeUM: RoundingModeUM = RoundingModeUM.None,
-        override val showShadow: Boolean = false,
+        override val shouldShowShadow: Boolean = false,
     ) : DraggableItem() {
 
         val groupTitle = TokensListItemUM.GroupTitle(
@@ -60,7 +60,7 @@ internal sealed class DraggableItem {
         val tokenItemState: TokenItemState.Draggable,
         val groupId: Int,
         val accountId: String = "",
-        override val showShadow: Boolean = false,
+        override val shouldShowShadow: Boolean = false,
         override val roundingModeUM: RoundingModeUM = RoundingModeUM.None,
     ) : DraggableItem() {
         override val id: String = tokenItemState.id
@@ -76,7 +76,7 @@ internal sealed class DraggableItem {
         override val id: String,
         val accountId: String = "",
     ) : DraggableItem() {
-        override val showShadow: Boolean = false
+        override val shouldShowShadow: Boolean = false
         override val roundingModeUM: RoundingModeUM = RoundingModeUM.None
     }
 
@@ -93,7 +93,7 @@ internal sealed class DraggableItem {
         val tokenItemState: TokenItemState,
     ) : DraggableItem() {
         override val id: String = tokenItemState.id
-        override val showShadow: Boolean = false
+        override val shouldShowShadow: Boolean = false
     }
 
     /**
@@ -121,7 +121,7 @@ internal sealed class DraggableItem {
         is Portfolio,
         is Placeholder,
         -> this
-        is GroupHeader -> this.copy(showShadow = show)
-        is Token -> this.copy(showShadow = show)
+        is GroupHeader -> this.copy(shouldShowShadow = show)
+        is Token -> this.copy(shouldShowShadow = show)
     }
 }

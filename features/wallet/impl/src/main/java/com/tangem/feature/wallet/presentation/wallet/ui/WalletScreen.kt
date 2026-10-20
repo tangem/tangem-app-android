@@ -452,7 +452,7 @@ private fun WalletContent(
                     .padding(bottom = 8.dp)
                     .padding(horizontal = 12.dp)
                     .fillMaxWidth(),
-                isVisible = state.showMarketsOnboarding,
+                isVisible = state.shouldShowMarketsOnboarding,
                 availableHeight = maxHeight,
                 sheetTopInset = 12.dp,
                 sheetTopOffset = remember(sheet) { sheet::topOffset },
@@ -601,8 +601,8 @@ private inline fun LegacySheetScaffoldWithMarkets(
             }
         }
 
-        LaunchedEffect(state.showMarketsOnboarding, bottomSheetState.targetValue) {
-            if (state.showMarketsOnboarding && bottomSheetState.targetValue == TangemSheetValue.Expanded) {
+        LaunchedEffect(state.shouldShowMarketsOnboarding, bottomSheetState.targetValue) {
+            if (state.shouldShowMarketsOnboarding && bottomSheetState.targetValue == TangemSheetValue.Expanded) {
                 state.onDismissMarketsTooltip()
             }
         }
@@ -729,8 +729,8 @@ private fun ShtorkaScaffoldWithMarkets(
             }
         }
 
-        LaunchedEffect(state.showMarketsOnboarding, isExpanded) {
-            if (state.showMarketsOnboarding && isExpanded) {
+        LaunchedEffect(state.shouldShowMarketsOnboarding, isExpanded) {
+            if (state.shouldShowMarketsOnboarding && isExpanded) {
                 state.onDismissMarketsTooltip()
             }
         }

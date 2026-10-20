@@ -10,7 +10,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
  */
 sealed class TechAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = "Tech", event = event, params = params) {
 
     class WindowObscured(state: ObscuredState) : TechAnalyticsEvent(

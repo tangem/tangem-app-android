@@ -40,6 +40,8 @@ import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelector
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -79,6 +81,13 @@ internal class GiveApprovalModel @Inject constructor(
         field = MutableStateFlow(
             GiveApprovalUM(
                 approveType = ApproveType.LIMITED,
+                // The Tron gasless service relays an exact approval only, and an unlimited one would keep
+                // every later gasless swap of this token over its allowance limit.
+                approveItems = if (params.isTronGaslessSupported) {
+                    persistentListOf(ApproveType.LIMITED)
+                } else {
+                    ApproveType.entries.toImmutableList()
+                },
                 walletInteractionIcon = walletInterationIcon(userWallet),
                 isApproveButtonEnabled = false,
                 isApproveLoading = false,

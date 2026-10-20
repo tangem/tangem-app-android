@@ -3,6 +3,8 @@ package com.tangem.core.decompose.navigation
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.utils.logging.Severity
+import com.tangem.utils.logging.TangemLogger
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -10,6 +12,7 @@ import io.mockk.verify
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -26,10 +29,25 @@ internal class DefaultRouterTest {
 
     private val router = DefaultRouter(navigationProvider, TestingCoroutineDispatcherProvider())
 
+    private val logs = mutableListOf<String>()
+    private val logWriter = object : TangemLogger.LogWriter {
+        override fun write(
+            severity: Severity,
+            tag: String,
+            message: String,
+            throwable: Throwable?,
+            shouldSanitize: Boolean,
+        ) {
+            logs += "$severity $tag $message"
+        }
+    }
+
     @BeforeEach
     fun setUp() {
         clearMocks(navigation, navigationProvider)
         results.clear()
+        logs.clear()
+        TangemLogger.setLogWriters(listOf(logWriter))
         stack = listOf(RouteA)
 
         every { navigationProvider.getOrCreate() } returns navigation
@@ -40,6 +58,11 @@ internal class DefaultRouterTest {
             stack = transformer(oldStack)
             callback(stack, oldStack)
         }
+    }
+
+    @AfterEach
+    fun tearDown() {
+        TangemLogger.setLogWriters(emptyList())
     }
 
     @Test
@@ -237,6 +260,34 @@ internal class DefaultRouterTest {
         // Assert
         assertThat(stack).containsExactly(RouteA, Details(id = 2), RouteB).inOrder()
         assertThat(results).containsExactly(false)
+    }
+
+    @Test
+    fun `GIVEN stack WHEN navigating THEN every operation is logged as info`() {
+        // Arrange
+        stack = listOf(RouteA, RouteB)
+
+        // Act
+        router.push(RouteC)
+        router.replaceCurrent(RouteB)
+        router.popTo(RouteA)
+        router.replaceAll(RouteA, RouteB)
+        router.pop()
+        router.popTo(RouteA::class)
+        router.popToMatching(RouteA::class, predicate = { true })
+        router.navigate(transformer = { listOf(RouteA, RouteC) })
+
+        // Assert
+        assertThat(logs).containsExactly(
+            "Info Router Push RouteC",
+            "Info Router Replace a current route with RouteB",
+            "Info Router Pop to RouteA",
+            "Info Router Replace all routes with [RouteA, RouteB]",
+            "Info Router Pop route",
+            "Info Router Pop to ${RouteA::class}",
+            "Info Router Pop to the last matching ${RouteA::class}",
+            "Info Router Rebuild the stack to [RouteA, RouteC]",
+        ).inOrder()
     }
 
     private data object RouteA : Route

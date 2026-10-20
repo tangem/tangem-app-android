@@ -11,16 +11,16 @@ internal fun AddCustomTokenConfig.Step.toContentModel(popBack: () -> Unit): AddC
     -> AddCustomTokenUM(
         popBack = popBack,
         title = resourceReference(R.string.add_custom_token_title),
-        showBackButton = false,
+        shouldShowBackButton = false,
     )
     AddCustomTokenConfig.Step.NETWORK_SELECTOR -> AddCustomTokenUM(
         popBack = popBack,
         title = resourceReference(R.string.custom_token_network_selector_title),
-        showBackButton = true,
+        shouldShowBackButton = true,
     )
     AddCustomTokenConfig.Step.DERIVATION_PATH_SELECTOR -> AddCustomTokenUM(
         popBack = popBack,
         title = resourceReference(R.string.custom_token_derivation_path),
-        showBackButton = true,
+        shouldShowBackButton = true,
     )
 }

@@ -17,11 +17,11 @@ private fun WalletState.MultiCurrency.Content.changeAvailability(enabled: Boolea
     return buttons
         .map { action ->
             when (action) {
-                is WalletManageButton.Buy -> action.copy(enabled = enabled)
-                is WalletManageButton.AddFunds -> action.copy(enabled = enabled)
-                is WalletManageButton.Sell -> action.copy(enabled = enabled)
-                is WalletManageButton.Transfer -> action.copy(enabled = enabled)
-                is WalletManageButton.Swap -> action.copy(enabled = enabled)
+                is WalletManageButton.Buy -> action.copy(isEnabled = enabled)
+                is WalletManageButton.AddFunds -> action.copy(isEnabled = enabled)
+                is WalletManageButton.Sell -> action.copy(isEnabled = enabled)
+                is WalletManageButton.Transfer -> action.copy(isEnabled = enabled)
+                is WalletManageButton.Swap -> action.copy(isEnabled = enabled)
                 else -> action
             }
         }
@@ -32,7 +32,7 @@ internal fun WalletState.MultiCurrency.Content.showSwapBadge(showBadge: Boolean)
     return buttons
         .map { action ->
             when (action) {
-                is WalletManageButton.Swap -> action.copy(showBadge = showBadge)
+                is WalletManageButton.Swap -> action.copy(shouldShowBadge = showBadge)
                 else -> action
             }
         }

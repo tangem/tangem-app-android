@@ -134,7 +134,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     override fun onDismissMarketsTooltip() {
-        stateHolder.update { it.copy(showMarketsOnboarding = false) }
+        stateHolder.update { it.copy(shouldShowMarketsOnboarding = false) }
         modelScope.launch {
             shouldShowMarketsTooltipUseCase(isShown = true)
         }

@@ -128,7 +128,7 @@ private fun WcAppInfoModalBottomSheetContent(state: WcAppInfoUM.Content, modifie
 
 @Composable
 private fun WcAppInfoFirstBlock(state: WcAppInfoUM.Content, modifier: Modifier = Modifier) {
-    var connectionRequestExpanded by remember { mutableStateOf(false) }
+    var isConnectionRequestExpanded by remember { mutableStateOf(false) }
     Column(modifier = modifier) {
         WcAppInfoItem(
             iconUrl = state.appIcon,
@@ -140,11 +140,11 @@ private fun WcAppInfoFirstBlock(state: WcAppInfoUM.Content, modifier: Modifier =
         ConnectionRequestBlock(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { connectionRequestExpanded = !connectionRequestExpanded }
+                .clickable { isConnectionRequestExpanded = !isConnectionRequestExpanded }
                 .padding(12.dp),
-            expanded = connectionRequestExpanded,
+            expanded = isConnectionRequestExpanded,
         )
-        if (connectionRequestExpanded) {
+        if (isConnectionRequestExpanded) {
             ConnectionRequestDescription(
                 modifier = Modifier
                     .padding(horizontal = 12.dp)
@@ -440,8 +440,8 @@ private fun WcAppInfoButtons(
                 .weight(1f),
             text = stringResourceSafe(R.string.wc_common_connect),
             onClick = connectButtonConfig.onClick,
-            showProgress = connectButtonConfig.showProgress,
-            enabled = connectButtonConfig.enabled,
+            showProgress = connectButtonConfig.shouldShowProgress,
+            enabled = connectButtonConfig.isEnabled,
         )
     }
 }
@@ -601,7 +601,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
         WcAppInfoUM.Loading(
             onDismiss = {},
             portfolioName = stringReference("Wallet"),
-            connectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = false, onClick = {}),
+            connectButtonConfig = WcPrimaryButtonConfig(shouldShowProgress = false, isEnabled = false, onClick = {}),
         ),
         WcAppInfoUM.Content(
             appName = "React App",
@@ -646,7 +646,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             ),
             onNetworksClick = {},
             onDismiss = {},
-            connectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = true, onClick = {}),
+            connectButtonConfig = WcPrimaryButtonConfig(shouldShowProgress = false, isEnabled = true, onClick = {}),
         ),
         WcAppInfoUM.Content(
             appName = "React App",
@@ -658,7 +658,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             networksInfo = WcNetworksInfo.MissingRequiredNetworkInfo(networks = "Solana"),
             onNetworksClick = {},
             onDismiss = {},
-            connectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = true, onClick = {}),
+            connectButtonConfig = WcPrimaryButtonConfig(shouldShowProgress = false, isEnabled = true, onClick = {}),
         ),
         WcAppInfoUM.Content(
             appName = "React App",
@@ -670,7 +670,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             networksInfo = WcNetworksInfo.MissingRequiredNetworkInfo(networks = "Solana"),
             onNetworksClick = {},
             onDismiss = {},
-            connectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = true, onClick = {}),
+            connectButtonConfig = WcPrimaryButtonConfig(shouldShowProgress = false, isEnabled = true, onClick = {}),
         ),
     ),
 )

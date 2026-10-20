@@ -21,7 +21,7 @@ import javax.inject.Inject
  * Returns `null` when the intent amount is not a positive number.
  */
 internal class SendIntentOfferConverter @Inject constructor() :
-    Converter<SendIntentOfferConverter.Input, SendIntentUM.Offer?> {
+    Converter<SendIntentOfferConverter.Input, SendIntentUM?> {
 
     data class Input(
         val intent: SendIntent,
@@ -30,11 +30,11 @@ internal class SendIntentOfferConverter @Inject constructor() :
         val onProceed: () -> Unit,
     )
 
-    override fun convert(value: Input): SendIntentUM.Offer? {
+    override fun convert(value: Input): SendIntentUM? {
         val amount = value.intent.amount.takeIf { it.signum() > 0 } ?: return null
         val agentIdentity = value.agent.origin ?: value.agent.name ?: Texts.UNKNOWN_AGENT_NAME
 
-        return SendIntentUM.Offer(
+        return SendIntentUM(
             token = value.currency.toTokenIcon(),
             title = Texts.offerTitle(agentIdentity = agentIdentity, amount = amount.toOfferAmount(value.currency)),
             agent = value.agent.toAgentUM(),

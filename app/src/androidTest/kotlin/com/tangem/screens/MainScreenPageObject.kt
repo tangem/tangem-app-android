@@ -586,8 +586,8 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
 
     /**
      * Tap target that raises the markets sheet. The legacy sheet exposes its grabber; the DS3
-     * shtorka (TWI_1608) drags instead of clicking, so it tags the transparent overlay over the
-     * collapsed search bar. Both builds ship until the toggle is retired — match either.
+     * shtorka (TWI_1608) drags instead of clicking, so it tags its search bar, which raises the
+     * sheet with the keyboard up. Both builds ship until the toggle is retired — match either.
      */
     val marketsSheetDragHandle: KNode = child {
         addSemanticsMatcher(

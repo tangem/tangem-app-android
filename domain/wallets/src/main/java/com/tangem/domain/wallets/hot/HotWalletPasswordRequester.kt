@@ -50,7 +50,7 @@ interface HotWalletPasswordRequester {
      */
     data class AttemptRequest(
         val hotWalletId: HotWalletId,
-        val authMode: Boolean,
+        val isAuthMode: Boolean,
         val hasBiometry: Boolean,
         val requestId: String = UUID.randomUUID().toString(),
     )
