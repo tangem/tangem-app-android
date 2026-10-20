@@ -2,8 +2,6 @@ package com.tangem.feature.swap.mcp.model
 
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.utils.pushOrReplaceCurrent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -44,7 +42,6 @@ private const val AGENT_LOOKUP_TIMEOUT_MILLIS = 3_000L
 internal class ExchangeIntentModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val appRouter: AppRouter,
     private val messageSender: UiMessageSender,
     private val getExchangeIntentUseCase: GetExchangeIntentUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
@@ -146,13 +143,19 @@ internal class ExchangeIntentModel @Inject constructor(
 
     /** Opens Swap in place of an open one, unless that one is an account flow: it is a different one using Swap. */
     private fun openSwap(route: AppRoute.Swap) {
-        val currentStack = appRouter.stack
-        val currentRoute = currentStack.lastOrNull()
-        if (currentRoute is AppRoute.Swap && currentRoute.accountFlow != null && route !in currentStack) {
-            appRouter.push(route)
-        } else {
-            appRouter.pushOrReplaceCurrent(route)
-        }
+        router.navigate(
+            transformer = { stack ->
+                val currentRoute = stack.lastOrNull()
+                val isAccountFlowOnTop = currentRoute is AppRoute.Swap && currentRoute.accountFlow != null
+                when {
+                    isAccountFlowOnTop && route !in stack -> stack + route
+                    currentRoute == route -> stack
+                    route in stack -> stack.take(stack.lastIndexOf(route) + 1)
+                    currentRoute is AppRoute.Swap -> stack.dropLast(1) + route
+                    else -> stack + route
+                }
+            },
+        )
     }
 
     private data class LoadedExchange(
