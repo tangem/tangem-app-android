@@ -36,5 +36,5 @@ class DummyRouter : Router {
         onComplete(true)
     }
 
-    override fun contains(route: Route): Boolean = false
+    override suspend fun contains(route: Route): Boolean = false
 }

@@ -173,15 +173,16 @@ internal class DefaultRouterTest {
     }
 
     @Test
-    fun `GIVEN reported stack WHEN contains THEN only routes of that stack are found`() {
+    fun `GIVEN stack WHEN contains THEN only routes of that stack are found and stack is unchanged`() = runTest {
         // Arrange
-        every { navigationProvider.stack } returns listOf(RouteA, RouteB)
+        stack = listOf(RouteA, RouteB)
 
         // Act
-        val actual = listOf(RouteA, RouteB, RouteC).map(router::contains)
+        val actual = listOf(RouteA, RouteB, RouteC).map { router.contains(it) }
 
         // Assert
         assertThat(actual).containsExactly(true, true, false).inOrder()
+        assertThat(stack).containsExactly(RouteA, RouteB).inOrder()
     }
 
     @Test

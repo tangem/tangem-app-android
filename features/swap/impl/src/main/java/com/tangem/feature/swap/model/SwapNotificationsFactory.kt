@@ -1,7 +1,6 @@
 package com.tangem.feature.swap.model
 
 import com.tangem.common.TangemSiteUrlBuilder
-import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWarningNotification
@@ -9,7 +8,6 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachable
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -128,7 +126,7 @@ internal class SwapNotificationsFactory(
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         swapFee: SwapFee?,
         feeError: GetFeeError?,
-        router: Router,
+        isFeeCurrencyInStack: Boolean,
         isHighNetworkFee: Boolean = false,
         lowSlippage: TextReference? = null,
     ): ImmutableList<NotificationUM> {
@@ -145,7 +143,7 @@ internal class SwapNotificationsFactory(
                 quoteModel = quoteModel,
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                 swapFee = swapFee,
-                router = router,
+                isFeeCurrencyInStack = isFeeCurrencyInStack,
             )
             maybeAddTransactionInProgressWarning(quoteModel)
             maybeAddPriceImpactNotification(quoteModel.priceImpact)
@@ -356,7 +354,7 @@ internal class SwapNotificationsFactory(
         quoteModel: SwapState.QuotesLoadedState,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         swapFee: SwapFee?,
-        router: Router,
+        isFeeCurrencyInStack: Boolean,
     ) {
         if (feeCryptoCurrencyStatus == null) return
         val fromSwapCurrency = quoteModel.fromTokenInfo.swapCurrencyStatus
@@ -384,19 +382,15 @@ internal class SwapNotificationsFactory(
                 if (fromCurrency.id == feeCryptoCurrencyStatus.currency.id) {
                     SwapNotificationUM.Error.InsufficientFunds
                 } else {
-                    val route = AppRoute.CurrencyDetails(
-                        userWalletId = fromSwapCurrency.userWalletId,
-                        currency = feeCryptoCurrencyStatus.currency,
-                    )
                     SwapNotificationUM.Error.UnableToCoverFeeWarning(
                         fromToken = fromCurrency,
                         feeCurrency = feeCryptoCurrencyStatus.currency,
                         currencyName = insufficientFee.feeCurrencyName ?: fromCurrency.network.name,
                         currencySymbol = insufficientFee.feeCurrencySymbol ?: fromCurrency.network.currencySymbol,
-                        onConfirmClick = if (!router.contains(route)) {
-                            { router.push(route) }
-                        } else {
+                        onConfirmClick = if (isFeeCurrencyInStack) {
                             null
+                        } else {
+                            { actions.openTokenDetailsScreen(feeCryptoCurrencyStatus.currency) }
                         },
                     )
                 },
