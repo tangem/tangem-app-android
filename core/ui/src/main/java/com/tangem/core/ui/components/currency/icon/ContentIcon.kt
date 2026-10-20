@@ -13,14 +13,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.account.AccountCharIcon
 import com.tangem.core.ui.components.account.AccountResIcon
+import com.tangem.core.ui.components.account.CollectiblesAccountResIcon
 import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.components.account.PredictionAccountResIcon
 import com.tangem.core.ui.components.currency.DefaultCurrencyIcon
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.TangemTheme
 
 @Composable
 internal fun ContentIcon(
@@ -70,6 +71,7 @@ internal fun ContentIcon(
         )
         is CurrencyIconState.PaymentAccount -> PaymentAccountIcon(modifier = modifier, size = icon.size)
         is CurrencyIconState.PredictionAccount -> PredictionAccountResIcon(modifier = modifier, size = icon.size)
+        is CurrencyIconState.CollectiblesAccount -> CollectiblesAccountResIcon(modifier = modifier, size = icon.size)
         is CurrencyIconState.CryptoPortfolio.Icon -> AccountResIcon(
             modifier = modifier,
             imageVector = icon.imageVector(),
@@ -100,7 +102,7 @@ fun CoinIcon(
     alpha: Float,
     colorFilter: ColorFilter?,
     modifier: Modifier = Modifier,
-    iconSize: Dp = TangemTheme.dimens.size36,
+    iconSize: Dp = 36.dp,
 ) {
     val iconData: Any = if (url.isNullOrBlank()) fallbackResId else url
 

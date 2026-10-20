@@ -40,7 +40,7 @@ internal class PolymarketActivityBatchFetcherTest {
         // Assert
         assertThat(cursors).containsExactly(null, "cursor-1", "cursor-1").inOrder()
         assertThat(failed).isInstanceOf(BatchFetchResult.Error::class.java)
-        assertThat(retried).isEqualTo(BatchFetchResult.Success(emptyList<Any>(), empty = true, last = true))
+        assertThat(retried).isEqualTo(BatchFetchResult.Success(emptyList<Any>(), isEmpty = true, isLast = true))
     }
 
     @Test
@@ -55,7 +55,7 @@ internal class PolymarketActivityBatchFetcherTest {
         val next = fetcher.fetchNext(null, first)
 
         // Assert
-        assertThat(first).isEqualTo(BatchFetchResult.Success(emptyList<Any>(), empty = true, last = false))
+        assertThat(first).isEqualTo(BatchFetchResult.Success(emptyList<Any>(), isEmpty = true, isLast = false))
         assertThat(next).isInstanceOf(BatchFetchResult.Error::class.java)
     }
 

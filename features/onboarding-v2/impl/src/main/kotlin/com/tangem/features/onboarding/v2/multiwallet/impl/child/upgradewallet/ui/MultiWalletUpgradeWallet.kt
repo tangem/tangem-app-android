@@ -33,7 +33,7 @@ internal fun MultiWalletUpgradeWallet(state: MultiWalletUpgradeWalletUM, modifie
             ),
             dismissButton = DialogButtonUM(
                 title = state.dialog.dismissButtonText.resolveReference(),
-                isWarning = state.dialog.dismissWarningColor,
+                isWarning = state.dialog.isDismissWarningColor,
                 onClick = state.dialog.onDismissButtonClick,
             ),
             onDismissDialog = state.dialog.onDismiss,

@@ -21,7 +21,7 @@ internal class WcSpendAllowanceUMConverter : Converter<WcSpendAllowanceUMConvert
                 TextReference.Str(amount.amountText())
             },
             isUnlimited = isUnlimited,
-            tokenSymbol = value.approvedAmount.amount?.currencySymbol ?: "",
+            tokenSymbol = value.approvedAmount.amount?.currencySymbol.orEmpty(),
             tokenImageUrl = value.approvedAmount.logoUrl,
             networkIconRes = value.approvedAmount.chainId?.toString()?.let { getActiveIconRes(Blockchain.fromId(it)) },
             onLearnMoreClicked = value.onLearnMoreClick,

@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.right
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -40,11 +39,9 @@ import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
-import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
-import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.SendComponent
@@ -67,7 +64,7 @@ import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.confirm.model.SendConfirmModel
 import com.tangem.features.send.send.joint.JointSendDelegate
 import com.tangem.features.send.send.model.SendModel
-import com.tangem.features.send.send.model.TronDefaultFeeLoader
+import com.tangem.features.send.send.model.DefaultFeeLoader
 import com.tangem.features.send.send.model.TronGaslessSentAmountQuoter
 import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.features.send.testDispatcherProvider
@@ -90,7 +87,6 @@ internal abstract class SendModelTestBase {
     }
 
     protected val router: Router = mockk(relaxed = true)
-    protected val appRouter: AppRouter = mockk(relaxed = true)
     protected val getUserWalletUseCase: GetUserWalletUseCase = mockk(relaxed = true)
     protected val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase =
         mockk(relaxed = true)
@@ -108,6 +104,7 @@ internal abstract class SendModelTestBase {
     protected val createTransferTransactionUseCase: CreateTransferTransactionUseCase = mockk(relaxed = true)
     protected val getFeeUseCase: GetFeeUseCase = mockk(relaxed = true)
     protected val getFeeForGaslessUseCase: GetFeeForGaslessUseCase = mockk(relaxed = true)
+    protected val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk(relaxed = true)
     protected val getFeeForTokenUseCase: GetFeeForTokenUseCase = mockk(relaxed = true)
     protected val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase = mockk(relaxed = true)
     protected val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk(relaxed = true)
@@ -115,8 +112,6 @@ internal abstract class SendModelTestBase {
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     protected val jointSendDelegate: JointSendDelegate = mockk(relaxed = true)
     protected val sendTransactionUseCase: SendTransactionUseCase = mockk(relaxed = true)
-    protected val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk(relaxed = true)
-    protected val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk(relaxed = true)
 
     // SendConfirmModel-specific dependencies
     protected val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase = mockk(relaxed = true)
@@ -134,8 +129,6 @@ internal abstract class SendModelTestBase {
     protected val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase = mockk(relaxed = true)
     protected val currenciesRepository: CurrenciesRepository = mockk(relaxed = true)
     protected val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase = mockk(relaxed = true)
-    protected val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase =
-        mockk(relaxed = true)
     protected val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase = mockk(relaxed = true)
     protected val sendAnalyticHelper: SendAnalyticHelper = mockk(relaxed = true)
     protected val recordTokenTransferFromSendUseCase: RecordTokenTransferFromSendUseCase = mockk(relaxed = true)
@@ -207,7 +200,6 @@ internal abstract class SendModelTestBase {
             getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
             createTransferTransactionUseCase = createTransferTransactionUseCase,
             getFeeUseCase = getFeeUseCase,
-            getFeeForGaslessUseCase = getFeeForGaslessUseCase,
             getFeeForTokenUseCase = getFeeForTokenUseCase,
             getAccountCurrencyStatusUseCase = getAccountCurrencyStatusUseCase,
             isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
@@ -215,9 +207,9 @@ internal abstract class SendModelTestBase {
             analyticsEventHandler = analyticsEventHandler,
             jointSendDelegate = jointSendDelegate,
             getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
-            tronDefaultFeeLoader = TronDefaultFeeLoader(
-                getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
-                isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+            defaultFeeLoader = DefaultFeeLoader(
+                getFeeForGaslessUseCase = getFeeForGaslessUseCase,
+                getFeeUseCase = getFeeUseCase,
             ),
             tronGaslessSentAmountQuoter = TronGaslessSentAmountQuoter(
                 isAmountSubtractAvailableUseCase = isAmountSubtractAvailableUseCase,
@@ -233,7 +225,6 @@ internal abstract class SendModelTestBase {
             paramsContainer = paramsContainer,
             dispatchers = testScope.testDispatcherProvider(),
             analyticsEventHandler = analyticsEventHandler,
-            appRouter = appRouter,
             router = router,
             isSendTapHelpEnabledUseCase = isSendTapHelpEnabledUseCase,
             neverShowTapHelpUseCase = neverShowTapHelpUseCase,
@@ -259,7 +250,6 @@ internal abstract class SendModelTestBase {
             manageCryptoCurrenciesUseCase = manageCryptoCurrenciesUseCase,
             currenciesRepository = currenciesRepository,
             createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
-            createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
             isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
             jointSendDelegate = jointSendDelegate,
             recordTokenTransferFromSendUseCase = recordTokenTransferFromSendUseCase,
@@ -307,5 +297,7 @@ internal abstract class SendModelTestBase {
         onLoadFee = { Either.Right(mockk(relaxed = true)) },
         onLoadFeeExtended = { Either.Right(mockk(relaxed = true)) },
         onSendTransaction = {},
+        onCloseFlow = {},
+        intentId = null,
     )
 }

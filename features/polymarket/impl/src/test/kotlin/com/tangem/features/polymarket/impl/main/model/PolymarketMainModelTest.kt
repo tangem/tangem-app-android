@@ -9,18 +9,15 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketCategory
-import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
-import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
-import com.tangem.domain.polymarket.model.PolymarketOutcome
-import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
@@ -56,6 +53,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -92,7 +90,6 @@ import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
 import io.mockk.coVerify
-import io.mockk.verifyOrder
 import org.junit.jupiter.api.BeforeEach
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -210,7 +207,7 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN categories fail WHEN model created THEN the feed runs unfiltered without tabs`() = runTest {
+    fun `GIVEN categories fail WHEN model created THEN the reload prompt is shown and no feed is requested`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
 
@@ -221,10 +218,41 @@ internal class PolymarketMainModelTest {
         // Assert
         assertThat(model.uiState.value.categories).isEmpty()
         assertThat(model.uiState.value.isCategoriesLoading).isFalse()
-        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
-        assertThat(dispatchedActions).containsExactly(
-            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = null)),
-        )
+        assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+        assertThat(dispatchedActions).isEmpty()
+        verify(exactly = 0) { getEventsBatchFlowUseCase(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN no categories served WHEN model created THEN the reload prompt is shown and no feed is requested`() =
+        runTest {
+            // Arrange
+            coEvery { getCategoriesUseCase() } returns emptyList<PolymarketCategory>().right()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.categories).isEmpty()
+            assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+            assertThat(dispatchedActions).isEmpty()
+            verify(exactly = 0) { getEventsBatchFlowUseCase(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN an empty category WHEN its feed ends without events THEN the empty prompt is shown`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        batchState.value = BatchListState(data = emptyList(), status = PaginationStatus.EndOfPagination)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Empty)
     }
 
     @Test
@@ -336,7 +364,7 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN categories were lost too WHEN reload tapped THEN they are requested again`() = runTest {
+    fun `GIVEN categories failed WHEN reload tapped THEN they are requested again and the first one's feed`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returnsMany listOf(
             DataError.NetworkError.NoInternetConnection.left(),
@@ -344,18 +372,18 @@ internal class PolymarketMainModelTest {
         )
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        batchState.value = BatchListState(
-            data = emptyList(),
-            status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
-        )
-        advanceUntilIdle()
 
         // Act
         (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.categories.map { it.id }).containsExactly(1, 2).inOrder()
+        assertThat(model.uiState.value.categories.map { it.id to it.isSelected })
+            .containsExactly(1 to true, 2 to false)
+            .inOrder()
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 1)),
+        )
     }
 
     @Test
@@ -363,11 +391,6 @@ internal class PolymarketMainModelTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
         val model = createModel(testScope = this)
-        advanceUntilIdle()
-        batchState.value = BatchListState(
-            data = emptyList(),
-            status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
-        )
         advanceUntilIdle()
         val categoriesReady = CompletableDeferred<Unit>()
         coEvery { getCategoriesUseCase() } coAnswers {
@@ -475,26 +498,20 @@ internal class PolymarketMainModelTest {
         }
 
     @Test
-    fun `GIVEN the categories keep failing WHEN reload tapped THEN the feed is requested again anyway`() = runTest {
+    fun `GIVEN the categories keep failing WHEN reload tapped THEN the prompt stays and no feed is requested`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        batchState.value = BatchListState(
-            data = emptyList(),
-            status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
-        )
-        advanceUntilIdle()
-        dispatchedActions.clear()
 
         // Act
         (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
         advanceUntilIdle()
 
         // Assert
-        assertThat(dispatchedActions).containsExactly(
-            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = null)),
-        )
+        assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+        assertThat(dispatchedActions).isEmpty()
+        coVerify(exactly = 2) { getCategoriesUseCase() }
     }
 
     @Test
@@ -1587,60 +1604,18 @@ internal class PolymarketMainModelTest {
 
     private fun successResult(last: Boolean) = BatchFetchResult.Success(
         data = batchOf(createEvent()),
-        empty = false,
-        last = last,
+        isEmpty = false,
+        isLast = last,
     )
 
     private fun categories(): List<PolymarketCategory> = listOf(
-        PolymarketCategory(id = 1, label = "Trending", iconUrl = null),
-        PolymarketCategory(id = 2, label = "Sport", iconUrl = null),
+        PolymarketCategory(id = 1, label = "Trending", icon = null),
+        PolymarketCategory(id = 2, label = "Sport", icon = null),
     )
 
-    private fun createEvent(id: String = "event-1"): PolymarketEvent = PolymarketEvent(
+    private fun createEvent(id: String = "event-1"): PolymarketEvent = createPolymarketEvent(
         id = id,
         slug = "$id-slug",
-        title = "Event title",
-        description = "Event description",
-        rulesUrl = "https://polymarket.com/rules",
-        iconUrl = null,
-        imageUrl = null,
-        status = PolymarketStatus.ACTIVE,
-        startDate = null,
-        endDate = null,
-        volume = null,
-        volume24h = null,
-        liquidity = null,
-        totalMarketsCount = 1,
-        isNegRisk = false,
-        isLive = false,
-        displayMode = PolymarketDisplayMode.PLAIN_MARKETS,
-        markets = listOf(
-            PolymarketMarket(
-                id = "market-1",
-                conditionId = null,
-                eventId = id,
-                title = "Market question",
-                slug = "market-slug",
-                description = "Market description",
-                groupItemTitle = null,
-                iconUrl = null,
-                imageUrl = null,
-                status = PolymarketStatus.ACTIVE,
-                isNegRisk = false,
-                isAcceptingOrders = true,
-                startDate = null,
-                endDate = null,
-                startDateIso = null,
-                endDateIso = null,
-                volume = null,
-                volume24h = null,
-                liquidity = null,
-                orderIndex = 0,
-                outcomes = listOf(
-                    PolymarketOutcome(assetId = "asset-1", title = "Yes", probability = null),
-                ),
-            ),
-        ),
     )
 
     @Test

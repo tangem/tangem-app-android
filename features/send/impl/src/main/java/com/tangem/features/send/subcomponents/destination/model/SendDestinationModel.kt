@@ -18,7 +18,6 @@ import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
 import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
-import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -48,7 +47,6 @@ import com.tangem.features.send.subcomponents.destination.SendDestinationAlertFa
 import com.tangem.features.send.subcomponents.destination.analytics.EnterAddressSource
 import com.tangem.features.send.subcomponents.destination.analytics.SendDestinationAnalyticEvents
 import com.tangem.features.send.subcomponents.destination.model.converters.JointAccountDestinationDeduplicator
-import com.tangem.features.send.subcomponents.destination.model.converters.JointAccountDestinationFactory
 import com.tangem.features.send.subcomponents.destination.model.transformers.*
 import com.tangem.features.send.subcomponents.destination.ui.state.DestinationWalletUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -85,14 +83,11 @@ internal class SendDestinationModel @Inject constructor(
     private val sendDestinationAlertFactory: SendDestinationAlertFactory,
     private val addressBookSendAnalytics: AddressBookSendAnalytics,
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
-    getJointAccountSupportedNetworksUseCase: GetJointAccountSupportedNetworksUseCase,
     isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
     getVerifiedContactsInteractor: GetVerifiedContactsInteractor,
     contactSelectionListener: ContactSelectionListener,
 ) : Model(), SendDestinationClickIntents {
     private val params: SendDestinationComponentParams = paramsContainer.require()
-
-    private val jointAccountSupportedNetworks = getJointAccountSupportedNetworksUseCase()
 
     private val _uiState = MutableStateFlow(params.state)
     val uiState = _uiState.asStateFlow()
@@ -375,18 +370,11 @@ internal class SendDestinationModel @Inject constructor(
                     async {
                         accountStatusList.accountStatuses.flatMap { accountStatus ->
                             when (accountStatus) {
-                                is AccountStatus.Personal ->
-                                    accountStatus.getDestinationWalletUM(wallet)
+                                is AccountStatus.CryptoPortfolio -> accountStatus.getDestinationWalletUM(wallet)
                                 is AccountStatus.Payment -> listOfNotNull(accountStatus.getDestinationWalletUM(wallet))
                                 is AccountStatus.Money -> emptyList()
                                 is AccountStatus.Prediction -> emptyList()
                                 is AccountStatus.Collectibles -> emptyList()
-                                is AccountStatus.Joint -> JointAccountDestinationFactory.create(
-                                    accountStatus = accountStatus,
-                                    wallet = wallet,
-                                    cryptoCurrency = cryptoCurrency,
-                                    supportedNetworks = jointAccountSupportedNetworks,
-                                )
                             }
                         }
                     }
@@ -402,9 +390,14 @@ internal class SendDestinationModel @Inject constructor(
             .flowOn(dispatchers.default)
     }
 
+    /**
+     * Offered only on a network the account holds a currency of, a coin or a token alike; a joint account follows
+     * the same rule, so its Safe is not suggested on a network its balance would not show up on.
+     */
     private fun AccountStatus.CryptoPortfolio.getDestinationWalletUM(wallet: UserWallet): List<DestinationWalletUM> {
         return this.flattenCurrencies()
             .filter { it.currency.network.rawId == cryptoCurrency.network.rawId }
+            .sortedByDescending { it.currency is CryptoCurrency.Coin }
             .mapNotNull { cryptoCurrencyStatus ->
                 val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
                     ?: return@mapNotNull null
@@ -416,6 +409,7 @@ internal class SendDestinationModel @Inject constructor(
                     account = account,
                 )
             }
+            .distinctBy { it.address }
     }
 
     private fun AccountStatus.Payment.getDestinationWalletUM(wallet: UserWallet): DestinationWalletUM? {

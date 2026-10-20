@@ -83,8 +83,8 @@ fun SimpleTextField(
             onValuePastedTriggerDismiss()
         }
     }
-    var textStyle = textStyle.copy(color = color)
-    if (centered) textStyle = textStyle.copy(textAlign = TextAlign.Center)
+    var fieldTextStyle = textStyle.copy(color = color)
+    if (centered) fieldTextStyle = fieldTextStyle.copy(textAlign = TextAlign.Center)
 
     BasicTextField(
         value = textFieldValue,
@@ -96,7 +96,7 @@ fun SimpleTextField(
 
             if (isStringChangedSinceLastInvocation) onValueChange(newTextFieldValueState.text)
         },
-        textStyle = textStyle,
+        textStyle = fieldTextStyle,
         cursorBrush = SolidColor(TangemTheme.colors.text.primary1),
         singleLine = singleLine,
         readOnly = readOnly,
@@ -108,7 +108,7 @@ fun SimpleTextField(
             SimpleTextPlaceholder(
                 placeholder = placeholder,
                 value = value,
-                textStyle = textStyle,
+                textStyle = fieldTextStyle,
                 textValue = textValue,
                 centered = centered,
                 color = placeholderColor,

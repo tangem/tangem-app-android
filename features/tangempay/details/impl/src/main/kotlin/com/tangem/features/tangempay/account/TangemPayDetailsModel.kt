@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.account
 
 import androidx.compose.runtime.Stable
+import arrow.core.Either
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
@@ -36,6 +37,7 @@ import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.*
 import com.tangem.domain.pay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.cashback.TangemPayCashbackController
@@ -458,12 +460,12 @@ internal class TangemPayDetailsModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.VaDetailsErrorShowed())
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
-            TangemPayDetailsNavigation.VaBankingDetailsError(
-                userWalletId = userWalletId,
-                productInstanceId = productInstanceId,
-            ),
+            TangemPayDetailsNavigation.VaBankingDetailsError(productInstanceId = productInstanceId),
         )
     }
+
+    suspend fun loadBankCredentials(productInstanceId: String): Either<VisaApiError, BankCredentials> =
+        getBankCredentialsUseCase(userWalletId = userWalletId, productInstanceId = productInstanceId)
 
     private fun showVaPreparing() {
         analytics.send(TangemPayAnalyticsEvents.VaPreparationPopupShowed())
@@ -520,7 +522,7 @@ internal class TangemPayDetailsModel @Inject constructor(
                 shouldShowWarning = true,
                 cryptoCurrency = data.currency,
                 userWalletId = data.walletId,
-                showMemoDisclaimer = false,
+                shouldShowMemoDisclaimer = false,
                 receiveAddress = data.receiveAddress,
             )
             bottomSheetNavigation.activate(TangemPayDetailsNavigation.Receive(config))

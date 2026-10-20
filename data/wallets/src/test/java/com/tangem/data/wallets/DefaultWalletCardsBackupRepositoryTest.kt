@@ -14,6 +14,7 @@ import com.tangem.datasource.api.tangemTech.models.WalletCardDTO
 import com.tangem.datasource.api.tangemTech.models.WalletCardsBody
 import com.tangem.datasource.api.tangemTech.models.WalletCardsResponse
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.backup.WalletCardsBackupDeliveryScheduler
 import com.tangem.domain.wallets.models.backup.CardBackupStatus
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.models.errors.WalletCardsBackupError
@@ -22,10 +23,15 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.verify
 import io.mockk.mockk
+import androidx.datastore.core.DataStore
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import java.io.IOException
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -38,17 +44,15 @@ internal class DefaultWalletCardsBackupRepositoryTest {
     private val tangemTechApi: TangemTechApi = mockk()
     private val dataStore = MockStateDataStore<PendingWalletCardsBackups>(default = emptyList())
 
+    private val deliveryScheduler: WalletCardsBackupDeliveryScheduler = mockk(relaxUnitFun = true)
+
     private val pendingStore = PendingWalletCardsBackupStore(dataStore = dataStore)
 
-    private val repository = DefaultWalletCardsBackupRepository(
-        tangemTechApi = tangemTechApi,
-        pendingStore = pendingStore,
-        dispatchers = TestingCoroutineDispatcherProvider(),
-    )
+    private val repository = createRepository(pendingStore)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(tangemTechApi)
+        clearMocks(tangemTechApi, deliveryScheduler)
         runBlocking { dataStore.updateData { emptyList() } }
     }
 
@@ -133,6 +137,50 @@ internal class DefaultWalletCardsBackupRepositoryTest {
                 ),
             )
         }
+
+        @Test
+        fun `GIVEN the request fails WHEN saveWalletCards THEN delivery is scheduled`() = runTest {
+            // Arrange
+            coEvery {
+                tangemTechApi.saveWalletCards(any(), any())
+            } returns ApiResponse.Error(cause = ApiResponseError.NetworkException()).cast()
+
+            // Act
+            repository.saveWalletCards(WALLET_ID, cards = emptyList(), usedSeed = false)
+
+            // Assert
+            verify(exactly = 1) { deliveryScheduler.schedule() }
+        }
+
+        @Test
+        fun `GIVEN api succeeds WHEN saveWalletCards THEN delivery is not scheduled`() = runTest {
+            // Arrange
+            coEvery { tangemTechApi.saveWalletCards(any(), any()) } returns ApiResponse.Success(Unit)
+
+            // Act
+            repository.saveWalletCards(WALLET_ID, cards = emptyList(), usedSeed = false)
+
+            // Assert
+            verify(exactly = 0) { deliveryScheduler.schedule() }
+        }
+
+        @Test
+        fun `GIVEN the queue cannot be written WHEN saveWalletCards THEN Unexpected is returned and nothing is sent`() =
+            runTest {
+                // Arrange
+                val error = IOException("disk full")
+                val brokenDataStore: DataStore<PendingWalletCardsBackups> = mockk {
+                    coEvery { updateData(any()) } throws error
+                }
+                val brokenRepository = createRepository(PendingWalletCardsBackupStore(dataStore = brokenDataStore))
+
+                // Act
+                val actual = brokenRepository.saveWalletCards(WALLET_ID, cards = emptyList(), usedSeed = false)
+
+                // Assert
+                assertThat(actual).isEqualTo(WalletCardsBackupError.Unexpected(cause = error).left())
+                coVerify(exactly = 0) { tangemTechApi.saveWalletCards(any(), any()) }
+            }
     }
 
     @Nested
@@ -159,6 +207,22 @@ internal class DefaultWalletCardsBackupRepositoryTest {
             assertThat(pendingStore.getAll()).isEmpty()
         }
 
+
+        @Test
+        fun `GIVEN the queue cannot be read WHEN sendPendingWalletCards THEN Unexpected is returned`() = runTest {
+            // Arrange
+            val error = IOException("unreadable")
+            val brokenDataStore: DataStore<PendingWalletCardsBackups> = mockk {
+                every { data } returns flow { throw error }
+            }
+            val brokenRepository = createRepository(PendingWalletCardsBackupStore(dataStore = brokenDataStore))
+
+            // Act
+            val actual = brokenRepository.sendPendingWalletCards()
+
+            // Assert
+            assertThat(actual).isEqualTo(WalletCardsBackupError.Unexpected(cause = error).left())
+        }
 
         @Test
         fun `GIVEN nothing queued WHEN sendPendingWalletCards THEN the api is not called`() = runTest {
@@ -349,6 +413,13 @@ internal class DefaultWalletCardsBackupRepositoryTest {
             assertThat(actual).isEqualTo(WalletCardsBackupError.Unexpected(cause = cause).left())
         }
     }
+
+    private fun createRepository(store: PendingWalletCardsBackupStore) = DefaultWalletCardsBackupRepository(
+        tangemTechApi = tangemTechApi,
+        pendingStore = store,
+        deliveryScheduler = deliveryScheduler,
+        dispatchers = TestingCoroutineDispatcherProvider(),
+    )
 
     @Suppress("UNCHECKED_CAST")
     private fun <T : Any> ApiResponse.Error.cast(): ApiResponse<T> = this as ApiResponse<T>

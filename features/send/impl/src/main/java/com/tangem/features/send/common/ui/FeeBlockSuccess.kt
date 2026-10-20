@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.components.rows.SelectorRowItem
 import com.tangem.core.ui.extensions.stringReference
@@ -28,7 +29,7 @@ fun FeeBlockSuccess(feeSelectorUM: FeeSelectorUM) {
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
-            .padding(TangemTheme.dimens.spacing12),
+            .padding(12.dp),
     ) {
         Text(
             text = stringResourceSafe(R.string.common_network_fee_title),
@@ -36,7 +37,7 @@ fun FeeBlockSuccess(feeSelectorUM: FeeSelectorUM) {
             color = TangemTheme.colors.text.tertiary,
         )
 
-        Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {
+        Box(modifier = Modifier.padding(top = 8.dp)) {
             val feeItemUM = feeSelectorUM.selectedFeeItem
             val feeAmount = feeItemUM.fee.amount
             SelectorRowItem(

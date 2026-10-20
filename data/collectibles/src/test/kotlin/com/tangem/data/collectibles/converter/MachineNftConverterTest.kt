@@ -69,7 +69,8 @@ internal class MachineNftConverterTest {
             rarity = null,
             gradingCompany = null,
             gradeNum = null,
-            image = null,
+            imageFront = null,
+            imageBack = null,
             insuredValue = null,
         )
 
@@ -82,7 +83,8 @@ internal class MachineNftConverterTest {
                 description = null,
                 rarity = null,
                 grade = null,
-                imageUrl = null,
+                frontImageUrl = null,
+                backImageUrl = null,
                 insuredValue = null,
             ),
         )

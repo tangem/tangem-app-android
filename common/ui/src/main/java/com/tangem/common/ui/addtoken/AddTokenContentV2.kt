@@ -53,18 +53,18 @@ fun AddTokenContentV2(state: AddTokenUM, modifier: Modifier = Modifier) {
                 PortfolioSelectRowV2(
                     modifier = Modifier.background(
                         color = TangemTheme.colors2.surface.level3,
-                        shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+                        shape = RoundedCornerShape(20.dp),
                     ),
                     state = state.portfolio,
                 )
 
-                SpacerH(TangemTheme.dimens2.x2)
+                SpacerH(8.dp)
             }
 
             NetworkRow(state.network)
         }
 
-        SpacerH(TangemTheme.dimens2.x4)
+        SpacerH(16.dp)
 
         AddButton(
             modifier = Modifier.fillMaxWidth(),
@@ -82,7 +82,7 @@ private fun TokenHeader(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = TangemTheme.dimens2.x8),
+            .padding(vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CurrencyIcon(
@@ -91,7 +91,7 @@ private fun TokenHeader(
             shouldDisplayNetwork = false,
         )
 
-        SpacerH(TangemTheme.dimens2.x4)
+        SpacerH(16.dp)
 
         when (tokenName) {
             is TokenItemState.TitleState.Content -> {
@@ -104,15 +104,15 @@ private fun TokenHeader(
             }
             TokenItemState.TitleState.Loading -> {
                 RectangleShimmer(
-                    modifier = Modifier.size(width = TangemTheme.dimens2.x17, height = TangemTheme.dimens2.x9),
-                    radius = TangemTheme.dimens2.x25,
+                    modifier = Modifier.size(width = 68.dp, height = 36.dp),
+                    radius = 100.dp,
                 )
             }
             TokenItemState.TitleState.Locked -> {
                 Box(
                     modifier = Modifier.background(
                         color = TangemTheme.colors2.surface.level4,
-                        shape = RoundedCornerShape(TangemTheme.dimens2.x25),
+                        shape = RoundedCornerShape(100.dp),
                     ),
                 )
             }
@@ -124,17 +124,17 @@ private fun TokenHeader(
 private fun NetworkRow(state: AddTokenUM.Network, modifier: Modifier = Modifier) {
     TangemRowContainer(
         modifier
-            .clickable(enabled = state.editable, onClick = state.onClick)
+            .clickable(enabled = state.isEditable, onClick = state.onClick)
             .background(
                 color = TangemTheme.colors2.surface.level3,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+                shape = RoundedCornerShape(20.dp),
             ),
     ) {
         Icon(
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.HEAD)
-                .size(TangemTheme.dimens2.x10)
-                .padding(end = TangemTheme.dimens2.x3),
+                .size(40.dp)
+                .padding(end = 12.dp),
             tint = Color.Unspecified,
             imageVector = ImageVector.vectorResource(id = state.icon),
             contentDescription = null,
@@ -153,11 +153,11 @@ private fun NetworkRow(state: AddTokenUM.Network, modifier: Modifier = Modifier)
             style = TangemTheme.typography2.bodyMedium16,
             color = TangemTheme.colors2.text.neutral.primary,
         )
-        if (state.editable) {
+        if (state.isEditable) {
             Icon(
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.TAIL)
-                    .size(TangemTheme.dimens2.x5),
+                    .size(20.dp),
                 painter = painterResource(id = com.tangem.common.ui.R.drawable.ic_select_choice_20),
                 contentDescription = null,
                 tint = TangemTheme.colors2.graphic.neutral.secondary,
@@ -191,7 +191,7 @@ private fun AddButton(state: AddTokenUM.Button, modifier: Modifier = Modifier) {
         isEnabled = state.isEnabled,
         size = TangemButtonSize.X12,
         shape = TangemButtonShape.Rounded,
-        isLoading = state.showProgress,
+        isLoading = state.shouldShowProgress,
     )
 }
 

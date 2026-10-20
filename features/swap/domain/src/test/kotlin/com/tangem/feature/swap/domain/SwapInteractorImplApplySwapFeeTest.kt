@@ -16,6 +16,7 @@ import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
 import com.tangem.feature.swap.domain.models.domain.SwapBalanceStatus
 import com.tangem.feature.swap.domain.models.ui.*
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -23,6 +24,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 /**
@@ -233,6 +235,42 @@ internal class SwapInteractorImplApplySwapFeeTest : SwapInteractorImplTestBase()
 
         assertThat(first.preparedSwapConfigState).isEqualTo(second.preparedSwapConfigState)
     }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN DEX fee paid in the swapped token WHEN applySwapFee THEN swap amount and fee share its balance`(
+        model: FeeInSwappedTokenModel,
+    ) = runTest {
+        // Arrange
+        coEvery { currenciesRepository.getFeePaidCurrency(any(), any()) } returns FeePaidCurrency.Coin
+        val state = buildQuotesLoadedState(
+            fromAmount = SwapAmount(model.amount, 6),
+            isCoin = false,
+            fromBalance = BigDecimal("100"),
+        )
+        val swappedTokenStatus = state.fromTokenInfo.swapCurrencyStatus.status
+        val feeAmount = mockk<Amount>(relaxed = true) { every { value } returns BigDecimal("3") }
+        val swapFee = SwapFee(
+            fee = mockk<Fee.Common>(relaxed = true) { every { amount } returns feeAmount },
+            transactionFeeResult = TransactionFeeResult.Loaded(mockk<TransactionFee.Single>(relaxed = true)),
+            selectedFeeToken = swappedTokenStatus,
+            otherNativeFee = BigDecimal.ZERO,
+            feeBucket = FeeBucket.MARKET,
+        )
+
+        // Act
+        val patched = sut.applySwapFee(state, swapFee, lastReducedBalanceBy)
+
+        // Assert
+        assertThat(patched.preparedSwapConfigState.balanceStatus).isInstanceOf(model.expected)
+    }
+
+    private fun provideTestModels() = listOf(
+        FeeInSwappedTokenModel(amount = BigDecimal("96"), expected = SwapBalanceStatus.Sufficient::class.java),
+        FeeInSwappedTokenModel(amount = BigDecimal("100"), expected = SwapBalanceStatus.InsufficientFee::class.java),
+    )
+
+    data class FeeInSwappedTokenModel(val amount: BigDecimal, val expected: Class<out SwapBalanceStatus>)
 
     private fun buildCurrencyCheck(): CryptoCurrencyCheck = CryptoCurrencyCheck(
         dustValue = null,

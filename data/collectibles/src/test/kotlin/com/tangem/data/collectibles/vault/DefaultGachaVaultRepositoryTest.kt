@@ -64,6 +64,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
+import java.util.Base64
 
 internal class DefaultGachaVaultRepositoryTest {
 
@@ -550,6 +551,7 @@ internal class DefaultGachaVaultRepositoryTest {
         @BeforeEach
         fun resetMocks() {
             clearMocks(walletManagersFacade, networkProvider, walletManager, hotDelegate)
+            coEvery { hotDelegate.getPublicKeyOrNull(any()) } returns DELEGATE
             coEvery { networkProvider.create(userWallet) } returns network.right()
             coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns walletManager
         }
@@ -599,6 +601,19 @@ internal class DefaultGachaVaultRepositoryTest {
         }
 
         @Test
+        fun `GIVEN the hot delegate is not provisioned WHEN sendPurchasePack THEN nothing is sent`() = runTest {
+            // Arrange
+            coEvery { hotDelegate.getPublicKeyOrNull(any()) } returns null
+
+            // Act
+            val actual = sendPurchasePack()
+
+            // Assert
+            assertThat(actual).isEqualTo(CollectiblesAccountError.DelegateNotProvisioned.left())
+            coVerify(exactly = 0) { walletManager.sendPurchasePack(any(), any(), any(), any(), any()) }
+        }
+
+        @Test
         fun `GIVEN no wallet manager WHEN sendPurchasePack THEN nothing is sent`() = runTest {
             // Arrange
             coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns null
@@ -613,11 +628,154 @@ internal class DefaultGachaVaultRepositoryTest {
 
         private suspend fun sendPurchasePack() = repository.sendPurchasePack(
             userWallet = userWallet,
-            hotDelegate = DELEGATE,
             amount = AMOUNT,
             feeAmount = FEE_AMOUNT,
             memo = MEMO,
         )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SendWithOwnerSignature {
+
+        private val coldWallet: UserWallet.Cold = mockk {
+            every { walletId } returns WALLET_ID
+            every { scanResponse } returns mockk {
+                every { productType } returns ProductType.Wallet2
+                every { card } returns mockk {
+                    every { cardId } returns CARD_ID
+                    every { backupStatus } returns CardDTO.BackupStatus.NoBackup
+                }
+            }
+        }
+
+        private val cardSigner: TransactionSigner = mockk()
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(walletManagersFacade, networkProvider, walletManager, hotWalletSignerFactory)
+            every { hotWalletSignerFactory.create(userWallet) } returns signer
+            every { cardSdkConfigRepository.getCommonSigner(any(), any(), WALLET_ID) } returns cardSigner
+            coEvery { networkProvider.create(any()) } returns network.right()
+            coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns walletManager
+            coEvery { walletManager.send(any<TransactionData>(), any(), any()) } returns
+                Result.Success(TransactionSendResult(hash = TX_HASH))
+        }
+
+        @Test
+        fun `GIVEN a mobile wallet WHEN sendWithOwnerSignature THEN the bytes are sent as is and the hash returned`() =
+            runTest {
+                // Arrange
+                val bytes = solanaTransaction(instructionDataSize = LARGE_INSTRUCTION_DATA_SIZE)
+
+                // Act
+                val actual = repository.sendWithOwnerSignature(userWallet, bytes.toBase64())
+
+                // Assert
+                assertThat(actual).isEqualTo(TX_HASH.right())
+                coVerify(exactly = 1) {
+                    walletManager.send(
+                        match<TransactionData.Compiled> { data ->
+                            (data.value as TransactionData.Compiled.Data.Bytes).data.contentEquals(bytes)
+                        },
+                        signer,
+                        any(),
+                    )
+                }
+            }
+
+        @Test
+        fun `GIVEN a card wallet and a small transaction WHEN sent THEN the card signs it`() = runTest {
+            // Arrange
+            val transaction = solanaTransaction(instructionDataSize = 10).toBase64()
+
+            // Act
+            val actual = repository.sendWithOwnerSignature(coldWallet, transaction)
+
+            // Assert
+            assertThat(actual).isEqualTo(TX_HASH.right())
+            coVerify(exactly = 1) { walletManager.send(any<TransactionData>(), cardSigner, any()) }
+        }
+
+        @Test
+        fun `GIVEN a card wallet and a large transaction WHEN sent THEN it is refused before the tap`() =
+            runTest {
+                // Arrange
+                val transaction = solanaTransaction(instructionDataSize = LARGE_INSTRUCTION_DATA_SIZE).toBase64()
+
+                // Act
+                val actual = repository.sendWithOwnerSignature(coldWallet, transaction)
+
+                // Assert
+                assertThat(actual).isEqualTo(
+                    CollectiblesAccountError.Vault(GachaVaultError.TransactionTooLarge).left(),
+                )
+                coVerify(exactly = 0) {
+                    networkProvider.create(any())
+                    walletManager.send(any<TransactionData>(), any(), any())
+                }
+            }
+
+        @Test
+        fun `GIVEN malformed base64 WHEN sendWithOwnerSignature THEN nothing is sent`() = runTest {
+            // Act
+            val actual = repository.sendWithOwnerSignature(userWallet, "not base64!")
+
+            // Assert
+            assertThat(actual.leftOrNull()).isInstanceOf(CollectiblesAccountError.Vault::class.java)
+            coVerify(exactly = 0) { walletManager.send(any<TransactionData>(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN the user cancels the card session WHEN sent THEN cancelled is returned`() = runTest {
+            // Arrange
+            coEvery { walletManager.send(any<TransactionData>(), any(), any()) } returns
+                Result.Failure(BlockchainSdkError.WrappedTangemError(TangemSdkError.UserCancelled()))
+
+            // Act
+            val actual = repository.sendWithOwnerSignature(coldWallet, solanaTransaction(10).toBase64())
+
+            // Assert
+            assertThat(actual).isEqualTo(CollectiblesAccountError.Cancelled.left())
+        }
+
+        @Test
+        fun `GIVEN no wallet manager WHEN sendWithOwnerSignature THEN nothing is sent`() = runTest {
+            // Arrange
+            coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns null
+
+            // Act
+            val actual = repository.sendWithOwnerSignature(userWallet, solanaTransaction(10).toBase64())
+
+            // Assert
+            assertThat(actual.isLeft()).isTrue()
+            coVerify(exactly = 0) { walletManager.send(any<TransactionData>(), any(), any()) }
+        }
+
+        /** A legacy transaction with one empty signature slot and one instruction carrying [instructionDataSize] bytes. */
+        private fun solanaTransaction(instructionDataSize: Int): ByteArray {
+            val message = byteArrayOf(1, 0, 1) +
+                shortVec(2) + ByteArray(PUBLIC_KEY_SIZE) { 1 } + ByteArray(PUBLIC_KEY_SIZE) { 2 } +
+                ByteArray(PUBLIC_KEY_SIZE) { 3 } +
+                shortVec(1) + byteArrayOf(1) + shortVec(1) + byteArrayOf(0) +
+                shortVec(instructionDataSize) + ByteArray(instructionDataSize)
+
+            return shortVec(1) + ByteArray(SIGNATURE_SIZE) + message
+        }
+
+        private fun shortVec(value: Int): ByteArray {
+            val bytes = mutableListOf<Byte>()
+            var rest = value
+            do {
+                var byte = rest and 0x7F
+                rest = rest shr 7
+                if (rest != 0) byte = byte or 0x80
+                bytes += byte.toByte()
+            } while (rest != 0)
+            return bytes.toByteArray()
+        }
+
+        private fun ByteArray.toBase64(): String = Base64.getEncoder().encodeToString(this)
     }
 
     private companion object {
@@ -639,6 +797,11 @@ internal class DefaultGachaVaultRepositoryTest {
         const val TX_HASH = "hash"
 
         const val CARD_ID = "AC01000000041225"
+        const val PUBLIC_KEY_SIZE = 32
+        const val SIGNATURE_SIZE = 64
+
+        /** Pushes the message past the 930 bytes a card can sign. */
+        const val LARGE_INSTRUCTION_DATA_SIZE = 900
         val SEED_KEY = byteArrayOf(2, 0xA.toByte(), 0xB.toByte())
 
         const val CURVES_CONFIG_FILE = "com.tangem.domain.wallets.config.CurvesConfigKt"

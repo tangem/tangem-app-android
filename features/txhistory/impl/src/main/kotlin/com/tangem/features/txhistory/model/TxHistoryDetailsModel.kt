@@ -318,7 +318,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
         clipboardManager.setText(text = address, isSensitive = false)
         uiMessageSender.send(
             SnackbarMessage(
-                message = resourceReference(R.string.wallet_notification_address_copied),
+                message = resourceReference(R.string.address_book_address_copied),
                 startIconId = R.drawable.ic_check_24,
             ),
         )

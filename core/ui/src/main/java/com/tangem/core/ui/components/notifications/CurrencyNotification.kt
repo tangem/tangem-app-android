@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.colorspace.ColorSpaces
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
@@ -64,7 +65,7 @@ private fun MainContent(
             modifier = Modifier.align(alignment = Alignment.CenterVertically),
         )
 
-        SpacerW(width = TangemTheme.dimens.spacing6)
+        SpacerW(width = 6.dp)
 
         TextsBlock(title = title, subtitle = subtitle)
     }
@@ -72,7 +73,7 @@ private fun MainContent(
 
 @Composable
 private fun TextsBlock(title: TextReference, subtitle: CurrencyNotificationConfig.AnnotatedSubtitle) {
-    Column(verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing2)) {
+    Column(verticalArrangement = Arrangement.spacedBy(space = 2.dp)) {
         Text(
             text = title.resolveReference(),
             color = TangemTheme.colors.text.primary1,

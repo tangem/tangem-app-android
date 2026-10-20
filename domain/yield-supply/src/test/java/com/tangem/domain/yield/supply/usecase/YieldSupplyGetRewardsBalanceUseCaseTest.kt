@@ -557,7 +557,7 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
                 backendId = "id",
                 campaign = YieldIncentiveCampaign(
                     hasActiveCampaign = true,
-                    rewardsApr = BigDecimal("6.0"),
+                    rewardsApy = BigDecimal("6.0"),
                     totalApyEst = BigDecimal("18.0"),
                 ),
             ),

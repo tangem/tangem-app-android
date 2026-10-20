@@ -26,7 +26,6 @@ import com.tangem.core.ui.components.sheetscaffold.rememberSheetState
 import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHost
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.LocalTopSnackbarHostState
-import com.tangem.core.ui.res.TangemTheme
 import dev.chrisbanes.haze.rememberHazeState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -78,8 +77,8 @@ fun ModalBottomSheetWithBackHandling(
                     TangemTopSnackbarHost(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
-                            .padding(horizontal = TangemTheme.dimens2.x4)
-                            .padding(top = TangemTheme.dimens2.x6),
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 24.dp),
                         hostState = topSnackbarHostState,
                     )
                 }

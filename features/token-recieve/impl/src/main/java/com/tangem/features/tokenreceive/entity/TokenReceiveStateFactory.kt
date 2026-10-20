@@ -61,7 +61,7 @@ internal class TokenReceiveStateFactory(
         val newEnsAddresses = ensAddress
             .filterIsInstance<EnsAddress.Address>()
             .filterNot { it.name in currentAddressValues }
-            .map { ensAddress -> ReceiveAddress(value = ensAddress.name, type = Ens) }
+            .map { ens -> ReceiveAddress(value = ens.name, type = Ens) }
 
         val combinedAddresses = (currentStateProvider.invoke().addresses + newEnsAddresses)
             .sortedWith(

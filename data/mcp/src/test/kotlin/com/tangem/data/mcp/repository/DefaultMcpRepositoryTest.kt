@@ -10,6 +10,7 @@ import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.data.mcp.api.McpApi
+import com.tangem.data.mcp.converter.McpClientConverter
 import com.tangem.data.mcp.api.models.request.McpDeviceVerificationConsent
 import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResponse
 import com.tangem.data.mcp.api.models.response.McpSessionResponse
@@ -48,6 +49,8 @@ internal class DefaultMcpRepositoryTest {
         mcpApi = mcpApi,
         appScope = appScope,
         dispatchers = TestingCoroutineDispatcherProvider(),
+        mcpClientConverter = McpClientConverter(),
+        agentStore = mockk(),
     )
 
     @BeforeEach

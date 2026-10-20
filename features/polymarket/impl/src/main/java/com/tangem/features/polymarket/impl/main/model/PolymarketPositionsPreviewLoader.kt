@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.main.model
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketPosition
+import com.tangem.domain.polymarket.model.PolymarketPositionsPageRequest
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.flow.PredictionPositionsUpdateListener
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
@@ -123,7 +124,10 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
     ) {
         val result = withContext(dispatchers.default) {
             val addresses = deriveAddresses.stored(userWalletId) ?: return@withContext null
-            repository.getOpenPositions(addresses = addresses, limit = PREVIEW_SIZE, offset = 0)
+            repository.getOpenPositions(
+                addresses = addresses,
+                request = PolymarketPositionsPageRequest.First(PREVIEW_SIZE),
+            )
         }
         currentCoroutineContext().ensureActive()
         if (result == null) {

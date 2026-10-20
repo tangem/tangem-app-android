@@ -5,7 +5,6 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
 import com.tangem.common.ui.charts.state.sorted
@@ -13,6 +12,7 @@ import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -69,7 +69,7 @@ internal class SearchModel @Inject constructor(
     private val saveRecentSearchTokenUseCase: SaveRecentSearchTokenUseCase,
     private val clearSearchHistoryUseCase: ClearSearchHistoryUseCase,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val stateController: SearchStateController,
     private val searchAnalyticsHelper: SearchAnalyticsHelper,
 ) : Model() {
@@ -240,7 +240,7 @@ internal class SearchModel @Inject constructor(
 
     private fun onSingleUserAssetClick(entry: UserAssetEntry) {
         searchAnalyticsHelper.sendPortfolioItemClicked(entry.currencyStatus.currency.symbol)
-        appRouter.push(
+        router.push(
             AppRoute.CurrencyDetails(
                 userWalletId = entry.userWalletId,
                 currency = entry.currencyStatus.currency,

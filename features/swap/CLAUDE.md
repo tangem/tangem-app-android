@@ -49,6 +49,12 @@ intent. It is read from the immutable `params` and sent as `intentId` with every
 quote-time prefetch (`findBestQuote`, repeated every `UPDATE_DELAY`) and the CEX call at confirm (`onSwap`). It is
 never kept in `SwapProcessDataState`, and Send-with-Swap (`swap-v2`) does not send it.
 
+`ExchangeIntentModel` completes once: Close, Proceed and failure invalidate the loaded intent and
+cancel loading before releasing the shared MCP/WalletConnect queue slot. Destruction invalidates
+callbacks without popping the router. This also guards callbacks retained by the modal's exit animation.
+Proceed reuses an equal Swap route already in the stack; otherwise it replaces a regular Swap on top
+or pushes over an account flow without replacing it.
+
 `SwapModel` state worth knowing: `dataStateStateFlow` (reactive domain data) and
 `uiState: SwapStateHolder` (Compose state); the inner `FeeSelectorRepository` wires the
 send-v2 fee selector to `SwapInteractor.loadSwapFee`/`applySwapFee`.

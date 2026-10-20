@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.either
-import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
@@ -213,6 +212,7 @@ class SignJointOperationUseCase(
             chainId = chainId,
             safeAddress = safeAddress,
             ownerAddress = ownerAddress,
+            deployment = deployment,
         )
 
         when (verdict) {
@@ -224,12 +224,9 @@ class SignJointOperationUseCase(
             JointOperationBlockaidGate.Verdict.UNAVAILABLE -> raise(
                 JointOperationSignError.Failed(cause = IllegalStateException("Blockaid is unavailable")),
             )
-            // Blockaid judges the signature by reading the Safe contract; before the first operation deploys it
-            // there is nothing to read and no verdict can come. The CREATE2 check above already proved the payload
-            // targets our composition, so only a deployed Safe left without a verdict stays unsigned.
-            JointOperationBlockaidGate.Verdict.UNKNOWN -> ensure(deployment == SafeDeployment.NOT_DEPLOYED) {
-                JointOperationSignError.Failed(cause = IllegalStateException("Blockaid returned no verdict"))
-            }
+            JointOperationBlockaidGate.Verdict.UNKNOWN -> raise(
+                JointOperationSignError.Failed(cause = IllegalStateException("Blockaid returned no verdict")),
+            )
         }
     }
 
