@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.features.tangempay.card.details.CardDetailsEvent
 import com.tangem.features.tangempay.card.details.CardDetailsEventListener
 import com.tangem.features.tangempay.card.details.TangemPayCardDetailsController
 import com.tangem.features.tangempay.card.view.TangemPayCardDetailsUM
@@ -28,6 +29,8 @@ internal class TangemPayAddToWalletModel @Inject constructor(
 
     private val params: TangemPayAddToWalletComponent.Params = paramsContainer.require()
 
+    private val cardDetailsEventListener = CardDetailsEventListener.default()
+
     private val cardDetailsController = cardDetailsControllerFactory.create(
         scope = modelScope,
         card = params.card,
@@ -36,7 +39,7 @@ internal class TangemPayAddToWalletModel @Inject constructor(
             isEditingNameEnabled = false,
             shouldShowCardDetailsButtonOnCard = true,
         ),
-        cardDetailsEventListener = CardDetailsEventListener.default(),
+        cardDetailsEventListener = cardDetailsEventListener,
         onEditNameClick = {},
     )
 
@@ -44,6 +47,10 @@ internal class TangemPayAddToWalletModel @Inject constructor(
 
     val uiState: StateFlow<TangemPayAddToWalletUM>
         field = MutableStateFlow(getInitialState())
+
+    fun onStop() {
+        cardDetailsEventListener.send(CardDetailsEvent.HideAll)
+    }
 
     @Suppress("MagicNumber")
     private fun getInitialState(): TangemPayAddToWalletUM {

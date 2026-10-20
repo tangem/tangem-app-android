@@ -112,6 +112,22 @@ internal class TangemPayCardPageModelTest {
     }
 
     @Test
+    fun `GIVEN details shown WHEN screen stopped THEN details row is enabled`() = runTest {
+        // Arrange
+        val model = createModel()
+        statusFlow.emit(paymentStatus)
+        eventListener.send(CardDetailsEvent.Show(firstCard.id))
+        runCurrent()
+
+        // Act
+        model.onStop()
+        runCurrent()
+
+        // Assert
+        assertThat(model.isDetailsSettingEnabled()).isTrue()
+    }
+
+    @Test
     fun `GIVEN details shown WHEN frozen state re-emitted THEN details row stays disabled`() = runTest {
         // Arrange
         val frozenStateFlow = MutableSharedFlow<TangemPayCardFrozenState>(replay = 1)

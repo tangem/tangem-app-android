@@ -66,6 +66,8 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_copy_16
+import com.tangem.core.ui.security.SensitiveContentEffect
+import com.tangem.core.ui.security.hideFromAccessibilityServices
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
@@ -100,6 +102,9 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
 
     // Determine which side to show based on the rotation angle
     val shouldShowDetails = rotateCardY > 90f
+    val areDetailsExposed = isCardFlipped || shouldShowDetails
+
+    if (areDetailsExposed) SensitiveContentEffect()
 
     CardBgWrapper(
         rotateCardY = rotateCardY,
@@ -528,6 +533,7 @@ private fun TangemPayCardDetailsShownBlock(
                 onCopy = onCopyCardholderName,
                 valueTestTag = TangemPayTestTags.CARD_DETAILS_CARDHOLDER_NAME_VALUE,
                 copyTestTag = TangemPayTestTags.CARD_DETAILS_COPY_CARDHOLDER_NAME,
+                isSensitive = false,
             )
         }
         CardDetailsFieldSeparator()
@@ -601,6 +607,7 @@ private fun CardDetailsField(
     onCopy: () -> Unit,
     modifier: Modifier = Modifier,
     isCompact: Boolean = false,
+    isSensitive: Boolean = true,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     Column(
@@ -625,7 +632,8 @@ private fun CardDetailsField(
             Text(
                 modifier = Modifier
                     .then(if (isCompact) Modifier.defaultMinSize(minWidth = 56.dp) else Modifier.weight(1f))
-                    .testTag(valueTestTag),
+                    .testTag(valueTestTag)
+                    .conditional(isSensitive) { hideFromAccessibilityServices() },
                 text = value,
                 style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.staticDark.primary,
