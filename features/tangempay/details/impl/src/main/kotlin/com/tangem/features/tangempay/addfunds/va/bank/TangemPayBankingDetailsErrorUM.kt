@@ -9,7 +9,7 @@ import androidx.compose.runtime.Immutable
  * is being re-fetched. While `true` both actions are disabled.
  */
 @Immutable
-internal data class TangemPayVaBankingDetailsErrorUM(
+internal data class TangemPayBankingDetailsErrorUM(
     val isRetryLoading: Boolean,
     val onRetryClick: () -> Unit,
     val onContactSupportClick: () -> Unit,
