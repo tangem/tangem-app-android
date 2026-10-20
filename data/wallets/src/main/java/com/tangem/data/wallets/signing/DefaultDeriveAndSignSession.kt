@@ -130,7 +130,7 @@ internal class DefaultDeriveAndSignSession(
                     null
                 },
                 cardId = cardId,
-                registerColdWallet = false,
+                registerColdWallet = true,
             )
         }.getOrElse { error ->
             TangemLogger.e("Derive and sign session: starting the card session threw", error)
