@@ -34,6 +34,7 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -78,8 +79,6 @@ internal open class SwapInteractorImplTestBase {
     protected val validateTransactionUseCase: ValidateTransactionUseCase = mockk(relaxed = true)
     protected val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase =
         mockk(relaxed = true)
-    protected val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase =
-        mockk(relaxed = true)
     protected val getCurrencyCheckUseCase: GetCurrencyCheckUseCase = mockk(relaxed = true)
     protected val getAssetRequirementsUseCase: GetAssetRequirementsUseCase = mockk(relaxed = true)
     protected val amountFormatter: AmountFormatter = mockk(relaxed = true)
@@ -96,6 +95,9 @@ internal open class SwapInteractorImplTestBase {
     protected val recordTokenTransferFromSwapUseCase: RecordTokenTransferFromSwapUseCase = mockk(relaxed = true)
     protected val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase = mockk(relaxed = true)
     protected val getFeeUseCase: GetFeeUseCase = mockk(relaxed = true)
+    protected val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase =
+        mockk(relaxed = true)
+    protected val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk(relaxed = true)
 
     // endregion
 
@@ -118,7 +120,6 @@ internal open class SwapInteractorImplTestBase {
             currenciesRepository = currenciesRepository,
             validateTransactionUseCase = validateTransactionUseCase,
             createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
-            createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
             getCurrencyCheckUseCase = getCurrencyCheckUseCase,
             getAssetRequirementsUseCase = getAssetRequirementsUseCase,
             amountFormatter = amountFormatter,
@@ -134,6 +135,8 @@ internal open class SwapInteractorImplTestBase {
             recordTokenTransferFromSwapUseCase = recordTokenTransferFromSwapUseCase,
             createApprovalTransactionUseCase = createApprovalTransactionUseCase,
             getFeeUseCase = getFeeUseCase,
+            createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
+            isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
         )
     }
 
@@ -178,6 +181,7 @@ internal fun buildSwapCurrencyStatus(
     userWalletId: UserWalletId = UserWalletId(stringValue = "deadbeef"),
     yieldSupplyActive: Boolean = false,
     yieldSupplyAllowedToSpend: Boolean = true,
+    fiatRate: BigDecimal = BigDecimal.ONE,
 ): SwapCurrencyStatus {
     val networkId = mockk<Network.ID>(relaxed = true) {
         every { rawId } returns Network.RawID(networkRawId)
@@ -227,6 +231,7 @@ internal fun buildSwapCurrencyStatus(
         every { this@mockk.networkAddress } returns networkAddress
         every { this@mockk.pendingTransactions } returns emptySet()
         every { this@mockk.yieldSupplyStatus } returns maybeYield
+        every { this@mockk.fiatRate } returns fiatRate
     }
 
     val cryptoCurrencyStatus = CryptoCurrencyStatus(

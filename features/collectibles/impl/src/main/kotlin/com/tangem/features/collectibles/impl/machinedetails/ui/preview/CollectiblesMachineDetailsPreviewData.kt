@@ -16,7 +16,7 @@ internal object CollectiblesMachineDetailsPreviewData {
     )
 
     val content = CollectiblesMachineDetailsUM.Content(
-        onBackClick = {},
+        onCloseClick = {},
         title = stringReference("Elite pack"),
         imageUrl = "",
         tiers = persistentListOf(
@@ -53,10 +53,10 @@ internal object CollectiblesMachineDetailsPreviewData {
         ),
     )
 
-    val loading = CollectiblesMachineDetailsUM.Loading(onBackClick = {})
+    val loading = CollectiblesMachineDetailsUM.Loading(onCloseClick = {})
 
     val error = CollectiblesMachineDetailsUM.Error(
-        onBackClick = {},
+        onCloseClick = {},
         message = stringReference("Failed to load the pack.\nTap to reload"),
         onReloadClick = {},
     )

@@ -4,6 +4,7 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
 import com.tangem.domain.models.currency.CryptoCurrency
 
 /**
@@ -13,10 +14,11 @@ import com.tangem.domain.models.currency.CryptoCurrency
  *
  * An ERC-20 `approve` is denominated in the approved token — a zero amount of it — yet moves none of it, so the
  * explorer reports it in the coin's history alone: a token's history is built from Transfer events and an approval
- * emits none. It therefore belongs to the coin, whatever its own amount says.
+ * emits none. It therefore belongs to the coin, whatever its own amount says. A Merkl rewards claim is built the same
+ * way — a zero amount of the yield token — and moves none of it either, so it belongs to the coin too.
  */
 internal fun TransactionData.Uncompiled.belongsToHistoryOf(currency: CryptoCurrency): Boolean {
-    if (isApproval()) return currency is CryptoCurrency.Coin
+    if (isApproval() || isMerklClaim()) return currency is CryptoCurrency.Coin
 
     return when (currency) {
         is CryptoCurrency.Coin -> amount.type is AmountType.Coin
@@ -26,3 +28,6 @@ internal fun TransactionData.Uncompiled.belongsToHistoryOf(currency: CryptoCurre
 
 private fun TransactionData.Uncompiled.isApproval(): Boolean =
     (extras as? EthereumTransactionExtras)?.callData is ApprovalERC20TokenCallData
+
+private fun TransactionData.Uncompiled.isMerklClaim(): Boolean =
+    (extras as? EthereumTransactionExtras)?.callData is MerklClaimCallData

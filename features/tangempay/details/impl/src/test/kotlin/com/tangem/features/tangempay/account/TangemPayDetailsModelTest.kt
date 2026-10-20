@@ -250,10 +250,13 @@ internal class TangemPayDetailsModelTest {
             }
 
         @Test
-        fun `GIVEN cached alt_block summary WHEN status re-emitted THEN one cashback item under current plan`() =
+        fun `GIVEN cached zero alt_block summary WHEN status re-emitted THEN one cashback item under current plan`() =
             runTest {
                 // Arrange
-                cachedSummary.value = enabledCashbackSummary(displayMode = CashbackDisplayMode.ALT_BLOCK)
+                cachedSummary.value = enabledCashbackSummary(
+                    displayMode = CashbackDisplayMode.ALT_BLOCK,
+                    confirmedAmount = BigDecimal.ZERO,
+                )
                 val statusFlow = MutableStateFlow(paymentStatus(loadedStatus(planState = tariffPlanState())))
                 val model = createModel(testScope = this, planState = tariffPlanState(), statusFlow = statusFlow)
                 advanceUntilIdle()
@@ -269,6 +272,30 @@ internal class TangemPayDetailsModelTest {
                 assertThat(menuTitleIds(model)).containsExactly(
                     R.string.tangempay_current_plan_title,
                     R.string.tangempay_cashback_menu_item_title,
+                    R.string.tangempay_pay_support,
+                ).inOrder()
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN cached non-zero alt_block summary WHEN status re-emitted THEN widget shown without cashback item`() =
+            runTest {
+                // Arrange
+                cachedSummary.value = enabledCashbackSummary(displayMode = CashbackDisplayMode.ALT_BLOCK)
+                val statusFlow = MutableStateFlow(paymentStatus(loadedStatus(planState = tariffPlanState())))
+                val model = createModel(testScope = this, planState = tariffPlanState(), statusFlow = statusFlow)
+                advanceUntilIdle()
+
+                // Act
+                statusFlow.value = paymentStatus(
+                    loadedStatus(availableForWithdrawal = BigDecimal.TEN, planState = tariffPlanState()),
+                )
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value.cashbackBlockState).isInstanceOf(CashbackBlockUM.Widget::class.java)
+                assertThat(menuTitleIds(model)).containsExactly(
+                    R.string.tangempay_current_plan_title,
                     R.string.tangempay_pay_support,
                 ).inOrder()
                 model.onDestroy()
@@ -375,6 +402,22 @@ internal class TangemPayDetailsModelTest {
             // THEN
             verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaPreparationPopupShowed>()) }
             verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.VaTopupButtonClicked>()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN banking details error sheet WHEN retry loads credentials THEN product instance credentials returned`() =
+        runTest {
+            // Arrange
+            coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns BANK_CREDENTIALS.right()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            val actual = model.loadBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(BANK_CREDENTIALS.right())
             model.onDestroy()
         }
 
@@ -1062,10 +1105,11 @@ internal class TangemPayDetailsModelTest {
 
     private fun enabledCashbackSummary(
         displayMode: CashbackDisplayMode = CashbackDisplayMode.FULL,
+        confirmedAmount: BigDecimal = BigDecimal("2.70"),
     ) = CashbackSummary.Enabled(
         displayMode = displayMode,
         cashback = TangemPayCashback(
-            confirmedAmount = BigDecimal("2.70"),
+            confirmedAmount = confirmedAmount,
             totalEarnedAmount = BigDecimal("2.70"),
             currency = "USD",
             payoutCurrency = "USDC",
@@ -1379,10 +1423,7 @@ internal class TangemPayDetailsModelTest {
                 // Assert
                 assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VaBankingDetailsError>())
                     .containsExactly(
-                        TangemPayDetailsNavigation.VaBankingDetailsError(
-                            userWalletId = userWalletId,
-                            productInstanceId = PRODUCT_INSTANCE_ID,
-                        ),
+                        TangemPayDetailsNavigation.VaBankingDetailsError(productInstanceId = PRODUCT_INSTANCE_ID),
                     )
                 payModel.onDestroy()
             }
@@ -1457,10 +1498,7 @@ internal class TangemPayDetailsModelTest {
                 // Assert
                 assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VaBankingDetailsError>())
                     .containsExactly(
-                        TangemPayDetailsNavigation.VaBankingDetailsError(
-                            userWalletId = userWalletId,
-                            productInstanceId = PRODUCT_INSTANCE_ID,
-                        ),
+                        TangemPayDetailsNavigation.VaBankingDetailsError(productInstanceId = PRODUCT_INSTANCE_ID),
                     )
                 verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
                 payModel.onDestroy()
@@ -1534,10 +1572,7 @@ internal class TangemPayDetailsModelTest {
             // Assert
             assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VaBankingDetailsError>())
                 .containsExactly(
-                    TangemPayDetailsNavigation.VaBankingDetailsError(
-                        userWalletId = userWalletId,
-                        productInstanceId = PRODUCT_INSTANCE_ID,
-                    ),
+                    TangemPayDetailsNavigation.VaBankingDetailsError(productInstanceId = PRODUCT_INSTANCE_ID),
                 )
             verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaDetailsErrorShowed>()) }
             payModel.onDestroy()

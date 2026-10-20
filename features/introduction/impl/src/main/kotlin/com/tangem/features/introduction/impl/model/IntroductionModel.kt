@@ -306,6 +306,7 @@ internal class IntroductionModel @Inject constructor(
     }
 
     private fun onCreateWalletSheetCloseClicked() {
+        if (isSigningInSocially) return
         reportCreateWalletSheetDismissed(IntroductionProcess.SheetDismissed.DismissReason.CloseButton)
     }
 
@@ -373,17 +374,26 @@ internal class IntroductionModel @Inject constructor(
 
     private inner class SocialLoginHost : IntroductionSocialLoginHandler.Host {
 
-        /** The sheet steps aside for the first surface, but the flag holds the welcome screen shut */
+        /**
+         * The tapped row already spins in the sheet, so a bare loader would only swap the sheet for the same
+         * spinner on a blank screen. The sheet steps aside for the first surface that says something, and the
+         * flag holds the welcome screen shut after it.
+         */
         override fun onProgress(progress: SocialLoginProgressUM?) {
-            if (progress != null && isAnySheetShown()) {
-                onBottomSheetDismissed()
-                haveWalletSheet.dismiss()
-            }
+            if (progress == SocialLoginProgressUM.Loader && isAnySheetShown()) return
+            if (progress != null) dismissSheets()
             uiState.update { it.copy(socialLoginProgress = progress) }
         }
 
         override fun onConsent(consent: SocialLoginConsentUM?) {
+            if (consent != null) dismissSheets()
             uiState.update { it.copy(socialLoginConsent = consent) }
+        }
+
+        private fun dismissSheets() {
+            if (!isAnySheetShown()) return
+            onBottomSheetDismissed()
+            haveWalletSheet.dismiss()
         }
 
         override fun onFinished() {

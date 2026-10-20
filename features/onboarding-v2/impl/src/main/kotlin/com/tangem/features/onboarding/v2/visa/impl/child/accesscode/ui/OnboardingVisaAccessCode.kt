@@ -68,7 +68,7 @@ internal fun OnboardingVisaAccessCode(state: OnboardingVisaAccessCodeUM, modifie
                 },
                 onClick = state.onContinue,
                 iconRes = R.drawable.ic_tangem_24,
-                shouldShowProgress = state.buttonLoading,
+                shouldShowProgress = state.isButtonLoading,
                 isIconVisible = state.step == OnboardingVisaAccessCodeUM.Step.ReEnter,
             ),
         )
@@ -115,11 +115,11 @@ private fun Content(
         val focusRequester = remember { FocusRequester() }
 
         OutlineTextFieldWithIcon(
-            modifier = modifier
+            modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .focusRequester(focusRequester)
                 .fillMaxWidth(),
-            iconResId = if (state.accessCodeHidden) {
+            iconResId = if (state.isAccessCodeHidden) {
                 R.drawable.ic_eye_outline_24
             } else {
                 R.drawable.ic_eye_off_outline_24
@@ -137,16 +137,16 @@ private fun Content(
                 state.onAccessCodeFirstChange
             },
             label = stringResourceSafe(id = R.string.onboarding_wallet_info_title_third),
-            isError = state.codesNotMatchError || state.atLeastMinCharsError,
-            visualTransformation = if (state.accessCodeHidden) {
+            isError = state.hasCodesNotMatchError || state.hasAtLeastMinCharsError,
+            visualTransformation = if (state.isAccessCodeHidden) {
                 PasswordVisualTransformation()
             } else {
                 VisualTransformation.None
             },
             caption = when {
-                state.codesNotMatchError && reEnterAccessCodeState ->
+                state.hasCodesNotMatchError && reEnterAccessCodeState ->
                     stringResourceSafe(R.string.onboarding_access_codes_doesnt_match)
-                state.atLeastMinCharsError && !reEnterAccessCodeState ->
+                state.hasAtLeastMinCharsError && !reEnterAccessCodeState ->
                     stringResourceSafe(R.string.onboarding_access_code_too_short)
                 else -> null
             },

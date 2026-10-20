@@ -12,10 +12,6 @@ import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsBo
  */
 internal const val VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER = "$10,000"
 
-/**
- * Maps VA on-ramp [BankCredentials] to the requisites rows consumed by the reused
- * `MoneyAccountAddFundsBottomSheetComponent` (mirrors `MoneyAccountMainModel.buildRequisites`).
- */
 internal fun BankCredentials.toRequisitesRows(): List<RequisitesRow> = listOf(
     RequisitesRow(
         title = resourceReference(R.string.virtual_account_requisites_beneficiary_name),

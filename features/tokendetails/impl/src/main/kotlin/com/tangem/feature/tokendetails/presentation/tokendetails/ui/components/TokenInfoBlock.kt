@@ -16,6 +16,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -30,7 +31,7 @@ internal fun TokenInfoBlock(state: TokenInfoBlockState, modifier: Modifier = Mod
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = TangemTheme.dimens.size60),
+            .heightIn(min = 60.dp),
     ) {
         Column(
             modifier = Modifier
@@ -51,7 +52,7 @@ internal fun TokenInfoBlock(state: TokenInfoBlockState, modifier: Modifier = Mod
         }
         CurrencyIcon(
             modifier = Modifier
-                .size(TangemTheme.dimens.size48)
+                .size(48.dp)
                 .clip(TangemTheme.shapes.roundedCorners8),
             icon = state.iconState,
             alpha = alpha,
@@ -73,7 +74,7 @@ private fun NetworkInfoText(currency: TokenInfoBlockState.Currency) {
         is TokenInfoBlockState.Currency.Token -> {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 val state = extractNetwork(tokenCurrency = currency)
 
@@ -86,7 +87,7 @@ private fun NetworkInfoText(currency: TokenInfoBlockState.Currency) {
                 }
 
                 Icon(
-                    modifier = Modifier.size(TangemTheme.dimens.size16),
+                    modifier = Modifier.size(16.dp),
                     painter = painterResource(id = currency.networkIcon),
                     tint = Color.Unspecified,
                     contentDescription = null,
