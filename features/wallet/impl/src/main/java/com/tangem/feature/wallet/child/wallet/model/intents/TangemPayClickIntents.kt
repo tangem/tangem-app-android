@@ -50,6 +50,8 @@ internal interface TangemPayIntents {
 
     fun onKycRequiredClicked(userWalletId: UserWalletId)
 
+    fun onVerifiedClicked(userWalletId: UserWalletId)
+
     fun onKycRejectedClicked(userWalletId: UserWalletId, customerId: String)
 
     fun onKycRejectedOpenProfileClicked(userWalletId: UserWalletId)
@@ -162,6 +164,10 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
 
     override fun onKycRequiredClicked(userWalletId: UserWalletId) {
         router.openTangemPayEligibility(product = TangemPayProduct.PAYMENT_ACCOUNT, userWalletId = userWalletId)
+    }
+
+    override fun onVerifiedClicked(userWalletId: UserWalletId) {
+        router.openTangemPayVerified(userWalletId = userWalletId)
     }
 
     override fun onKycRejectedOpenProfileClicked(userWalletId: UserWalletId) {

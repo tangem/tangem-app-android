@@ -107,6 +107,24 @@ internal class TangemPayMainBlockConverterTest {
         verify(exactly = 1) { tangemPayIntents.onKycRequiredClicked(userWalletId) }
     }
 
+    @Test
+    fun `GIVEN verified WHEN convert THEN block click opens verified screen`() {
+        // Arrange
+        val userWalletId = UserWalletId("011")
+        val status = AccountStatus.Payment(
+            account = mockk { every { this@mockk.userWalletId } returns userWalletId },
+            value = PaymentAccountStatusValue.Verified(source = StatusSource.ACTUAL),
+        )
+
+        // Act
+        val result = converter.convert(status)
+
+        // Assert
+        assertThat(result).isInstanceOf(TangemPayMainUM.ActionRequired::class.java)
+        (result as TangemPayMainUM.ActionRequired).onClick()
+        verify(exactly = 1) { tangemPayIntents.onVerifiedClicked(userWalletId) }
+    }
+
     private fun paymentAccount(value: PaymentAccountStatusValue): AccountStatus.Payment {
         return AccountStatus.Payment(account = mockk(), value = value)
     }
