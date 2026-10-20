@@ -4,6 +4,8 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.blockchains.tron.TronTransactionExtras
+import com.tangem.blockchain.blockchains.tron.tokenmethods.TronApprovalTokenCallData
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
@@ -301,8 +303,27 @@ internal class TronGaslessFeeResolverTest {
             }
 
         @Test
-        fun `GIVEN the tx contract differs in case WHEN resolveWithAutoFeeToken THEN no token is quoted`() =
+        fun `GIVEN an exact approval WHEN resolveWithAutoFeeToken THEN the quote is requested for the approved token`() =
             runTest {
+                // Arrange
+                val transactionData = approval(approvedValue = BigDecimal("3"))
+
+                // Act
+                val actual = resolve(transactionData = transactionData)
+
+                // Assert
+                assertThat(actual).isEqualTo(gaslessFee(GASLESS_FEE).right())
+                coVerify(exactly = 1) {
+                    getTronGaslessFeeUseCase(
+                        userWalletId = userWalletId,
+                        transactionData = transactionData,
+                        feeToken = usdt,
+                    )
+                }
+            }
+
+        @Test
+        fun `GIVEN the tx contract differs in case WHEN resolveWithAutoFeeToken THEN no token is quoted`() = runTest {
                 // Arrange
                 val transactionData = tokenTransfer(contract = USDT_CONTRACT.lowercase())
 
@@ -459,6 +480,7 @@ internal class TronGaslessFeeResolverTest {
             SelectedNotApplicableModel(transactionData = coinTransfer()),
             SelectedNotApplicableModel(transactionData = tokenTransfer(value = BigDecimal.ZERO)),
             SelectedNotApplicableModel(isSupported = false),
+            SelectedNotApplicableModel(transactionData = approval(approvedValue = null)),
         )
 
         fun provideQuoteResults(): List<Either<GetFeeError, TransactionFeeExtended>> = listOf(
@@ -595,6 +617,19 @@ internal class TronGaslessFeeResolverTest {
             fee = null,
             sourceAddress = "TFrom",
             destinationAddress = "TTo",
+        )
+
+        fun approval(approvedValue: BigDecimal?): TransactionData.Uncompiled = TransactionData.Uncompiled(
+            amount = Amount(token = usdtSdkToken(USDT_CONTRACT), value = BigDecimal.ZERO),
+            fee = null,
+            sourceAddress = "TFrom",
+            destinationAddress = USDT_CONTRACT,
+            extras = TronTransactionExtras(
+                callData = TronApprovalTokenCallData(
+                    spenderAddress = "TRouter",
+                    amount = approvedValue?.let { Amount(token = usdtSdkToken(USDT_CONTRACT), value = it) },
+                ),
+            ),
         )
 
         fun coinTransfer(): TransactionData.Uncompiled = TransactionData.Uncompiled(
