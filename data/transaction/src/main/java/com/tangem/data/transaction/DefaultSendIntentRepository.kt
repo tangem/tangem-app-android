@@ -11,6 +11,8 @@ import com.tangem.domain.transaction.SendIntentRepository
 import com.tangem.domain.transaction.error.SendIntentError
 import com.tangem.domain.transaction.models.SendIntent
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.seconds
 
 internal class DefaultSendIntentRepository(
     private val transactionIntentApi: TransactionIntentApi,
@@ -41,6 +43,26 @@ internal class DefaultSendIntentRepository(
     }
 
     /** Completing the intent retries on any server failure itself, so only reading tells HTTP 5xx apart. */
+    override suspend fun reportSendIntentHash(intentId: String, txHash: String): Either<Throwable, Unit> {
+        var result = completeSendIntent(intentId = intentId, txHash = txHash)
+
+        for (pause in RETRY_PAUSES) {
+            if (result.leftOrNull()?.mayPass() != true) break
+            delay(pause)
+            result = completeSendIntent(intentId = intentId, txHash = txHash)
+        }
+
+        return result
+    }
+
+    private fun Throwable.mayPass(): Boolean = when (this) {
+        is ApiResponseError.NetworkException,
+        is ApiResponseError.TimeoutException,
+        -> true
+        is ApiResponseError.HttpException -> isServerError() || code in RETRIABLE_CLIENT_ERRORS
+        else -> false
+    }
+
     private fun convertReadError(intentId: String, cause: ApiResponseError): Throwable {
         val error = convertError(intentId = intentId, cause = cause)
 
@@ -62,5 +84,15 @@ internal class DefaultSendIntentRepository(
             -> TangemLogger.i(error.message)
             else -> TangemLogger.e(message, error)
         }
+    }
+
+    private companion object {
+        // Three more attempts after the first, as the requirements ask
+        val RETRY_PAUSES = listOf(2.seconds, 5.seconds, 15.seconds)
+        val RETRIABLE_CLIENT_ERRORS = setOf(
+            ApiResponseError.HttpException.Code.UNAUTHORIZED,
+            ApiResponseError.HttpException.Code.REQUEST_TIMEOUT,
+            ApiResponseError.HttpException.Code.TOO_MANY_REQUESTS,
+        )
     }
 }

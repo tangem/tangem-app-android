@@ -17,10 +17,15 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultSendIntentRepositoryTest {
 
     private val transactionIntentApi: TransactionIntentApi = mockk()
@@ -197,6 +202,131 @@ internal class DefaultSendIntentRepositoryTest {
 
         // Assert
         assertThat(actual).isEqualTo(Either.Left(failure))
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ReportHash {
+
+        @Test
+        fun `GIVEN service accepts the hash WHEN reportSendIntentHash THEN it is sent once without a pause`() = runTest {
+            // Arrange
+            stubConfirm(ApiResponse.Success(Unit, code = ApiResponseError.HttpException.Code.NO_CONTENT))
+
+            // Act
+            val actual = repository.reportSendIntentHash(INTENT_ID, TX_HASH)
+
+            // Assert
+            assertThat(actual).isEqualTo(Either.Right(Unit))
+            assertThat(testScheduler.currentTime).isEqualTo(0L)
+            coVerify(exactly = 1) { transactionIntentApi.confirmIntentTransaction(INTENT_ID, any()) }
+        }
+
+        @Test
+        fun `GIVEN no network at first WHEN reportSendIntentHash THEN it is sent again after a pause`() = runTest {
+            // Arrange
+            coEvery { transactionIntentApi.confirmIntentTransaction(INTENT_ID, any()) } returnsMany listOf(
+                failure(ApiResponseError.NetworkException()),
+                ApiResponse.Success(Unit, code = ApiResponseError.HttpException.Code.NO_CONTENT),
+            )
+
+            // Act
+            val actual = repository.reportSendIntentHash(INTENT_ID, TX_HASH)
+
+            // Assert
+            assertThat(actual).isEqualTo(Either.Right(Unit))
+            assertThat(testScheduler.currentTime).isEqualTo(2_000L)
+            coVerify(exactly = 2) { transactionIntentApi.confirmIntentTransaction(INTENT_ID, any()) }
+        }
+
+        @Test
+        fun `GIVEN service never reachable WHEN reportSendIntentHash THEN it gives up with the last failure`() = runTest {
+            // Arrange
+            val last = ApiResponseError.TimeoutException()
+            coEvery { transactionIntentApi.confirmIntentTransaction(INTENT_ID, any()) } returnsMany listOf(
+                failure(ApiResponseError.NetworkException()),
+                failure(ApiResponseError.NetworkException()),
+                failure(ApiResponseError.NetworkException()),
+                failure(last),
+            )
+
+            // Act
+            val actual = repository.reportSendIntentHash(INTENT_ID, TX_HASH)
+
+            // Assert
+            assertThat(actual).isEqualTo(Either.Left(last))
+            assertThat(testScheduler.currentTime).isEqualTo(22_000L)
+            coVerify(exactly = 4) { transactionIntentApi.confirmIntentTransaction(INTENT_ID, any()) }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN failure that may pass WHEN reportSendIntentHash THEN it is tried again`(
+            code: ApiResponseError.HttpException.Code,
+        ) = runTest {
+            // Arrange
+            coEvery { transactionIntentApi.confirmIntentTransaction(INTENT_ID, any()) } returnsMany listOf(
+                failure(ApiResponseError.HttpException(code = code, message = null, errorBody = null)),
+                ApiResponse.Success(Unit, code = ApiResponseError.HttpException.Code.NO_CONTENT),
+            )
+
+            // Act
+            val actual = repository.reportSendIntentHash(INTENT_ID, TX_HASH)
+
+            // Assert
+            assertThat(actual).isEqualTo(Either.Right(Unit))
+            coVerify(exactly = 2) { transactionIntentApi.confirmIntentTransaction(INTENT_ID, any()) }
+        }
+
+        @Suppress("unused")
+        private fun provideTestModels() = listOf(
+            ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR,
+            ApiResponseError.HttpException.Code.BAD_GATEWAY,
+            ApiResponseError.HttpException.Code.SERVICE_UNAVAILABLE,
+            ApiResponseError.HttpException.Code.UNAUTHORIZED,
+            ApiResponseError.HttpException.Code.REQUEST_TIMEOUT,
+            ApiResponseError.HttpException.Code.TOO_MANY_REQUESTS,
+        )
+
+        @Test
+        fun `GIVEN service refuses the hash for good WHEN reportSendIntentHash THEN it is not tried again`() = runTest {
+            // Arrange
+            val badRequest = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.BAD_REQUEST,
+                message = null,
+                errorBody = null,
+            )
+            stubConfirm(failure(badRequest))
+
+            // Act
+            val actual = repository.reportSendIntentHash(INTENT_ID, TX_HASH)
+
+            // Assert
+            assertThat(actual).isEqualTo(Either.Left(badRequest))
+            assertThat(testScheduler.currentTime).isEqualTo(0L)
+            coVerify(exactly = 1) { transactionIntentApi.confirmIntentTransaction(INTENT_ID, any()) }
+        }
+
+        @Test
+        fun `GIVEN intent already carries another hash WHEN reportSendIntentHash THEN it is not tried again`() = runTest {
+            // Arrange
+            val conflict = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.CONFLICT,
+                message = null,
+                errorBody = """{"status":409,"code":"INTENT_ALREADY_COMPLETED"}""",
+            )
+            stubConfirm(failure(conflict))
+
+            // Act
+            val actual = repository.reportSendIntentHash(INTENT_ID, TX_HASH)
+
+            // Assert
+            assertThat(actual).isEqualTo(Either.Left(SendIntentError.AlreadyCompleted(INTENT_ID)))
+            coVerify(exactly = 1) { transactionIntentApi.confirmIntentTransaction(INTENT_ID, any()) }
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        private fun failure(cause: ApiResponseError): ApiResponse<Unit> = ApiResponse.Error(cause) as ApiResponse<Unit>
     }
 
     private fun stubConfirm(response: ApiResponse<Unit>) {
