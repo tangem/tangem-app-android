@@ -52,7 +52,7 @@ internal class SendIntentOfferConverterTest {
     fun `GIVEN token intent WHEN convert THEN offer shows token amount with network badge`() {
         // Arrange
         val onProceed: () -> Unit = {}
-        val expected = SendIntentUM.Offer(
+        val expected = SendIntentUM(
             token = TangemTokenIcon.UiState.Token(
                 TangemTokenIcon.State(url = usdt.iconUrl, topIcon = usdt.networkIconResId),
             ),
@@ -73,7 +73,7 @@ internal class SendIntentOfferConverterTest {
     fun `GIVEN coin intent WHEN convert THEN offer shows coin amount without network badge`() {
         // Arrange
         val onProceed: () -> Unit = {}
-        val expected = SendIntentUM.Offer(
+        val expected = SendIntentUM(
             token = TangemTokenIcon.UiState.Token(TangemTokenIcon.State(url = eth.iconUrl, topIcon = null)),
             title = stringReference("mcp.claude.com Agent wants to send 1.50 ETH"),
             agent = SendIntentAgentUM.Verified(iconUrl = claude.iconUrl, label = stringReference("mcp.claude.com")),
@@ -219,7 +219,7 @@ internal class SendIntentOfferConverterTest {
         currency: CryptoCurrency = usdt,
         agent: McpAgent = claude,
         onProceed: () -> Unit = {},
-    ): SendIntentUM.Offer? = converter.convert(
+    ): SendIntentUM? = converter.convert(
         SendIntentOfferConverter.Input(intent = intent, currency = currency, agent = agent, onProceed = onProceed),
     )
 

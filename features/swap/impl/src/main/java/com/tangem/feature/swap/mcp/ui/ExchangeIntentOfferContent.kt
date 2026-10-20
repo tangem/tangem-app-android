@@ -21,7 +21,7 @@ import com.tangem.feature.swap.mcp.model.ExchangeIntentUM
  * [Figma](https://www.figma.com/design/Qqm0dNTOnqtxLYEcmgc32C/Store?node-id=25973-248232)
  */
 @Composable
-internal fun ExchangeIntentOfferContent(state: ExchangeIntentUM.Offer, modifier: Modifier = Modifier) {
+internal fun ExchangeIntentOfferContent(state: ExchangeIntentUM, modifier: Modifier = Modifier) {
     TangemModalStatus(
         modifier = modifier,
         variant = TangemModalStatus.Variant.Info,
@@ -37,7 +37,7 @@ internal fun ExchangeIntentOfferContent(state: ExchangeIntentUM.Offer, modifier:
 private fun ExchangeIntentOfferContentPreview() {
     TangemThemePreviewRedesign {
         ExchangeIntentOfferContent(
-            state = ExchangeIntentUM.Offer(
+            state = ExchangeIntentUM(
                 fromToken = TangemTokenIcon.UiState.Token(TangemTokenIcon.State(url = null)),
                 toToken = TangemTokenIcon.UiState.Token(TangemTokenIcon.State(url = null)),
                 title = stringReference("mcp.claude.com Agent wants to swap 42.00 USDT to POL"),
