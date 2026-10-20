@@ -102,6 +102,26 @@ data class OrderRequest(
     ) : Data
 
     @Serializable
+    @SerialName("ONBOARDING_RAIN")
+    data class Onboarding(
+        @SerialName("customer_wallet_address") val customerWalletAddress: String,
+        @SerialName("tariff_plan_transition") val tariffPlanTransition: OnboardingTariffPlanTransition?,
+        @SerialName("account_issue_banking") val accountIssueBanking: OnboardingAccountIssueBanking?,
+    ) : Data
+
+    @Serializable
+    data class OnboardingTariffPlanTransition(
+        @SerialName("target_tariff_plan_id") val targetTariffPlanId: String,
+        @SerialName("tariff_plan_transition_type") val tariffPlanTransitionType: String,
+    )
+
+    @Serializable
+    data class OnboardingAccountIssueBanking(
+        @SerialName("deposit_address") val depositAddress: String,
+        @SerialName("signature") val signature: String,
+    )
+
+    @Serializable
     data class ShippingAddress(
         @SerialName("first_name") val firstName: String,
         @SerialName("last_name") val lastName: String,
