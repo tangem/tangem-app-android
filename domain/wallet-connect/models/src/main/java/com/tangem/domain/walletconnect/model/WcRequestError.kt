@@ -21,6 +21,12 @@ sealed class WcRequestError {
      */
     data object RequestExpired : WcRequestError()
 
+    /**
+     * The request violates a Tangem signing policy (e.g. typed data that authorizes the gasless executor on behalf
+     * of the user's account) and must never be signed. Rejected before the user can confirm it.
+     */
+    data object ForbiddenRequest : WcRequestError()
+
     companion object {
 
         fun WcRequestError.message(): String = when (this) {
@@ -29,6 +35,7 @@ sealed class WcRequestError {
             is WrappedSendError -> sendTransactionError.message()
             is HandleMethodError -> message
             RequestExpired -> "WalletConnect request is no longer valid"
+            ForbiddenRequest -> "WalletConnect request is forbidden by signing policy"
         }
 
         fun WcRequestError.code(): String = when (this) {
@@ -37,6 +44,7 @@ sealed class WcRequestError {
             is WcRespondError -> this.code.toString()
             is WrappedSendError -> sendTransactionError.code()
             RequestExpired -> "RequestExpired"
+            ForbiddenRequest -> "ForbiddenRequest"
         }
 
         private fun SendTransactionError.code(): String = when (this) {
