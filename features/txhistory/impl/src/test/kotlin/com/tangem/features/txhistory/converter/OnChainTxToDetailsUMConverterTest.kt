@@ -18,6 +18,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
@@ -1512,6 +1513,33 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     private fun provideYieldModeTypes() = listOf(
         TransactionType.YieldSupply.Enter(address = USER_ADDRESS),
         TransactionType.YieldSupply.Exit(address = USER_ADDRESS),
+    )
+
+    @ParameterizedTest
+    @MethodSource("provideYieldServiceIconModels")
+    fun `GIVEN yield service tx WHEN convert THEN header repeats the list row glyph`(model: YieldServiceIconModel) {
+        // Act
+        val icon = converter.convert(txInfo(type = model.type)).header.icon
+
+        // Assert
+        assertThat(icon).isEqualTo(model.expectedIcon)
+    }
+
+    internal data class YieldServiceIconModel(val type: TransactionType.YieldSupply, val expectedIcon: TxIcon)
+
+    private fun provideYieldServiceIconModels() = listOf(
+        YieldServiceIconModel(
+            type = TransactionType.YieldSupply.DeployContract(address = USER_ADDRESS),
+            expectedIcon = TxIcon.Vector(Icons.ic_document_20),
+        ),
+        YieldServiceIconModel(
+            type = TransactionType.YieldSupply.InitializeToken(address = USER_ADDRESS),
+            expectedIcon = TxIcon.Res(R.drawable.ic_gear_24),
+        ),
+        YieldServiceIconModel(
+            type = TransactionType.YieldSupply.ReactivateToken(address = USER_ADDRESS),
+            expectedIcon = TxIcon.Vector(Icons.ic_arrow_refresh_20),
+        ),
     )
 
     @Test
