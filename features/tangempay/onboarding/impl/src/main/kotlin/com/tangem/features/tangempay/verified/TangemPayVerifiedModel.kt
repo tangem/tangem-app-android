@@ -76,6 +76,7 @@ internal class TangemPayVerifiedModel @Inject constructor(
         stackNavigation.pushNew(TangemPayVerifiedRoute.SelectPlan)
     }
 
+    @Suppress("UnusedParameter")
     fun onPlanSelected(transition: TangemPayTariffPlanTransition) {
         // TODO v_rodionov: #[REDACTED_TASK_KEY]
     }
