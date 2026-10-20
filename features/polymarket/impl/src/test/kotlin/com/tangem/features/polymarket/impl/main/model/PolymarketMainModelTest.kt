@@ -1604,8 +1604,8 @@ internal class PolymarketMainModelTest {
 
     private fun successResult(last: Boolean) = BatchFetchResult.Success(
         data = batchOf(createEvent()),
-        empty = false,
-        last = last,
+        isEmpty = false,
+        isLast = last,
     )
 
     private fun categories(): List<PolymarketCategory> = listOf(

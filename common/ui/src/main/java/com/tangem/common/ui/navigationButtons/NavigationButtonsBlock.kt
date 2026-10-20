@@ -69,20 +69,20 @@ fun NavigationButtonsBlockV2(
     modifier: Modifier = Modifier,
     footerText: TextReference? = null,
 ) {
-    val navigationUM = navigationUM as? NavigationUM.Content
+    val contentUM = navigationUM as? NavigationUM.Content
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.fillMaxWidth(),
     ) {
         InfoText(footerText)
-        DoneButtons(navigationUM?.secondaryPairButtonsUM)
+        DoneButtons(contentUM?.secondaryPairButtonsUM)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            PreviousButton(navigationUM?.prevButton)
-            key(navigationUM?.source) {
-                NavigationPrimaryButton(navigationUM?.primaryButton, modifier = Modifier.weight(1f))
+            PreviousButton(contentUM?.prevButton)
+            key(contentUM?.source) {
+                NavigationPrimaryButton(contentUM?.primaryButton, modifier = Modifier.weight(1f))
             }
         }
     }

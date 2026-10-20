@@ -191,8 +191,8 @@ private fun BalanceContent(balance: UserWalletItemUM.Balance, modifier: Modifier
         modifier = modifier,
         targetState = balance,
         label = "Balance content",
-    ) { balance ->
-        when (balance) {
+    ) { targetBalance ->
+        when (targetBalance) {
             UserWalletItemUM.Balance.Locked -> {
                 Icon(
                     modifier = Modifier
@@ -215,7 +215,7 @@ private fun BalanceContent(balance: UserWalletItemUM.Balance, modifier: Modifier
                         maxLines = 1,
                     )
 
-                    val (balanceValue, isFlickering) = getBalanceValueAndFlickerState(balance)
+                    val (balanceValue, isFlickering) = getBalanceValueAndFlickerState(targetBalance)
 
                     if (balanceValue == null) {
                         TextShimmer(

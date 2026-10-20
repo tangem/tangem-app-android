@@ -64,7 +64,7 @@ internal class WcSendTransactionUMConverter @Inject constructor(
                     isLoading = value.signState.domainStep == WcSignStep.Signing,
                     address = WcAddressConverter.convert(value.context.derivationState),
                     transactionValidationResult = value.securityCheck?.result?.validation,
-                    sendEnabled = when (value.feeState) {
+                    isSendEnabled = when (value.feeState) {
                         WcTransactionFeeState.None -> feeErrorNotification == null
                         is WcTransactionFeeState.Success -> {
                             value.feeSelectorUM is FeeSelectorUM.Content && feeErrorNotification == null

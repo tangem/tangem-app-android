@@ -64,7 +64,7 @@ internal class PolymarketPositionsBatchFetcherTest {
         // Assert
         assertThat(requests).containsExactly(First(10), Next("cursor-1"), Next("cursor-1")).inOrder()
         assertThat((failure as BatchFetchResult.Error).throwable).isInstanceOf(PolymarketPositionsReadException::class.java)
-        assertThat(retry).isEqualTo(BatchFetchResult.Success(listOf(position), empty = false, last = false))
+        assertThat(retry).isEqualTo(BatchFetchResult.Success(listOf(position), isEmpty = false, isLast = false))
     }
 
     @Test
@@ -76,7 +76,7 @@ internal class PolymarketPositionsBatchFetcherTest {
         val result = fetcher.fetchFirst(config)
 
         // Assert
-        assertThat(result).isEqualTo(BatchFetchResult.Success(emptyList<PolymarketPosition>(), empty = true, last = true))
+        assertThat(result).isEqualTo(BatchFetchResult.Success(emptyList<PolymarketPosition>(), isEmpty = true, isLast = true))
     }
 
     @Test
@@ -111,7 +111,7 @@ internal class PolymarketPositionsBatchFetcherTest {
         val next = fetcher.fetchNext(overrideRequestParams = null, lastResult = first)
 
         // Assert
-        assertThat(first).isEqualTo(BatchFetchResult.Success(listOf(position), empty = false, last = true))
+        assertThat(first).isEqualTo(BatchFetchResult.Success(listOf(position), isEmpty = false, isLast = true))
         assertThat((next as BatchFetchResult.Error).throwable).isInstanceOf(EndOfPaginationException::class.java)
         assertThat(requests).containsExactly(First(10))
     }
@@ -126,7 +126,7 @@ internal class PolymarketPositionsBatchFetcherTest {
         val next = fetcher.fetchNext(overrideRequestParams = null, lastResult = first)
 
         // Assert
-        assertThat(first).isEqualTo(BatchFetchResult.Success(listOf(position), empty = false, last = false))
+        assertThat(first).isEqualTo(BatchFetchResult.Success(listOf(position), isEmpty = false, isLast = false))
         assertThat(next).isInstanceOf(BatchFetchResult.Error::class.java)
     }
 

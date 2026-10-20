@@ -15,7 +15,7 @@ internal data class ExchangeUM(
     val activeStatus: ExchangeStatus?,
     val statuses: ImmutableList<ExchangeStatusState>,
     val notification: ExchangeStatusNotification?,
-    val showProviderLink: Boolean,
+    val shouldShowProviderLink: Boolean,
     val fromUserWalletId: UserWalletId,
     val fromCryptoCurrency: CryptoCurrency,
     val toCryptoCurrency: CryptoCurrency,

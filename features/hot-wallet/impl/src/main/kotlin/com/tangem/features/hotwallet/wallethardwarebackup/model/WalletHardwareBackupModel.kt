@@ -164,7 +164,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
                 // signing in no longer restores this one. So for a social wallet only the seed phrase counts.
                 val isSocialBackedUp = isSocialBackupCompletedUseCase(userWallet.walletId)
                 val isNoticeNeeded = if (isSocialBackedUp) {
-                    !userWallet.backedUp
+                    !userWallet.isBackedUp
                 } else {
                     !isWalletBackedUpUseCase(userWallet)
                 }

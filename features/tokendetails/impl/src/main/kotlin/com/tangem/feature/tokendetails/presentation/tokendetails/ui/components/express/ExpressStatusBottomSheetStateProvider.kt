@@ -92,7 +92,7 @@ class ExpressStatusBottomSheetStateProvider : PreviewParameterProvider<ExpressSt
                         onGoToProviderClick = {},
                         providerName = "Unlimit",
                     ),
-                    showProviderLink = false,
+                    shouldShowProviderLink = false,
                     fromCryptoCurrency = token,
                     toCryptoCurrency = token,
                     hasLongTime = true,

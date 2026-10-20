@@ -6,7 +6,7 @@ sealed class WalletScreenAnalyticsEvent {
 
     sealed class MainScreen(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : AnalyticsEvent(category = "Main Screen", event = event, params = params) {
 
         data class ScreenOpened(
@@ -153,7 +153,7 @@ sealed class WalletScreenAnalyticsEvent {
 
     sealed class PushBannerPromo(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : AnalyticsEvent(category = "Promo", event = event, params = params) {
 
         class PushBanner : PushBannerPromo(event = "Push Banner")

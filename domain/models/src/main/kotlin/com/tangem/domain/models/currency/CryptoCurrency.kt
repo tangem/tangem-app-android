@@ -310,7 +310,7 @@ sealed class CryptoCurrency {
     protected fun checkProperties() {
         require(name.isNotBlank()) { "Crypto currency name must not be blank" }
         require(symbol.isNotBlank()) { "Crypto currency symbol must not be blank" }
-        require(iconUrl?.isNotBlank() ?: true) { "Crypto currency icon URL must not be blank" }
+        require(iconUrl?.isNotBlank() != false) { "Crypto currency icon URL must not be blank" }
         require(decimals >= 0) { "Crypto currency decimal must not be less then zero, but it is: $decimals" }
     }
 }

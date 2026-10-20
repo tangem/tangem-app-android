@@ -135,7 +135,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     }
 
     fun onBack() {
-        if (uiState.value.scanPrimary) {
+        if (uiState.value.shouldScanPrimary) {
             modelScope.launch { onBackFlow.emit(Unit) }
         } else {
             uiMessageSender.send(CantLeaveBackupDialog)
@@ -161,7 +161,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         return MultiWalletFinalizeUM(
             isRing = batchId?.let { isRing(it) } == true,
             onScanClick = ::onLinkClick,
-            scanPrimary = initialStep == MultiWalletFinalizeUM.Step.Primary,
+            shouldScanPrimary = initialStep == MultiWalletFinalizeUM.Step.Primary,
             cardNumber = cardId?.lastMasked().orEmpty(),
             step = initialStep,
         )
@@ -217,7 +217,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                         st.copy(
                             step = MultiWalletFinalizeUM.Step.BackupDevice1,
                             isRing = backupService.backupCardsBatchIds.getOrNull(0)?.let(::isRing) == true,
-                            scanPrimary = false,
+                            shouldScanPrimary = false,
                             cardNumber = backupService.backupCardIds.firstOrNull()?.lastMasked().orEmpty(),
                         )
                     }

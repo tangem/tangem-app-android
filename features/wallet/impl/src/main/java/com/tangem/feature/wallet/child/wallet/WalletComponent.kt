@@ -343,7 +343,7 @@ internal class WalletComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val bottomSheetState = remember { mutableStateOf(BottomSheetState.COLLAPSED) }
         var headerSize by remember { mutableStateOf(0.dp) }
-        val dialog by dialog.subscribeAsState()
+        val dialogSlot by dialog.subscribeAsState()
         val uiState by model.uiState.collectAsStateWithLifecycle()
         val isShtorkaBlurEnabled by feedV2Component.isSheetBlurEnabled.collectAsStateWithLifecycle()
         val isShtorkaPartialExpansionSupported = if (feedFeatureToggles.isNewShtorkaEnabled) {
@@ -392,12 +392,12 @@ internal class WalletComponent @AssistedInject constructor(
             onBottomSheetStateChange = { bottomSheetState.value = it },
         )
 
-        when (val dialog = dialog.child?.instance) {
-            is ComposableDialogComponent -> dialog.Dialog()
+        when (val dialogComponent = dialogSlot.child?.instance) {
+            is ComposableDialogComponent -> dialogComponent.Dialog()
             is DefaultTokenActionsComponent -> {
-                dialog.Content(Modifier.hazeEffectTangem())
+                dialogComponent.Content(Modifier.hazeEffectTangem())
             }
-            is ComposableBottomSheetComponent -> dialog.BottomSheet()
+            is ComposableBottomSheetComponent -> dialogComponent.BottomSheet()
             else -> {}
         }
     }

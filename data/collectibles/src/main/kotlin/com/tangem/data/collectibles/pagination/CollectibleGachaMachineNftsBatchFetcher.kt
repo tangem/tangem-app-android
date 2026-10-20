@@ -44,7 +44,7 @@ internal class CollectibleGachaMachineNftsBatchFetcher(
             ?: lastConfig
             ?: error("fetchFirst() must be called before fetchNext()")
 
-        if (lastResult is BatchFetchResult.Success && lastResult.last && overrideRequestParams == null) {
+        if (lastResult is BatchFetchResult.Success && lastResult.isLast && overrideRequestParams == null) {
             return BatchFetchResult.Error(EndOfPaginationException())
         }
 
@@ -64,8 +64,8 @@ internal class CollectibleGachaMachineNftsBatchFetcher(
 
                 BatchFetchResult.Success(
                     data = fetched.nfts,
-                    empty = fetched.nfts.isEmpty(),
-                    last = !fetched.hasMore,
+                    isEmpty = fetched.nfts.isEmpty(),
+                    isLast = !fetched.hasMore,
                 )
             },
             // A failed page keeps [nextPage] where it is, so a retry re-requests the page that failed.

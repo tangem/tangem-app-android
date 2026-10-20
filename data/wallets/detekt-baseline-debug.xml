@@ -3,7 +3,5 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>NamedArguments:DefaultHotWalletAccessCodeAttemptsRepository.kt$DefaultHotWalletAccessCodeAttemptsRepository$toState(id, count, deadline, boot)</ID>
-    <ID>UnnecessaryLet:MissedDerivationsFinder.kt$MissedDerivationsFinder$let(::findByNetworks)</ID>
-    <ID>UseOrEmpty:DefaultColdMapDerivationsRepository.kt$DefaultColdMapDerivationsRepository$oldKeys[walletKey] ?: emptyMap()</ID>
   </CurrentIssues>
 </SmellBaseline>

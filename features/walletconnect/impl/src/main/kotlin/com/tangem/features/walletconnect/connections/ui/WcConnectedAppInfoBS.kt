@@ -124,8 +124,8 @@ private fun WcConnectedAppInfoBSContent(state: WcConnectedAppInfoUM, modifier: M
                 .padding(vertical = 16.dp)
                 .testTag(WalletConnectDetailsBottomSheetTestTags.DISCONNECT_BUTTON),
             text = stringResourceSafe(R.string.common_disconnect),
-            enabled = state.disconnectButtonConfig.enabled,
-            showProgress = state.disconnectButtonConfig.showProgress,
+            enabled = state.disconnectButtonConfig.isEnabled,
+            showProgress = state.disconnectButtonConfig.shouldShowProgress,
             onClick = state.disconnectButtonConfig.onClick,
         )
     }
@@ -239,7 +239,11 @@ private fun WcConnectedAppInfoBS_Preview() {
                         symbol = "solana",
                     ),
                 ),
-                disconnectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = true, onClick = {}),
+                disconnectButtonConfig = WcPrimaryButtonConfig(
+                    shouldShowProgress = false,
+                    isEnabled = true,
+                    onClick = {},
+                ),
                 onDismiss = {},
             ),
         )
@@ -280,7 +284,11 @@ private fun WcConnectedAppInfoBS_OneWallet_Preview() {
                         symbol = "solana",
                     ),
                 ),
-                disconnectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = true, onClick = {}),
+                disconnectButtonConfig = WcPrimaryButtonConfig(
+                    shouldShowProgress = false,
+                    isEnabled = true,
+                    onClick = {},
+                ),
                 onDismiss = {},
             ),
         )

@@ -88,7 +88,7 @@ internal class DefaultSocialLoginUseCaseTest {
         walletId = WALLET_ID,
         hotWalletId = hotWalletId,
         wallets = emptyList(),
-        backedUp = false,
+        isBackedUp = false,
     )
     private val savedWallet = userWallet.copy(isSocialBackupCompleted = true)
     private val restoredHotWalletId: HotWalletId = mockk()
@@ -97,7 +97,7 @@ internal class DefaultSocialLoginUseCaseTest {
         walletId = RESTORED_WALLET_ID,
         hotWalletId = restoredHotWalletId,
         wallets = emptyList(),
-        backedUp = false,
+        isBackedUp = false,
     )
     private val savedRestoredWallet = restoredWallet.copy(isSocialBackupCompleted = true)
 

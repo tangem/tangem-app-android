@@ -2,38 +2,16 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>BooleanPropertyNaming:DefaultUserWalletsFetcher.kt$DefaultUserWalletsFetcher$@Assisted("onlyMultiCurrency") private val onlyMultiCurrency: Boolean</ID>
-    <ID>BooleanPropertyNaming:DraggableItem.kt$DraggableItem$abstract val showShadow: Boolean</ID>
-    <ID>BooleanPropertyNaming:OrganizeTokensState.kt$OrganizeTokensState.ActionsConfig$val showApplyProgress: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:ScrollToWalletTransformer.kt$ScrollToWalletTransformer$private val withScrollAnimation: Boolean = true</ID>
-    <ID>BooleanPropertyNaming:UpdateMultiWalletActionButtonBadgeTransformer.kt$UpdateMultiWalletActionButtonBadgeTransformer$private val showSwapBadge: Boolean</ID>
-    <ID>BooleanPropertyNaming:WalletAdditionalInfo.kt$WalletAdditionalInfo$val hideable: Boolean</ID>
-    <ID>BooleanPropertyNaming:WalletCurrencyActionsClickIntents.kt$WalletCurrencyActionsClickIntentsImplementor$val showSwapStories = maybeSwapStories.getOrNull() != null</ID>
-    <ID>BooleanPropertyNaming:WalletManageButton.kt$WalletManageButton$/** Is click enabled */ abstract val enabled: Boolean</ID>
-    <ID>BooleanPropertyNaming:WalletManageButton.kt$WalletManageButton$/** Whether to dim content */ abstract val dimContent: Boolean</ID>
-    <ID>BooleanPropertyNaming:WalletManageButton.kt$WalletManageButton.Swap$val showBadge: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:WalletScreenState.kt$WalletScreenState$val showMarketsOnboarding: Boolean</ID>
-    <ID>BooleanPropertyNaming:WalletWithFundsChecker.kt$WalletWithFundsChecker$val prevStatus = statusByWalletId.get(userWalletId)</ID>
     <ID>MaxChainedCallsOnSameLine:HasSingleWalletSignedHashesUseCase.kt$HasSingleWalletSignedHashesUseCase$userWallet.scanResponse.card.wallets.firstOrNull()?.totalSignedHashes</ID>
     <ID>NamedArguments:TangemSnapFlingBehavior.kt$HighVelocityApproachAnimation$animateDecay(offset, animationState, decayAnimationSpec, onAnimationStep)</ID>
     <ID>NamedArguments:TangemSnapFlingBehavior.kt$TangemSnapFlingBehavior$animateSnap( closestOffset, closestOffset, animationState, snapAnimationSpec, ) { delta -&gt; remainingScrollOffset -= delta onRemainingScrollOffsetUpdate(remainingScrollOffset) }</ID>
     <ID>NamedArguments:TangemSnapFlingBehavior.kt$TangemSnapFlingBehavior$animateSnap( remainingOffset, remainingOffset, animationState.copy(value = 0f), snapAnimationSpec, ) { delta -&gt; remainingScrollOffset -= delta onAnimationStep(remainingScrollOffset) }</ID>
     <ID>NamedArguments:TangemSnapFlingBehavior.kt$TangemSnapFlingBehavior$approach( initialTargetOffset, initialVelocity, animation, snapLayoutInfoProvider, density, onAnimationStep, )</ID>
     <ID>NamedArguments:TangemSnapFlingBehavior.kt$approachAnimation( this, initialTargetOffset, initialVelocity, onAnimationStep, )</ID>
-    <ID>NoNameShadowing:DefaultUserWalletsFetcher.kt$DefaultUserWalletsFetcher${ it.isMultiCurrency }</ID>
-    <ID>NoNameShadowing:WalletComponent.kt$WalletComponent$dialog</ID>
     <ID>PropertyUsedBeforeDeclaration:BaseWalletClickIntents.kt$BaseWalletClickIntents$_modelScope</ID>
     <ID>PropertyUsedBeforeDeclaration:BaseWalletClickIntents.kt$BaseWalletClickIntents$_router</ID>
     <ID>PropertyUsedBeforeDeclaration:WalletStateController.kt$WalletStateController$mutableUiState</ID>
     <ID>SuspendFunSwallowedCancellation:WalletModel.kt$WalletModel$runCatching</ID>
-    <ID>UnnecessaryLet:TangemSnapFlingBehavior.kt$TangemSnapFlingBehavior$let { abs(it) * sign(initialVelocity) // ensure offset sign is correct }</ID>
-    <ID>UnnecessaryLet:WalletClickIntents.kt$WalletClickIntents$let(::add)</ID>
-    <ID>UseEmptyCounterpart:DefaultUserWalletImageFetcher.kt$DefaultUserWalletImageFetcher$mapOf&lt;String, ArtworkUM&gt;()</ID>
-    <ID>UseEmptyCounterpart:PortfolioOrganizeTokensAnalyticsEvent.kt$PortfolioOrganizeTokensAnalyticsEvent$mapOf()</ID>
-    <ID>UseEmptyCounterpart:PromoActivationAnalytics.kt$PromoActivationAnalytics$mapOf()</ID>
-    <ID>UseEmptyCounterpart:TokenListStateConverter.kt$TokenListStateConverter$listOf()</ID>
-    <ID>UseEmptyCounterpart:WalletScreenAnalyticsEvent.kt$WalletScreenAnalyticsEvent.MainScreen$mapOf()</ID>
-    <ID>UseEmptyCounterpart:WalletScreenAnalyticsEvent.kt$WalletScreenAnalyticsEvent.PushBannerPromo$mapOf()</ID>
     <ID>UseSumOfInsteadOfFlatMapSize:TokenListStateConverter.kt$TokenListStateConverter$flatMap(NetworkGroup::currencies)</ID>
     <ID>VarCouldBeVal:TangemSnapFlingBehavior.kt$TangemSnapFlingBehavior$private var motionScaleDuration = DefaultScrollMotionDurationScale</ID>
   </CurrentIssues>
