@@ -1,8 +1,6 @@
 package com.tangem.features.txhistory.converter
 
 import androidx.annotation.StringRes
-import com.tangem.common.ui.account.CryptoPortfolioIconConverter
-import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TxIcon
@@ -23,7 +21,6 @@ import com.tangem.core.ui.res.generated.icons.ic_lightning_20
 import com.tangem.core.ui.res.generated.icons.ic_percent_20
 import com.tangem.core.ui.res.generated.icons.ic_stack_20
 import com.tangem.core.ui.res.generated.icons.ic_success_20
-import com.tangem.domain.addressbook.model.portfolioIcon
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
@@ -364,50 +361,15 @@ internal class OnChainTxToDetailsUMConverter(
      */
     private fun TxInfo.toCounterpartyUM(): TxHistoryDetailsUM.CounterpartyUM? {
         val address = counterpartyCardAddress() ?: return null
-        val copyAddress = if (allowsAddressCopy()) {
-            { onCopyAddress(address) }
-        } else {
-            null
-        }
-        return when (val owner = resolvedCounterparty()) {
-            is ResolvedOwner.OwnAccount -> TxHistoryDetailsUM.CounterpartyUM(
-                label = counterpartyLabel(incoming = R.string.common_from_account),
-                title = TxHistoryDetailsUM.CounterpartyTitle.Name(owner.account.accountName.toUM().value),
-                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Account(
-                    name = owner.account.accountName.toUM().value,
-                    icon = CryptoPortfolioIconConverter.convert(owner.account.icon),
-                ),
-                onCopyClick = copyAddress,
-            )
-            is ResolvedOwner.OwnPaymentAccount -> TxHistoryDetailsUM.CounterpartyUM(
-                label = counterpartyLabel(incoming = R.string.common_from_account),
-                title = TxHistoryDetailsUM.CounterpartyTitle.Name(owner.account.accountName.toUM().value),
-                avatar = TxHistoryDetailsUM.CounterpartyAvatar.PaymentAccount,
-                onCopyClick = copyAddress,
-            )
-            is ResolvedOwner.OwnWallet -> TxHistoryDetailsUM.CounterpartyUM(
-                label = counterpartyLabel(incoming = R.string.common_from_wallet),
-                title = TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference(owner.walletInfo.name)),
-                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Wallet(deviceIconUM = owner.walletInfo.deviceIconUM),
-                onCopyClick = copyAddress,
-            )
-            is ResolvedOwner.SavedContact -> TxHistoryDetailsUM.CounterpartyUM(
-                label = counterpartyLabel(incoming = R.string.common_from_address),
-                title = TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference(owner.contact.name.value)),
-                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Contact(
-                    name = owner.contact.name.value,
-                    icon = CryptoPortfolioIconConverter.convert(owner.contact.portfolioIcon()),
-                ),
-                onCopyClick = copyAddress,
-            )
-            is ResolvedOwner.External -> TxHistoryDetailsUM.CounterpartyUM(
-                label = counterpartyLabel(incoming = R.string.common_from_address),
-                title = TxHistoryDetailsUM.CounterpartyTitle.Address(owner.address),
-                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Address(rawAddress = owner.address),
-                onCopyClick = copyAddress,
-            )
-            null -> null
-        }
+        val owner = resolvedCounterparty() ?: return null
+        return owner.toCounterpartyUM(
+            label = counterpartyLabel(incoming = owner.incomingLabelRes),
+            onCopyClick = if (allowsAddressCopy()) {
+                { onCopyAddress(address) }
+            } else {
+                null
+            },
+        )
     }
 
     /**
