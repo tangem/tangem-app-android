@@ -145,6 +145,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelector
 import com.tangem.features.send.impl.R
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.filterIf
@@ -208,7 +209,7 @@ internal class SwapModel @Inject constructor(
     private val predictionFundingWindow: PredictionFundingWindow,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val allowPermissionsHandler: AllowPermissionsHandler,
-    swapFeatureToggles: SwapFeatureToggles,
+    private val swapFeatureToggles: SwapFeatureToggles,
     private val getSwapUiModeUseCase: GetSwapUiModeUseCase,
     private val setSwapUiModeUseCase: SetSwapUiModeUseCase,
     private val calculateAmountUseCase: CalculateAmountUseCase,
@@ -3468,14 +3469,15 @@ internal class SwapModel @Inject constructor(
 
                 val swapAmount = SwapAmount(amount, fromSwapCurrencyStatus.currency.decimals)
 
-                // DEX path requires a SwapDataModel and does not support gasless yet. swap-xyz native
-                // transfers (txType=SEND) re-route to the CEX-style flow, so they take the CEX fee path.
+                // swap-xyz native transfers (txType=SEND) re-route to the CEX-style flow, so they take the CEX
+                // fee path.
                 val swapDataForCall = when (quoteState.swapProvider.type) {
                     ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
                         if (quoteState.txType == ExpressTxType.SEND) {
                             null
+                        } else if (isTronGaslessDexSwap(fromSwapCurrencyStatus)) {
+                            quoteState.swapDataModel ?: return Either.Left(GetFeeError.UnknownError)
                         } else {
-                            // TODO support gasless in DEX/DEX_BRIDGE
                             return Either.Left(GetFeeError.GaslessError.NetworkIsNotSupported)
                         }
                     }
@@ -3640,6 +3642,9 @@ internal class SwapModel @Inject constructor(
         }
     }
 
+    private fun isTronGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
+        swapFeatureToggles.isTronGaslessDexSwapEnabled && isTron(fromSwapCurrencyStatus.currency.network.rawId)
+
     /**
      * Loads the approval transaction + its fee, stores both on the current
      * [SwapState.QuotesLoadedState] as [IntegratedApprovalData], and returns the *combined*
@@ -3748,6 +3753,8 @@ internal class SwapModel @Inject constructor(
             feeFooter = resourceReference(R.string.swap_give_permission_fee_footer),
             isResetApproval = permissionState.isResetApproval,
             isHoldToConfirm = isHoldToConfirm,
+            isTronGaslessSupported = swapFeatureToggles.isTronGaslessDexSwapEnabled &&
+                isTron(fromSwapCurrencyStatus.currency.network.rawId),
             callback = approvalFullCallback,
         )
     }
