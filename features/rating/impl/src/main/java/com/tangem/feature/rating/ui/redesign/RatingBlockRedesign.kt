@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,7 +24,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -37,6 +35,9 @@ private const val STARS_COUNT = 5
 /**
  * Redesigned provider-rating card shown in the transaction details bottom sheet.
  *
+ * While the rating is still loading the card draws nothing: it appears under the exchange block only once there is
+ * something to tap, so the details screen never opens on a placeholder.
+ *
  * [Figma](https://www.figma.com/design/Qqm0dNTOnqtxLYEcmgc32C/Store?node-id=5648-171645)
  */
 @Composable
@@ -45,7 +46,7 @@ internal fun RatingBlockRedesign(state: RatingUM, modifier: Modifier = Modifier)
     // every later visit, the stored rating being read back as AlreadyRated. The feedback sheet stays composed through
     // it: the same state change dismisses the sheet, which has to outlive the card to animate away.
     when (val ratingState = state.state) {
-        is RatingUM.RatingState.Loading -> RatingCard(modifier) { RatingLoadingState() }
+        is RatingUM.RatingState.Loading -> Unit
         is RatingUM.RatingState.Unrated -> RatingCard(modifier) {
             TitleAndStars(
                 selectedRating = ratingState.selectedRating,
@@ -70,15 +71,6 @@ private fun RatingCard(modifier: Modifier = Modifier, content: @Composable Colum
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         content = content,
-    )
-}
-
-@Composable
-private fun RatingLoadingState() {
-    TangemShimmer(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(68.dp),
     )
 }
 
@@ -149,7 +141,6 @@ private fun RatingBlockRedesignPreview() {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            RatingBlockRedesign(state = previewState(RatingUM.RatingState.Loading))
             RatingBlockRedesign(state = previewState(RatingUM.RatingState.Unrated(selectedRating = null)))
         }
     }
