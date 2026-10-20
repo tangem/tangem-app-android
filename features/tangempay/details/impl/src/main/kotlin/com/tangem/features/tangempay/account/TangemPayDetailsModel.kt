@@ -212,10 +212,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             .filterIsInstance<PaymentAccountStatusValue.AwaitingPlanSelection>()
             .onEach { status ->
                 router.replaceAll(
-                    TangemPayAccountDetailsInnerRoute.SelectPlan(
-                        tariffPlan = status.tariffPlan,
-                        source = TangemPaySelectPlanSource.TIERS_ONBOARDING,
-                    ),
+                    TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.TIERS_ONBOARDING),
                 )
             }
             .launchIn(modelScope)
@@ -593,13 +590,8 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun openChangePlan() {
-        val tariffPlan = currentStatus.value.tariffPlan ?: return
-        router.push(
-            TangemPayAccountDetailsInnerRoute.SelectPlan(
-                tariffPlan = tariffPlan,
-                source = TangemPaySelectPlanSource.CHANGE_PLAN,
-            ),
-        )
+        if (currentStatus.value.tariffPlan == null) return
+        router.push(TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.CHANGE_PLAN))
     }
 
     private fun openCashback() {
