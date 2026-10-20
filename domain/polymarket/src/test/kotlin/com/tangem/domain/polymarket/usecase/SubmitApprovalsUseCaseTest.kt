@@ -33,14 +33,14 @@ internal class SubmitApprovalsUseCaseTest {
     }
 
     @Test
-    fun `GIVEN a signed onboarding WHEN invoke THEN submits exactly the signed fields`() = runTest {
+    fun `GIVEN signed approvals WHEN invoke THEN submits exactly the signed fields`() = runTest {
         // Arrange
         val batch = slot<PolymarketApprovalsBatch>()
         coEvery { polymarketRepository.submitApprovals(capture(batch)) } returns
             PolymarketWalletStatus.APPROVALS_IN_PROGRESS.right()
 
         // Act
-        val actual = useCase(addresses = ADDRESSES, signed = SIGNED)
+        val actual = useCase(addresses = ADDRESSES, approvals = SIGNED_APPROVALS)
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketWalletStatus.APPROVALS_IN_PROGRESS.right())
@@ -50,11 +50,11 @@ internal class SubmitApprovalsUseCaseTest {
                 depositWalletAddress = SIGNED_DEPOSIT_WALLET,
                 nonce = NONCE,
                 deadline = DEADLINE,
-                calls = SIGNED.approvals.calls,
+                calls = SIGNED_APPROVALS.payload.calls,
                 signature = BATCH_SIGNATURE,
             ),
         )
-        assertThat(batch.captured.calls).isSameInstanceAs(SIGNED.approvals.calls)
+        assertThat(batch.captured.calls).isSameInstanceAs(SIGNED_APPROVALS.payload.calls)
     }
 
     @Test
@@ -64,7 +64,7 @@ internal class SubmitApprovalsUseCaseTest {
             PolymarketWalletError.RelayerRejected.NonceReused.left()
 
         // Act
-        val actual = useCase(addresses = ADDRESSES, signed = SIGNED)
+        val actual = useCase(addresses = ADDRESSES, approvals = SIGNED_APPROVALS)
 
         // Assert
         assertThat(actual).isEqualTo(
@@ -78,7 +78,7 @@ internal class SubmitApprovalsUseCaseTest {
         coEvery { polymarketRepository.submitApprovals(any()) } returns PolymarketWalletError.Network.left()
 
         // Act
-        val actual = useCase(addresses = ADDRESSES, signed = SIGNED)
+        val actual = useCase(addresses = ADDRESSES, approvals = SIGNED_APPROVALS)
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketOnboardingError.Network.left())
@@ -98,16 +98,14 @@ internal class SubmitApprovalsUseCaseTest {
             userWalletId = UserWalletId("011"),
         )
 
-        val SIGNED = PolymarketSignedOnboarding(
-            l1Signature = "0xaa",
-            clobAuthTimestamp = "1735689600",
-            batchSignature = BATCH_SIGNATURE,
-            approvals = PolymarketApprovalsPayload(
+        val SIGNED_APPROVALS = PolymarketSignedOnboarding.SignedApprovals(
+            payload = PolymarketApprovalsPayload(
                 depositWalletAddress = SIGNED_DEPOSIT_WALLET,
                 nonce = NONCE,
                 deadline = DEADLINE,
                 calls = PolymarketApprovalCalls.build(),
             ),
+            signature = BATCH_SIGNATURE,
         )
     }
 }
