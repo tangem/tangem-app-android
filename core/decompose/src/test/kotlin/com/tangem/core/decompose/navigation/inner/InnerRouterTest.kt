@@ -5,67 +5,59 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 internal class InnerRouterTest {
 
-    private val context: AppComponentContext = mockk()
+    private val context: AppComponentContext = mockk {
+        every { dispatchers } returns TestingCoroutineDispatcherProvider()
+    }
     private val stackNavigation: StackNavigation<InnerRoute> = mockk()
     private val fallBackRouter: Router = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(fallBackRouter)
+        clearMocks(stackNavigation, fallBackRouter)
     }
 
     @Test
-    fun `GIVEN current stack WHEN contains inner route THEN only routes of that stack are found`() {
+    fun `GIVEN inner stack WHEN contains inner route THEN only routes of that stack are found`() = runTest {
         // Arrange
-        val router = context.InnerRouter(
-            stackNavigation = stackNavigation,
-            fallBackRouter = fallBackRouter,
-            currentStack = { listOf(InnerRoute.First) },
-        )
+        every { stackNavigation.navigate(any(), any()) } answers {
+            val transformer = firstArg<(List<InnerRoute>) -> List<InnerRoute>>()
+            val callback = secondArg<(List<InnerRoute>, List<InnerRoute>) -> Unit>()
+            val stack = listOf<InnerRoute>(InnerRoute.First)
+            callback(transformer(stack), stack)
+        }
+        val router = context.InnerRouter(stackNavigation = stackNavigation, fallBackRouter = fallBackRouter)
 
         // Act
-        val actual = listOf(InnerRoute.First, InnerRoute.Second).map(router::contains)
+        val actual = listOf(InnerRoute.First, InnerRoute.Second).map { router.contains(it) }
 
         // Assert
         assertThat(actual).containsExactly(true, false).inOrder()
     }
 
     @Test
-    fun `GIVEN no current stack WHEN contains inner route THEN not found`() {
+    fun `GIVEN outer route WHEN contains THEN fallback router answers`() = runTest {
         // Arrange
+        coEvery { fallBackRouter.contains(OuterRoute) } returns true
         val router = context.InnerRouter(stackNavigation = stackNavigation, fallBackRouter = fallBackRouter)
-
-        // Act
-        val actual = router.contains(InnerRoute.First)
-
-        // Assert
-        assertThat(actual).isFalse()
-    }
-
-    @Test
-    fun `GIVEN outer route WHEN contains THEN fallback router answers`() {
-        // Arrange
-        every { fallBackRouter.contains(OuterRoute) } returns true
-        val router = context.InnerRouter(
-            stackNavigation = stackNavigation,
-            fallBackRouter = fallBackRouter,
-            currentStack = { emptyList() },
-        )
 
         // Act
         val actual = router.contains(OuterRoute)
 
         // Assert
         assertThat(actual).isTrue()
+        verify(exactly = 0) { stackNavigation.navigate(any(), any()) }
     }
 
     @Test

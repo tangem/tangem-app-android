@@ -306,7 +306,6 @@ internal class SwapModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isAccountsModeProvider = Provider { isAccountsMode },
         isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
-        router = router,
         isChooseTokenPulseEnabled = swapFeatureToggles.isChooseTokenPulseEnabled,
         isCustomSlippageEnabled = swapFeatureToggles.isCustomSlippageEnabled,
         predictionTopUpLimitsProvider = Provider { predictionTopUpLimits },
@@ -1419,8 +1418,18 @@ internal class SwapModel @Inject constructor(
             swapFee = swapFee,
             feeError = feeSelectorRepository.state.value as? FeeSelectorUM.Error,
             isHighNetworkFee = isHighNetworkFee(swapFee),
+            isFeeCurrencyInStack = isFeeCurrencyInStack(state, dataState.feePaidCryptoCurrency),
             slippage = dataState.slippage,
         )
+    }
+
+    private suspend fun isFeeCurrencyInStack(
+        quoteModel: SwapState.QuotesLoadedState,
+        feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
+    ): Boolean {
+        val feeCurrency = feeCryptoCurrencyStatus?.currency ?: return false
+        val userWalletId = quoteModel.fromTokenInfo.swapCurrencyStatus.userWalletId
+        return router.contains(AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = feeCurrency))
     }
 
     private suspend fun isHighNetworkFee(swapFee: SwapFee?): Boolean {
@@ -3627,13 +3636,18 @@ internal class SwapModel @Inject constructor(
             } else {
                 TangemLogger.e("loadFee: ${feeError.error}, isHidden = true")
                 refreshTransferUIStateIfNeeded()
-                uiState = stateBuilder.createFeeErrorState(
-                    uiStateHolder = uiState,
-                    quoteModel = dataState.getCurrentLoadedSwapState() ?: return,
-                    feeCryptoCurrencyStatus = dataState.feePaidCryptoCurrency,
-                    feeError = feeError.error,
-                )
-                modelScope.launch { forceUpdateState.emit(feeError.copy(isHidden = true)) }
+                val quoteModel = dataState.getCurrentLoadedSwapState() ?: return
+                modelScope.launch {
+                    val feeCryptoCurrencyStatus = dataState.feePaidCryptoCurrency
+                    uiState = stateBuilder.createFeeErrorState(
+                        uiStateHolder = uiState,
+                        quoteModel = quoteModel,
+                        feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                        feeError = feeError.error,
+                        isFeeCurrencyInStack = isFeeCurrencyInStack(quoteModel, feeCryptoCurrencyStatus),
+                    )
+                    forceUpdateState.emit(feeError.copy(isHidden = true))
+                }
             }
         }
     }
