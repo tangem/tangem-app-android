@@ -108,7 +108,10 @@ class GiveApprovalModelTest {
         } returns transactionFeeExtended.right()
     }
 
-    private fun createParams(amount: String): GiveApprovalComponent.Params = GiveApprovalComponent.Params(
+    private fun createParams(
+        amount: String,
+        isTronGaslessSupported: Boolean = false,
+    ): GiveApprovalComponent.Params = GiveApprovalComponent.Params(
         userWalletId = userWalletId,
         cryptoCurrencyStatus = cryptoCurrencyStatus,
         feeCryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -116,12 +119,16 @@ class GiveApprovalModelTest {
         spenderAddress = "0xSpender",
         amountFooter = TextReference.EMPTY,
         feeFooter = TextReference.EMPTY,
+        isTronGaslessSupported = isTronGaslessSupported,
         callback = mockk(relaxed = true),
     )
 
-    private fun createModel(amount: String = "10"): GiveApprovalModel = GiveApprovalModel(
+    private fun createModel(
+        amount: String = "10",
+        isTronGaslessSupported: Boolean = false,
+    ): GiveApprovalModel = GiveApprovalModel(
         dispatchers = TestingCoroutineDispatcherProvider(),
-        paramsContainer = MutableParamsContainer(createParams(amount)),
+        paramsContainer = MutableParamsContainer(createParams(amount, isTronGaslessSupported)),
         createApprovalTransactionUseCase = createApprovalTransactionUseCase,
         getAllowanceInfoUseCase = getAllowanceInfoUseCase,
         sendTransactionUseCase = sendTransactionUseCase,
@@ -146,6 +153,24 @@ class GiveApprovalModelTest {
         assertThat(state.isApproveButtonEnabled).isFalse()
         coVerify(exactly = 1) { feeSelectorReloadTrigger.triggerLoadingState() }
         coVerify(exactly = 1) { feeSelectorReloadTrigger.triggerUpdate() }
+    }
+
+    @Test
+    fun `GIVEN Tron gasless supported WHEN model created THEN only the exact approval is offered`() {
+        // Act
+        val model = createModel(isTronGaslessSupported = true)
+
+        // Assert
+        assertThat(model.uiState.value.approveItems).containsExactly(ApproveType.LIMITED)
+    }
+
+    @Test
+    fun `GIVEN Tron gasless not supported WHEN model created THEN both approval types are offered`() {
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.uiState.value.approveItems).containsExactly(ApproveType.LIMITED, ApproveType.UNLIMITED)
     }
 
     @Test
