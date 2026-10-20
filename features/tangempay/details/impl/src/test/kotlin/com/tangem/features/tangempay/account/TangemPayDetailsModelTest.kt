@@ -453,7 +453,7 @@ internal class TangemPayDetailsModelTest {
         advanceUntilIdle()
 
         // THEN
-        verify(exactly = 1) { router.replaceAll(routes = selectPlanRoutes(awaitingPlanSelection), onComplete = any()) }
+        verify(exactly = 1) { router.replaceAll(routes = selectPlanRoutes(), onComplete = any()) }
         model.onDestroy()
     }
 
@@ -499,7 +499,7 @@ internal class TangemPayDetailsModelTest {
 
             // THEN
             verify(exactly = 1) {
-                router.replaceAll(routes = selectPlanRoutes(awaitingPlanSelection), onComplete = any())
+                router.replaceAll(routes = selectPlanRoutes(), onComplete = any())
             }
             model.onDestroy()
         }
@@ -650,11 +650,8 @@ internal class TangemPayDetailsModelTest {
         ),
     )
 
-    private fun selectPlanRoutes(status: PaymentAccountStatusValue.AwaitingPlanSelection) = arrayOf(
-        TangemPayAccountDetailsInnerRoute.SelectPlan(
-            tariffPlan = status.tariffPlan,
-            source = TangemPaySelectPlanSource.TIERS_ONBOARDING,
-        ),
+    private fun selectPlanRoutes() = arrayOf(
+        TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.TIERS_ONBOARDING),
     )
 
     @Test
@@ -1618,7 +1615,6 @@ internal class TangemPayDetailsModelTest {
             DeepLinkRouteModel(
                 initialRoute = TangemPayDetailsInitialRoute.CHANGE_PLAN,
                 expectedRoute = TangemPayAccountDetailsInnerRoute.SelectPlan(
-                    tariffPlan = DEEPLINK_PLAN_STATE.tariff,
                     source = TangemPaySelectPlanSource.CHANGE_PLAN,
                 ),
             ),
