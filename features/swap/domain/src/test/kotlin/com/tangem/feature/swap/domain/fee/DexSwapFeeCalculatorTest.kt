@@ -14,6 +14,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
@@ -21,7 +22,10 @@ import com.tangem.domain.transaction.usecase.CreateTransactionDataExtrasUseCase
 import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
+import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.tron.TronGaslessSwap
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.usecase.WrapYieldSwapCallDataWithUpgradeUseCase
 import com.tangem.feature.swap.domain.buildSwapCurrencyStatus
@@ -61,6 +65,8 @@ internal class DexSwapFeeCalculatorTest {
     private val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase = mockk(relaxed = true)
     private val walletManagersFacade: WalletManagersFacade = mockk(relaxed = true)
     private val wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase = mockk(relaxed = true)
+    private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk()
+    private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk()
 
     private val dexBump = PatchEthGasLimitForSwap(percentage = PatchEthGasLimitForSwap.DEX_PERCENTAGE)
 
@@ -73,6 +79,8 @@ internal class DexSwapFeeCalculatorTest {
             walletManagersFacade = walletManagersFacade,
             patchEthGasLimitForSwap = dexBump,
             wrapYieldSwapCallDataWithUpgradeUseCase = wrapYieldSwapCallDataWithUpgradeUseCase,
+            getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
+            isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
         )
     }
 
@@ -1050,6 +1058,107 @@ internal class DexSwapFeeCalculatorTest {
     }
 
     @Test
+    fun `GIVEN sponsored sold token WHEN calculate gasless THEN quotes the swap paid in the sold token`() =
+        runTest {
+            // Arrange
+            val fromStatus = buildSwapCurrencyStatus(
+                networkRawId = tronNetwork,
+                contractAddress = TRON_USDT,
+                isCoin = false,
+            )
+            val transaction = buildDex(
+                txData = "0x4C279D6B",
+                txTo = "TRouter",
+                txFrom = "TSender",
+                allowanceContract = "TSpender",
+            )
+            val feeExtended = mockk<TransactionFeeExtended>()
+            coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+            coEvery { getTronGaslessFeeUseCase.forSwap(any(), any(), any()) } returns feeExtended.right()
+
+            // Act
+            val result = sut.calculate(
+                fromSwapCurrencyStatus = fromStatus,
+                transaction = transaction,
+                isGasless = true,
+            )
+
+            // Assert
+            val transactionFee = result.getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended
+            assertThat(transactionFee?.fee).isSameInstanceAs(feeExtended)
+            val userWalletId = fromStatus.userWalletId
+            val soldToken = fromStatus.currency as CryptoCurrency.Token
+            coVerify(exactly = 1) {
+                getTronGaslessFeeUseCase.forSwap(
+                    userWalletId = userWalletId,
+                    swap = TronGaslessSwap(
+                        fromAddress = "TSender",
+                        tokenContract = TRON_USDT,
+                        amount = BigInteger.TEN.pow(18),
+                        routerAddress = "TRouter",
+                        callDataHex = "4c279d6b",
+                        spenderAddress = "TSpender",
+                    ),
+                    feeToken = soldToken,
+                )
+            }
+            coVerify(exactly = 0) { getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any()) }
+        }
+
+    @Test
+    fun `GIVEN sold token not sponsored WHEN calculate gasless THEN no supported tokens`() = runTest {
+        // Arrange
+        val fromStatus = buildSwapCurrencyStatus(
+            networkRawId = tronNetwork,
+            contractAddress = TRON_USDT,
+            isCoin = false,
+        )
+        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns false
+
+        // Act
+        val result = sut.calculate(
+            fromSwapCurrencyStatus = fromStatus,
+            transaction = buildDex(txData = "4c279d6b", txTo = "TRouter", txFrom = "TSender"),
+            isGasless = true,
+        )
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(GetFeeError.GaslessError.NoSupportedTokensFound)
+        coVerify(exactly = 0) { getTronGaslessFeeUseCase.forSwap(any(), any(), any()) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideTronGaslessNativeCostModels")
+    fun `GIVEN route costs native TRX WHEN calculate gasless THEN network not supported`(
+        model: TronGaslessNativeCostModel,
+    ) = runTest {
+        // Arrange
+        val fromStatus = buildSwapCurrencyStatus(
+            networkRawId = tronNetwork,
+            contractAddress = TRON_USDT,
+            isCoin = false,
+        )
+        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+
+        // Act
+        val result = sut.calculate(
+            fromSwapCurrencyStatus = fromStatus,
+            transaction = buildDex(
+                txValue = model.txValue,
+                otherNativeFeeWei = model.otherNativeFeeWei,
+                txData = "4c279d6b",
+                txTo = "TRouter",
+                txFrom = "TSender",
+            ),
+            isGasless = true,
+        )
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(GetFeeError.GaslessError.NetworkIsNotSupported)
+        coVerify(exactly = 0) { getTronGaslessFeeUseCase.forSwap(any(), any(), any()) }
+    }
+
+    @Test
     fun `GIVEN zero native balance WHEN calculateYield THEN falls back to getEthSpecificFeeUseCase`() = runTest {
         // Arrange
         val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = false, yieldSupplyActive = true)
@@ -1227,6 +1336,13 @@ internal class DexSwapFeeCalculatorTest {
         ),
     )
 
+    private fun provideTronGaslessNativeCostModels() = listOf(
+        TronGaslessNativeCostModel(txValue = "5000000", otherNativeFeeWei = null),
+        TronGaslessNativeCostModel(txValue = "0", otherNativeFeeWei = BigDecimal("1000000")),
+    )
+
+    data class TronGaslessNativeCostModel(val txValue: String, val otherNativeFeeWei: BigDecimal?)
+
     private fun buildDex(
         txData: String = "dGVzdA==",
         txValue: String? = "0",
@@ -1249,4 +1365,8 @@ internal class DexSwapFeeCalculatorTest {
         gas = gas,
         allowanceContract = allowanceContract,
     )
+
+    private companion object {
+        const val TRON_USDT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+    }
 }
