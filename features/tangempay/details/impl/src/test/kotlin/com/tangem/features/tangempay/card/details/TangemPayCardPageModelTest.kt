@@ -48,6 +48,7 @@ internal class TangemPayCardPageModelTest {
     private val supplier: PaymentAccountStatusSupplier = mockk()
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk(relaxed = true)
     private val controllerFactory: TangemPayCardDetailsController.Factory = mockk()
+    private val cardControllers = mutableMapOf<String, TangemPayCardDetailsController>()
     private val googleWalletController: TangemPayAddToGoogleWalletController = mockk(relaxed = true) {
         every { entry } returns MutableStateFlow(TangemPayAddToGoogleWalletController.Entry.ManualGuide)
     }
@@ -73,7 +74,8 @@ internal class TangemPayCardPageModelTest {
             controllerFactory.create(any(), any(), any(), any(), any(), any())
         } answers {
             val card = secondArg<TangemPayCard>()
-            mockk(relaxed = true) { every { cardId } returns card.id }
+            mockk<TangemPayCardDetailsController>(relaxed = true) { every { cardId } returns card.id }
+                .also { cardControllers[card.id] = it }
         }
     }
 
@@ -140,6 +142,23 @@ internal class TangemPayCardPageModelTest {
 
         // Assert
         assertThat(model.isDetailsSettingEnabled()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN second card selected WHEN details row clicked THEN only its controller requests reveal`() = runTest {
+        // Arrange
+        val model = createModel()
+        statusFlow.emit(paymentStatus)
+        runCurrent()
+        model.onCardPageSelected(index = 1)
+        runCurrent()
+
+        // Act
+        model.uiState.value.settings.first { it.id == TangemPayCardPageSetting.Id.Details }.onClick()
+
+        // Assert
+        verify(exactly = 1) { cardControllers.getValue(secondCard.id).requestReveal() }
+        verify(exactly = 0) { cardControllers.getValue(firstCard.id).requestReveal() }
     }
 
     @Test
@@ -365,8 +384,7 @@ internal class TangemPayCardPageModelTest {
         changeCardFrozenStateUseCase = mockk(relaxed = true),
         cardDetailsEventListener = eventListener,
         cardDetailsControllerFactory = controllerFactory,
-        biometricAuthManager = mockk(relaxed = true),
-        settingsManager = mockk(relaxed = true),
+        cardAuthenticator = mockk(relaxed = true),
         onboardingRepository = mockk(relaxed = true),
         tangemPayFeatureToggles = tangemPayFeatureToggles,
         googleWalletControllerFactory = googleWalletControllerFactory,
