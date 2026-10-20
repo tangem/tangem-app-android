@@ -2,10 +2,14 @@ package com.tangem.domain.transaction.usecase.gasless
 
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.blockchains.tron.TronTransactionExtras
+import com.tangem.blockchain.blockchains.tron.tokenmethods.TronApprovalTokenCallData
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.smartcontract.CompiledSmartContractCallData
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
@@ -19,9 +23,13 @@ import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.tron.TronGaslessApprove
+import com.tangem.domain.transaction.models.tron.TronGaslessApproveEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.domain.transaction.models.tron.TronGaslessSubmitResult
+import com.tangem.domain.transaction.models.tron.TronGaslessSwap
+import com.tangem.domain.transaction.models.tron.TronGaslessSwapEstimateParams
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -32,6 +40,7 @@ import io.mockk.unmockkObject
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -52,6 +61,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
         tronGaslessTransactionRepository = tronGaslessTransactionRepository,
         singleAccountListSupplier = singleAccountListSupplier,
         gaslessSignerProvider = gaslessSignerProvider,
+        currentTimeMillis = { NOW_MS },
     )
 
     private val userWallet = MockUserWalletFactory.create()
@@ -86,8 +96,9 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
         energy = 1,
         bandwidth = 1,
         trxCost = BigDecimal("1"),
-        expiresAtEpochMs = 1,
+        expiresAtEpochMs = NOW_MS + 120_000,
     )
+    private val expiredQuote = quote.copy(expiresAtEpochMs = NOW_MS + 10_000)
     private val fee = TransactionFeeExtended(
         transactionFee = TransactionFee.Single(
             normal = Fee.Common(amount = Amount(token = sentToken, value = BigDecimal("2.75"))),
@@ -221,6 +232,23 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
     }
 
     @Test
+    fun `GIVEN quote expiring before submit WHEN invoke THEN re-quotes the same transfer`() = runTest {
+        // Arrange
+        val expiringFee = fee.copy(gaslessProtocolData = GaslessProtocolData.Tron(quote = expiredQuote))
+        coEvery { tronGaslessTransactionRepository.estimate(any()) } returns quote.copy(quoteId = "q_2")
+        coEvery { tronGaslessTransactionRepository.submit(any(), "q_2", any(), any()) } returns
+            TronGaslessSubmitResult(compensationTxHash = "hComp", originalTxHash = "hOrig", status = "BROADCAST")
+
+        // Act
+        val result = useCase(userWallet, originalTx, expiringFee)
+
+        // Assert
+        assertThat(result.getOrNull()).isEqualTo("hOrig")
+        coVerify(exactly = 1) { tronGaslessTransactionRepository.estimate(any()) }
+        coVerify(exactly = 1) { tronGaslessTransactionRepository.submit(any(), "q_2", any(), any()) }
+    }
+
+    @Test
     fun `GIVEN amount reduced by the fee after quoting WHEN invoke THEN re-quotes and submits the fresh quote`() =
         runTest {
             // Arrange — sending the whole balance: the send step lowers the transfer by the compensation.
@@ -320,5 +348,266 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
 
         // Assert
         assertThat(result.isLeft()).isTrue()
+    }
+
+    @Nested
+    inner class SendSwap {
+
+        private val swap = TronGaslessSwap(
+            fromAddress = "TFrom",
+            tokenContract = usdtContract,
+            amount = BigInteger("50000000"),
+            routerAddress = "TRouter",
+            callDataHex = "4c279d6b",
+            spenderAddress = "TRouter",
+        )
+        private val swapTx = TransactionData.Uncompiled(
+            amount = Amount(value = BigDecimal.ZERO, blockchain = Blockchain.Tron),
+            fee = null,
+            sourceAddress = "TFrom",
+            destinationAddress = "TRouter",
+            extras = TronTransactionExtras(callData = CompiledSmartContractCallData("4c279d6b".hexToBytes())),
+        )
+        private val refreshedSwap = swap.copy(callDataHex = "4c279d6c")
+        private val refreshedSwapTx = swapTx.copy(
+            extras = TronTransactionExtras(callData = CompiledSmartContractCallData("4c279d6c".hexToBytes())),
+        )
+        private val swapQuote = quote.copy(quotedToAddress = "TRouter", quotedSwap = swap)
+        private val swapFee = fee.copy(gaslessProtocolData = GaslessProtocolData.Tron(quote = swapQuote))
+        private val submitted = TronGaslessSubmitResult(
+            compensationTxHash = "hComp",
+            originalTxHash = "hSwap",
+            status = "BROADCAST",
+        )
+
+        @Test
+        fun `GIVEN quoted swap WHEN sendSwap THEN signs compensation and swap in one session and submits them`() =
+            runTest {
+                // Arrange
+                coEvery {
+                    walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any())
+                } returns listOf("signedComp", "signedSwap")
+                coEvery { tronGaslessTransactionRepository.submit(any(), any(), any(), any()) } returns submitted
+
+                // Act
+                val result = useCase.sendSwap(userWallet, swap, swapTx, swapFee)
+
+                // Assert
+                assertThat(result.getOrNull()).isEqualTo("hSwap")
+                coVerify(exactly = 1) {
+                    walletManagersFacade.signTronGaslessTransactions(
+                        userWalletId = any(),
+                        network = any(),
+                        transactionDataList = listOf(compensationTx, swapTx),
+                        signer = any(),
+                    )
+                }
+                coVerify(exactly = 1) {
+                    tronGaslessTransactionRepository.submit(
+                        userWalletId = userWallet.walletId,
+                        quoteId = "q_1",
+                        signedCompensationTx = "signedComp",
+                        signedOriginalTx = "signedSwap",
+                    )
+                }
+                coVerify(exactly = 0) { tronGaslessTransactionRepository.estimateSwap(any()) }
+            }
+
+        @Test
+        fun `GIVEN route refreshed after quoting WHEN sendSwap THEN re-quotes the new route`() = runTest {
+            // Arrange
+            coEvery { tronGaslessTransactionRepository.estimateSwap(any()) } returns
+                swapQuote.copy(quoteId = "q_2", quotedSwap = refreshedSwap)
+            coEvery {
+                walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any())
+            } returns listOf("signedComp", "signedSwap")
+            coEvery { tronGaslessTransactionRepository.submit(any(), any(), any(), any()) } returns submitted
+
+            // Act
+            val result = useCase.sendSwap(userWallet, refreshedSwap, refreshedSwapTx, swapFee)
+
+            // Assert
+            assertThat(result.getOrNull()).isEqualTo("hSwap")
+            coVerify(exactly = 1) {
+                tronGaslessTransactionRepository.estimateSwap(
+                    TronGaslessSwapEstimateParams(
+                        userWalletId = userWallet.walletId,
+                        swap = refreshedSwap,
+                        feeTokenContract = usdtContract,
+                    ),
+                )
+            }
+            coVerify { tronGaslessTransactionRepository.submit(any(), "q_2", any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN re-quoted compensation grew WHEN sendSwap THEN error and nothing is signed`() = runTest {
+            // Arrange
+            coEvery { tronGaslessTransactionRepository.estimateSwap(any()) } returns swapQuote.copy(
+                quoteId = "q_2",
+                quotedSwap = refreshedSwap,
+                compensationAmountRaw = BigInteger("2750001"),
+            )
+
+            // Act
+            val result = useCase.sendSwap(userWallet, refreshedSwap, refreshedSwapTx, swapFee)
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(SendTransactionError.GaslessFeeIncreased)
+            coVerify(exactly = 0) { walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN quote expiring before submit WHEN sendSwap THEN re-quotes the unchanged route`() = runTest {
+            // Arrange
+            val expiringFee = fee.copy(
+                gaslessProtocolData = GaslessProtocolData.Tron(quote = swapQuote.copy(expiresAtEpochMs = NOW_MS)),
+            )
+            coEvery { tronGaslessTransactionRepository.estimateSwap(any()) } returns swapQuote.copy(quoteId = "q_2")
+            coEvery {
+                walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any())
+            } returns listOf("signedComp", "signedSwap")
+            coEvery { tronGaslessTransactionRepository.submit(any(), any(), any(), any()) } returns submitted
+
+            // Act
+            val result = useCase.sendSwap(userWallet, swap, swapTx, expiringFee)
+
+            // Assert
+            assertThat(result.getOrNull()).isEqualTo("hSwap")
+            coVerify(exactly = 1) { tronGaslessTransactionRepository.estimateSwap(any()) }
+            coVerify { tronGaslessTransactionRepository.submit(any(), "q_2", any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN transaction calldata differs from the quoted swap WHEN sendSwap THEN error before quoting and signing`() =
+            runTest {
+                // Act
+                val result = useCase.sendSwap(userWallet, swap, refreshedSwapTx, swapFee)
+
+                // Assert
+                assertThat(result.isLeft()).isTrue()
+                coVerify(exactly = 0) { tronGaslessTransactionRepository.estimateSwap(any()) }
+                coVerify(exactly = 0) {
+                    walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any())
+                }
+            }
+    }
+
+    @Nested
+    inner class Approve {
+
+        private val approvalTx = TransactionData.Uncompiled(
+            amount = Amount(token = sentToken, value = BigDecimal.ZERO),
+            fee = null,
+            sourceAddress = "TFrom",
+            destinationAddress = usdtContract,
+            extras = TronTransactionExtras(
+                callData = TronApprovalTokenCallData(
+                    spenderAddress = "TRouter",
+                    amount = Amount(token = sentToken, value = BigDecimal("3")),
+                ),
+            ),
+        )
+        private val approve = TronGaslessApprove(
+            fromAddress = "TFrom",
+            tokenContract = usdtContract,
+            amount = BigInteger("3000000"),
+            spenderAddress = "TRouter",
+        )
+
+        @Test
+        fun `GIVEN quote for this approval WHEN invoke THEN signs compensation and approval without re-quoting`() =
+            runTest {
+                // Arrange
+                val approveFee = fee.copy(
+                    gaslessProtocolData = GaslessProtocolData.Tron(quote = quote.copy(quotedApprove = approve)),
+                )
+
+                // Act
+                val result = useCase(userWallet, approvalTx, approveFee)
+
+                // Assert
+                assertThat(result.getOrNull()).isEqualTo("hOrig")
+                coVerify {
+                    walletManagersFacade.signTronGaslessTransactions(
+                        userWalletId = any(),
+                        network = any(),
+                        transactionDataList = match { it.size == 2 && it[0] === compensationTx && it[1] === approvalTx },
+                        signer = any(),
+                    )
+                }
+                coVerify(exactly = 0) { tronGaslessTransactionRepository.estimateApprove(any()) }
+                coVerify(exactly = 0) { tronGaslessTransactionRepository.estimate(any()) }
+            }
+
+        @Test
+        fun `GIVEN quote for another approval amount WHEN invoke THEN re-quotes the approval`() = runTest {
+            // Arrange
+            val staleFee = fee.copy(
+                gaslessProtocolData = GaslessProtocolData.Tron(
+                    quote = quote.copy(quotedApprove = approve.copy(amount = BigInteger("1000000"))),
+                ),
+            )
+            coEvery { tronGaslessTransactionRepository.estimateApprove(any()) } returns
+                quote.copy(quotedApprove = approve)
+
+            // Act
+            val result = useCase(userWallet, approvalTx, staleFee)
+
+            // Assert
+            assertThat(result.getOrNull()).isEqualTo("hOrig")
+            coVerify(exactly = 1) {
+                tronGaslessTransactionRepository.estimateApprove(
+                    TronGaslessApproveEstimateParams(
+                        userWalletId = userWallet.walletId,
+                        approve = approve,
+                        feeTokenContract = usdtContract,
+                    ),
+                )
+            }
+        }
+
+        @Test
+        fun `GIVEN re-quoted approval compensation grew WHEN invoke THEN error without signing`() = runTest {
+            // Arrange
+            val staleFee = fee.copy(
+                gaslessProtocolData = GaslessProtocolData.Tron(
+                    quote = quote.copy(quotedApprove = approve.copy(amount = BigInteger("1000000"))),
+                ),
+            )
+            coEvery { tronGaslessTransactionRepository.estimateApprove(any()) } returns
+                quote.copy(quotedApprove = approve, compensationAmountRaw = BigInteger("2750001"))
+
+            // Act
+            val result = useCase(userWallet, approvalTx, staleFee)
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(SendTransactionError.GaslessFeeIncreased)
+            coVerify(exactly = 0) { walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN quote for this approval expiring before submit WHEN invoke THEN re-quotes the approval`() = runTest {
+            // Arrange
+            val expiringFee = fee.copy(
+                gaslessProtocolData = GaslessProtocolData.Tron(quote = expiredQuote.copy(quotedApprove = approve)),
+            )
+            coEvery { tronGaslessTransactionRepository.estimateApprove(any()) } returns
+                quote.copy(quoteId = "q_2", quotedApprove = approve)
+            coEvery { tronGaslessTransactionRepository.submit(any(), "q_2", any(), any()) } returns
+                TronGaslessSubmitResult(compensationTxHash = "hComp", originalTxHash = "hOrig", status = "BROADCAST")
+
+            // Act
+            val result = useCase(userWallet, approvalTx, expiringFee)
+
+            // Assert
+            assertThat(result.getOrNull()).isEqualTo("hOrig")
+            coVerify(exactly = 1) { tronGaslessTransactionRepository.estimateApprove(any()) }
+            coVerify(exactly = 1) { tronGaslessTransactionRepository.submit(any(), "q_2", any(), any()) }
+        }
+    }
+
+    private companion object {
+        const val NOW_MS = 1_780_489_000_000L
     }
 }
