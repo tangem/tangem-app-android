@@ -73,5 +73,5 @@ interface Router {
      *
      * @param route The route to look for.
      */
-    fun contains(route: Route): Boolean
+    suspend fun contains(route: Route): Boolean
 }
