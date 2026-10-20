@@ -24,6 +24,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -186,6 +187,28 @@ internal class DefaultSettingsRepositoryTest {
 
         // Assert
         assertThat(repository.getUserCountryCode().value).isEqualTo(UserCountry.Other(code = "fr"))
+    }
+
+    @Test
+    fun `GIVEN geo and cache read both fail WHEN fetchUserCountryCode THEN device region is published`() = runTest {
+        // Arrange
+        Locale.setDefault(Locale.UK)
+        val failingStore = createAppPreferencesStore(
+            moshi = Moshi.Builder().build(),
+            dispatchers = TestingCoroutineDispatcherProvider(),
+            preferencesDataStore = mockk {
+                every { data } returns flow { throw IOException("preferences read failed") }
+            },
+        )
+        val repository = createRepository(preferencesStore = failingStore)
+        coEvery { tangemTechApi.getUserCountryCode() } throws IOException("timeout")
+
+        // Act
+        repository.fetchUserCountryCode()
+
+        // Assert
+        assertThat(repository.getUserCountryCode().value).isEqualTo(UserCountry.Other(code = "gb"))
+        coVerify(exactly = 1) { tangemTechApi.getUserCountryCode() }
     }
 
     private class FailingWriteDataStore : DataStore<Preferences> {
