@@ -5,11 +5,11 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.TangemBlogUrlBuilder
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
@@ -28,6 +28,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
@@ -83,6 +84,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val urlOpener: UrlOpener,
+    private val router: Router,
     private val appRouter: AppRouter,
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
     private val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase,
@@ -188,7 +190,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
             currency = cryptoCurrency,
             screenSource = AnalyticsParam.ScreensSources.Token,
         ) ?: return false
-        appRouter.push(route)
+        router.push(route)
         return true
     }
 
@@ -204,12 +206,17 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     override fun onStopEarningTransactionSent() {
         transactionInProgressFlow.update { false }
-        appRouter.pop()
+        exitAfterTransaction()
     }
 
     override fun onTransactionSent() {
         transactionInProgressFlow.update { false }
-        appRouter.pop()
+        exitAfterTransaction()
+    }
+
+    // Transaction callbacks arrive from background dispatchers, while the entry host's back handling reads its stack
+    private fun exitAfterTransaction() {
+        modelScope.launch(dispatchers.mainImmediate) { router.pop() }
     }
 
     fun onApprove() {
@@ -426,7 +433,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     }
 
     private fun onBoostClick() {
-        appRouter.push(
+        router.push(
             AppRoute.Stories(
                 storyId = StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id,
                 nextScreen = null,

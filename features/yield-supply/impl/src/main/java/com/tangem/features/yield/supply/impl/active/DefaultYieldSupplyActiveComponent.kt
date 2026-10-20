@@ -12,7 +12,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -46,7 +45,6 @@ import dagger.assisted.AssistedInject
 internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
     @Assisted private val appComponentContext: AppComponentContext,
     @Assisted private val params: YieldSupplyActiveComponent.Params,
-    private val appRouter: AppRouter,
     private val marketingBannerComponentFactory: MarketingBannerComponent.Factory,
 ) : YieldSupplyActiveComponent, AppComponentContext by appComponentContext {
 
@@ -117,7 +115,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
                 .fillMaxSize()
                 .systemBarsPadding(),
         ) {
-            YieldSupplyActiveTitle(onCloseClick = appRouter::pop)
+            YieldSupplyActiveTitle(onCloseClick = router::pop)
 
             Box(modifier = Modifier.weight(1f)) {
                 YieldSupplyActiveContent(
