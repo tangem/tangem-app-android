@@ -31,6 +31,10 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
   `UNDETERMINED` refuses with a snackbar. A run failure leaves the screen idle; the button is the only retry.
 - Region-restricted users (`READ_ONLY`) still reach Main, browse and withdraw. `READ_ONLY` explains itself
   as a region restriction — reuse it for another cause and the UI lies.
+- After the gate the region lives in the process-wide `PredictionRegionAccess`, refreshed by Main on open and
+  on pull-to-refresh. While it is restricted, Main shows the banner, Add funds is dimmed, and every order
+  entry (feed, search, event, Buy more, Close) shows the restrictions modal instead of opening. A failed check
+  counts as allowed, as on iOS; the amount step still checks on its own.
 - Main returns here (`replaceAll(Onboarding)`) the moment the stored credentials are gone, even from under a
   child: nothing above Main can sign without them. So the order summary answers an `Unauthorized`
   placement with no dialog and leaves the gate to explain it.
