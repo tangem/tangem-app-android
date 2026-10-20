@@ -21,7 +21,7 @@ import com.tangem.features.send.mcp.model.SendIntentUM
  * [Figma](https://www.figma.com/design/Qqm0dNTOnqtxLYEcmgc32C/Store?node-id=23363-122221)
  */
 @Composable
-internal fun SendIntentOfferContent(state: SendIntentUM.Offer, modifier: Modifier = Modifier) {
+internal fun SendIntentOfferContent(state: SendIntentUM, modifier: Modifier = Modifier) {
     TangemModalStatus(
         modifier = modifier,
         variant = TangemModalStatus.Variant.Info,
@@ -37,7 +37,7 @@ internal fun SendIntentOfferContent(state: SendIntentUM.Offer, modifier: Modifie
 private fun SendIntentOfferContentPreview() {
     TangemThemePreviewRedesign {
         SendIntentOfferContent(
-            state = SendIntentUM.Offer(
+            state = SendIntentUM(
                 token = TangemTokenIcon.UiState.Token(TangemTokenIcon.State(url = null)),
                 title = stringReference("mcp.claude.com Agent wants to send 42.00 USDT"),
                 agent = SendIntentAgentUM.Verified(iconUrl = null, label = stringReference("mcp.claude.com")),
