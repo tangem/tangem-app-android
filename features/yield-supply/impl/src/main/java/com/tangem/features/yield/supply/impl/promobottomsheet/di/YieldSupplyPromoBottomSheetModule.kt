@@ -1,7 +1,9 @@
 package com.tangem.features.yield.supply.impl.promobottomsheet.di
 
 import com.tangem.features.yield.supply.api.promobottomsheet.GetYieldModePromoVariantUseCase
+import com.tangem.features.yield.supply.api.promobottomsheet.ResolveYieldModePromoUseCase
 import com.tangem.features.yield.supply.impl.promobottomsheet.DefaultGetYieldModePromoVariantUseCase
+import com.tangem.features.yield.supply.impl.promobottomsheet.DefaultResolveYieldModePromoUseCase
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -15,4 +17,7 @@ internal interface YieldSupplyPromoBottomSheetModule {
     fun bindGetYieldModePromoVariantUseCase(
         impl: DefaultGetYieldModePromoVariantUseCase,
     ): GetYieldModePromoVariantUseCase
+
+    @Binds
+    fun bindResolveYieldModePromoUseCase(impl: DefaultResolveYieldModePromoUseCase): ResolveYieldModePromoUseCase
 }
