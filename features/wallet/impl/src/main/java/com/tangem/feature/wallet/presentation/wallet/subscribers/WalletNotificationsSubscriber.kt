@@ -43,7 +43,8 @@ internal class WalletNotificationsSubscriber @AssistedInject constructor(
 ) : WalletSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<ImmutableList<WalletNotificationUM>> {
-        var wasUpgradePromoShown = false
+        if (userWallet is UserWallet.Hot) hardwareUpgradeLauncher.prefetch()
+
         val isHidingPromoCards = promoBannersFeatureToggles.isHideMarketingBannersWhileSystemEnabled
         val promoCardsTriggerFlow = if (isHidingPromoCards) getPromoCardsTriggerFlow() else flowOf(null)
 
@@ -63,11 +64,6 @@ internal class WalletNotificationsSubscriber @AssistedInject constructor(
                     )
                 }
             }
-
-            // Only when the banner appears: a failed prefetch isn't cached, so each emission would redo it.
-            val isUpgradePromoShown = notifications.any { it is WalletNotificationUM.UpgradeHotWalletPromo }
-            if (isUpgradePromoShown && !wasUpgradePromoShown) hardwareUpgradeLauncher.prefetch()
-            wasUpgradePromoShown = isUpgradePromoShown
 
             val displayedWalletUM = stateHolder.getWalletUM(userWallet.walletId)
 

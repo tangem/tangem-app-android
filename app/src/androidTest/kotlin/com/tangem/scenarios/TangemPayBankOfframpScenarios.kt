@@ -1,7 +1,6 @@
 package com.tangem.scenarios
 
 import android.text.format.DateFormat
-import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.test.espresso.Espresso
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TangemPayBankOfframpOrder
@@ -9,15 +8,14 @@ import com.tangem.common.constants.TangemPayBankRecipient
 import com.tangem.common.constants.TangemPayBankRoute
 import com.tangem.common.constants.TangemPayBankRoutes
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO
-import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.common.extensions.tapBackButton
 import com.tangem.common.utils.findWireMockRequestBodies
 import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
-import com.tangem.screens.onHotWalletAccessCodeScreen
-import com.tangem.screens.unlockDialogAccessCodeInputMatcher
 import com.tangem.screens.tangempay.TangemPayBankWithdrawField
 import com.tangem.screens.tangempay.onTangemPayBankRecipientsScreen
 import com.tangem.screens.tangempay.onTangemPayBankWithdrawAmountScreen
@@ -154,9 +152,18 @@ fun BaseTestCase.openTangemPayBankWithdrawSourceSelector() {
 }
 
 fun BaseTestCase.returnToPaymentAccountFromBankWithdrawSourceSelector() {
-    step("Close 'Choose network' sheet") { device.uiDevice.pressBack() }
-    step("Assert 'Choose network' sheet is not displayed") {
-        awaitSuccess { onTangemPayBankWithdrawAmountScreen { tokenSheetTitle.assertDoesNotExist() } }
+    // The amount field reopens the keyboard under the sheet, and Back then closes the keyboard instead.
+    step("Close 'Choose network' sheet") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            Espresso.closeSoftKeyboard()
+            onTangemPayBankWithdrawAmountScreen {
+                if (tokenSheetTitle.isDisplayedSafely()) {
+                    device.uiDevice.pressBack()
+                    composeTestRule.waitForIdle()
+                }
+                tokenSheetTitle.assertDoesNotExist()
+            }
+        }
     }
     step("Click on 'Back' button") { tapBackButton() }
     step("Assert 'Withdraw' hub screen is displayed") {
@@ -199,11 +206,18 @@ fun BaseTestCase.chooseTangemPayBankWithdrawRoute(route: TangemPayBankRoute) {
 
 fun BaseTestCase.chooseTangemPayBankWithdrawSource(symbol: String, network: String) {
     openTangemPayBankWithdrawSourceSelector()
-    step("Click on '$symbol' on '$network'") {
-        onTangemPayBankWithdrawAmountScreen { tokenRow(symbol, network).performClick() }
-    }
-    step("Assert '$symbol' on '$network' is the source") {
-        awaitSuccess { onTangemPayBankWithdrawAmountScreen { sourceRowWith(symbol, network).assertIsDisplayed() } }
+    // The amount field reopens the keyboard under the sheet, and it swallows taps on the lower rows.
+    step("Click on '$symbol' on '$network' until it is the source") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            Espresso.closeSoftKeyboard()
+            onTangemPayBankWithdrawAmountScreen {
+                if (tokenRow(symbol, network).isDisplayedSafely()) {
+                    tokenRow(symbol, network).performClick()
+                    composeTestRule.waitForIdle()
+                }
+                sourceRowWith(symbol, network).assertIsDisplayed()
+            }
+        }
     }
 }
 
@@ -331,18 +345,9 @@ fun BaseTestCase.fillTangemPayBankDetails(recipient: TangemPayBankRecipient) {
     clickTangemPayBankWithdrawFormContinue()
 }
 
-@OptIn(ExperimentalTestApi::class)
 fun BaseTestCase.sendTangemPayBankWithdrawal(accessCode: String) {
     clickTangemPayBankWithdrawSend()
-    step("Enter access code") {
-        // Raw Compose on purpose: the dialog content waits for frames a 10 s Kakao retry would not advance.
-        composeTestRule.waitUntilAtLeastOneExists(unlockDialogAccessCodeInputMatcher, WAIT_UNTIL_TIMEOUT)
-        onHotWalletAccessCodeScreen { unlockDialogAccessCodeInput.performTextInput(accessCode) }
-    }
-    step("Dismiss keyboard") {
-        Espresso.closeSoftKeyboard()
-        waitForIdle()
-    }
+    enterHotWalletUnlockAccessCode(accessCode)
 }
 
 fun BaseTestCase.clickTangemPayBankWithdrawSend() {

@@ -516,6 +516,7 @@ fun BaseTestCase.changeReceiveToken(tokenName: String) {
 /** Opens the FROM token selector via the swap-card icon. The balance filter is only wired for FROM, not TO. */
 fun BaseTestCase.openSwapFromTokenSelector() {
     step("Click on 'Select token' icon in 'From' field") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) { onSwapTokenScreen { swapSelectTokenIcon.assertIsDisplayed() } }
         onSwapTokenScreen { swapSelectTokenIcon.performClick() }
     }
 }
