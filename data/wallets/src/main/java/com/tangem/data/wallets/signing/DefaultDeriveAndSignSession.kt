@@ -228,9 +228,11 @@ internal class DefaultDeriveAndSignSession(
         private val establishedByThisRun = AtomicReference<UnlockHotWallet?>(null)
 
         suspend fun ensureUnlocked() {
-            if (isRequestedByThisRun.getAndSet(true)) return
+            if (establishedByThisRun.get() != null) return
 
-            wasUnlockedBeforeRun.set(hotWalletAccessor.getContextualUnlock(hotWalletId) != null)
+            if (!isRequestedByThisRun.getAndSet(true)) {
+                wasUnlockedBeforeRun.set(hotWalletAccessor.getContextualUnlock(hotWalletId) != null)
+            }
             establishedByThisRun.set(hotWalletAccessor.unlockContextual(hotWalletId))
         }
 
