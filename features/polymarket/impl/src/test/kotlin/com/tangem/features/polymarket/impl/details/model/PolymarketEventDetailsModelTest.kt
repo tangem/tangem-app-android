@@ -59,13 +59,66 @@ internal class PolymarketEventDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
+        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
         assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
     }
 
     @Test
-    fun `GIVEN load fails WHEN model created THEN error AND retry reloads to content`() = runTest {
+    fun `GIVEN initial load fails once WHEN two seconds pass THEN retry shows content without an error`() = runTest {
         // Arrange
         coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+            PolymarketEventError.Network.left(),
+            createEvent().right(),
+        )
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Act
+        advanceTimeBy(RETRY_DELAY_MILLIS - 1)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
+        assertThat(model.uiState.value).isEqualTo(PolymarketEventDetailsUM.Loading)
+
+        advanceTimeBy(1)
+        runCurrent()
+
+        coVerify(exactly = 2) { getEventUseCase(eventId = "event-1") }
+        assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
+        verify(exactly = 0) { messageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN initial load keeps failing WHEN silent retry fails THEN error is shown without further retries`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(eventId = "event-1") } returns PolymarketEventError.Network.left()
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Act
+        advanceTimeBy(RETRY_DELAY_MILLIS - 1)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
+        assertThat(model.uiState.value).isEqualTo(PolymarketEventDetailsUM.Loading)
+
+        advanceTimeBy(1)
+        runCurrent()
+
+        assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Error::class.java)
+        advanceUntilIdle()
+        coVerify(exactly = 2) { getEventUseCase(eventId = "event-1") }
+        verify(exactly = 0) { messageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN load and silent retry fail WHEN manual retry tapped THEN reload can retry silently to content`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+            PolymarketEventError.Network.left(),
+            PolymarketEventError.Network.left(),
             PolymarketEventError.Network.left(),
             createEvent().right(),
         )
@@ -75,10 +128,32 @@ internal class PolymarketEventDetailsModelTest {
         // Act
         val error = model.uiState.value as PolymarketEventDetailsUM.Error
         error.onRetryClick()
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 3) { getEventUseCase(eventId = "event-1") }
+        assertThat(model.uiState.value).isEqualTo(PolymarketEventDetailsUM.Loading)
+
+        advanceTimeBy(RETRY_DELAY_MILLIS)
+        runCurrent()
+
+        coVerify(exactly = 4) { getEventUseCase(eventId = "event-1") }
+        assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
+    }
+
+    @Test
+    fun `GIVEN initial retry is pending WHEN model destroyed THEN no second request is sent`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(eventId = "event-1") } returns PolymarketEventError.Network.left()
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Act
+        model.onDestroy()
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
+        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
     }
 
     @Test
@@ -236,7 +311,7 @@ internal class PolymarketEventDetailsModelTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 2) { getEventUseCase(eventId = "event-1") }
         assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Error::class.java)
         model.onDestroy()
     }
