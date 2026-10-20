@@ -5,18 +5,13 @@ import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.extensions.TextReference
 
 @Immutable
-internal sealed interface SendIntentUM {
-
-    data object Loading : SendIntentUM
-
-    data class Offer(
-        val token: TangemTokenIcon.UiState,
-        val title: TextReference,
-        val agent: SendIntentAgentUM,
-        val description: TextReference,
-        val primaryButton: SendIntentButtonUM,
-    ) : SendIntentUM
-}
+internal data class SendIntentUM(
+    val token: TangemTokenIcon.UiState,
+    val title: TextReference,
+    val agent: SendIntentAgentUM,
+    val description: TextReference,
+    val primaryButton: SendIntentButtonUM,
+)
 
 @Immutable
 internal sealed interface SendIntentAgentUM {

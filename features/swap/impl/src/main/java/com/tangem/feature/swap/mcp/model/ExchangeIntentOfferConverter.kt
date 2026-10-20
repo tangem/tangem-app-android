@@ -24,7 +24,7 @@ import javax.inject.Inject
  */
 internal class ExchangeIntentOfferConverter @Inject constructor(
     private val amountConverter: ExchangeIntentAmountConverter,
-) : Converter<ExchangeIntentOfferConverter.Input, ExchangeIntentUM.Offer?> {
+) : Converter<ExchangeIntentOfferConverter.Input, ExchangeIntentUM?> {
 
     data class Input(
         val intent: ExchangeIntent,
@@ -34,11 +34,11 @@ internal class ExchangeIntentOfferConverter @Inject constructor(
         val onProceed: () -> Unit,
     )
 
-    override fun convert(value: Input): ExchangeIntentUM.Offer? {
+    override fun convert(value: Input): ExchangeIntentUM? {
         val swap = value.toSwapText() ?: return null
         val agentIdentity = value.agent.origin ?: value.agent.name ?: Texts.UNKNOWN_AGENT_NAME
 
-        return ExchangeIntentUM.Offer(
+        return ExchangeIntentUM(
             fromToken = value.from.toTokenIcon(),
             toToken = value.to.toTokenIcon(),
             title = Texts.offerTitle(agentIdentity = agentIdentity, swap = swap),
