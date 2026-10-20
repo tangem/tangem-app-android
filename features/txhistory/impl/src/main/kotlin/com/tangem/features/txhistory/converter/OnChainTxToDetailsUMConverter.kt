@@ -474,7 +474,7 @@ private fun TxInfo.signedAmount(currency: CryptoCurrency): String {
         status is TxInfo.TransactionStatus.Failed -> ""
         amount.isZero() -> ""
         else -> when (type.amountSign()) {
-            AmountSign.BY_DIRECTION -> if (isOutgoing) "${StringsSigns.MINUS} " else "${StringsSigns.PLUS} "
+            AmountSign.BY_DIRECTION -> if (isOutgoing) "${StringsSigns.DASH_SIGN} " else "${StringsSigns.PLUS} "
             AmountSign.ALWAYS_PLUS -> "${StringsSigns.PLUS} "
             AmountSign.NONE -> ""
         }

@@ -424,7 +424,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val amountBlock = converter.convert(tx).amountBlock
 
         // Assert
-        assertThat(amountBlock.amount.resolveString()).startsWith("- ")
+        assertThat(amountBlock.amount.resolveString()).startsWith("— ")
     }
 
     @Test
@@ -1648,7 +1648,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_up_20))
         assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_sent))
-        assertThat(result.amountBlock.amount.resolveString()).startsWith("- ")
+        assertThat(result.amountBlock.amount.resolveString()).startsWith("— ")
         assertThat(result.counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
         assertThat(result.counterparty?.avatar)
             .isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(USER_ADDRESS))

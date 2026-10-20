@@ -589,7 +589,7 @@ private fun BigDecimal?.takeIfPositive(): BigDecimal? = this?.takeIf { it > BigD
 // region Amount signs
 
 /** Leading sign of the pay-in / "You send" leg: always `−` — the funds left regardless of how the deal ended. */
-private const val OUTGOING_SIGN = "${StringsSigns.MINUS} "
+private const val OUTGOING_SIGN = "${StringsSigns.DASH_SIGN} "
 
 /**
  * Leading sign of the payout / "You receive" leg: `~` while in flight (the final received amount is still an estimate),
