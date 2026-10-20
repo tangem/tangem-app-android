@@ -74,6 +74,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
         cardSdkConfigRepository = cardSdkConfigRepository,
         hotSignerFactory = hotSignerFactory,
         addressFactory = PolymarketAddressFactory(),
+        digestFactory = PolymarketDigestFactory(),
         formatter = PolymarketSignatureFormatter(),
         dispatchers = dispatchers,
     )
