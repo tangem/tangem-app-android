@@ -250,10 +250,13 @@ internal class TangemPayDetailsModelTest {
             }
 
         @Test
-        fun `GIVEN cached alt_block summary WHEN status re-emitted THEN one cashback item under current plan`() =
+        fun `GIVEN cached zero alt_block summary WHEN status re-emitted THEN one cashback item under current plan`() =
             runTest {
                 // Arrange
-                cachedSummary.value = enabledCashbackSummary(displayMode = CashbackDisplayMode.ALT_BLOCK)
+                cachedSummary.value = enabledCashbackSummary(
+                    displayMode = CashbackDisplayMode.ALT_BLOCK,
+                    confirmedAmount = BigDecimal.ZERO,
+                )
                 val statusFlow = MutableStateFlow(paymentStatus(loadedStatus(planState = tariffPlanState())))
                 val model = createModel(testScope = this, planState = tariffPlanState(), statusFlow = statusFlow)
                 advanceUntilIdle()
@@ -269,6 +272,30 @@ internal class TangemPayDetailsModelTest {
                 assertThat(menuTitleIds(model)).containsExactly(
                     R.string.tangempay_current_plan_title,
                     R.string.tangempay_cashback_menu_item_title,
+                    R.string.tangempay_pay_support,
+                ).inOrder()
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN cached non-zero alt_block summary WHEN status re-emitted THEN widget shown without cashback item`() =
+            runTest {
+                // Arrange
+                cachedSummary.value = enabledCashbackSummary(displayMode = CashbackDisplayMode.ALT_BLOCK)
+                val statusFlow = MutableStateFlow(paymentStatus(loadedStatus(planState = tariffPlanState())))
+                val model = createModel(testScope = this, planState = tariffPlanState(), statusFlow = statusFlow)
+                advanceUntilIdle()
+
+                // Act
+                statusFlow.value = paymentStatus(
+                    loadedStatus(availableForWithdrawal = BigDecimal.TEN, planState = tariffPlanState()),
+                )
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value.cashbackBlockState).isInstanceOf(CashbackBlockUM.Widget::class.java)
+                assertThat(menuTitleIds(model)).containsExactly(
+                    R.string.tangempay_current_plan_title,
                     R.string.tangempay_pay_support,
                 ).inOrder()
                 model.onDestroy()
@@ -1062,10 +1089,11 @@ internal class TangemPayDetailsModelTest {
 
     private fun enabledCashbackSummary(
         displayMode: CashbackDisplayMode = CashbackDisplayMode.FULL,
+        confirmedAmount: BigDecimal = BigDecimal("2.70"),
     ) = CashbackSummary.Enabled(
         displayMode = displayMode,
         cashback = TangemPayCashback(
-            confirmedAmount = BigDecimal("2.70"),
+            confirmedAmount = confirmedAmount,
             totalEarnedAmount = BigDecimal("2.70"),
             currency = "USD",
             payoutCurrency = "USDC",

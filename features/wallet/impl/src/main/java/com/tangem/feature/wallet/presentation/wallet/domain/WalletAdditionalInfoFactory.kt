@@ -43,7 +43,7 @@ internal object WalletAdditionalInfoFactory {
                     wallet.resolveSingleCurrencyInfo(currencyAmount)
                 }
             }
-            is UserWallet.Hot -> wallet.resolveAdditionalInfo(syncProgress, isHotBackedUp ?: wallet.backedUp)
+            is UserWallet.Hot -> wallet.resolveAdditionalInfo(syncProgress, isHotBackedUp ?: wallet.isBackedUp)
         }
     }
 
@@ -64,7 +64,7 @@ internal object WalletAdditionalInfoFactory {
             )
         }
         return WalletAdditionalInfo(
-            hideable = false,
+            isHideable = false,
             content = content,
             isHotBackedUp = isBackedUp,
         )
@@ -73,7 +73,7 @@ internal object WalletAdditionalInfoFactory {
     private fun UserWallet.Cold.resolveMultiCurrencyInfo(): WalletAdditionalInfo {
         return if (isLocked) {
             WalletAdditionalInfo(
-                hideable = false,
+                isHideable = false,
                 content = WalletAdditionalInfo.Content.Text(
                     getBackupInfoWithDivider(
                         backupCardsCount = getCardsCount(),
@@ -93,7 +93,7 @@ internal object WalletAdditionalInfoFactory {
     private fun UserWallet.Cold.resolveWallet2Info(): WalletAdditionalInfo {
         return if (isImported) {
             WalletAdditionalInfo(
-                hideable = false,
+                isHideable = false,
                 content = WalletAdditionalInfo.Content.Text(
                     getBackupInfoWithDivider(backupCardsCount = getCardsCount()) + TextReference.Res(
                         id = R.string.common_seed_phrase,
@@ -121,7 +121,7 @@ internal object WalletAdditionalInfoFactory {
         }
 
         return WalletAdditionalInfo(
-            hideable = false,
+            isHideable = false,
             content = WalletAdditionalInfo.Content.Text(ref),
         )
     }
@@ -137,7 +137,7 @@ internal object WalletAdditionalInfoFactory {
     private fun UserWallet.Cold.resolveSingleCurrencyInfo(currencyAmount: BigDecimal?): WalletAdditionalInfo {
         return if (isLocked) {
             WalletAdditionalInfo(
-                hideable = false,
+                isHideable = false,
                 content = WalletAdditionalInfo.Content.Text(TextReference.Res(R.string.common_locked)),
             )
         } else {
@@ -145,7 +145,7 @@ internal object WalletAdditionalInfoFactory {
             val amount = currencyAmount?.format { crypto(blockchain.currency, blockchain.decimals()) }
 
             WalletAdditionalInfo(
-                hideable = true,
+                isHideable = true,
                 content = WalletAdditionalInfo.Content.Text(TextReference.Str(value = amount.orEmpty())),
             )
         }

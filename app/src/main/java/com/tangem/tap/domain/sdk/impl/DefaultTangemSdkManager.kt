@@ -76,6 +76,7 @@ internal class DefaultTangemSdkManager(
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
+    private val cardContextInterceptorFactory: CardContextInterceptor.Factory,
     private val cardRepository: CardRepository,
     private val derivationsHelper: DerivationsHelper,
     // Lazy breaks a DI cycle: the launcher -> hot wallet accessor -> LegacySettingsRepository ->
@@ -262,7 +263,7 @@ internal class DefaultTangemSdkManager(
                 // We don't use the standard analytics event enrichment mechanism with card context params here,
                 // because we've just scanned a new card that may not yet be selected as the current one
                 val analyticsEvent = Basic.CardWasScanned(source)
-                val interceptor = CardContextInterceptor(scanResponse)
+                val interceptor = cardContextInterceptorFactory.create(scanResponse)
                 val params = analyticsEvent.params.toMutableMap()
                 interceptor.intercept(params)
 

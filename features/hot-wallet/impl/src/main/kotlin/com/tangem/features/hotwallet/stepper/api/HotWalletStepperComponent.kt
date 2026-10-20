@@ -12,16 +12,16 @@ interface HotWalletStepperComponent : ComposableContentComponent {
         @IntRange(from = 0) val currentStep: Int,
         @IntRange(from = 0) val steps: Int,
         val title: TextReference,
-        val showBackButton: Boolean,
-        val showSkipButton: Boolean,
+        val shouldShowBackButton: Boolean,
+        val shouldShowSkipButton: Boolean,
     ) {
         companion object {
             fun initialState() = StepperUM(
                 currentStep = 0,
                 steps = 0,
                 title = TextReference.EMPTY,
-                showBackButton = false,
-                showSkipButton = false,
+                shouldShowBackButton = false,
+                shouldShowSkipButton = false,
             )
         }
     }

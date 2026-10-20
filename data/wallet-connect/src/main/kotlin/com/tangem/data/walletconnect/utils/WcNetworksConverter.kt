@@ -82,7 +82,7 @@ internal class WcNetworksConverter @Inject constructor(
         val portfolioNetworks = getAccountNetworks(account.accountId)
 
         val blockchain = namespaceConverters
-            .firstNotNullOfOrNull { it.toBlockchain(rawChainId) } ?: return listOf()
+            .firstNotNullOfOrNull { it.toBlockchain(rawChainId) } ?: return emptyList()
 
         val allCoinNetwork = portfolioNetworks.filter { it.rawId == blockchain.toNetworkId() }
         return allCoinNetwork
@@ -134,7 +134,6 @@ internal class WcNetworksConverter @Inject constructor(
             ?.flattenCurrencies()
             ?.map { it.currency }
             ?.filterIsInstance<CryptoCurrency.Coin>()
-            ?.map(CryptoCurrency.Coin::network)
-            ?: emptyList()
+            ?.map(CryptoCurrency.Coin::network).orEmpty()
     }
 }
