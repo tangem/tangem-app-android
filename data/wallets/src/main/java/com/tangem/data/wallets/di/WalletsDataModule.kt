@@ -2,6 +2,7 @@ package com.tangem.data.wallets.di
 
 import com.squareup.moshi.Moshi
 import com.tangem.data.common.wallet.WalletServerBinder
+import com.tangem.data.wallet.BuildConfig
 import com.tangem.data.wallets.DefaultWalletCardsBackupRepository
 import com.tangem.data.wallets.DefaultWalletNamesMigrationRepository
 import com.tangem.data.wallets.DefaultWalletsPromoRepository
@@ -12,7 +13,9 @@ import com.tangem.data.wallets.derivations.DefaultDerivationsRepository
 import com.tangem.data.wallets.hot.DefaultHotMapDerivationsRepository
 import com.tangem.data.wallets.hot.DefaultHotWalletAccessCodeAttemptsRepository
 import com.tangem.data.wallets.signing.DefaultDeriveAndSignSession
-import com.tangem.data.wallets.signing.DeriveAndSignSession
+import com.tangem.data.wallets.signing.DefaultInSessionKeyDeriver
+import com.tangem.data.wallets.signing.InSessionKeyDeriver
+import com.tangem.data.wallets.signing.MockDeriveAndSignSession
 import com.tangem.data.wallets.store.PendingWalletCardsBackup
 import com.tangem.data.wallets.store.PendingWalletCardsBackupStore
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -32,12 +35,14 @@ import com.tangem.domain.wallets.repository.WalletCardsBackupRepository
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletsPromoRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.domain.wallets.signing.DeriveAndSignSession
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Provider
 import javax.inject.Singleton
 import kotlinx.serialization.builtins.ListSerializer
 
@@ -121,6 +126,13 @@ internal object WalletsDataModule {
             demoConfig = DemoConfig,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideDeriveAndSignSession(
+        defaultSession: Provider<DefaultDeriveAndSignSession>,
+        mockSession: Provider<MockDeriveAndSignSession>,
+    ): DeriveAndSignSession = if (BuildConfig.MOCK_DATA_SOURCE) mockSession.get() else defaultSession.get()
 }
 
 @Module
@@ -129,7 +141,7 @@ internal interface WalletsDataBindsModule {
 
     @Binds
     @Singleton
-    fun bindDeriveAndSignSession(impl: DefaultDeriveAndSignSession): DeriveAndSignSession
+    fun bindInSessionKeyDeriver(impl: DefaultInSessionKeyDeriver): InSessionKeyDeriver
 
     @Binds
     @Singleton
