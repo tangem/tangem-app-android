@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -43,6 +44,7 @@ internal abstract class YieldSupplyActiveModelTestBase {
     protected val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk(relaxed = true)
     protected val getUserWalletUseCase: GetUserWalletUseCase = mockk(relaxed = true)
     protected val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk(relaxed = true)
+    protected val router: Router = mockk(relaxed = true)
     protected val appRouter: AppRouter = mockk(relaxed = true)
     protected val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase = mockk(relaxed = true)
     protected val getYieldRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase = mockk(relaxed = true)
@@ -92,6 +94,7 @@ internal abstract class YieldSupplyActiveModelTestBase {
         getUserWalletUseCase = getUserWalletUseCase,
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         urlOpener = mockk<UrlOpener>(relaxed = true),
+        router = router,
         appRouter = appRouter,
         yieldSupplyGetDustMinAmountUseCase = mockk<YieldSupplyGetDustMinAmountUseCase>(relaxed = true),
         getYieldBoostStatusUseCase = getYieldBoostStatusUseCase,
