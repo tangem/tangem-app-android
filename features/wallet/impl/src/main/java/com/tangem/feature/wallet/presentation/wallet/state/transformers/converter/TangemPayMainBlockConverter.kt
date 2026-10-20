@@ -48,6 +48,9 @@ internal class TangemPayMainBlockConverter(
             is PaymentAccountStatusValue.KycRequired -> TangemPayMainUM.ActionRequired(
                 onClick = { tangemPayClickIntents.onKycRequiredClicked(value.account.userWalletId) },
             )
+            is PaymentAccountStatusValue.Verified -> TangemPayMainUM.ActionRequired(
+                onClick = { tangemPayClickIntents.onVerifiedClicked(value.account.userWalletId) },
+            )
             is PaymentAccountStatusValue.UnderReview -> TangemPayMainUM.UnderReview(
                 subtitle = when (statusValue.kycStatus) {
                     KycStatus.REJECTED -> TextReference.Res(R.string.tangempay_kyc_has_failed)
