@@ -447,7 +447,7 @@ private fun ResolvedOwner?.isOwnPortfolio(): Boolean = when (this) {
     is ResolvedOwner.Foreign, null -> false
 }
 
-private fun ResolvedOwner.toSubtitle(direction: ContentSubtitle.Direction): ContentSubtitle = when (this) {
+internal fun ResolvedOwner.toSubtitle(direction: ContentSubtitle.Direction): ContentSubtitle = when (this) {
     is ResolvedOwner.OwnAccount -> ContentSubtitle.OwnAccount(
         direction = direction,
         accountName = account.accountName.toUM().value,
