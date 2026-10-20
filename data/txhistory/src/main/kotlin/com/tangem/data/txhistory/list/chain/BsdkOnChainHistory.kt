@@ -106,7 +106,7 @@ internal class BsdkOnChainHistory @AssistedInject constructor(
         val status = batchState.status as? PaginationStatus.Paginating ?: return
         val lastResult = status.lastResult as? BatchFetchResult.Success ?: return
         val loadedItemsCount = batchState.data.sumOf { batch -> batch.data.items.size }
-        val shouldLoadMore = loadedItemsCount < AUTO_LOAD_MORE_TARGET_COUNT || lastResult.empty
+        val shouldLoadMore = loadedItemsCount < AUTO_LOAD_MORE_TARGET_COUNT || lastResult.isEmpty
         if (shouldLoadMore) {
             sendAction(Action.LoadMore)
         }

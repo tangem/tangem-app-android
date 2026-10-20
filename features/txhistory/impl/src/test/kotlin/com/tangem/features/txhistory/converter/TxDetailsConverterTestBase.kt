@@ -170,7 +170,7 @@ internal open class TxDetailsConverterTestBase {
         status = Yield.Validator.ValidatorStatus.ACTIVE,
         name = name,
         website = website,
-        preferred = true,
+        isPreferred = true,
         isStrategicPartner = false,
     )
 

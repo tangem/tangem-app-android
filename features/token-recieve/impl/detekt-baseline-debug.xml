@@ -2,10 +2,7 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>BooleanPropertyNaming:ReceiveAssetsUM.kt$ReceiveAssetsUM$val showMemoDisclaimer: Boolean</ID>
-    <ID>BooleanPropertyNaming:TokenReceiveAssetsComponent.kt$TokenReceiveAssetsComponent.TokenReceiveAssetsParams$val showMemoDisclaimer: Boolean</ID>
     <ID>MaxChainedCallsOnSameLine:DefaultTokenReceiveComponent.kt$DefaultTokenReceiveComponent$model.params.config.cryptoCurrency.network.name</ID>
-    <ID>NoNameShadowing:TokenReceiveStateFactory.kt$TokenReceiveStateFactory$ensAddress</ID>
     <ID>PropertyUsedBeforeDeclaration:TokenReceiveModel.kt$TokenReceiveModel$params</ID>
     <ID>PropertyUsedBeforeDeclaration:TokenReceiveModel.kt$TokenReceiveModel$state</ID>
   </CurrentIssues>

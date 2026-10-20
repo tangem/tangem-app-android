@@ -89,7 +89,7 @@ internal class AmountRequirementStateTransformerTest {
         cryptoCurrencyStatus = solanaCryptoStatus(),
         maxAmount = EnterAmountBoundary(amount = staked, fiatAmount = null, fiatRate = null),
         integration = solanaExitIntegration(exitMin = exitMin, enterMin = enterMin),
-        actionType = StakingActionCommonType.Exit(partiallyUnstakeDisabled = false),
+        actionType = StakingActionCommonType.Exit(isPartiallyUnstakeDisabled = false),
     )
 
     @Test
@@ -98,7 +98,7 @@ internal class AmountRequirementStateTransformerTest {
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             maxAmount = EnterAmountBoundary(amount = BigDecimal("100"), fiatAmount = null, fiatRate = null),
             integration = enterIntegrationWith(minimum = BigDecimal("0.01"), maximum = BigDecimal("0.15")),
-            actionType = StakingActionCommonType.Enter(skipEnterAmount = false),
+            actionType = StakingActionCommonType.Enter(shouldSkipEnterAmount = false),
         )
 
         val result = transformer.transform(amountState(BigDecimal("0.2"))) as AmountState.Data
@@ -114,7 +114,7 @@ internal class AmountRequirementStateTransformerTest {
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             maxAmount = EnterAmountBoundary(amount = BigDecimal("100"), fiatAmount = null, fiatRate = null),
             integration = enterIntegrationWith(minimum = BigDecimal("0.1"), maximum = null),
-            actionType = StakingActionCommonType.Enter(skipEnterAmount = false),
+            actionType = StakingActionCommonType.Enter(shouldSkipEnterAmount = false),
         )
 
         val result = transformer.transform(amountState(BigDecimal("0.05"))) as AmountState.Data
@@ -130,7 +130,7 @@ internal class AmountRequirementStateTransformerTest {
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             maxAmount = EnterAmountBoundary(amount = BigDecimal("100"), fiatAmount = null, fiatRate = null),
             integration = exitIntegrationWith(minimum = BigDecimal("0.1"), maximum = null),
-            actionType = StakingActionCommonType.Exit(partiallyUnstakeDisabled = false),
+            actionType = StakingActionCommonType.Exit(isPartiallyUnstakeDisabled = false),
         )
 
         val result = transformer.transform(amountState(BigDecimal("0.05"))) as AmountState.Data
@@ -146,7 +146,7 @@ internal class AmountRequirementStateTransformerTest {
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             maxAmount = EnterAmountBoundary(amount = BigDecimal("0.5"), fiatAmount = null, fiatRate = null),
             integration = enterIntegrationWith(minimum = BigDecimal("0.01"), maximum = null),
-            actionType = StakingActionCommonType.Enter(skipEnterAmount = false),
+            actionType = StakingActionCommonType.Enter(shouldSkipEnterAmount = false),
         )
 
         val result = transformer.transform(amountState(BigDecimal("0.6"))) as AmountState.Data
@@ -162,7 +162,7 @@ internal class AmountRequirementStateTransformerTest {
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             maxAmount = EnterAmountBoundary(amount = BigDecimal("0.5"), fiatAmount = null, fiatRate = null),
             integration = exitIntegrationWith(minimum = BigDecimal("0.01"), maximum = null),
-            actionType = StakingActionCommonType.Exit(partiallyUnstakeDisabled = false),
+            actionType = StakingActionCommonType.Exit(isPartiallyUnstakeDisabled = false),
         )
 
         val result = transformer.transform(amountState(BigDecimal("0.6"))) as AmountState.Data
@@ -288,7 +288,7 @@ internal class AmountRequirementStateTransformerTest {
             cryptoCurrencyStatus = cryptoCurrencyStatus, // relaxed mock: network.rawId is not "solana"
             maxAmount = EnterAmountBoundary(amount = BigDecimal("5"), fiatAmount = null, fiatRate = null),
             integration = exitIntegrationWith(minimum = null, maximum = null),
-            actionType = StakingActionCommonType.Exit(partiallyUnstakeDisabled = false),
+            actionType = StakingActionCommonType.Exit(isPartiallyUnstakeDisabled = false),
         )
 
         val result = transformer.transform(amountState(BigDecimal("0.5"))) as AmountState.Data
