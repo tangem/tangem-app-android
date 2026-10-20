@@ -3114,6 +3114,27 @@
   <string name="tangempay_topup_receive_title">From another wallet or exchange</string>
   <string name="tangempay_topup_swap_body">Use crypto from your wallet to top up your payment account</string>
   <string name="tangempay_topup_swap_title">From your Tangem Wallet</string>
+  <string name="tangempay_unified_onboarding_cashback_caption">Cashback</string>
+  <string name="tangempay_unified_onboarding_cashback_subtitle">Paid in USDC</string>
+  <string name="tangempay_unified_onboarding_cashback_title">Up to 2%%. %1$s</string>
+  <string name="tangempay_unified_onboarding_description">A Visa card and a US dollar account in one. Verify once — we\'ll open everything that\'s available where you live</string>
+  <string name="tangempay_unified_onboarding_everything_header">For everything</string>
+  <string name="tangempay_unified_onboarding_fees_caption">Pay what you see</string>
+  <string name="tangempay_unified_onboarding_fees_subtitle">1 USDC = 1 USD</string>
+  <string name="tangempay_unified_onboarding_fees_title">No purchase fees. %1$s</string>
+  <string name="tangempay_unified_onboarding_legal">What you can open depends on where you live. We\'ll confirm right after verification</string>
+  <string name="tangempay_unified_onboarding_money_account_caption">Quite handy</string>
+  <string name="tangempay_unified_onboarding_money_account_header">USD account</string>
+  <string name="tangempay_unified_onboarding_money_account_subtitle">Receive ACH transfers USD to USDC 1:1; flat $1 fee</string>
+  <string name="tangempay_unified_onboarding_money_account_title">Your own US account details. %1$s</string>
+  <string name="tangempay_unified_onboarding_payment_account_caption">Pay as you want</string>
+  <string name="tangempay_unified_onboarding_payment_account_header">Visa Card</string>
+  <string name="tangempay_unified_onboarding_payment_account_subtitle_android">with Google Pay</string>
+  <string name="tangempay_unified_onboarding_payment_account_title">Online or %1$s</string>
+  <string name="tangempay_unified_onboarding_plan_caption">One plan</string>
+  <string name="tangempay_unified_onboarding_plan_subtitle">Basic is free.</string>
+  <string name="tangempay_unified_onboarding_plan_title">%1$s Plus covers both and packs much more</string>
+  <string name="tangempay_unified_onboarding_terms_button">Terms and fees</string>
   <string name="tangempay_usdc_on_polygon_network">USDC on Polygon network</string>
   <string name="tangempay_va_account_details">Account details</string>
   <string name="tangempay_va_available_to_deposit_day">Available to deposit per day:</string>
