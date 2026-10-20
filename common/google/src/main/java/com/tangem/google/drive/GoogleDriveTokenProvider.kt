@@ -21,6 +21,12 @@ interface GoogleDriveTokenProvider {
     suspend fun invalidate()
 
     /**
+     * Drops only the cached token and keeps the pinned account. For a token the server rejected: the
+     * re-authorization must stay in the same account, while [invalidate] would let it pick another one.
+     */
+    suspend fun invalidateToken()
+
+    /**
      * [invalidate], then pins the following authorizations to [accountName] — one operation, because in
      * the gap between two a concurrent [getAccessToken] can cache a token for the account being left.
      */

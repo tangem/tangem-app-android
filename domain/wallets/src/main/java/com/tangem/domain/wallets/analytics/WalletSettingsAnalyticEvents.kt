@@ -5,6 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.STATUS
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.domain.sociallogin.models.SocialLoginError
 
 sealed class WalletSettingsAnalyticEvents(
     category: String = "Settings / Wallet Settings",
@@ -105,6 +106,13 @@ sealed class WalletSettingsAnalyticEvents(
 
     class SocialRecoveryDeleted : WalletSettingsAnalyticEvents(
         event = "Social Recovery Deleted",
+    )
+
+    data class SocialRecoveryDeletionError(
+        val error: SocialLoginError,
+    ) : WalletSettingsAnalyticEvents(
+        event = "Social Recovery Deletion Error",
+        params = mapOf(AnalyticsParam.ERROR_MESSAGE to error.deletionMessage()),
     )
 
     data class CloudBackupDeletionError(
@@ -298,3 +306,29 @@ sealed class WalletSettingsAnalyticEvents(
 }
 
 private fun Boolean.toYesNo(): String = if (this) "Yes" else "No"
+
+/** Fixed wording, so the values stay groupable in Amplitude; the cause may carry file names or urls */
+private fun SocialLoginError.deletionMessage(): String = when (this) {
+    SocialLoginError.BackupNotFound -> "Backup not found"
+    SocialLoginError.CloudUnavailable -> "Cloud unavailable"
+    SocialLoginError.NetworkError -> "Network error"
+    is SocialLoginError.BackupWriteFailed -> "Delete error"
+    is SocialLoginError.ServerError -> "Server error"
+    is SocialLoginError.PersistenceFailed -> "Persistence error"
+    // a deletion does not produce these, they come from the sign-in and restore flows
+    SocialLoginError.SignInCanceled,
+    SocialLoginError.ConsentDeclined,
+    is SocialLoginError.SignInFailed,
+    SocialLoginError.NoProviderAccount,
+    SocialLoginError.ProviderUnavailable,
+    SocialLoginError.BindingNotFound,
+    SocialLoginError.BindingConflict,
+    is SocialLoginError.RecoveryKeyDecryptionFailed,
+    SocialLoginError.InvalidBackupFile,
+    is SocialLoginError.UnsupportedBackupVersion,
+    SocialLoginError.WalletAlreadySaved,
+    SocialLoginError.PassphraseNotSupported,
+    SocialLoginError.BackupAbandoned,
+    is SocialLoginError.Unknown,
+    -> "Unknown error"
+}
