@@ -24,7 +24,7 @@ import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun TangemPayVaBankingDetailsErrorBottomSheet(state: TangemPayVaBankingDetailsErrorUM) {
+internal fun TangemPayBankingDetailsErrorBottomSheet(state: TangemPayBankingDetailsErrorUM) {
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
@@ -45,7 +45,7 @@ internal fun TangemPayVaBankingDetailsErrorBottomSheet(state: TangemPayVaBanking
 }
 
 @Composable
-private fun Content(state: TangemPayVaBankingDetailsErrorUM, modifier: Modifier = Modifier) {
+private fun Content(state: TangemPayBankingDetailsErrorUM, modifier: Modifier = Modifier) {
     TangemPayErrorContent(
         title = resourceReference(R.string.tangempay_va_banking_details_error_title),
         subtitle = resourceReference(R.string.tangempay_va_banking_details_error_description),
@@ -71,8 +71,8 @@ private fun Content(state: TangemPayVaBankingDetailsErrorUM, modifier: Modifier 
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TangemPayVaBankingDetailsErrorPreview(
-    @PreviewParameter(VaBankingDetailsErrorPreviewProvider::class) state: TangemPayVaBankingDetailsErrorUM,
+private fun TangemPayBankingDetailsErrorPreview(
+    @PreviewParameter(BankingDetailsErrorPreviewProvider::class) state: TangemPayBankingDetailsErrorUM,
 ) {
     TangemThemePreviewRedesign {
         Content(
@@ -82,16 +82,16 @@ private fun TangemPayVaBankingDetailsErrorPreview(
     }
 }
 
-private class VaBankingDetailsErrorPreviewProvider :
-    CollectionPreviewParameterProvider<TangemPayVaBankingDetailsErrorUM>(
+private class BankingDetailsErrorPreviewProvider :
+    CollectionPreviewParameterProvider<TangemPayBankingDetailsErrorUM>(
         collection = listOf(
-            TangemPayVaBankingDetailsErrorUM(
+            TangemPayBankingDetailsErrorUM(
                 isRetryLoading = false,
                 onRetryClick = {},
                 onContactSupportClick = {},
                 onDismiss = {},
             ),
-            TangemPayVaBankingDetailsErrorUM(
+            TangemPayBankingDetailsErrorUM(
                 isRetryLoading = true,
                 onRetryClick = {},
                 onContactSupportClick = {},
