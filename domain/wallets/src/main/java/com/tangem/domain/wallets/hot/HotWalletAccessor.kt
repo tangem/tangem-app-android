@@ -20,6 +20,13 @@ interface HotWalletAccessor {
 
     suspend fun derivePublicKeys(hotWalletId: HotWalletId, request: DeriveWalletRequest): DerivedPublicKeyResponse
 
+    suspend fun derivePublicKeysWithUnlock(
+        unlockHotWallet: UnlockHotWallet,
+        request: DeriveWalletRequest,
+    ): DerivedPublicKeyResponse
+
+    suspend fun signHashesWithUnlock(unlockHotWallet: UnlockHotWallet, dataToSign: List<DataToSign>): List<SignedData>
+
     suspend fun exportSeedPhrase(hotWalletId: HotWalletId): SeedPhrasePrivateInfo
 
     suspend fun unlockContextual(hotWalletId: HotWalletId): UnlockHotWallet

@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.addfunds.bankTransferOnramp.details
 
 import androidx.compose.runtime.Stable
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -9,9 +8,10 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
-import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesLoader
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
+import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent
+import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent.RequisiteField
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +22,6 @@ import javax.inject.Inject
 
 @Stable
 @ModelScoped
-@Suppress("LongParameterList")
 internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -30,7 +29,6 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
     private val getOnrampFeesUseCase: GetOnrampFeesUseCase,
     private val clipboardManager: ClipboardManager,
     private val shareManager: ShareManager,
-    private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankTransferOnrampDetailsComponent.Params>()
@@ -57,7 +55,7 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
         )
 
     init {
-        analytics.send(TangemPayAnalyticsEvents.VaBankingDetailsShowed())
+        params.analytics.onDetailsShown()
         feesLoader.fees
             .onEach { fees -> uiState.update { state -> state.copy(fees = fees) } }
             .launchIn(modelScope)
@@ -68,13 +66,13 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
         router.pop()
     }
 
-    private fun onCopyClick(field: String, value: String) {
-        analytics.send(TangemPayAnalyticsEvents.VaCopyFieldClicked(field))
+    private fun onCopyClick(field: RequisiteField, value: String) {
+        params.analytics.onFieldCopied(field)
         clipboardManager.setText(text = value, isSensitive = true)
     }
 
     private fun onShareClick() {
-        analytics.send(TangemPayAnalyticsEvents.VaShareDetailsButtonClicked())
+        params.analytics.onShareClicked()
         shareManager.shareText(requisites.joinToString(separator = "\n") { "${it.key}: ${it.value}" })
     }
 }
