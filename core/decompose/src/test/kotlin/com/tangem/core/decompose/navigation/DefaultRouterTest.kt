@@ -201,6 +201,19 @@ internal class DefaultRouterTest {
     }
 
     @Test
+    fun `GIVEN routes of a class deeper in stack WHEN navigate removes them THEN stack is rebuilt and completion is successful`() {
+        // Arrange
+        stack = listOf(RouteA, Details(id = 1), RouteB, Details(id = 2))
+
+        // Act
+        router.navigate(transformer = { it.filterNot { route -> route is Details } + RouteC }, onComplete = onComplete)
+
+        // Assert
+        assertThat(stack).containsExactly(RouteA, RouteB, RouteC).inOrder()
+        assertThat(results).containsExactly(true)
+    }
+
+    @Test
     fun `GIVEN matching route on top WHEN popToMatching THEN stack is unchanged and completion is successful`() {
         // Arrange
         stack = listOf(RouteA, Details(id = 1, flag = true))

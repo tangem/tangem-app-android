@@ -98,12 +98,11 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
             )
         }
 
-    // A marketing banner can open another onramp flow over this one, so all of them give way to the success screen
+    // A marketing banner or a buy deep link can open another onramp flow, so the success screen replaces all of them
     private fun openSuccess(txId: String) {
-        val successRoute = AppRoute.OnrampSuccess(txId)
-        router.popToMatching(AppRoute::class, predicate = { it !is AppRoute.Onramp }) { isOnrampFlowClosed ->
-            if (isOnrampFlowClosed) router.push(successRoute) else router.replaceCurrent(successRoute)
-        }
+        router.navigate(
+            transformer = { stack -> stack.filterNot { it is AppRoute.Onramp } + AppRoute.OnrampSuccess(txId) },
+        )
     }
 
     @AssistedFactory
