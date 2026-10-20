@@ -33,7 +33,7 @@ internal class RevokeSocialRecoveryUseCaseTest {
         clearMocks(socialRecoveryRepository, socialBackupRepository)
         coEvery { socialRecoveryRepository.unbindWallet(walletId) } returns Unit.right()
         coEvery { socialBackupRepository.setSocialBackupCompleted(walletId, any()) } returns Unit.right()
-        coEvery { socialBackupRepository.deleteBackup(walletId) } returns Unit.right()
+        coEvery { socialBackupRepository.deleteBackup(walletId) } returns true.right()
     }
 
     @Test

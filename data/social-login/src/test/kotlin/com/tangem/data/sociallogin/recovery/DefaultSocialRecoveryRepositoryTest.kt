@@ -4,6 +4,7 @@ import android.util.Base64
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.RecoveryKey
@@ -17,6 +18,7 @@ import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -38,14 +40,17 @@ internal class DefaultSocialRecoveryRepositoryTest {
         every { walletId } returns WALLET_ID
     }
 
+    private val userWalletsListRepository: UserWalletsListRepository = mockk()
+
     private val repository = DefaultSocialRecoveryRepository(
         client = client,
         hotWalletSignerFactory = hotWalletSignerFactory,
+        userWalletsListRepository = { userWalletsListRepository },
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(client, hotWalletSignerFactory)
+        clearMocks(client, hotWalletSignerFactory, userWalletsListRepository)
         mockkStatic(Base64::class)
         every { Base64.encodeToString(any(), any()) } answers {
             JavaBase64.getEncoder().encodeToString(firstArg())
@@ -147,6 +152,78 @@ internal class DefaultSocialRecoveryRepositoryTest {
         coVerify(exactly = 1) { client.unbindWallet(BACKEND_WALLET_ID) }
     }
 
+    @Test
+    fun `GIVEN a listed wallet not registered here WHEN unbindWallet THEN it is registered and unbound again`() =
+        runTest {
+            // Arrange — the backend erases a binding only for a wallet registered on this device
+            val signer: WalletSigner = mockk()
+            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(userWallet)
+            every { hotWalletSignerFactory.signerFor(userWallet) } returns signer
+            coEvery { client.unbindWallet(BACKEND_WALLET_ID) } returnsMany listOf(
+                SocialRecoveryError.WalletNotRegistered.left(),
+                Unit.right(),
+            )
+            coEvery { client.registerWallet(BACKEND_WALLET_ID, signer) } returns Unit.right()
+
+            // Act
+            val actual = repository.unbindWallet(WALLET_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+            coVerifyOrder {
+                client.unbindWallet(BACKEND_WALLET_ID)
+                client.registerWallet(BACKEND_WALLET_ID, signer)
+                client.unbindWallet(BACKEND_WALLET_ID)
+            }
+        }
+
+    @Test
+    fun `GIVEN the wallet cannot be registered WHEN unbindWallet THEN the binding is not reported as erased`() =
+        runTest {
+            // Arrange
+            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(userWallet)
+            every { hotWalletSignerFactory.signerFor(userWallet) } returns mockk()
+            coEvery { client.unbindWallet(BACKEND_WALLET_ID) } returns SocialRecoveryError.WalletNotRegistered.left()
+            coEvery { client.registerWallet(any(), any()) } returns SocialRecoveryError.Api(AuthError.NetworkError).left()
+
+            // Act
+            val actual = repository.unbindWallet(WALLET_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(SocialLoginError.NetworkError.left())
+            coVerify(exactly = 1) { client.unbindWallet(any()) }
+        }
+
+    @Test
+    fun `GIVEN a wallet only in the Hot SDK WHEN unbindWallet finds it unregistered THEN there is nothing to erase`() =
+        runTest {
+            // Arrange — a binding is only ever created together with the wallet's registration
+            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+            coEvery { client.unbindWallet(BACKEND_WALLET_ID) } returns SocialRecoveryError.WalletNotRegistered.left()
+
+            // Act
+            val actual = repository.unbindWallet(WALLET_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+            coVerify(exactly = 0) { client.registerWallet(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN the wallet list cannot be read WHEN unbindWallet finds it unregistered THEN the failure is returned`() =
+        runTest {
+            // Arrange
+            coEvery { userWalletsListRepository.userWalletsSync() } throws IllegalStateException("storage")
+            coEvery { client.unbindWallet(BACKEND_WALLET_ID) } returns SocialRecoveryError.WalletNotRegistered.left()
+
+            // Act
+            val actual = repository.unbindWallet(WALLET_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(SocialLoginError.ServerError().left())
+            coVerify(exactly = 0) { client.registerWallet(any(), any()) }
+        }
+
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN the transport fails WHEN getRecoveryKey THEN the error is translated`(model: ErrorModel) = runTest {
@@ -170,6 +247,7 @@ internal class DefaultSocialRecoveryRepositoryTest {
             ErrorModel(SocialRecoveryError.BindingConflict, SocialLoginError.BindingConflict),
             ErrorModel(SocialRecoveryError.NonceExpired, SocialLoginError.ServerError()),
             ErrorModel(SocialRecoveryError.NoActiveSession, SocialLoginError.ServerError()),
+            ErrorModel(SocialRecoveryError.WalletNotRegistered, SocialLoginError.ServerError()),
             ErrorModel(SocialRecoveryError.DeviceKeyUnavailable, SocialLoginError.ServerError()),
             ErrorModel(SocialRecoveryError.SigningFailed(cause), SocialLoginError.ServerError(cause)),
             ErrorModel(
