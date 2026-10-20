@@ -11,6 +11,9 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.txhistory.joint.ownJointAccount
+import com.tangem.features.txhistory.model.TxHistoryLookupContext
+import com.tangem.features.txhistory.model.TxHistoryOwnerLookupProducer
+import com.tangem.features.txhistory.model.resolveCounterparty
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -26,6 +29,7 @@ internal class JointCosignRequestsDelegate @Inject constructor(
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
     private val networkReader: JointNetworkReader,
     private val transferResolver: JointOperationTransferResolver,
+    private val ownerLookupProducer: TxHistoryOwnerLookupProducer,
 ) {
 
     fun observe(userWalletId: UserWalletId, currency: CryptoCurrency): Flow<JointCosignRequest?> {
@@ -34,7 +38,10 @@ internal class JointCosignRequestsDelegate @Inject constructor(
         return combine(
             flow = accountListSupplier.ownJointAccount(userWalletId = userWalletId, currency = currency),
             flow2 = jointAccountListSupplier(userWalletId = userWalletId),
-        ) { account, accounts -> resolve(account = account, accounts = accounts, currency = currency) }
+            flow3 = ownerLookupProducer(userWalletId = userWalletId),
+        ) { account, accounts, lookup ->
+            resolve(account = account, accounts = accounts, currency = currency, lookup = lookup)
+        }
             .distinctUntilChanged()
     }
 
@@ -42,6 +49,7 @@ internal class JointCosignRequestsDelegate @Inject constructor(
         account: Account.Joint?,
         accounts: List<JointAccount>,
         currency: CryptoCurrency,
+        lookup: TxHistoryLookupContext,
     ): JointCosignRequest? {
         if (account == null) return null
         val jointAccount = accounts
@@ -61,6 +69,13 @@ internal class JointCosignRequestsDelegate @Inject constructor(
             safeAddress = safeAddress,
         ) ?: return null
 
-        return JointCosignRequest(operation = operation, transfer = transfer)
+        return JointCosignRequest(
+            operation = operation,
+            transfer = transfer,
+            recipient = lookup.resolveCounterparty(
+                address = transfer.intent.recipient,
+                networkRawId = currency.network.id.rawId,
+            ),
+        )
     }
 }
