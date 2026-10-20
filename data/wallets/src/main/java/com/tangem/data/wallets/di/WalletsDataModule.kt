@@ -6,6 +6,7 @@ import com.tangem.data.wallets.DefaultWalletCardsBackupRepository
 import com.tangem.data.wallets.DefaultWalletNamesMigrationRepository
 import com.tangem.data.wallets.DefaultWalletsPromoRepository
 import com.tangem.data.wallets.DefaultWalletsRepository
+import com.tangem.data.wallets.backup.DefaultWalletCardsBackupDeliveryScheduler
 import com.tangem.data.wallets.cold.DefaultColdMapDerivationsRepository
 import com.tangem.data.wallets.derivations.DefaultDerivationsHelper
 import com.tangem.data.wallets.derivations.DefaultDerivationsRepository
@@ -145,4 +146,9 @@ internal interface WalletsDataBindsModule {
     fun bindHotWalletAccessCodeAttemptsRepository(
         impl: DefaultHotWalletAccessCodeAttemptsRepository,
     ): HotWalletAccessCodeAttemptsRepository
+
+    @Binds
+    fun bindWalletCardsBackupDeliveryScheduler(
+        impl: DefaultWalletCardsBackupDeliveryScheduler,
+    ): WalletCardsBackupDeliveryScheduler
 }
