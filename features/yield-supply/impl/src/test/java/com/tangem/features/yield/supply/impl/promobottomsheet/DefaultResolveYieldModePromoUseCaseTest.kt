@@ -117,14 +117,14 @@ internal class DefaultResolveYieldModePromoUseCaseTest {
         assertThat(actual).isEqualTo(ready(userMaxApy = offer(apy = "5.00", tokenSymbol = "USDT")))
     }
 
-    @Test
-    fun `GIVEN a token loading outside the Yield Mode networks WHEN invoke THEN the check does not wait for it`() {
+    @ParameterizedTest
+    @MethodSource("provideUnsettledTronValues")
+    fun `GIVEN a token loading or failed outside the Yield Mode networks WHEN invoke THEN the check ignores it`(
+        tronValue: CryptoCurrencyStatus.Value,
+    ) {
         // Arrange
         val tronToken = MockYieldSupply.token(contractAddress = "0xC0", symbol = "TRX_USDT", network = tronNetwork)
-        val statuses = listOf(
-            MockYieldSupply.loadedStatus(usdt),
-            CryptoCurrencyStatus(tronToken, CryptoCurrencyStatus.Loading),
-        )
+        val statuses = listOf(MockYieldSupply.loadedStatus(usdt), CryptoCurrencyStatus(tronToken, tronValue))
 
         // Act
         val actual = useCase(statuses = statuses, yieldSupplyApy = apyOf(usdt), earnOffers = earnOffers())
@@ -135,7 +135,7 @@ internal class DefaultResolveYieldModePromoUseCaseTest {
 
     @ParameterizedTest
     @MethodSource("provideFailedRefreshStatuses")
-    fun `GIVEN the only position failed to refresh WHEN invoke THEN data not ready`(
+    fun `GIVEN a Yield Mode token failed to refresh WHEN invoke THEN data not ready`(
         statuses: List<CryptoCurrencyStatus>,
     ) {
         // Act
@@ -269,13 +269,20 @@ internal class DefaultResolveYieldModePromoUseCaseTest {
     private fun provideFailedRefreshStatuses() = listOf(
         listOf(
             MockYieldSupply.loadedStatus(usdt, amount = BigDecimal("100")),
-            CryptoCurrencyStatus(
-                usdtInCardAccount,
-                CryptoCurrencyStatus.Unreachable(priceChange = null, fiatRate = null, networkAddress = null),
-            ),
+            CryptoCurrencyStatus(usdtInCardAccount, unreachable()),
         ),
         listOf(MockYieldSupply.loadedStatus(usdt, amount = BigDecimal("100"), networkSource = StatusSource.ONLY_CACHE)),
+        listOf(
+            MockYieldSupply.loadedStatus(usdt, amount = BigDecimal("100")),
+            CryptoCurrencyStatus(usdc, unreachable()),
+        ),
+        listOf(
+            MockYieldSupply.loadedStatus(usdt, amount = BigDecimal("100")),
+            MockYieldSupply.loadedStatus(usdc, networkSource = StatusSource.ONLY_CACHE),
+        ),
     )
+
+    private fun provideUnsettledTronValues() = listOf(CryptoCurrencyStatus.Loading, unreachable())
 
     private fun provideStillLoadingStatuses() = listOf(
         CryptoCurrencyStatus(usdtInCardAccount, CryptoCurrencyStatus.Loading),
@@ -294,6 +301,12 @@ internal class DefaultResolveYieldModePromoUseCaseTest {
     private fun apyOf(token: CryptoCurrency.Token) = mapOf(token.yieldSupplyKey() to BigDecimal("5"))
 
     private fun earnOffers() = EarnYieldOffers(total = 36, best = MockEarn.yieldToken())
+
+    private fun unreachable() = CryptoCurrencyStatus.Unreachable(
+        priceChange = null,
+        fiatRate = null,
+        networkAddress = null,
+    )
 
     private fun ready(userMaxApy: YieldModePromoOffer) = YieldModePromoResolution.Ready(
         userMaxApy = userMaxApy,
