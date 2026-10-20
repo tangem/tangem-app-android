@@ -50,7 +50,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
     private val HotWalletPasswordRequester.AttemptRequest.attemptId
         get() = HotWalletAccessCodeAttemptsRepository.AttemptId(
             hotWalletId = hotWalletId,
-            auth = authMode,
+            isAuth = isAuthMode,
         )
 
     val uiState: StateFlow<HotAccessCodeRequestUM>
@@ -66,11 +66,11 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         currentRequest.value = attemptRequest
         result.value = null // Reset the result when showing the dialog
         subscribeToAttempts(attemptRequest)
-        uiState.update {
-            it.copy(
+        uiState.update { state ->
+            state.copy(
                 isShown = true,
                 accessCode = "",
-                useBiometricVisible = attemptRequest.isBiometryButtonVisible(),
+                isUseBiometricVisible = attemptRequest.isBiometryButtonVisible(),
                 onAccessCodeChange = ::onAccessCodeChange,
             )
         }
@@ -94,7 +94,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
                 state.copy(
                     accessCodeColor = PinTextColor.WrongCode,
                     onAccessCodeChange = {},
-                    useBiometricVisible = attemptRequest.isBiometryButtonVisible(),
+                    isUseBiometricVisible = attemptRequest.isBiometryButtonVisible(),
                 )
             }
         }
@@ -104,8 +104,8 @@ internal class HotAccessCodeRequestModel @Inject constructor(
     suspend fun successfulAuthentication(attemptRequest: HotWalletPasswordRequester.AttemptRequest) {
         hotAccessCodeAttemptsRepository.resetAttempts(attemptRequest.hotWalletId)
         if (isCurrentRequest(attemptRequest)) {
-            uiState.update {
-                it.copy(
+            uiState.update { state ->
+                state.copy(
                     accessCodeColor = PinTextColor.Success,
                     onAccessCodeChange = {},
                 )
@@ -131,18 +131,18 @@ internal class HotAccessCodeRequestModel @Inject constructor(
     private fun onAccessCodeChange(accessCode: String) {
         if (accessCode.length > ACCESS_CODE_LENGTH) return
 
-        uiState.update {
-            it.copy(
+        uiState.update { state ->
+            state.copy(
                 accessCode = accessCode,
                 accessCodeColor = PinTextColor.Primary,
             )
         }
 
         if (accessCode.length == ACCESS_CODE_LENGTH) {
-            uiState.update {
-                it.copy(
+            uiState.update { state ->
+                state.copy(
                     onAccessCodeChange = {},
-                    useBiometricVisible = false,
+                    isUseBiometricVisible = false,
                 )
             }
 
@@ -167,8 +167,8 @@ internal class HotAccessCodeRequestModel @Inject constructor(
             when (attempts) {
                 is Attempts.FastForward -> {
                     if (attempts.count > 0) {
-                        uiState.update {
-                            it.copy(
+                        uiState.update { state ->
+                            state.copy(
                                 wrongAccessCodeText = resourceReference(
                                     R.string.access_code_check_warining_lock,
                                     wrappedList(MAX_FAST_FORWARD_ATTEMPTS - attempts.count),
@@ -177,8 +177,8 @@ internal class HotAccessCodeRequestModel @Inject constructor(
                             )
                         }
                     } else {
-                        uiState.update {
-                            it.copy(
+                        uiState.update { state ->
+                            state.copy(
                                 wrongAccessCodeText = null,
                                 onAccessCodeChange = ::onAccessCodeChange,
                             )
@@ -186,8 +186,8 @@ internal class HotAccessCodeRequestModel @Inject constructor(
                     }
                 }
                 is Attempts.WithDelay -> {
-                    uiState.update {
-                        it.copy(
+                    uiState.update { state ->
+                        state.copy(
                             wrongAccessCodeText = remainingSecondsToText(attempts.remainingSeconds),
                             onAccessCodeChange = ::onAccessCodeChange.takeIf { attempts.remainingSeconds <= 0 }
                                 ?: {},
@@ -195,8 +195,8 @@ internal class HotAccessCodeRequestModel @Inject constructor(
                     }
                 }
                 is Attempts.BeforeDeletion -> {
-                    uiState.update {
-                        it.copy(
+                    uiState.update { state ->
+                        state.copy(
                             wrongAccessCodeText = remainingSecondsToText(attempts.remainingSeconds)
                                 ?: resourceReference(
                                     R.string.access_code_check_warining_delete,

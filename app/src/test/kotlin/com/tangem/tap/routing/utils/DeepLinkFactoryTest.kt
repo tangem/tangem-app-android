@@ -7,6 +7,8 @@ import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
+import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
+import com.tangem.feature.usedesk.api.deeplink.SupportDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.DiscoverDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.EarnDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsDeepLinkHandler
@@ -126,6 +128,14 @@ internal class DeepLinkFactoryTest {
         every { create(any()) } returns mockk()
     }
 
+    private val supportDeepLinkFactory = mockk<SupportDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
+    private val useDeskFeatureToggles = mockk<UseDeskFeatureToggles> {
+        every { isSupportChatDeepLinkEnabled } returns true
+    }
+
     private val earnDeepLinkFactory = mockk<EarnDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any()) } returns mockk()
     }
@@ -217,6 +227,8 @@ internal class DeepLinkFactoryTest {
         yieldDeepLink = yieldDeepLinkFactory,
         discoverDeepLink = discoverDeepLinkFactory,
         surveyDeepLink = surveyDeepLinkFactory,
+        supportDeepLink = supportDeepLinkFactory,
+        useDeskFeatureToggles = useDeskFeatureToggles,
         promoCampaignsDeepLink = campaignsDeepLinkHandlerFactory,
         mcpDeepLink = mcpDeepLinkFactory,
         mcpIntentDeepLink = mcpIntentDeepLinkFactory,
@@ -419,6 +431,12 @@ internal class DeepLinkFactoryTest {
         advanceUntilIdle()
         verify { referralDeepLinkFactory.create() }
 
+        // Test Support
+        every { mockedUri.host } returns "support"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { supportDeepLinkFactory.create(eq(testScope)) }
+
         // Test Wallet
         every { mockedUri.host } returns "main"
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
@@ -545,6 +563,22 @@ internal class DeepLinkFactoryTest {
 
         // Assert
         verify(exactly = 0) { mcpIntentDeepLinkFactory.create(any()) }
+    }
+
+    @Test
+    fun `GIVEN support chat deeplink disabled WHEN support deeplink handled THEN handler is not created`() = runTest {
+        // Arrange
+        every { useDeskFeatureToggles.isSupportChatDeepLinkEnabled } returns false
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "support"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { supportDeepLinkFactory.create(any()) }
     }
 
     @Test

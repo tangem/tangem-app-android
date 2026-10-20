@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.extensions.TextReference
@@ -30,18 +31,18 @@ internal fun NotificationSettingRow(
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         BlockCard(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        horizontal = TangemTheme.dimens.spacing16,
-                        vertical = TangemTheme.dimens.spacing12,
+                        horizontal = 16.dp,
+                        vertical = 12.dp,
                     ),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
                     modifier = Modifier.weight(1f),
@@ -84,7 +85,7 @@ private fun SubtitleText(base: TextReference, showMoreInfo: Boolean, onMoreInfoC
         base
     }
     Text(
-        modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+        modifier = Modifier.padding(horizontal = 16.dp),
         text = reference.resolveAnnotatedReference(),
         style = TangemTheme.typography.caption2,
         color = TangemTheme.colors.text.tertiary,

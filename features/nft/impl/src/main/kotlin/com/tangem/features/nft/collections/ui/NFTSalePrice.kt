@@ -5,6 +5,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -33,7 +34,7 @@ internal fun NFTSalePrice(state: NFTSalePriceUM, modifier: Modifier = Modifier) 
         is NFTSalePriceUM.Loading -> {
             TextShimmer(
                 modifier = modifier
-                    .width(TangemTheme.dimens.size48),
+                    .width(48.dp),
                 style = TangemTheme.typography.caption2,
             )
         }

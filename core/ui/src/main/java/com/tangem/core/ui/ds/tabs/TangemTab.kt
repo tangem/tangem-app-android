@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
@@ -41,7 +42,7 @@ fun TangemTab(
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
 ) {
-    val shape = RoundedCornerShape(TangemTheme.dimens2.x25)
+    val shape = RoundedCornerShape(100.dp)
     val backgroundColor = if (isChecked) {
         TangemTheme.colors2.tabs.backgroundPrimary
     } else {
@@ -68,8 +69,8 @@ fun TangemTab(
                 indication = ripple(),
             )
             .padding(
-                vertical = TangemTheme.dimens2.x2,
-                horizontal = TangemTheme.dimens2.x3,
+                vertical = 8.dp,
+                horizontal = 12.dp,
             ),
     ) {
         Text(
@@ -88,7 +89,7 @@ fun TangemTab(
 private fun TangemTab_Preview() {
     TangemThemePreviewRedesign {
         Column(
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x6),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
             modifier = Modifier.background(TangemTheme.colors2.surface.level1),
         ) {
             TangemTab(

@@ -82,6 +82,12 @@ sealed interface SocialRecoveryError {
     /** The identity already points at another wallet, or the wallet at another identity */
     data object BindingConflict : SocialRecoveryError
 
+    /**
+     * The wallet is not registered on this device, so the backend left its binding alone: it erases a binding
+     * only for a wallet the device has proven to own. Register the wallet and unbind again.
+     */
+    data object WalletNotRegistered : SocialRecoveryError
+
     /** No authenticated session to run the call on; device registration has to happen first */
     data object NoActiveSession : SocialRecoveryError
 

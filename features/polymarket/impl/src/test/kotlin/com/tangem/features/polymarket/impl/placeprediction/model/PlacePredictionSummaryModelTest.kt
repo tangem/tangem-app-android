@@ -11,6 +11,7 @@ import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.interactor.PredictionSignRequest
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
@@ -128,7 +129,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
             // Assert
             coVerify(exactly = 1) { signOrderInteractor(request = any()) }
-            coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
+            coVerify(exactly = 1) { placeOrderUseCase(any(), any(), PolymarketMarketVersion.V1) }
 
             model.onDestroy()
         }

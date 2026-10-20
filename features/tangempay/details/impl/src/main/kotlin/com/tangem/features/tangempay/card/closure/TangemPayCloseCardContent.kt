@@ -65,10 +65,10 @@ private fun Content(state: TangemPayCloseCardUM) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens2.x4),
+            .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(modifier = Modifier.height(TangemTheme.dimens2.x6))
+        Spacer(modifier = Modifier.height(24.dp))
 
         Box(
             modifier = Modifier
@@ -86,7 +86,7 @@ private fun Content(state: TangemPayCloseCardUM) {
             )
         }
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens2.x8))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Text(
             text = stringResourceSafe(R.string.tangem_pay_close_card_popup_title),
@@ -98,7 +98,7 @@ private fun Content(state: TangemPayCloseCardUM) {
                 .testTag(TangemPayTestTags.CLOSE_CARD_SHEET_TITLE),
         )
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens2.x2))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = stringResourceSafe(R.string.tangem_pay_close_card_popup_description),
@@ -110,7 +110,7 @@ private fun Content(state: TangemPayCloseCardUM) {
                 .testTag(TangemPayTestTags.CLOSE_CARD_SHEET_DESCRIPTION),
         )
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens2.x12))
+        Spacer(modifier = Modifier.height(48.dp))
 
         TangemButton(
             modifier = Modifier
@@ -123,7 +123,7 @@ private fun Content(state: TangemPayCloseCardUM) {
             onClick = state.onDismissRequest,
         )
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens2.x2))
+        Spacer(modifier = Modifier.height(8.dp))
 
         TangemButton(
             modifier = Modifier
@@ -137,7 +137,7 @@ private fun Content(state: TangemPayCloseCardUM) {
             onClick = state.onCloseClick,
         )
 
-        Spacer(modifier = Modifier.height(TangemTheme.dimens2.x4))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 

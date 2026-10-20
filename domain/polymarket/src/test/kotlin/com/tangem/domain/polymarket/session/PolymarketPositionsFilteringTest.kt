@@ -59,11 +59,11 @@ internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTest
         val first = position(assetId = "first", result = PolymarketPositionResult.WON)
         val second = position(assetId = "second", result = PolymarketPositionResult.WON)
         val lastResponse = CompletableDeferred<Unit>()
-        fetch = { offset ->
-            when (offset) {
+        fetch = { index ->
+            when (index) {
                 0 -> page(last = false)
-                30 -> page(emptyList(), last = false)
-                60 -> page(listOf(first), last = false)
+                1 -> page(emptyList(), last = false)
+                2 -> page(listOf(first), last = false)
                 else -> {
                     lastResponse.await()
                     page(listOf(second))
@@ -88,7 +88,7 @@ internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTest
                 listOf(first, second), PaginationStatus.EndOfPagination, PolymarketPositionsFilter.WON,
             ),
         )
-        assertThat(requests.map { it.second }).containsExactly(0, 30, 60, 90).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1, 2, 3).inOrder()
     }
 
     @Test
@@ -96,10 +96,10 @@ internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTest
         // Arrange
         val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
         val winners = List(60) { position(assetId = "$it", result = PolymarketPositionResult.WON) }
-        fetch = { offset ->
-            when (offset) {
+        fetch = { index ->
+            when (index) {
                 0 -> page(last = false)
-                30 -> page(winners.take(30), last = false)
+                1 -> page(winners.take(30), last = false)
                 else -> page(winners.drop(30), last = false)
             }
         }
@@ -113,7 +113,7 @@ internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTest
         // Assert
         assertThat(session.state.value.positions).containsExactlyElementsIn(winners.take(30)).inOrder()
         assertThat(session.state.value.status).isInstanceOf(PaginationStatus.Paginating::class.java)
-        assertThat(requests.map { it.second }).containsExactly(0, 30).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1).inOrder()
 
         // Act
         session.loadMore()
@@ -122,7 +122,7 @@ internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTest
 
         // Assert
         assertThat(session.state.value.positions).containsExactlyElementsIn(winners).inOrder()
-        assertThat(requests.map { it.second }).containsExactly(0, 30, 60).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1, 2).inOrder()
     }
 
     @Test
@@ -135,8 +135,8 @@ internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTest
             val nextWon = position(assetId = "nextWon", result = PolymarketPositionResult.WON)
             val nextLost = position(assetId = "nextLost", result = PolymarketPositionResult.LOST)
             val response = CompletableDeferred<Unit>()
-            fetch = { offset ->
-                if (offset == 0) page(listOf(won, lost), last = false) else {
+            fetch = { index ->
+                if (index == 0) page(listOf(won, lost), last = false) else {
                     response.await()
                     page(listOf(nextWon, nextLost))
                 }
@@ -172,17 +172,17 @@ internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTest
             assertThat(session.state.value).isEqualTo(
                 PolymarketPositionsState(listOf(won, lost, nextWon, nextLost), PaginationStatus.EndOfPagination),
             )
-            assertThat(requests.map { it.second }).containsExactly(0, 30).inOrder()
+            assertThat(requests.map { it.second }).containsExactly(0, 1).inOrder()
         }
 
     @Test
-    fun `GIVEN failed search page WHEN retried THEN keeps matches and the failed offset`() = runTest {
+    fun `GIVEN failed search page WHEN retried THEN keeps matches and the failed page`() = runTest {
         // Arrange
         val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
         val first = position(result = PolymarketPositionResult.WON)
         val second = position(assetId = "second", result = PolymarketPositionResult.WON)
         val error = BatchFetchResult.Error(IllegalStateException("Offline"))
-        fetch = { offset -> if (offset == 0) page(listOf(first), last = false) else error }
+        fetch = { index -> if (index == 0) page(listOf(first), last = false) else error }
         session.selectFilter(PolymarketPositionsFilter.WON)
         session.resume(backgroundScope)
         runCurrent()
@@ -201,7 +201,7 @@ internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTest
             PolymarketPositionsState(emptyList(), PaginationStatus.Paginating(error), PolymarketPositionsFilter.LOST),
         )
         assertThat(session.state.value.positions).containsExactly(first)
-        assertThat(requests.map { it.second }).containsExactly(0, 30).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1).inOrder()
 
         // Act
         fetch = { page(listOf(second)) }
@@ -214,7 +214,7 @@ internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTest
                 listOf(first, second), PaginationStatus.EndOfPagination, PolymarketPositionsFilter.WON,
             ),
         )
-        assertThat(requests.map { it.second }).containsExactly(0, 30, 30).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1, 1).inOrder()
     }
 
     @Test
@@ -222,8 +222,8 @@ internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTest
         // Arrange
         val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
         val response = CompletableDeferred<Unit>()
-        fetch = { offset ->
-            if (offset == 0) page(last = false) else {
+        fetch = { index ->
+            if (index == 0) page(last = false) else {
                 response.await()
                 page()
             }
@@ -254,10 +254,10 @@ internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTest
         val first = position(assetId = "first", result = PolymarketPositionResult.WON)
         val second = position(assetId = "second", result = PolymarketPositionResult.WON)
         val response = CompletableDeferred<Unit>()
-        fetch = { offset ->
-            when (offset) {
+        fetch = { index ->
+            when (index) {
                 0 -> page(last = false)
-                30 -> {
+                1 -> {
                     response.await()
                     page(listOf(first), last = false)
                 }
@@ -275,7 +275,7 @@ internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTest
 
         // Assert
         assertThat(session.state.value.positions).containsExactly(first)
-        assertThat(requests.map { it.second }).containsExactly(0, 30).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1).inOrder()
 
         // Act
         session.resume(backgroundScope)
@@ -293,7 +293,7 @@ internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTest
             ),
         )
         assertThat(reopened.state.value.filter).isEqualTo(PolymarketPositionsFilter.ALL)
-        assertThat(requests.map { it.second }).containsExactly(0, 30, 0, 30, 60, 0).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1, 0, 1, 2, 0).inOrder()
     }
 
     private companion object {

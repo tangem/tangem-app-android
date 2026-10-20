@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.components.label.Label
 import com.tangem.core.ui.extensions.resolveReference
@@ -27,13 +28,13 @@ fun BlockItem(model: BlockUM, modifier: Modifier = Modifier, colors: BlockItemCo
         onClick = model.onClick,
     ) {
         Row(
-            modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
+            modifier = Modifier.padding(all = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12, Alignment.Start),
+            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.Start),
         ) {
             if (model.iconRes != null) {
                 Icon(
-                    modifier = Modifier.size(TangemTheme.dimens.size24),
+                    modifier = Modifier.size(24.dp),
                     painter = painterResource(id = model.iconRes),
                     tint = when (model.accentType) {
                         BlockUM.AccentType.NONE -> colors.leadingIconColor
