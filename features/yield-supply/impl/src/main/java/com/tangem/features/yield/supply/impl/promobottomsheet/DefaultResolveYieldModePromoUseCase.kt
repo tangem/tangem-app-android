@@ -41,21 +41,15 @@ internal class DefaultResolveYieldModePromoUseCase @Inject constructor() : Resol
         if (yieldModeTokens.any { it.value.yieldSupplyStatus?.isActive == true }) {
             return YieldModePromoResolution.NoEligibleToken
         }
+        // A failed status carries no Yield Mode state, so it can't rule out Yield Mode active on that token
+        if (yieldModeTokens.any { it.isFailed() }) return YieldModePromoResolution.DataNotReady
 
         val candidate = positions
             .mapNotNull { (key, accountStatuses) ->
                 candidateOrNull(key = key, accountStatuses = accountStatuses, apy = yieldSupplyApy.getValue(key))
             }
             .minWithOrNull(BEST_FIRST)
-
-        if (candidate == null) {
-            val hasFailedRefresh = positions.values.any { accountStatuses -> accountStatuses.any { it.isFailed() } }
-            return if (hasFailedRefresh) {
-                YieldModePromoResolution.DataNotReady
-            } else {
-                YieldModePromoResolution.NoEligibleToken
-            }
-        }
+            ?: return YieldModePromoResolution.NoEligibleToken
 
         val globalMaxApy = earnOffers.best?.toOffer(earnOffers.total)
             ?: return YieldModePromoResolution.DataNotReady
@@ -68,7 +62,6 @@ internal class DefaultResolveYieldModePromoUseCase @Inject constructor() : Resol
 
     private fun candidateOrNull(key: String, accountStatuses: List<CryptoCurrencyStatus>, apy: BigDecimal): Candidate? {
         if (apy.signum() <= 0) return null
-        if (accountStatuses.any { it.isFailed() }) return null
 
         val amount = accountStatuses.sumOf { it.value.amount.orZero() }
         if (amount.signum() <= 0) return null
