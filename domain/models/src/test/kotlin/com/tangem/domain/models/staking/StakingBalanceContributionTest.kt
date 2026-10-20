@@ -118,9 +118,10 @@ internal class StakingBalanceContributionTest {
             expected = BigDecimal.ZERO,
         ),
         DeltaTestModel(
-            description = "P2PEthPool, stake not in network balance -> staked + unstaking + withdrawable + rewards",
+            description = "P2PEthPool, stake not in network balance -> staked + unstaking + withdrawable, " +
+                "rewards are already inside staked",
             balance = p2pEthPool(staked = 5, unstaking = 2, withdrawable = 1, rewards = 3),
-            expected = BigDecimal(11),
+            expected = BigDecimal(8),
         ),
         DeltaTestModel(
             description = "P2PEthPool, stake already in network balance -> rewards only",
@@ -141,7 +142,7 @@ internal class StakingBalanceContributionTest {
                     account(staked = 3, unstaking = 0, withdrawable = 0, rewards = 2),
                 ),
             ),
-            expected = BigDecimal(11),
+            expected = BigDecimal(8),
         ),
     )
 
