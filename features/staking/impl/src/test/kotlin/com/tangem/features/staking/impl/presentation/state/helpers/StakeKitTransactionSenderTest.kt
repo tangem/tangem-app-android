@@ -366,7 +366,7 @@ internal class StakeKitTransactionSenderTest {
         val cryptoAmount: BigDecimal = BigDecimal.TEN,
         val feeValue: BigDecimal = BigDecimal.ONE,
         val validatorAddress: String = "VALIDATOR",
-        val actionType: StakingActionCommonType = StakingActionCommonType.Enter(skipEnterAmount = false),
+        val actionType: StakingActionCommonType = StakingActionCommonType.Enter(shouldSkipEnterAmount = false),
         val pendingAction: PendingAction? = null,
         val reduceAmountBy: BigDecimal? = null,
     )

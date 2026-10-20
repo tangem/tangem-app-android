@@ -99,7 +99,7 @@ internal fun ExchangeStatusBottomSheetContent(state: ExchangeUM, extraContent: (
 
 private fun ExchangeUM.toExpressStatusUM(): ExpressStatusUM = ExpressStatusUM(
     title = resourceReference(R.string.express_exchange_status_title),
-    link = if (showProviderLink) {
+    link = if (shouldShowProviderLink) {
         ExpressLinkUM.Content(
             icon = R.drawable.ic_arrow_top_right_24,
             text = resourceReference(R.string.common_go_to_provider),

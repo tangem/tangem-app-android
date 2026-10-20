@@ -10,7 +10,7 @@ data class NFTAssetUM(
     val media: Media,
     val topInfo: TopInfo,
     val traits: ImmutableList<BlockItem>,
-    val showAllTraitsButton: Boolean,
+    val shouldShowAllTraitsButton: Boolean,
     val baseInfoItems: ImmutableList<BlockItem>,
 ) {
 
@@ -50,7 +50,7 @@ data class NFTAssetUM(
         data class Content(
             val rank: String,
             val label: String,
-            val showDivider: Boolean,
+            val shouldShowDivider: Boolean,
             val onRankClick: () -> Unit,
             val onLabelClick: () -> Unit,
         ) : Rarity()
@@ -61,7 +61,7 @@ data class NFTAssetUM(
         val titleTextEllipsis: TextEllipsis = TextEllipsis.End,
         val value: String,
         val valueTextEllipsis: TextEllipsis = TextEllipsis.End,
-        val showInfoButton: Boolean,
+        val shouldShowInfoButton: Boolean,
         val onBlockClick: (() -> Unit)? = null,
         val onValueClick: (() -> Unit)? = null,
     )

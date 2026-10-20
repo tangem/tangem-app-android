@@ -108,7 +108,7 @@ internal class CollectiblesDiscoveryContentTransformerTest {
         TransformModel(
             description = "GIVEN a page settled WHEN transform THEN no loader is shown",
             status = PaginationStatus.Paginating(
-                lastResult = BatchFetchResult.Success(data = emptyBatch(), empty = false, last = false),
+                lastResult = BatchFetchResult.Success(data = emptyBatch(), isEmpty = false, isLast = false),
             ),
             prevContent = CollectiblesDiscoveryUM.ContentUM.Loading,
             expected = Expectation.Content(nextPage = Expectation.NextPage.Idle, isReloading = false),
