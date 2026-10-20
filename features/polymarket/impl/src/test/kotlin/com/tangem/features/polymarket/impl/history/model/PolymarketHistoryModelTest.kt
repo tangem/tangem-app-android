@@ -17,20 +17,28 @@ import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM.
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.PaginationStatus
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketHistoryModelTest {
 
+    private val exporter: PolymarketActivityExport = mockk()
+    private val messageSender: com.tangem.core.decompose.ui.UiMessageSender = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
     private val createSession: CreatePolymarketActivitySessionUseCase = mockk()
     private val session: PolymarketActivitySession = mockk(relaxed = true)
@@ -163,6 +171,50 @@ internal class PolymarketHistoryModelTest {
         assertThat(model.uiState.value.details).isNull()
     }
 
+    @Test
+    fun `GIVEN an export in flight WHEN tapping twice and switching tabs THEN exports the original filter once`() = runTest {
+        // Arrange
+        val pendingFile = CompletableDeferred<File>()
+        coEvery { exporter(wallet, PolymarketActivityFilter()) } coAnswers { pendingFile.await() }
+        val model = createModel()
+        state.value = PolymarketActivityState(listOf(historyTrade()), status = PaginationStatus.EndOfPagination)
+        runCurrent()
+        val content = model.uiState.value.content as Content.Data
+        val received = async { model.exports.first() }
+
+        // Act
+        content.onDownloadCsvClick()
+        content.onDownloadCsvClick()
+        state.value = state.value.copy(filter = PolymarketActivityFilter(PolymarketActivity.Type.SELL))
+        runCurrent()
+        assertThat(model.uiState.value.isExporting).isTrue()
+        val file = File("predictions-history.csv")
+        pendingFile.complete(file)
+        runCurrent()
+
+        // Assert
+        assertThat(received.await()).isEqualTo(file)
+        assertThat(model.uiState.value.isExporting).isFalse()
+        coVerify(exactly = 1) { exporter(wallet, PolymarketActivityFilter()) }
+        coVerify(exactly = 1) { exporter(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN an export failure WHEN downloading THEN clears loading and offers an error message`() = runTest {
+        // Arrange
+        coEvery { exporter(any(), any()) } throws IllegalStateException("Failed page")
+        val model = createModel()
+        state.value = PolymarketActivityState(listOf(historyTrade()), status = PaginationStatus.EndOfPagination)
+        runCurrent()
+
+        // Act
+        (model.uiState.value.content as Content.Data).onDownloadCsvClick()
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.isExporting).isFalse()
+        verify(exactly = 1) { messageSender.send(any()) }
+    }
 
     private fun TestScope.createModel(): PolymarketHistoryModel {
         every { createSession(wallet) } returns session
@@ -172,6 +224,8 @@ internal class PolymarketHistoryModelTest {
             router = router,
             paramsContainer = MutableParamsContainer(PolymarketHistoryComponent.Params(wallet)),
             createSession = createSession,
+            exportActivity = exporter,
+            messageSender = messageSender,
         ).also { model = it }
     }
 

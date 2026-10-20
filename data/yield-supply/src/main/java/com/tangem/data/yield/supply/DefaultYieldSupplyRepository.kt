@@ -77,7 +77,7 @@ internal class DefaultYieldSupplyRepository(
         val marketDtos = plain.overlaidWith(getIncentivisedMarkets(chains))
 
         store.store(marketDtos)
-        marketDtos.map(YieldMarketTokenConverter::convert)
+        marketDtos.map(YieldMarketTokenConverter::convert).enrichNetworkIds()
     }
 
     /**

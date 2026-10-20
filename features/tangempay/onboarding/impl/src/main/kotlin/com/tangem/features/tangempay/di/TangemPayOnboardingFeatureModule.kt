@@ -5,7 +5,9 @@ import com.tangem.features.tangempay.components.DefaultTangemPayOnboardingCompon
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
 import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
+import com.tangem.features.tangempay.components.TangemPayVerifiedComponent
 import com.tangem.features.tangempay.hotwallet.DefaultTangemPayHotWalletOnboardingComponent
+import com.tangem.features.tangempay.verified.DefaultTangemPayVerifiedComponent
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -25,4 +27,7 @@ internal interface TangemPayOnboardingFeatureModule {
 
     @Binds
     fun bindCampaignFactory(impl: DefaultTangemPayCampaignComponent.Factory): TangemPayCampaignComponent.Factory
+
+    @Binds
+    fun bindVerifiedFactory(impl: DefaultTangemPayVerifiedComponent.Factory): TangemPayVerifiedComponent.Factory
 }

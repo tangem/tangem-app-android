@@ -13,23 +13,20 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
-import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.feature.swap.mcp.model.ExchangeIntentButtonUM
 import com.tangem.feature.swap.mcp.model.ExchangeIntentUM
 
 /**
- * Sheet of the intent flow. It stays hidden while the intent is being read, then shows the content of [state] and
- * the one action it carries. The last offer remains visible until the dismissal animation finishes.
+ * Sheet of the intent flow: the offer in [state] and the one action it carries. It is shown for as long as it stays
+ * in composition, so the caller opens and closes it by adding it to and removing it from composition.
  *
  * [Figma](https://www.figma.com/design/Qqm0dNTOnqtxLYEcmgc32C/Store?node-id=23363-122221)
  */
 @Composable
 internal fun ExchangeIntentModal(state: ExchangeIntentUM, onDismiss: () -> Unit) {
-    val displayedOffer = rememberLastNonNull(state as? ExchangeIntentUM.Offer)
-
     TangemModal<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
-            isShown = state !is ExchangeIntentUM.Loading,
+            isShown = true,
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
@@ -37,12 +34,10 @@ internal fun ExchangeIntentModal(state: ExchangeIntentUM, onDismiss: () -> Unit)
         scrollableContent = false,
         title = { TangemModal.TopNavigation(endButton = { TangemButton.Close(onClick = onDismiss) }) },
     ) {
-        if (displayedOffer != null) {
-            Column(modifier = Modifier.weight(weight = 1f, fill = false).verticalScroll(rememberScrollState())) {
-                ExchangeIntentOfferContent(state = displayedOffer)
-            }
-            ExchangeIntentFooter(button = displayedOffer.primaryButton)
+        Column(modifier = Modifier.weight(weight = 1f, fill = false).verticalScroll(rememberScrollState())) {
+            ExchangeIntentOfferContent(state = state)
         }
+        ExchangeIntentFooter(button = state.primaryButton)
     }
 }
 
