@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 class JobHolder {
 
     val isActive: Boolean
-        get() = job?.isActive ?: false
+        get() = job?.isActive == true
 
     /** Whether the current [job] was cancelled, either while running or before it could complete */
     val isCancelled: Boolean

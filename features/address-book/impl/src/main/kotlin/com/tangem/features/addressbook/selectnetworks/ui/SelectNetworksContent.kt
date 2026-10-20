@@ -131,7 +131,7 @@ private fun NothingFoundContent(modifier: Modifier = Modifier) {
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .background(color = TangemTheme.colors3.bg.opaque.primary, shape = CircleShape),
+                .background(color = TangemTheme.colors3.bg.transparent.primary, shape = CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

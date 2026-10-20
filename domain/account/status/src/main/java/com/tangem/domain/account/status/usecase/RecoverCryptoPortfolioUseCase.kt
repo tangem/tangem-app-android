@@ -170,8 +170,7 @@ class RecoverCryptoPortfolioUseCase(
             val recoveredAccountName = recoveredAccount.accountName as? AccountName.Custom
                 ?: raise(Error.DataOperationFailed(message = "Recovered account should have a custom name"))
 
-            val indexedName = AccountNameIndexer.transform(from = recoveredAccountName.value)
-                .let(AccountName::invoke).getOrNull()
+            val indexedName = AccountName(AccountNameIndexer.transform(from = recoveredAccountName.value)).getOrNull()
                 ?: raise(Error.DataOperationFailed(message = "Failed to generate indexed account name"))
 
             val renamedAccount = recoveredAccount.copySealed(accountName = indexedName)

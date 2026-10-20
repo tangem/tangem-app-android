@@ -1,5 +1,7 @@
 package com.tangem.domain.collectibles.models
 
+import java.math.BigDecimal
+
 /**
  * @property fromAddress the player for the gacha: the vault, which pays for the spin
  * @property machineId the machine's external id, e.g. `pokemon_50`
@@ -72,7 +74,8 @@ enum class CollectibleTxStatus {
 /**
  * The card a spin won.
  *
- * @property insuredValue USD * 100
+ * @property insuredValue appraised value in whole currency units. The wire format is cents, so the
+ *   data layer divides by 100 — see `OpenedPackConverter`.
  */
 data class OpenedCollectiblePack(
     val txId: String,
@@ -81,12 +84,11 @@ data class OpenedCollectiblePack(
     val imageBackUrl: String?,
     val rarity: CollectibleRarity?,
     val gradingCompany: String?,
-    val grade: String?,
     val gradingId: String?,
     val year: String?,
     val set: String?,
     val serialNumber: String?,
-    val insuredValue: Long?,
+    val insuredValue: BigDecimal?,
 )
 
 /** Refusals that need more than a generic error; anything else surfaces as the original exception. */
@@ -94,4 +96,7 @@ sealed class CollectibleException(message: String?) : Exception(message) {
 
     /** The machine has too many packs currently open. */
     class LowInventory : CollectibleException("Low inventory")
+
+    /** The backend will not buy this card back; a retry gets the same answer. */
+    class BuybackRefused : CollectibleException("Buyback refused")
 }

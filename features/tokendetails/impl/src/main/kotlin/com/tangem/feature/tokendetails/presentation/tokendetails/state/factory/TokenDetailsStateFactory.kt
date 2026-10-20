@@ -216,24 +216,30 @@ internal class TokenDetailsStateFactory(
         return copy(
             items = buildList {
                 if (isDynamicAddressesAvailable) {
-                    TangemDropdownMenuItem(
-                        title = resourceReference(R.string.dynamic_addresses),
-                        textColor = themedColor { TangemTheme.colors.text.primary1 },
-                        onClick = tokenDetailsClickIntents::onDynamicAddressesClick,
-                    ).let(::add)
+                    add(
+                        TangemDropdownMenuItem(
+                            title = resourceReference(R.string.dynamic_addresses),
+                            textColor = themedColor { TangemTheme.colors.text.primary1 },
+                            onClick = tokenDetailsClickIntents::onDynamicAddressesClick,
+                        ),
+                    )
                 }
                 if (isSupported && hasDerivations) {
-                    TangemDropdownMenuItem(
-                        title = resourceReference(R.string.token_details_generate_xpub),
-                        textColor = themedColor { TangemTheme.colors.text.primary1 },
-                        onClick = tokenDetailsClickIntents::onGenerateExtendedKey,
-                    ).let(::add)
+                    add(
+                        TangemDropdownMenuItem(
+                            title = resourceReference(R.string.token_details_generate_xpub),
+                            textColor = themedColor { TangemTheme.colors.text.primary1 },
+                            onClick = tokenDetailsClickIntents::onGenerateExtendedKey,
+                        ),
+                    )
                 }
-                TangemDropdownMenuItem(
-                    title = TextReference.Res(id = R.string.token_details_hide_token),
-                    textColor = themedColor { TangemTheme.colors.text.warning },
-                    onClick = tokenDetailsClickIntents::onHideClick,
-                ).let(::add)
+                add(
+                    TangemDropdownMenuItem(
+                        title = TextReference.Res(id = R.string.token_details_hide_token),
+                        textColor = themedColor { TangemTheme.colors.text.warning },
+                        onClick = tokenDetailsClickIntents::onHideClick,
+                    ),
+                )
             }.toImmutableList(),
         )
     }

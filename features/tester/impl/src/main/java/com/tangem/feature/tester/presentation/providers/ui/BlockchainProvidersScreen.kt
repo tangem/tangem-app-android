@@ -93,7 +93,7 @@ internal fun BlockchainProvidersScreen(state: BlockchainProvidersUM) {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(TangemTheme.dimens.spacing16),
+                .padding(16.dp),
         )
     }
 }
@@ -102,14 +102,14 @@ internal fun BlockchainProvidersScreen(state: BlockchainProvidersUM) {
 private fun Header(topBar: TopBarWithRefreshUM, searchBar: SearchBarUM) {
     Column(
         modifier = Modifier.background(TangemTheme.colors.background.primary),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         TopBarWithRefresh(state = topBar)
         SearchBar(
             state = searchBar,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .padding(bottom = TangemTheme.dimens.spacing12),
+                .padding(bottom = 12.dp),
         )
     }
 }
@@ -153,7 +153,7 @@ private fun BlockchainRow(state: ProvidersUM, onExpandStateChange: () -> Unit) {
             Image(
                 painter = painterResource(id = getActiveIconRes(Blockchain.fromId(state.blockchainId))),
                 contentDescription = null,
-                modifier = Modifier.size(TangemTheme.dimens.size36),
+                modifier = Modifier.size(36.dp),
             )
 
             RowText(
@@ -177,7 +177,7 @@ private fun BlockchainRow(state: ProvidersUM, onExpandStateChange: () -> Unit) {
         Icon(
             modifier = Modifier
                 .rotate(rotation)
-                .size(TangemTheme.dimens.size24),
+                .size(24.dp),
             painter = painterResource(id = R.drawable.ic_chevron_24),
             tint = TangemTheme.colors.icon.informative,
             contentDescription = null,
@@ -332,9 +332,9 @@ private fun AddPublicProviderDialog(state: BlockchainProvidersUM.AddPublicProvid
             },
         ),
         onDismissDialog = onDismiss,
-        onValueChange = {
-            value = it
-            state.onValueChange(it.text)
+        onValueChange = { textFieldValue ->
+            value = textFieldValue
+            state.onValueChange(textFieldValue.text)
         },
         textFieldParams = AdditionalTextInputDialogUM(
             label = "Url",

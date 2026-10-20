@@ -5,6 +5,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.CardWithIcon
 import com.tangem.core.ui.components.notifications.Notification
@@ -23,9 +24,9 @@ internal fun NotificationsBlock(notifications: ImmutableList<NotificationUM>) {
                     description = notification.description.resolveReference(),
                     icon = {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(TangemTheme.dimens.size16),
+                            modifier = Modifier.size(16.dp),
                             color = TangemTheme.colors.icon.primary1,
-                            strokeWidth = TangemTheme.dimens.size2,
+                            strokeWidth = 2.dp,
                         )
                     },
                 )

@@ -23,12 +23,12 @@ private const val USD_BALANCE_MIN_DECIMALS = 2
  * assembled anywhere still gets the same treatment. The main button is deliberately left alone: it keeps
  * its dynamic Transfer/Swap label in account flows too.
  *
- * @param predictionCollateralBalance the prediction account balance for top-up or withdrawal
+ * @param accountBalance the balance of the prediction or collectibles account the flow tops up or withdraws from
  */
 internal fun SwapStateHolder.withAccountFlowPresentation(
     accountFlow: AccountFlow?,
     isReverseLocked: Boolean,
-    predictionCollateralBalance: BigDecimal? = null,
+    accountBalance: BigDecimal? = null,
 ): SwapStateHolder {
     val reversedState = if (isReverseLocked) {
         copy(changeCardsButtonState = ChangeCardsButtonState.HIDDEN)
@@ -41,9 +41,16 @@ internal fun SwapStateHolder.withAccountFlowPresentation(
     val titledState = reversedState.copy(titleId = flow.titleId())
 
     return when (flow) {
-        is AccountFlow.PredictionWithdraw -> titledState.withPredictionWithdrawCards(predictionCollateralBalance)
-        is AccountFlow.PredictionTopUp -> titledState.withPredictionTopUpReceiveCard(predictionCollateralBalance)
-        is AccountFlow.CollectiblesTopUp -> titledState.withLockedReceiveCard()
+        is AccountFlow.PredictionWithdraw -> titledState.withPredictionWithdrawCards(accountBalance)
+        is AccountFlow.PredictionTopUp -> titledState.withAccountTopUpReceiveCard(
+            iconState = CurrencyIconState.PredictionAccount(),
+            accountBalance = accountBalance,
+        )
+        is AccountFlow.CollectiblesTopUp -> titledState.withAccountTopUpReceiveCard(
+            iconState = CurrencyIconState.CollectiblesAccount(),
+            accountBalance = accountBalance,
+        )
+        is AccountFlow.MoneyTopUp -> titledState.withLockedReceiveCard()
         is AccountFlow.TopUp -> titledState.withAccountTopUpReceiveCard()
         is AccountFlow.Withdraw -> titledState
     }
@@ -55,6 +62,7 @@ private fun AccountFlow.titleId(): Int = when (this) {
     is AccountFlow.PredictionWithdraw -> R.string.prediction_main_withdraw
     is AccountFlow.PredictionTopUp -> R.string.common_add_funds
     is AccountFlow.CollectiblesTopUp -> R.string.common_add_funds
+    is AccountFlow.MoneyTopUp -> R.string.common_add_funds
 }
 
 private fun SwapStateHolder.withPredictionWithdrawCards(collateralBalance: BigDecimal?): SwapStateHolder = copy(
@@ -86,13 +94,16 @@ private fun SwapStateHolder.withAccountTopUpReceiveCard(): SwapStateHolder {
     )
 }
 
-private fun SwapStateHolder.withPredictionTopUpReceiveCard(collateralBalance: BigDecimal?): SwapStateHolder {
+private fun SwapStateHolder.withAccountTopUpReceiveCard(
+    iconState: CurrencyIconState,
+    accountBalance: BigDecimal?,
+): SwapStateHolder {
     val receiveCard = receiveCardData as? SwapCardState.SwapCardData ?: return withLockedReceiveCard()
     return copy(
         receiveCardData = receiveCard.copy(
-            currencyIconState = CurrencyIconState.PredictionAccount(),
+            currencyIconState = iconState,
             fiatSymbolOverride = ACCOUNT_TOP_UP_ABSTRACT_SYMBOL,
-            balance = collateralBalance?.formatUsdBalance() ?: receiveCard.balance,
+            balance = accountBalance?.formatUsdBalance() ?: receiveCard.balance,
             isSelectionLocked = true,
         ),
     )
