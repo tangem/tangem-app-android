@@ -44,7 +44,7 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
 import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
-import com.tangem.domain.wallets.usecase.SendPendingWalletCardsBackupUseCase
+import com.tangem.domain.wallets.backup.WalletCardsBackupDeliveryScheduler
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
@@ -62,7 +62,6 @@ import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.tap.routing.utils.DeepLinkFeatureToggles
 import com.tangem.tap.routing.utils.DeeplinkSource
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.Lazy
@@ -133,10 +132,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     internal lateinit var onboardingV2FeatureToggles: OnboardingV2FeatureToggles
 
     @Inject
-    internal lateinit var sendPendingWalletCardsBackupUseCase: SendPendingWalletCardsBackupUseCase
-
-    @Inject
-    internal lateinit var appScope: AppCoroutineScope
+    internal lateinit var walletCardsBackupDeliveryScheduler: WalletCardsBackupDeliveryScheduler
 
     @Inject
     internal lateinit var lockUserWalletsTimer: LockUserWalletsTimer
@@ -432,13 +428,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     private fun sendPendingWalletCardsBackups() {
         if (onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled.not()) return
 
-        // deliberately not lifecycleScope: a drain cut short by the activity being destroyed would leave a
-        // report the backend has already accepted still queued, to be sent again on the next launch
-        appScope.launch {
-            sendPendingWalletCardsBackupUseCase().onLeft { error ->
-                TangemLogger.e("Pending cards backup reports deferred: $error")
-            }
-        }
+        walletCardsBackupDeliveryScheduler.schedule()
     }
 
     private fun checkGoogleServicesAvailability() {

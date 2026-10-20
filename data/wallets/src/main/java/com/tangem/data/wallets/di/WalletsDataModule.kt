@@ -7,6 +7,7 @@ import com.tangem.data.wallets.DefaultWalletCardsBackupRepository
 import com.tangem.data.wallets.DefaultWalletNamesMigrationRepository
 import com.tangem.data.wallets.DefaultWalletsPromoRepository
 import com.tangem.data.wallets.DefaultWalletsRepository
+import com.tangem.data.wallets.backup.DefaultWalletCardsBackupDeliveryScheduler
 import com.tangem.data.wallets.cold.DefaultColdMapDerivationsRepository
 import com.tangem.data.wallets.derivations.DefaultDerivationsHelper
 import com.tangem.data.wallets.derivations.DefaultDerivationsRepository
@@ -28,6 +29,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.wallets.derivations.ColdMapDerivationsRepository
 import com.tangem.domain.wallets.derivations.DerivationsHelper
+import com.tangem.domain.wallets.backup.WalletCardsBackupDeliveryScheduler
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.derivations.HotMapDerivationsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
@@ -77,6 +79,7 @@ internal object WalletsDataModule {
     fun provideWalletCardsBackupRepository(
         tangemTechApi: TangemTechApi,
         dataStoreFactory: AppDataStoreFactory,
+        deliveryScheduler: WalletCardsBackupDeliveryScheduler,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletCardsBackupRepository {
         return DefaultWalletCardsBackupRepository(
@@ -88,6 +91,7 @@ internal object WalletsDataModule {
                     fileName = "pending_wallet_cards_backups",
                 ),
             ),
+            deliveryScheduler = deliveryScheduler,
             dispatchers = dispatchers,
         )
     }
@@ -160,4 +164,9 @@ internal interface WalletsDataBindsModule {
     fun bindHotWalletAccessCodeAttemptsRepository(
         impl: DefaultHotWalletAccessCodeAttemptsRepository,
     ): HotWalletAccessCodeAttemptsRepository
+
+    @Binds
+    fun bindWalletCardsBackupDeliveryScheduler(
+        impl: DefaultWalletCardsBackupDeliveryScheduler,
+    ): WalletCardsBackupDeliveryScheduler
 }
