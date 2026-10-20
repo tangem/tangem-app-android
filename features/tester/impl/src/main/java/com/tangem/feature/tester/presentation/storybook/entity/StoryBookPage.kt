@@ -807,7 +807,8 @@ internal data class TangemAccountRowStory(
     val variant: Variant,
     val tokenCount: Int,
     val isExpanded: Boolean,
-    val hasMembersAmount: Boolean,
+    val hasDescription: Boolean,
+    val hasActionMessage: Boolean,
     val hasUpdateWarning: Boolean,
     val hasSection: Boolean,
     val longTitle: Boolean,
@@ -816,7 +817,8 @@ internal data class TangemAccountRowStory(
     val onVariantChange: (Variant) -> Unit,
     val onTokenCountChange: (Int) -> Unit,
     val onExpandedToggle: () -> Unit,
-    val onMembersAmountToggle: () -> Unit,
+    val onDescriptionToggle: () -> Unit,
+    val onActionMessageToggle: () -> Unit,
     val onUpdateWarningToggle: () -> Unit,
     val onSectionToggle: () -> Unit,
     val onLongTitleToggle: () -> Unit,
@@ -825,7 +827,7 @@ internal data class TangemAccountRowStory(
 ) : DsStoryBookPage {
 
     /** Which [com.tangem.core.ui.ds2.accountrow.TangemAccountRow] variant is rendered. */
-    enum class Variant { Default, Unreachable, BalanceError, Empty, Shimmer }
+    enum class Variant { Default, Unreachable, BalanceError, NotActive, Empty, Shimmer }
 }
 
 @Suppress("BooleanPropertyNaming")
