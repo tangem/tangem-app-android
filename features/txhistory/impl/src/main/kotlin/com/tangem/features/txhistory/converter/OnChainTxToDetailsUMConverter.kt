@@ -356,15 +356,19 @@ internal class OnChainTxToDetailsUMConverter(
      * list uses for its subtitle); a counterparty that is not a plain `User` address yields no card (`null`).
      *
      * The address is resolved through the shared [lookup] for display only: an own account / own wallet renders its
-     * name and avatar, anything else the full external address with an identicon. Whatever it renders, the card copies
-     * the underlying address on tap — the same address the header menu's "Copy address" row copies.
+     * name and avatar, anything else the full external address with an identicon. The card is tappable only where
+     * [the address may be copied][allowsAddressCopy] — the same condition the header menu's "Copy address" row obeys.
      */
     private fun TxInfo.toCounterpartyUM(): TxHistoryDetailsUM.CounterpartyUM? {
-        val address = copyableAddress() ?: return null
+        val address = counterpartyCardAddress() ?: return null
         val owner = resolvedCounterparty() ?: return null
         return owner.toCounterpartyUM(
             label = counterpartyLabel(incoming = owner.incomingLabelRes),
-            onCopyClick = { onCopyAddress(address) },
+            onCopyClick = if (allowsAddressCopy()) {
+                { onCopyAddress(address) }
+            } else {
+                null
+            },
         )
     }
 
@@ -385,14 +389,28 @@ internal class OnChainTxToDetailsUMConverter(
         return !isProtocolType || isPlainSend
     }
 
-    /**
-     * Address copied by both the counterparty card and the header menu's "Copy address" row — the two are offered
-     * together, on exactly the transactions that show a [counterparty card][toCounterpartyUM]. What the card *displays*
-     * plays no part: an own account or wallet renders its name, and copying still yields the address behind it.
-     */
-    private fun TxInfo.copyableAddress(): String? {
+    /** The counterparty address the card is built from, on exactly the transactions that show one. */
+    private fun TxInfo.counterpartyCardAddress(): String? {
         if (!hasCounterpartyCard()) return null
         return counterpartyAddress()?.ifBlank { null }
+    }
+
+    /**
+     * Address offered to both copy entry points — the counterparty card's tap and the header menu's "Copy address"
+     * row — so the two never disagree. `null` drops the menu row and leaves the card non-tappable.
+     */
+    private fun TxInfo.copyableAddress(): String? = counterpartyCardAddress()?.takeIf { allowsAddressCopy() }
+
+    /**
+     * Whether the counterparty address may be copied at all. Only a transaction that reads "Sent" / "Received" names
+     * an address the user would act on; a transfer between the user's own portfolios ("Transferred") and an on-chain
+     * swap name a counterparty that is theirs or the protocol's, so neither offers the copy.
+     */
+    private fun TxInfo.allowsAddressCopy(): Boolean {
+        val isTransferType = type is TransactionType.Transfer ||
+            type is TransactionType.Joint.Transfer ||
+            (type as? TransactionType.YieldSupply.Send)?.isYieldSupplyWithdraw == false
+        return isTransferType && !isOwnTransfer()
     }
 
     /**
