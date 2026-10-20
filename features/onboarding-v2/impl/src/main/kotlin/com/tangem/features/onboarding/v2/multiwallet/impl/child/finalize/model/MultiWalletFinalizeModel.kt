@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
+import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -31,6 +32,7 @@ import com.tangem.domain.wallets.backup.CardBackupConverter
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
+import com.tangem.domain.wallets.models.backup.CardBackupError
 import com.tangem.domain.wallets.models.backup.CardBackupStatus
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -219,7 +221,10 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                         )
                     }
                 }
-                is CompletionResult.Failure -> Unit
+                is CompletionResult.Failure -> reportFailedCard(
+                    role = WalletCardBackup.Role.PRIMARY,
+                    error = result.error,
+                )
             }
             tangemSdkManager.clearProductType()
         }
@@ -278,6 +283,10 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                     }
                 }
                 is CompletionResult.Failure -> {
+                    WalletCardsBackupReporter.BACKUP_ROLES.getOrNull(cardIndex)?.let { role ->
+                        reportFailedCard(role = role, error = result.error)
+                    }
+
                     if (result.error is TangemSdkError.WalletAlreadyCreated) {
                         // show should reset dialog
                         handleActivationError()
@@ -432,7 +441,19 @@ internal class MultiWalletFinalizeModel @Inject constructor(
      */
     private fun reportFinalizedCard(role: WalletCardBackup.Role, card: CardDTO) {
         finalizedCards[role] = card
+        reportCards()
+    }
 
+    private fun reportFailedCard(role: WalletCardBackup.Role, error: TangemError) {
+        if (error is TangemSdkError.UserCancelled) return
+
+        reportCards(
+            failedRole = role,
+            error = CardBackupError(code = error.code.toString(), message = error.toString()),
+        )
+    }
+
+    private fun reportCards(failedRole: WalletCardBackup.Role? = null, error: CardBackupError? = null) {
         val scanResponse = multiWalletState.value.currentScanResponse
         // when the primary card was finalized in an earlier session, the scan response is all the app knows about it
         val primaryCard = finalizedCards[WalletCardBackup.Role.PRIMARY] ?: scanResponse.card
@@ -451,11 +472,15 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             }
         }
 
+        val reportedCards = cards.map { card ->
+            if (card.role == failedRole) card.copy(backupStatus = CardBackupStatus.NO_BACKUP, error = error) else card
+        }
+
         walletCardsBackupReporter.report(
             // the finalized primary card is what carries the wallet id: on the newest firmware the wallet appears on
             // the card only once the primary card is finalized
             scanResponse = scanResponse.copy(card = primaryCard),
-            cards = cards,
+            cards = reportedCards,
             usedSeed = scanResponse.usedSeedPhrase(),
         )
     }
