@@ -24,7 +24,7 @@ internal fun coin(blockchain: Blockchain): CryptoCurrency.Coin = currencyFactory
 
 internal fun polygonToken(): CryptoCurrency.Token = currencyFactory.createToken(
     blockchain = Blockchain.Ethereum,
-    id = "matic-network",
+    id = "polygon-ecosystem-token",
     contractAddress = MockStaking.POLYGON_CONTRACT,
     symbol = "POL",
     decimals = 18,

@@ -9,8 +9,4 @@ dependencies {
     api(projects.domain.staking.models)
     api(projects.domain.yieldSupply.models)
     implementation(deps.arrow.core)
-
-    // region Tests
-    testImplementation(projects.test.core)
-    // endregion
 }
