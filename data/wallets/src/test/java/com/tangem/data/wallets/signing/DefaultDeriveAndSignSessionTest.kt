@@ -19,6 +19,9 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessor
+import com.tangem.domain.wallets.signing.DeriveAndSignError
+import com.tangem.domain.wallets.signing.SignRequest
+import com.tangem.domain.wallets.signing.Signed
 import com.tangem.hot.sdk.model.DerivedPublicKeyResponse
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.hot.sdk.model.SignedData
@@ -37,8 +40,8 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import kotlin.coroutines.resume
@@ -50,198 +53,229 @@ internal class DefaultDeriveAndSignSessionTest {
     private val cardSdkConfigRepository: CardSdkConfigRepository = mockk()
     private val tangemSdkManager: TangemSdkManager = mockk()
     private val hotWalletAccessor: HotWalletAccessor = mockk(relaxUnitFun = true)
+    private val inSessionKeyDeriver: InSessionKeyDeriver = mockk()
     private val signer: TransactionSigner = mockk()
     private val session: CardSession = mockk(relaxed = true)
-    private var sessionResult: CompletionResult<Unit>? = null
+    private var sessionResult: CompletionResult<Signed<String>>? = null
 
     private val sut = DefaultDeriveAndSignSession(
         derivationsRepository = derivationsRepository,
         cardSdkConfigRepository = cardSdkConfigRepository,
         tangemSdkManager = tangemSdkManager,
         hotWalletAccessor = hotWalletAccessor,
-        deriveInSession = { _, _ -> CompletionResult.Success(DERIVED_KEY) },
+        inSessionKeyDeriver = inSessionKeyDeriver,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(derivationsRepository, cardSdkConfigRepository, tangemSdkManager, hotWalletAccessor, signer)
+        clearMocks(
+            derivationsRepository,
+            cardSdkConfigRepository,
+            tangemSdkManager,
+            hotWalletAccessor,
+            inSessionKeyDeriver,
+            signer,
+        )
         sessionResult = null
+        coEvery { inSessionKeyDeriver.derive(session, SEED_KEY, PATH) } returns CompletionResult.Success(DERIVED_KEY)
     }
 
-    @Test
-    fun `GIVEN a stored key WHEN run THEN no session opens before sign`() = runTest {
-        // Arrange
-        val wallet = coldWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns storedDerivedKey()
-        every { cardSdkConfigRepository.getCommonSigner(any(), any(), any(), null) } returns signer
-        coEvery { signer.sign(listOf(HASH), any<Wallet.PublicKey>()) } returns CompletionResult.Success(listOf(SIG))
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Cold {
 
-        // Act
-        val actual = sut.run(wallet, SEED_KEY, PATH) { key -> key to sign(listOf(HASH)) }
+        @Test
+        fun `GIVEN a stored key WHEN run THEN prepares before the card session and signs once`() = runTest {
+            // Arrange
+            val wallet = coldWallet()
+            val events = mutableListOf<String>()
+            coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns storedDerivedKey()
+            every { cardSdkConfigRepository.getCommonSigner(any(), any(), any(), null) } returns signer
+            coEvery { signer.sign(listOf(HASH), any<Wallet.PublicKey>()) } coAnswers {
+                events += "sign"
+                CompletionResult.Success(listOf(SIG))
+            }
 
-        // Assert
-        assertThat(actual.getOrNull()?.first).isEqualTo(DERIVED_KEY)
-        assertThat((actual.getOrNull()?.second as CompletionResult.Success).data).containsExactly(SIG)
-        coVerify(exactly = 0) {
-            tangemSdkManager.runTaskAsync<Unit>(any(), any(), any(), any(), any(), any(), any())
+            // Act
+            val actual = sut.run(wallet, SEED_KEY, PATH) { key ->
+                events += "prepare"
+                SignRequest(value = key.publicKey.size.toString(), hashes = listOf(HASH))
+            }
+
+            // Assert
+            assertThat(actual.getOrNull()?.signatures).containsExactly(SIG)
+            assertThat(events).containsExactly("prepare", "sign").inOrder()
+            coVerify(exactly = 0) {
+                tangemSdkManager.runTaskAsync<Any>(any(), any(), any(), any(), any(), any(), any())
+            }
         }
-    }
 
-    @Test
-    fun `GIVEN no stored key WHEN run on cold THEN derives, stores and signs in one session`() = runTest {
-        // Arrange
-        val wallet = coldWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-        every { cardSdkConfigRepository.getCommonSigner(any(), any(), any(), session) } returns signer
-        coEvery { signer.sign(listOf(HASH), any<Wallet.PublicKey>()) } returns CompletionResult.Success(listOf(SIG))
-        stubCardSession()
+        @Test
+        fun `GIVEN a stored key and nothing to sign WHEN run THEN no card is touched`() = runTest {
+            // Arrange
+            val wallet = coldWallet()
+            coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns storedDerivedKey()
 
-        // Act
-        val actual = sut.run(wallet, SEED_KEY, PATH) { sign(listOf(HASH)) }
+            // Act
+            val actual = sut.run(wallet, SEED_KEY, PATH) { SignRequest(value = VALUE, hashes = emptyList()) }
 
-        // Assert
-        assertThat((actual.getOrNull() as CompletionResult.Success).data).containsExactly(SIG)
-        assertThat(sessionResult).isInstanceOf(CompletionResult.Success::class.java)
-        coVerify(exactly = 1) {
-            derivationsRepository.storeDerivedKeys(
-                wallet.walletId,
-                mapOf(SEED_KEY_BAK to ExtendedPublicKeysMap(mapOf(PATH to DERIVED_KEY))),
-            )
+            // Assert
+            assertThat(actual.getOrNull()?.value).isEqualTo(VALUE)
+            assertThat(actual.getOrNull()?.signatures).isEmpty()
+            verify(exactly = 0) { cardSdkConfigRepository.getCommonSigner(any(), any(), any(), any()) }
         }
-        coVerify(exactly = 1) {
-            tangemSdkManager.runTaskAsync<Unit>(any(), any(), any(), any(), any(), any(), registerColdWallet = true)
-        }
-    }
 
-    @Test
-    fun `GIVEN the block fails before signing WHEN run on cold THEN the key stays stored and the block result returns`() =
-        runTest {
+        @Test
+        fun `GIVEN no stored key WHEN run THEN derives, stores, prepares and signs in one session`() = runTest {
             // Arrange
             val wallet = coldWallet()
             coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
             every { cardSdkConfigRepository.getCommonSigner(any(), any(), any(), session) } returns signer
+            coEvery { signer.sign(listOf(HASH), any<Wallet.PublicKey>()) } returns CompletionResult.Success(listOf(SIG))
             stubCardSession()
 
             // Act
-            val actual = sut.run(wallet, SEED_KEY, PATH) { "network failed" }
+            val actual = sut.run(wallet, SEED_KEY, PATH) { SignRequest(value = VALUE, hashes = listOf(HASH)) }
 
             // Assert
-            assertThat(actual.getOrNull()).isEqualTo("network failed")
+            assertThat(actual.getOrNull()?.value).isEqualTo(VALUE)
+            assertThat(actual.getOrNull()?.signatures).containsExactly(SIG)
             assertThat(sessionResult).isInstanceOf(CompletionResult.Success::class.java)
-            coVerify(exactly = 1) { derivationsRepository.storeDerivedKeys(any(), any()) }
+            coVerify(exactly = 1) {
+                derivationsRepository.storeDerivedKeys(
+                    wallet.walletId,
+                    mapOf(SEED_KEY_BAK to ExtendedPublicKeysMap(mapOf(PATH to DERIVED_KEY))),
+                )
+            }
+            coVerify(exactly = 1) { signer.sign(any<List<ByteArray>>(), any()) }
+            coVerify(exactly = 1) {
+                tangemSdkManager.runTaskAsync<Any>(any(), any(), any(), any(), any(), any(), registerColdWallet = true)
+            }
         }
 
-    @Test
-    fun `GIVEN the card rejects the signature WHEN run on cold THEN the session ends with that error`() = runTest {
-        // Arrange
-        val wallet = coldWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-        every { cardSdkConfigRepository.getCommonSigner(any(), any(), any(), session) } returns signer
-        coEvery { signer.sign(any<List<ByteArray>>(), any()) } returns
-            CompletionResult.Failure(TangemSdkError.WrongAccessCode())
-        stubCardSession()
+        @Test
+        fun `GIVEN no stored key and nothing to sign WHEN run THEN the session closes without a signature`() =
+            runTest {
+                // Arrange
+                val wallet = coldWallet()
+                coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
+                stubCardSession()
 
-        // Act
-        val actual = sut.run(wallet, SEED_KEY, PATH) { sign(listOf(HASH)) }
+                // Act
+                val actual = sut.run(wallet, SEED_KEY, PATH) { SignRequest(value = VALUE, hashes = emptyList()) }
 
-        // Assert
-        assertThat(actual.getOrNull()).isInstanceOf(CompletionResult.Failure::class.java)
-        assertThat((sessionResult as CompletionResult.Failure).error)
-            .isInstanceOf(TangemSdkError.WrongAccessCode::class.java)
-    }
+                // Assert
+                assertThat(actual.getOrNull()?.signatures).isEmpty()
+                assertThat(sessionResult).isInstanceOf(CompletionResult.Success::class.java)
+                verify(exactly = 0) { cardSdkConfigRepository.getCommonSigner(any(), any(), any(), any()) }
+            }
 
-    @Test
-    fun `GIVEN the user closes the sheet while signing WHEN run on cold THEN returns Left and does not hang`() =
-        runTest {
+        @Test
+        fun `GIVEN the card rejects the signature WHEN run THEN returns CardError and the session fails`() = runTest {
             // Arrange
             val wallet = coldWallet()
             coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
             every { cardSdkConfigRepository.getCommonSigner(any(), any(), any(), session) } returns signer
-            val isSigning = CompletableDeferred<Unit>()
-            coEvery { signer.sign(any<List<ByteArray>>(), any()) } coAnswers {
-                isSigning.complete(Unit)
-                awaitCancellation()
-            }
-            coEvery {
-                tangemSdkManager.runTaskAsync(
-                    runnable = any<CardSessionRunnable<Unit>>(),
-                    preflightReadFilter = any(),
-                    cardId = any(),
-                    initialMessage = any(),
-                    accessCode = any(),
-                    iconScanRes = any(),
-                    registerColdWallet = any(),
-                )
-            } coAnswers {
-                firstArg<CardSessionRunnable<Unit>>().run(session) { }
-                isSigning.await()
-                CompletionResult.Failure(TangemSdkError.UserCancelled())
-            }
+            coEvery { signer.sign(any<List<ByteArray>>(), any()) } returns
+                CompletionResult.Failure(TangemSdkError.WrongAccessCode())
+            stubCardSession()
 
             // Act
-            val actual = sut.run(wallet, SEED_KEY, PATH) { sign(listOf(HASH)) }
+            val actual = sut.run(wallet, SEED_KEY, PATH) { SignRequest(value = VALUE, hashes = listOf(HASH)) }
 
             // Assert
-            assertThat(actual.leftOrNull()).isInstanceOf(TangemSdkError.UserCancelled::class.java)
-            coVerify(exactly = 1) { derivationsRepository.storeDerivedKeys(any(), any()) }
+            assertThat(actual.leftOrNull()).isEqualTo(DeriveAndSignError.CardError)
+            assertThat(sessionResult).isInstanceOf(CompletionResult.Failure::class.java)
         }
 
-    @Test
-    fun `GIVEN the user closes the sheet during the network part WHEN run on cold THEN returns Left before any sign`() =
-        runTest {
+        @Test
+        fun `GIVEN the derivation fails WHEN run THEN returns the error and never prepares`() = runTest {
             // Arrange
             val wallet = coldWallet()
+            var isPrepared = false
             coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-            every { cardSdkConfigRepository.getCommonSigner(any(), any(), any(), session) } returns signer
-            val isAwaitingNetwork = CompletableDeferred<Unit>()
-            coEvery {
-                tangemSdkManager.runTaskAsync(
-                    runnable = any<CardSessionRunnable<Unit>>(),
-                    preflightReadFilter = any(),
-                    cardId = any(),
-                    initialMessage = any(),
-                    accessCode = any(),
-                    iconScanRes = any(),
-                    registerColdWallet = any(),
-                )
-            } coAnswers {
-                firstArg<CardSessionRunnable<Unit>>().run(session) { sessionResult = it }
-                isAwaitingNetwork.await()
+            coEvery { inSessionKeyDeriver.derive(session, SEED_KEY, PATH) } returns
                 CompletionResult.Failure(TangemSdkError.UserCancelled())
-            }
+            stubCardSession()
 
             // Act
             val actual = sut.run(wallet, SEED_KEY, PATH) {
-                isAwaitingNetwork.complete(Unit)
-                awaitCancellation()
-                sign(listOf(HASH))
+                isPrepared = true
+                SignRequest(value = VALUE, hashes = listOf(HASH))
             }
 
             // Assert
-            assertThat(actual.leftOrNull()).isInstanceOf(TangemSdkError.UserCancelled::class.java)
-            assertThat(sessionResult).isNull()
-            coVerify(exactly = 1) { derivationsRepository.storeDerivedKeys(any(), any()) }
-            coVerify(exactly = 0) { signer.sign(any<List<ByteArray>>(), any()) }
+            assertThat(actual.leftOrNull()).isEqualTo(DeriveAndSignError.UserCancelled)
+            assertThat(isPrepared).isFalse()
+            coVerify(exactly = 0) { derivationsRepository.storeDerivedKeys(any(), any()) }
         }
 
-    @Test
-    fun `GIVEN the caller is cancelled during the session WHEN run on cold THEN the sheet closes as cancelled`() =
-        runTest {
+        @Test
+        fun `GIVEN prepare throws WHEN run THEN returns Unknown and the session fails`() = runTest {
             // Arrange
             val wallet = coldWallet()
             coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-            every { cardSdkConfigRepository.getCommonSigner(any(), any(), any(), session) } returns signer
-            val isInBlock = CompletableDeferred<Unit>()
+            stubCardSession()
+
+            // Act
+            val actual = sut.run<String>(wallet, SEED_KEY, PATH) { error("boom") }
+
+            // Assert
+            assertThat(actual.leftOrNull()).isEqualTo(DeriveAndSignError.Unknown)
+            assertThat(sessionResult).isInstanceOf(CompletionResult.Failure::class.java)
+        }
+
+        @Test
+        fun `GIVEN the user closes the sheet during prepare WHEN run THEN returns UserCancelled and nothing signs`() =
+            runTest {
+                // Arrange
+                val wallet = coldWallet()
+                val isPreparing = CompletableDeferred<Unit>()
+                coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
+                coEvery {
+                    tangemSdkManager.runTaskAsync(
+                        runnable = any<CardSessionRunnable<Signed<String>>>(),
+                        preflightReadFilter = any(),
+                        cardId = any(),
+                        initialMessage = any(),
+                        accessCode = any(),
+                        iconScanRes = any(),
+                        registerColdWallet = any(),
+                    )
+                } coAnswers {
+                    firstArg<CardSessionRunnable<Signed<String>>>().run(session) { sessionResult = it }
+                    isPreparing.await()
+                    CompletionResult.Failure(TangemSdkError.UserCancelled())
+                }
+
+                // Act
+                val actual = sut.run<String>(wallet, SEED_KEY, PATH) {
+                    isPreparing.complete(Unit)
+                    awaitCancellation()
+                }
+
+                // Assert
+                assertThat(actual.leftOrNull()).isEqualTo(DeriveAndSignError.UserCancelled)
+                assertThat(sessionResult).isNull()
+                verify(exactly = 0) { cardSdkConfigRepository.getCommonSigner(any(), any(), any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the caller is cancelled during prepare WHEN run THEN the sheet closes as cancelled`() = runTest {
+            // Arrange
+            val wallet = coldWallet()
+            val isPreparing = CompletableDeferred<Unit>()
+            coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
             stubCardSession()
 
             // Act
             val job = launch {
-                sut.run(wallet, SEED_KEY, PATH) {
-                    isInBlock.complete(Unit)
+                sut.run<String>(wallet, SEED_KEY, PATH) {
+                    isPreparing.complete(Unit)
                     awaitCancellation()
                 }
             }
-            isInBlock.await()
+            isPreparing.await()
             job.cancelAndJoin()
 
             // Assert
@@ -249,299 +283,202 @@ internal class DefaultDeriveAndSignSessionTest {
                 .isInstanceOf(TangemSdkError.UserCancelled::class.java)
         }
 
-    @Test
-    fun `GIVEN a successful signature WHEN the block signs again on cold THEN the second sign fails at once`() =
-        runTest {
+        @Test
+        fun `GIVEN starting the card session throws WHEN run THEN returns Unknown and never prepares`() = runTest {
             // Arrange
             val wallet = coldWallet()
+            var isPrepared = false
             coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-            every { cardSdkConfigRepository.getCommonSigner(any(), any(), any(), session) } returns signer
-            coEvery { signer.sign(listOf(HASH), any<Wallet.PublicKey>()) } returns
-                CompletionResult.Success(listOf(SIG))
-            stubCardSession()
+            coEvery {
+                tangemSdkManager.runTaskAsync(
+                    runnable = any<CardSessionRunnable<Signed<String>>>(),
+                    preflightReadFilter = any(),
+                    cardId = any(),
+                    initialMessage = any(),
+                    accessCode = any(),
+                    iconScanRes = any(),
+                    registerColdWallet = any(),
+                )
+            } throws IllegalStateException("no activity")
 
             // Act
             val actual = sut.run(wallet, SEED_KEY, PATH) {
-                sign(listOf(HASH))
-                sign(listOf(HASH))
+                isPrepared = true
+                SignRequest(value = VALUE, hashes = listOf(HASH))
             }
 
             // Assert
-            assertThat(actual.getOrNull()).isInstanceOf(CompletionResult.Failure::class.java)
-            assertThat(sessionResult).isInstanceOf(CompletionResult.Success::class.java)
-            coVerify(exactly = 1) { signer.sign(any<List<ByteArray>>(), any()) }
+            assertThat(actual.leftOrNull()).isEqualTo(DeriveAndSignError.Unknown)
+            assertThat(isPrepared).isFalse()
         }
-
-    @Test
-    fun `GIVEN the block throws WHEN run on cold THEN returns Left instead of throwing`() = runTest {
-        // Arrange
-        val wallet = coldWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-        every { cardSdkConfigRepository.getCommonSigner(any(), any(), any(), session) } returns signer
-        stubCardSession()
-
-        // Act
-        val actual = sut.run(wallet, SEED_KEY, PATH) { error("boom") }
-
-        // Assert
-        assertThat(actual.leftOrNull()).isInstanceOf(TangemSdkError.ExceptionError::class.java)
-        assertThat(sessionResult).isInstanceOf(CompletionResult.Success::class.java)
     }
 
-    @Test
-    fun `GIVEN a timeout inside the block after signing WHEN run on cold THEN returns Left and does not hang`() =
-        runTest {
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Hot {
+
+        @Test
+        fun `GIVEN no stored key WHEN run THEN unlocks once and derives and signs with that unlock`() = runTest {
             // Arrange
-            val wallet = coldWallet()
+            val wallet = hotWallet()
+            val unlock: UnlockHotWallet = mockk()
             coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-            every { cardSdkConfigRepository.getCommonSigner(any(), any(), any(), session) } returns signer
-            coEvery { signer.sign(listOf(HASH), any<Wallet.PublicKey>()) } returns
-                CompletionResult.Success(listOf(SIG))
-            stubCardSession()
+            every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany listOf(null, unlock, unlock)
+            coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } returns unlock
+            coEvery { hotWalletAccessor.derivePublicKeysWithUnlock(unlock, any()) } returns derivedResponse()
+            coEvery { hotWalletAccessor.signHashesWithUnlock(unlock, any()) } returns signedData()
 
             // Act
-            val actual = sut.run(wallet, SEED_KEY, PATH) {
-                sign(listOf(HASH))
-                withTimeout(timeMillis = 1) { awaitCancellation() }
-            }
+            val actual = sut.run(wallet, SEED_KEY, PATH) { SignRequest(value = VALUE, hashes = listOf(HASH)) }
 
             // Assert
-            assertThat(actual.leftOrNull()).isInstanceOf(TangemSdkError.ExceptionError::class.java)
-            assertThat(sessionResult).isInstanceOf(CompletionResult.Success::class.java)
+            assertThat(actual.getOrNull()?.signatures).containsExactly(SIG)
+            coVerify(exactly = 1) { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) }
+            coVerify(exactly = 0) { hotWalletAccessor.signHashesReusingContextualUnlock(any(), any()) }
+            coVerify(exactly = 0) { hotWalletAccessor.signHashes(any(), any()) }
+            coVerify(exactly = 1) {
+                derivationsRepository.storeDerivedKeys(
+                    wallet.walletId,
+                    mapOf(SEED_KEY_BAK to ExtendedPublicKeysMap(mapOf(PATH to DERIVED_KEY))),
+                )
+            }
+            verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(HOT_WALLET_ID) }
         }
 
-    @Test
-    fun `GIVEN the derivation fails WHEN run on cold THEN returns Left and never runs the block`() = runTest {
-        // Arrange
-        val wallet = coldWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-        val failing = DefaultDeriveAndSignSession(
-            derivationsRepository = derivationsRepository,
-            cardSdkConfigRepository = cardSdkConfigRepository,
-            tangemSdkManager = tangemSdkManager,
-            hotWalletAccessor = hotWalletAccessor,
-            deriveInSession = { _, _ -> CompletionResult.Failure(TangemSdkError.UserCancelled()) },
-        )
-        stubCardSession()
-        var isBlockRun = false
-
-        // Act
-        val actual = failing.run(wallet, SEED_KEY, PATH) { isBlockRun = true }
-
-        // Assert
-        assertThat(actual.leftOrNull()).isInstanceOf(TangemSdkError.UserCancelled::class.java)
-        assertThat(isBlockRun).isFalse()
-        coVerify(exactly = 0) { derivationsRepository.storeDerivedKeys(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN the hot derivation prompt is cancelled WHEN run THEN Left and no unlock is cleared`() = runTest {
-        // Arrange
-        val wallet = hotWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-        every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returns null
-        coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } throws TangemSdkError.UserCancelled()
-
-        // Act
-        val actual = sut.run(wallet, SEED_KEY, PATH) { "unreached" }
-
-        // Assert
-        assertThat(actual.leftOrNull()).isInstanceOf(TangemSdkError.UserCancelled::class.java)
-        verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
-    }
-
-    @Test
-    fun `GIVEN a stored key and no signature WHEN run on hot THEN nothing is unlocked`() = runTest {
-        // Arrange
-        val wallet = hotWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns storedDerivedKey()
-        every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returns null
-
-        // Act
-        val actual = sut.run(wallet, SEED_KEY, PATH) { "nothing to sign" }
-
-        // Assert
-        assertThat(actual.getOrNull()).isEqualTo("nothing to sign")
-        coVerify(exactly = 0) { hotWalletAccessor.unlockContextual(any<HotWalletId>()) }
-        verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
-    }
-
-    @Test
-    fun `GIVEN no stored key WHEN run on hot THEN unlocks once for derive and sign`() = runTest {
-        // Arrange
-        val wallet = hotWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-        val unlock: UnlockHotWallet = mockk()
-        every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany listOf(null, unlock)
-        coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } returns unlock
-        coEvery { hotWalletAccessor.derivePublicKeysReusingContextualUnlock(HOT_WALLET_ID, any()) } returns
-            derivedResponse()
-        coEvery { hotWalletAccessor.signHashesReusingContextualUnlock(HOT_WALLET_ID, any()) } returns signedData()
-
-        // Act
-        val actual = sut.run(wallet, SEED_KEY, PATH) { sign(listOf(HASH)) }
-
-        // Assert
-        assertThat((actual.getOrNull() as CompletionResult.Success).data).containsExactly(SIG)
-        coVerify(exactly = 1) { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) }
-        coVerify(exactly = 0) { hotWalletAccessor.signHashes(any(), any()) }
-        coVerify(exactly = 0) { hotWalletAccessor.derivePublicKeys(any(), any()) }
-        coVerify(exactly = 1) {
-            derivationsRepository.storeDerivedKeys(
-                wallet.walletId,
-                mapOf(SEED_KEY_BAK to ExtendedPublicKeysMap(mapOf(PATH to DERIVED_KEY))),
-            )
-        }
-        verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(HOT_WALLET_ID) }
-    }
-
-    @Test
-    fun `GIVEN an unlock established elsewhere WHEN run on hot THEN asks once and leaves it in place`() = runTest {
-        // Arrange
-        val wallet = hotWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-        val unlock: UnlockHotWallet = mockk()
-        every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returns unlock
-        coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } returns unlock
-        coEvery { hotWalletAccessor.derivePublicKeysReusingContextualUnlock(HOT_WALLET_ID, any()) } returns
-            derivedResponse()
-        coEvery { hotWalletAccessor.signHashesReusingContextualUnlock(HOT_WALLET_ID, any()) } returns signedData()
-
-        // Act
-        val actual = sut.run(wallet, SEED_KEY, PATH) { sign(listOf(HASH)) }
-
-        // Assert
-        assertThat((actual.getOrNull() as CompletionResult.Success).data).containsExactly(SIG)
-        coVerify(exactly = 1) { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) }
-        verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
-    }
-
-    @Test
-    fun `GIVEN an unlock established elsewhere and the prompt is cancelled WHEN run on hot THEN nothing is signed`() =
-        runTest {
+        @Test
+        fun `GIVEN a stored key and nothing to sign WHEN run THEN nothing is unlocked`() = runTest {
             // Arrange
             val wallet = hotWallet()
             coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns storedDerivedKey()
-            every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returns mockk()
+
+            // Act
+            val actual = sut.run(wallet, SEED_KEY, PATH) { SignRequest(value = VALUE, hashes = emptyList()) }
+
+            // Assert
+            assertThat(actual.getOrNull()?.signatures).isEmpty()
+            coVerify(exactly = 0) { hotWalletAccessor.unlockContextual(any<HotWalletId>()) }
+            verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
+        }
+
+        @Test
+        fun `GIVEN an unlock established elsewhere WHEN run THEN asks once and leaves it in place`() = runTest {
+            // Arrange
+            val wallet = hotWallet()
+            val unlock: UnlockHotWallet = mockk()
+            coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns storedDerivedKey()
+            every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returns unlock
+            coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } returns unlock
+            coEvery { hotWalletAccessor.signHashesWithUnlock(unlock, any()) } returns signedData()
+
+            // Act
+            val actual = sut.run(wallet, SEED_KEY, PATH) { SignRequest(value = VALUE, hashes = listOf(HASH)) }
+
+            // Assert
+            assertThat(actual.getOrNull()?.signatures).containsExactly(SIG)
+            coVerify(exactly = 1) { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) }
+            verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
+        }
+
+        @Test
+        fun `GIVEN another flow clears the unlock during prepare WHEN run THEN asks again before signing`() =
+            runTest {
+                // Arrange
+                val wallet = hotWallet()
+                val first: UnlockHotWallet = mockk()
+                val second: UnlockHotWallet = mockk()
+                coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
+                every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany
+                    listOf(null, null, second)
+                coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } returnsMany listOf(first, second)
+                coEvery { hotWalletAccessor.derivePublicKeysWithUnlock(first, any()) } returns derivedResponse()
+                coEvery { hotWalletAccessor.signHashesWithUnlock(second, any()) } returns signedData()
+
+                // Act
+                val actual = sut.run(wallet, SEED_KEY, PATH) { SignRequest(value = VALUE, hashes = listOf(HASH)) }
+
+                // Assert
+                assertThat(actual.getOrNull()?.signatures).containsExactly(SIG)
+                coVerify(exactly = 2) { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) }
+                verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(HOT_WALLET_ID) }
+            }
+
+        @Test
+        fun `GIVEN the prompt is cancelled WHEN run THEN returns UserCancelled and nothing is signed`() = runTest {
+            // Arrange
+            val wallet = hotWallet()
+            coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
+            every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returns null
             coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } throws TangemSdkError.UserCancelled()
 
             // Act
-            val actual = sut.run(wallet, SEED_KEY, PATH) { sign(listOf(HASH)) }
+            val actual = sut.run(wallet, SEED_KEY, PATH) { SignRequest(value = VALUE, hashes = listOf(HASH)) }
 
             // Assert
-            val failure = actual.getOrNull() as CompletionResult.Failure
-            assertThat(failure.error).isInstanceOf(TangemSdkError.UserCancelled::class.java)
-            coVerify(exactly = 0) { hotWalletAccessor.signHashesReusingContextualUnlock(any(), any()) }
+            assertThat(actual.leftOrNull()).isEqualTo(DeriveAndSignError.UserCancelled)
+            coVerify(exactly = 0) { hotWalletAccessor.signHashesWithUnlock(any(), any()) }
             verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
         }
 
-    @Test
-    fun `GIVEN an unlock established elsewhere and the first prompt is cancelled WHEN the block signs again THEN asks again`() =
-        runTest {
-            // Arrange
-            val wallet = hotWallet()
-            coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns storedDerivedKey()
-            every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returns mockk()
-            val unlock: UnlockHotWallet = mockk()
-            coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } throws TangemSdkError.UserCancelled() andThen
-                unlock
-            coEvery { hotWalletAccessor.signHashesReusingContextualUnlock(HOT_WALLET_ID, any()) } returns signedData()
-
-            // Act
-            val actual = sut.run(wallet, SEED_KEY, PATH) {
-                sign(listOf(HASH))
-                sign(listOf(HASH))
-            }
-
-            // Assert
-            assertThat((actual.getOrNull() as CompletionResult.Success).data).containsExactly(SIG)
-            coVerify(exactly = 2) { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) }
-            coVerify(exactly = 1) { hotWalletAccessor.signHashesReusingContextualUnlock(HOT_WALLET_ID, any()) }
-            verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
-        }
-
-    @Test
-    fun `GIVEN the block throws before signing WHEN run on hot THEN returns Left and no unlock is cleared`() = runTest {
-        // Arrange
-        val wallet = hotWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns storedDerivedKey()
-        every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returns null
-
-        // Act
-        val actual = sut.run(wallet, SEED_KEY, PATH) { error("boom") }
-
-        // Assert
-        assertThat(actual.leftOrNull()).isInstanceOf(TangemSdkError.ExceptionError::class.java)
-        verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
-    }
-
-    @Test
-    fun `GIVEN the hot unlock fails after it was stored WHEN run THEN the stored unlock is cleared`() = runTest {
-        // Arrange
-        val wallet = hotWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-        every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany listOf(null, mockk())
-        coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } throws IllegalStateException("save failed")
-
-        // Act
-        val actual = sut.run(wallet, SEED_KEY, PATH) { "unreached" }
-
-        // Assert
-        assertThat(actual.leftOrNull()).isInstanceOf(TangemSdkError.ExceptionError::class.java)
-        verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(HOT_WALLET_ID) }
-    }
-
-    @Test
-    fun `GIVEN another caller replaced the run's unlock WHEN run on hot ends THEN the replacement is left in place`() =
-        runTest {
+        @Test
+        fun `GIVEN the unlock fails after it was stored WHEN run THEN the stored unlock is cleared`() = runTest {
             // Arrange
             val wallet = hotWallet()
             coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-            val unlock: UnlockHotWallet = mockk()
-            val replacement: UnlockHotWallet = mockk()
-            every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany listOf(null, replacement)
-            coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } returns unlock
-            coEvery { hotWalletAccessor.derivePublicKeysReusingContextualUnlock(HOT_WALLET_ID, any()) } returns
-                derivedResponse()
-            coEvery { hotWalletAccessor.signHashesReusingContextualUnlock(HOT_WALLET_ID, any()) } returns signedData()
+            every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany listOf(null, mockk())
+            coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } throws IllegalStateException("save failed")
 
             // Act
-            sut.run(wallet, SEED_KEY, PATH) { sign(listOf(HASH)) }
+            val actual = sut.run(wallet, SEED_KEY, PATH) { SignRequest(value = VALUE, hashes = listOf(HASH)) }
 
             // Assert
-            verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
+            assertThat(actual.leftOrNull()).isEqualTo(DeriveAndSignError.Unknown)
+            verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(HOT_WALLET_ID) }
         }
 
-    @Test
-    fun `GIVEN starting the card session throws WHEN run on cold THEN returns Left instead of throwing`() = runTest {
-        // Arrange
-        val wallet = coldWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
-        coEvery {
-            tangemSdkManager.runTaskAsync(
-                runnable = any<CardSessionRunnable<Unit>>(),
-                preflightReadFilter = any(),
-                cardId = any(),
-                initialMessage = any(),
-                accessCode = any(),
-                iconScanRes = any(),
-                registerColdWallet = any(),
-            )
-        } throws IllegalStateException("no activity")
-        var isBlockRun = false
+        @Test
+        fun `GIVEN another flow replaced the run's unlock WHEN run ends THEN the replacement is left in place`() =
+            runTest {
+                // Arrange
+                val wallet = hotWallet()
+                val unlock: UnlockHotWallet = mockk()
+                val replacement: UnlockHotWallet = mockk()
+                coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
+                every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany
+                    listOf(null, replacement, replacement)
+                coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } returns unlock
+                coEvery { hotWalletAccessor.derivePublicKeysWithUnlock(unlock, any()) } returns derivedResponse()
+                coEvery { hotWalletAccessor.signHashesWithUnlock(unlock, any()) } returns signedData()
 
-        // Act
-        val actual = sut.run(wallet, SEED_KEY, PATH) { isBlockRun = true }
+                // Act
+                sut.run(wallet, SEED_KEY, PATH) { SignRequest(value = VALUE, hashes = listOf(HASH)) }
 
-        // Assert
-        assertThat(actual.leftOrNull()).isInstanceOf(TangemSdkError.ExceptionError::class.java)
-        assertThat(isBlockRun).isFalse()
+                // Assert
+                verify(exactly = 0) { hotWalletAccessor.clearContextualUnlock(any<HotWalletId>()) }
+            }
+
+        @Test
+        fun `GIVEN prepare throws WHEN run THEN returns Unknown and the run's unlock is cleared`() = runTest {
+            // Arrange
+            val wallet = hotWallet()
+            val unlock: UnlockHotWallet = mockk()
+            coEvery { derivationsRepository.getExistingDerivedKeys(wallet, SEED_KEY_BAK) } returns noStoredKeys()
+            every { hotWalletAccessor.getContextualUnlock(HOT_WALLET_ID) } returnsMany listOf(null, unlock)
+            coEvery { hotWalletAccessor.unlockContextual(HOT_WALLET_ID) } returns unlock
+            coEvery { hotWalletAccessor.derivePublicKeysWithUnlock(unlock, any()) } returns derivedResponse()
+
+            // Act
+            val actual = sut.run<String>(wallet, SEED_KEY, PATH) { error("boom") }
+
+            // Assert
+            assertThat(actual.leftOrNull()).isEqualTo(DeriveAndSignError.Unknown)
+            verify(exactly = 1) { hotWalletAccessor.clearContextualUnlock(HOT_WALLET_ID) }
+        }
     }
 
     private fun stubCardSession() {
         coEvery {
             tangemSdkManager.runTaskAsync(
-                runnable = any<CardSessionRunnable<Unit>>(),
+                runnable = any<CardSessionRunnable<Signed<String>>>(),
                 preflightReadFilter = any(),
                 cardId = any(),
                 initialMessage = any(),
@@ -550,7 +487,7 @@ internal class DefaultDeriveAndSignSessionTest {
                 registerColdWallet = any(),
             )
         } coAnswers {
-            val runnable = firstArg<CardSessionRunnable<Unit>>()
+            val runnable = firstArg<CardSessionRunnable<Signed<String>>>()
             suspendCancellableCoroutine { continuation ->
                 runnable.run(session) { result ->
                     sessionResult = result
@@ -561,6 +498,7 @@ internal class DefaultDeriveAndSignSessionTest {
     }
 
     private companion object {
+        const val VALUE = "prepared"
         val PATH = DerivationPath("m/44'/60'/999899'/0/0")
         val SEED_KEY = "02AABB".hexToBytes()
         val SEED_KEY_BAK = ByteArrayKey(SEED_KEY)
