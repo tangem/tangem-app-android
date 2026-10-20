@@ -36,5 +36,9 @@ class DummyRouter : Router {
         onComplete(true)
     }
 
+    override fun navigate(transformer: (stack: List<Route>) -> List<Route>, onComplete: (isSuccess: Boolean) -> Unit) {
+        onComplete(true)
+    }
+
     override suspend fun contains(route: Route): Boolean = false
 }

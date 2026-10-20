@@ -45,5 +45,9 @@ internal class WcRouter(
         /** Not allowed */
     }
 
+    override fun navigate(transformer: (stack: List<Route>) -> List<Route>, onComplete: (Boolean) -> Unit) {
+        /** Not allowed */
+    }
+
     override suspend fun contains(route: Route): Boolean = false
 }
