@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -17,6 +18,10 @@ internal class TangemPayAddToWalletComponent(
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val model: TangemPayAddToWalletModel = getOrCreateModel(params)
+
+    init {
+        lifecycle.subscribe(onStop = model::onStop)
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
