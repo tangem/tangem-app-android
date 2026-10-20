@@ -233,36 +233,40 @@ internal class ForgetWalletModel @Inject constructor(
 
         val walletId = params.userWalletId.stringValue
         return appScope.launch {
-            cloudBackupRepository.findBackups().fold(
-                ifLeft = { error ->
-                    TangemLogger.e("Unable to find cloud backups on forget: $error")
-                    analyticsEventHandler.send(
-                        WalletSettingsAnalyticEvents.CloudBackupDeletionError(errorMessage = error.analyticsMessage()),
-                    )
-                },
-                ifRight = { backups ->
-                    val info = backups.firstOrNull { it.walletId == walletId }
-                    if (info == null) {
-                        setCloudBackupStateUseCase(walletId, isBackedUp = false)
-                        return@fold
-                    }
-
-                    deleteCloudBackupWithRetryUseCase(info.fileId).fold(
-                        ifLeft = { error ->
-                            TangemLogger.e("Unable to delete cloud backup on forget: $error")
-                            analyticsEventHandler.send(
-                                WalletSettingsAnalyticEvents.CloudBackupDeletionError(
-                                    errorMessage = error.analyticsMessage(),
-                                ),
-                            )
-                        },
-                        ifRight = {
-                            analyticsEventHandler.send(WalletSettingsAnalyticEvents.CloudBackupDeleted())
-                            setCloudBackupStateUseCase(walletId, isBackedUp = false)
-                        },
-                    )
-                },
-            )
+            cloudBackupRepository.withAccountOf(walletId) { deleteCloudBackupOf(walletId) }
         }
+    }
+
+    private suspend fun deleteCloudBackupOf(walletId: String) {
+        cloudBackupRepository.findBackups().fold(
+            ifLeft = { error ->
+                TangemLogger.e("Unable to find cloud backups on forget: $error")
+                analyticsEventHandler.send(
+                    WalletSettingsAnalyticEvents.CloudBackupDeletionError(errorMessage = error.analyticsMessage()),
+                )
+            },
+            ifRight = { backups ->
+                val info = backups.firstOrNull { it.walletId == walletId }
+                if (info == null) {
+                    setCloudBackupStateUseCase(walletId, isBackedUp = false)
+                    return@fold
+                }
+
+                deleteCloudBackupWithRetryUseCase(info.fileId).fold(
+                    ifLeft = { error ->
+                        TangemLogger.e("Unable to delete cloud backup on forget: $error")
+                        analyticsEventHandler.send(
+                            WalletSettingsAnalyticEvents.CloudBackupDeletionError(
+                                errorMessage = error.analyticsMessage(),
+                            ),
+                        )
+                    },
+                    ifRight = {
+                        analyticsEventHandler.send(WalletSettingsAnalyticEvents.CloudBackupDeleted())
+                        setCloudBackupStateUseCase(walletId, isBackedUp = false)
+                    },
+                )
+            },
+        )
     }
 }
