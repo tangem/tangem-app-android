@@ -92,6 +92,8 @@ internal class WalletBackupModelTest {
         every { walletId } returns this@WalletBackupModelTest.walletId
     }
 
+    private var pinnedWalletId: String? = null
+
     @BeforeEach
     fun setUp() {
         every { paramsContainer.require<WalletBackupComponent.Params>() } returns params
@@ -99,6 +101,11 @@ internal class WalletBackupModelTest {
         every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
         coEvery { cloudBackupRepository.isBackedUp(any()) } returns false
         coEvery { cloudBackupRepository.signOut() } just Runs
+        pinnedWalletId = null
+        coEvery { cloudBackupRepository.withAccountOf<Any?>(any(), any()) } coAnswers {
+            pinnedWalletId = firstArg()
+            secondArg<suspend () -> Any?>().invoke().also { pinnedWalletId = null }
+        }
 
         // DateTimeFormatters delegates to android.text.format.DateFormat, an Android stub unavailable on the JVM
         mockkStatic(DateFormat::class)
@@ -458,6 +465,43 @@ internal class WalletBackupModelTest {
         }
 
     @Test
+    fun `GIVEN toggle on WHEN model created THEN the backups are listed in the wallet's account`() =
+        runTest {
+            // Arrange
+            var listedFor: String? = null
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+            coEvery { cloudBackupRepository.findBackups() } answers {
+                listedFor = pinnedWalletId
+                listOf(backup(walletId = "011")).right()
+            }
+
+            // Act
+            val model = createModel(this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(listedFor).isEqualTo("011")
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN wallet was backed up AND its backup found WHEN model created THEN it is marked again for its account`() =
+        runTest {
+            // Arrange — a wallet backed up before accounts were remembered gets its account this way
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+            coEvery { cloudBackupRepository.isBackedUp("011") } returns true
+            coEvery { cloudBackupRepository.findBackups() } returns listOf(backup(walletId = "011")).right()
+
+            // Act
+            val model = createModel(this)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { setCloudBackupStateUseCase("011", isBackedUp = true) }
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN toggle on AND findBackups returns only other-wallet backups WHEN model created THEN googleDriveStatus is NoBackup`() =
         runTest {
             // Arrange
@@ -544,6 +588,35 @@ internal class WalletBackupModelTest {
     }
 
     @Test
+    fun `GIVEN backup file not found WHEN create clicked THEN the account is asked again before the creation`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+            coEvery { cloudBackupRepository.isBackedUp("011") } returns true
+            coEvery { cloudBackupRepository.findBackups() } returns emptyList<CloudBackupInfo>().right()
+            val sentMessages = mutableListOf<UiMessage>()
+            every { uiMessageSender.send(capture(sentMessages)) } just Runs
+            val model = createModel(this)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.onGoogleDriveClick()
+            val sheet = sentMessages.filterIsInstance<BottomSheetMessage>().last()
+            sheet.messageBottomSheetUM.elements
+                .filterIsInstance<MessageBottomSheetUM.Button>()
+                .first { it.text == resourceReference(R.string.hw_cloud_backup_not_found_create) }
+                .onClick?.invoke(sheet.messageBottomSheetUM.closeScope)
+            advanceUntilIdle()
+
+            // Assert
+            coVerifyOrder {
+                cloudBackupRepository.signOut()
+                router.push(route = AppRoute.CreateCloudBackup(walletId), onComplete = any())
+            }
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN toggle on WHEN screen resumed THEN first resume is skipped AND the next one refreshes`() = runTest {
         // Arrange
         every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
@@ -560,6 +633,35 @@ internal class WalletBackupModelTest {
         advanceUntilIdle()
         coVerify(exactly = 2) { cloudBackupRepository.findBackups() }
         model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN toggle on AND backup present WHEN delete confirmed THEN it is deleted in the wallet's account`() = runTest {
+        // Arrange
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+        coEvery { cloudBackupRepository.findBackups() } returns listOf(backup(fileId = "file-1", walletId = "011")).right()
+        var deletedInWalletId: String? = null
+        coEvery { cloudBackupRepository.deleteBackup("file-1") } coAnswers {
+            deletedInWalletId = pinnedWalletId
+            Unit.right()
+        }
+        val sentMessages = mutableListOf<UiMessage>()
+        every { uiMessageSender.send(capture(sentMessages)) } just Runs
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onGoogleDriveClick()
+        val sheet = sentMessages.filterIsInstance<BottomSheetMessage>().last()
+        sheet.messageBottomSheetUM.elements
+            .filterIsInstance<MessageBottomSheetUM.Button>()
+            .first()
+            .onClick?.invoke(sheet.messageBottomSheetUM.closeScope)
+        sentMessages.filterIsInstance<DialogMessage>().last().firstAction.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(deletedInWalletId).isEqualTo("011")
     }
 
     @Test
