@@ -10,7 +10,6 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.core.run
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
@@ -21,135 +20,125 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessor
+import com.tangem.domain.wallets.signing.DeriveAndSignError
+import com.tangem.domain.wallets.signing.DeriveAndSignSession
+import com.tangem.domain.wallets.signing.SignRequest
+import com.tangem.domain.wallets.signing.Signed
 import com.tangem.hot.sdk.model.DataToSign
 import com.tangem.hot.sdk.model.DeriveWalletRequest
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.hot.sdk.model.UnlockHotWallet
-import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 
-internal class DefaultDeriveAndSignSession(
+internal class DefaultDeriveAndSignSession @Inject constructor(
     private val derivationsRepository: DerivationsRepository,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val tangemSdkManager: TangemSdkManager,
     private val hotWalletAccessor: HotWalletAccessor,
-    private val deriveInSession: DeriveInSession,
+    private val inSessionKeyDeriver: InSessionKeyDeriver,
 ) : DeriveAndSignSession {
-
-    @Inject
-    constructor(
-        derivationsRepository: DerivationsRepository,
-        cardSdkConfigRepository: CardSdkConfigRepository,
-        tangemSdkManager: TangemSdkManager,
-        hotWalletAccessor: HotWalletAccessor,
-    ) : this(
-        derivationsRepository = derivationsRepository,
-        cardSdkConfigRepository = cardSdkConfigRepository,
-        tangemSdkManager = tangemSdkManager,
-        hotWalletAccessor = hotWalletAccessor,
-        deriveInSession = { session, request ->
-            DeriveWalletPublicKeyTask(walletPublicKey = request.seedKey, derivationPath = request.path).run(session)
-        },
-    )
 
     override suspend fun <T> run(
         userWallet: UserWallet,
         seedKey: ByteArray,
         path: DerivationPath,
-        block: suspend DeriveAndSignScope.(derivedKey: ExtendedPublicKey) -> T,
-    ): Either<TangemSdkError, T> {
-        val storedKey = runSuspendCatching {
-            derivationsRepository.getExistingDerivedKeys(userWallet, ByteArrayKey(seedKey))[path]
-        }.getOrElse { error ->
-            TangemLogger.e("Derive and sign session: reading the stored keys threw", error)
-            return error.asTangemSdkError().left()
-        }
-
-        return when (userWallet) {
+        prepare: suspend (derivedKey: ExtendedPublicKey) -> SignRequest<T>,
+    ): Either<DeriveAndSignError, Signed<T>> = runSuspendCatching {
+        val storedKey = derivationsRepository.getExistingDerivedKeys(userWallet, ByteArrayKey(seedKey))[path]
+        when (userWallet) {
             is UserWallet.Cold -> if (storedKey != null) {
-                val signer by lazy { userWallet.signer(session = null) }
-                val publicKey = publicKey(seedKey, storedKey, path)
-                runBlockCatching(DeriveAndSignScope { hashes -> signer.sign(hashes, publicKey) }, storedKey, block)
+                signWithStoredKey(
+                    userWallet = userWallet,
+                    publicKey = publicKey(seedKey = seedKey, derivedKey = storedKey, path = path),
+                    storedKey = storedKey,
+                    prepare = prepare,
+                )
             } else {
-                deriveInCardSession(userWallet = userWallet, seedKey = seedKey, path = path, block = block)
+                deriveAndSignInCardSession(userWallet = userWallet, seedKey = seedKey, path = path, prepare = prepare)
             }
             is UserWallet.Hot -> runHot(
                 userWallet = userWallet,
                 seedKey = seedKey,
                 path = path,
                 storedKey = storedKey,
-                block = block,
+                prepare = prepare,
             )
+        }
+    }.getOrElse { error ->
+        TangemLogger.e("Derive and sign session failed", error)
+        error.toDeriveAndSignError().left()
+    }
+
+    private suspend fun <T> signWithStoredKey(
+        userWallet: UserWallet.Cold,
+        publicKey: Wallet.PublicKey,
+        storedKey: ExtendedPublicKey,
+        prepare: suspend (ExtendedPublicKey) -> SignRequest<T>,
+    ): Either<DeriveAndSignError, Signed<T>> {
+        val request = prepare(storedKey)
+        if (request.hashes.isEmpty()) return Signed(request.value, emptyList()).right()
+
+        return when (val signed = userWallet.signer(session = null).sign(request.hashes, publicKey)) {
+            is CompletionResult.Success -> Signed(request.value, signed.data).right()
+            is CompletionResult.Failure -> signed.error.toDeriveAndSignError().left()
         }
     }
 
-    private suspend fun <T> deriveInCardSession(
+    private suspend fun <T> deriveAndSignInCardSession(
         userWallet: UserWallet.Cold,
         seedKey: ByteArray,
         path: DerivationPath,
-        block: suspend DeriveAndSignScope.(ExtendedPublicKey) -> T,
-    ): Either<TangemSdkError, T> = coroutineScope {
-        val outcome = CompletableDeferred<Either<TangemSdkError, T>>()
+        prepare: suspend (ExtendedPublicKey) -> SignRequest<T>,
+    ): Either<DeriveAndSignError, Signed<T>> = coroutineScope {
         val cardId = userWallet.sessionCardId()
-
-        val task = DeriveKeyInSessionTask(
-            userWalletId = userWallet.walletId,
-            request = DeriveKeyInSessionTask.Request(seedKey = seedKey, path = path),
-            derivationsRepository = derivationsRepository,
-            deriveInSession = deriveInSession,
+        val task = DeriveAndSignTask(
             scope = this,
-            onDerived = { session, derivedKey, sessionCallback ->
-                val signingScope = SingleSignatureScope(
-                    signer = lazy { userWallet.signer(session = session) },
-                    publicKey = publicKey(seedKey, derivedKey, path),
-                    sessionCallback = sessionCallback,
-                )
-                outcome.complete(runBlockCatching(signingScope, derivedKey, block))
-                sessionCallback.close(signingScope.closingResult())
+            derive = { session ->
+                deriveAndStore(session = session, userWallet = userWallet, seedKey = seedKey, path = path)
+            },
+            prepare = prepare,
+            sign = { session, derivedKey, hashes ->
+                val publicKey = publicKey(seedKey = seedKey, derivedKey = derivedKey, path = path)
+                userWallet.signer(session).sign(hashes, publicKey)
             },
         )
 
-        val sessionResult = runSuspendCatching {
-            tangemSdkManager.runTaskAsync(
-                runnable = task,
-                preflightReadFilter = if (cardId == null) {
-                    UserWalletIdPreflightReadFilter(expectedUserWallet = userWallet)
-                } else {
-                    null
-                },
-                cardId = cardId,
-                registerColdWallet = true,
-            )
-        }.getOrElse { error ->
-            TangemLogger.e("Derive and sign session: starting the card session threw", error)
-            CompletionResult.Failure(error.asTangemSdkError())
-        }
-
-        when (sessionResult) {
-            is CompletionResult.Success -> outcome.await()
-            is CompletionResult.Failure -> if (outcome.isCompleted) {
-                outcome.await()
+        val result = tangemSdkManager.runTaskAsync(
+            runnable = task,
+            preflightReadFilter = if (cardId == null) {
+                UserWalletIdPreflightReadFilter(expectedUserWallet = userWallet)
             } else {
-                TangemLogger.i(
-                    "Derive and sign session: the card session ended before the block, ${sessionResult.error}",
-                )
-                task.abandonSession()
-                coroutineContext.cancelChildren()
-                sessionResult.error.asTangemSdkError().left()
-            }
+                null
+            },
+            cardId = cardId,
+            registerColdWallet = true,
+        )
+        task.abandon()
+        coroutineContext.cancelChildren()
+
+        when (result) {
+            is CompletionResult.Success -> result.data.right()
+            is CompletionResult.Failure -> result.error.toDeriveAndSignError().left()
         }
+    }
+
+    private suspend fun deriveAndStore(
+        session: CardSession,
+        userWallet: UserWallet.Cold,
+        seedKey: ByteArray,
+        path: DerivationPath,
+    ): CompletionResult<ExtendedPublicKey> {
+        val derived = inSessionKeyDeriver.derive(session, seedKey, path)
+        if (derived is CompletionResult.Success) {
+            storeDerivedKey(userWallet = userWallet, seedKey = seedKey, path = path, derivedKey = derived.data)
+        }
+        return derived
     }
 
     private suspend fun <T> runHot(
@@ -157,27 +146,30 @@ internal class DefaultDeriveAndSignSession(
         seedKey: ByteArray,
         path: DerivationPath,
         storedKey: ExtendedPublicKey?,
-        block: suspend DeriveAndSignScope.(ExtendedPublicKey) -> T,
-    ): Either<TangemSdkError, T> {
-        val hotWalletId = userWallet.hotWalletId
+        prepare: suspend (ExtendedPublicKey) -> SignRequest<T>,
+    ): Either<DeriveAndSignError, Signed<T>> {
         val curve = userWallet.wallets.orEmpty().firstOrNull { it.publicKey.contentEquals(seedKey) }?.curve
-            ?: return TangemSdkError.WalletNotFound().left()
-        val unlock = RunScopedUnlock(hotWalletId)
+            ?: return DeriveAndSignError.WalletNotFound.left()
+        val unlock = RunScopedUnlock(userWallet.hotWalletId)
 
         return try {
-            val derivedKey = storedKey ?: runSuspendCatching {
-                deriveHot(userWallet = userWallet, seedKey = seedKey, path = path, curve = curve, unlock = unlock)
-            }.getOrElse { error -> return error.asTangemSdkError().left() }
-
-            val signingScope = DeriveAndSignScope { hashes ->
-                runSuspendCatching {
-                    signHot(unlock = unlock, curve = curve, path = path, hashes = hashes)
-                }.fold(
-                    onSuccess = { CompletionResult.Success(it) },
-                    onFailure = { CompletionResult.Failure(it.asTangemSdkError()) },
-                )
+            val derivedKey = storedKey ?: deriveHot(
+                userWallet = userWallet,
+                seedKey = seedKey,
+                path = path,
+                curve = curve,
+                unlock = unlock.current(),
+            )
+            val request = prepare(derivedKey)
+            val signatures = if (request.hashes.isEmpty()) {
+                emptyList()
+            } else {
+                hotWalletAccessor.signHashesWithUnlock(
+                    unlockHotWallet = unlock.current(),
+                    dataToSign = listOf(DataToSign(curve = curve, derivationPath = path, hashes = request.hashes)),
+                ).flatMap { it.signatures }
             }
-            runBlockCatching(signingScope, derivedKey, block)
+            Signed(request.value, signatures).right()
         } finally {
             unlock.clearIfEstablished()
         }
@@ -188,82 +180,58 @@ internal class DefaultDeriveAndSignSession(
         seedKey: ByteArray,
         path: DerivationPath,
         curve: EllipticCurve,
-        unlock: RunScopedUnlock,
+        unlock: UnlockHotWallet,
     ): ExtendedPublicKey {
-        unlock.ensureUnlocked()
-        val response = hotWalletAccessor.derivePublicKeysReusingContextualUnlock(
-            hotWalletId = userWallet.hotWalletId,
+        val derivedKey = hotWalletAccessor.derivePublicKeysWithUnlock(
+            unlockHotWallet = unlock,
             request = DeriveWalletRequest(
                 requests = listOf(DeriveWalletRequest.Request(curve = curve, paths = listOf(path))),
             ),
-        )
-        val derivedKey = response.responses
+        ).responses
             .first { it.seedKey.publicKey.contentEquals(seedKey) }
             .publicKeys.getValue(path)
+        storeDerivedKey(userWallet = userWallet, seedKey = seedKey, path = path, derivedKey = derivedKey)
+        return derivedKey
+    }
 
+    private suspend fun storeDerivedKey(
+        userWallet: UserWallet,
+        seedKey: ByteArray,
+        path: DerivationPath,
+        derivedKey: ExtendedPublicKey,
+    ) {
         derivationsRepository.storeDerivedKeys(
             userWalletId = userWallet.walletId,
             derivedKeys = mapOf(ByteArrayKey(seedKey) to ExtendedPublicKeysMap(mapOf(path to derivedKey))),
         )
-        return derivedKey
     }
 
-    private suspend fun signHot(
-        unlock: RunScopedUnlock,
-        curve: EllipticCurve,
-        path: DerivationPath,
-        hashes: List<ByteArray>,
-    ): List<ByteArray> {
-        unlock.ensureUnlocked()
-        return hotWalletAccessor.signHashesReusingContextualUnlock(
-            hotWalletId = unlock.hotWalletId,
-            dataToSign = listOf(DataToSign(curve = curve, derivationPath = path, hashes = hashes)),
-        ).flatMap { it.signatures }
-    }
+    private inner class RunScopedUnlock(private val hotWalletId: HotWalletId) {
 
-    private inner class RunScopedUnlock(val hotWalletId: HotWalletId) {
+        private var isRequestedByThisRun = false
+        private var wasUnlockedBeforeRun = false
+        private var establishedByThisRun: UnlockHotWallet? = null
 
-        private val isRequestedByThisRun = AtomicBoolean(false)
-        private val wasUnlockedBeforeRun = AtomicBoolean(false)
-        private val establishedByThisRun = AtomicReference<UnlockHotWallet?>(null)
+        suspend fun current(): UnlockHotWallet {
+            val established = establishedByThisRun
+            if (established != null && hotWalletAccessor.getContextualUnlock(hotWalletId) != null) return established
 
-        suspend fun ensureUnlocked() {
-            if (establishedByThisRun.get() != null) return
-
-            if (!isRequestedByThisRun.getAndSet(true)) {
-                wasUnlockedBeforeRun.set(hotWalletAccessor.getContextualUnlock(hotWalletId) != null)
+            if (!isRequestedByThisRun) {
+                isRequestedByThisRun = true
+                wasUnlockedBeforeRun = hotWalletAccessor.getContextualUnlock(hotWalletId) != null
             }
-            establishedByThisRun.set(hotWalletAccessor.unlockContextual(hotWalletId))
+            return hotWalletAccessor.unlockContextual(hotWalletId).also { establishedByThisRun = it }
         }
 
         fun clearIfEstablished() {
-            if (!isRequestedByThisRun.get() || wasUnlockedBeforeRun.get()) return
+            if (!isRequestedByThisRun || wasUnlockedBeforeRun) return
 
             val current = hotWalletAccessor.getContextualUnlock(hotWalletId) ?: return
-            val established = establishedByThisRun.get()
-            val isRequestUnfinished = established == null
-            if (isRequestUnfinished || current === established) {
+            val established = establishedByThisRun
+            if (established == null || current === established) {
                 hotWalletAccessor.clearContextualUnlock(hotWalletId)
             }
         }
-    }
-
-    private suspend fun <T> runBlockCatching(
-        scope: DeriveAndSignScope,
-        derivedKey: ExtendedPublicKey,
-        block: suspend DeriveAndSignScope.(ExtendedPublicKey) -> T,
-    ): Either<TangemSdkError, T> = try {
-        runSuspendCatching { scope.block(derivedKey) }.fold(
-            onSuccess = { it.right() },
-            onFailure = { error ->
-                TangemLogger.e("Derive and sign session: the block threw", error)
-                error.asTangemSdkError().left()
-            },
-        )
-    } catch (strayCancellation: CancellationException) {
-        currentCoroutineContext().ensureActive()
-        TangemLogger.e("Derive and sign session: the block was cancelled from inside", strayCancellation)
-        strayCancellation.asTangemSdkError().left()
     }
 
     private fun UserWallet.Cold.signer(session: CardSession?): TransactionSigner =
@@ -286,32 +254,13 @@ internal class DefaultDeriveAndSignSession(
         ),
     )
 
-    private fun Throwable.asTangemSdkError(): TangemSdkError =
-        this as? TangemSdkError ?: TangemSdkError.ExceptionError(this)
+    private fun Throwable.toDeriveAndSignError(): DeriveAndSignError =
+        (this as? TangemError)?.toDeriveAndSignError() ?: DeriveAndSignError.Unknown
 
-    private class SingleSignatureScope(
-        private val signer: Lazy<TransactionSigner>,
-        private val publicKey: Wallet.PublicKey,
-        private val sessionCallback: OneShotSessionCallback,
-    ) : DeriveAndSignScope {
-
-        private val lastFailure = AtomicReference<TangemError?>(null)
-
-        override suspend fun sign(hashes: List<ByteArray>): CompletionResult<List<ByteArray>> {
-            if (!sessionCallback.isOpen) return CompletionResult.Failure(sessionClosedAfterSignature())
-
-            return signer.value.sign(hashes, publicKey).also { result ->
-                when (result) {
-                    is CompletionResult.Success -> sessionCallback.close(CompletionResult.Success(Unit))
-                    is CompletionResult.Failure -> lastFailure.set(result.error)
-                }
-            }
-        }
-
-        fun closingResult(): CompletionResult<Unit> =
-            lastFailure.get()?.let { CompletionResult.Failure(it) } ?: CompletionResult.Success(Unit)
-
-        private fun sessionClosedAfterSignature() =
-            TangemSdkError.ExceptionError(IllegalStateException("The card session closes after the first signature"))
+    private fun TangemError.toDeriveAndSignError(): DeriveAndSignError = when (this) {
+        is TangemSdkError.UserCancelled -> DeriveAndSignError.UserCancelled
+        is TangemSdkError.WalletNotFound -> DeriveAndSignError.WalletNotFound
+        is TangemSdkError.ExceptionError -> DeriveAndSignError.Unknown
+        else -> DeriveAndSignError.CardError
     }
 }
