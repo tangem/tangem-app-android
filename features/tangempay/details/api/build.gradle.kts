@@ -18,5 +18,6 @@ dependencies {
     api(projects.domain.visa.models)
 
     /** Other */
+    api(deps.arrow.core)
     implementation(deps.androidx.annotation)
 }
