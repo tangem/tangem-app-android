@@ -20,12 +20,13 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.account.AccountId
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.addfunds.TangemPayAddFundsComponent
-import com.tangem.features.tangempay.addfunds.va.bank.TangemPayVaBankingDetailsErrorComponent
+import com.tangem.features.tangempay.addfunds.va.bank.DefaultTangemPayBankingDetailsErrorComponent
 import com.tangem.features.tangempay.addfunds.va.bank.VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER
 import com.tangem.features.tangempay.addfunds.va.bank.toRequisitesRows
 import com.tangem.features.tangempay.addfunds.va.deposit.TangemPayVirtualAccountDepositComponent
 import com.tangem.features.tangempay.card.issue.TangemPayIssueAdditionalCardComponent
 import com.tangem.features.tangempay.common.userWalletId
+import com.tangem.features.tangempay.components.TangemPayBankingDetailsErrorComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tangempay.multichain.choosenetwork.PaymentChooseNetworkComponent
@@ -180,11 +181,10 @@ internal class TangemPayDetailsComponent(
                     onFieldCopied = model::onVaFieldCopied,
                 ),
             )
-            is TangemPayDetailsNavigation.VaBankingDetailsError -> TangemPayVaBankingDetailsErrorComponent(
+            is TangemPayDetailsNavigation.VaBankingDetailsError -> DefaultTangemPayBankingDetailsErrorComponent(
                 appComponentContext = context,
-                params = TangemPayVaBankingDetailsErrorComponent.Params(
-                    userWalletId = navigation.userWalletId,
-                    productInstanceId = navigation.productInstanceId,
+                params = TangemPayBankingDetailsErrorComponent.Params(
+                    retry = { model.loadBankCredentials(navigation.productInstanceId) },
                     onDismiss = model.bottomSheetNavigation::dismiss,
                     onContactSupport = model::onContactSupportClicked,
                     onResolved = model::onVaBankingDetailsResolved,
