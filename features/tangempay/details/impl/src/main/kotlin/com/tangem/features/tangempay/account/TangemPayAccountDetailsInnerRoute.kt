@@ -2,7 +2,6 @@ package com.tangem.features.tangempay.account
 
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.models.account.BankCredentials
-import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
@@ -30,7 +29,6 @@ internal sealed class TangemPayAccountDetailsInnerRoute : Route {
 
     @Serializable
     data class SelectPlan(
-        val tariffPlan: TangemPayCustomerTariffPlan,
         val source: TangemPaySelectPlanSource,
     ) : TangemPayAccountDetailsInnerRoute()
 
