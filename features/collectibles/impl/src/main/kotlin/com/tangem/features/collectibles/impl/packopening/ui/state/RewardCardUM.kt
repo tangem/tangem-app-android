@@ -9,7 +9,6 @@ internal data class RewardCardUM(
     val title: String,
     val editionNumber: String,
     val marketValue: String,
-    val sellBackValue: String,
     val frontImageUrl: String? = null,
     val backImageUrl: String? = null,
 ) {

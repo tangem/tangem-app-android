@@ -22,6 +22,7 @@ import com.tangem.core.ui.res.LocalMaterialShadowEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.collectibles.impl.packopening.PackOpeningConst
 import com.tangem.features.collectibles.impl.packopening.PackOpeningConst.SLAB_INSET
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.SellBackButtonUM
 import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardProgress
 import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardUM
 import dev.chrisbanes.haze.rememberHazeState
@@ -64,14 +65,18 @@ private enum class RewardSlot { Case, Title, Footer }
 @Composable
 internal fun RewardCard(
     um: RewardCardUM,
+    sellBack: SellBackButtonUM,
     timing: RewardCardTiming,
     onKeepCardClick: () -> Unit,
     onSellBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     cardAspect: Float? = null,
+    isKeepCardEnabled: Boolean = true,
 ) {
     RewardCardContent(
         um = um,
+        sellBack = sellBack,
+        isKeepCardEnabled = isKeepCardEnabled,
         timing = timing,
         progress = rememberRewardCardAnimation(timing),
         cardAspect = cardAspect,
@@ -111,6 +116,8 @@ private fun rememberRewardCardAnimation(timing: RewardCardTiming): RewardCardPro
 @Composable
 internal fun RewardCardContent(
     um: RewardCardUM,
+    sellBack: SellBackButtonUM,
+    isKeepCardEnabled: Boolean,
     timing: RewardCardTiming,
     progress: RewardCardProgress,
     modifier: Modifier = Modifier,
@@ -161,7 +168,8 @@ internal fun RewardCardContent(
                     title = { RewardTitle(um = um, progress = progress.chrome) },
                     footer = {
                         RewardFooter(
-                            um = um,
+                            sellBack = sellBack,
+                            isKeepCardEnabled = isKeepCardEnabled,
                             progress = progress.chrome,
                             onKeepCardClick = onKeepCardClick,
                             onSellBackClick = onSellBackClick,
