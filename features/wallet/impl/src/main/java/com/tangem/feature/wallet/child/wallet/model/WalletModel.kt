@@ -915,7 +915,7 @@ internal class WalletModel @Inject constructor(
                     mcpRequestService.request(McpRequest.Pair(userCode = target.userCode))
                 }
             }
-            is QrSendTarget.DeepLink -> deeplinkLauncher.launch(target.uri)
+            is QrSendTarget.DeepLink -> deeplinkLauncher.launch(target.uri, shouldReportFailure = false)
             is QrSendTarget.Single -> {
                 innerWalletRouter.openSend(
                     userWalletId = target.userWalletId,
