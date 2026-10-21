@@ -34,7 +34,7 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 - After the gate the region lives in the process-wide `PredictionRegionAccess`, refreshed by Main on open and
   on pull-to-refresh. While it is restricted, Main shows the banner, Add funds is dimmed, and every order
   entry (feed, search, event, Buy more, Close) shows the restrictions modal instead of opening. A failed check
-  counts as allowed, as on iOS; the amount step still checks on its own.
+  keeps the last answer and counts as allowed only when there is none; the amount step still checks on its own.
 - Main returns here (`replaceAll(Onboarding)`) the moment the stored credentials are gone, even from under a
   child: nothing above Main can sign without them. So the order summary answers an `Unauthorized`
   placement with no dialog and leaves the gate to explain it.
