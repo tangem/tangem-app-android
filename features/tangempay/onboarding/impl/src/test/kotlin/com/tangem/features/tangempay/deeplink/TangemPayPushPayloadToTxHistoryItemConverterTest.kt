@@ -8,6 +8,7 @@ import org.joda.time.DateTimeZone
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.NullAndEmptySource
 import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 import java.util.Currency
@@ -280,20 +281,27 @@ class TangemPayPushPayloadToTxHistoryItemConverterTest {
         assertThat(result).isEqualTo(expected)
     }
 
-    @Test
-    fun `GIVEN no currency WHEN convertCollateral THEN Collateral in USD`() {
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = ["usd", "usdc", "rusd"])
+    fun `GIVEN collateral push in any or no currency WHEN convertCollateral THEN Collateral in USD`(currency: String?) {
         // Arrange
-        val payload = collateralPayload() - "currency"
+        val payload = if (currency == null) collateralPayload() - "currency" else collateralPayload(currency = currency)
+        val expected = expectedCollateral(
+            payload = payload,
+            amount = "50.00",
+            type = TangemPayTxHistoryItem.Type.Deposit,
+        )
 
         // Act
         val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
 
         // Assert
-        assertThat(result?.currency).isEqualTo(Currency.getInstance("USD"))
+        assertThat(result).isEqualTo(expected)
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["type", "transaction_id", "amount", "transaction_hash", "posted_at"])
+    @ValueSource(strings = ["type", "transaction_id", "amount", "posted_at"])
     fun `GIVEN required field missing WHEN convertCollateral THEN returns null`(missingKey: String) {
         // Arrange
         val payload = collateralPayload() - missingKey
@@ -305,16 +313,27 @@ class TangemPayPushPayloadToTxHistoryItemConverterTest {
         assertThat(result).isNull()
     }
 
-    @Test
-    fun `GIVEN empty transaction_hash WHEN convertCollateral THEN returns null`() {
+    @ParameterizedTest
+    @NullAndEmptySource
+    fun `GIVEN no transaction_hash WHEN convertCollateral THEN Collateral without hash`(transactionHash: String?) {
         // Arrange
-        val payload = collateralPayload() + ("transaction_hash" to "")
+        val payload = if (transactionHash == null) {
+            collateralPayload() - "transaction_hash"
+        } else {
+            collateralPayload() + ("transaction_hash" to transactionHash)
+        }
+        val expected = expectedCollateral(
+            payload = payload,
+            amount = "50.00",
+            type = TangemPayTxHistoryItem.Type.Deposit,
+            transactionHash = null,
+        )
 
         // Act
         val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
 
         // Assert
-        assertThat(result).isNull()
+        assertThat(result).isEqualTo(expected)
     }
 
     @Test
@@ -416,11 +435,15 @@ class TangemPayPushPayloadToTxHistoryItemConverterTest {
         "authorized_at" to "2025-10-24T10:32:24.496Z",
     )
 
-    private fun collateralPayload(type: String = "collateral_deposit", amount: String = "50.00") = mapOf(
+    private fun collateralPayload(
+        type: String = "collateral_deposit",
+        amount: String = "50.00",
+        currency: String = "usdc",
+    ) = mapOf(
         "type" to type,
         "transaction_id" to "col-123",
         "amount" to amount,
-        "currency" to "usdc",
+        "currency" to currency,
         "transaction_hash" to "0xabc123",
         "posted_at" to "2025-10-25T19:22:22.597Z",
     )
@@ -429,13 +452,14 @@ class TangemPayPushPayloadToTxHistoryItemConverterTest {
         payload: Map<String, String>,
         amount: String,
         type: TangemPayTxHistoryItem.Type,
+        transactionHash: String? = "0xabc123",
     ) = TangemPayTxHistoryItem.Collateral(
         id = "col-123",
         jsonRepresentation = payload.toString(),
         date = DateTime.parse("2025-10-25T19:22:22.597Z").withZone(DateTimeZone.getDefault()),
         amount = BigDecimal(amount),
         currency = Currency.getInstance("USD"),
-        transactionHash = "0xabc123",
+        transactionHash = transactionHash,
         type = type,
     )
 

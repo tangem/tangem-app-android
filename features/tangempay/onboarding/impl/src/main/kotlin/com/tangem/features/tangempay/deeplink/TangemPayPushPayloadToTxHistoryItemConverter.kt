@@ -67,7 +67,7 @@ object TangemPayPushPayloadToTxHistoryItemConverter {
     fun convertCollateral(payload: Map<String, String>): TangemPayTxHistoryItem.Collateral? {
         val id = payload[KEY_ID]?.ifEmpty { null } ?: return null
         val amount = payload[KEY_AMOUNT]?.toBigDecimalOrNull() ?: return null
-        val transactionHash = payload[KEY_TRANSACTION_HASH]?.ifEmpty { null } ?: return null
+        val transactionHash = payload[KEY_TRANSACTION_HASH]?.ifEmpty { null }
         val postedAt = payload[KEY_POSTED_AT]?.let(::parseDateTime) ?: return null
         val type = payload[KEY_TYPE]
             ?.let(TangemPayPushNotificationType::fromValue)
