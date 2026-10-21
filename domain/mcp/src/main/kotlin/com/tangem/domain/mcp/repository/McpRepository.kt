@@ -56,4 +56,13 @@ interface McpRepository {
      * either way, and the caller has nothing left to tell the owner about.
      */
     suspend fun revokeSession(sessionId: String): Either<Throwable, Unit>
+
+    /**
+     * Revokes every authorization currently issued, across all wallets — the agent half of the
+     * screen's Disconnect All, which cuts off every dApp the same way.
+     *
+     * The service has no bulk endpoint, so this is the single-session revoke sent for each of them at
+     * once. A session that fails to be revoked stays, and comes back with the reloaded list.
+     */
+    suspend fun revokeAllSessions()
 }
