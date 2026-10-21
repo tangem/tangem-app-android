@@ -107,18 +107,26 @@ internal class McpPairModel @Inject constructor(
         }
     }
 
-    /**
-     * Only an explicit decline turns the request down: dismissing the sheet leaves the user code
-     * alive, so the agent can still be connected from another entry point.
-     */
-    fun onDecline() {
-        verification.value?.let { verification ->
-            appScope.launch { mcpRepository.rejectDeviceVerification(verification) }
-        }
-        onClose()
+    fun onDecline() = onClose()
+
+    fun onClose() {
+        rejectVerification()
+        router.pop()
     }
 
-    fun onClose() = router.pop()
+    /**
+     * Dismissing the sheet turns the request down, exactly like Decline: left alone the user code
+     * stays valid until its TTL, so the same deep link would open the confirmation all over again.
+     *
+     * Sent on [appScope] and not awaited — the sheet is already gone, a model-bound scope would
+     * cancel the request halfway, and a failure has no screen left to be reported on.
+     */
+    private fun rejectVerification() {
+        if (connectState.value.isConnected) return
+        val verification = verification.value ?: return
+
+        appScope.launch { mcpRepository.rejectDeviceVerification(verification) }
+    }
 
     /**
      * The button stays in loading for the whole chain: the push check first, then the pairing request.
