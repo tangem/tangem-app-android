@@ -71,6 +71,7 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.coil)
 
     /** Other */
     implementation(deps.decompose)
