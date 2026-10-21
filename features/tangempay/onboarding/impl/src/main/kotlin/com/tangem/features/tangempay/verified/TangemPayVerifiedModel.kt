@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class TangemPayVerifiedModel @Inject constructor(
     paramsContainer: ParamsContainer,
