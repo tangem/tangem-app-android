@@ -90,6 +90,12 @@ internal class DefaultQrDeepLinkMatcherTest {
         // No feature claims the page, so it opens in the browser
         IsDeepLinkModel(link = "https://tangem.com/some/page", expected = true),
         IsDeepLinkModel(link = "https://www.tangem.com/some/page", expected = true),
+        IsDeepLinkModel(link = "https://tangem.com/some page", expected = true),
+        IsDeepLinkModel(link = "https://tangem.com/some|page", expected = true),
+        IsDeepLinkModel(link = "https://tangem.com/some\npage", expected = true),
+        // An unpatched android.net.Uri reads the host as tangem.com, a browser as evil.com
+        IsDeepLinkModel(link = "https://evil.com\\@tangem.com/page", expected = false),
+        IsDeepLinkModel(link = "https://[REDACTED_EMAIL]/page", expected = false),
         IsDeepLinkModel(link = "tangem://unknown", expected = false),
         IsDeepLinkModel(link = "tangem://wc?uri=wc:6ea45@2", expected = false),
         IsDeepLinkModel(link = "tangem://mcp.authorization?user_code=WDJB-MJHT", expected = false),
@@ -102,13 +108,17 @@ internal class DefaultQrDeepLinkMatcherTest {
         IsDeepLinkModel(link = "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq", expected = false),
     )
 
-    // `authority`, not `host`: java.net.URI drops a host with an underscore (`redirect_sell`), android.net.Uri keeps it
+    /**
+     * java.net.URI rejects characters android.net.Uri accepts, so they are escaped first. It also drops a host with an
+     * underscore (`redirect_sell`) that android.net.Uri keeps, hence the `authority` fallback.
+     */
     private fun createUri(link: String): Uri {
-        val uri = URI(link)
+        val uri = URI(link.replace(" ", "%20").replace("|", "%7C").replace("\n", "%0A").replace("\\", "%5C"))
 
         return mockk {
             every { scheme } returns uri.scheme
-            every { host } returns uri.authority
+            every { host } returns (uri.host ?: uri.authority)
+            every { userInfo } returns uri.userInfo
             every { pathSegments } returns uri.path.orEmpty().split('/').filter(String::isNotEmpty)
         }
     }
