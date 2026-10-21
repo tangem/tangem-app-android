@@ -3,7 +3,6 @@ package com.tangem.feature.swap.mcp.model
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
@@ -105,11 +104,10 @@ internal class ExchangeIntentModelTest {
 
         // Act
         val model = createModel(testScope = this)
-        val openedOffers = model.offerSlotNavigation.trackSlot()
         advanceUntilIdle()
 
         // Assert
-        assertThat(openedOffers).isEmpty()
+        assertThat(model.offer.value).isNull()
         model.onDestroy()
     }
 
@@ -118,53 +116,21 @@ internal class ExchangeIntentModelTest {
         runTest {
             // Act
             val model = createModel(testScope = this)
-            val openedOffers = model.offerSlotNavigation.trackSlot()
             advanceUntilIdle()
 
             // Assert
-            assertThat(openedOffers).hasSize(1)
-            assertThat(openedOffers.single()?.title.toString()).contains("POL")
+            assertThat(model.shownOffer().title.toString()).contains("POL")
             model.onDestroy()
         }
-
-    @Test
-    fun `GIVEN offer sheet open WHEN component is recreated THEN the slot is restored with the same offer`() = runTest {
-        // Arrange
-        val model = createModel(testScope = this)
-        val openedOffers = model.offerSlotNavigation.trackSlot()
-        advanceUntilIdle()
-
-        // Act
-        val restoredOffer = model.shownOffer
-
-        // Assert
-        assertThat(restoredOffer).isEqualTo(openedOffers.single())
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN offer sheet open WHEN closed THEN nothing is restored on recreation`() = runTest {
-        // Arrange
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Act
-        model.onClose()
-
-        // Assert
-        assertThat(model.shownOffer).isNull()
-        model.onDestroy()
-    }
 
     @Test
     fun `GIVEN known agent WHEN model created THEN offer is made in its verified origin`() = runTest {
         // Act
         val model = createModel(testScope = this)
-        val openedOffers = model.offerSlotNavigation.trackSlot()
         advanceUntilIdle()
 
         // Assert
-        assertThat(openedOffers.single()?.title.toString()).contains("${claude.origin} Agent")
+        assertThat(model.shownOffer().title.toString()).contains("${claude.origin} Agent")
         model.onDestroy()
     }
 
@@ -175,12 +141,11 @@ internal class ExchangeIntentModelTest {
 
         // Act
         val model = createModel(testScope = this)
-        val openedOffers = model.offerSlotNavigation.trackSlot()
         advanceTimeBy(AGENT_LOOKUP_TIMEOUT_MILLIS + 1)
         runCurrent()
 
         // Assert
-        assertThat(openedOffers.single()?.title.toString()).contains("Unknown Agent")
+        assertThat(model.shownOffer().title.toString()).contains("Unknown Agent")
         model.onDestroy()
     }
 
@@ -194,7 +159,6 @@ internal class ExchangeIntentModelTest {
 
         // Act
         val exchangeIntentModel = createModel(testScope = this)
-        val openedOffers = exchangeIntentModel.offerSlotNavigation.trackSlot()
         advanceUntilIdle()
         exchangeIntentModel.onClose()
         exchangeIntentModel.onClose()
@@ -202,7 +166,7 @@ internal class ExchangeIntentModelTest {
         // Assert
         verify(exactly = 1) { messageSender.send(any<ToastMessage>()) }
         verify(exactly = 1) { router.pop(any()) }
-        assertThat(openedOffers).isEmpty()
+        assertThat(exchangeIntentModel.offer.value).isNull()
         exchangeIntentModel.onDestroy()
     }
 
@@ -237,16 +201,16 @@ internal class ExchangeIntentModelTest {
     fun `GIVEN offer WHEN proceed THEN swap opens bound to the intent and sheet closes`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
-        val openedOffers = model.offerSlotNavigation.trackSlot()
         advanceUntilIdle()
+        val offer = model.shownOffer()
 
         // Act
-        openedOffers.shownOffer().primaryButton.onClick()
+        offer.primaryButton.onClick()
 
         // Assert
         verify(exactly = 1) { appRouter.push(expectedSwapRoute(), any()) }
         verify(exactly = 1) { router.pop(any()) }
-        assertThat(openedOffers.last()).isNull()
+        assertThat(model.offer.value).isEqualTo(offer)
         model.onDestroy()
     }
 
@@ -255,11 +219,10 @@ internal class ExchangeIntentModelTest {
         // Arrange
         every { appRouter.stack } returns listOf(AppRoute.Swap(userWalletId = walletId, screenSource = "Main"))
         val model = createModel(testScope = this)
-        val openedOffers = model.offerSlotNavigation.trackSlot()
         advanceUntilIdle()
 
         // Act
-        openedOffers.shownOffer().primaryButton.onClick()
+        model.shownOffer().primaryButton.onClick()
 
         // Assert
         verify(exactly = 1) { appRouter.replaceCurrent(expectedSwapRoute(), any()) }
@@ -278,11 +241,10 @@ internal class ExchangeIntentModelTest {
             ),
         )
         val model = createModel(testScope = this)
-        val openedOffers = model.offerSlotNavigation.trackSlot()
         advanceUntilIdle()
 
         // Act
-        openedOffers.shownOffer().primaryButton.onClick()
+        model.shownOffer().primaryButton.onClick()
 
         // Assert
         verify(exactly = 1) { appRouter.push(expectedSwapRoute(), any()) }
@@ -303,11 +265,10 @@ internal class ExchangeIntentModelTest {
             ),
         )
         val model = createModel(testScope = this)
-        val openedOffers = model.offerSlotNavigation.trackSlot()
         advanceUntilIdle()
 
         // Act
-        openedOffers.shownOffer().primaryButton.onClick()
+        model.shownOffer().primaryButton.onClick()
 
         // Assert
         verify(exactly = 1) { appRouter.popTo(expectedSwapRoute(), any()) }
@@ -322,16 +283,15 @@ internal class ExchangeIntentModelTest {
         runTest {
             // Arrange
             val model = createModel(testScope = this)
-            val openedOffers = model.offerSlotNavigation.trackSlot()
             advanceUntilIdle()
-            val offer = openedOffers.shownOffer()
+            val offer = model.shownOffer()
 
             // Act
             model.onClose()
             model.onClose()
 
             // Assert
-            assertThat(openedOffers).containsExactly(offer, null).inOrder()
+            assertThat(model.offer.value).isEqualTo(offer)
             verify(exactly = 1) { router.pop(any()) }
             verify(exactly = 0) { appRouter.push(any(), any()) }
             verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
@@ -344,7 +304,6 @@ internal class ExchangeIntentModelTest {
         val response = CompletableDeferred<Either<Throwable, ExchangeIntent>>()
         coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } coAnswers { response.await() }
         val model = createModel(testScope = this)
-        val openedOffers = model.offerSlotNavigation.trackSlot()
         advanceUntilIdle()
 
         // Act
@@ -355,7 +314,7 @@ internal class ExchangeIntentModelTest {
         // Assert
         verify(exactly = 1) { router.pop(any()) }
         verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
-        assertThat(openedOffers.filterNotNull()).isEmpty()
+        assertThat(model.offer.value).isNull()
         model.onDestroy()
     }
 
@@ -370,9 +329,8 @@ internal class ExchangeIntentModelTest {
         ) = runTest {
             // Arrange
             val model = createModel(testScope = this)
-            val openedOffers = model.offerSlotNavigation.trackSlot()
             advanceUntilIdle()
-            val proceed = openedOffers.shownOffer().primaryButton.onClick
+            val proceed = model.shownOffer().primaryButton.onClick
 
             // Act
             testModel.actions.forEach { action ->
@@ -406,12 +364,11 @@ internal class ExchangeIntentModelTest {
         fun `GIVEN navigation triggers dismissal WHEN proceed THEN queue is released only once`() = runTest {
             // Arrange
             val model = createModel(testScope = this)
-            val openedOffers = model.offerSlotNavigation.trackSlot()
             advanceUntilIdle()
             every { appRouter.push(any(), any()) } answers { model.onClose() }
 
             // Act
-            openedOffers.shownOffer().primaryButton.onClick()
+            model.shownOffer().primaryButton.onClick()
 
             // Assert
             verify(exactly = 1) { appRouter.push(expectedSwapRoute(), any()) }
@@ -435,7 +392,6 @@ internal class ExchangeIntentModelTest {
                 withContext(NonCancellable) { response.await() }
             }
             val model = createModel(testScope = this)
-            val openedOffers = model.offerSlotNavigation.trackSlot()
             runCurrent()
 
             // Act
@@ -444,7 +400,7 @@ internal class ExchangeIntentModelTest {
             advanceUntilIdle()
 
             // Assert
-            assertThat(openedOffers.filterNotNull()).isEmpty()
+            assertThat(model.offer.value).isNull()
             verify(exactly = 1) { router.pop(any()) }
             verify(exactly = 0) { appRouter.push(any(), any()) }
             verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
@@ -468,7 +424,6 @@ internal class ExchangeIntentModelTest {
                 }
             }
             val model = createModel(testScope = this)
-            val openedOffers = model.offerSlotNavigation.trackSlot()
             runCurrent()
 
             // Act
@@ -477,7 +432,7 @@ internal class ExchangeIntentModelTest {
 
             // Assert
             assertThat(lookupCancelled).isTrue()
-            assertThat(openedOffers.filterNotNull()).isEmpty()
+            assertThat(model.offer.value).isNull()
             verify(exactly = 1) { router.pop(any()) }
             verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
             model.onDestroy()
@@ -496,14 +451,7 @@ internal class ExchangeIntentModelTest {
         override fun toString() = description
     }
 
-    /** Mirrors what a real `childSlot` would track, since bare `SlotNavigation` only relays events */
-    private fun SlotNavigation<ExchangeIntentUM>.trackSlot(): List<ExchangeIntentUM?> {
-        val tracked = mutableListOf<ExchangeIntentUM?>()
-        subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
-        return tracked
-    }
-
-    private fun List<ExchangeIntentUM?>.shownOffer(): ExchangeIntentUM = checkNotNull(single())
+    private fun ExchangeIntentModel.shownOffer(): ExchangeIntentUM = checkNotNull(offer.value)
 
     private fun expectedSwapRoute() = swapRouteConverter.convert(
         ExchangeIntentSwapRouteConverter.Input(intent = intent, userWalletId = walletId, from = usdt, to = pol),
