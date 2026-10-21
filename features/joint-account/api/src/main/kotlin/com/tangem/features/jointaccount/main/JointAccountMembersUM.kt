@@ -26,7 +26,6 @@ data class JointAccountMembersUM(
     val joined: ImmutableList<MemberUM.Joined>,
     val freeSlots: ImmutableList<MemberUM.FreeSlot>,
     val membersLabel: TextReference?,
-    val waitingLabel: TextReference?,
     val footer: FooterUM?,
 ) {
 
@@ -124,6 +123,9 @@ data class JointAccountMembersUM(
     sealed interface SlotStatusUM {
 
         data object NotInvited : SlotStatusUM
+
+        /** What a member sees: only the creator knows whether the slot was invited. */
+        data object WaitingToJoin : SlotStatusUM
 
         /** [label] is "Invited", or the invite's deadline when the backend reports one ("Until tomorrow, 13:15"). */
         data class Invited(val label: TextReference) : SlotStatusUM

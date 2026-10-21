@@ -250,7 +250,7 @@ internal class JointAccountToMembersUMConverterTest {
             FooterModel(
                 status = JointAccount.Status.PENDING,
                 isCreator = true,
-                expected = FooterExpectation(hint = INVITE_MORE_TWO, isButtonEnabled = false),
+                expected = FooterExpectation(hint = INVITE_TWO, isButtonEnabled = false),
             ),
             FooterModel(
                 status = JointAccount.Status.PENDING,
@@ -660,7 +660,7 @@ internal class JointAccountToMembersUMConverterTest {
     inner class SectionLabels {
 
         @Test
-        fun `GIVEN joined members and free slots WHEN convert THEN both section labels shown`() {
+        fun `GIVEN joined members and free slots WHEN convert THEN one Members section for both`() {
             // Arrange
             val input = input(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
 
@@ -669,26 +669,25 @@ internal class JointAccountToMembersUMConverterTest {
 
             // Assert
             assertThat(state.membersLabel).isEqualTo(resourceReference(CoreUiR.string.joint_account_members_title))
-            assertThat(state.waitingLabel).isEqualTo(
-                resourceReference(CoreUiR.string.joint_account_invite_members_waiting_to_join),
-            )
+            assertThat(state.freeSlots).hasSize(2)
         }
 
         @Test
-        fun `GIVEN every slot filled WHEN convert THEN no waiting label`() {
+        fun `GIVEN a member, not the creator WHEN convert THEN free slots read Waiting to join without buttons`() {
             // Arrange
             val input = input(
-                account = pendingAccount(members = listOf(creator, member, member.copy(address = "0xB0B"))),
-                invites = listOf(INVITE_A),
+                account = pendingAccount(members = listOf(creator, member)),
+                invites = emptyList(),
+                ownAddress = member.address,
+                sharedInvites = setOf(INVITE_A),
             )
 
             // Act
-            val state = converter.convert(input)
+            val slots = converter.convert(input).freeSlots
 
             // Assert
-            assertThat(state.freeSlots).isEmpty()
-            assertThat(state.waitingLabel).isNull()
-            assertThat(state.membersLabel).isNotNull()
+            assertThat(slots.map { it.status }.distinct()).containsExactly(JointAccountMembersUM.SlotStatusUM.WaitingToJoin)
+            assertThat(slots.map { it.action }.distinct()).containsExactly(null)
         }
     }
 
@@ -803,8 +802,8 @@ internal class JointAccountToMembersUMConverterTest {
         const val INVITE_A = "invite-a"
         const val INVITE_B = "invite-b"
 
-        val INVITE_MORE_TWO = pluralReference(
-            id = CoreUiR.plurals.joint_account_invite_members_invite_more,
+        val INVITE_TWO = pluralReference(
+            id = CoreUiR.plurals.joint_account_invite_members_invite_count,
             count = 2,
             formatArgs = wrappedList(2),
         )

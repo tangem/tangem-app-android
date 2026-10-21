@@ -35,11 +35,11 @@ internal class FreeSlotUMFactory(
         size = input.freeSlotsCount,
     ) { index ->
         val invite = input.invites.getOrNull(index)
-        val status = slotStatus(
-            invite = invite,
-            isShared = invite?.id in input.sharedInvites,
-            nowMillis = input.nowMillis,
-        )
+        val status = if (input.canInvite) {
+            slotStatus(invite = invite, isShared = invite?.id in input.sharedInvites, nowMillis = input.nowMillis)
+        } else {
+            SlotStatusUM.WaitingToJoin
+        }
 
         JointAccountMembersUM.MemberUM.FreeSlot(
             id = "slot_$index",
