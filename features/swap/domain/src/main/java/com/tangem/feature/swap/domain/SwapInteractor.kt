@@ -168,6 +168,17 @@ interface SwapInteractor {
     fun integratedApprovalFallback(fromSwapCurrencyStatus: SwapCurrencyStatus, spenderAddress: String)
 
     /**
+     * Asks for a new Tron approval to [spenderAddress] while the on-chain allowance is above [maxAllowance], even
+     * though it covers the amount: the gasless service refuses a swap whose allowance leaves no room for the
+     * compensation, and only an approval can lower it.
+     */
+    fun requireTronReapproval(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        spenderAddress: String,
+        maxAllowance: BigDecimal,
+    )
+
+    /**
      * Builds the on-chain ERC-20 approval transaction for [fromStatus] / [spenderAddress]
      * with an amount derived from [approveType] (null for `UNLIMITED`, the swap amount for
      * `LIMITED`), loads its [com.tangem.blockchain.common.transaction.TransactionFee] and returns

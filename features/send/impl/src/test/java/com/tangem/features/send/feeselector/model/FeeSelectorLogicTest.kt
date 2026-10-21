@@ -313,11 +313,11 @@ internal class FeeSelectorLogicTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class TronActivationRefusal {
+    inner class TronGaslessRefusal {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN tron activation refused WHEN load fee THEN surface refusal without basic fallback`(
+        fun `GIVEN tron gasless refusal WHEN load fee THEN surface refusal without basic fallback`(
             refusal: GetFeeError,
         ) = runTest(UnconfinedTestDispatcher()) {
             // Arrange
@@ -336,6 +336,11 @@ internal class FeeSelectorLogicTest {
             GetFeeError.GaslessError.TronActivationNotEnoughFunds(minimumAmount = BigDecimal(5), tokenSymbol = "USDT"),
             GetFeeError.GaslessError.TronActivationRateLimited(isPerWallet = true),
             GetFeeError.GaslessError.TronActivationRateLimited(isPerWallet = false),
+            GetFeeError.GaslessError.TronAllowanceTooHigh(
+                balance = BigDecimal(50),
+                required = BigDecimal(51),
+                allowance = BigDecimal(49),
+            ),
         )
     }
 
