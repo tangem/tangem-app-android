@@ -41,7 +41,7 @@ internal class DefaultTxHistoryComponent @AssistedInject constructor(
                 context = childByContext(ctx),
                 params = TxHistoryDetailsComponent.Params(
                     txId = config.txId,
-                    historyTxListManager = requireNotNull(model.historyTxListManager),
+                    historyTxListManager = model.historyTxListManager,
                     userWalletId = params.userWalletId,
                     currency = params.currency,
                     onDismiss = model.txDetailsNavigation::dismiss,
