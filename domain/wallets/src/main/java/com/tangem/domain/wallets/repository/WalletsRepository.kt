@@ -23,6 +23,8 @@ interface WalletsRepository {
 
     suspend fun isWalletWithRing(userWalletId: UserWalletId): Boolean
 
+    suspend fun isWalletRegistered(userWalletId: UserWalletId): Boolean
+
     suspend fun setHasWalletsWithRing(userWalletId: UserWalletId)
 
     suspend fun createWallet(userWalletId: UserWalletId): WalletSyncResult

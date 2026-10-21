@@ -51,7 +51,7 @@ internal class McpPairModel @Inject constructor(
     val stackNavigation = StackNavigation<McpPairRoutes>()
 
     val portfolioFetcher: PortfolioFetcher = portfolioFetcherFactory.create(
-        mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = true),
+        mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = true, isOnlyRegistered = true),
         scope = modelScope,
     )
 
