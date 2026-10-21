@@ -641,7 +641,6 @@ private fun previewPlasticAvailable(
 private fun previewOrderTypeState(
     isLoading: Boolean = false,
     isError: Boolean = false,
-    isPlasticEnabled: Boolean = true,
     isVirtualAvailable: Boolean = true,
     cardImageUrl: String? = null,
     isBasicPlan: Boolean = true,
@@ -650,7 +649,7 @@ private fun previewOrderTypeState(
 ) = TangemPayOrderCardTypeUM(
     isLoading = isLoading,
     isError = isError,
-    availableTypes = availableTypesOf(isPlasticEnabled, isVirtualAvailable),
+    availableTypes = availableTypesOf(isVirtualAvailable),
     cardImageUrl = cardImageUrl,
     isBasicPlan = isBasicPlan,
     virtual = TangemPayOrderCardTypeUM.Virtual(issueFee = issueFee),
@@ -702,9 +701,7 @@ private class OrderCardTypePreviewProvider : CollectionPreviewParameterProvider<
         ),
         previewOrderTypeState(plastic = previewPlasticAvailable(feeState = FeeState.InsufficientFunds)),
         previewOrderTypeState(plastic = Plastic.Unavailable(country = "Afghanistan")),
-        previewOrderTypeState(isPlasticEnabled = false),
         previewOrderTypeState(isLoading = true, issueFee = "", plastic = Plastic.Unavailable(country = "")),
-        previewOrderTypeState(isLoading = true, isPlasticEnabled = false, issueFee = ""),
         previewOrderTypeState(isError = true),
     ),
 )

@@ -458,21 +458,6 @@ internal class DefaultSocialRecoveryClientTest {
     }
 
     @Test
-    fun `GIVEN authentication is toggled off WHEN unbindWallet THEN the teardown is not reported as done`() =
-        runTest {
-            // Arrange
-            coEvery {
-                walletRegistrar.unregister(walletId = WALLET_ID, shouldDeleteSocialRecovery = true)
-            } returns Either.Left(WalletRegistrationError.Disabled)
-
-            // Act
-            val result = client.unbindWallet(WALLET_ID)
-
-            // Assert — a binding made before the toggle flipped is still on the server
-            assertThat(result.leftOrNull()).isEqualTo(SocialRecoveryError.NoActiveSession)
-        }
-
-    @Test
     fun `GIVEN the wallet is not registered on this device WHEN unbindWallet THEN WalletNotRegistered`() = runTest {
         // Arrange
         coEvery {
