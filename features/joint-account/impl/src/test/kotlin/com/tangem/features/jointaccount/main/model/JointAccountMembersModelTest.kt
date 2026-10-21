@@ -586,6 +586,7 @@ internal class JointAccountMembersModelTest {
             every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns accounts
             coEvery { getInvitesUseCase(any(), any()) } returns emptyList()
             val model = createModel()
+            model.onResume()
             val changes = mutableListOf<Unit>()
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.memberStatusChanges.collect { changes += it } }
             runCurrent()
@@ -606,6 +607,7 @@ internal class JointAccountMembersModelTest {
         every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns accounts
         coEvery { getInvitesUseCase(any(), any()) } returns emptyList()
         val model = createModel()
+        model.onResume()
         val changes = mutableListOf<Unit>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.memberStatusChanges.collect { changes += it } }
         runCurrent()
@@ -616,6 +618,27 @@ internal class JointAccountMembersModelTest {
 
         // Assert
         assertThat(changes).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN paused screen WHEN a member joins THEN no status change is emitted`() = runTest {
+        // Arrange
+        val accounts = MutableStateFlow(listOf(pendingAccount(members = listOf(creator))))
+        every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns accounts
+        coEvery { getInvitesUseCase(any(), any()) } returns emptyList()
+        val model = createModel()
+        model.onResume()
+        model.onPause()
+        val changes = mutableListOf<Unit>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.memberStatusChanges.collect { changes += it } }
+        runCurrent()
+
+        // Act
+        accounts.value = listOf(pendingAccount(members = listOf(creator, member)))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(changes).isEmpty()
     }
 
     @Test
