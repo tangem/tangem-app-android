@@ -87,7 +87,6 @@ internal class TxHistoryModel @Inject constructor(
     private val isResumed = MutableStateFlow(false)
     private val loadedPagesTracker = LoadedPagesTracker()
 
-    val legacyUiState = stateController.legacyUiState
     val uiState = stateController.uiState
 
     init {
