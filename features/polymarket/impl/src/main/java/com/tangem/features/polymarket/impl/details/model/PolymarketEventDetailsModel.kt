@@ -88,7 +88,7 @@ internal class PolymarketEventDetailsModel @Inject constructor(
         pollJob.cancel()
         modelScope.launch {
             uiState.value = PolymarketEventDetailsUM.Loading
-            val result = withContext(dispatchers.default) { getPolymarketEventUseCase(eventId = params.eventId) }
+            val result = withContext(dispatchers.default) { fetchEventWithSilentRetry() }
             result.fold(
                 ifLeft = { uiState.value = PolymarketEventDetailsUM.Error(onRetryClick = ::load) },
                 ifRight = { loaded ->
