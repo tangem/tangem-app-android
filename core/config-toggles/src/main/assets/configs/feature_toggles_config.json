@@ -186,5 +186,9 @@
     {
         "name": "TWI_1876_KYC_PRESCREENING_CEX_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1728_PAY_BUNDLE_INTRODUCTION_ENABLED",
+        "version": "undefined"
     }
 ]
