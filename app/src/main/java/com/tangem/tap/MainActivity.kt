@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.net.Uri
+import android.nfc.NfcAdapter
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
@@ -44,10 +45,11 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
 import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
-import com.tangem.domain.wallets.usecase.SendPendingWalletCardsBackupUseCase
+import com.tangem.domain.wallets.backup.WalletCardsBackupDeliveryScheduler
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
+import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.google.auth.GoogleAuthActivityResultBridge
 import com.tangem.spend.pushProvisioning.PushProvisioningActivityBridge
@@ -62,7 +64,6 @@ import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.tap.routing.utils.DeepLinkFeatureToggles
 import com.tangem.tap.routing.utils.DeeplinkSource
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.Lazy
@@ -133,13 +134,13 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     internal lateinit var onboardingV2FeatureToggles: OnboardingV2FeatureToggles
 
     @Inject
-    internal lateinit var sendPendingWalletCardsBackupUseCase: SendPendingWalletCardsBackupUseCase
-
-    @Inject
-    internal lateinit var appScope: AppCoroutineScope
+    internal lateinit var walletCardsBackupDeliveryScheduler: WalletCardsBackupDeliveryScheduler
 
     @Inject
     internal lateinit var lockUserWalletsTimer: LockUserWalletsTimer
+
+    @Inject
+    internal lateinit var walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -158,6 +159,12 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         applyEdgeToEdge()
 
         super.onCreate(savedInstanceState)
+
+        // Before the root content, so a launch by a link or a push skips the promo check rather than interrupts it.
+        // A restored or Recents launch gets the original intent again, which is not a new opening
+        val isFreshLaunch = savedInstanceState == null &&
+            intent?.flags?.and(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0
+        if (isFreshLaunch) intent?.let(::notifyIfOpenedByLinkOrPush)
 
         // We have to allow adjust_resize (can only be specified in the manifest) for Android <=10,
         // in order for imePadding to work correctly
@@ -353,6 +360,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             analyticsEventsHandler.send(Push.PushNotificationOpened())
         }
 
+        notifyIfOpenedByLinkOrPush(intent)
         handleDeepLink(intent = intent, isFromOnNewIntent = true)
     }
 
@@ -388,6 +396,15 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             testerMenuLauncher.launchOnKeyEventObserver.dispatchKeyEvent(event) || super.dispatchKeyEvent(event)
         } else {
             super.dispatchKeyEvent(event)
+        }
+    }
+
+    private fun notifyIfOpenedByLinkOrPush(intent: Intent) {
+        // A card tap starts the app with the card's NDEF link as its data, which is not a deep link
+        val isDeepLink = intent.data != null && intent.action != NfcAdapter.ACTION_NDEF_DISCOVERED
+        val isFromPush = intent.extras?.containsKey(OPENED_FROM_GCM_PUSH) == true
+        if (isDeepLink || isFromPush || PayloadToDeeplinkConverter.convertBundle(intent.extras) != null) {
+            walletDeepLinkActionTrigger.onOpenedByLinkOrPush()
         }
     }
 
@@ -432,13 +449,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     private fun sendPendingWalletCardsBackups() {
         if (onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled.not()) return
 
-        // deliberately not lifecycleScope: a drain cut short by the activity being destroyed would leave a
-        // report the backend has already accepted still queued, to be sent again on the next launch
-        appScope.launch {
-            sendPendingWalletCardsBackupUseCase().onLeft { error ->
-                TangemLogger.e("Pending cards backup reports deferred: $error")
-            }
-        }
+        walletCardsBackupDeliveryScheduler.schedule()
     }
 
     private fun checkGoogleServicesAvailability() {

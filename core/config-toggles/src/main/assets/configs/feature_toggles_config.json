@@ -33,7 +33,7 @@
     },
     {
         "name": "TWI_1326_YIELD_DEX_TRANSFER_ENABLED",
-        "version": "undefined"
+        "version": "6.5"
     },
     {
         "name": "ADDRESS_SYNC_ENABLED",
@@ -101,7 +101,7 @@
     },
     {
         "name": "TWI_1477_RWA_AND_CATEGORIES_ENABLED",
-        "version": "undefined"
+        "version": "6.5"
     },
     {
         "name": "TWI_1747_INTRODUCTION_REDESIGN_ENABLED",

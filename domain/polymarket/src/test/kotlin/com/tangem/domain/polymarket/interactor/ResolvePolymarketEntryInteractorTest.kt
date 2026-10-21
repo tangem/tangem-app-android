@@ -9,7 +9,7 @@ import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
-import com.tangem.domain.polymarket.model.PolymarketDerivationError
+import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketWalletError
@@ -125,7 +125,7 @@ internal class ResolvePolymarketEntryInteractorTest {
     @Test
     fun `GIVEN derivation cancelled WHEN invoke THEN fails without reading wallet status`() = runTest {
         // Arrange
-        val error = PolymarketOnboardingError.Derivation(PolymarketDerivationError.UserCancelled)
+        val error = PolymarketOnboardingError.Signing(PolymarketSigningError.UserCancelled)
         coEvery { deriveAddresses(userWalletId) } returns error.left()
 
         // Act

@@ -32,6 +32,7 @@ internal class UpdateInvitePreviewWalletsTransformerTest {
         creatorAddress = "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf",
         wallet = null,
         confirmation = null,
+        onRequiredApprovalsClick = {},
         onCreatorInfoClick = {},
         onContinueClick = {},
         onCloseClick = {},

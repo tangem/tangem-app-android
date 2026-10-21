@@ -6,6 +6,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -90,11 +91,13 @@ sealed class PaymentAccountStatusValue {
      *
      * @property source The source of the status information.
      * @property customerId The unique identifier of the customer, or `null` if the backend has not provided it.
+     * @property customerResidency The country and region the customer picked on the residency step.
      */
     @Serializable
     data class KycRequired(
         @SerialName("source") override val source: StatusSource,
         @SerialName("customer_id") val customerId: String?,
+        @SerialName("customer_residency") val customerResidency: TangemPayCustomerResidency?,
     ) : PaymentAccountStatusValue()
 
     /**
