@@ -30,8 +30,7 @@ internal class CollectiblesPackOpeningComponent @AssistedInject constructor(
     @Assisted params: Params,
 ) : ComposableContentComponent, AppComponentContext by context {
 
-    // TODO keep the model state in the component (state keeper): the pack animation has played and the prize
-    //  is won, so a recreated screen must not lose it
+    // No state keeper: DefaultRoutingComponent does not restore the stack after process death, so it is never read
     private val model: CollectiblesPackOpeningModel = getOrCreateModel(params = params)
 
     private val bottomSheetSlot = childSlot(
