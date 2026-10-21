@@ -19,5 +19,6 @@ internal class DefaultDeepLinkFeatureToggles(
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18183_DEEPLINK_HANDLER_REGISTRY_ENABLED)
 
     override val isQrScanDeepLinksEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1690_QR_SCAN_DEEPLINKS_ENABLED)
+        get() = isHandlerRegistryEnabled &&
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1690_QR_SCAN_DEEPLINKS_ENABLED)
 }
