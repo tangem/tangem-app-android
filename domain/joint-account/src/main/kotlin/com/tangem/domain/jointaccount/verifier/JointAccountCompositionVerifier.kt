@@ -37,7 +37,7 @@ class JointAccountCompositionVerifier(
         return isMember && isSafeAddressComputed(jointAccount = jointAccount, safeAddress = safeAddress)
     }
 
-    private suspend fun ownerAddress(userWalletId: UserWalletId, ownerKeyIndex: OwnerKeyIndex): String? {
+    suspend fun ownerAddress(userWalletId: UserWalletId, ownerKeyIndex: OwnerKeyIndex): String? {
         val key = userWalletId to ownerKeyIndex
         ownerAddresses[key]?.let { return it }
 
