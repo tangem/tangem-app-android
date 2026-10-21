@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -197,6 +198,7 @@ internal class TangemPaySelectPlanModelTest {
         }
         coVerify(exactly = 0) { submitTariffTransitionUseCase(any(), any()) }
         verify(exactly = 0) { uiMessageSender.send(any()) }
+        verify(exactly = 1) { router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayOnboardingSuccess) }
     }
 
     @Test
@@ -245,6 +247,7 @@ internal class TangemPaySelectPlanModelTest {
         assertThat(selectContent(model).isProcessing).isFalse()
         verify(exactly = 1) { uiMessageSender.send(any()) }
         verify(exactly = 0) { router.pop() }
+        verify(exactly = 0) { router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayOnboardingSuccess) }
     }
 
     @Test
