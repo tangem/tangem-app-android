@@ -38,7 +38,7 @@ internal class JointAccountToMembersUMConverterTest {
 
     private val onMemberInfoClick: (JointAccountMembersUM.MemberAvatarUM, TextReference, String) -> Unit = mockk(relaxed = true)
     private val onInviteClick: (String, TextReference) -> Unit = mockk(relaxed = true)
-    private val onActivateClick: (String) -> Unit = mockk(relaxed = true)
+    private val onConfirmAddressClick: (String) -> Unit = mockk(relaxed = true)
     private val onApprovalsInfoClick: (Int, Int) -> Unit = mockk(relaxed = true)
     private val onCloseClick: () -> Unit = mockk(relaxed = true)
 
@@ -46,7 +46,7 @@ internal class JointAccountToMembersUMConverterTest {
         callbacks = JointAccountToMembersUMConverter.Callbacks(
             onMemberInfoClick = onMemberInfoClick,
             onInviteClick = onInviteClick,
-            onActivateClick = onActivateClick,
+            onConfirmAddressClick = onConfirmAddressClick,
             onApprovalsInfoClick = onApprovalsInfoClick,
             onCloseClick = onCloseClick,
         ),
@@ -54,7 +54,7 @@ internal class JointAccountToMembersUMConverterTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(onMemberInfoClick, onInviteClick, onActivateClick, onApprovalsInfoClick, onCloseClick)
+        clearMocks(onMemberInfoClick, onInviteClick, onConfirmAddressClick, onApprovalsInfoClick, onCloseClick)
     }
 
     @Nested
@@ -192,7 +192,7 @@ internal class JointAccountToMembersUMConverterTest {
     inner class ReadyToActivate {
 
         @Test
-        fun `GIVEN confirming account WHEN activation clicked THEN the callback gets this account's id`() {
+        fun `GIVEN confirming account WHEN confirm clicked THEN the callback gets this account's id`() {
             // Arrange
             val input = input(
                 account = pendingAccount(members = listOf(creator, member)).copy(status = JointAccount.Status.CONFIRMING),
@@ -203,7 +203,7 @@ internal class JointAccountToMembersUMConverterTest {
             converter.convert(input).footer?.button?.onClick?.invoke()
 
             // Assert
-            verify(exactly = 1) { onActivateClick(ACCOUNT_ID) }
+            verify(exactly = 1) { onConfirmAddressClick(ACCOUNT_ID) }
         }
 
         @Test

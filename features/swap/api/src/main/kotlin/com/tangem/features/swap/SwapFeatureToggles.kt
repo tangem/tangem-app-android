@@ -7,4 +7,5 @@ interface SwapFeatureToggles {
     val isTronGaslessSwapEnabled: Boolean
     val isTronGaslessDexSwapEnabled: Boolean
     val isCustomSlippageEnabled: Boolean
+    val isOverallBestPriceEnabled: Boolean
 }

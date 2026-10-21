@@ -52,14 +52,18 @@ sealed class JointAccountStatusValue {
     ) : JointAccountStatusValue()
 
     /**
-     * Every slot is taken and the Safe address is computed; the creator has yet to activate the account.
+     * Every slot is taken and the Safe address is computed; the members have yet to confirm it.
      *
-     * @property totalMembers slots of the account, all of them taken in this state
+     * @property totalMembers    slots of the account, all of them taken in this state
+     * @property verifiedMembers members who confirmed the shared address
+     * @property isOwnVerified   this wallet confirmed the shared address
      */
     @Serializable
     data class Confirming(
         override val source: StatusSource,
         val totalMembers: Int,
+        val verifiedMembers: Int = 0,
+        val isOwnVerified: Boolean = false,
     ) : JointAccountStatusValue()
 
     /**

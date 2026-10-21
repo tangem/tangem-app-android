@@ -1,8 +1,6 @@
 package com.tangem.feature.swap.model
 
 import com.tangem.common.TangemSiteUrlBuilder
-import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWarningNotification
@@ -128,7 +126,7 @@ internal class SwapNotificationsFactory(
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         swapFee: SwapFee?,
         feeError: GetFeeError?,
-        appRouter: AppRouter,
+        isFeeCurrencyInStack: Boolean,
         isHighNetworkFee: Boolean = false,
         lowSlippage: TextReference? = null,
     ): ImmutableList<NotificationUM> {
@@ -145,7 +143,7 @@ internal class SwapNotificationsFactory(
                 quoteModel = quoteModel,
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                 swapFee = swapFee,
-                appRouter = appRouter,
+                isFeeCurrencyInStack = isFeeCurrencyInStack,
             )
             maybeAddTransactionInProgressWarning(quoteModel)
             maybeAddPriceImpactNotification(quoteModel.priceImpact)
@@ -356,7 +354,7 @@ internal class SwapNotificationsFactory(
         quoteModel: SwapState.QuotesLoadedState,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         swapFee: SwapFee?,
-        appRouter: AppRouter,
+        isFeeCurrencyInStack: Boolean,
     ) {
         if (feeCryptoCurrencyStatus == null) return
         val fromSwapCurrency = quoteModel.fromTokenInfo.swapCurrencyStatus
@@ -384,19 +382,15 @@ internal class SwapNotificationsFactory(
                 if (fromCurrency.id == feeCryptoCurrencyStatus.currency.id) {
                     SwapNotificationUM.Error.InsufficientFunds
                 } else {
-                    val route = AppRoute.CurrencyDetails(
-                        userWalletId = fromSwapCurrency.userWalletId,
-                        currency = feeCryptoCurrencyStatus.currency,
-                    )
                     SwapNotificationUM.Error.UnableToCoverFeeWarning(
                         fromToken = fromCurrency,
                         feeCurrency = feeCryptoCurrencyStatus.currency,
                         currencyName = insufficientFee.feeCurrencyName ?: fromCurrency.network.name,
                         currencySymbol = insufficientFee.feeCurrencySymbol ?: fromCurrency.network.currencySymbol,
-                        onConfirmClick = if (!appRouter.stack.contains(route)) {
-                            { appRouter.push(route) }
-                        } else {
+                        onConfirmClick = if (isFeeCurrencyInStack) {
                             null
+                        } else {
+                            { actions.openTokenDetailsScreen(feeCryptoCurrencyStatus.currency) }
                         },
                     )
                 },

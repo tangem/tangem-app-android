@@ -37,6 +37,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.transaction.usecase.ReportSendIntentHashUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
@@ -132,6 +133,7 @@ internal abstract class SendModelTestBase {
     protected val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase = mockk(relaxed = true)
     protected val sendAnalyticHelper: SendAnalyticHelper = mockk(relaxed = true)
     protected val recordTokenTransferFromSendUseCase: RecordTokenTransferFromSendUseCase = mockk(relaxed = true)
+    protected val reportSendIntentHashUseCase: ReportSendIntentHashUseCase = mockk()
     protected val sendBalanceUpdaterFactory: SendBalanceUpdater.Factory = mockk(relaxed = true)
 
     @BeforeEach
@@ -146,6 +148,7 @@ internal abstract class SendModelTestBase {
             sendTransactionUseCase,
             createAndSendGaslessTransactionUseCase,
             feeSelectorCheckReloadTrigger,
+            reportSendIntentHashUseCase,
             answers = false,
             recordedCalls = true,
             childMocks = false,
@@ -171,6 +174,7 @@ internal abstract class SendModelTestBase {
         coEvery { sendTransactionUseCase(any(), any(), any()) } returns "txHash".right()
         coEvery { createAndSendGaslessTransactionUseCase(any(), any(), any()) } returns "txHash".right()
         every { getExplorerTransactionUrlUseCase(any(), any()) } returns "https://explorer/tx".right()
+        coEvery { reportSendIntentHashUseCase(any(), any()) } returns Unit.right()
 
         // --- SendConfirmModel init-path happy stubs ---
         coEvery { isSendTapHelpEnabledUseCase.invokeSync() } returns false.right()
@@ -253,6 +257,7 @@ internal abstract class SendModelTestBase {
             isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
             jointSendDelegate = jointSendDelegate,
             recordTokenTransferFromSendUseCase = recordTokenTransferFromSendUseCase,
+            reportSendIntentHashUseCase = reportSendIntentHashUseCase,
             sendBalanceUpdaterFactory = sendBalanceUpdaterFactory,
             appScope = TestAppCoroutineScope(testScope = testScope),
         )

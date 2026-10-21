@@ -44,7 +44,10 @@ internal class PredictionFundingRequisites(
         refreshInteractor(userWalletId = userWalletId).fold(
             ifLeft = { state.update { current -> current as? RequisitesState.Ready ?: RequisitesState.Failed } },
             ifRight = { requisites ->
-                state.value = requisites.default?.let(RequisitesState::Ready) ?: RequisitesState.Failed
+                state.value = requisites.default
+                    ?.takeIf { it.token.minCheckoutUsd != null }
+                    ?.let(RequisitesState::Ready)
+                    ?: RequisitesState.Failed
             },
         )
     }.saveIn(jobHolder)

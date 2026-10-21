@@ -69,7 +69,6 @@ data class JointAccountMembersUM(
     /** "Confirm shared address" button. */
     data class ConfirmButtonUM(
         val isEnabled: Boolean,
-        val isLoading: Boolean,
         val onClick: () -> Unit,
     )
 
