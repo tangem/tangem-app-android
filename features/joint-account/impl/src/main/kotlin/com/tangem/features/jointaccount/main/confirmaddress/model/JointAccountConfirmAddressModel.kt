@@ -20,11 +20,11 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.jointaccount.model.JointAccountActivationError
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
+import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
-import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatcher
 import com.tangem.features.jointaccount.main.confirmaddress.JointAccountConfirmAddressComponent
 import com.tangem.features.jointaccount.main.confirmaddress.ui.state.JointAccountConfirmAddressUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -58,7 +58,7 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
     private val activateJointAccountUseCase: ActivateJointAccountUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val compromiseWatcher: JointAccountCompromiseWatcher,
+    private val pollingCoordinator: JointAccountPollingCoordinator,
 ) : Model() {
 
     private val params = paramsContainer.require<JointAccountConfirmAddressComponent.Params>()
@@ -81,16 +81,14 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
 
     init {
         observeAddress()
+        pollingCoordinator.poll(walletId = params.userWalletId).launchIn(modelScope)
     }
 
     private fun observeAddress() {
-        val accounts = jointAccountListSupplier(userWalletId = params.userWalletId)
-            .map { accounts -> accounts.firstOrNull { it.cryptoAccountId == params.cryptoAccountId } }
+        jointAccountListSupplier(userWalletId = params.userWalletId)
+            .map { accounts -> accounts.firstOrNull { it.cryptoAccountId == params.cryptoAccountId }?.safeAddress }
             .distinctUntilChanged()
-
-        compromiseWatcher
-            .verified(userWalletId = params.userWalletId, accounts = accounts, onCompromised = router::pop)
-            .onEach { account -> uiState.update { it.copy(address = account?.safeAddress) } }
+            .onEach { address -> uiState.update { it.copy(address = address) } }
             .launchIn(modelScope)
     }
 

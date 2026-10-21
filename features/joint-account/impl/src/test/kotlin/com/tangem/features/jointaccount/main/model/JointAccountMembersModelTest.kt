@@ -32,8 +32,8 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatcher
 import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
-import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
+import com.tangem.features.jointaccount.main.model.JointAccountMembersListParams
 import com.tangem.features.jointaccount.main.state.transformers.click
 import com.tangem.features.jointaccount.main.entity.JointAccountMembersSheetConfig
 import com.tangem.features.jointaccount.main.navigation.JointAccountMembersRoute
@@ -75,6 +75,7 @@ import com.tangem.core.ui.R as CoreUiR
 internal class JointAccountMembersModelTest {
 
     private val router: Router = mockk(relaxed = true)
+    private val closeFlow: () -> Unit = mockk(relaxed = true)
     private val clipboardManager: ClipboardManager = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val shareManager: ShareManager = mockk(relaxed = true)
@@ -97,6 +98,7 @@ internal class JointAccountMembersModelTest {
     fun resetMocks() {
         clearMocks(
             router,
+            closeFlow,
             clipboardManager,
             uiMessageSender,
             shareManager,
@@ -586,7 +588,8 @@ internal class JointAccountMembersModelTest {
         val model = createModel()
 
         // Assert
-        verify(exactly = 1) { router.pop() }
+        verify(exactly = 1) { closeFlow() }
+        verify(exactly = 0) { router.pop() }
         verify(exactly = 1) { jointAccountCompromisedAlert.show(USER_WALLET_ID) }
         assertThat(model.uiState.value.joined).isEmpty()
     }
@@ -610,9 +613,10 @@ internal class JointAccountMembersModelTest {
     private fun TestScope.createModel(cryptoAccountId: String? = ACCOUNT_ID): JointAccountMembersModel {
         val model = JointAccountMembersModel(
             paramsContainer = MutableParamsContainer(
-                JointAccountMembersComponent.Params(
+                JointAccountMembersListParams(
                     userWalletId = USER_WALLET_ID,
                     cryptoAccountId = cryptoAccountId,
+                    onCloseFlow = closeFlow,
                 ),
             ),
             dispatchers = createTestingCoroutineDispatcherProvider(),
