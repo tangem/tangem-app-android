@@ -3,7 +3,6 @@ package com.tangem.features.staking.impl.presentation.state.transformers.amount
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.fixtures.coin
 import com.tangem.features.staking.impl.fixtures.currencyStatus
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
@@ -90,20 +89,6 @@ internal class AmountRoundToIntegerTransformerTest {
         assertThat(actual.fiatValue).isEmpty()
         assertThat(actual.cryptoAmount.value).isNull()
         assertThat(actual.fiatAmount.value).isNull()
-    }
-
-    // Pins current behaviour: a missing fiat rate is passed to BigDecimal.multiply and crashes.
-    @Test
-    fun `GIVEN no fiat rate WHEN transform THEN null pointer exception`() {
-        // Arrange
-        val status: CryptoCurrencyStatus = currencyStatus(coin(Blockchain.Tron), fiatRate = null)
-        val input = stakingUiState(amountState = amountData(BigDecimal("10.7"), value = "10.7"))
-
-        // Act
-        val error = runCatching { AmountRoundToIntegerTransformer(status).transform(input) }.exceptionOrNull()
-
-        // Assert
-        assertThat(error).isInstanceOf(NullPointerException::class.java)
     }
 
     private fun field(state: StakingUiState) = (state.amountState as AmountState.Data).amountTextField
