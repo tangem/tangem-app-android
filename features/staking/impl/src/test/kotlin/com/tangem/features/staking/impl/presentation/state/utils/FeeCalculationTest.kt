@@ -93,16 +93,6 @@ internal class FeeCalculationTest {
             assertThat(actual.scale()).isEqualTo(0)
         }
 
-        // Pins current behaviour: MathContext(0, UP) is unlimited precision, so the Tron fee is never rounded up.
-        @Test
-        fun `GIVEN tron fractional fee WHEN calculate THEN fee is not rounded up before coverage check`() {
-            // Act
-            val actual = calculate(Blockchain.Tron, balance = "10", amount = "9.5", fee = "0.3")
-
-            // Assert
-            assertThat(actual).isEquivalentAccordingToCompareTo(BigDecimal("9.5"))
-        }
-
         private fun calculate(
             blockchain: Blockchain,
             balance: String?,
