@@ -1,5 +1,6 @@
 package com.tangem.common.di
 
+import com.tangem.core.decompose.utils.ForegroundActivityProvider
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.di.TangemSdkManagerModule
 import com.tangem.tap.domain.sdk.impl.MockTangemSdkManager
@@ -18,7 +19,7 @@ object TestModule {
 
     @Provides
     @Singleton
-    fun provideTangemSdkManager(): TangemSdkManager {
-        return MockTangemSdkManager()
+    fun provideTangemSdkManager(foregroundActivityProvider: ForegroundActivityProvider): TangemSdkManager {
+        return MockTangemSdkManager(foregroundActivityProvider)
     }
 }
