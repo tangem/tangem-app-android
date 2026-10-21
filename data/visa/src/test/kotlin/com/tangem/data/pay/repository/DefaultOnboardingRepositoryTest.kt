@@ -506,7 +506,7 @@ internal class DefaultOnboardingRepositoryTest {
         private fun customerSummaryResult() = CustomerSummaryResponse.Result(
             customerId = "customer",
             customerStatus = "ACTIVE",
-            hidden = false,
+            isHidden = false,
             kycStatus = "APPROVED",
             paymentAccount = CustomerSummaryResponse.PaymentAccount(
                 id = "payment-account",
