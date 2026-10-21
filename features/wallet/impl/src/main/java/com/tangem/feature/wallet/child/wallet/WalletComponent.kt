@@ -10,6 +10,7 @@ import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.decompose.value.subscribe
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
@@ -21,6 +22,7 @@ import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
+import com.tangem.core.ui.extensions.trackUserInteraction
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.tokens.model.details.TokenAction
@@ -55,6 +57,7 @@ import com.tangem.features.tangempay.eligibility.TangemPayWaitlistComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.moneyaccount.main.component.MoneyAccountMainBlockComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
+import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoBottomSheetComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -86,6 +89,7 @@ internal class WalletComponent @AssistedInject constructor(
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
     private val tangemPayWaitlistComponentFactory: TangemPayWaitlistComponent.Factory,
+    private val yieldModePromoBottomSheetComponentFactory: YieldModePromoBottomSheetComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: WalletModel = getOrCreateModel()
@@ -145,6 +149,7 @@ internal class WalletComponent @AssistedInject constructor(
     init {
         lifecycle.subscribe(model.screenLifecycleProvider)
         doOnResume { model.onResume() }
+        doOnResume(isOneTime = true) { model.suggestYieldModePromo() }
         componentScope.launch { model.innerWalletRouter.navigateToFlow.collect { navigate(it) } }
     }
 
@@ -224,6 +229,15 @@ internal class WalletComponent @AssistedInject constructor(
                             product = TangemPayProduct.BANKING_ACCOUNT,
                             countryCode = dialogConfig.countryCode,
                             regionCode = null,
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                        ),
+                    )
+                }
+                is WalletDialogConfig.YieldModePromo -> {
+                    yieldModePromoBottomSheetComponentFactory.create(
+                        context = childByContext(componentContext),
+                        params = YieldModePromoBottomSheetComponent.Params(
+                            offer = dialogConfig.offer,
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
                         ),
                     )
@@ -339,6 +353,10 @@ internal class WalletComponent @AssistedInject constructor(
         },
     )
 
+    init {
+        dialog.subscribe(lifecycle) { slot -> if (slot.child != null) model.onDialogShown() }
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         val bottomSheetState = remember { mutableStateOf(BottomSheetState.COLLAPSED) }
@@ -359,7 +377,7 @@ internal class WalletComponent @AssistedInject constructor(
             jointAccountComponent = jointAccountMainBlockComponent,
             polymarketComponent = polymarketWalletBlockComponent,
             collectiblesComponent = collectiblesWalletBlockComponent,
-            modifier = modifier,
+            modifier = modifier.trackUserInteraction(model.userInteractionTracker),
             isNewShtorkaEnabled = feedFeatureToggles.isNewShtorkaEnabled,
             isHideMarketingWhileSystemEnabled = promoBannersFeatureToggles.isHideMarketingBannersWhileSystemEnabled,
             isShtorkaBlurEnabled = { isShtorkaBlurEnabled },
