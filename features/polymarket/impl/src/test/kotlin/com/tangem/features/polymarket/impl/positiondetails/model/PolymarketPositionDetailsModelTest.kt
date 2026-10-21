@@ -5,7 +5,10 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.message.EventMessage
+import com.tangem.core.ui.message.ModalMessage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
@@ -20,6 +23,9 @@ import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketConst
+import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
+import com.tangem.features.polymarket.impl.common.region.createPredictionRegionAccess
+import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.features.polymarket.impl.createPolymarketMarket
 import com.tangem.features.polymarket.impl.createPolymarketOutcome
@@ -35,6 +41,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
@@ -59,6 +66,7 @@ internal class PolymarketPositionDetailsModelTest {
     private val deriveAddresses: DerivePolymarketAddressesUseCase = mockk()
     private val getEvent: GetPolymarketEventUseCase = mockk()
     private val router: Router = mockk(relaxed = true)
+    private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val addresses: PolymarketAddresses = mockk()
     private val wallet = UserWalletId("022")
     private val position = createPolymarketPosition()
@@ -460,6 +468,44 @@ internal class PolymarketPositionDetailsModelTest {
         }
 
     @Test
+    fun `GIVEN a blocked region WHEN buy tapped THEN the restriction is explained AND no order opens`() = runModelTest {
+        // Arrange
+        coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket())).right()
+        val model = createModel(regionAccess = createPredictionRegionAccess(isBlocked = true))
+        model.onResume()
+        runCurrent()
+        val message = slot<EventMessage>()
+        every { messageSender.send(capture(message)) } returns Unit
+
+        // Act
+        requireNotNull(model.data().onBuyMoreClick).invoke()
+
+        // Assert
+        verify(exactly = 0) { router.push(any<PolymarketRoute.PlacePrediction>(), any()) }
+        assertThat((message.captured as ModalMessage).messageModalUM.content)
+            .isEqualTo(regionRestrictionsMessage().messageModalUM.content)
+    }
+
+    @Test
+    fun `GIVEN a blocked region WHEN close tapped THEN the restriction is explained AND no close opens`() =
+        runModelTest {
+            // Arrange
+            val model = createModel(regionAccess = createPredictionRegionAccess(isBlocked = true))
+            model.onResume()
+            runCurrent()
+            val message = slot<EventMessage>()
+            every { messageSender.send(capture(message)) } returns Unit
+
+            // Act
+            requireNotNull(model.data().onClosePositionClick).invoke()
+
+            // Assert
+            verify(exactly = 0) { router.push(any<PolymarketRoute.ClosePosition>(), any()) }
+            assertThat((message.captured as ModalMessage).messageModalUM.content)
+                .isEqualTo(regionRestrictionsMessage().messageModalUM.content)
+        }
+
+    @Test
     fun `GIVEN an event market that refuses orders WHEN buy tapped THEN market closed sheet is shown`() = runModelTest {
         // Arrange
         coEvery { getEvent("event") } returns
@@ -620,6 +666,7 @@ internal class PolymarketPositionDetailsModelTest {
     private fun TestScope.createModel(
         userWalletId: UserWalletId = wallet,
         positionId: PolymarketPositionId = position.id,
+        regionAccess: PredictionRegionAccess = createPredictionRegionAccess(),
     ): PolymarketPositionDetailsModel {
         val dispatcher = StandardTestDispatcher(testScheduler)
         return PolymarketPositionDetailsModel(
@@ -629,6 +676,8 @@ internal class PolymarketPositionDetailsModelTest {
             repository = repository,
             deriveAddresses = deriveAddresses,
             getEvent = getEvent,
+            messageSender = messageSender,
+            regionAccess = regionAccess,
         ).also(models::add)
     }
 

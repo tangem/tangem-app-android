@@ -91,7 +91,6 @@ import com.tangem.domain.transaction.error.IncompleteTransactionError
 import com.tangem.domain.transaction.error.OpenTrustlineError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.*
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.*
@@ -111,7 +110,6 @@ import com.tangem.features.rating.RatingComponent
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.features.tokendetails.TokenDetailsComponent
-import com.tangem.features.tokendetails.deeplink.ExpressDeepLinkListener
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
@@ -167,7 +165,6 @@ internal class TokenDetailsModel @Inject constructor(
     getUserWalletUseCase: GetUserWalletUseCase,
     private val router: Router,
     private val tokenDetailsRouter: InnerTokenDetailsRouter,
-    private val expressDeepLinkListener: ExpressDeepLinkListener,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
     private val saveViewedTokenReceiveWarningUseCase: SaveViewedTokenReceiveWarningUseCase,
@@ -192,7 +189,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
     private val onrampGetDefaultCurrencyUseCase: OnrampGetDefaultCurrencyUseCase,
-    private val txHistoryFeatureToggle: TxHistoryFeatureToggles,
 ) : Model(),
     TokenDetailsClickIntents,
     YieldSupplyDepositedWarningComponent.ModelCallback {
@@ -314,7 +310,6 @@ internal class TokenDetailsModel @Inject constructor(
         initButtons()
         updateContent()
         handleBalanceHiding()
-        checkForActionUpdates()
         handleNavigationParam()
         observeQuickTopUpBlock()
     }
@@ -1350,13 +1345,6 @@ internal class TokenDetailsModel @Inject constructor(
     private fun showStakingUnavailable() {
         TangemLogger.e("Staking is unavailable for ${cryptoCurrency.name}")
         uiMessageSender.send(SnackbarMessage(resourceReference(R.string.staking_error_no_validators_title)))
-    }
-
-    private fun checkForActionUpdates() {
-        if (txHistoryFeatureToggle.isNewTxHistoryEnabled) return
-        expressDeepLinkListener.actionFlow
-            .onEach { txId -> expressTransactionsEventListener.send(ExpressTransactionsEvent.OpenTx(txId)) }
-            .launchIn(modelScope)
     }
 
     private suspend fun configureReceiveAddresses(
