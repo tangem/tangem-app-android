@@ -1201,6 +1201,13 @@
   <string name="joint_account_coming_soon_title">Coming soon to joint accounts</string>
   <string name="joint_account_confirm_account_subtitle">Before using your Joint Account, make sure every member sees exactly the same address.</string>
   <string name="joint_account_confirm_account_title">Confirm the account</string>
+  <string name="joint_account_confirm_address_compare_subtitle">Contact all members outside Tangem by phone, messenger, or in person. Check that everyone sees the exact same address.</string>
+  <string name="joint_account_confirm_address_compare_title">Compare with other members</string>
+  <string name="joint_account_confirm_address_confirm_button">Checked with everyone</string>
+  <string name="joint_account_confirm_address_everyone_subtitle">Your account will be ready once all members have confirmed the address.</string>
+  <string name="joint_account_confirm_address_everyone_title">Everyone must confirm</string>
+  <string name="joint_account_confirm_address_label">Shared address</string>
+  <string name="joint_account_confirm_address_mismatch_button">Address doesn\'t match</string>
   <string name="joint_account_confirm_shared_address">Confirm shared address</string>
   <string name="joint_account_invite_invalid_subtitle">Check that you opened the correct link, or ask the account creator to send it again</string>
   <string name="joint_account_invite_invalid_title">Invitation link isn\'t valid</string>
@@ -1278,6 +1285,14 @@
   <string name="joint_account_join_title">You\'ve been invited to %1$s</string>
   <string name="joint_account_join_to_account_btn_text">Join account</string>
   <string name="joint_account_join_to_approve">To approve</string>
+  <plurals name="joint_account_main_waiting_confirmations">
+    <item quantity="one">Waiting for %d confirmation</item>
+    <item quantity="other">Waiting for %d confirmations</item>
+  </plurals>
+  <plurals name="joint_account_main_waiting_members">
+    <item quantity="one">Waiting for %d member</item>
+    <item quantity="other">Waiting for %d members</item>
+  </plurals>
   <plurals name="joint_account_members_count">
     <item quantity="one">%d member</item>
     <item quantity="other">%d members</item>
@@ -1683,6 +1698,7 @@
   <string name="nft_receive_title">Receive NFT</string>
   <string name="nft_receive_unavailable_asset_warning_message">You haven\'t added this network yet. To receive NFTs, add it to your portfolio.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Network not added</string>
+  <string name="nft_receive_unsupported_cnft_description">cNFTs are not supported yet. Please don\'t send them to your wallet.</string>
   <string name="nft_receive_unsupported_types">Unsupported NFT types</string>
   <string name="nft_receive_unsupported_types_description">cNFTs and pNFTs are not supported yet. Please don\'t send them to your wallet.</string>
   <string name="nft_send">Send NFT</string>
