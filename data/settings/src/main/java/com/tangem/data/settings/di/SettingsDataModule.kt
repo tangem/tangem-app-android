@@ -1,7 +1,6 @@
 package com.tangem.data.settings.di
 
 import android.content.Context
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.settings.BuildConfig
 import com.tangem.data.settings.DefaultAppRatingRepository
 import com.tangem.data.settings.DefaultPermissionRepository
@@ -40,7 +39,6 @@ internal object SettingsDataModule {
         storePreferencesKeys: StorePreferencesKeys,
         appLogsStore: AppLogsStore,
         tangemTechApi: TangemTechApi,
-        settingsFeatureToggles: SettingsFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ): SettingsRepository {
         return DefaultSettingsRepository(
@@ -48,15 +46,14 @@ internal object SettingsDataModule {
             storePreferencesKeys = storePreferencesKeys,
             appLogsStore = appLogsStore,
             tangemTechApi = tangemTechApi,
-            settingsFeatureToggles = settingsFeatureToggles,
             dispatchers = dispatchers,
         )
     }
 
     @Provides
     @Singleton
-    fun provideSettingsFeatureToggles(featureTogglesManager: FeatureTogglesManager): SettingsFeatureToggles {
-        return DefaultSettingsFeatureToggles(featureTogglesManager)
+    fun provideSettingsFeatureToggles(): SettingsFeatureToggles {
+        return DefaultSettingsFeatureToggles()
     }
 
     @Provides

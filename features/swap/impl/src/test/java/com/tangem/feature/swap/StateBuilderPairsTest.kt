@@ -58,7 +58,6 @@ internal class StateBuilderPairsTest {
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
             isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
-            isChooseTokenPulseEnabled = false,
         )
     }
 

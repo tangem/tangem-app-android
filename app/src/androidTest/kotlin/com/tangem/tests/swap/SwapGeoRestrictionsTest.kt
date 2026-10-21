@@ -3,7 +3,6 @@ package com.tangem.tests.swap
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.ui.R
 import com.tangem.scenarios.SwapEntryPoint
 import com.tangem.scenarios.chooseReceiveToken
@@ -22,10 +21,6 @@ import org.junit.Test
 
 @HiltAndroidTest
 class SwapGeoRestrictionsTest : BaseTestCase() {
-
-    override val featureToggleOverrides = mapOf(
-        FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED.rawName to true,
-    )
 
     @AllureId("11595")
     @DisplayName("Swap: a region-restricted provider is unavailable while the other providers stay selectable")

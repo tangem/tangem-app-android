@@ -20,7 +20,6 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
@@ -80,9 +79,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val deviceRegistrar: DeviceRegistrar
         get() = entryPoint.getDeviceRegistrar()
 
-    private val authFeatureToggles: AuthFeatureToggles
-        get() = entryPoint.getAuthFeatureToggles()
-
     private val walletRegistrationLauncher: WalletRegistrationLauncher
         get() = entryPoint.getWalletRegistrationLauncher()
 
@@ -139,27 +135,25 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     }
 
     fun init() {
-        if (authFeatureToggles.isBackendAuthenticationEnabled) {
-            appScope.launch {
-                // Order matters: registration reads the device public key, so it must wait for
-                // generation to complete. Running them concurrently on first launch would race —
-                // register() would see `DeviceKeyUnavailable` and defer to the next app launch.
-                deviceKeyManager.generateIfMissing()
-                deviceRegistrar.register()
-                    .onLeft { error -> TangemLogger.w("Device registration deferred: $error") }
-                    .onRight {
-                        // Safety net: register any MOBILE wallets that missed it (created before the
-                        // toggle was on, or after a transient failure). Requires the DPoP session from
-                        // device registration, so it runs only once that succeeded. Best-effort —
-                        // loading the wallet list (userWalletsSync) can throw, which must not crash
-                        // startup, so the whole retry is guarded.
-                        runSuspendCatching {
-                            walletRegistrationLauncher.retryMobileRegistrations(
-                                userWalletsListRepository.userWalletsSync(),
-                            )
-                        }.onFailure { error -> TangemLogger.e("Mobile wallet registration retry failed", error) }
-                    }
-            }
+        appScope.launch {
+            // Order matters: registration reads the device public key, so it must wait for
+            // generation to complete. Running them concurrently on first launch would race —
+            // register() would see `DeviceKeyUnavailable` and defer to the next app launch.
+            deviceKeyManager.generateIfMissing()
+            deviceRegistrar.register()
+                .onLeft { error -> TangemLogger.w("Device registration deferred: $error") }
+                .onRight {
+                    // Safety net: register any MOBILE wallets that missed it (created on an older app
+                    // version, or after a transient failure). Requires the DPoP session from device
+                    // registration, so it runs only once that succeeded. Best-effort — loading the
+                    // wallet list (userWalletsSync) can throw, which must not crash startup, so the
+                    // whole retry is guarded.
+                    runSuspendCatching {
+                        walletRegistrationLauncher.retryMobileRegistrations(
+                            userWalletsListRepository.userWalletsSync(),
+                        )
+                    }.onFailure { error -> TangemLogger.e("Mobile wallet registration retry failed", error) }
+                }
         }
         apiConfigsManager.initialize()
 

@@ -6,7 +6,6 @@ import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -708,26 +707,8 @@ internal class TangemPayDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN bank offramp disabled WHEN withdraw clicked THEN swap is pushed without hub`() = runTest {
+    fun `GIVEN bank offramp available WHEN withdraw clicked THEN hub screen pushed and swap not pushed`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isBankOfframpEnabled } returns false
-        val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
-        advanceUntilIdle()
-
-        // Act
-        model.onClickWithdraw()
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 1) { router.push(match<AppRoute.Swap> { it.accountFlow == AccountFlow.Withdraw }) }
-        verify(exactly = 0) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN bank offramp enabled WHEN withdraw clicked THEN hub screen pushed and swap not pushed`() = runTest {
-        // Arrange
-        every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
         val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
         advanceUntilIdle()
 
@@ -745,7 +726,6 @@ internal class TangemPayDetailsModelTest {
     @Test
     fun `GIVEN bank offramp channel missing WHEN withdraw clicked THEN swap pushed instead of the hub`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
         val model = createModel(
             testScope = this,
             availableForWithdrawal = BigDecimal.TEN,
@@ -767,7 +747,6 @@ internal class TangemPayDetailsModelTest {
     fun `GIVEN bank offramp channel not known yet WHEN withdraw clicked THEN swap pushed instead of the hub`() =
         runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
             val model = createModel(
                 testScope = this,
                 availableForWithdrawal = BigDecimal.TEN,
@@ -789,7 +768,6 @@ internal class TangemPayDetailsModelTest {
     fun `GIVEN an active bank offramp order WHEN withdraw clicked THEN in progress error shown and nothing pushed`() =
         runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
             coEvery { findActiveBankOfframpOrderUseCase(any()) } returns bankOfframpOrder().right()
             val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
             advanceUntilIdle()
@@ -808,7 +786,6 @@ internal class TangemPayDetailsModelTest {
     fun `GIVEN the active order lookup fails WHEN withdraw clicked THEN hub pushed without in progress error`() =
         runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
             coEvery { findActiveBankOfframpOrderUseCase(any()) } returns VisaApiError.Unspecified.left()
             val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
             advanceUntilIdle()
@@ -824,12 +801,15 @@ internal class TangemPayDetailsModelTest {
         }
 
     @Test
-    fun `GIVEN active withdrawal and bank offramp disabled WHEN withdraw clicked THEN in progress error shown and nothing pushed`() =
+    fun `GIVEN active withdrawal and bank offramp channel missing WHEN withdraw clicked THEN in progress error shown and nothing pushed`() =
         runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isBankOfframpEnabled } returns false
             coEvery { tangemPayWithdrawRepository.hasWithdrawOrder(any()) } returns true
-            val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
+            val model = createModel(
+                testScope = this,
+                availableForWithdrawal = BigDecimal.TEN,
+                isBankOfframpAvailable = false,
+            )
             advanceUntilIdle()
 
             // Act
@@ -846,8 +826,10 @@ internal class TangemPayDetailsModelTest {
     fun `GIVEN no deposit address WHEN withdraw clicked THEN service unavailable sheet shown and nothing pushed`() =
         runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isBankOfframpEnabled } returns false
-            val model = createModel(testScope = this, statusValue = loadedStatus(statusNetworks = emptyList()))
+            val model = createModel(
+                testScope = this,
+                statusValue = loadedStatus(statusNetworks = emptyList(), isBankOfframpAvailable = false),
+            )
             advanceUntilIdle()
 
             // Act
@@ -937,7 +919,6 @@ internal class TangemPayDetailsModelTest {
     fun `GIVEN the offers request fails WHEN add card clicked THEN a message is shown and nothing is opened`() =
         runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
             coEvery { getCustomerOffers.cardIssueOffers(any()) } returns VisaApiError.ServerUnavailable.left()
             val model = createModel(testScope = this)
             advanceUntilIdle()
@@ -955,7 +936,6 @@ internal class TangemPayDetailsModelTest {
     @Test
     fun `GIVEN no offers WHEN add card clicked THEN a message is shown and nothing is opened`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
         coEvery { getCustomerOffers.cardIssueOffers(any()) } returns
             CardIssueOffers(virtual = null, plastic = null).right()
         val model = createModel(testScope = this)
@@ -974,7 +954,6 @@ internal class TangemPayDetailsModelTest {
     @Test
     fun `GIVEN only a virtual offer WHEN add card clicked THEN the order screen is opened`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
         coEvery { getCustomerOffers.cardIssueOffers(any()) } returns
             CardIssueOffers(virtual = virtualOffer(), plastic = null).right()
         val model = createModel(testScope = this)
@@ -993,7 +972,6 @@ internal class TangemPayDetailsModelTest {
     @Test
     fun `GIVEN only a plastic offer WHEN add card clicked THEN the order screen is opened`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
         coEvery { getCustomerOffers.cardIssueOffers(any()) } returns
             CardIssueOffers(virtual = null, plastic = plasticOffer()).right()
         val model = createModel(testScope = this)
@@ -1338,7 +1316,6 @@ internal class TangemPayDetailsModelTest {
             model: DeepLinkRouteModel,
         ) = runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
             val payModel = createModel(
                 testScope = this,
                 initialRoute = model.initialRoute,
