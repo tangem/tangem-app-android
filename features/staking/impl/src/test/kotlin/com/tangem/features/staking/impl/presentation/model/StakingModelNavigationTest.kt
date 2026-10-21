@@ -31,7 +31,7 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
     @Test
     fun `WHEN onBackClick THEN router pop and stateController clear called`() = runTest {
         every { stateController.value } returns initialUiState
-        every { appRouter.pop(any()) } just Runs
+        every { router.pop(any()) } just Runs
         every { stateController.clear() } just Runs
 
         val model = createModel(testScope = this)
@@ -39,7 +39,7 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
 
         model.onBackClick()
 
-        verify { appRouter.pop(any()) }
+        verify { router.pop(any()) }
         verify { stateController.clear() }
 
         model.onDestroy()
@@ -252,7 +252,7 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
         every { stateController.uiState } returns uiStateFlow
         every { stateController.value } returns initialUiState
         every { stateController.update(any<(StakingUiState) -> StakingUiState>()) } just Runs
-        every { appRouter.pop(any()) } just Runs
+        every { router.pop(any()) } just Runs
         every { stateController.clear() } just Runs
 
         val amountUiState = mockk<StakingUiState>(relaxed = true) {

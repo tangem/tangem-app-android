@@ -5,7 +5,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
@@ -66,7 +65,6 @@ internal class StateBuilder(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
     private val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork,
-    private val appRouter: AppRouter,
     private val isChooseTokenPulseEnabled: Boolean,
     private val isCustomSlippageEnabled: Boolean = false,
     private val predictionTopUpLimitsProvider: Provider<PredictionTopUpLimits?> = Provider { null },
@@ -570,6 +568,7 @@ internal class StateBuilder(
         swapFee: SwapFee?,
         feeError: FeeSelectorUM.Error?,
         isHighNetworkFee: Boolean,
+        isFeeCurrencyInStack: Boolean,
         slippage: SwapSlippageState = SwapSlippageState.Default(),
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -583,7 +582,7 @@ internal class StateBuilder(
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             swapFee = swapFee,
             feeError = feeError?.error,
-            appRouter = appRouter,
+            isFeeCurrencyInStack = isFeeCurrencyInStack,
             isHighNetworkFee = isHighNetworkFee,
             lowSlippage = getLowSlippage(swapProvider, slippage.customOrNull),
         )
@@ -700,6 +699,7 @@ internal class StateBuilder(
         quoteModel: SwapState.QuotesLoadedState,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         feeError: GetFeeError,
+        isFeeCurrencyInStack: Boolean,
     ): SwapStateHolder {
         val fromSwapCurrencyStatus = quoteModel.fromTokenInfo.swapCurrencyStatus
         if (feeCryptoCurrencyStatus == null) return uiStateHolder
@@ -709,7 +709,7 @@ internal class StateBuilder(
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             swapFee = null,
             feeError = feeError,
-            appRouter = appRouter,
+            isFeeCurrencyInStack = isFeeCurrencyInStack,
         )
 
         return uiStateHolder.copy(
