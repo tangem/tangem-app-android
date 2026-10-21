@@ -18,10 +18,13 @@ import com.tangem.scenarios.assertTangemPaySessionExpiredBanner
 import com.tangem.scenarios.assertTangemPayStaleState
 import com.tangem.scenarios.assertTangemPayTileShowsCachedData
 import com.tangem.scenarios.assertTangemPayTransactionRowDisplayed
+import com.tangem.scenarios.awaitMainTotalBalanceIncludingTangemPay
 import com.tangem.scenarios.openAndCloseTangemPayKycInProgressSheet
 import com.tangem.scenarios.openMainScreenWithExistingHotWallet
 import com.tangem.scenarios.openMainScreenWithTangemPayTile
 import com.tangem.scenarios.openTangemPay
+import com.tangem.screens.onMainScreen
+import com.tangem.screens.onOutdatedDataBanner
 import com.tangem.screens.tangempay.onTangemPayMainScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
@@ -234,6 +237,41 @@ class TangemPayStateCachingTest : BaseTestCase() {
             }
             step("Assert Tangem Pay tile with '$issuingCardText' is not displayed") {
                 onTangemPayMainScreen { tileWithSubtitle(issuingCardText).assertDoesNotExist() }
+            }
+        }
+    }
+
+    @AllureId("9692")
+    @DisplayName("Tangem Pay: Main keeps the cached balance when customer requests fail on the next launch")
+    @Test
+    fun mainScreenShowsCachedBalanceWhenCustomerRequestsFailTest() {
+        setupHooks(
+            additionalBeforeSection = {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+            }
+        ).run {
+            step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
+            var cachedTotalBalance = ""
+            step("Read total balance with the Payment account balance") {
+                cachedTotalBalance = awaitMainTotalBalanceIncludingTangemPay()
+            }
+            step("Set WireMock scenario '$sessionScenario' to '$serviceUnavailableState'") {
+                setWireMockScenarioState(sessionScenario, serviceUnavailableState)
+            }
+            step("Force-close and re-launch the app") { restartApp(packageName) }
+            step("Assert Main tile shows the cached account data") {
+                assertTangemPayTileShowsCachedData(cachedBalance, cachedCardsSubtitle)
+            }
+            step("Assert total balance shows the cached '$cachedTotalBalance'") {
+                flakySafely { onMainScreen { totalBalanceText.assertTextEquals(cachedTotalBalance) } }
+            }
+            step("Assert 'Balances may be outdated' banner is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onOutdatedDataBanner {
+                        title.assertIsDisplayed()
+                        message.assertIsDisplayed()
+                    }
+                }
             }
         }
     }
