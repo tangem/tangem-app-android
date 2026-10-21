@@ -146,31 +146,7 @@ private fun ContentRow(
             exit = TangemTransition.SlotExitHorizontally,
         ) {
             displayedText?.let { textRef ->
-                CompositionLocalProvider(LocalDensity provides cappedFontScaleDensity()) {
-                    Text(
-                        modifier = Modifier
-                            .padding(horizontal = sizeTokens.textPadding)
-                            .wrapContentHeight(unbounded = true)
-                            .testTag(BaseButtonTestTags.TEXT),
-                        text = textRef.resolveReference(),
-                        textAlign = TextAlign.Center,
-                        color = if (isEnabled) colorTokens.textColor else colorTokens.disabledTextColor,
-                        style = sizeTokens.textStyle.copy(
-                            platformStyle = PlatformTextStyle(includeFontPadding = false),
-                            lineHeightStyle = LineHeightStyle(
-                                alignment = LineHeightStyle.Alignment.Center,
-                                trim = LineHeightStyle.Trim.Both,
-                            ),
-                        ),
-                        maxLines = 1,
-                        softWrap = false,
-                        overflow = TextOverflow.Ellipsis,
-                        autoSize = TextAutoSize.StepBased(
-                            minFontSize = TangemTheme.typography3.caption.medium.fontSize,
-                            maxFontSize = sizeTokens.textStyle.fontSize,
-                        ),
-                    )
-                }
+                ButtonLabel(text = textRef, isEnabled = isEnabled, colorTokens = colorTokens, sizeTokens = sizeTokens)
             }
         }
 
@@ -190,6 +166,35 @@ private fun ContentRow(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ButtonLabel(text: TextReference, isEnabled: Boolean, colorTokens: ColorTokens, sizeTokens: SizeTokens) {
+    CompositionLocalProvider(LocalDensity provides cappedFontScaleDensity()) {
+        Text(
+            modifier = Modifier
+                .padding(horizontal = sizeTokens.textPadding)
+                .wrapContentHeight(unbounded = true)
+                .testTag(BaseButtonTestTags.TEXT),
+            text = text.resolveReference(),
+            textAlign = TextAlign.Center,
+            color = if (isEnabled) colorTokens.textColor else colorTokens.disabledTextColor,
+            style = sizeTokens.textStyle.copy(
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
+                lineHeightStyle = LineHeightStyle(
+                    alignment = LineHeightStyle.Alignment.Center,
+                    trim = LineHeightStyle.Trim.Both,
+                ),
+            ),
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis,
+            autoSize = TextAutoSize.StepBased(
+                minFontSize = TangemTheme.typography3.caption.medium.fontSize,
+                maxFontSize = sizeTokens.textStyle.fontSize,
+            ),
+        )
     }
 }
 
@@ -359,6 +364,7 @@ internal data class SizeTokens(
     val loaderSize: TangemLoaderSize,
 )
 
+@Suppress("LongMethod")
 @Composable
 @ReadOnlyComposable
 internal fun TangemButton.Size.tokens(): SizeTokens {
