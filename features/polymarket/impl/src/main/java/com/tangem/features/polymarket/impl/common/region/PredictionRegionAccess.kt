@@ -1,6 +1,5 @@
 package com.tangem.features.polymarket.impl.common.region
 
-import arrow.core.getOrElse
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -27,16 +26,21 @@ internal class PredictionRegionAccess @Inject constructor(
 
     suspend fun refresh() {
         val request = latestRequest.incrementAndGet()
-        val isBlocked = withContext(dispatchers.default) {
-            checkPolymarketGeoblockUseCase().getOrElse { error ->
-                TangemLogger.e("Predictions: region check failed, trading and funding are left available: $error")
-                false
-            }
-        }
+        val checked = withContext(dispatchers.default) { checkPolymarketGeoblockUseCase() }
 
         if (request != latestRequest.get()) return
 
-        status.value = if (isBlocked) PredictionRegionStatus.RESTRICTED else PredictionRegionStatus.ALLOWED
+        status.value = checked.fold(
+            ifLeft = { error ->
+                val kept = status.value.takeUnless { it == PredictionRegionStatus.UNKNOWN }
+                    ?: PredictionRegionStatus.ALLOWED
+                TangemLogger.e("Predictions: region check failed, the region stays $kept: $error")
+                kept
+            },
+            ifRight = { isBlocked ->
+                if (isBlocked) PredictionRegionStatus.RESTRICTED else PredictionRegionStatus.ALLOWED
+            },
+        )
     }
 }
 
