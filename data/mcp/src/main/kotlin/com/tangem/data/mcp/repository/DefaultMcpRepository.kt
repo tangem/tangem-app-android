@@ -23,10 +23,13 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 private const val TAG = "MCP"
@@ -94,6 +97,24 @@ internal class DefaultMcpRepository @Inject constructor(
             .toEither()
             .recoverGoneSession()
             .onRight { loadSessions(force = true) }
+    }
+
+    override suspend fun revokeAllSessions() {
+        val issuedSessions = sessions.value
+        if (issuedSessions.isEmpty()) return
+
+        withContext(dispatchers.io) {
+            issuedSessions
+                .map { session -> async { session.id to mcpApi.revokeSession(sessionId = session.id).toEither() } }
+                .awaitAll()
+                .forEach { (sessionId, result) ->
+                    result.recoverGoneSession().onLeft {
+                        TangemLogger.withTag(TAG).e("Agent session $sessionId was not revoked", it)
+                    }
+                }
+        }
+
+        loadSessions(force = true)
     }
 
     /**
