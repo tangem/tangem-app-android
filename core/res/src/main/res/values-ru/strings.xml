@@ -1970,7 +1970,7 @@
   <string name="settings_upgrade_banner_title">Холодный кошелек Tangem</string>
   <string name="settings_wallet_name_title">Имя</string>
   <string name="social_agreement_action_create">Создать кошелёк</string>
-  <string name="social_login_consent_acknowledge">Я понимаю, что если я не сохраню свою фразу восстановления, потеря доступа к моему аккаунту %s может навсегда лишить меня доступа к этому кошельку.</string>
+  <string name="social_login_consent_acknowledge">Я понимаю, что если я не сохраню свою фразу восстановления, то потеря доступа к моему аккаунту %s может навсегда лишить меня доступа к этому кошельку.</string>
   <string name="social_login_consent_description">Ключи вашего кошелька зашифрованы, а их резервная копия хранится в вашем облачном аккаунте. Tangem не может получить к ним доступ. Войдите через %1$s, чтобы восстановить кошелёк, или используйте фразу восстановления, если потеряете доступ к своему аккаунту %1$s.</string>
   <string name="social_login_consent_email_sharing">Получать новости о продукте и эксклюзивные предложения по электронной почте</string>
   <string name="social_login_consent_learn_more">Узнать больше</string>
@@ -1991,7 +1991,7 @@
   <string name="social_login_toast_wallet_added">Кошелёк добавлен</string>
   <string name="social_login_toast_wallet_created">Кошелёк создан</string>
   <string name="social_wallet_delete_anyway">Всё равно удалить</string>
-  <string name="social_wallet_delete_attention_acknowledge">Я понимаю, что если резервная копия моей фразы восстановления не сохранена, я навсегда потеряю доступ к этому кошельку.</string>
+  <string name="social_wallet_delete_attention_acknowledge">Я понимаю, что если резервная копия моей фразы восстановления не сохранена, то я навсегда потеряю доступ к этому кошельку.</string>
   <string name="social_wallet_delete_attention_description">Кошелёк будет удалён с этого устройства и отвязан от вашего аккаунта %1$s, а ваши зашифрованные ключи будут удалены из облака. Вход через %1$s больше не позволит его восстановить.</string>
   <string name="social_wallet_delete_confirmation_title">Удалить этот кошелёк и отвязать его от вашего аккаунта %1$s?</string>
   <string name="social_wallet_delete_description">Кошелёк будет удалён с этого устройства и отвязан от вашего аккаунта %1$s, а ваши зашифрованные ключи будут удалены из облака. Вход через %1$s больше не позволит его восстановить. Сначала сохраните резервную копию своей фразы восстановления. Без неё вы навсегда потеряете доступ к криптовалюте в этом кошельке.</string>
