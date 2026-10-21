@@ -48,6 +48,8 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 - **Add funds** needs a confirmed deposit address; without one, report an unknown error rather than offer
   an address that may be wrong. The buy amount step offers the same sheet, shut until the region check
   answers, and shows the account-status balance only once `ACTUAL`.
+- **Withdraw** waits on the same funding requisites as Add funds (QA, [REDACTED_TASK_KEY]): disabled while they load,
+  dimmed and answering with Add funds' error when they failed. Unlike Add funds it ignores the region.
 - **Awaiting-funds banner** opens on a completed top-up swap or a sent order, never on Receive.
 - Pull-to-refresh refreshes region, positions preview, account status and positions value, then the
   requisites. Feed pages are not re-requested — they are kept per visited category and refreshed by
