@@ -9,9 +9,11 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.RewardCardContent
 import com.tangem.features.collectibles.impl.packopening.ui.components.rewardcard.RewardCardTiming
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.SellBackButtonUM
 import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardProgress
 import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardUM
 
@@ -28,6 +30,8 @@ private fun RewardCard_Preview(@PreviewParameter(RewardCardPreviewProvider::clas
     TangemThemePreviewRedesign {
         RewardCardContent(
             um = RewardCardPreviewUM.copy(accent = params.accent),
+            sellBack = params.sellBack,
+            isKeepCardEnabled = !params.sellBack.isLoading,
             timing = RewardCardTiming.Default,
             progress = params.progress,
             modifier = Modifier.fillMaxSize(),
@@ -38,6 +42,7 @@ private fun RewardCard_Preview(@PreviewParameter(RewardCardPreviewProvider::clas
 private data class RewardCardPreviewParams(
     val progress: RewardCardProgress,
     val accent: RewardCardUM.Accent = RewardCardUM.Accent.Green,
+    val sellBack: SellBackButtonUM = PreviewSellBack,
 )
 
 // No Android types here: Studio builds the provider before the layoutlib session exists
@@ -48,6 +53,18 @@ private class RewardCardPreviewProvider : PreviewParameterProvider<RewardCardPre
         RewardCardPreviewParams(progress = RewardCardProgress.Settled, accent = RewardCardUM.Accent.Neutral),
         RewardCardPreviewParams(progress = RewardCardProgress.Settled, accent = RewardCardUM.Accent.Blue),
         RewardCardPreviewParams(progress = RewardCardProgress.Settled, accent = RewardCardUM.Accent.Violet),
+        RewardCardPreviewParams(
+            progress = RewardCardProgress.Settled,
+            sellBack = SellBackButtonUM(
+                textRef = resourceReference(R.string.collectibles_open_pack_buyback_unavailable),
+                isEnabled = false,
+                isLoading = false,
+            ),
+        ),
+        RewardCardPreviewParams(
+            progress = RewardCardProgress.Settled,
+            sellBack = PreviewSellBack.copy(isLoading = true),
+        ),
         RewardCardPreviewParams(
             progress = RewardCardProgress(
                 grow = PREVIEW_EARLY,
@@ -67,11 +84,16 @@ private class RewardCardPreviewProvider : PreviewParameterProvider<RewardCardPre
     )
 }
 
+private val PreviewSellBack = SellBackButtonUM(
+    textRef = resourceReference(R.string.collectibles_open_pack_sell_back_button, wrappedList("$55.80")),
+    isEnabled = true,
+    isLoading = false,
+)
+
 private val RewardCardPreviewUM = RewardCardUM(
     rarity = resourceReference(R.string.collectibles_open_pack_pull_uncommon),
     accent = RewardCardUM.Accent.Green,
     title = "2024 Series One",
     editionNumber = "#216",
     marketValue = "$62.00",
-    sellBackValue = "$55.80",
 )

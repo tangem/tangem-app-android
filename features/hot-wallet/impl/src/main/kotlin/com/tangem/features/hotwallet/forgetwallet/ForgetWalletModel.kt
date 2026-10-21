@@ -1,6 +1,8 @@
 package com.tangem.features.hotwallet.forgetwallet
 
+import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.left
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.routing.AppRoute
@@ -21,6 +23,8 @@ import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.cloudbackup.usecase.DeleteCloudBackupWithRetryUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.sociallogin.usecase.RevokeSocialRecoveryUseCase
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
@@ -30,6 +34,7 @@ import com.tangem.features.hotwallet.forgetwallet.entity.ForgetWalletUM
 import com.tangem.features.hotwallet.impl.R
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -148,9 +153,9 @@ internal class ForgetWalletModel @Inject constructor(
     private fun deleteSocialWallet() {
         uiState.update { it.copy(isInProgress = true) }
         modelScope.launch {
-            revokeSocialRecoveryUseCase(params.userWalletId).onLeft { error ->
+            revokeSocialRecovery().onLeft { error ->
                 TangemLogger.e("Unable to drop the social recovery on delete: $error")
-                sendDeletionError(step = "Unbind", error = error)
+                analyticsEventHandler.send(WalletSettingsAnalyticEvents.DeleteWalletError(error))
                 uiState.update { it.copy(isInProgress = false) }
                 showDeletionFailedDialog()
                 return@launch
@@ -160,10 +165,14 @@ internal class ForgetWalletModel @Inject constructor(
         }
     }
 
-    private fun sendDeletionError(step: String, error: Any) {
-        analyticsEventHandler.send(
-            WalletSettingsAnalyticEvents.DeleteWalletError(errorMessage = "$step failed: ${error::class.simpleName}"),
-        )
+    private suspend fun revokeSocialRecovery(): Either<SocialLoginError, Unit> {
+        val userWallet = runSuspendCatching { userWalletsListRepository.userWalletsSync() }
+            .onFailure { TangemLogger.e("Failed to read the wallet list to release a social recovery binding", it) }
+            .getOrNull()
+            ?.firstOrNull { it.walletId == params.userWalletId } as? UserWallet.Hot
+            ?: return SocialLoginError.Unknown().left()
+
+        return revokeSocialRecoveryUseCase(userWallet)
     }
 
     private fun showDeletionFailedDialog() {
@@ -185,7 +194,11 @@ internal class ForgetWalletModel @Inject constructor(
             val hasUserWallets = deleteWalletUseCase(params.userWalletId)
                 .getOrElse { error ->
                     TangemLogger.e("Unable to delete wallet: $error")
-                    if (isSocialDeletion) sendDeletionError(step = "Local deletion", error = error)
+                    if (isSocialDeletion) {
+                        analyticsEventHandler.send(
+                            WalletSettingsAnalyticEvents.DeleteWalletError(errorMessage = "Local deletion error"),
+                        )
+                    }
 
                     uiState.update { it.copy(isInProgress = false) }
                     uiMessageSender.send(

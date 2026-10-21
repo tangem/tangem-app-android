@@ -1,9 +1,9 @@
 package com.tangem.features.staking.impl.presentation.state
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.domain.staking.analytics.StakeScreenSource
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
@@ -24,7 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest
 
 internal class StakingStateRouterTest {
 
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val navigationRouter: Router = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val events = mutableListOf<AnalyticsEvent>()
 
@@ -33,12 +33,12 @@ internal class StakingStateRouterTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(appRouter, analytics)
+        clearMocks(navigationRouter, analytics)
         events.clear()
         every { analytics.send(capture(events)) } just Runs
         controller = StakingStateController(urlOpener = mockk(relaxed = true))
         router = StakingStateRouter(
-            appRouter = appRouter,
+            router = navigationRouter,
             stateController = controller,
             analyticsEventsHandler = analytics,
         )
@@ -273,7 +273,7 @@ internal class StakingStateRouterTest {
 
             // Assert
             assertThat(events).contains(StakingAnalyticsEvent.ButtonCancel(StakeScreenSource.Info))
-            verify(exactly = 1) { appRouter.pop(any()) }
+            verify(exactly = 1) { navigationRouter.pop(any()) }
             assertThat(controller.value.cryptoCurrencyName).isEmpty()
         }
 
@@ -286,7 +286,7 @@ internal class StakingStateRouterTest {
             router.onPrevClick()
 
             // Assert
-            verify(exactly = 1) { appRouter.pop(any()) }
+            verify(exactly = 1) { navigationRouter.pop(any()) }
             assertThat(controller.value.currentStep).isEqualTo(StakingStep.Success)
             assertThat(controller.value.cryptoCurrencyName).isEqualTo("Solana")
             assertThat(events).isEmpty()
@@ -337,7 +337,7 @@ internal class StakingStateRouterTest {
 
             // Assert
             assertThat(events.first()).isEqualTo(StakingAnalyticsEvent.ButtonCancel(model.source))
-            verify(exactly = 1) { appRouter.pop(any()) }
+            verify(exactly = 1) { navigationRouter.pop(any()) }
             assertThat(controller.value.cryptoCurrencyName).isEmpty()
             assertThat(controller.value.currentStep).isEqualTo(StakingStep.InitialInfo)
         }
