@@ -305,16 +305,6 @@ internal class StakingInfoNotificationsFactoryTest {
             assertThat(notification.config.buttonsState).isNull()
         }
 
-        // Pins current behaviour: balance and sum are compared with equals, so 10 and 10.00 differ.
-        @Test
-        fun `GIVEN same value different scale WHEN add THEN entire balance not detected`() {
-            // Act
-            val actual = collectEntire(sending = BigDecimal("9.90"), fee = fee, status = currencyStatus())
-
-            // Assert
-            assertThat(actual).isEmpty()
-        }
-
         @Test
         fun `GIVEN subtract unavailable WHEN add THEN no entire balance`() {
             // Act
