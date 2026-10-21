@@ -47,7 +47,14 @@ internal class StakingTransactionConverterTest {
     @Test
     fun `GIVEN transaction dto WHEN convert THEN all fields mapped`() {
         // Arrange
-        val dto = transactionDTO(gasEstimate = StakingGasEstimateDTO(BigDecimal("0.000005"), solTokenDTO, "200000"))
+        val gasEstimate = StakingGasEstimateDTO(BigDecimal("0.000005"), solTokenDTO, "200000")
+        val dto = transactionDTO(gasEstimate = gasEstimate).copy(
+            hash = "0xhash",
+            signedTransaction = "0xsigned",
+            error = "error",
+            ledgerHwAppId = "solana",
+            isMessage = true,
+        )
 
         // Act
         val actual = converter.convert(dto)
@@ -58,16 +65,16 @@ internal class StakingTransactionConverterTest {
             network = NetworkType.SOLANA,
             status = StakingTransactionStatus.WAITING_FOR_SIGNATURE,
             type = StakingTransactionType.SPLIT,
-            hash = null,
-            signedTransaction = null,
+            hash = "0xhash",
+            signedTransaction = "0xsigned",
             unsignedTransaction = "0xunsigned",
             stepIndex = 1,
-            error = null,
+            error = "error",
             gasEstimate = StakingGasEstimate(BigDecimal("0.000005"), solToken, "200000"),
             stakeId = "stake-1",
             explorerUrl = "https://explorer/tx",
-            ledgerHwAppId = null,
-            isMessage = false,
+            ledgerHwAppId = "solana",
+            isMessage = true,
         )
         assertThat(actual).isEqualTo(expected)
     }
