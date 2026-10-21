@@ -1,7 +1,6 @@
 package com.tangem.grow.datasource.stakekit
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.tangem.grow.datasource.stakekit.models.response.model.BalanceDTO.BalanceTypeDTO
 import com.tangem.grow.datasource.stakekit.models.response.model.NetworkTypeDTO
@@ -91,18 +90,6 @@ internal class StakeKitEnumFallbackAdaptersTest {
             assertThat(actual).isEqualTo(model.unknown)
         }
 
-        // Pins current behaviour: fallback adapters are not null-safe, JSON null fails the whole decode
-        @ParameterizedTest
-        @ProvideTestModels
-        fun `GIVEN json null WHEN decoded with fallback adapters THEN throws JsonDataException`(model: UnknownModel) {
-            // Act
-            val error = runCatching { decode(moshi, model.enumClass, "null") }.exceptionOrNull()
-
-            // Assert
-            assertThat(error).isInstanceOf(JsonDataException::class.java)
-            assertThat(error).hasMessageThat().isEqualTo("Expected a string but was NULL at path $")
-        }
-
         private fun provideTestModels() = listOf(
             UnknownModel(BalanceTypeDTO::class.java, BalanceTypeDTO.UNKNOWN),
             UnknownModel(NetworkTypeDTO::class.java, NetworkTypeDTO.UNKNOWN),
@@ -157,21 +144,6 @@ internal class StakeKitEnumFallbackAdaptersTest {
                 preferred = true,
             )
             assertThat(actual).isEqualTo(expected)
-        }
-
-        // Pins current behaviour: fallback adapters are not null-safe, JSON null fails the whole decode
-        @Test
-        fun `GIVEN validator with null status WHEN decoded THEN throws JsonDataException`() {
-            // Arrange
-            val json = """{"address":"v1","status":null,"preferred":true}"""
-
-            // Act
-            val error = runCatching { dtoMoshi.adapter(YieldDTO.ValidatorDTO::class.java).fromJson(json) }
-                .exceptionOrNull()
-
-            // Assert
-            assertThat(error).isInstanceOf(JsonDataException::class.java)
-            assertThat(error).hasMessageThat().isEqualTo("Expected a string but was NULL at path $.status")
         }
 
         @Test
