@@ -9,24 +9,26 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_DARK
 import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_LIGHT
 import androidx.core.net.toUri
+import com.tangem.core.decompose.utils.ForegroundActivityProvider
+import com.tangem.core.decompose.utils.withForegroundActivity
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.getColorCompat
-import com.tangem.tap.foregroundActivityObserver
-import com.tangem.tap.withForegroundActivity
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
 
-internal class CustomTabsUrlOpener : UrlOpener {
+internal class CustomTabsUrlOpener(
+    private val foregroundActivityProvider: ForegroundActivityProvider,
+) : UrlOpener {
 
     override fun openUrl(url: String) {
-        foregroundActivityObserver.withForegroundActivity {
+        foregroundActivityProvider.withForegroundActivity {
             openUrl(url, context = it)
         }
     }
 
     override fun openUrlExternalBrowser(url: String) {
-        foregroundActivityObserver.withForegroundActivity { context ->
+        foregroundActivityProvider.withForegroundActivity { context ->
             if (url.isEmpty()) return@withForegroundActivity
             val browserIntent = Intent(Intent.ACTION_VIEW, url.toUri())
             runCatching {

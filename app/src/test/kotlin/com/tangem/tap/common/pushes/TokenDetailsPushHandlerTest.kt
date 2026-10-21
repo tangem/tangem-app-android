@@ -39,6 +39,7 @@ class TokenDetailsPushHandlerTest {
         getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
         singleAccountListSupplier = singleAccountListSupplier,
         singleAccountListFetcher = singleAccountListFetcher,
+        foregroundActivityProvider = mockk(),
     )
 
     private val userWalletId = UserWalletId("011")
