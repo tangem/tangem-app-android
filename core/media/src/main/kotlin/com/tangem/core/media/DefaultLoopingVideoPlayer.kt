@@ -1,4 +1,4 @@
-package com.tangem.features.introduction.impl.engine
+package com.tangem.core.media
 
 import android.view.SurfaceView
 import androidx.annotation.OptIn
@@ -11,14 +11,14 @@ import androidx.media3.exoplayer.DecoderCounters
 import kotlin.math.roundToInt
 
 @OptIn(UnstableApi::class)
-internal class DefaultIntroductionVideoPlayer(
+internal class DefaultLoopingVideoPlayer(
     private val player: Player,
     private val decoderCounters: () -> DecoderCounters?,
     videoItem: MediaItem,
     override val isMotionEnabled: Boolean,
-    private val listener: IntroductionVideoPlayer.Listener,
-    private val teardownScheduler: VideoTeardownScheduler,
-) : IntroductionVideoPlayer {
+    private val listener: LoopingVideoPlayer.Listener,
+    teardownScheduler: VideoTeardownScheduler,
+) : LoopingVideoPlayer {
 
     private val playerListener = object : Player.Listener {
 
@@ -37,42 +37,33 @@ internal class DefaultIntroductionVideoPlayer(
         override fun onPlayerError(error: PlaybackException) = listener.onError(error)
     }
 
+    private val surfaceBinding = VideoSurfaceBinding(player = player, teardownScheduler = teardownScheduler)
+
     private var isPrepared = false
 
-    private var isReleased = false
-
-    private var attachedSurfaceView: SurfaceView? = null
-
     override val isSurfaceAttached: Boolean
-        get() = attachedSurfaceView != null
+        get() = surfaceBinding.isAttached
 
     override val positionMs: Long
         get() = player.currentPosition.coerceAtLeast(0L)
 
     override val outputFrameCount: Long?
         get() = decoderCounters()?.run {
-            // The playback thread writes these; reading from another thread has to go through this first.
+            // Written on the playback thread.
             ensureUpdated()
             renderedOutputBufferCount.toLong() + skippedOutputBufferCount + droppedBufferCount
         }
 
     init {
-        // Copies make the wrap an ordinary transition with the next period already buffered;
-        // REPEAT_MODE_ONE re-seeks the single period instead and stalls on slower decoders.
+        // With copies the wrap is a buffered transition; REPEAT_MODE_ONE re-seeks and stalls slower decoders.
         player.setMediaItems(List(LOOP_COPIES) { videoItem })
         player.repeatMode = Player.REPEAT_MODE_ALL
         player.addListener(playerListener)
     }
 
     override fun attachSurface(surfaceView: SurfaceView) {
-        // The screen can still compose a new surface while it animates away from a destroyed model, and binding
-        // it would cancel the release that is already scheduled.
-        if (isReleased) return
-        teardownScheduler.cancel()
-        attachedSurfaceView = surfaceView
-        player.setVideoSurfaceView(surfaceView)
-        // With no surface set, media3 configures the codec against a placeholder one and reports a first
-        // frame that nothing can paint.
+        if (!surfaceBinding.attach(surfaceView)) return
+        // Prepared without a surface, media3 reports a first frame that nothing paints.
         if (!isPrepared) {
             isPrepared = true
             player.prepare()
@@ -80,30 +71,22 @@ internal class DefaultIntroductionVideoPlayer(
     }
 
     override fun detachSurface(surfaceView: SurfaceView) {
-        // A replacement can be attached before this one is released, and it keeps the picture.
-        if (attachedSurfaceView !== surfaceView) return
-        attachedSurfaceView = null
-        // The unqualified clearVideoSurface() would drop someone else's surface.
-        teardownScheduler.schedule { player.clearVideoSurfaceView(surfaceView) }
+        surfaceBinding.detach(surfaceView)
     }
 
     override fun setRunning(isRunning: Boolean) {
-        if (isReleased) return
+        if (surfaceBinding.isReleased) return
         if (isRunning && isMotionEnabled) player.play() else player.pause()
     }
 
     override fun restart() {
-        if (isReleased) return
+        if (surfaceBinding.isReleased) return
         player.seekTo(0L)
     }
 
     override fun release() {
-        isReleased = true
-        attachedSurfaceView = null
         player.removeListener(playerListener)
-        // Releasing takes the surface with it, so a pending detach has nothing left to do.
-        teardownScheduler.cancel()
-        teardownScheduler.schedule { player.release() }
+        surfaceBinding.release()
     }
 
     private companion object {

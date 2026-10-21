@@ -63,6 +63,7 @@ internal class DefaultIntroductionComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val stories by storiesSlot.subscribeAsState()
         val state by model.uiState.collectAsStateWithLifecycle()
+        val video by model.videoState.collectAsStateWithLifecycle()
 
         // The story replaces the screen rather than covering it: two SurfaceViews in one window have no defined
         // order between their holes, and the Create wallet sheet is a dialog window that would keep back and
@@ -73,8 +74,7 @@ internal class DefaultIntroductionComponent @AssistedInject constructor(
         } else {
             IntroductionScreen(
                 state = state,
-                onSurfaceAvailable = model::attachSurface,
-                onSurfaceRelease = model::detachSurface,
+                video = video,
                 videoPositionMs = model::videoPositionMs,
                 modifier = modifier,
             )
