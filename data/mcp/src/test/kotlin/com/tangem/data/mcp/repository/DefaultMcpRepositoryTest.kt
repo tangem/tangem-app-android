@@ -312,6 +312,69 @@ internal class DefaultMcpRepositoryTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class RevokeAllSessions {
+
+        @Test
+        fun `GIVEN sessions of two wallets WHEN revokeAllSessions THEN every one of them is revoked`() = runTest {
+            // Arrange
+            givenSessions(SESSION_RESPONSE, SECOND_SESSION_RESPONSE, OTHER_WALLET_SESSION_RESPONSE)
+
+            // Act
+            repository.revokeAllSessions()
+
+            // Assert
+            coVerify(exactly = 1) { mcpApi.revokeSession(sessionId = SESSION_ID) }
+            coVerify(exactly = 1) { mcpApi.revokeSession(sessionId = SECOND_SESSION_ID) }
+            coVerify(exactly = 1) { mcpApi.revokeSession(sessionId = OTHER_WALLET_SESSION_ID) }
+        }
+
+        @Test
+        fun `GIVEN two sessions WHEN revokeAllSessions THEN the list is re-read once`() = runTest {
+            // Arrange
+            givenSessions(SESSION_RESPONSE, SECOND_SESSION_RESPONSE)
+
+            // Act
+            repository.revokeAllSessions()
+
+            // Assert
+            coVerify(exactly = 2) { mcpApi.getSessions() }
+        }
+
+        @Test
+        fun `GIVEN one revoke fails WHEN revokeAllSessions THEN the other is still revoked`() = runTest {
+            // Arrange
+            givenSessions(SESSION_RESPONSE, SECOND_SESSION_RESPONSE)
+            coEvery { mcpApi.revokeSession(sessionId = SESSION_ID) } returns apiError(SERVER_ERROR)
+
+            // Act
+            repository.revokeAllSessions()
+
+            // Assert
+            coVerify(exactly = 1) { mcpApi.revokeSession(sessionId = SECOND_SESSION_ID) }
+        }
+
+        @Test
+        fun `GIVEN no sessions WHEN revokeAllSessions THEN nothing is sent`() = runTest {
+            // Arrange
+            givenSessions()
+
+            // Act
+            repository.revokeAllSessions()
+
+            // Assert
+            coVerify(exactly = 0) { mcpApi.revokeSession(any()) }
+            coVerify(exactly = 1) { mcpApi.getSessions() }
+        }
+
+        private suspend fun givenSessions(vararg sessions: McpSessionResponse) {
+            coEvery { mcpApi.getSessions() } returns ApiResponse.Success(sessions.toList())
+            coEvery { mcpApi.revokeSession(any()) } returns ApiResponse.Success(Unit)
+            repository.getSessions().first()
+        }
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun <T : Any> apiError(cause: ApiResponseError): ApiResponse<T> =
         ApiResponse.Error(cause) as ApiResponse<T>
@@ -328,11 +391,14 @@ internal class DefaultMcpRepositoryTest {
         const val SCOPE = "wallet:read wallet:sign"
         const val STATE = "state-token"
         const val SESSION_ID = "b3f1c0d2"
+        const val SECOND_SESSION_ID = "c4a2d1e3"
+        const val OTHER_WALLET_SESSION_ID = "d5b3e2f4"
 
         const val CREATED_AT = "2026-10-01T14:26:30.551455Z"
         val CREATED_AT_MILLIS: Long = Instant.parse(CREATED_AT).toEpochMilli()
 
         val WALLET_ID = UserWalletId(stringValue = "0A1B")
+        val OTHER_WALLET_ID = UserWalletId(stringValue = "0C2D")
         val BASE64_WALLET_ID: String = JavaBase64.getEncoder().encodeToString(WALLET_ID.value)
 
         val NETWORK_ERROR = ApiResponseError.NetworkException()
@@ -374,6 +440,13 @@ internal class DefaultMcpRepositoryTest {
             clientIp = "203.0.113.7",
             clientCountry = "DE",
             clientUserAgent = "claude-code/1.0.0",
+        )
+
+        val SECOND_SESSION_RESPONSE = SESSION_RESPONSE.copy(id = SECOND_SESSION_ID)
+
+        val OTHER_WALLET_SESSION_RESPONSE = SESSION_RESPONSE.copy(
+            id = OTHER_WALLET_SESSION_ID,
+            walletId = OTHER_WALLET_ID.stringValue,
         )
 
         val SESSION = McpSession(
