@@ -2,7 +2,6 @@ package com.tangem.features.yield.supply.impl.active.model
 
 import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -45,7 +44,6 @@ internal abstract class YieldSupplyActiveModelTestBase {
     protected val getUserWalletUseCase: GetUserWalletUseCase = mockk(relaxed = true)
     protected val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk(relaxed = true)
     protected val router: Router = mockk(relaxed = true)
-    protected val appRouter: AppRouter = mockk(relaxed = true)
     protected val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase = mockk(relaxed = true)
     protected val getYieldRewardsSummaryUseCase: GetYieldRewardsSummaryUseCase = mockk(relaxed = true)
     protected val claimTracker: YieldSupplyClaimTracker = mockk()
@@ -95,7 +93,6 @@ internal abstract class YieldSupplyActiveModelTestBase {
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         urlOpener = mockk<UrlOpener>(relaxed = true),
         router = router,
-        appRouter = appRouter,
         yieldSupplyGetDustMinAmountUseCase = mockk<YieldSupplyGetDustMinAmountUseCase>(relaxed = true),
         getYieldBoostStatusUseCase = getYieldBoostStatusUseCase,
         boostStoryPreloader = mockk<YieldBoostStoryPreloader>(relaxed = true),
