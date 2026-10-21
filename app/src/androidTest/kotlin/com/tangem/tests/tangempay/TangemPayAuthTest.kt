@@ -2,6 +2,7 @@ package com.tangem.tests.tangempay
 
 import androidx.test.InstrumentationRegistry.getTargetContext
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.TANGEM_PAY_ACCESS_CODE
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
@@ -10,9 +11,15 @@ import com.tangem.common.extensions.bringAppToForeground
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.collapseAppByHomeButton
 import com.tangem.common.utils.findWireMockRequestBodies
+import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.scenarios.assertTangemPayRenewSessionAvailableAfterFailure
+import com.tangem.scenarios.assertTangemPaySessionExpiredBanner
+import com.tangem.scenarios.disableTangemPayRealAuth
+import com.tangem.scenarios.enableTangemPayRealAuth
 import com.tangem.scenarios.expireTangemPayAccessToken
 import com.tangem.scenarios.openMainScreenWithTangemPayTile
+import com.tangem.scenarios.renewTangemPaySession
 import com.tangem.scenarios.restoreTangemPayAccessToken
 import com.tangem.screens.tangempay.onTangemPayMainScreen
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -30,7 +37,12 @@ class TangemPayAuthTest : BaseTestCase() {
     private val balanceInitialState = "InitialBalance"
     private val balanceAfterTransactionState = "AfterTransaction"
 
+    private val sessionScenario = "tangem_pay_session"
+    private val sessionExpiredState = "SessionExpired"
+
     private val refreshTokenEndpoint = "/auth/token/refresh"
+    private val challengeEndpoint = "/auth/challenge"
+    private val tokenEndpoint = "/auth/token"
     private val refreshToken = "mock-refresh-token"
     private val initialBalance = "10.00"
     private val updatedBalance = "9.00"
@@ -84,6 +96,97 @@ class TangemPayAuthTest : BaseTestCase() {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
                     onTangemPayMainScreen { balance.assertTextContainsSafe(updatedBalance, substring = true) }
                 }
+            }
+        }
+    }
+
+    @AllureId("9506")
+    @DisplayName("Tangem Pay: Renew session fails when /auth/challenge fails")
+    @Test
+    fun renewSessionFailsWhenChallengeRequestFailsTest() {
+        val challengeScenario = "tangem_pay_auth_challenge"
+        val challengeErrorState = "Error"
+
+        setupHooks(
+            additionalAfterSection = { disableTangemPayRealAuth() },
+        ).run {
+            val challengeCountBefore = getWireMockRequestCount("POST", challengeEndpoint)
+            val tokenCountBefore = getWireMockRequestCount("POST", tokenEndpoint)
+
+            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+            }
+            step("Set WireMock scenario '$sessionScenario' to '$sessionExpiredState'") {
+                setWireMockScenarioState(sessionScenario, sessionExpiredState)
+            }
+            step("Set WireMock scenario '$challengeScenario' to '$challengeErrorState'") {
+                setWireMockScenarioState(challengeScenario, challengeErrorState)
+            }
+            step("Enable real Tangem Pay authorization") { enableTangemPayRealAuth() }
+            step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
+            step("Assert session expired banner is displayed") { assertTangemPaySessionExpiredBanner() }
+            step("Renew Tangem Pay session") { renewTangemPaySession(TANGEM_PAY_ACCESS_CODE) }
+            step("Assert '$challengeEndpoint' was requested") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    assertTrue(
+                        "Renew session should call $challengeEndpoint",
+                        getWireMockRequestCount("POST", challengeEndpoint) > challengeCountBefore,
+                    )
+                }
+            }
+            step("Assert 'Renew session' is available after the failure") {
+                assertTangemPayRenewSessionAvailableAfterFailure()
+            }
+            step("Assert '$tokenEndpoint' was not requested") {
+                assertEquals(
+                    "A failed challenge should stop the authorization before $tokenEndpoint",
+                    tokenCountBefore,
+                    getWireMockRequestCount("POST", tokenEndpoint),
+                )
+            }
+        }
+    }
+
+    @AllureId("9508")
+    @DisplayName("Tangem Pay: Renew session fails when /auth/token fails")
+    @Test
+    fun renewSessionFailsWhenTokenRequestFailsTest() {
+        val tokenScenario = "tangem_pay_auth_token"
+        val tokenInvalidSignatureState = "InvalidSignature"
+
+        setupHooks(
+            additionalAfterSection = { disableTangemPayRealAuth() },
+        ).run {
+            val challengeCountBefore = getWireMockRequestCount("POST", challengeEndpoint)
+            val tokenCountBefore = getWireMockRequestCount("POST", tokenEndpoint)
+
+            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+            }
+            step("Set WireMock scenario '$sessionScenario' to '$sessionExpiredState'") {
+                setWireMockScenarioState(sessionScenario, sessionExpiredState)
+            }
+            step("Set WireMock scenario '$tokenScenario' to '$tokenInvalidSignatureState'") {
+                setWireMockScenarioState(tokenScenario, tokenInvalidSignatureState)
+            }
+            step("Enable real Tangem Pay authorization") { enableTangemPayRealAuth() }
+            step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
+            step("Assert session expired banner is displayed") { assertTangemPaySessionExpiredBanner() }
+            step("Renew Tangem Pay session") { renewTangemPaySession(TANGEM_PAY_ACCESS_CODE) }
+            step("Assert '$challengeEndpoint' and '$tokenEndpoint' were requested") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    assertTrue(
+                        "Renew session should call $challengeEndpoint",
+                        getWireMockRequestCount("POST", challengeEndpoint) > challengeCountBefore,
+                    )
+                    assertTrue(
+                        "Renew session should call $tokenEndpoint after the challenge",
+                        getWireMockRequestCount("POST", tokenEndpoint) > tokenCountBefore,
+                    )
+                }
+            }
+            step("Assert 'Renew session' is available after the failure") {
+                assertTangemPayRenewSessionAvailableAfterFailure()
             }
         }
     }

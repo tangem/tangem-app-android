@@ -99,6 +99,8 @@ internal abstract class DetailsModelTestBase {
         } returns persistentListOf()
         every { itemsBuilder.addTangemPayItem(any(), capture(onTangemPaySlot)) } answers { firstArg() }
         every { itemsBuilder.removeTangemPayItem(any()) } answers { firstArg() }
+        every { itemsBuilder.hasTangemPayItem(any()) } returns false
+        every { itemsBuilder.removeMoneyAccountItem(any()) } answers { firstArg() }
     }
 
     @AfterEach
@@ -126,7 +128,7 @@ internal abstract class DetailsModelTestBase {
         tangemPayFeatureToggles = tangemPayFeatureToggles,
         getMoneyAccountEligibilityUseCase = getMoneyAccountEligibilityUseCase,
         moneyAccountFeatureToggles = moneyAccountFeatureToggles,
-    )
+    ).also(DetailsModel::onResume)
 
     protected fun stubBuildAllReturns(list: ImmutableList<DetailsItemUM>) {
         every {

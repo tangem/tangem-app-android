@@ -49,7 +49,8 @@ internal class JointAccountInviteSharing @Inject constructor(
             shareManager.sharedTexts
                 .mapNotNull { text ->
                     getJointAccountInvitesUseCase(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId)
-                        .firstOrNull { inviteId -> text.containsLink(JointAccountInviteLinkBuilder.build(inviteId)) }
+                        .firstOrNull { invite -> text.containsLink(JointAccountInviteLinkBuilder.build(invite.id)) }
+                        ?.id
                 }
                 .map { inviteId ->
                     markJointAccountInviteSharedUseCase(

@@ -29,6 +29,7 @@ import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
+import com.tangem.domain.jointaccount.model.JointAccountInvite
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
@@ -210,10 +211,12 @@ internal class DefaultJointAccountRepository @Inject constructor(
      * even when the invite actions cannot be offered. As in [storeInvites], the failure is logged without its
      * content — an invite id is a secret.
      */
-    override suspend fun getInvites(userWalletId: UserWalletId, cryptoAccountId: String): List<String> {
+    override suspend fun getInvites(userWalletId: UserWalletId, cryptoAccountId: String): List<JointAccountInvite> {
         return withContext(dispatchers.io) {
             runSuspendCatching {
-                invitesStore.get(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId).orEmpty()
+                invitesStore.get(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId)
+                    .orEmpty()
+                    .map { inviteId -> JointAccountInvite(id = inviteId) }
             }.getOrElse { throwable ->
                 logger.e(messageString = "Failed to read the stored invites", throwable = throwable)
                 emptyList()
