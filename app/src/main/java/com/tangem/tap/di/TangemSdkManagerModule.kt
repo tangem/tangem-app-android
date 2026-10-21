@@ -9,7 +9,6 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
-import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
@@ -47,7 +46,6 @@ internal class TangemSdkManagerModule {
         cardRepository: CardRepository,
         derivationsHelper: DerivationsHelper,
         walletRegistrationLauncher: Lazy<WalletRegistrationLauncher>,
-        authFeatureToggles: AuthFeatureToggles,
         foregroundActivityProvider: ForegroundActivityProvider,
     ): TangemSdkManager {
         return if (BuildConfig.MOCK_DATA_SOURCE) {
@@ -67,7 +65,6 @@ internal class TangemSdkManagerModule {
                 cardRepository = cardRepository,
                 derivationsHelper = derivationsHelper,
                 walletRegistrationLauncher = walletRegistrationLauncher,
-                authFeatureToggles = authFeatureToggles,
             )
         }
     }

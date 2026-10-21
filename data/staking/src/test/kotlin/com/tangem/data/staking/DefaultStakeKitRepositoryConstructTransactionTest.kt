@@ -19,7 +19,6 @@ import com.tangem.data.staking.StakeKitRepositoryFixtures.transactionDTO
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.staking.NetworkType
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.grow.datasource.stakekit.StakeKitApi
 import com.tangem.grow.datasource.stakekit.models.request.ConstructTransactionRequestBody
@@ -44,14 +43,12 @@ internal class DefaultStakeKitRepositoryConstructTransactionTest {
     private val stakeKitApi: StakeKitApi = mockk()
     private val stakingYieldsStore: StakingYieldsStore = mockk()
     private val stakingValidatorDao: StakingValidatorDao = mockk()
-    private val txHistoryFeatureToggle: TxHistoryFeatureToggles = mockk()
     private val walletManagersFacade: WalletManagersFacade = mockk()
 
     private val repository = DefaultStakeKitRepository(
         stakeKitApi = stakeKitApi,
         stakingYieldsStore = stakingYieldsStore,
         stakingValidatorDao = stakingValidatorDao,
-        txHistoryFeatureToggle = txHistoryFeatureToggle,
         dispatchers = TestingCoroutineDispatcherProvider(),
         walletManagersFacade = walletManagersFacade,
         moshi = StakeKitRepositoryFixtures.moshi,
@@ -59,7 +56,7 @@ internal class DefaultStakeKitRepositoryConstructTransactionTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(stakeKitApi, stakingYieldsStore, stakingValidatorDao, txHistoryFeatureToggle, walletManagersFacade)
+        clearMocks(stakeKitApi, stakingYieldsStore, stakingValidatorDao, walletManagersFacade)
     }
 
     private fun rawId(value: String) = Network.RawID(value)
