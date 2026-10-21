@@ -3,6 +3,7 @@ package com.tangem.tap.di
 import android.content.Context
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.utils.ForegroundActivityProvider
 import com.tangem.domain.card.BuildConfig
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -47,9 +48,10 @@ internal class TangemSdkManagerModule {
         derivationsHelper: DerivationsHelper,
         walletRegistrationLauncher: Lazy<WalletRegistrationLauncher>,
         authFeatureToggles: AuthFeatureToggles,
+        foregroundActivityProvider: ForegroundActivityProvider,
     ): TangemSdkManager {
         return if (BuildConfig.MOCK_DATA_SOURCE) {
-            MockTangemSdkManager()
+            MockTangemSdkManager(foregroundActivityProvider)
         } else {
             DefaultTangemSdkManager(
                 cardSdkConfigRepository = cardSdkConfigRepository,
