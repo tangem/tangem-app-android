@@ -439,7 +439,6 @@ internal class StateBuilder(
             ),
             amountField = placeholderAmountField(value = if (isFromCard) "0" else "0".appendApproximateSign()),
             amountEquivalent = emptyAmountState.zeroAmountEquivalent,
-            isPulseAnimationEnabled = true,
         )
 
     fun createSwapNotSupportedState(
@@ -856,7 +855,6 @@ internal class StateBuilder(
             type = type,
             amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
             amountField = null,
-            isPulseAnimationEnabled = true,
         )
         return uiStateHolder.copy(
             receiveCardData = receiveCardData,
