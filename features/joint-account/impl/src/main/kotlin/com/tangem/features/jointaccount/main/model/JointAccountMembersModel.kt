@@ -23,6 +23,7 @@ import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountActivationError
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
+import com.tangem.domain.jointaccount.model.JointAccountInvite
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
@@ -177,9 +178,6 @@ internal class JointAccountMembersModel @Inject constructor(
             .onEach { resolved ->
                 dismissStaleActivationConfirmation(resolvedAccountId = resolved?.account?.cryptoAccountId)
 
-                val walletIconRes = userWalletsListRepository
-                    .getSyncOrNull(id = params.userWalletId)
-                    ?.let(::walletInterationIcon)
                 val transformer = resolved
                     ?.let { account ->
                         UpdateMembersAccountTransformer(
@@ -188,7 +186,6 @@ internal class JointAccountMembersModel @Inject constructor(
                             sharedInvites = account.sharedInvites,
                             ownAddress = account.ownAddress,
                             callbacks = converterCallbacks,
-                            walletIconRes = walletIconRes,
                             isActivating = account.isActivating,
                             accountName = account.name,
                             accountIcon = account.icon,
@@ -401,7 +398,7 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private data class ResolvedAccount(
         val account: JointAccount,
-        val invites: List<String>,
+        val invites: List<JointAccountInvite>,
         val sharedInvites: Set<String>,
         val ownAddress: String?,
         val isActivating: Boolean,

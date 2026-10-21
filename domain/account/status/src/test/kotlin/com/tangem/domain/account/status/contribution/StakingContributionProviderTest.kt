@@ -183,7 +183,7 @@ internal class StakingContributionProviderTest {
     }
 
     @Test
-    fun `GIVEN P2PEthPool balance WHEN resolve THEN it is stamped for the network and every bucket counts`() =
+    fun `GIVEN P2PEthPool balance WHEN resolve THEN it is stamped for the network and every bucket but rewards counts`() =
         runTest {
             // Arrange — Ethereum keeps the staked principal outside the network balance
             val currency = cryptoCurrencyFactory.ethereum
@@ -199,7 +199,7 @@ internal class StakingContributionProviderTest {
             // Assert
             val staking = actual as StakingBalance.Data.P2PEthPool
             assertThat(staking.isStakedIncludedInNetworkBalance).isFalse()
-            assertThat(staking.totalDeltaCryptoAmount()).isEqualTo(BigDecimal(11))
+            assertThat(staking.totalDeltaCryptoAmount()).isEqualTo(BigDecimal(8))
         }
 
     @Test

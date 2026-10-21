@@ -60,3 +60,9 @@ internal fun createMembersUM(
     waitingLabel = waitingLabel,
     footer = footer,
 )
+
+internal fun JointAccountMembersUM.SlotActionUM?.click() = when (this) {
+    is JointAccountMembersUM.SlotActionUM.Invite -> onClick()
+    is JointAccountMembersUM.SlotActionUM.ReInvite -> onClick()
+    is JointAccountMembersUM.SlotActionUM.Loading, null -> error("The slot offers no button to press")
+}

@@ -531,7 +531,6 @@ dependencies {
     androidTestImplementation(deps.test.hilt)
     androidTestImplementation(deps.arrow.core)
     androidTestImplementation(deps.kotlin.coroutines)
-    androidTestImplementation(deps.kotlin.datetime)
     androidTestImplementation(deps.okHttp)
     androidTestImplementation(deps.jodatime)
     // Decodes QR codes in UI tests (QrCodeUtils); no main source references it.
@@ -558,7 +557,6 @@ dependencies {
     implementation(deps.androidx.savedState)
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
-    implementation(deps.kotlin.datetime)
     implementation(deps.moshi)
     implementation(deps.okHttp)
     implementation(deps.haze)
