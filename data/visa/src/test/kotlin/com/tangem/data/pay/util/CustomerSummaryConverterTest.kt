@@ -116,7 +116,7 @@ internal class CustomerSummaryConverterTest {
     ) = CustomerSummaryResponse.Result(
         customerId = CUSTOMER_ID,
         customerStatus = customerStatus,
-        hidden = true,
+        isHidden = true,
         kycStatus = kycStatus,
         paymentAccount = CustomerSummaryResponse.PaymentAccount(
             id = paymentAccountId,
