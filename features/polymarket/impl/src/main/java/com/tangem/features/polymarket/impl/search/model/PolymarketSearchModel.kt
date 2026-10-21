@@ -128,6 +128,7 @@ internal class PolymarketSearchModel @Inject constructor(
                     isQueryActive = uiState.value.query.trim().length >= MIN_QUERY_LENGTH,
                     eventUMConverter = eventUMConverter,
                     onReloadClick = ::reloadCurrentQuery,
+                    onNextPageRetryClick = ::onLoadMore,
                 )
                 uiState.update(transformer::transform)
             }
