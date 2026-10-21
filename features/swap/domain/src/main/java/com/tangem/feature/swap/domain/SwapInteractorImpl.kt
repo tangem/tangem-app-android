@@ -2536,7 +2536,7 @@ internal class SwapInteractorImpl @Inject constructor(
         if (!swapFeatureToggles.isTronGaslessDexSwapEnabled) return false
         val token = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token ?: return false
         return isTron(token.network.rawId) &&
-            isTronGaslessSupportedUseCase(fromSwapCurrencyStatus.userWalletId, token.network, token)
+            isTronGaslessSupportedUseCase(token.network, token)
     }
 
     /**
