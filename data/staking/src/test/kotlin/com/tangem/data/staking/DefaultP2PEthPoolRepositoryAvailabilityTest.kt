@@ -21,13 +21,14 @@ import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.model.ethpool.VaultLimitInfo
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -48,7 +49,6 @@ internal class DefaultP2PEthPoolRepositoryAvailabilityTest {
     private val featureToggles: StakingFeatureToggles = mockk()
     private val regionBlockedStore = P2PEthPoolRegionBlockedStore()
     private val vaultDao: P2PEthPoolVaultDao = mockk()
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles = mockk()
 
     private val repository = DefaultP2PEthPoolRepository(
         p2pEthPoolApi = api,
@@ -58,16 +58,16 @@ internal class DefaultP2PEthPoolRepositoryAvailabilityTest {
         tangemTechApi = tangemTechApi,
         dispatchers = TestingCoroutineDispatcherProvider(),
         stakingFeatureToggles = featureToggles,
-        txHistoryFeatureToggle = txHistoryFeatureToggles,
         p2pEthPoolRegionBlockedStore = regionBlockedStore,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(api, tangemTechApi, featureToggles, vaultDao, txHistoryFeatureToggles)
+        clearMocks(api, tangemTechApi, featureToggles, vaultDao)
         limitsStore.clear()
         regionBlockedStore.clear()
         runBlocking { vaultsStore.store(emptyList()) }
+        coEvery { vaultDao.upsert(any()) } just Runs
     }
 
     private suspend fun seedStaleState() {
@@ -158,7 +158,6 @@ internal class DefaultP2PEthPoolRepositoryAvailabilityTest {
             // Arrange
             seedStaleState()
             every { featureToggles.isIntegrationEnabled(any()) } returns true
-            every { txHistoryFeatureToggles.isNewTxHistoryEnabled } returns false
             coEvery { api.getVaults(any()) } returns ApiResponse.Success(
                 P2PEthPoolResponse(
                     error = null,
@@ -245,7 +244,6 @@ internal class DefaultP2PEthPoolRepositoryAvailabilityTest {
         fun `GIVEN vaults fetched WHEN fetchVaults THEN converted vaults stored`() = runTest {
             // Arrange
             every { featureToggles.isIntegrationEnabled(any()) } returns true
-            every { txHistoryFeatureToggles.isNewTxHistoryEnabled } returns false
             coEvery { api.getVaults(any()) } returns ApiResponse.Success(
                 P2PEthPoolResponse(
                     error = null,

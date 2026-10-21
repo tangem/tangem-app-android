@@ -241,8 +241,6 @@ abstract class BaseTestCase : TestCase(
         // FeatureToggles rawNames; stale keys match nothing and are logged as ignored.
         val baseToggles = mapOf(
             "VISA_ONBOARDING_ENABLED" to true, // "undefined" on develop → forced on for tests
-            // The OTLP exporter has its own HTTP client, so it bypasses the WireMock redirect.
-            "TWI_1627_OTEL_METRICS_ENABLED" to false,
         )
         // Overrides supplied at launch time (GitHub Actions `feature_toggles` input / Allure TestOps launch
         // parameter, delivered via the `featureToggles` instrumentation arg) win over the base map. Empty

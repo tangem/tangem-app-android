@@ -79,7 +79,6 @@ internal class StateBuilderSwapButtonTest {
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
             isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
-            isChooseTokenPulseEnabled = false,
         )
     }
 
@@ -354,7 +353,6 @@ internal class StateBuilderSwapButtonTest {
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
             isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
-            isChooseTokenPulseEnabled = false,
             predictionTopUpLimitsProvider = Provider {
                 PredictionTopUpLimits(
                     minimum = BigDecimal(minimum),

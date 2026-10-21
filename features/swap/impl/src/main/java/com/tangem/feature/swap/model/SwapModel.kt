@@ -313,7 +313,6 @@ internal class SwapModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isAccountsModeProvider = Provider { isAccountsMode },
         isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
-        isChooseTokenPulseEnabled = swapFeatureToggles.isChooseTokenPulseEnabled,
         isCustomSlippageEnabled = swapFeatureToggles.isCustomSlippageEnabled,
         predictionTopUpLimitsProvider = Provider { predictionTopUpLimits },
     )

@@ -11,7 +11,6 @@ import com.tangem.domain.appsflyer.AppsFlyerDeeplink
 import com.tangem.domain.appsflyer.AppsFlyerDeeplinkTarget
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
@@ -36,7 +35,6 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val appRouter: AppRouter,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory,
 ) {
 
@@ -127,8 +125,6 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
     }
 
     private suspend fun routeTangemPayCampaign(campaignKey: String, currentRoute: AppRoute) {
-        if (!tangemPayFeatureToggles.isCustomCardsCobrandEnabled) return
-
         if (userWalletsListRepository.userWalletsSync().isNotEmpty()) {
             if (isNavigationBlocked(currentRoute)) return
             TangemLogger.i("[TangemPay][Campaign] Routing campaign deep link over the current screen")

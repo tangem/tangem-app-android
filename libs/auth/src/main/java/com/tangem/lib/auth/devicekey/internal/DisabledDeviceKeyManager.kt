@@ -15,13 +15,13 @@ internal object DisabledDeviceKeyManager : DeviceKeyManager {
 
     override suspend fun sign(data: ByteArray): ByteArray {
         throw DeviceKeySigningException(
-            "DeviceKeyManager is disabled: feature toggle is off or keystore is unavailable",
+            "DeviceKeyManager is disabled: keystore is unavailable",
         )
     }
 
     override suspend fun signDer(data: ByteArray): ByteArray {
         throw DeviceKeySigningException(
-            "DeviceKeyManager is disabled: feature toggle is off or keystore is unavailable",
+            "DeviceKeyManager is disabled: keystore is unavailable",
         )
     }
 }

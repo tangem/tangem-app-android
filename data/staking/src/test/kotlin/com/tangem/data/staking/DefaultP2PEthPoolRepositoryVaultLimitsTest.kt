@@ -18,7 +18,6 @@ import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.model.ethpool.VaultLimitInfo
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolNetworkDTO
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolResponse
@@ -53,7 +52,6 @@ internal class DefaultP2PEthPoolRepositoryVaultLimitsTest {
     private val featureToggles: StakingFeatureToggles = mockk(relaxed = true)
     private val regionBlockedStore: P2PEthPoolRegionBlockedStore = mockk(relaxed = true)
     private val vaultDao: P2PEthPoolVaultDao = mockk()
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles = mockk()
 
     private val repository = DefaultP2PEthPoolRepository(
         p2pEthPoolApi = api,
@@ -63,13 +61,12 @@ internal class DefaultP2PEthPoolRepositoryVaultLimitsTest {
         tangemTechApi = tangemTechApi,
         dispatchers = TestingCoroutineDispatcherProvider(),
         stakingFeatureToggles = featureToggles,
-        txHistoryFeatureToggle = txHistoryFeatureToggles,
         p2pEthPoolRegionBlockedStore = regionBlockedStore,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(api, tangemTechApi, vaultDao, txHistoryFeatureToggles)
+        clearMocks(api, tangemTechApi, vaultDao)
         limitsStore.clear()
         coEvery { vaultDao.upsert(any()) } just Runs
     }
@@ -224,9 +221,8 @@ internal class DefaultP2PEthPoolRepositoryVaultLimitsTest {
     inner class GetVaults {
 
         @Test
-        fun `GIVEN tx history enabled WHEN getVaults THEN raw vaults upserted and domain vaults rescaled`() = runTest {
+        fun `GIVEN vaults WHEN getVaults THEN raw vaults upserted and domain vaults rescaled`() = runTest {
             // Arrange
-            every { txHistoryFeatureToggles.isNewTxHistoryEnabled } returns true
             coEvery { api.getVaults("mainnet") } returns vaultsOk(vaultDTO())
 
             // Act
@@ -237,27 +233,12 @@ internal class DefaultP2PEthPoolRepositoryVaultLimitsTest {
             coVerify { vaultDao.upsert(listOf(expectedEntity)) }
         }
 
-        @Test
-        fun `GIVEN tx history disabled WHEN getVaults THEN dao untouched`() = runTest {
-            // Arrange
-            every { txHistoryFeatureToggles.isNewTxHistoryEnabled } returns false
-            coEvery { api.getVaults("mainnet") } returns vaultsOk(vaultDTO())
-
-            // Act
-            val actual = repository.getVaults(P2PEthPoolNetwork.MAINNET)
-
-            // Assert
-            assertThat(actual).isEqualTo(listOf(expectedVault).right())
-            coVerify(exactly = 0) { vaultDao.upsert(any()) }
-        }
-
         // Pins current behaviour: upsert runs before the test-vault filter
         @Test
-        fun `GIVEN test vault and tx history enabled WHEN getVaults THEN test vault persisted but filtered from result`() =
+        fun `GIVEN test vault WHEN getVaults THEN test vault persisted but filtered from result`() =
             runTest {
                 // Arrange
                 val testAddress = "0xb72668d6ff7a0e318f83097a754c6aed0f8af034"
-                every { txHistoryFeatureToggles.isNewTxHistoryEnabled } returns true
                 coEvery { api.getVaults("mainnet") } returns vaultsOk(vaultDTO(), vaultDTO(address = testAddress))
 
                 // Act
@@ -272,7 +253,6 @@ internal class DefaultP2PEthPoolRepositoryVaultLimitsTest {
         fun `GIVEN api error WHEN getVaults THEN unknown error and dao untouched`() = runTest {
             // Arrange
             val cause = ApiResponseError.NetworkException()
-            every { txHistoryFeatureToggles.isNewTxHistoryEnabled } returns true
             coEvery { api.getVaults("mainnet") } returns apiError<P2PEthPoolResponse<P2PEthPoolVaultsResponse>>(cause)
 
             // Act

@@ -24,7 +24,6 @@ import com.tangem.features.tangempay.addfunds.va.bank.DefaultTangemPayBankingDet
 import com.tangem.features.tangempay.addfunds.va.bank.VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER
 import com.tangem.features.tangempay.addfunds.va.bank.toRequisitesRows
 import com.tangem.features.tangempay.addfunds.va.deposit.TangemPayVirtualAccountDepositComponent
-import com.tangem.features.tangempay.card.issue.TangemPayIssueAdditionalCardComponent
 import com.tangem.features.tangempay.common.userWalletId
 import com.tangem.features.tangempay.components.TangemPayBankingDetailsErrorComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
@@ -188,16 +187,6 @@ internal class TangemPayDetailsComponent(
                     onDismiss = model.bottomSheetNavigation::dismiss,
                     onContactSupport = model::onContactSupportClicked,
                     onResolved = model::onVaBankingDetailsResolved,
-                ),
-            )
-            is TangemPayDetailsNavigation.IssueAdditionalCard -> TangemPayIssueAdditionalCardComponent(
-                appComponentContext = context,
-                params = TangemPayIssueAdditionalCardComponent.Params(
-                    userWalletId = navigation.walletId,
-                    feeAmount = navigation.feeAmount,
-                    feeCurrency = navigation.feeCurrency,
-                    fiatBalance = navigation.fiatBalance,
-                    listener = model,
                 ),
             )
             is TangemPayDetailsNavigation.ChooseNetwork -> PaymentChooseNetworkComponent(
