@@ -34,7 +34,11 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import com.tangem.test.core.ProvideTestModels
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -450,6 +454,60 @@ internal class StakingModelInitTest : StakingModelTestBase() {
             }
         }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class RefreshedStatusBeforeConfirmation {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN step before confirmation WHEN refreshed status emitted THEN notifications recomputed`(
+            model: StepModel,
+        ) = runTest {
+            // Arrange
+            val statusFlow = MutableSharedFlow<AccountCryptoCurrencyStatus>()
+            val uiStateFlow = MutableStateFlow(initialUiState)
+            val (cachedStatus, cachedAccountStatus) = createMockedAccountCurrencyStatus()
+            val (refreshedStatus, refreshedAccountStatus) = createMockedAccountCurrencyStatus()
+            arrangeStatusRefreshOnConfirmation(statusFlow, uiStateFlow, cachedStatus)
+
+            val stakingModel = createModel(testScope = this)
+            statusFlow.emit(cachedAccountStatus)
+            advanceUntilIdle()
+            uiStateFlow.value = createUiStateOnStep(model.step)
+            advanceUntilIdle()
+
+            // Act
+            statusFlow.emit(refreshedAccountStatus)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = model.expectedRecomputations) {
+                getCurrencyCheckUseCase(
+                    userWalletId = any(),
+                    currencyStatus = refreshedStatus,
+                    feeCurrencyStatus = any(),
+                    amount = any(),
+                    fee = any(),
+                    feeCurrencyBalanceAfterTransaction = any(),
+                    recipientAddress = any(),
+                )
+            }
+            coVerify(exactly = 0) { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), refreshedStatus) }
+
+            stakingModel.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            StepModel(step = StakingStep.Amount, expectedRecomputations = 1),
+            StepModel(step = StakingStep.RewardsValidators, expectedRecomputations = 1),
+            StepModel(step = StakingStep.RestakeValidator, expectedRecomputations = 1),
+            StepModel(step = StakingStep.Validators, expectedRecomputations = 1),
+            StepModel(step = StakingStep.Success, expectedRecomputations = 0),
+        )
+    }
+
+    internal data class StepModel(val step: StakingStep, val expectedRecomputations: Int)
+
     private fun arrangeStatusRefreshOnConfirmation(
         statusFlow: MutableSharedFlow<AccountCryptoCurrencyStatus>,
         uiStateFlow: MutableStateFlow<StakingUiState>,
@@ -487,6 +545,10 @@ internal class StakingModelInitTest : StakingModelTestBase() {
         } returns mockk<StakingFeeLoader> {
             coEvery { getFee(any(), any(), any(), any()) } just Runs
         }
+    }
+
+    private fun createUiStateOnStep(step: StakingStep): StakingUiState = mockk(relaxed = true) {
+        every { currentStep } returns step
     }
 
     private fun createConfirmationUiState(confirmationInnerState: InnerConfirmationStakingState): StakingUiState =
