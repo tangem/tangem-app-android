@@ -1,6 +1,5 @@
 package com.tangem.features.jointaccount.main.entity
 
-import androidx.annotation.DrawableRes
 import com.tangem.core.ui.extensions.TextReference
 
 /**
@@ -10,17 +9,6 @@ import com.tangem.core.ui.extensions.TextReference
 internal sealed interface JointAccountMembersSheetConfig {
 
     data class MemberCard(val card: MemberCardConfig) : JointAccountMembersSheetConfig
-
-    /**
-     * "Activate account" confirmation. [cryptoAccountId] is threaded back into
-     * [com.tangem.features.jointaccount.main.model.JointAccountMembersModel.onConfirmActivationClick] rather
-     * than re-read off the screen state, so the confirm action always targets the account the sheet was
-     * opened for.
-     */
-    data class ActivationConfirmation(
-        val cryptoAccountId: String,
-        @DrawableRes val walletInteractionIconRes: Int?,
-    ) : JointAccountMembersSheetConfig
 
     /**
      * "About signatures" sheet.

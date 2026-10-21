@@ -20,7 +20,6 @@ internal class UpdateMembersAccountTransformer(
     private val sharedInvites: Set<String>,
     private val ownAddress: String?,
     private val callbacks: JointAccountToMembersUMConverter.Callbacks,
-    private val isActivating: Boolean = false,
     private val accountName: AccountName? = null,
     private val accountIcon: CryptoPortfolioIcon? = null,
 ) : Transformer<JointAccountMembersUM> {
@@ -32,7 +31,6 @@ internal class UpdateMembersAccountTransformer(
                 invites = invites,
                 sharedInvites = sharedInvites,
                 ownAddress = ownAddress,
-                isActivating = isActivating,
                 accountName = accountName,
                 accountIcon = accountIcon,
             ),
