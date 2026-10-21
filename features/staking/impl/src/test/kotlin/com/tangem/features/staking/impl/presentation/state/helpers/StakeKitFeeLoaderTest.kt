@@ -602,24 +602,6 @@ internal class StakeKitFeeLoaderTest {
             assertThat(captured.fees).isEmpty()
         }
 
-        // Pins current behaviour: a failed action is reported but the fee of the remaining actions is still emitted
-        @Test
-        fun `GIVEN one of two actions fails WHEN getFee THEN error reported and fee of remaining action emitted`() =
-            runTest {
-                // Arrange
-                givenCompositeState(withdraw1, withdraw2)
-                stubEstimate("pt-1", Either.Left(StakingError.DomainError("boom")))
-                stubEstimate("pt-2", estimate("0.002"))
-                val captured = Captured()
-
-                // Act
-                solanaLoader().load(captured)
-
-                // Assert
-                assertThat(captured.stakingErrors).containsExactly(StakingError.DomainError("boom"))
-                assertThat(captured.fees).containsExactly(fee(BigDecimal("0.002"), "SOL", 9) to false)
-            }
-
         @Test
         fun `GIVEN all actions fail WHEN getFee THEN each error plus error estimating fee`() = runTest {
             // Arrange

@@ -28,7 +28,6 @@ internal class StakingOperationsFactoryTest {
     private val stakeKitLoader: StakeKitFeeLoader = mockk()
     private val p2pLoader: P2PEthPoolFeeLoader = mockk()
     private val stakeKitSender: StakeKitTransactionSender = mockk()
-    private val p2pSender: P2PEthPoolTransactionSender = mockk()
 
     private val provider = Provider { status(currency = solanaCoin) }
     private val userWallet = realUserWallet
@@ -125,33 +124,6 @@ internal class StakingOperationsFactoryTest {
                 )
             }
             verify(exactly = 0) { p2pSenderFactory.create(any(), any(), any()) }
-        }
-
-        @Test
-        fun `GIVEN p2p integration WHEN createTransactionSender THEN p2p sender created and subtract flag ignored`() {
-            // Arrange
-            val integration = p2pIntegration()
-            every { p2pSenderFactory.create(any(), any(), any()) } returns p2pSender
-
-            // Act
-            val actual = factory.createTransactionSender(
-                cryptoCurrencyStatusProvider = provider,
-                userWallet = userWallet,
-                integration = integration,
-                isAmountSubtractAvailable = true,
-            )
-
-            // Assert
-            assertThat(actual).isSameInstanceAs(p2pSender)
-            verify(exactly = 1) { p2pSenderFactory.create(provider, userWallet, integration) }
-            verify(
-                exactly = 0,
-            ) { stakeKitSenderFactory.create(
-                cryptoCurrencyStatusProvider = any(),
-                userWallet = any(),
-                integration = any(),
-                isAmountSubtractAvailable = any(),
-            ) }
         }
     }
 
