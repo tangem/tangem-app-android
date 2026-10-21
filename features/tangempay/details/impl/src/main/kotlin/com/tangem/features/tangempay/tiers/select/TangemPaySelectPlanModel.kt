@@ -14,8 +14,11 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
-import com.tangem.domain.models.account.mainImageUrl
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
+import com.tangem.domain.models.account.mainImageUrl
+import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
+import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
 import com.tangem.domain.pay.usecase.GetCurrentTariffUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanTransitionsUseCase
 import com.tangem.domain.pay.usecase.SubmitTariffTransitionUseCase
@@ -46,6 +49,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     private val getTransitions: GetTangemPayTariffPlanTransitionsUseCase,
     private val getCurrentTariffUseCase: GetCurrentTariffUseCase,
     private val submitTariffTransitionUseCase: SubmitTariffTransitionUseCase,
+    private val startTangemPayOnboardingUseCase: StartTangemPayOnboardingUseCase,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
     private val urlOpener: UrlOpener,
@@ -105,9 +109,8 @@ internal class TangemPaySelectPlanModel @Inject constructor(
                 isConfirm = true
                 state.update { buildState() }
             }
-            is TangemPaySelectPlanComponent.Mode.PickPlan -> {
-                router.pop()
-                mode.onPlanSelected(transition)
+            is TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder -> {
+                createOnboardingOrder(transition = transition, availableProducts = mode.availableProducts)
             }
         }
     }
@@ -173,6 +176,31 @@ internal class TangemPaySelectPlanModel @Inject constructor(
                     uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
                 },
             )
+        }
+    }
+
+    private fun createOnboardingOrder(
+        transition: TangemPayTariffPlanTransition,
+        availableProducts: Set<TangemPayProduct>,
+    ) {
+        if (isProcessing) return
+
+        isProcessing = true
+        state.update { buildState() }
+        modelScope.launch {
+            startTangemPayOnboardingUseCase(
+                userWalletId = params.userWalletId,
+                tariffPlanTransition = transition,
+                availableProducts = availableProducts,
+            ).onLeft { error ->
+                isProcessing = false
+                state.update { buildState() }
+                if (error !is StartTangemPayOnboardingError.UserCancelled) {
+                    uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
+                }
+            }.onRight {
+                // TODO v_rodiononov: #[REDACTED_TASK_KEY] Tangem Pay Onboarding Success Screen
+            }
         }
     }
 
