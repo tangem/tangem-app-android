@@ -30,10 +30,13 @@ import com.tangem.features.jointaccount.main.confirmaddress.ui.state.JointAccoun
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -43,6 +46,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import com.tangem.core.ui.R as CoreUiR
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Stable
 @ModelScoped
 @Suppress("LongParameterList")
@@ -79,9 +83,27 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
             ),
         )
 
+    private val isResumed = MutableStateFlow(false)
+
     init {
         observeAddress()
-        pollingCoordinator.poll(walletId = params.userWalletId).launchIn(modelScope)
+        subscribePolling()
+    }
+
+    fun onResume() {
+        isResumed.value = true
+    }
+
+    fun onPause() {
+        isResumed.value = false
+    }
+
+    private fun subscribePolling() {
+        isResumed
+            .flatMapLatest { resumed ->
+                if (resumed) pollingCoordinator.poll(walletId = params.userWalletId) else emptyFlow()
+            }
+            .launchIn(modelScope)
     }
 
     private fun observeAddress() {

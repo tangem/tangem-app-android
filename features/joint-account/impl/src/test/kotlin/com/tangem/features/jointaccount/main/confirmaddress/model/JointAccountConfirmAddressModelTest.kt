@@ -37,9 +37,11 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -254,12 +256,40 @@ internal class JointAccountConfirmAddressModelTest {
     }
 
     @Test
-    fun `GIVEN model created WHEN on screen THEN the joint accounts are polled for the wallet`() = runTest {
+    fun `GIVEN model created WHEN resumed THEN the joint accounts are polled for the wallet`() = runTest {
+        // Arrange
+        val model = createModel()
+        verify(exactly = 0) { pollingCoordinator.poll(walletId = any()) }
+
         // Act
-        createModel()
+        model.onResume()
+        advanceUntilIdle()
 
         // Assert
         verify(exactly = 1) { pollingCoordinator.poll(walletId = USER_WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN resumed model WHEN paused THEN polling stops`() = runTest {
+        // Arrange
+        val pollCancelled = MutableStateFlow(false)
+        every { pollingCoordinator.poll(walletId = USER_WALLET_ID) } returns flow {
+            try {
+                awaitCancellation()
+            } finally {
+                pollCancelled.value = true
+            }
+        }
+        val model = createModel()
+        model.onResume()
+        advanceUntilIdle()
+
+        // Act
+        model.onPause()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(pollCancelled.value).isTrue()
     }
 
     private fun confirmingAccount() = JointAccount(
