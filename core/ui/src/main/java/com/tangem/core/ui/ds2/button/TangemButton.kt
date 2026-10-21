@@ -110,8 +110,7 @@ fun TangemButton(
     val disabledAlpha = if (hasEnabledAppearance) 1f else colorTokens.disabledAlpha
     val backgroundColor =
         if (hasEnabledAppearance) colorTokens.backgroundColor else colorTokens.disabledBackgroundColor
-    val accessibilityLabel = contentDescription
-        ?: if (shouldShowLoader) (loadingText ?: text)?.resolveReference() else null
+    val accessibilityLabel = contentDescription ?: resolveLoadingLabel(shouldShowLoader, loadingText, text)
 
     TangemSurface(
         modifier = modifier
@@ -144,6 +143,11 @@ fun TangemButton(
             sizeTokens = sizeTokens,
         )
     }
+}
+
+@Composable
+private fun resolveLoadingLabel(isLoading: Boolean, loadingText: TextReference?, text: TextReference?): String? {
+    return if (isLoading) (loadingText ?: text)?.resolveReference() else null
 }
 
 object TangemButton {
