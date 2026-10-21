@@ -46,7 +46,13 @@ internal class TangemPayMainBlockConverter(
                 onClick = { tangemPayClickIntents.openDetails(value) },
             )
             is PaymentAccountStatusValue.KycRequired -> TangemPayMainUM.ActionRequired(
-                onClick = { tangemPayClickIntents.onKycRequiredClicked(value.account.userWalletId) },
+                onClick = {
+                    tangemPayClickIntents.onKycRequiredClicked(
+                        userWalletId = value.account.userWalletId,
+                        customerId = statusValue.customerId,
+                        customerResidency = statusValue.customerResidency,
+                    )
+                },
             )
             is PaymentAccountStatusValue.Verified -> TangemPayMainUM.ActionRequired(
                 onClick = { tangemPayClickIntents.onVerifiedClicked(value.account.userWalletId) },

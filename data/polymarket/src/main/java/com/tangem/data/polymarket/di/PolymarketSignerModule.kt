@@ -2,7 +2,9 @@ package com.tangem.data.polymarket.di
 
 import com.tangem.data.polymarket.signer.AndroidBase64UrlCodec
 import com.tangem.data.polymarket.signer.Base64UrlCodec
+import com.tangem.data.polymarket.signing.DefaultPolymarketSigningSession
 import com.tangem.data.polymarket.signing.DefaultPolymarketTypedDataSigner
+import com.tangem.domain.polymarket.signing.PolymarketSigningSession
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import dagger.Binds
 import dagger.Module
@@ -18,6 +20,10 @@ internal interface PolymarketSignerModule {
     @Binds
     @Singleton
     fun bindPolymarketTypedDataSigner(impl: DefaultPolymarketTypedDataSigner): PolymarketTypedDataSigner
+
+    @Binds
+    @Singleton
+    fun bindPolymarketSigningSession(impl: DefaultPolymarketSigningSession): PolymarketSigningSession
 
     companion object {
 

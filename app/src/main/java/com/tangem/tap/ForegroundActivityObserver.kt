@@ -6,9 +6,12 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.core.decompose.utils.ForegroundActivityProvider
 import com.tangem.utils.logging.TangemLogger
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.reflect.KClass
 
-object ForegroundActivityObserver : ForegroundActivityProvider {
+@Singleton
+internal class ForegroundActivityObserver @Inject constructor() : ForegroundActivityProvider {
 
     private val activities = HashMap<KClass<out Activity>, AppCompatActivity>()
 
@@ -16,14 +19,13 @@ object ForegroundActivityObserver : ForegroundActivityProvider {
         get() = activities.entries
             .firstOrNull { entry ->
                 TangemLogger.i("foregroundActivity: ${entry.key} | ${entry.value.isDestroyed}")
-                entry.value.isDestroyed == false
+                !entry.value.isDestroyed
             }
             ?.value
 
-    internal val callbacks: ActivityLifecycleCallbacks
-        get() = Callbacks()
+    val callbacks: ActivityLifecycleCallbacks = Callbacks()
 
-    internal class Callbacks : ActivityLifecycleCallbacks {
+    private inner class Callbacks : ActivityLifecycleCallbacks {
         override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         }
 
@@ -52,8 +54,4 @@ object ForegroundActivityObserver : ForegroundActivityProvider {
         override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
         }
     }
-}
-
-fun ForegroundActivityObserver.withForegroundActivity(block: (AppCompatActivity) -> Unit) {
-    foregroundActivity?.let { block(it) }
 }

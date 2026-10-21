@@ -3,6 +3,7 @@ package com.tangem.domain.models.account
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.SerialName
@@ -93,6 +94,19 @@ sealed class MoneyAccountStatusValue {
         abstract val customerId: String
         abstract val cryptoCurrency: CryptoCurrency.Token
         abstract val balance: Balance?
+
+        val cryptoCurrencyStatus: CryptoCurrencyStatus?
+            get() = balance?.let { accountBalance ->
+                CryptoCurrencyStatus(
+                    currency = cryptoCurrency,
+                    value = depositCryptoCurrencyStatusValue(
+                        amount = accountBalance.cryptoAmount,
+                        fiatRate = accountBalance.fiatRate,
+                        depositAddress = accountBalance.depositAddress,
+                        source = source,
+                    ),
+                )
+            }
 
         @Serializable
         data class Active(

@@ -19,6 +19,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
@@ -48,7 +49,11 @@ internal interface TangemPayIntents {
 
     fun onKycProgressClicked(userWalletId: UserWalletId)
 
-    fun onKycRequiredClicked(userWalletId: UserWalletId)
+    fun onKycRequiredClicked(
+        userWalletId: UserWalletId,
+        customerId: String?,
+        customerResidency: TangemPayCustomerResidency?,
+    )
 
     fun onVerifiedClicked(userWalletId: UserWalletId)
 
@@ -162,12 +167,41 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         uiMessageSender.send(kycInfoBottomSheet)
     }
 
-    override fun onKycRequiredClicked(userWalletId: UserWalletId) {
+    override fun onKycRequiredClicked(
+        userWalletId: UserWalletId,
+        customerId: String?,
+        customerResidency: TangemPayCustomerResidency?,
+    ) {
+        if (customerResidency == null) {
+            openEligibility(userWalletId)
+        } else {
+            showRegionUnavailableBottomSheet(userWalletId, customerId)
+        }
+    }
+
+    private fun openEligibility(userWalletId: UserWalletId) {
         router.openTangemPayEligibility(product = TangemPayProduct.PAYMENT_ACCOUNT, userWalletId = userWalletId)
     }
 
     override fun onVerifiedClicked(userWalletId: UserWalletId) {
         router.openTangemPayVerified(userWalletId = userWalletId)
+    }
+
+    private fun showRegionUnavailableBottomSheet(userWalletId: UserWalletId, customerId: String?) {
+        val bottomSheet = regionUnavailableBottomSheet(
+            onContactSupportClick = {
+                modelScope.launch {
+                    sendFeedbackEmailUseCase(type = kycRequiredFeedbackEmailType(userWalletId, customerId))
+                }
+            },
+            secondaryAction = EventMessageAction(
+                title = resourceReference(R.string.tangempay_region_unavailable_secondary_button),
+                onClick = { openEligibility(userWalletId) },
+            ),
+            onHideAccountClick = { disableTangemPay(userWalletId) },
+        )
+
+        uiMessageSender.send(bottomSheet)
     }
 
     override fun onKycRejectedOpenProfileClicked(userWalletId: UserWalletId) {
