@@ -1035,6 +1035,41 @@ internal class PolymarketMainModelTest {
         }
 
     @Test
+    fun `GIVEN a failed prefetch WHEN withdraw is clicked THEN nothing opens and the error alert is shown`() = runTest {
+        // Arrange
+        coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Network.left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        val message = slot<EventMessage>()
+        every { messageSender.send(capture(message)) } returns Unit
+
+        // Act
+        model.uiState.value.balance.withdraw.onClick()
+
+        // Assert
+        verify(exactly = 0) { router.push(any(), any()) }
+        assertThat((message.captured as DialogMessage).message)
+            .isEqualTo(resourceReference(R.string.prediction_add_funds_error_description))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the default target has no minimum WHEN withdraw is clicked THEN nothing opens`() = runTest {
+        // Arrange
+        coEvery { refreshRequisites(USER_WALLET_ID) } returns REQUISITES_WITHOUT_MINIMUM.right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.balance.withdraw.onClick()
+
+        // Assert
+        assertThat(model.uiState.value.balance.withdraw.isDimmed).isTrue()
+        verify(exactly = 0) { router.push(any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN funding window opens WHEN state observed THEN awaiting funds banner shown and hidden with it`() =
         runTest {
             // Arrange
