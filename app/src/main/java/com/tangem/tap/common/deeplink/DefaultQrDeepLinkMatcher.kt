@@ -26,7 +26,7 @@ internal class DefaultQrDeepLinkMatcher(
 
         return when (uri.scheme) {
             DeepLinkScheme.Tangem.scheme -> isScreenLink(uri)
-            DeepLinkScheme.Https.scheme -> ExternalUrlValidator.isHostTrusted(uri.host)
+            DeepLinkScheme.Https.scheme -> ExternalUrlValidator.isUriTrusted(uri)
             else -> false
         }
     }
