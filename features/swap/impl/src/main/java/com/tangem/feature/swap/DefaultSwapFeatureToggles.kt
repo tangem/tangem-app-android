@@ -41,6 +41,6 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
 
     override val isOverallBestPriceEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.AND_18709_SWAP_OVERALL_BEST_PRICE_ENABLED,
+            toggle = FeatureToggles.TWI_1876_KYC_PRESCREENING_CEX_ENABLED,
         )
 }
