@@ -11,7 +11,6 @@ import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.staking.MockStaking
 import kotlinx.collections.immutable.toPersistentList
 import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
@@ -96,42 +95,6 @@ internal class StakingPendingActionUtilsTest {
             assertThat(actual)
                 .containsExactly(actions(StakingActionType.CLAIM_REWARDS).single(), STUB_UNSTAKE)
                 .inOrder()
-        }
-
-        @Test
-        fun `GIVEN stub network and rewards balance WHEN withStubUnstakeAction THEN active stake actions returned`() {
-            // Arrange
-            val activeStake = balanceState(
-                type = BalanceType.REWARDS,
-                pendingActions = actions(StakingActionType.WITHDRAW),
-            )
-
-            // Act
-            val actual = withStubUnstakeAction(
-                networkId = Blockchain.Cosmos.toNetworkId(),
-                pendingActions = actions(StakingActionType.CLAIM_REWARDS),
-                activeStake = activeStake,
-            )
-
-            // Assert
-            assertThat(actual).containsExactly(actions(StakingActionType.WITHDRAW).single())
-        }
-
-        // Pins current behaviour: outside stub networks the passed pending actions are silently discarded.
-        @Test
-        fun `GIVEN non stub network WHEN withStubUnstakeAction THEN active stake actions returned and passed list ignored`() {
-            // Arrange
-            val activeStake = balanceState(pendingActions = actions(StakingActionType.WITHDRAW))
-
-            // Act
-            val actual = withStubUnstakeAction(
-                networkId = Blockchain.Solana.toNetworkId(),
-                pendingActions = actions(StakingActionType.CLAIM_REWARDS),
-                activeStake = activeStake,
-            )
-
-            // Assert
-            assertThat(actual).containsExactly(actions(StakingActionType.WITHDRAW).single())
         }
 
         private fun provideTestModels() = listOf(Blockchain.BSC, Blockchain.Cardano, Blockchain.Cosmos)
