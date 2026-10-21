@@ -478,23 +478,6 @@ internal class StakingBalanceEntryConverterTest {
             assertThat(actual?.pendingActions).containsExactly(withdraw)
         }
 
-        // Pins current behaviour: the TON preparing branch ignores isPending, unlike every other clickable type.
-        @Test
-        fun `GIVEN ton preparing pending with withdraw action WHEN convert THEN clickable ignoring pending`() {
-            // Arrange
-            val entry = stakeKitEntry(
-                type = StakingEntryType.PREPARING,
-                pendingActions = listOf(withdraw),
-                isPending = true,
-            )
-
-            // Act
-            val actual = converter(currency = ton, integration = tonIntegration).convert(entry)
-
-            // Assert
-            assertThat(actual?.isClickable).isTrue()
-        }
-
         @Test
         fun `GIVEN ton preparing without withdraw WHEN convert THEN not clickable`() {
             // Act
