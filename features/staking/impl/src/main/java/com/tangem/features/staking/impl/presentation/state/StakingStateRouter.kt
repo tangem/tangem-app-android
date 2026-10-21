@@ -1,13 +1,13 @@
 package com.tangem.features.staking.impl.presentation.state
 
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
 
 internal class StakingStateRouter(
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val stateController: StakingStateController,
     private val analyticsEventsHandler: AnalyticsEventHandler,
 ) {
@@ -16,7 +16,7 @@ internal class StakingStateRouter(
 
     fun onBackClick() {
         analyticSender.screenCancel(stateController.value)
-        appRouter.pop()
+        router.pop()
         stateController.clear()
     }
 
@@ -67,7 +67,7 @@ internal class StakingStateRouter(
                 }
             }
             StakingStep.Validators -> showConfirmation()
-            StakingStep.Success -> appRouter.pop()
+            StakingStep.Success -> router.pop()
         }
     }
 
