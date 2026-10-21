@@ -12,11 +12,13 @@ dependencies {
     /** Core */
     api(projects.core.decompose)
     api(projects.core.ui)
+    implementation(projects.core.utils)
 
     /** Domain */
     api(projects.domain.models)
     api(projects.domain.visa.models)
 
     /** Other */
+    api(deps.arrow.core)
     implementation(deps.androidx.annotation)
 }

@@ -1,43 +1,28 @@
 package com.tangem.features.feed.rwa.model
 
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
-import com.tangem.domain.settings.usercountry.models.UserCountry
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.withTimeoutOrNull
 import java.util.Locale
 import javax.inject.Inject
 
 /**
  * Resolves the country the category restrictions are evaluated for.
  *
- * The synchronous read is a `StateFlow` seeded `null` and rebuilt every process, not the persisted value:
- * only the start-up fetch fills it. So **every** launch races the categories request, and the flow wait is
- * the normal path rather than the exception. Waiting briefly beats asking without a country, because such
- * an answer comes back with every category unrestricted — the permissive outcome, and the wrong one to
- * show a user in a restricted region.
+ * Waits for the start-up country with no timer of its own: it is published once per process and the tab
+ * never re-reads it, so a stand-in taken early would name the wrong region for the whole session.
+ * `fetchUserCountryCode()` publishes on every path, so the wait ends with the geo request.
  *
- * Returns `null` only when neither the backend nor the device knows the region.
+ * Returns `null` when the published country is blank.
  */
 internal class UserCountryResolver @Inject constructor(
     private val getUserCountryUseCase: GetUserCountryUseCase,
 ) {
 
     suspend fun resolve(): String? {
-        val resolved = getUserCountryUseCase.invokeSync().getOrNull()
-            ?: withTimeoutOrNull(RESOLVE_TIMEOUT_MILLIS) {
-                getUserCountryUseCase().mapNotNull { it.getOrNull() }.first()
-            }
-            // Asking without a country makes the backend lift every restriction, so the device region is
-            // a better last resort than none — the same order `needApplyFCARestrictions` already uses.
-            ?: UserCountry.fromDeviceLocale()
+        val resolved = getUserCountryUseCase().mapNotNull { it.getOrNull() }.first()
 
-        // ISO 3166-1 alpha-2 is upper case on the wire, while the stored country keeps whatever case it
-        // was saved in — normalizing here keeps the cache key stable across both.
+        // the backend expects upper-case ISO 3166-1 alpha-2, while the published country is lower case
         return resolved.code.uppercase(Locale.ROOT).takeIf(String::isNotBlank)
-    }
-
-    private companion object {
-        const val RESOLVE_TIMEOUT_MILLIS = 3_000L
     }
 }

@@ -14,6 +14,7 @@ import com.tangem.common.core.Config
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.decompose.utils.ForegroundActivityProvider
 import com.tangem.crypto.bip39.Wordlist
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.data.card.sdk.CardSdkProvider
@@ -34,7 +35,6 @@ import com.tangem.sdk.nfc.NfcManager
 import com.tangem.sdk.storage.create
 import com.tangem.tap.domain.card.FirmwareFeatureToggles
 import com.tangem.tap.domain.walletregistration.withBackupColdWalletRegistration
-import com.tangem.tap.foregroundActivityObserver
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
@@ -56,6 +56,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
     private val apiConfigsManager: ApiConfigsManager,
     private val firmwareFeatureToggles: FirmwareFeatureToggles,
     private val tangemSdkManager: Lazy<TangemSdkManager>,
+    private val foregroundActivityProvider: ForegroundActivityProvider,
     appInfoProvider: AppInfoProvider,
     tangemApiKeyHeaderProvider: TangemApiKeyHeaderProvider,
 ) : CardSdkProvider, CardSdkOwner, BackupServiceProvider {
@@ -128,7 +129,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
         )
         Log.warning { warning }
 
-        val activity = foregroundActivityObserver.foregroundActivity
+        val activity = foregroundActivityProvider.foregroundActivity
 
         if (activity == null) {
             val error = "Tangem SDK holder is null and foreground activity is null"

@@ -110,7 +110,6 @@ internal open class TxDetailsConverterTestBase {
     ) = ExpressTxToDetailsUMConverter(
         currency = currency,
         onGoToProvider = openedUrls::add,
-        onCopyAddress = copiedAddresses::add,
         lookup = lookup,
         menu = menu,
         isBalanceHidden = isBalanceHidden,

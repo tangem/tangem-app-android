@@ -6,8 +6,8 @@ import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import com.tangem.core.decompose.utils.ForegroundActivityProvider
 import com.tangem.core.navigation.email.EmailSender
-import com.tangem.tap.foregroundActivityObserver
 import com.tangem.utils.logging.TangemLogger
 
 /**
@@ -17,10 +17,11 @@ import com.tangem.utils.logging.TangemLogger
  */
 internal class AndroidEmailSender(
     private val messageTruncator: EmailMessageTruncator,
+    private val foregroundActivityProvider: ForegroundActivityProvider,
 ) : EmailSender {
 
     override fun send(email: EmailSender.Email, onFail: ((Exception) -> Unit)?) {
-        val activity = foregroundActivityObserver.foregroundActivity
+        val activity = foregroundActivityProvider.foregroundActivity
 
         if (activity == null) {
             TangemLogger.e("Foreground activity not found")

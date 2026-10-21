@@ -113,7 +113,11 @@ fun BaseTestCase.openMainScreenWithNewHotWallet() {
 }
 
 @OptIn(ExperimentalTestApi::class)
-fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessCode: String = "") {
+fun BaseTestCase.openMainScreenWithExistingHotWallet(
+    seedPhrase: String,
+    accessCode: String = "",
+    dismissMarketsTooltip: Boolean = true,
+) {
     step("Click on 'I have a wallet' button") {
         onIntroductionScreen { iHaveWalletButton.clickWithAssertion() }
     }
@@ -195,8 +199,10 @@ fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessC
     step("Assert 'Main' screen is displayed") {
         onMainScreen { screenContainer.assertIsDisplayed() }
     }
-    step("Dismiss Market Tooltip by clicking close button") {
-        onMarketsTooltipScreen { closeButton.clickWithAssertion() }
+    if (dismissMarketsTooltip) {
+        step("Dismiss Market Tooltip by clicking close button") {
+            onMarketsTooltipScreen { closeButton.clickWithAssertion() }
+        }
     }
 }
 

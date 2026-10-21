@@ -12,6 +12,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_chart_line_vertical_20
@@ -356,15 +357,19 @@ internal class OnChainTxToDetailsUMConverter(
      * list uses for its subtitle); a counterparty that is not a plain `User` address yields no card (`null`).
      *
      * The address is resolved through the shared [lookup] for display only: an own account / own wallet renders its
-     * name and avatar, anything else the full external address with an identicon. Whatever it renders, the card copies
-     * the underlying address on tap — the same address the header menu's "Copy address" row copies.
+     * name and avatar, anything else the full external address with an identicon. The card is tappable only where
+     * [the address may be copied][allowsAddressCopy] — the same condition the header menu's "Copy address" row obeys.
      */
     private fun TxInfo.toCounterpartyUM(): TxHistoryDetailsUM.CounterpartyUM? {
-        val address = copyableAddress() ?: return null
+        val address = counterpartyCardAddress() ?: return null
         val owner = resolvedCounterparty() ?: return null
         return owner.toCounterpartyUM(
             label = counterpartyLabel(incoming = owner.incomingLabelRes),
-            onCopyClick = { onCopyAddress(address) },
+            onCopyClick = if (allowsAddressCopy()) {
+                { onCopyAddress(address) }
+            } else {
+                null
+            },
         )
     }
 
@@ -385,14 +390,28 @@ internal class OnChainTxToDetailsUMConverter(
         return !isProtocolType || isPlainSend
     }
 
-    /**
-     * Address copied by both the counterparty card and the header menu's "Copy address" row — the two are offered
-     * together, on exactly the transactions that show a [counterparty card][toCounterpartyUM]. What the card *displays*
-     * plays no part: an own account or wallet renders its name, and copying still yields the address behind it.
-     */
-    private fun TxInfo.copyableAddress(): String? {
+    /** The counterparty address the card is built from, on exactly the transactions that show one. */
+    private fun TxInfo.counterpartyCardAddress(): String? {
         if (!hasCounterpartyCard()) return null
         return counterpartyAddress()?.ifBlank { null }
+    }
+
+    /**
+     * Address offered to both copy entry points — the counterparty card's tap and the header menu's "Copy address"
+     * row — so the two never disagree. `null` drops the menu row and leaves the card non-tappable.
+     */
+    private fun TxInfo.copyableAddress(): String? = counterpartyCardAddress()?.takeIf { allowsAddressCopy() }
+
+    /**
+     * Whether the counterparty address may be copied at all. Only a transaction that reads "Sent" / "Received" names
+     * an address the user would act on; a transfer between the user's own portfolios ("Transferred") and an on-chain
+     * swap name a counterparty that is theirs or the protocol's, so neither offers the copy.
+     */
+    private fun TxInfo.allowsAddressCopy(): Boolean {
+        val isTransferType = type is TransactionType.Transfer ||
+            type is TransactionType.Joint.Transfer ||
+            (type as? TransactionType.YieldSupply.Send)?.isYieldSupplyWithdraw == false
+        return isTransferType && !isOwnTransfer()
     }
 
     /**
@@ -442,7 +461,7 @@ private fun TxInfo.signedAmount(currency: CryptoCurrency): String {
         status is TxInfo.TransactionStatus.Failed -> ""
         amount.isZero() -> ""
         else -> when (type.amountSign()) {
-            AmountSign.BY_DIRECTION -> if (isOutgoing) "${StringsSigns.MINUS} " else "${StringsSigns.PLUS} "
+            AmountSign.BY_DIRECTION -> if (isOutgoing) "${StringsSigns.DASH_SIGN} " else "${StringsSigns.PLUS} "
             AmountSign.ALWAYS_PLUS -> "${StringsSigns.PLUS} "
             AmountSign.NONE -> ""
         }
@@ -466,22 +485,28 @@ private fun TxInfo.headerIcon(currency: CryptoCurrency): TxIcon {
         is TransactionType.Staking.Unstake,
         is TransactionType.Staking.Restake,
         -> TxIcon.Vector(Icons.ic_stack_20)
-        is TransactionType.YieldSupply.Enter,
-        is TransactionType.YieldSupply.Exit,
-        -> TxIcon.Vector(Icons.ic_chart_line_vertical_20)
-        // A non-withdraw Send is a plain transfer — directional arrow. A withdraw stays a yield operation and
-        // keeps the yield lightning glyph (falls through to the YieldSupply branch below); it only drops the
-        // validator/counterparty.
-        is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {
-            TxIcon.Vector(Icons.ic_lightning_20)
-        } else {
-            TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
-        }
-        is TransactionType.YieldSupply -> TxIcon.Vector(Icons.ic_lightning_20)
+        is TransactionType.YieldSupply -> yieldSupplyIcon(type)
         is TransactionType.Operation -> TxIcon.Vector(Icons.ic_document_20)
         is TransactionType.Swap -> TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20)
         else -> TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
     }
+}
+
+private fun TxInfo.yieldSupplyIcon(type: TransactionType.YieldSupply): TxIcon = when (type) {
+    is TransactionType.YieldSupply.Enter,
+    is TransactionType.YieldSupply.Exit,
+    -> TxIcon.Vector(Icons.ic_chart_line_vertical_20)
+    is TransactionType.YieldSupply.DeployContract -> TxIcon.Vector(Icons.ic_document_20)
+    is TransactionType.YieldSupply.InitializeToken -> TxIcon.Res(R.drawable.ic_gear_24)
+    is TransactionType.YieldSupply.ReactivateToken -> TxIcon.Vector(Icons.ic_arrow_refresh_20)
+    // A non-withdraw Send is a plain transfer — directional arrow. A withdraw stays a yield operation and keeps the
+    // lightning glyph; it only drops the validator/counterparty.
+    is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {
+        TxIcon.Vector(Icons.ic_lightning_20)
+    } else {
+        TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
+    }
+    TransactionType.YieldSupply.Topup -> TxIcon.Vector(Icons.ic_lightning_20)
 }
 
 // endregion

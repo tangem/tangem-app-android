@@ -125,7 +125,7 @@ internal class ExpressTxToTransactionItemUMConverterTest {
         ) as TransactionItemUM.Content
 
         assertThat(result.direction).isEqualTo(TransactionItemUM.Content.Direction.OUTGOING)
-        assertThat(result.amount).startsWith("-")
+        assertThat(result.amount).startsWith("—")
         assertThat(result.amount).contains("1.5")
     }
 

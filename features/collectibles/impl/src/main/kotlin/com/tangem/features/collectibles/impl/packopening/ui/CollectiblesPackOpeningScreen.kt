@@ -40,6 +40,8 @@ internal fun CollectiblesPackOpeningScreen(state: CollectiblesPackOpeningUM, mod
         if (content != null && card != null && stage == Stage.Reward) {
             RewardCard(
                 um = card,
+                sellBack = content.reveal.sellBack,
+                isKeepCardEnabled = content.reveal.isKeepCardEnabled,
                 timing = if (content.reveal.isSkipped) RewardCardTiming.Skipped else RewardCardTiming.Default,
                 cardAspect = cardAspect,
                 onKeepCardClick = content.reveal.onKeepCardClick,

@@ -21,9 +21,9 @@ internal val ResolvedOwner.incomingLabelRes: Int
 
 /**
  * Counterparty card of a resolved owner: an own account, own wallet or saved contact renders its name and avatar,
- * anything else the full external address with an identicon.
+ * anything else the full external address with an identicon. A `null` [onCopyClick] leaves the card non-tappable.
  */
-internal fun ResolvedOwner.toCounterpartyUM(label: TextReference, onCopyClick: () -> Unit) =
+internal fun ResolvedOwner.toCounterpartyUM(label: TextReference, onCopyClick: (() -> Unit)?) =
     TxHistoryDetailsUM.CounterpartyUM(
         label = label,
         title = when (this) {

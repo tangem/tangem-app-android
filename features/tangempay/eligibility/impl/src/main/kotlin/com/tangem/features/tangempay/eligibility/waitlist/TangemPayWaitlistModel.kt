@@ -19,6 +19,7 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.eligibility.TangemPayWaitlistComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.withCacheBypass
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -79,7 +80,7 @@ internal class TangemPayWaitlistModel @Inject constructor(
     }
 
     private fun onPrivacyPolicyClick() {
-        urlOpener.openUrl(PRIVACY_POLICY_URL)
+        urlOpener.openUrl(PRIVACY_POLICY_URL.withCacheBypass())
     }
 
     private fun onSaveClick() {
@@ -163,7 +164,7 @@ internal class TangemPayWaitlistModel @Inject constructor(
     }
 
     private companion object {
-        const val PRIVACY_POLICY_URL = "https://tangem.com/privacy-policy/"
+        const val PRIVACY_POLICY_URL = "https://tangem.com/docs/en/privacy-policy.pdf"
         val EMAIL_REGEX = "[^@\\s]+@[^@\\s.]+\\.[^@\\s]{2,}".toRegex()
     }
 }
