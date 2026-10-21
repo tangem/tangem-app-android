@@ -47,9 +47,9 @@ packopening/
   model/CollectiblesPackOpeningModel
   model/converter/                  — CollectiblesPackOpeningConverter (order), CollectiblesRewardCardConverter
                                       (RewardCardUM from OpenedCollectiblePack)
-  video/                            — PackRevealVideoPlayer, DefaultPackRevealVideoPlayer(+Factory)
-  video/source/                     — PackRevealAsset, PackRevealAssetCache,
-                                      PackRevealMediaSourceFactory
+  video/                            — PackRevealVideoPlayer, DefaultPackRevealVideoPlayer(+Factory): glue over
+                                      `:core:media`'s OneShotVideoController and SoundClip
+  video/source/                     — PackRevealAsset, PackRevealAssetCache (the engine's RemoteClipCache)
   ui/components/{confirmorder,packreveal,rewardcard}, ui/preview, ui/state
 ```
 
@@ -80,7 +80,7 @@ quirk here.) Impl has no `res/`, no `AndroidManifest.xml` and no `androidTest/`;
 | `CollectiblesMachineDetailsModel` | One machine plus its prize-pool pagination; holds the Turbo flag | `impl/.../machinedetails/model/CollectiblesMachineDetailsModel.kt` |
 | `CollectiblesPackOpeningModel` | Runs the purchase, picks full vs short reveal, drives the `Stage` | `impl/.../packopening/model/CollectiblesPackOpeningModel.kt` |
 | `CollectiblesPackOpeningScreen` | Layers confirm order / reveal video / reward card by `Stage` | `impl/.../packopening/ui/CollectiblesPackOpeningScreen.kt` |
-| `DefaultPackRevealVideoPlayer` | Two ExoPlayers (video + skip sound); trips the card reveal | `impl/.../packopening/video/DefaultPackRevealVideoPlayer.kt` |
+| `DefaultPackRevealVideoPlayer` | `OneShotVideoController` (video) + `SoundClip` (skip sound) from `:core:media`; trips the card reveal | `impl/.../packopening/video/DefaultPackRevealVideoPlayer.kt` |
 | `CardChoreography` / `RewardCardTiming` | Pure maths for the card's grow / turn / settle; `Default` and `Skipped` timings; JVM-tested | `impl/.../packopening/ui/components/rewardcard/CardChoreography.kt` |
 | `OpenCollectiblePackUseCase` | Buy → pay on chain → await payment → open; emits `OpenPackStep` | `domain/collectibles/.../usecase/OpenCollectiblePackUseCase.kt` |
 | `CollectiblesMainList` | The single `LazyColumn`; header + discovery's items + filler | `impl/.../main/ui/components/CollectiblesMainList.kt` |
@@ -202,10 +202,12 @@ The UI beat is `CollectiblesPackOpeningUM.Stage` — `Order → Launching → Re
 **Reveal media come from the backend.** `MachineDTO.openPackMedia` (`videoLight`, `videoDark`,
 `skipAnimationAudio`) → `CollectibleGachaMachine.RevealAssets` (`lightVideoUrl`, `darkVideoUrl`,
 `skipAudioUrl`); without `openPackMedia` the machine has no `RevealAssets`, the player gets `null` and goes
-`Failed`, and the short version runs. The component reports `LocalIsInDarkTheme` through
-`onThemeChanged`, and the model preloads the matching video while still on `Order`; a theme change there
-reloads it. Remote URLs are downloaded in full into `PackRevealAssetCache` (a 256 MB LRU media3
-`SimpleCache` in `pack-reveal/`) before playback, so the reveal never buffers.
+`Failed`, and the short version runs. No audio focus is taken, so other audio neither pauses the video
+nor is paused by it. The screen's `onPause`/`onResume` pause the video and carry on from the same frame.
+The component reports `LocalIsInDarkTheme` through `onThemeChanged`, and the model preloads the matching
+video while still on `Order`; a theme change there reloads it. Remote URLs are downloaded in full into
+`PackRevealAssetCache` (a 256 MB LRU media3 `SimpleCache` in `pack-reveal/`) before playback, so the reveal
+never buffers.
 
 ### Sell back
 
@@ -284,7 +286,7 @@ the config requires updating `CollectiblesConfigTest`, which asserts the exact h
 
 | Module | Scope | Provides |
 |---|---|---|
-| `CollectiblesComponentModule` | `SingletonComponent` | `CollectiblesEntryComponent.Factory`, `CollectiblesDiscoveryComponent.Factory`, `CollectiblesWalletBlockComponent.Factory`, `PackRevealVideoPlayer.Factory`, `PackRevealMediaSourceFactory` |
+| `CollectiblesComponentModule` | `SingletonComponent` | `CollectiblesEntryComponent.Factory`, `CollectiblesDiscoveryComponent.Factory`, `CollectiblesWalletBlockComponent.Factory`, `PackRevealVideoPlayer.Factory` |
 | `CollectiblesModelModule` | **`ModelComponent`** | All six models `@IntoMap @ClassKey` into the model map read by `getOrCreateModel()` |
 | `CollectiblesFeatureTogglesModule` | `SingletonComponent` | `CollectiblesFeatureToggles` |
 | `CollectiblesDataModule` (in `data/collectibles/`) | `SingletonComponent` | Repositories, owner deriver, account store/supplier/fetcher, machine store, wallet data cleaner |
@@ -309,7 +311,8 @@ Tests use the shared `TestScope.createTestingCoroutineDispatcherProvider()` from
 Reference tests in this feature: `CollectiblesDiscoveryContentTransformerTest` (parameterized status
 table), `CollectiblesDiscoveryModelTest` (fake `BatchFlow` + captured `BatchingContext`),
 `CollectiblesPackOpeningModelTest` (relaxed `PackRevealVideoPlayer` mock, captured `Listener` to fire the
-card reveal), `DefaultPackRevealVideoPlayerTest` (mocked `ExoPlayer`s), and the root-level `MachineFactory.kt`
+card reveal), `DefaultPackRevealVideoPlayerTest` (mocked engine controller and sound clip; the playback
+rules themselves are tested in `:core:media`), and the root-level `MachineFactory.kt`
 for the all-arguments-defaulted fixtures (machines, categories, NFTs, `createOpenedPack`).
 
 ## Gotchas
@@ -370,13 +373,13 @@ throw could not be taken back if the purchase then failed. While the purchase ru
 ignored, and stays ignored until the card is shown (`Stage.Reward`) — the component registers its own
 `BackCallback`, since leaving would cancel the job and a paid pack with it.
 
-**The card reveal comes off presented frames, with an end-of-video backstop.** `DefaultPackRevealVideoPlayer`
-trips the card reveal from `setVideoFrameMetadataListener`, comparing each frame the decoder actually *presented*
-against `cardRevealMs` — so it stalls with a starving decoder instead of running ahead of it, which is the
-required behaviour rather than a bug. `Player.STATE_ENDED` (and a playback error) is the backstop. Do not
-add a `currentPosition` poll for the card reveal: it advances on the timeline and would fire while a stalled
-picture was still frozen. The reveal video carries its sound muxed in; the second ExoPlayer only plays the
-short skip/fallback sound.
+**The card reveal comes off presented frames, with backstops.** `OneShotVideoController` (`:core:media`) reports
+the cue from `setVideoFrameMetadataListener`, comparing each frame the decoder actually *presented* against
+`cardRevealMs`, and hands it to the main thread. Do not add a `currentPosition` poll for the card reveal: it
+advances on the timeline and would fire while a stalled picture was still frozen. The backstops are the end of
+the video, a playback error and a stall: three seconds without a new frame while the screen is in front give way
+to the card with the skip sound. A paused video in the background never counts as a stall. The reveal video
+carries its sound muxed in; `SoundClip` only plays the short skip/fallback sound.
 
 **Card reveal and skip timings are not in the API.** The backend sends URLs only; `PackRevealAsset`
 defaults to `cardRevealMs = 7_000` / `skipToMs = 6_100` for the current render. A re-rendered video needs those
