@@ -153,4 +153,27 @@ class TangemPayBalanceSyncTest : BaseTestCase() {
             }
         }
     }
+
+    @AllureId("9689")
+    @DisplayName("Tangem Pay: Main total balance includes the Payment account balance")
+    @Test
+    fun mainTotalBalanceIncludesPaymentAccountBalanceTest() {
+        setupHooks(
+            additionalBeforeSection = {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+            }
+        ).run {
+            step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
+            step("Assert Main tile balance contains '$initialBalance'") {
+                onTangemPayMainScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        tileBalance.assertTextContainsSafe(initialBalance, substring = true)
+                    }
+                }
+            }
+            step("Assert total balance equals the token balances plus the Payment account balance") {
+                awaitMainTotalBalanceIncludingTangemPay()
+            }
+        }
+    }
 }
