@@ -48,7 +48,8 @@ internal class TangemPayVerifiedUMFactory(
                     isMoneyAccountAvailable -> resourceReference(R.string.tangempay_verified_open_money_account)
                     else -> resourceReference(R.string.common_close)
                 },
-                iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24).takeIf { isMoneyAccountAvailable },
+                iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24)
+                    .takeIf { isMoneyAccountAvailable && !isVisaCardAvailable },
                 onClick = when {
                     isVisaCardAvailable -> onChoosePlanClick
                     isMoneyAccountAvailable -> onOpenMoneyAccountClick
