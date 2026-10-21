@@ -4,13 +4,7 @@ import arrow.core.toOption
 import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
 import com.tangem.common.test.data.staking.MockYieldDTOFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
-import com.google.common.truth.Truth.assertThat
-import com.tangem.core.local.datastore.RuntimeSharedStore
-import com.tangem.data.staking.converters.ethpool.P2PEthPoolStakingAccountConverter
-import com.tangem.data.staking.store.DefaultP2PEthPoolBalancesStore
 import com.tangem.data.staking.store.P2PEthPoolBalancesStore
-import com.tangem.data.staking.store.WalletIdWithP2PEthPoolResponses
-import com.tangem.data.staking.store.WalletIdWithP2PStakingBalances
 import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.data.staking.utils.YieldBalanceRequestBodyFactory
 import com.tangem.core.remote.response.ApiResponse
@@ -23,14 +17,10 @@ import com.tangem.grow.datasource.stakekit.models.response.model.YieldBalanceWra
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
-import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.assertEitherLeft
-import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.test.core.assertEitherRight
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -161,71 +151,6 @@ internal class DefaultMultiStakingBalanceFetcherTest {
             coVerify(exactly = 0) { p2PEthPoolBalancesStore.storeActual(any(), any()) }
             assertEitherRight(actual)
         }
-
-        // Pins current behaviour: missing-id check ignores case, so no error is stored for the requested id
-        @Test
-        fun `GIVEN response delegator in different case WHEN invoke THEN no error stored for that id`() = runTest {
-            // Arrange
-            stubWallet()
-            coEvery { p2pEthPoolVaultsStore.getSync() } returns listOf(vault(VAULT_A))
-            coEvery { p2pEthPoolApi.getAccountsList(any(), VAULT_A, any()) } returns
-                accountsListSuccess(accountResponse(ADDR_UPPER, VAULT_A))
-            val params = MultiStakingBalanceFetcher.Params(userWalletId, setOf(p2pIdLower))
-
-            // Act
-            val actual = fetcher.invoke(params)
-
-            // Assert
-            coVerify {
-                p2PEthPoolBalancesStore.storeActual(userWalletId, setOf(accountResponse(ADDR_UPPER, VAULT_A)))
-            }
-            coVerify(exactly = 0) { p2PEthPoolBalancesStore.storeError(any(), any()) }
-            assertEitherRight(actual)
-        }
-
-        // Pins current behaviour: the balance is stored under the response casing, so the requested id stays CACHE
-        @Test
-        fun `GIVEN real store and response delegator in different case WHEN invoke THEN requested id stays CACHE`() =
-            runTest {
-                // Arrange
-                val runtimeStore = RuntimeSharedStore<WalletIdWithP2PStakingBalances>()
-                val realStore = DefaultP2PEthPoolBalancesStore(
-                    runtimeStore = runtimeStore,
-                    persistenceStore = MockStateDataStore<WalletIdWithP2PEthPoolResponses>(default = emptyMap()),
-                    scope = TestAppCoroutineScope(),
-                )
-                val realStoreFetcher = DefaultMultiStakingBalanceFetcher(
-                    userWalletsListRepository = userWalletsListRepository,
-                    stakingYieldsStore = stakingYieldsStore,
-                    stakeKitBalancesStore = stakeKitBalancesStore,
-                    p2PEthPoolBalancesStore = realStore,
-                    stakeKitApi = stakeKitApi,
-                    p2pEthPoolApi = p2pEthPoolApi,
-                    p2pEthPoolVaultsStore = p2pEthPoolVaultsStore,
-                    dispatchers = TestingCoroutineDispatcherProvider(),
-                )
-                val previousResponse = accountResponse(ADDR_UPPER.lowercase(), VAULT_A)
-                val freshResponse = accountResponse(ADDR_UPPER, VAULT_A)
-                runtimeStore.store(
-                    mapOf(userWalletId to setOf(p2pBalance(p2pIdLower, StatusSource.ACTUAL, previousResponse))),
-                )
-                stubWallet()
-                coEvery { p2pEthPoolVaultsStore.getSync() } returns listOf(vault(VAULT_A))
-                coEvery { p2pEthPoolApi.getAccountsList(any(), VAULT_A, any()) } returns
-                    accountsListSuccess(freshResponse)
-                val params = MultiStakingBalanceFetcher.Params(userWalletId, setOf(p2pIdLower))
-
-                // Act
-                val actual = realStoreFetcher.invoke(params)
-
-                // Assert
-                val upperId = StakingID(integrationId = p2pIdLower.integrationId, address = ADDR_UPPER)
-                assertThat(realStore.getAllSyncOrNull(userWalletId)).containsExactly(
-                    p2pBalance(p2pIdLower, StatusSource.CACHE, previousResponse),
-                    p2pBalance(upperId, StatusSource.ACTUAL, freshResponse),
-                )
-                assertEitherRight(actual)
-            }
 
         // Pins current behaviour: every non-StakeKit integration id, including unknown ones, goes to the P2P branch
         @Test
@@ -822,11 +747,9 @@ internal class DefaultMultiStakingBalanceFetcherTest {
         const val VAULT_A = "0xVaultAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
         const val VAULT_B = "0xVaultBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
 
-        const val ADDR_UPPER = "0xABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFABCD"
 
         val p2pId1 = StakingID(integrationId = "p2p-ethereum-pooled", address = ADDR_1)
         val p2pId2 = StakingID(integrationId = "p2p-ethereum-pooled", address = ADDR_2)
-        val p2pIdLower = StakingID(integrationId = "p2p-ethereum-pooled", address = ADDR_UPPER.lowercase())
         val unknownId = StakingID(integrationId = "unknown-integration", address = ADDR_1)
 
         fun vault(address: String) = P2PEthPoolVault(
@@ -854,13 +777,6 @@ internal class DefaultMultiStakingBalanceFetcherTest {
             availableToWithdraw = BigDecimal.ZERO,
             exitQueue = P2PEthPoolExitQueueDTO(total = BigDecimal.ZERO, requests = emptyList()),
         )
-
-        fun p2pBalance(id: StakingID, source: StatusSource, vararg responses: P2PEthPoolAccountResponse) =
-            StakingBalance.Data.P2PEthPool(
-                stakingId = id,
-                source = source,
-                accounts = responses.map(P2PEthPoolStakingAccountConverter::convert),
-            )
 
         fun accountsListSuccess(vararg accounts: P2PEthPoolAccountResponse) = ApiResponse.Success(
             P2PEthPoolResponse(

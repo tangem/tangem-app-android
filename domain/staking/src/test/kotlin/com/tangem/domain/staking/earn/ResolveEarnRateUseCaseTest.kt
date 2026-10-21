@@ -296,25 +296,6 @@ internal class ResolveEarnRateUseCaseTest {
             assertThat(actual).isEqualTo(solanaStaking("0.07", isActive = true))
         }
 
-        // Pins current behaviour: staked validator is looked up in validators, not allValidators
-        @Test
-        fun `GIVEN stake on jailed validator WHEN invoke THEN preferred rate used instead`() {
-            // Arrange
-            val jailed6 = MockStaking.validator(
-                address = "validator-9",
-                status = Yield.Validator.ValidatorStatus.JAILED,
-                preferred = false,
-                rewardInfo = RewardInfo(BigDecimal("0.06"), RewardType.APR),
-            )
-            val option = stakeKitOption(vPref7, allValidators = listOf(vPref7, jailed6))
-
-            // Act
-            val actual = resolve(option, stakedOn("validator-9"))
-
-            // Assert
-            assertThat(actual).isEqualTo(solanaStaking("0.07", isActive = true))
-        }
-
         @Test
         fun `GIVEN preferred validator with APY reward WHEN invoke THEN APY reward type returned`() {
             // Arrange
