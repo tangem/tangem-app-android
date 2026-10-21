@@ -14,7 +14,7 @@ data class CustomerSummaryResponse(
     data class Result(
         @SerialName("customer_id") val customerId: String,
         @SerialName("customer_status") val customerStatus: String,
-        @SerialName("hidden") val hidden: Boolean,
+        @SerialName("hidden") val isHidden: Boolean,
         @SerialName("kyc_status") val kycStatus: String,
         @SerialName("payment_account") val paymentAccount: PaymentAccount,
         @SerialName("banking_account") val bankingAccount: BankingAccount,

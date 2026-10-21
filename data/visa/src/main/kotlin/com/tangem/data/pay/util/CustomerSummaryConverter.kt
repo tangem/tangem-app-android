@@ -12,7 +12,7 @@ internal object CustomerSummaryConverter : Converter<CustomerSummaryResponse.Res
         return CustomerSummary(
             customerId = value.customerId,
             customerStatus = CustomerInfo.State.fromString(value.customerStatus),
-            isHidden = value.hidden,
+            isHidden = value.isHidden,
             kycStatus = KycStatus.fromString(value.kycStatus),
             paymentAccount = CustomerSummary.PaymentAccount(
                 id = value.paymentAccount.id,
