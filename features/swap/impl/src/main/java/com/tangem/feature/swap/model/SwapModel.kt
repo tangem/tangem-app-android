@@ -1649,7 +1649,10 @@ internal class SwapModel @Inject constructor(
 
         return if (consideredProviders.isNotEmpty()) {
             val successLoadedData = consideredProviders.getLastLoadedSuccessStates()
-            val bestQuotesProvider = SwapProviderResolver.findBest(states = successLoadedData)
+            val bestQuotesProvider = SwapProviderResolver.findBest(
+                states = successLoadedData,
+                isOverallBestPriceEnabled = swapFeatureToggles.isOverallBestPriceEnabled,
+            )
             val currentSelected = dataState.selectedProvider
             if (currentSelected != null && consideredProviders.keys.contains(currentSelected)) {
                 // logic for always choose best if already selected provider
