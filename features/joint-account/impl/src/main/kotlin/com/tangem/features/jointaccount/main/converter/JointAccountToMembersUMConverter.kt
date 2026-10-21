@@ -86,11 +86,6 @@ internal class JointAccountToMembersUMConverter(
             } else {
                 null
             },
-            waitingLabel = if (freeSlots.isNotEmpty()) {
-                resourceReference(CoreUiR.string.joint_account_invite_members_waiting_to_join)
-            } else {
-                null
-            },
             footer = footer(phase = phase, input = value, freeSlots = freeSlots),
         )
     }
@@ -180,19 +175,20 @@ internal class JointAccountToMembersUMConverter(
         if (freeSlots.isEmpty()) return resourceReference(CoreUiR.string.joint_account_invite_members_everyone_joined)
 
         val notInvited = freeSlots.count { slot -> slot.status is SlotStatusUM.NotInvited }
-        return if (phase.isThisDeviceCreator && notInvited > 0) {
-            pluralReference(
-                id = CoreUiR.plurals.joint_account_invite_members_invite_more,
-                count = notInvited,
-                formatArgs = wrappedList(notInvited),
-            )
-        } else {
-            pluralReference(
+        if (!phase.isThisDeviceCreator || notInvited == 0) {
+            return pluralReference(
                 id = CoreUiR.plurals.joint_account_invite_members_awaiting_to_join,
                 count = freeSlots.size,
                 formatArgs = wrappedList(freeSlots.size),
             )
         }
+
+        val id = if (notInvited == freeSlots.size) {
+            CoreUiR.plurals.joint_account_invite_members_invite_count
+        } else {
+            CoreUiR.plurals.joint_account_invite_members_invite_more
+        }
+        return pluralReference(id = id, count = notInvited, formatArgs = wrappedList(notInvited))
     }
 
     private fun joinedMember(
