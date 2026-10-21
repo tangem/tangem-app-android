@@ -54,6 +54,6 @@ object ForegroundActivityObserver : ForegroundActivityProvider {
     }
 }
 
-fun ForegroundActivityObserver.withForegroundActivity(block: (AppCompatActivity) -> Unit) {
+fun ForegroundActivityProvider.withForegroundActivity(block: (AppCompatActivity) -> Unit) {
     foregroundActivity?.let { block(it) }
 }

@@ -56,11 +56,15 @@ internal interface UtilsModule {
 
         @Provides
         @Singleton
-        fun provideUrlOpener(): UrlOpener = CustomTabsUrlOpener()
+        fun provideUrlOpener(foregroundActivityProvider: ForegroundActivityProvider): UrlOpener =
+            CustomTabsUrlOpener(foregroundActivityProvider)
 
         @Provides
         @Singleton
-        fun provideAppFinisher(@ApplicationContext context: Context): AppFinisher = AndroidAppFinisher(context)
+        fun provideAppFinisher(
+            @ApplicationContext context: Context,
+            foregroundActivityProvider: ForegroundActivityProvider,
+        ): AppFinisher = AndroidAppFinisher(context, foregroundActivityProvider)
 
         @Provides
         @Singleton
