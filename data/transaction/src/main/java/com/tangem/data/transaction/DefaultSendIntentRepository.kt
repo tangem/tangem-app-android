@@ -21,7 +21,7 @@ internal class DefaultSendIntentRepository(
     override suspend fun getSendIntent(intentId: String): Either<Throwable, SendIntent> {
         val result: Either<Throwable, SendIntent> = when (val response = transactionIntentApi.getSendIntent(intentId)) {
             is ApiResponse.Success -> sendIntentConverter.convert(response.data)
-            is ApiResponse.Error -> Either.Left(convertError(intentId = intentId, cause = response.cause))
+            is ApiResponse.Error -> Either.Left(convertReadError(intentId = intentId, cause = response.cause))
         }
 
         return result.onLeft { error -> logFailure(error, message = "Failed to read send intent $intentId") }
@@ -38,6 +38,17 @@ internal class DefaultSendIntentRepository(
         }
 
         return result.onLeft { error -> logFailure(error, message = "Failed to complete send intent $intentId") }
+    }
+
+    /** Completing the intent retries on any server failure itself, so only reading tells HTTP 5xx apart. */
+    private fun convertReadError(intentId: String, cause: ApiResponseError): Throwable {
+        val error = convertError(intentId = intentId, cause = cause)
+
+        return if (error is ApiResponseError.HttpException && error.isServerError()) {
+            SendIntentError.ServerError(intentId = intentId, httpCode = error.code.numericCode)
+        } else {
+            error
+        }
     }
 
     private fun convertError(intentId: String, cause: ApiResponseError): Throwable {

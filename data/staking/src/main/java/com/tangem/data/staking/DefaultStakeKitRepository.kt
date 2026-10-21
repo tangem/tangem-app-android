@@ -2,9 +2,11 @@ package com.tangem.data.staking
 
 import android.util.Base64
 import com.squareup.moshi.Moshi
+import com.tangem.blockchain.blockchains.solana.SolanaTransactionExtras
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchainsdk.utils.fromNetworkId
@@ -282,6 +284,7 @@ internal class DefaultStakeKitRepository(
                 fee = fee,
                 amount = amount,
                 status = TransactionStatus.Unconfirmed,
+                extras = getTransactionExtras(networkId),
             )
 
             transaction to transactionData
@@ -335,6 +338,15 @@ internal class DefaultStakeKitRepository(
                     /* flags = */ Base64.NO_WRAP,
                 ),
             )
+            else -> null
+        }
+    }
+
+    // StakeKit mints the Solana blockhash when it builds the transaction, long before the user signs, so the SDK
+    // is asked to replace it with a fresh one right before signing.
+    private fun getTransactionExtras(networkId: Network.RawID): TransactionExtras? {
+        return when (networkId.toBlockchain()) {
+            Blockchain.Solana -> SolanaTransactionExtras(shouldRefreshRecentBlockhash = true)
             else -> null
         }
     }

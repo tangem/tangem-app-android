@@ -31,6 +31,7 @@ internal sealed class PromoCampaignsAnalyticsEvent(
         constructor(campaign: PromoCampaign) : this(
             mapOf(
                 SCREEN to campaign.name,
+                CAMPAIGN to campaign.name,
                 MATCH_MODE to campaign.matchMode.analyticsName,
                 PAYOUT to if (campaign.payout.isNeeded) "Yes" else "No",
             ),

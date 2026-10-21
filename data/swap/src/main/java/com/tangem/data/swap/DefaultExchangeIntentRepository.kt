@@ -2,6 +2,7 @@ package com.tangem.data.swap
 
 import arrow.core.Either
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.swap.converter.ExchangeIntentConverter
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.express.ExpressErrorResolver
@@ -9,6 +10,7 @@ import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.ExchangeIntentRepository
 import com.tangem.domain.swap.models.ExchangeIntent
+import com.tangem.domain.swap.models.ExchangeIntentError
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.utils.logging.TangemLogger
 
@@ -33,24 +35,31 @@ internal class DefaultExchangeIntentRepository(
 
         val result: Either<Throwable, ExchangeIntent> = when (response) {
             is ApiResponse.Success -> exchangeIntentConverter.convert(response.data)
-            is ApiResponse.Error -> {
-                val cause = response.cause
-                val isOfAnotherWallet = expressErrorResolver.resolve(cause) is ExpressError.IntentOfAnotherWalletError
-
-                Either.Left(if (isOfAnotherWallet) wrongWalletError(intentId) else cause)
-            }
+            is ApiResponse.Error -> Either.Left(convertError(intentId = intentId, cause = response.cause))
         }
 
         return result.onLeft { error ->
-            if (error is DataError.UserWalletError.WrongUserWallet) {
-                TangemLogger.i("Exchange intent belongs to another wallet")
-            } else {
-                TangemLogger.e("Failed to read exchange intent $intentId", error)
+            when (error) {
+                is DataError.UserWalletError.WrongUserWallet,
+                is ExchangeIntentError.NotFound,
+                -> TangemLogger.i("Exchange intent $intentId is not available: ${error.message}")
+                else -> TangemLogger.e("Failed to read exchange intent $intentId", error)
             }
         }
     }
 
-    private fun wrongWalletError(intentId: String): Throwable {
-        return DataError.UserWalletError.WrongUserWallet("Intent $intentId belongs to another wallet")
+    private fun convertError(intentId: String, cause: ApiResponseError): Throwable {
+        return when {
+            cause is ApiResponseError.HttpException && cause.isServerError() -> {
+                ExchangeIntentError.ServerError(intentId = intentId, httpCode = cause.code.numericCode)
+            }
+            else -> when (expressErrorResolver.resolve(cause)) {
+                is ExpressError.IntentOfAnotherWalletError -> {
+                    DataError.UserWalletError.WrongUserWallet("Intent $intentId belongs to another wallet")
+                }
+                is ExpressError.IntentNotFoundError -> ExchangeIntentError.NotFound(intentId)
+                else -> cause
+            }
+        }
     }
 }

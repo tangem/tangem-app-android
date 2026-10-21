@@ -183,6 +183,17 @@ fun BaseTestCase.assertTangemPayTariffRequestSentOnce(name: String, countBefore:
     Assert.assertEquals("The $name request should be sent once", 1, count() - countBefore)
 }
 
+fun BaseTestCase.completeTangemPayBasicPlanIssuing(plan: String) {
+    stageTangemPayPlanState(plan)
+    completeTangemPayBasicOrderIssuing()
+    assertTangemPayIssuingCardBannerHidden()
+    step("Assert payment account balance is displayed") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onTangemPayMainScreen { balance.assertIsDisplayed() }
+        }
+    }
+}
+
 /** From the Main screen, opens plan selection through the 'Select plan' Tangem Pay tile. */
 fun BaseTestCase.openTangemPaySelectPlanFromOnboarding() {
     val selectPlanSubtitle = getResourceString(CoreResR.string.tangempay_main_select_plan)
