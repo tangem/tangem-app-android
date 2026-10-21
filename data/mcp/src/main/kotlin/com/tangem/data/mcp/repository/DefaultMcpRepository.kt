@@ -3,7 +3,9 @@ package com.tangem.data.mcp.repository
 import android.util.Base64
 import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.recover
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.mcp.converter.McpClientConverter
 import com.tangem.data.mcp.converter.toDomain
 import com.tangem.domain.mcp.models.McpAgent
@@ -90,7 +92,22 @@ internal class DefaultMcpRepository @Inject constructor(
     override suspend fun revokeSession(sessionId: String): Either<Throwable, Unit> {
         return mcpApi.revokeSession(sessionId = sessionId)
             .toEither()
+            .recoverGoneSession()
             .onRight { loadSessions(force = true) }
+    }
+
+    /**
+     * Turns a session the service no longer knows into a success: the caller asked for it to be gone,
+     * and it is. The reload that follows takes it off the screen without an error of its own.
+     */
+    private fun Either<Throwable, Unit>.recoverGoneSession(): Either<Throwable, Unit> = recover { error ->
+        val code = (error as? ApiResponseError.HttpException)?.code
+
+        if (code != ApiResponseError.HttpException.Code.NOT_FOUND &&
+            code != ApiResponseError.HttpException.Code.GONE
+        ) {
+            raise(error)
+        }
     }
 
     /**
