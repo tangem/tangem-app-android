@@ -5,6 +5,7 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.transaction.error.GaslessServiceException
 import com.tangem.domain.transaction.error.TronActivationRefusal
+import com.tangem.domain.transaction.error.TronAllowanceTooHigh
 import com.tangem.grow.datasource.gasless.models.GaslessErrorDto
 import com.tangem.grow.datasource.gasless.models.GaslessErrorResponse
 
@@ -15,7 +16,8 @@ import com.tangem.grow.datasource.gasless.models.GaslessErrorResponse
  * so the send flow ends up showing an error with no code at all.
  *
  * With [errorAdapter] the error body is read as well: the service's own message replaces the HTTP reason phrase,
- * and a refused Tron account activation is carried as [GaslessServiceException.tronActivationRefusal].
+ * and the Tron refusals the app reacts to are carried as [GaslessServiceException.tronActivationRefusal] and
+ * [GaslessServiceException.tronAllowanceTooHigh].
  */
 internal fun <T : Any> ApiResponse<T>.getOrThrowGaslessError(
     errorAdapter: JsonAdapter<GaslessErrorResponse>? = null,
@@ -37,6 +39,7 @@ internal fun ApiResponseError.toGaslessServiceException(
                 ?: code.readableName(),
             cause = this,
             tronActivationRefusal = error?.toTronActivationRefusal(),
+            tronAllowanceTooHigh = error?.toTronAllowanceTooHigh(),
         )
     }
     is ApiResponseError.NetworkException -> GaslessServiceException(
@@ -68,6 +71,19 @@ private fun GaslessErrorDto.toTronActivationRefusal(): TronActivationRefusal? = 
     )
     "TRON_ACTIVATION_RATE_LIMITED" -> TronActivationRefusal.RateLimited(isPerWallet = details?.scope == "wallet")
     else -> null
+}
+
+private fun GaslessErrorDto.toTronAllowanceTooHigh(): TronAllowanceTooHigh? {
+    if (code != "TRON_ALLOWANCE_TOO_HIGH") return null
+    val details = details ?: return null
+    return TronAllowanceTooHigh(
+        balanceRaw = details.balance?.toBigIntegerOrNull() ?: return null,
+        requiredRaw = details.required?.toBigIntegerOrNull() ?: return null,
+        allowanceRaw = details.allowance?.toBigIntegerOrNull() ?: return null,
+        allowancesRaw = details.allowances.orEmpty().mapNotNull { (address, allowance) ->
+            allowance.toBigIntegerOrNull()?.let { address to it }
+        }.toMap(),
+    )
 }
 
 private fun ApiResponseError.HttpException.Code.readableName(): String {
