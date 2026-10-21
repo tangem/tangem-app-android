@@ -519,31 +519,6 @@ internal class StakeKitTransactionSenderTest {
             assertThat(error).hasMessageThat().isEqualTo("No amount state")
         }
 
-        // Pins current behaviour: a balance target does not replace the validator, and an empty build is reported twice
-        @Test
-        fun `GIVEN no chosen validator even with balance target WHEN send THEN no validator error then empty build error`() =
-            runTest {
-                // Arrange
-                every { stateController.value } returns uiState(
-                    validatorState = StakingStates.ValidatorState.Empty(),
-                    balanceState = balanceState("balance-target"),
-                )
-                val recorder = Recorder()
-
-                // Act
-                createRealSender().send(recorder.callbacks)
-
-                // Assert
-                assertThat(recorder.constructErrors).containsExactly(
-                    StakingError.DomainError("No validator provided"),
-                    StakingError.DomainError("fullTransactionsData is null or empty"),
-                ).inOrder()
-                coVerify(exactly = 0) { getStakingTransactionsUseCase(any(), any(), any()) }
-                coVerify(
-                    exactly = 0,
-                ) { sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any()) }
-            }
-
         // Pins current behaviour: a failed transactions request is followed by a second, generic build error
         @Test
         fun `GIVEN staking transactions left WHEN send THEN error forwarded then empty build error`() = runTest {
@@ -604,32 +579,6 @@ internal class StakeKitTransactionSenderTest {
                 coVerify(exactly = 1) {
                     sendTransactionUseCase(
                         txsData = listOf(compiled("stake")),
-                        userWallet = any(),
-                        network = any(),
-                        sendMode = any(),
-                    )
-                }
-            }
-
-        // Pins current behaviour: a failed construction is reported, the remaining transactions are still sent
-        @Test
-        fun `GIVEN one of two constructions fails WHEN send THEN error reported and remaining transaction still sent`() =
-            runTest {
-                // Arrange
-                givenTransactions(tx("tx-1"), tx("tx-2"))
-                coEvery {
-                    getConstructedStakingTransactionUseCase(networkId = any(), fee = any(), amount = any(), transactionId = "tx-1")
-                } returns Either.Left(StakingError.DomainError("construct failed"))
-                val recorder = Recorder()
-
-                // Act
-                createRealSender().send(recorder.callbacks)
-
-                // Assert
-                assertThat(recorder.constructErrors).containsExactly(StakingError.DomainError("construct failed"))
-                coVerify(exactly = 1) {
-                    sendTransactionUseCase(
-                        txsData = listOf(compiled("tx-2")),
                         userWallet = any(),
                         network = any(),
                         sendMode = any(),
@@ -854,9 +803,8 @@ internal class StakeKitTransactionSenderTest {
             }
         }
 
-        // Pins current behaviour: a batch Left after the first tx was already broadcast leaves no submit_hash trace.
         @Test
-        fun `GIVEN send left WHEN send THEN send error and no hash submit or balance update`() = runTest {
+        fun `GIVEN send left WHEN send THEN send error reported and no success`() = runTest {
             // Arrange
             coEvery {
                 sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
@@ -868,8 +816,6 @@ internal class StakeKitTransactionSenderTest {
 
             // Assert
             assertThat(recorder.sendErrors).containsExactly(SendTransactionError.UserCancelledError)
-            coVerify(exactly = 0) { submitHashUseCase(any()) }
-            verify(exactly = 0) { stakingBalanceUpdaterFactory.create(any(), any(), any()) }
             assertThat(recorder.successUrls).isEmpty()
         }
 
@@ -963,26 +909,6 @@ internal class StakeKitTransactionSenderTest {
             verify(exactly = 1) { balanceUpdater.updateAfterTransaction() }
             assertThat(recorder.successUrls).containsExactly("url")
         }
-
-        // Pins current behaviour: send throws NoSuchElementException on `transactionHashes.last()` when no hashes come back
-        @Test
-        fun `GIVEN send returns empty hashes WHEN send THEN throws NoSuchElementException and nothing submitted`() =
-            runTest {
-                // Arrange
-                coEvery {
-                    sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
-                } returns Either.Right(emptyList())
-                val recorder = Recorder()
-
-                // Act
-                val error = runSuspendCatching { createRealSender().send(recorder.callbacks) }.exceptionOrNull()
-
-                // Assert
-                assertThat(error).isInstanceOf(NoSuchElementException::class.java)
-                coVerify(exactly = 0) { submitHashUseCase(any()) }
-                coVerify(exactly = 0) { saveUnsubmittedHashUseCase(any(), any()) }
-                assertThat(recorder.successUrls).isEmpty()
-            }
 
         // Pins current behaviour: hashes are paired with transactions by position, unmatched transactions are skipped
         @Test

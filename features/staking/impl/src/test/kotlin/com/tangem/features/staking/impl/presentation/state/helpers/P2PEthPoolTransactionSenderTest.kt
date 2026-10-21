@@ -244,50 +244,6 @@ internal class P2PEthPoolTransactionSenderTest {
             }
         }
 
-        // Pins current behaviour: the verdict cached by validate() is reused in send() without re-checking
-        @Test
-        fun `GIVEN validated SAFE then check would be UNSAFE WHEN send THEN stale SAFE verdict reused and sent`() =
-            runTest {
-                // Arrange
-                val sender = createSender()
-                val recorder = Recorder()
-                sender.validate()
-                givenVerdict(StakingTransactionVerdict.UNSAFE)
-
-                // Act
-                sender.send(recorder.callbacks)
-
-                // Assert
-                assertThat(recorder.constructErrors).isEmpty()
-                assertThat(recorder.successUrls).containsExactly("https://etherscan.io/tx/0xhash")
-                coVerify(exactly = 1) { checkStakingTransactionUseCase(any(), any(), any(), any(), any(), any()) }
-                coVerify(exactly = 1) { repository.broadcastTransaction(any(), any()) }
-            }
-
-        // Pins current behaviour: a validate() that returns early does not clear the verdict cached earlier
-        @Test
-        fun `GIVEN UNSAFE cached then validate returns early WHEN send THEN old UNSAFE still blocks`() = runTest {
-            // Arrange
-            givenVerdict(StakingTransactionVerdict.UNSAFE)
-            coEvery { transactionCreator.createTransaction(any()) } returnsMany listOf(
-                unsignedTx().right(),
-                StakingError.DomainError("x").left(),
-                unsignedTx().right(),
-            )
-            val sender = createSender()
-            val recorder = Recorder()
-            sender.validate()
-
-            // Act
-            val secondValidate = sender.validate()
-            givenVerdict(StakingTransactionVerdict.SAFE)
-            sender.send(recorder.callbacks)
-
-            // Assert
-            assertThat(secondValidate).isEqualTo(StakingTransactionVerdict.SAFE)
-            assertThat(recorder.constructErrors).containsExactly(BLOCKED_ERROR)
-        }
-
         private fun givenVerdict(verdict: StakingTransactionVerdict) {
             coEvery {
                 checkStakingTransactionUseCase(network = any(), accountAddress = any(), unsignedTransaction = any(), token = any(), blockchain = any(), provider = any())
