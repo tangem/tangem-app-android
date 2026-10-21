@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.ds2.util.TangemPriceChange
@@ -14,6 +15,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_checkmark_16
 import com.tangem.core.ui.res.generated.icons.ic_clock_16
 import com.tangem.core.ui.res.generated.icons.ic_user_plus_16
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -45,16 +47,13 @@ internal class WalletJointAccountItemConverter(
             is JointAccountStatusValue.Error.Compromised -> compromised(value = value, status = status)
             is JointAccountStatusValue.Pending -> waitingMembers(
                 account = account,
-                subtitle = resourceReference(
-                    id = R.string.joint_account_members_progress,
-                    formatArgs = wrappedList(status.joinedMembers, status.totalMembers),
-                ),
-                banner = inviteBanner(account = account, hasFreeSlots = status.joinedMembers < status.totalMembers),
+                subtitle = membersCount(status.totalMembers),
+                banner = pendingBanner(account = account, freeSlots = status.totalMembers - status.joinedMembers),
             )
             is JointAccountStatusValue.Confirming -> waitingMembers(
                 account = account,
-                subtitle = resourceReference(id = R.string.joint_account_waiting_activation),
-                banner = activateBanner(account = account),
+                subtitle = membersCount(status.totalMembers),
+                banner = confirmingBanner(account = account, status = status),
             )
             is JointAccountStatusValue.Active -> error("An active joint account is a regular portfolio row")
         }
@@ -121,25 +120,63 @@ internal class WalletJointAccountItemConverter(
     /** Only the creator holds the invites, so their presence on this device marks the creator's row */
     private fun Account.Joint.belongsToCreator(): Boolean = accountId.value in accountIdsWithInvites
 
-    private fun inviteBanner(account: Account.Joint, hasFreeSlots: Boolean): JointAccountMainUM.BannerUM? {
-        if (!account.belongsToCreator() || !hasFreeSlots) return null
+    private fun membersCount(totalMembers: Int): TextReference = pluralReference(
+        id = R.plurals.joint_account_members_count,
+        count = totalMembers,
+        formatArgs = wrappedList(totalMembers),
+    )
 
-        return JointAccountMainUM.BannerUM(
-            text = resourceReference(id = R.string.joint_account_invite_members_to_join),
-            icon = Icons.ic_user_plus_16,
-            onClick = { onAccountClick(userWalletId, account.accountId.value) },
-        )
+    private fun pendingBanner(account: Account.Joint, freeSlots: Int): JointAccountMainUM.BannerUM? {
+        if (freeSlots <= 0) return null
+
+        return if (account.belongsToCreator()) {
+            banner(
+                account = account,
+                text = resourceReference(id = R.string.joint_account_invite_members_to_join),
+                icon = Icons.ic_user_plus_16,
+            )
+        } else {
+            banner(
+                account = account,
+                text = pluralReference(
+                    id = R.plurals.joint_account_main_waiting_members,
+                    count = freeSlots,
+                    formatArgs = wrappedList(freeSlots),
+                ),
+                icon = Icons.ic_clock_16,
+            )
+        }
     }
 
-    private fun activateBanner(account: Account.Joint): JointAccountMainUM.BannerUM? {
-        if (!account.belongsToCreator()) return null
+    private fun confirmingBanner(
+        account: Account.Joint,
+        status: JointAccountStatusValue.Confirming,
+    ): JointAccountMainUM.BannerUM {
+        if (!status.isOwnVerified) {
+            return banner(
+                account = account,
+                text = resourceReference(id = R.string.joint_account_confirm_shared_address),
+                icon = Icons.ic_checkmark_16,
+            )
+        }
 
-        return JointAccountMainUM.BannerUM(
-            text = resourceReference(id = R.string.joint_account_activation_account_button_title),
+        val notConfirmed = status.totalMembers - status.verifiedMembers
+        return banner(
+            account = account,
+            text = pluralReference(
+                id = R.plurals.joint_account_main_waiting_confirmations,
+                count = notConfirmed,
+                formatArgs = wrappedList(notConfirmed),
+            ),
             icon = Icons.ic_clock_16,
-            onClick = { onAccountClick(userWalletId, account.accountId.value) },
         )
     }
+
+    private fun banner(account: Account.Joint, text: TextReference, icon: ImageVector) = JointAccountMainUM.BannerUM(
+        text = text,
+        icon = icon,
+        onClick = { onAccountClick(userWalletId, account.accountId.value) },
+    )
 
     private fun zeroBalanceText(): String {
         return BigDecimal.ZERO.format {

@@ -31,7 +31,6 @@ internal class CollectiblesRewardCardConverterTest {
                 title = "2024 Series One",
                 editionNumber = "#216",
                 marketValue = "$62",
-                sellBackValue = "$55.80",
                 frontImageUrl = "https://tangem.com/front.png",
                 backImageUrl = "https://tangem.com/back.png",
             ),

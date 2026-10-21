@@ -10,7 +10,6 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CompletableDeferred
@@ -25,13 +24,14 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration
 
 /**
  * Bridges a suspending caller (the Google authorizer) to the [ActivityResultRegistry] of the root Activity.
  *
  * Callers only see [launch] and [launchAccountPicker]. One resolution runs at a time (auth is user-driven),
  * guarded by [mutex]. Every request always completes: with the delivered result, or as canceled once the
- * result can no longer arrive — see [createLostResultObserver] and [detach].
+ * result can no longer arrive — see [awaitUnlessUiLost] and [detach].
  */
 @Singleton
 class GoogleAuthActivityResultBridge @Inject constructor(
@@ -103,11 +103,6 @@ class GoogleAuthActivityResultBridge @Inject constructor(
             registration.launcher = launcher
             registrations += registration
 
-            val hostObserver = createLostResultObserver(
-                deferred = deferred,
-                isHostLeftAtLaunch = !target.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED),
-            )
-            target.lifecycle.addObserver(hostObserver)
             val hostWatcher = launch {
                 host.first { it !== target }
                 deferred.completeAsLost(reason = "host detached")
@@ -119,10 +114,14 @@ class GoogleAuthActivityResultBridge @Inject constructor(
                     registration.isSettled = true
                     throw e
                 }
-                deferred.await()
+                // the registry delivers a result before the Activity resumes, so none is still on its way then
+                awaitUnlessUiLost(target.lifecycle, resultGracePeriod = Duration.ZERO) { deferred.await() }
+                    ?: deferred.run {
+                        completeAsLost(reason = "host resumed")
+                        await()
+                    }
             } finally {
                 hostWatcher.cancel()
-                target.lifecycle.removeObserver(hostObserver)
             }
         }
     }
@@ -138,28 +137,6 @@ class GoogleAuthActivityResultBridge @Inject constructor(
         val released = registrations.filter(predicate)
         released.forEach { it.launcher.unregister() }
         registrations -= released.toSet()
-    }
-
-    /**
-     * The registry delivers a result before the Activity resumes, so a request still waiting when the
-     * Activity resumes after having left the foreground never gets one: the Google UI is no longer on top.
-     *
-     * That is what happens when the app is minimized while the Google UI is shown and opened again from the
-     * launcher: `MainActivity` is `singleInstance`, so the Google UI runs in a task of its own and the
-     * launcher brings back only the app's task, leaving the Google one hidden behind it.
-     */
-    private fun createLostResultObserver(
-        deferred: CompletableDeferred<ActivityResult>,
-        isHostLeftAtLaunch: Boolean,
-    ): LifecycleEventObserver {
-        var isHostLeft = isHostLeftAtLaunch
-        return LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_PAUSE -> isHostLeft = true
-                Lifecycle.Event.ON_RESUME -> if (isHostLeft) deferred.completeAsLost(reason = "host resumed")
-                else -> Unit
-            }
-        }
     }
 
     private fun CompletableDeferred<ActivityResult>.completeAsLost(reason: String) {

@@ -10,7 +10,6 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
@@ -90,7 +89,6 @@ import kotlinx.coroutines.flow.emptyFlow
 internal abstract class SwapModelTestBase {
 
     protected val router: Router = mockk(relaxed = true)
-    protected val appRouter: AppRouter = mockk(relaxed = true)
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     protected val analyticsErrorEventHandler: AnalyticsErrorHandler = mockk(relaxed = true)
     protected val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk(relaxed = true)
@@ -253,7 +251,6 @@ internal abstract class SwapModelTestBase {
         getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
         chooseTokenBridgeFactory = chooseTokenBridgeFactory,
         router = router,
-        appRouter = appRouter,
         dispatchers = dispatchers,
         analyticsEventHandler = analyticsEventHandler,
         analyticsErrorEventHandler = analyticsErrorEventHandler,

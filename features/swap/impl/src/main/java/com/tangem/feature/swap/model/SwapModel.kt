@@ -17,7 +17,6 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
@@ -171,7 +170,6 @@ internal class SwapModel @Inject constructor(
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     chooseTokenBridgeFactory: ChooseTokenBridge.Factory,
     private val router: Router,
-    private val appRouter: AppRouter,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsErrorEventHandler: AnalyticsErrorHandler,
@@ -315,7 +313,6 @@ internal class SwapModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isAccountsModeProvider = Provider { isAccountsMode },
         isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
-        appRouter = appRouter,
         isChooseTokenPulseEnabled = swapFeatureToggles.isChooseTokenPulseEnabled,
         isCustomSlippageEnabled = swapFeatureToggles.isCustomSlippageEnabled,
         predictionTopUpLimitsProvider = Provider { predictionTopUpLimits },
@@ -540,7 +537,7 @@ internal class SwapModel @Inject constructor(
             currency = fromCurrency,
             screenSource = ScreensSources.Swap,
         ) ?: return false
-        appRouter.push(route)
+        router.push(route)
         return true
     }
 
@@ -1415,8 +1412,18 @@ internal class SwapModel @Inject constructor(
             swapFee = swapFee,
             feeError = feeSelectorRepository.state.value as? FeeSelectorUM.Error,
             isHighNetworkFee = isHighNetworkFee(swapFee),
+            isFeeCurrencyInStack = isFeeCurrencyInStack(state, dataState.feePaidCryptoCurrency),
             slippage = dataState.slippage,
         )
+    }
+
+    private suspend fun isFeeCurrencyInStack(
+        quoteModel: SwapState.QuotesLoadedState,
+        feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
+    ): Boolean {
+        val feeCurrency = feeCryptoCurrencyStatus?.currency ?: return false
+        val userWalletId = quoteModel.fromTokenInfo.swapCurrencyStatus.userWalletId
+        return router.contains(AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = feeCurrency))
     }
 
     private suspend fun isHighNetworkFee(swapFee: SwapFee?): Boolean {
@@ -1683,7 +1690,10 @@ internal class SwapModel @Inject constructor(
 
         return if (consideredProviders.isNotEmpty()) {
             val successLoadedData = consideredProviders.getLastLoadedSuccessStates()
-            val bestQuotesProvider = SwapProviderResolver.findBest(states = successLoadedData)
+            val bestQuotesProvider = SwapProviderResolver.findBest(
+                states = successLoadedData,
+                isOverallBestPriceEnabled = swapFeatureToggles.isOverallBestPriceEnabled,
+            )
             val currentSelected = dataState.selectedProvider
             if (currentSelected != null && consideredProviders.keys.contains(currentSelected)) {
                 // logic for always choose best if already selected provider
@@ -2709,7 +2719,7 @@ internal class SwapModel @Inject constructor(
                     currency = cryptoCurrency,
                 )
 
-                appRouter.push(route)
+                router.push(route)
             },
             onRetryClick = {
                 startLoadingQuotesFromLastState()
@@ -3069,7 +3079,7 @@ internal class SwapModel @Inject constructor(
             toSwapCurrencyStatus = toSwapCurrencyStatus,
             requirement = requirement,
             onAssociateClick = {
-                appRouter.push(
+                router.push(
                     AppRoute.CurrencyDetails(
                         userWalletId = toSwapCurrencyStatus.userWalletId,
                         currency = toSwapCurrencyStatus.currency,
@@ -3679,13 +3689,18 @@ internal class SwapModel @Inject constructor(
             } else {
                 TangemLogger.e("loadFee: ${feeError.error}, isHidden = true")
                 refreshTransferUIStateIfNeeded()
-                uiState = stateBuilder.createFeeErrorState(
-                    uiStateHolder = uiState,
-                    quoteModel = dataState.getCurrentLoadedSwapState() ?: return,
-                    feeCryptoCurrencyStatus = dataState.feePaidCryptoCurrency,
-                    feeError = feeError.error,
-                )
-                modelScope.launch { forceUpdateState.emit(feeError.copy(isHidden = true)) }
+                val quoteModel = dataState.getCurrentLoadedSwapState() ?: return
+                modelScope.launch {
+                    val feeCryptoCurrencyStatus = dataState.feePaidCryptoCurrency
+                    uiState = stateBuilder.createFeeErrorState(
+                        uiStateHolder = uiState,
+                        quoteModel = quoteModel,
+                        feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                        feeError = feeError.error,
+                        isFeeCurrencyInStack = isFeeCurrencyInStack(quoteModel, feeCryptoCurrencyStatus),
+                    )
+                    forceUpdateState.emit(feeError.copy(isHidden = true))
+                }
             }
         }
     }
