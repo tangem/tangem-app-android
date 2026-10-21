@@ -269,7 +269,11 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             )
         }
 
-        val value = JointAccountStatusValueConverter.convert(value = jointAccount)
+        val ownAddress = jointAccountCompositionVerifier.ownerAddress(
+            userWalletId = account.userWalletId,
+            ownerKeyIndex = account.ownerKeyIndex,
+        )
+        val value = JointAccountStatusValueConverter(ownAddress = ownAddress).convert(value = jointAccount)
 
         if (value !is JointAccountStatusValue.Active || account.cryptoCurrencies.isEmpty()) {
             return AccountStatus.Joint(

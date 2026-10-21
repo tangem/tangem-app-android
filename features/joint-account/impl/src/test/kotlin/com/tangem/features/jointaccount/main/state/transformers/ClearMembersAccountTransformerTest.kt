@@ -55,7 +55,6 @@ internal class ClearMembersAccountTransformerTest {
                 hint = null,
                 button = JointAccountMembersUM.ConfirmButtonUM(
                     isEnabled = true,
-                    isLoading = false,
                     onClick = {},
                 ),
             ),

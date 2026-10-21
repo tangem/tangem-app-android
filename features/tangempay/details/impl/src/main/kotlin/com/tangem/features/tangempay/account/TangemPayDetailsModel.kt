@@ -43,7 +43,6 @@ import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.cashback.TangemPayCashbackController
 import com.tangem.features.tangempay.account.cashback.withCashback
 import com.tangem.features.tangempay.addfunds.AddFundsListener
-import com.tangem.features.tangempay.card.issue.TangemPayIssueAdditionalCardComponent
 import com.tangem.features.tangempay.common.*
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
@@ -60,7 +59,6 @@ import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
@@ -91,7 +89,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     TangemPayTxHistoryUiActions,
     TangemPayDetailIntents,
     AddFundsListener,
-    TangemPayIssueAdditionalCardComponent.Listener,
     ChooseNetworkListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
@@ -214,10 +211,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             .filterIsInstance<PaymentAccountStatusValue.AwaitingPlanSelection>()
             .onEach { status ->
                 router.replaceAll(
-                    TangemPayAccountDetailsInnerRoute.SelectPlan(
-                        tariffPlan = status.tariffPlan,
-                        source = TangemPaySelectPlanSource.TIERS_ONBOARDING,
-                    ),
+                    TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.TIERS_ONBOARDING),
                 )
             }
             .launchIn(modelScope)
@@ -231,7 +225,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onClickWithdraw() {
         analytics.send(TangemPayAnalyticsEvents.WithdrawClicked())
-        if (tangemPayFeatureToggles.isBankOfframpEnabled && isBankOfframpAvailable()) {
+        if (isBankOfframpAvailable()) {
             modelScope.launch { openWithdrawHubUnlessOrderInFlight() }
             return
         }
@@ -595,13 +589,8 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun openChangePlan() {
-        val tariffPlan = currentStatus.value.tariffPlan ?: return
-        router.push(
-            TangemPayAccountDetailsInnerRoute.SelectPlan(
-                tariffPlan = tariffPlan,
-                source = TangemPaySelectPlanSource.CHANGE_PLAN,
-            ),
-        )
+        if (currentStatus.value.tariffPlan == null) return
+        router.push(TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.CHANGE_PLAN))
     }
 
     private fun openCashback() {
@@ -609,7 +598,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun openOrderCard() {
-        if (!tangemPayFeatureToggles.isPlasticCardOrderEnabled) return
         currentStatus.value.ifLoadedOrNull { router.push(TangemPayAccountDetailsInnerRoute.OrderCard()) }
     }
 
@@ -630,30 +618,11 @@ internal class TangemPayDetailsModel @Inject constructor(
         modelScope.launch {
             val offers = getCustomerOffers.cardIssueOffers(userWalletId).getOrNull()
 
-            if (tangemPayFeatureToggles.isPlasticCardOrderEnabled) {
-                if (offers?.hasAny == true) {
-                    router.push(TangemPayAccountDetailsInnerRoute.OrderCard())
-                } else {
-                    uiMessageSender.send(createNoAvailableOffersMessage(tariffState))
-                }
-                return@launch
-            }
-
-            val virtualOffer = offers?.virtual
-            if (virtualOffer == null) {
+            if (offers?.hasAny == true) {
+                router.push(TangemPayAccountDetailsInnerRoute.OrderCard())
+            } else {
                 uiMessageSender.send(createNoAvailableOffersMessage(tariffState))
-                return@launch
             }
-
-            analytics.send(TangemPayAnalyticsEvents.IssueAdditionalCardPopupShown())
-            bottomSheetNavigation.activate(
-                TangemPayDetailsNavigation.IssueAdditionalCard(
-                    walletId = userWalletId,
-                    feeAmount = virtualOffer.fee.amount,
-                    feeCurrency = virtualOffer.fee.currency,
-                    fiatBalance = currentStatus.value.balanceOrNull()?.fiatBalance?.availableBalance ?: BigDecimal.ZERO,
-                ),
-            )
         }
     }
 
@@ -666,20 +635,6 @@ internal class TangemPayDetailsModel @Inject constructor(
         } else {
             TangemPayMessagesFactory.createMaximumCardsIssuedMessage()
         }
-
-    override fun onIssueAdditionalCardDismissed() {
-        bottomSheetNavigation.dismiss()
-    }
-
-    override fun onIssueAdditionalCardSucceeded() {
-        bottomSheetNavigation.dismiss()
-        modelScope.launch { paymentAccountStatusFetcher.invoke(userWalletId) }
-    }
-
-    override fun onAddFundsForCardIssue() {
-        bottomSheetNavigation.dismiss()
-        onClickAddFunds()
-    }
 
     override fun onRenewSession() {
         baseState.update(TangemPayMessageBannerTransformer(shouldShowProgress = true))
