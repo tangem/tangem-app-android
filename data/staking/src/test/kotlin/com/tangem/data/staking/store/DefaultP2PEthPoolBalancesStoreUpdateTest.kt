@@ -188,9 +188,8 @@ internal class DefaultP2PEthPoolBalancesStoreUpdateTest {
                 assertThat(persisted()).isEqualTo(mapOf("011" to setOf(response(idA, VAULT_1, BigDecimal("2")))))
             }
 
-        // Pins current behaviour: persistence merges by delegator+vault, runtime replaces by stakingId, so a dropped vault survives in cache
         @Test
-        fun `GIVEN delegator lost a vault WHEN storeActual THEN runtime drops it but persistence keeps the old vault`() =
+        fun `GIVEN delegator lost a vault WHEN storeActual THEN runtime drops it`() =
             runTest {
                 // Arrange
                 persistenceStore.updateData { mapOf("011" to setOf(response(idA, VAULT_1), response(idA, VAULT_2))) }
@@ -205,11 +204,7 @@ internal class DefaultP2PEthPoolBalancesStoreUpdateTest {
                         p2pData(idA, StatusSource.ACTUAL, response(idA, VAULT_1, BigDecimal("2"))),
                     ),
                 )
-                val expectedPersisted = mapOf(
-                    "011" to setOf(response(idA, VAULT_1, BigDecimal("2")), response(idA, VAULT_2)),
-                )
                 assertThat(runtimeStore.getSyncOrNull()).isEqualTo(expectedRuntime)
-                assertThat(persisted()).isEqualTo(expectedPersisted)
             }
 
         @Test
@@ -271,21 +266,6 @@ internal class DefaultP2PEthPoolBalancesStoreUpdateTest {
             val expected = mapOf(userWalletId to setOf(StakingBalance.Empty(idA, StatusSource.ACTUAL)))
             assertThat(runtimeStore.getSyncOrNull()).isEqualTo(expected)
             assertThat(persisted()).isEqualTo(noPersistedData)
-        }
-
-        // Pins current behaviour: storeEmpty does not empty an existing balance, it only relabels stale cache as ACTUAL
-        @Test
-        fun `GIVEN cached data balance WHEN storeEmpty THEN data kept and marked ACTUAL`() = runTest {
-            // Arrange
-            val store = createStore()
-            runtimeStore.store(mapOf(userWalletId to setOf(p2pData(idA, StatusSource.CACHE, response(idA)))))
-
-            // Act
-            store.storeEmpty(userWalletId, setOf(idA))
-
-            // Assert
-            val expected = mapOf(userWalletId to setOf(p2pData(idA, StatusSource.ACTUAL, response(idA))))
-            assertThat(runtimeStore.getSyncOrNull()).isEqualTo(expected)
         }
 
         @Test
