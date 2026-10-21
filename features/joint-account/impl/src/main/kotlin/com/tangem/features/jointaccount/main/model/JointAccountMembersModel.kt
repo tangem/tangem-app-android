@@ -91,6 +91,10 @@ internal class JointAccountMembersModel @Inject constructor(
     val uiState: StateFlow<JointAccountMembersUM>
         get() = stateController.uiState
 
+    /** Fires when a member joined or confirmed between two updates; silent on the first render and on no-op refreshes */
+    val memberStatusChanges: Flow<Unit>
+        field = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
     private val isResumed = MutableStateFlow(false)
 
     private val resolvedAccountFlow: Flow<JointAccount?> = compromiseWatcher.verified(
@@ -168,10 +172,17 @@ internal class JointAccountMembersModel @Inject constructor(
                     }
                     ?: ClearMembersAccountTransformer()
 
+                val previous = uiState.value.memberStatuses()
                 stateController.update(transformer)
+                val next = uiState.value.memberStatuses()
+
+                if (previous.isNotEmpty() && next.isNotEmpty() && previous != next) memberStatusChanges.tryEmit(Unit)
             }
             .launchIn(modelScope)
     }
+
+    private fun JointAccountMembersUM.memberStatuses(): List<Pair<String, JointAccountMembersUM.MemberStatusUM>> =
+        joined.map { member -> member.id to member.status }
 
     /**
      * The account's `/accounts` record as this wallet sees it: its name, icon and the wallet's own owner address,
