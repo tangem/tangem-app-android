@@ -349,6 +349,8 @@ sealed class AnalyticsParam {
         const val SOURCE = "Source"
         const val BALANCE = "Balance"
         const val TOKENS_COUNT = "Tokens Count"
+        const val APY = "APY"
+        const val CLOSE_METHOD = "Close Method"
         const val STATE = "State"
         const val BATCH = "Batch"
         const val TYPE = "Type"

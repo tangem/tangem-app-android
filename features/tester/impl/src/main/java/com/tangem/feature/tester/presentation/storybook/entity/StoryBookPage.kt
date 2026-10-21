@@ -6,6 +6,7 @@ import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.field.search.TangemFieldShape
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
+import com.tangem.core.ui.ds2.actionmessage.TangemActionMessage
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -484,6 +485,13 @@ internal data class TangemGlowRingStory(
         BgInverse("bg.inverse"),
     }
 }
+
+internal data class TangemActionMessageStory(
+    val variant: TangemActionMessage.Variant,
+    val isLongText: Boolean,
+    val onVariantChange: (TangemActionMessage.Variant) -> Unit,
+    val onLongTextToggle: () -> Unit,
+) : DsStoryBookPage
 
 @Suppress("BooleanPropertyNaming")
 internal data class TangemMessageBannerStory(

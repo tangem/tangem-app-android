@@ -101,7 +101,8 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val deployFee = txs.first().fee as Fee.Ethereum.Legacy
         val enterFee = txs.last().fee as Fee.Ethereum.Legacy
         Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(21_000))
-        Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(500_000))
+        Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(700_000))
+        Truth.assertThat(enterFee.amount.value).isEqualToIgnoringScale(BigDecimal("0.07"))
     }
 
     @Test
@@ -161,7 +162,7 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val deployFee = txs.first().fee as Fee.Ethereum.Legacy
         val enterFee = txs.last().fee as Fee.Ethereum.Legacy
         Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(21_000))
-        Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(500_000))
+        Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(700_000))
     }
 
     @Test
@@ -192,7 +193,8 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val deployFee = txs.first().fee as Fee.Ethereum.EIP1559
         val enterFee = txs.last().fee as Fee.Ethereum.EIP1559
         Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(21_000))
-        Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(500_000))
+        Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(700_000))
+        Truth.assertThat(enterFee.amount.value).isEqualToIgnoringScale(BigDecimal("0.07"))
     }
 
     @Test
@@ -252,7 +254,7 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val deployFee = txs.first().fee as Fee.Ethereum.EIP1559
         val enterFee = txs.last().fee as Fee.Ethereum.EIP1559
         Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(21_000))
-        Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(500_000))
+        Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(700_000))
     }
 
     @Test

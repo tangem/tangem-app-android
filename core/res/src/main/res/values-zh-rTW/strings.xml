@@ -211,6 +211,17 @@
   <string name="main_scan_card_warning_view_subtitle">要訪問所有的網路您需要掃描卡片</string>
   <string name="main_scan_card_warning_view_title">掃描卡片</string>
   <string name="main_tokens">代幣</string>
+  <string name="money_account_main_status_dialog_activating_description">我們正在為您準備帳戶，這可能需要一些時間</string>
+  <string name="money_account_main_status_dialog_activating_title">正在開設您的銀行帳戶</string>
+  <string name="money_account_main_status_dialog_country_not_supported_description">我們正在努力拓展至更多地區。需要協助嗎？</string>
+  <string name="money_account_main_status_dialog_country_not_supported_title">您所在的地區暫不支援</string>
+  <string name="money_account_main_status_dialog_hide_account">從首頁隱藏帳戶</string>
+  <string name="money_account_main_status_dialog_join_waitlist">加入候補名單</string>
+  <string name="money_account_main_status_dialog_verification_declined_description">很抱歉，根據您提供的資訊，我們無法驗證您的身分</string>
+  <string name="money_account_main_status_dialog_verification_declined_title">我們無法驗證您的身分</string>
+  <string name="money_account_main_status_dialog_verification_description">通常需要幾分鐘。您可以在下方查看狀態</string>
+  <string name="money_account_main_status_dialog_verification_title">正在驗證您的身分</string>
+  <string name="money_account_main_status_dialog_view_status">查看狀態</string>
   <string name="money_account_onboarding_disclaimer">Tangem Pay 是一家金融科技公司，而非銀行。銀行服務由 SSB 提供，SSB 為 FDIC 成員。存放於 SSB 的資金符合 FDIC 保險的承保資格，每位存款人於每家投保銀行最高可獲 250,000 美元保障，並受適用限制及 FDIC 規則約束。</string>
   <string name="no_account_polkadot">目標帳戶未激活。發送 %s 或更多以激活帳戶</string>
   <string name="no_account_send_to_create">要創建帳戶，請將資金發送到此地址</string>

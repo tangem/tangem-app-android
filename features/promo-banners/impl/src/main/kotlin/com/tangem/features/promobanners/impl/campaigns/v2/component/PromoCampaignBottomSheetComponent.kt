@@ -86,10 +86,10 @@ internal class PromoCampaignBottomSheetComponent(
                 content = TangemBottomSheetConfigContent.Empty,
             ),
             chromePlacement = TangemModal.ChromePlacement.Overlay,
-            presentation = TangemModal.Presentation.Overlay,
             dismissOnClickOutside = !isEnrolling,
             onBack = { if (!isEnrolling) onChildBack() },
             scrollableContent = false,
+            isMaterialEnabled = !isStatusStep,
             containerColor = TangemTheme.colors3.bg.primary,
             title = {
                 if (!isStatusStep) {
@@ -117,7 +117,13 @@ internal class PromoCampaignBottomSheetComponent(
                 },
             ) { child ->
                 when (child.configuration) {
-                    PromoCampaignRoute.Campaign -> child.instance.Content(modifier = Modifier)
+                    // Full height whatever the content: a shorter card opens at its first measured height and
+                    // then grows once the pinned footer reports its own.
+                    PromoCampaignRoute.Campaign -> child.instance.Content(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(windowHeight),
+                    )
                     PromoCampaignRoute.ChooseToken -> child.instance.Content(
                         modifier = Modifier
                             .fillMaxWidth()

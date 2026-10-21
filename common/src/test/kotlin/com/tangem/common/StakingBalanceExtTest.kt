@@ -69,7 +69,7 @@ internal class StakingBalanceExtTest {
         }
 
         @Test
-        fun `GIVEN P2PEthPool on including chain WHEN getTotalWithRewards THEN sums staked plus unstaking plus withdrawable plus rewards`() {
+        fun `GIVEN P2PEthPool on including chain WHEN getTotalWithRewards THEN sums staked plus unstaking plus withdrawable without rewards`() {
             // Arrange
             val balance = p2pEthPool(staked = 5, unstaking = 2, withdrawable = 1, rewards = 3)
 
@@ -77,7 +77,7 @@ internal class StakingBalanceExtTest {
             val actual = balance.getTotalWithRewardsStakingBalance(includeChainId)
 
             // Assert
-            assertThat(actual).isEqualTo(BigDecimal(11))
+            assertThat(actual).isEqualTo(BigDecimal(8))
         }
 
         @Test

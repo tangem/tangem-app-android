@@ -1277,6 +1277,17 @@
   <string name="markets_yield_supply_banner_title">Activer le mode rendement</string>
   <string name="mobile_wallet_requires_min_os_warning_body">Vous devez effectuer la mise à jour %1$s afin de créer un portefeuille mobile.</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Le portefeuille mobile nécessite %1$s ou une version supérieure.</string>
+  <string name="money_account_main_status_dialog_activating_description">Nous préparons votre compte. Cela peut prendre un peu de temps</string>
+  <string name="money_account_main_status_dialog_activating_title">Création de votre compte bancaire</string>
+  <string name="money_account_main_status_dialog_country_not_supported_description">Nous travaillons à étendre notre service à d’autres régions. Besoin d’aide ?</string>
+  <string name="money_account_main_status_dialog_country_not_supported_title">Pas encore disponible dans votre région</string>
+  <string name="money_account_main_status_dialog_hide_account">Masquer le compte de l’écran d’accueil</string>
+  <string name="money_account_main_status_dialog_join_waitlist">Rejoindre la liste d’attente</string>
+  <string name="money_account_main_status_dialog_verification_declined_description">Désolés, nous n’avons pas pu vérifier votre identité à partir des informations fournies</string>
+  <string name="money_account_main_status_dialog_verification_declined_title">Nous n’avons pas pu vérifier votre identité</string>
+  <string name="money_account_main_status_dialog_verification_description">Cela prend généralement quelques minutes. Vous pouvez consulter le statut ci-dessous</string>
+  <string name="money_account_main_status_dialog_verification_title">Vérification de votre identité</string>
+  <string name="money_account_main_status_dialog_view_status">Voir le statut</string>
   <string name="money_account_onboarding_disclaimer">Tangem Pay est une entreprise de technologie financière, et non une banque. Les services bancaires sont fournis par SSB, membre de la FDIC. Les fonds déposés auprès de SSB sont éligibles à la couverture d’assurance de la FDIC jusqu’à 250 000 $ US par déposant et par banque assurée, sous réserve des limitations applicables et des règles de la FDIC.</string>
   <string name="news_all_news">Toutes les actualités</string>
   <string name="news_like">Like</string>

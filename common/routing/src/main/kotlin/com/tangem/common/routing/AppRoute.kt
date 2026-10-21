@@ -276,6 +276,7 @@ sealed class AppRoute(val path: String) : Route {
          * a wallet key but submitted as a signed batch through our backend.
          * PredictionTopUp anchors the prediction account as the concrete TO — its deposit token at the bridge
          * address — and is the only way the app funds that account through the swap screen.
+         * MoneyTopUp anchors the Money account's USDC as the concrete TO at its deposit address.
          */
         @Serializable
         sealed interface AccountFlow {
@@ -288,6 +289,8 @@ sealed class AppRoute(val path: String) : Route {
             @Serializable data object PredictionTopUp : AccountFlow
 
             @Serializable data object CollectiblesTopUp : AccountFlow
+
+            @Serializable data object MoneyTopUp : AccountFlow
         }
     }
 

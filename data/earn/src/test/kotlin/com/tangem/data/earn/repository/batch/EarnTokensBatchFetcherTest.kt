@@ -14,6 +14,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.earn.model.EarnTokensListConfig
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.pagination.BatchFetchResult
+import io.mockk.MockKMatcherScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -38,6 +39,7 @@ internal class EarnTokensBatchFetcherTest {
         batchSize = BATCH_SIZE,
         userWalletsListRepository = userWalletsListRepository,
         cryptoCurrencyFactory = CryptoCurrencyFactory(ExcludedBlockchains()),
+        apyType = APY_TYPE,
     )
 
     @BeforeEach
@@ -50,7 +52,7 @@ internal class EarnTokensBatchFetcherTest {
     @Test
     fun `GIVEN hasNext is true WHEN a page is fetched THEN it is not the last one`() = runTest {
         // Arrange
-        coEvery { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) } returns page(hasNext = true)
+        coEvery { getEarnTokensWithApyType() } returns page(hasNext = true)
 
         // Act
         val result = fetcher.fetchFirst(config())
@@ -63,7 +65,7 @@ internal class EarnTokensBatchFetcherTest {
     fun `GIVEN a full page of rows the mapping drops WHEN it is fetched THEN it is still not the last one`() =
         runTest {
             // Arrange — the old rule counted the mapped rows and would have stopped the list here
-            coEvery { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) } returns page(
+            coEvery { getEarnTokensWithApyType() } returns page(
                 hasNext = true,
                 networkId = "not-a-real-network",
             )
@@ -79,7 +81,7 @@ internal class EarnTokensBatchFetcherTest {
     @Test
     fun `GIVEN hasNext is false WHEN a full page is fetched THEN it is the last one`() = runTest {
         // Arrange
-        coEvery { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) } returns page(hasNext = false)
+        coEvery { getEarnTokensWithApyType() } returns page(hasNext = false)
 
         // Act
         val result = fetcher.fetchFirst(config())
@@ -91,7 +93,7 @@ internal class EarnTokensBatchFetcherTest {
     @Test
     fun `GIVEN no hasNext WHEN a short page is fetched THEN it is the last one`() = runTest {
         // Arrange
-        coEvery { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) } returns page(
+        coEvery { getEarnTokensWithApyType() } returns page(
             hasNext = null,
             itemCount = 1,
         )
@@ -107,7 +109,7 @@ internal class EarnTokensBatchFetcherTest {
     fun `GIVEN no hasNext WHEN the server reports its own smaller limit THEN a full page is not the last one`() =
         runTest {
             // Arrange — the server clamped the request, so its limit decides what "full" means
-            coEvery { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) } returns page(
+            coEvery { getEarnTokensWithApyType() } returns page(
                 hasNext = null,
                 itemCount = SERVER_LIMIT,
                 serverLimit = SERVER_LIMIT,
@@ -148,8 +150,18 @@ internal class EarnTokensBatchFetcherTest {
         ),
     )
 
+    private suspend fun MockKMatcherScope.getEarnTokensWithApyType() = tangemTechApi.getEarnTokens(
+        isForEarn = any(),
+        page = any(),
+        limit = any(),
+        type = any(),
+        networks = any(),
+        apyType = APY_TYPE,
+    )
+
     private companion object {
 
+        const val APY_TYPE = "gross"
         const val BATCH_SIZE = 20
         const val SERVER_LIMIT = 10
     }

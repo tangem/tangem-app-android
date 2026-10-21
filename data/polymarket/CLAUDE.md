@@ -106,6 +106,8 @@ unsupported market version) — none is a generic conflict.
 
 ## Signing
 
-The signer uses only an owner key that is **already derived and stored** (`NotDerived` otherwise);
-`DefaultPolymarketEoaDeriver` is the only place a card session or hot-wallet unlock is opened for
-derivation. Card and hot signers return raw `r‖s`; `v` is recovered afterwards.
+The signer uses only an owner key that is **already derived and stored** (`NotDerived` otherwise). A card
+session or hot-wallet unlock is opened for derivation only by `DefaultPolymarketEoaDeriver` and by
+`DefaultPolymarketSigningSession` — the onboarding path, which derives, runs its `prepare` (status and nonce
+reads, bounded by the caller's timeout) and signs once on one tap. Card and hot signers return raw `r‖s`; `v`
+is recovered afterwards.

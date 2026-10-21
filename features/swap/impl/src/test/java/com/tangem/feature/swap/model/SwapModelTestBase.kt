@@ -29,6 +29,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionTopUpMinimumUseCase
@@ -145,6 +146,9 @@ internal abstract class SwapModelTestBase {
     }
     protected val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher = mockk {
         coEvery { this@mockk(any()) } returns Unit.right()
+    }
+    protected val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk {
+        coEvery { this@mockk(any<MoneyAccountStatusFetcher.Params>()) } returns Unit.right()
     }
     protected val backupErrorWarningSender: BackupErrorWarningSender = mockk {
         every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
@@ -301,6 +305,7 @@ internal abstract class SwapModelTestBase {
         getPredictionDepositCurrencyStatusesUseCase = getPredictionDepositCurrencyStatusesUseCase,
         backupErrorWarningSender = backupErrorWarningSender,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
+        moneyAccountStatusFetcher = moneyAccountStatusFetcher,
     )
 
     // region builders

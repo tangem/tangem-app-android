@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
@@ -16,11 +15,12 @@ import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
-import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.details.TangemPayBankTransferOnrampDetailsScreenUM.DailyDepositLimitUM
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
 import com.tangem.features.tangempay.bankCredentials
+import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent
+import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent.RequisiteField
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.onrampFee
 import com.tangem.test.core.ProvideTestModels
@@ -52,14 +52,15 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
     private val getOnrampFeesUseCase: GetOnrampFeesUseCase = mockk()
     private val clipboardManager: ClipboardManager = mockk(relaxed = true)
     private val shareManager: ShareManager = mockk(relaxed = true)
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
+    private val analytics: TangemPayBankTransferOnrampDetailsComponent.Analytics = mockk(relaxed = true)
 
     private val defaultLocale = Locale.getDefault()
 
     @BeforeEach
     fun resetMocks() {
         Locale.setDefault(Locale.US)
-        clearMocks(router, getOnrampFeesUseCase, clipboardManager, shareManager, analytics)
+        clearMocks(router, getOnrampFeesUseCase, clipboardManager, shareManager)
+        clearMocks(analytics)
         coEvery { getOnrampFeesUseCase(userWalletId) } returns emptyList<AccountFee>().right()
     }
 
@@ -84,8 +85,23 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
                 "Bank name" to "SSB Bank",
                 "Bank address" to "8700 Perry Highway",
             ).inOrder()
-            verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaBankingDetailsShowed>()) }
+            verify(exactly = 1) { analytics.onDetailsShown() }
         }
+
+    @Test
+    fun `GIVEN credentials with blank fields WHEN model created THEN those requisites are hidden`() = runTest {
+        // Act
+        val model = createModel(bankCredentials().copy(beneficiaryAddress = "", beneficiaryBankAddress = " "))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.requisites.map { it.key }).containsExactly(
+            "Account number",
+            "Routing number",
+            "Beneficiary name",
+            "Bank name",
+        ).inOrder()
+    }
 
     @Test
     fun `GIVEN daily deposit limit WHEN model created THEN limitation shown`() = runTest {
@@ -201,9 +217,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
 
         // Assert
         verify(exactly = 1) { clipboardManager.setText(text = "123456", isSensitive = true) }
-        verify(exactly = 1) {
-            analytics.send(TangemPayAnalyticsEvents.VaCopyFieldClicked(field = "Account number"))
-        }
+        verify(exactly = 1) { analytics.onFieldCopied(RequisiteField.ACCOUNT_NUMBER) }
     }
 
     @Test
@@ -226,7 +240,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
                     "Bank address: 8700 Perry Highway",
             )
         }
-        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaShareDetailsButtonClicked>()) }
+        verify(exactly = 1) { analytics.onShareClicked() }
     }
 
     @Test
@@ -248,6 +262,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
                 TangemPayBankTransferOnrampDetailsComponent.Params(
                     userWalletId = userWalletId,
                     bankCredentials = bankCredentials,
+                    analytics = analytics,
                 ),
             ),
             dispatchers = createTestingCoroutineDispatcherProvider(),
@@ -255,7 +270,6 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
             getOnrampFeesUseCase = getOnrampFeesUseCase,
             clipboardManager = clipboardManager,
             shareManager = shareManager,
-            analytics = analytics,
         )
 
     private fun provideTestModels() = listOf(

@@ -31,7 +31,7 @@ internal object PromoEnrollAnalyticsResolver {
         outcome: PromoRegistrationOutcome,
         walletsRequested: Int,
     ): PromoCampaignsAnalyticsEvent {
-        val errorCode = result.leftOrNull()?.httpCode
+        val errorCode = result.fold(ifLeft = { it.httpCode }, ifRight = { Code.OK.numericCode })
         return when (outcome) {
             is PromoRegistrationOutcome.Enrolled -> EnrollSuccessful(
                 campaign = campaign,

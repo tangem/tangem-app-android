@@ -22,8 +22,11 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
    the seed (Hot); background refreshes and screen opens use only the `stored` / `withoutPrompting`
    variants. Their `null` means "not derived on this device", never "no account" — a wallet onboarded on
    another phone answers `null` too.
-2. **One signing session per onboarding run.** ClobAuth and the approvals batch are signed together and the
-   user is never asked twice; a failure is retryable and the caller starts a new run.
+2. **One tap per onboarding run.** Deriving a missing owner key, the status and nonce reads and the signature
+   share one card session (Cold) or one unlock (Hot) — `PolymarketSigningSession`. The key is stored as soon as
+   it is derived, so a run that fails later still costs one tap on retry. The signed set depends on the state:
+   ClobAuth only without stored credentials, the approvals batch only while approvals are owed; a future
+   relayer batch (session keys) is one more `PolymarketTypedPayload` in the same list.
 3. **Approvals are only really checked on a fresh wallet.** The BFF reads on-chain allowances before it
    validates our batch, so an already-approved deposit wallet answers `READY_TO_TRADE` to *any* batch.
    Test approvals changes on a brand-new wallet.
@@ -49,7 +52,7 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
    cached value. Never show `Loading` when the store already holds a value.
 8. **A ready backend status is not enough to trade.** L2 credentials live only on this device. Reinstall,
    new phone or a re-added wallet → `READY_TO_TRADE` with nothing to sign with → `PolymarketEntry.Reconnect`:
-   the same onboarding run signs both digests, uses only ClobAuth to re-derive credentials, deploys and
+   the same onboarding run signs only ClobAuth (a nonce read ahead is discarded), re-derives the credentials, deploys and
    approves nothing. A CLOB `401` on balance or order drops only the credentials, never
    `PolymarketOnboardedStore`, so the gate offers Reconnect, not a full onboarding. Reading, clearing and
    re-deriving one wallet's credentials share one non-reentrant `PolymarketCredentialsLock`, so a late `401`
