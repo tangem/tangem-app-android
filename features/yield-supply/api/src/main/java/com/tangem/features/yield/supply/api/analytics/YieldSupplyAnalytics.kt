@@ -8,6 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.BALANCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.CLOSE_METHOD
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_DESCRIPTION
+import com.tangem.core.analytics.models.AnalyticsParam.Key.REASON
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKENS_COUNT
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
@@ -257,6 +258,18 @@ sealed class YieldSupplyAnalytics(
         Cross("X"),
         Swipe("Swipe"),
         SystemBack("System Back"),
+    }
+
+    data class PromoScreenSkipped(val reason: SkipReason) : YieldSupplyAnalytics(
+        event = "Promo Screen Skipped",
+        params = mapOf(REASON to reason.value),
+    )
+
+    enum class SkipReason(val value: String) {
+        SurfaceBusy("Surface Busy"),
+        Interrupted("Interrupted"),
+        DataNotReady("Data Not Ready"),
+        NoEligibleToken("No Eligible Token"),
     }
 }
 
