@@ -19,6 +19,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.earn.EarnError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.MockKMatcherScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -54,6 +55,7 @@ internal class DefaultEarnRepositoryCatalogTest {
         earnFilterStore = EarnFilterStore(),
         earnErrorResolver = DefaultEarnErrorResolver(),
         excludedBlockchains = ExcludedBlockchains(),
+        isMerklIncentivesEnabled = true,
     )
 
     @BeforeEach
@@ -66,13 +68,13 @@ internal class DefaultEarnRepositoryCatalogTest {
     @Test
     fun `GIVEN hasNext is false WHEN the catalogue is fetched THEN only one page is requested`() = runTest {
         // Arrange
-        coEvery { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) } returns page(hasNext = false)
+        coEvery { getEarnTokensWithApyType() } returns page(hasNext = false)
 
         // Act
         repository.fetchEarnTokensCatalog()
 
         // Assert
-        coVerify(exactly = 1) { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { getEarnTokensWithApyType() }
         assertThat(catalogStore.get().first()?.isRight()).isTrue()
     }
 
@@ -80,7 +82,7 @@ internal class DefaultEarnRepositoryCatalogTest {
     fun `GIVEN hasNext turns false on the third page WHEN the catalogue is fetched THEN paging stops there`() =
         runTest {
             // Arrange
-            coEvery { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) } returnsMany listOf(
+            coEvery { getEarnTokensWithApyType() } returnsMany listOf(
                 page(hasNext = true),
                 page(hasNext = true),
                 page(hasNext = false),
@@ -90,14 +92,14 @@ internal class DefaultEarnRepositoryCatalogTest {
             repository.fetchEarnTokensCatalog()
 
             // Assert
-            coVerify(exactly = 3) { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) }
+            coVerify(exactly = 3) { getEarnTokensWithApyType() }
         }
 
     @Test
     fun `GIVEN a full page without hasNext WHEN the catalogue is fetched THEN paging follows the server limit`() =
         runTest {
             // Arrange — the server clamped our request to 20, so 20 rows is a full page, not a short one
-            coEvery { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) } returnsMany listOf(
+            coEvery { getEarnTokensWithApyType() } returnsMany listOf(
                 page(itemCount = SERVER_LIMIT, serverLimit = SERVER_LIMIT, hasNext = null),
                 page(itemCount = 3, serverLimit = SERVER_LIMIT, hasNext = null),
             )
@@ -106,13 +108,13 @@ internal class DefaultEarnRepositoryCatalogTest {
             repository.fetchEarnTokensCatalog()
 
             // Assert
-            coVerify(exactly = 2) { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) }
+            coVerify(exactly = 2) { getEarnTokensWithApyType() }
         }
 
     @Test
     fun `GIVEN rows the mapping drops WHEN a full page is fetched THEN paging still continues`() = runTest {
         // Arrange — an unsupported network maps to nothing, which must not read as the end of the list
-        coEvery { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) } returnsMany listOf(
+        coEvery { getEarnTokensWithApyType() } returnsMany listOf(
             page(hasNext = true, networkId = "not-a-real-network"),
             page(hasNext = false),
         )
@@ -121,14 +123,14 @@ internal class DefaultEarnRepositoryCatalogTest {
         repository.fetchEarnTokensCatalog()
 
         // Assert
-        coVerify(exactly = 2) { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 2) { getEarnTokensWithApyType() }
     }
 
     @Test
     fun `GIVEN the same row on two pages WHEN the catalogue is fetched THEN it is kept once`() = runTest {
         // Arrange — a duplicate would become a duplicate Compose key in the search list
         val duplicated = earnResponse(tokenId = "usd-coin", networkId = "ethereum")
-        coEvery { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) } returnsMany listOf(
+        coEvery { getEarnTokensWithApyType() } returnsMany listOf(
             response(items = listOf(duplicated), hasNext = true),
             response(items = listOf(duplicated), hasNext = false),
         )
@@ -143,7 +145,7 @@ internal class DefaultEarnRepositoryCatalogTest {
     @Test
     fun `GIVEN the same token on three networks WHEN the catalogue is fetched THEN all three are kept`() = runTest {
         // Arrange — the real payload lists usd-coin on base, ethereum and avalanche
-        coEvery { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) } returns response(
+        coEvery { getEarnTokensWithApyType() } returns response(
             items = listOf(
                 earnResponse(tokenId = "usd-coin", networkId = "base", address = "0x833589"),
                 earnResponse(tokenId = "usd-coin", networkId = "ethereum", address = "0xa0b869"),
@@ -163,7 +165,7 @@ internal class DefaultEarnRepositoryCatalogTest {
     @Test
     fun `GIVEN the api fails WHEN the catalogue is fetched THEN the failure is stored`() = runTest {
         // Arrange
-        coEvery { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) } returns httpError()
+        coEvery { getEarnTokensWithApyType() } returns httpError()
 
         // Act
         repository.fetchEarnTokensCatalog()
@@ -183,7 +185,16 @@ internal class DefaultEarnRepositoryCatalogTest {
         repository.fetchEarnTokensCatalog()
 
         // Assert
-        coVerify(exactly = 0) { tangemTechApi.getEarnTokens(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) {
+            tangemTechApi.getEarnTokens(
+                isForEarn = any(),
+                page = any(),
+                limit = any(),
+                type = any(),
+                networks = any(),
+                apyType = any(),
+            )
+        }
         assertThat(catalogStore.get().first()).isNull()
     }
 
@@ -240,8 +251,18 @@ internal class DefaultEarnRepositoryCatalogTest {
         ),
     )
 
+    private suspend fun MockKMatcherScope.getEarnTokensWithApyType() = tangemTechApi.getEarnTokens(
+        isForEarn = any(),
+        page = any(),
+        limit = any(),
+        type = any(),
+        networks = any(),
+        apyType = APY_TYPE,
+    )
+
     private companion object {
 
+        const val APY_TYPE = "gross"
         const val PAGE_SIZE = 50
         const val SERVER_LIMIT = 20
         const val MAX_PAGES = 10
