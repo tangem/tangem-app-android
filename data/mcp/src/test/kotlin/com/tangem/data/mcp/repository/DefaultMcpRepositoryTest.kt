@@ -14,6 +14,7 @@ import com.tangem.data.mcp.converter.McpClientConverter
 import com.tangem.data.mcp.api.models.request.McpDeviceVerificationConsent
 import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResponse
 import com.tangem.data.mcp.api.models.response.McpSessionResponse
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -34,6 +35,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.time.Instant
 import java.util.Base64 as JavaBase64
 import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResult as McpDeviceVerificationResultResponse
@@ -285,11 +287,37 @@ internal class DefaultMcpRepositoryTest {
             // Assert
             assertThat(actual).isEqualTo(Either.Left(SERVER_ERROR))
         }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN the session is already gone WHEN revokeSession THEN succeeds and re-reads the list`(
+            code: ApiResponseError.HttpException.Code,
+        ) = runTest {
+            // Arrange
+            coEvery { mcpApi.getSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
+            coEvery { mcpApi.revokeSession(any()) } returns apiError(httpError(code))
+            repository.getSessions().first()
+
+            // Act
+            val actual = repository.revokeSession(SESSION_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(Either.Right(Unit))
+            coVerify(exactly = 2) { mcpApi.getSessions() }
+        }
+
+        private fun provideTestModels() = listOf(
+            ApiResponseError.HttpException.Code.NOT_FOUND,
+            ApiResponseError.HttpException.Code.GONE,
+        )
     }
 
     @Suppress("UNCHECKED_CAST")
     private fun <T : Any> apiError(cause: ApiResponseError): ApiResponse<T> =
         ApiResponse.Error(cause) as ApiResponse<T>
+
+    private fun httpError(code: ApiResponseError.HttpException.Code) =
+        ApiResponseError.HttpException(code = code, message = null, errorBody = null)
 
     private companion object {
         const val USER_CODE = "WDJB-MJHT"
