@@ -89,7 +89,7 @@ internal class DefaultStakingYieldsStoreTest {
         fun `GIVEN existing yield without id WHEN store new yield without id THEN replaced`() = runTest {
             // Arrange
             val store = createStore(yieldDto(MockStaking.TON_ID).copy(id = null))
-            val replacement = yieldDto(MockStaking.SOLANA_ID).copy(id = null)
+            val replacement = yieldDto(MockStaking.SOLANA_ID).copy(id = null, apy = BigDecimal("0.1"))
 
             // Act
             store.store(listOf(replacement), force = false)
