@@ -182,5 +182,9 @@
     {
         "name": "TWI_1762_YIELD_MODE_PROMO_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_18709_SWAP_OVERALL_BEST_PRICE_ENABLED",
+        "version": "undefined"
     }
 ]
