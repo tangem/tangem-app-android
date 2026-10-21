@@ -450,12 +450,16 @@ internal class PolymarketMainModel @Inject constructor(
     private fun onAddFundsClick() {
         if (regionAccess.isRestricted) return messageSender.send(regionRestrictionsMessage())
 
+        whenRequisitesReady(::openAddFunds)
+    }
+
+    private fun whenRequisitesReady(action: () -> Unit) {
         when (fundingRequisites.state.value) {
             is RequisitesState.Loading -> Unit
             is RequisitesState.Failed -> messageSender.send(
                 DialogMessage(message = resourceReference(R.string.prediction_add_funds_error_description)),
             )
-            is RequisitesState.Ready -> openAddFunds()
+            is RequisitesState.Ready -> action()
         }
     }
 
@@ -466,6 +470,10 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun onWithdrawClick() {
+        whenRequisitesReady(::openWithdraw)
+    }
+
+    private fun openWithdraw() {
         val collateral = activeStatus.value?.cryptoCurrencyStatus?.currency ?: return reportUnconfirmedAddress()
         router.push(
             AppRoute.Swap(
