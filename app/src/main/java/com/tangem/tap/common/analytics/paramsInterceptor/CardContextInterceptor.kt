@@ -4,7 +4,7 @@ import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.analytics.models.DetachedWalletEvent
+import com.tangem.core.analytics.models.TrackingContextExcludedEvent
 import com.tangem.core.analytics.models.event.SignIn
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
@@ -33,7 +33,7 @@ class CardContextInterceptor @AssistedInject constructor(
 
     override fun canBeAppliedTo(event: AnalyticsEvent): Boolean {
         return when (event) {
-            is DetachedWalletEvent -> false
+            is TrackingContextExcludedEvent -> false
             is IntroductionProcess.ButtonScanCard,
             is IntroductionProcess.ButtonScanCardLegacy,
             is IntroductionProcess.ButtonImportExistingWallet,
