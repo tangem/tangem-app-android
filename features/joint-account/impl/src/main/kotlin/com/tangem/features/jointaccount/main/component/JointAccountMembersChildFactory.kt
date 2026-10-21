@@ -28,15 +28,6 @@ internal class JointAccountMembersChildFactory @Inject constructor() {
                     onDismiss = onDismiss,
                 ),
             )
-            is JointAccountMembersSheetConfig.ActivationConfirmation -> ActivationConfirmationComponent(
-                appComponentContext = appComponentContext,
-                params = ActivationConfirmationComponent.Params(
-                    walletInteractionIconRes = config.walletInteractionIconRes,
-                    isConfirming = model.isConfirmingActivation,
-                    onConfirmClick = { model.onConfirmActivationClick(cryptoAccountId = config.cryptoAccountId) },
-                    onDismiss = onDismiss,
-                ),
-            )
             is JointAccountMembersSheetConfig.AboutSignatures -> AboutSignaturesComponent(
                 appComponentContext = appComponentContext,
                 params = AboutSignaturesComponent.Params(
