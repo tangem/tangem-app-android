@@ -73,6 +73,7 @@ dependencies {
     implementation(projects.core.analytics.models)
     implementation(projects.domain.core)
     implementation(projects.domain.visa)
+    implementation(projects.domain.mcp)
     implementation(projects.domain.mcp.models)
 
 

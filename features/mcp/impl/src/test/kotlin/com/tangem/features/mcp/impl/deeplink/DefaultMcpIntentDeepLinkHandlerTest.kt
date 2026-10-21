@@ -15,6 +15,7 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
     private val mcpRequestService: McpRequestService = mockk(relaxed = true)
 
     private val exchangeSource = McpRequest.Intent.Source.Express(McpRequest.Intent.Source.Express.Type.EXCHANGE)
+    private val sendSource = McpRequest.Intent.Source.Transaction(McpRequest.Intent.Source.Transaction.Type.SEND)
 
     private val validParams = mapOf("id" to "my_intent_id123", "source" to "express", "type" to "exchange")
 
@@ -87,10 +88,52 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN send intent of another service WHEN handler created THEN no request is sent`() {
+    fun `GIVEN transaction send link WHEN handler created THEN send intent request is sent`() {
+        // Arrange
+        val params = mapOf("id" to "my_intent_id123", "source" to "transaction", "type" to "send")
+
+        // Act
+        DefaultMcpIntentDeepLinkHandler(queryParams = params, mcpRequestService = mcpRequestService)
+
+        // Assert
+        verify(exactly = 1) {
+            mcpRequestService.request(McpRequest.Intent(id = "my_intent_id123", source = sendSource))
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["receive", "SEND", "", " "])
+    fun `GIVEN transaction link of an unsupported or blank type WHEN handler created THEN no request is sent`(
+        type: String,
+    ) {
         // Act
         DefaultMcpIntentDeepLinkHandler(
-            queryParams = mapOf("id" to "my_intent_id123", "source" to "transaction", "type" to "send"),
+            queryParams = mapOf("id" to "my_intent_id123", "source" to "transaction", "type" to type),
+            mcpRequestService = mcpRequestService,
+        )
+
+        // Assert
+        verify(exactly = 0) { mcpRequestService.request(any()) }
+    }
+
+    @Test
+    fun `GIVEN transaction link with no type param WHEN handler created THEN no request is sent`() {
+        // Act
+        DefaultMcpIntentDeepLinkHandler(
+            queryParams = mapOf("id" to "my_intent_id123", "source" to "transaction"),
+            mcpRequestService = mcpRequestService,
+        )
+
+        // Assert
+        verify(exactly = 0) { mcpRequestService.request(any()) }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["onramp", "staking"])
+    fun `GIVEN intent of an unknown service WHEN handler created THEN no request is sent`(source: String) {
+        // Act
+        DefaultMcpIntentDeepLinkHandler(
+            queryParams = mapOf("id" to "my_intent_id123", "source" to source, "type" to "send"),
             mcpRequestService = mcpRequestService,
         )
 
