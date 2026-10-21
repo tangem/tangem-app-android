@@ -3,9 +3,9 @@ package com.tangem.tap.common.finisher
 import android.content.Context
 import android.content.Intent
 import com.tangem.core.decompose.utils.ForegroundActivityProvider
+import com.tangem.core.decompose.utils.withForegroundActivity
 import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.tap.MainActivity
-import com.tangem.tap.withForegroundActivity
 
 internal class AndroidAppFinisher(
     private val appContext: Context,

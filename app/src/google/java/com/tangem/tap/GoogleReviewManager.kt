@@ -5,6 +5,7 @@ import com.google.android.gms.tasks.Task
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.tangem.core.decompose.utils.ForegroundActivityProvider
+import com.tangem.core.decompose.utils.withForegroundActivity
 import com.tangem.core.navigation.review.ReviewManager
 import com.tangem.utils.logging.TangemLogger
 import com.google.android.play.core.review.ReviewManager as GReviewManager

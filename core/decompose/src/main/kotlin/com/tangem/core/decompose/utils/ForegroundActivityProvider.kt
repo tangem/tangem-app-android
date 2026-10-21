@@ -14,3 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 interface ForegroundActivityProvider {
     val foregroundActivity: AppCompatActivity?
 }
+
+fun ForegroundActivityProvider.withForegroundActivity(block: (AppCompatActivity) -> Unit) {
+    foregroundActivity?.let { block(it) }
+}

@@ -52,6 +52,10 @@ internal interface UtilsModule {
     @Binds
     fun bindShareManager(impl: IntentShareManager): ShareManager
 
+    @Binds
+    @Singleton
+    fun bindForegroundActivityProvider(impl: ForegroundActivityObserver): ForegroundActivityProvider
+
     companion object {
 
         @Provides
@@ -70,10 +74,6 @@ internal interface UtilsModule {
         @Singleton
         fun provideSettingsManager(@ApplicationContext context: Context): SettingsManager =
             IntentSettingsManager(context)
-
-        @Provides
-        @Singleton
-        fun provideForegroundActivityProvider(): ForegroundActivityProvider = ForegroundActivityObserver
 
         @Provides
         @Singleton
