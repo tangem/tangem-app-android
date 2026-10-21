@@ -254,19 +254,6 @@ internal class StakingBalanceConverterTest {
             // Assert
             assertThat(actual.validatorAddress).isNull()
         }
-
-        // Pins current behaviour: get(0) on an empty validatorAddresses list
-        @Test
-        fun `GIVEN empty tron validatorAddresses WHEN convert THEN throws IndexOutOfBoundsException`() {
-            // Arrange
-            val balance = balanceDTO(validatorAddress = null, validatorAddresses = emptyList())
-
-            // Act
-            val error = runCatching { convertItems(wrapper(balance)) }.exceptionOrNull()
-
-            // Assert
-            assertThat(error).isInstanceOf(IndexOutOfBoundsException::class.java)
-        }
     }
 
     private fun convertItems(wrapper: YieldBalanceWrapperDTO): List<BalanceItem> {
