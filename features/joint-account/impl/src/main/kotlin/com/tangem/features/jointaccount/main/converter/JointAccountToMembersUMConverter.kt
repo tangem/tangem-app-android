@@ -152,7 +152,11 @@ internal class JointAccountToMembersUMConverter(
         return when (phase.stage) {
             MembersScreenPhase.Stage.Completed -> null
             MembersScreenPhase.Stage.Collecting -> JointAccountMembersUM.FooterUM(
-                hint = collectingHint(phase = phase, freeSlots = freeSlots),
+                hint = collectingHint(
+                    phase = phase,
+                    freeSlots = freeSlots,
+                    isAnyInviteShared = input.sharedInvites.isNotEmpty(),
+                ),
                 button = button,
             )
             MembersScreenPhase.Stage.Confirming -> if (phase.isOwnVerified) {
@@ -171,7 +175,12 @@ internal class JointAccountToMembersUMConverter(
         }
     }
 
-    private fun collectingHint(phase: MembersScreenPhase, freeSlots: List<MemberUM.FreeSlot>): TextReference {
+    /** "Invite K members" only before any invite was ever shared; a redeemed invite stays in the shared set */
+    private fun collectingHint(
+        phase: MembersScreenPhase,
+        freeSlots: List<MemberUM.FreeSlot>,
+        isAnyInviteShared: Boolean,
+    ): TextReference {
         if (freeSlots.isEmpty()) return resourceReference(CoreUiR.string.joint_account_invite_members_everyone_joined)
 
         val notInvited = freeSlots.count { slot -> slot.status is SlotStatusUM.NotInvited }
@@ -183,7 +192,7 @@ internal class JointAccountToMembersUMConverter(
             )
         }
 
-        val id = if (notInvited == freeSlots.size) {
+        val id = if (!isAnyInviteShared) {
             CoreUiR.plurals.joint_account_invite_members_invite_count
         } else {
             CoreUiR.plurals.joint_account_invite_members_invite_more
