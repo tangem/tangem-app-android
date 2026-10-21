@@ -38,4 +38,9 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.TWI_1674_SWAP_CUSTOM_SLIPPAGE_ENABLED,
         )
+
+    override val isOverallBestPriceEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.TWI_1876_KYC_PRESCREENING_CEX_ENABLED,
+        )
 }
