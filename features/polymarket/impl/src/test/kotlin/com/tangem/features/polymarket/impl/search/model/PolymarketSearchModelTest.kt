@@ -16,6 +16,7 @@ import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.createPredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.createPolymarketEvent
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.search.PolymarketSearchComponent
 import com.tangem.features.polymarket.impl.search.ui.state.PolymarketSearchUM
@@ -172,6 +173,56 @@ internal class PolymarketSearchModelTest {
         // Assert
         assertThat(dispatchedActions.filterIsInstance<BatchAction.LoadMore<PolymarketSearchConfig>>())
             .hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN a failed next page WHEN scrolled near the end THEN that page is retried`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        model.uiState.value.onQueryChange("trump")
+        advanceUntilIdle()
+        batchState.value = BatchListState(
+            data = listOf(Batch(key = 0, data = listOf(createEvent()))),
+            status = PaginationStatus.Paginating(
+                lastResult = BatchFetchResult.Error(IllegalStateException("HTTP 500")),
+            ),
+        )
+        advanceUntilIdle()
+        dispatchedActions.clear()
+
+        // Act
+        model.onLoadMore()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(dispatchedActions).hasSize(1)
+        assertThat(dispatchedActions.single()).isInstanceOf(BatchAction.LoadMore::class.java)
+    }
+
+    @Test
+    fun `GIVEN a failed next page WHEN retry is tapped THEN only that page is requested`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        model.uiState.value.onQueryChange("trump")
+        advanceUntilIdle()
+        batchState.value = BatchListState(
+            data = listOf(Batch(key = 0, data = listOf(createEvent()))),
+            status = PaginationStatus.Paginating(
+                lastResult = BatchFetchResult.Error(IllegalStateException("HTTP 500")),
+            ),
+        )
+        advanceUntilIdle()
+        dispatchedActions.clear()
+
+        // Act
+        val content = model.uiState.value.content as PolymarketSearchUM.ContentUM.Results
+        (content.footer as PolymarketFeedFooterUM.Error).onRetryClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(dispatchedActions).hasSize(1)
+        assertThat(dispatchedActions.single()).isInstanceOf(BatchAction.LoadMore::class.java)
+        assertThat(content.events.map { it.id }).containsExactly("event-1")
     }
 
     @Test
