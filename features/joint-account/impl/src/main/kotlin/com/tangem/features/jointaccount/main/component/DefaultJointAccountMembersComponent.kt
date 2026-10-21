@@ -1,58 +1,91 @@
 package com.tangem.features.jointaccount.main.component
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.slide
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.arkivanov.decompose.router.slot.childSlot
-import com.arkivanov.essenty.lifecycle.doOnPause
-import com.arkivanov.essenty.lifecycle.doOnResume
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
-import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.decompose.navigation.inner.InnerRouter
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
-import com.tangem.features.jointaccount.main.model.JointAccountMembersModel
-import com.tangem.features.jointaccount.main.ui.JointAccountMembersScreen
+import com.tangem.features.jointaccount.main.confirmaddress.JointAccountConfirmAddressComponent
+import com.tangem.features.jointaccount.main.navigation.JointAccountMembersRoute
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
 internal class DefaultJointAccountMembersComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
-    @Assisted params: JointAccountMembersComponent.Params,
-    childFactory: JointAccountMembersChildFactory,
+    @Assisted private val params: JointAccountMembersComponent.Params,
+    private val childFactory: JointAccountMembersChildFactory,
 ) : JointAccountMembersComponent, AppComponentContext by appComponentContext {
 
-    private val model: JointAccountMembersModel = getOrCreateModel(params = params)
+    private val stackNavigation = StackNavigation<JointAccountMembersRoute>()
 
-    private val bottomSheetSlot = childSlot(
-        source = model.bottomSheetNavigation,
+    private val innerRouter = InnerRouter<JointAccountMembersRoute>(
+        stackNavigation = stackNavigation,
+        popCallback = { onChildBack() },
+    )
+
+    private val stack = childStack(
+        key = "jointAccountMembersStack",
+        source = stackNavigation,
         serializer = null,
-        handleBackButton = false,
-        key = "bottomSheetSlot",
-        childFactory = { config, componentContext ->
-            childFactory.createChild(
-                config = config,
-                appComponentContext = childByContext(componentContext),
-                model = model,
+        initialConfiguration = JointAccountMembersRoute.Members,
+        handleBackButton = true,
+        childFactory = { route, factoryContext ->
+            createChild(
+                route = route,
+                childContext = childByContext(componentContext = factoryContext, router = innerRouter),
             )
         },
     )
 
-    init {
-        lifecycle.doOnResume { model.onResume() }
-        lifecycle.doOnPause { model.onPause() }
-    }
-
     @Composable
     override fun Content(modifier: Modifier) {
-        val state by model.uiState.collectAsStateWithLifecycle()
-        val bottomSheet by bottomSheetSlot.subscribeAsState()
+        val childStack by stack.subscribeAsState()
 
-        JointAccountMembersScreen(state = state, modifier = modifier)
+        Children(
+            stack = childStack,
+            modifier = modifier,
+            animation = stackAnimation { slide() },
+        ) { child ->
+            child.instance.Content(Modifier.fillMaxSize())
+        }
+    }
 
-        bottomSheet.child?.instance?.BottomSheet()
+    private fun createChild(
+        route: JointAccountMembersRoute,
+        childContext: AppComponentContext,
+    ): ComposableContentComponent = when (route) {
+        is JointAccountMembersRoute.Members -> JointAccountMembersListComponent(
+            appComponentContext = childContext,
+            params = params,
+            childFactory = childFactory,
+        )
+        is JointAccountMembersRoute.ConfirmAddress -> JointAccountConfirmAddressComponent(
+            appComponentContext = childContext,
+            params = JointAccountConfirmAddressComponent.Params(
+                userWalletId = params.userWalletId,
+                cryptoAccountId = route.cryptoAccountId,
+            ),
+        )
+    }
+
+    private fun onChildBack() {
+        if (stack.value.backStack.isEmpty()) {
+            router.pop()
+        } else {
+            stackNavigation.pop()
+        }
     }
 
     @AssistedFactory
