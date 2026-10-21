@@ -196,6 +196,73 @@ internal class DefaultRouterTest {
     }
 
     @Test
+    fun `GIVEN stack WHEN contains THEN only routes of that stack are found and stack is unchanged`() = runTest {
+        // Arrange
+        stack = listOf(RouteA, RouteB)
+
+        // Act
+        val actual = listOf(RouteA, RouteB, RouteC).map { router.contains(it) }
+
+        // Assert
+        assertThat(actual).containsExactly(true, true, false).inOrder()
+        assertThat(stack).containsExactly(RouteA, RouteB).inOrder()
+    }
+
+    @Test
+    fun `GIVEN routes of the class WHEN popToMatching THEN popped to the last route satisfying the predicate`() {
+        // Arrange
+        stack = listOf(RouteA, Details(id = 1, flag = true), Details(id = 2), Details(id = 1, flag = false), RouteB)
+
+        // Act
+        router.popToMatching(Details::class, predicate = { it.id == 1 }, onComplete = onComplete)
+
+        // Assert
+        assertThat(stack)
+            .containsExactly(RouteA, Details(id = 1, flag = true), Details(id = 2), Details(id = 1, flag = false))
+            .inOrder()
+        assertThat(results).containsExactly(true)
+    }
+
+    @Test
+    fun `GIVEN routes of a class deeper in stack WHEN navigate removes them THEN stack is rebuilt and completion is successful`() {
+        // Arrange
+        stack = listOf(RouteA, Details(id = 1), RouteB, Details(id = 2))
+
+        // Act
+        router.navigate(transformer = { it.filterNot { route -> route is Details } + RouteC }, onComplete = onComplete)
+
+        // Assert
+        assertThat(stack).containsExactly(RouteA, RouteB, RouteC).inOrder()
+        assertThat(results).containsExactly(true)
+    }
+
+    @Test
+    fun `GIVEN matching route on top WHEN popToMatching THEN stack is unchanged and completion is successful`() {
+        // Arrange
+        stack = listOf(RouteA, Details(id = 1, flag = true))
+
+        // Act
+        router.popToMatching(Details::class, predicate = { it.id == 1 }, onComplete = onComplete)
+
+        // Assert
+        assertThat(stack).containsExactly(RouteA, Details(id = 1, flag = true)).inOrder()
+        assertThat(results).containsExactly(true)
+    }
+
+    @Test
+    fun `GIVEN no route satisfying the predicate WHEN popToMatching THEN stack is unchanged and completion fails`() {
+        // Arrange
+        stack = listOf(RouteA, Details(id = 2), RouteB)
+
+        // Act
+        router.popToMatching(Details::class, predicate = { it.id == 1 }, onComplete = onComplete)
+
+        // Assert
+        assertThat(stack).containsExactly(RouteA, Details(id = 2), RouteB).inOrder()
+        assertThat(results).containsExactly(false)
+    }
+
+    @Test
     fun `GIVEN stack WHEN navigating THEN every operation is logged as info`() {
         // Arrange
         stack = listOf(RouteA, RouteB)
@@ -207,6 +274,8 @@ internal class DefaultRouterTest {
         router.replaceAll(RouteA, RouteB)
         router.pop()
         router.popTo(RouteA::class)
+        router.popToMatching(RouteA::class, predicate = { true })
+        router.navigate(transformer = { listOf(RouteA, RouteC) })
 
         // Assert
         assertThat(logs).containsExactly(
@@ -216,10 +285,13 @@ internal class DefaultRouterTest {
             "Info Router Replace all routes with [RouteA, RouteB]",
             "Info Router Pop route",
             "Info Router Pop to ${RouteA::class}",
+            "Info Router Pop to the last matching ${RouteA::class}",
+            "Info Router Rebuild the stack to [RouteA, RouteC]",
         ).inOrder()
     }
 
     private data object RouteA : Route
     private data object RouteB : Route
     private data object RouteC : Route
+    private data class Details(val id: Int, val flag: Boolean = false) : Route
 }
