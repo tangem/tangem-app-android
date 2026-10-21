@@ -24,7 +24,7 @@ import dagger.hilt.components.SingletonComponent
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 @Suppress("TooManyFunctions")
-interface ApplicationEntryPoint {
+internal interface ApplicationEntryPoint {
 
     fun getFeatureTogglesManager(): FeatureTogglesManager
 
@@ -59,4 +59,6 @@ interface ApplicationEntryPoint {
     fun getAnalyticsEventHandler(): AnalyticsEventHandler
 
     fun getAnalyticsHandlers(): Set<@JvmSuppressWildcards AnalyticsHandler>
+
+    fun getForegroundActivityObserver(): ForegroundActivityObserver
 }
