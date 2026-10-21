@@ -2476,6 +2476,17 @@ internal class SwapModel @Inject constructor(
         )
     }
 
+    @VisibleForTesting
+    internal fun onTronReapproveClick(spenderAddress: String, amount: BigDecimal) {
+        val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return
+        swapInteractor.requireTronReapproval(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            spenderAddress = spenderAddress,
+            maxAllowance = amount,
+        )
+        onReduceAmountClicked(SwapAmount(amount, fromSwapCurrencyStatus.currency.decimals))
+    }
+
     private fun onAmountSelected(selected: Boolean) {
         if (selected) {
             analyticsEventHandler.send(SwapEvents.SendTokenBalanceClicked())
@@ -2659,6 +2670,7 @@ internal class SwapModel @Inject constructor(
                     }
                 }
             },
+            onTronReapproveClick = ::onTronReapproveClick,
             onApproveTypeSelect = { provider ->
                 val approval = getSelectApprovalTypeParams(provider)
                 if (approval != null) {

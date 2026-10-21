@@ -21,6 +21,8 @@ import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.domain.models.ui.SwapState
+import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -29,6 +31,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -41,6 +44,9 @@ import java.math.BigInteger
  * amount has grown past it since (`NotEnough` for the entered amount). Otherwise increasing the
  * amount right after approving locks the screen in the approval-in-progress error with no way to
  * request a new approval.
+ *
+ * A Tron re-approval ([SwapInteractorImpl.requireTronReapproval]) keeps both the approval request and the in-progress
+ * marker in place until the allowance drops to its ceiling, even though the old allowance covers the amount.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SwapInteractorImplApprovalInProgressTest : SwapInteractorImplTestBase() {
@@ -51,6 +57,7 @@ internal class SwapInteractorImplApprovalInProgressTest : SwapInteractorImplTest
     private val spender = "TDexRouterSpender"
     private val tokenContract = "TRegularTokenContract"
     private val approvedAmount = BigDecimal("5")
+    private val reapproval = BigDecimal("4")
 
     private var inProgress = true
 
@@ -216,6 +223,87 @@ internal class SwapInteractorImplApprovalInProgressTest : SwapInteractorImplTest
             )
         }
 
+    @Test
+    fun `GIVEN tron reapproval required and allowance above it WHEN findBestQuote THEN approval required`() =
+        runTest {
+            // Arrange
+            inProgress = false
+            stubAllowance(AllowanceInfo.Enough(allowance = BigDecimal("10")))
+            val provider = stubTronDexQuote()
+            val fromStatus = buildTronTokenStatus()
+            sut.requireTronReapproval(
+                fromSwapCurrencyStatus = fromStatus,
+                spenderAddress = spender,
+                maxAllowance = reapproval,
+            )
+
+            // Act
+            val result = invokeTronTokenQuote(provider, amountToSwap = "4", fromStatus = fromStatus)
+
+            // Assert
+            val loaded = result[provider] as SwapState.QuotesLoadedState
+            assertThat(loaded.permissionState).isEqualTo(
+                PermissionDataState.PermissionRequired(isResetApproval = false, spenderAddress = spender),
+            )
+        }
+
+    @Test
+    fun `GIVEN tron reapproval sent but not on chain WHEN findBestQuote THEN stays in progress`() = runTest {
+        // Arrange — the old allowance of 10 already covers the amount, so only the ceiling keeps the marker
+        every { allowPermissionsHandler.getApprovedAmount(any()) } returns reapproval
+        stubAllowance(AllowanceInfo.Enough(allowance = BigDecimal("10")))
+        val provider = stubTronDexQuote()
+        val fromStatus = buildTronTokenStatus()
+        sut.requireTronReapproval(
+            fromSwapCurrencyStatus = fromStatus,
+            spenderAddress = spender,
+            maxAllowance = reapproval,
+        )
+
+        // Act
+        val result = invokeTronTokenQuote(provider, amountToSwap = "4", fromStatus = fromStatus)
+
+        // Assert
+        coVerify(exactly = 0) { allowPermissionsHandler.removeAddressFromProgress(any()) }
+        val loaded = result[provider] as SwapState.QuotesLoadedState
+        assertThat(loaded.permissionState).isEqualTo(PermissionDataState.PermissionLoading)
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN tron reapproval no longer needed WHEN findBestQuote THEN requirement dropped`(
+        model: TronReapprovalDropModel,
+    ) = runTest {
+        // Arrange
+        inProgress = false
+        val provider = stubTronDexQuote()
+        val fromStatus = buildTronTokenStatus()
+        sut.requireTronReapproval(
+            fromSwapCurrencyStatus = fromStatus,
+            spenderAddress = spender,
+            maxAllowance = reapproval,
+        )
+        stubAllowance(AllowanceInfo.Enough(allowance = model.allowance))
+        invokeTronTokenQuote(provider, amountToSwap = model.amountToSwap, fromStatus = fromStatus)
+        stubAllowance(AllowanceInfo.Enough(allowance = BigDecimal("10")))
+
+        // Act
+        val result = invokeTronTokenQuote(provider, amountToSwap = "4", fromStatus = fromStatus)
+
+        // Assert
+        val loaded = result[provider] as SwapState.QuotesLoadedState
+        assertThat(loaded.permissionState).isEqualTo(PermissionDataState.Empty)
+    }
+
+    private fun provideTestModels() = listOf(
+        // The new approval landed
+        TronReapprovalDropModel(allowance = reapproval, amountToSwap = "4"),
+        // The amount was raised past the ceiling, so it is approved as entered
+        TronReapprovalDropModel(allowance = BigDecimal("10"), amountToSwap = "8"),
+    )
+
+    data class TronReapprovalDropModel(val allowance: BigDecimal, val amountToSwap: String)
+
     // region — stubs & helpers
 
     private fun stubAllowance(info: AllowanceInfo) {
@@ -268,17 +356,23 @@ internal class SwapInteractorImplApprovalInProgressTest : SwapInteractorImplTest
         ),
     )
 
-    private suspend fun invokeTronTokenQuote(provider: SwapProvider, amountToSwap: String) = sut.findBestQuote(
-        fromSwapCurrencyStatus = buildSwapCurrencyStatus(
-            networkRawId = tronNetwork,
-            contractAddress = tokenContract,
-            isCoin = false,
-            amount = BigDecimal("100"),
-        ),
+    private suspend fun invokeTronTokenQuote(
+        provider: SwapProvider,
+        amountToSwap: String,
+        fromStatus: SwapCurrencyStatus = buildTronTokenStatus(),
+    ) = sut.findBestQuote(
+        fromSwapCurrencyStatus = fromStatus,
         toSwapCurrencyStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork),
         providers = listOf(provider),
         amountToSwap = amountToSwap,
         reduceBalanceBy = BigDecimal.ZERO,
+    )
+
+    private fun buildTronTokenStatus(): SwapCurrencyStatus = buildSwapCurrencyStatus(
+        networkRawId = tronNetwork,
+        contractAddress = tokenContract,
+        isCoin = false,
+        amount = BigDecimal("100"),
     )
 
     private fun buildCurrencyCheck(): CryptoCurrencyCheck = CryptoCurrencyCheck(
