@@ -36,8 +36,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
-val foregroundActivityObserver = ForegroundActivityObserver
-
 open class TangemApplication : Application(), ImageLoaderFactory, Configuration.Provider {
 
     // region DI
@@ -137,7 +135,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
             store = NorthernLightsCrashGuardPreferences(context = this),
             appVersion = BuildConfig.VERSION_CODE,
         )
-        registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
+        registerActivityLifecycleCallbacks(ForegroundActivityObserver.callbacks)
     }
 
     fun init() {
