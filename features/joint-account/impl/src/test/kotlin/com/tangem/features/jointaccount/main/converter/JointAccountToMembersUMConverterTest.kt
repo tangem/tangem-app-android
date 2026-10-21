@@ -318,6 +318,23 @@ internal class JointAccountToMembersUMConverterTest {
         val expected: FooterExpectation?,
     )
 
+    @Test
+    fun `GIVEN the invited member joined and one slot is still uninvited WHEN convert THEN footer keeps Invite more`() {
+        // Arrange
+        val input = input(
+            account = pendingAccount(members = listOf(creator, member.copy(inviteId = INVITE_B))),
+            invites = listOf(INVITE_A, INVITE_B),
+            sharedInvites = setOf(INVITE_B),
+            ownAddress = creator.address,
+        )
+
+        // Act
+        val hint = converter.convert(input).footer?.hint
+
+        // Assert
+        assertThat(hint).isEqualTo(INVITE_MORE_ONE)
+    }
+
     data class FooterExpectation(val hint: TextReference?, val isButtonEnabled: Boolean?)
 
     @Nested
