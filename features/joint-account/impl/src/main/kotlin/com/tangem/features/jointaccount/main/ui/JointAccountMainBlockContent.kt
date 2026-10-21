@@ -34,6 +34,7 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_checkmark_16
 import com.tangem.core.ui.res.generated.icons.ic_clock_16
 import com.tangem.core.ui.res.generated.icons.ic_user_plus_16
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -228,7 +229,7 @@ private class JointAccountMainPreviewProvider : CollectionPreviewParameterProvid
         JointAccountMainUM.Loading,
         JointAccountMainUM.WaitingMembers(
             title = stringReference("Joint account"),
-            subtitle = stringReference("1 of 5 members"),
+            subtitle = stringReference("5 members"),
             icon = previewIcon,
             balance = stringReference("$0.00"),
             priceChange = previewNeutralPriceChange,
@@ -241,24 +242,28 @@ private class JointAccountMainPreviewProvider : CollectionPreviewParameterProvid
         ),
         JointAccountMainUM.WaitingMembers(
             title = stringReference("Joint account"),
-            subtitle = stringReference("Waiting for activation"),
+            subtitle = stringReference("5 members"),
             icon = previewIcon,
             balance = stringReference("$0.00"),
             priceChange = previewNeutralPriceChange,
             banner = JointAccountMainUM.BannerUM(
-                text = stringReference("Activate account"),
-                icon = Icons.ic_clock_16,
+                text = stringReference("Confirm shared address"),
+                icon = Icons.ic_checkmark_16,
                 onClick = {},
             ),
             onClick = {},
         ),
         JointAccountMainUM.WaitingMembers(
             title = stringReference("Joint account"),
-            subtitle = stringReference("3 of 5 members"),
+            subtitle = stringReference("5 members"),
             icon = previewIcon,
             balance = stringReference("$0.00"),
             priceChange = previewNeutralPriceChange,
-            banner = null,
+            banner = JointAccountMainUM.BannerUM(
+                text = stringReference("Waiting for 2 confirmations"),
+                icon = Icons.ic_clock_16,
+                onClick = {},
+            ),
             onClick = {},
         ),
         JointAccountMainUM.Blocked(
