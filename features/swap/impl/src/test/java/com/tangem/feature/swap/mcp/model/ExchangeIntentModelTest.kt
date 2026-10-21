@@ -6,8 +6,8 @@ import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.ToastMessage
@@ -56,7 +56,6 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class ExchangeIntentModelTest {
 
     private val router: Router = mockk(relaxed = true)
-    private val appRouter: AppRouter = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val getExchangeIntentUseCase: GetExchangeIntentUseCase = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
@@ -78,18 +77,24 @@ internal class ExchangeIntentModelTest {
     )
     private val pol = createCoin(network = createNetwork(rawId = "polygon-pos", name = "Polygon"), symbol = "POL")
 
+    /** Root stack the [router] falls back to; the model navigates it only through [Router.navigate]. */
+    private var rootStack: List<Route> = emptyList()
+
     @BeforeEach
     fun resetMocks() {
         clearMocks(
             router,
-            appRouter,
             messageSender,
             getExchangeIntentUseCase,
             userWalletsListRepository,
             holdingsResolver,
             mcpRepository,
         )
-        every { appRouter.stack } returns emptyList()
+        rootStack = emptyList()
+        every { router.navigate(any(), any()) } answers {
+            rootStack = firstArg<(List<Route>) -> List<Route>>().invoke(rootStack)
+            secondArg<(Boolean) -> Unit>().invoke(true)
+        }
         coEvery { userWalletsListRepository.selectedUserWalletSync() } returns
             mockk<UserWallet> { every { this@mockk.walletId } returns this@ExchangeIntentModelTest.walletId }
         coEvery { holdingsResolver.resolve(walletId, any()) } returns ExchangeIntentHoldings.Both(from = usdt, to = pol)
@@ -244,7 +249,7 @@ internal class ExchangeIntentModelTest {
         openedOffers.shownOffer().primaryButton.onClick()
 
         // Assert
-        verify(exactly = 1) { appRouter.push(expectedSwapRoute(), any()) }
+        assertThat(rootStack).containsExactly(expectedSwapRoute())
         verify(exactly = 1) { router.pop(any()) }
         assertThat(openedOffers.last()).isNull()
         model.onDestroy()
@@ -253,7 +258,7 @@ internal class ExchangeIntentModelTest {
     @Test
     fun `GIVEN swap already open WHEN proceed THEN it is replaced`() = runTest {
         // Arrange
-        every { appRouter.stack } returns listOf(AppRoute.Swap(userWalletId = walletId, screenSource = "Main"))
+        rootStack = listOf(AppRoute.Swap(userWalletId = walletId, screenSource = "Main"))
         val model = createModel(testScope = this)
         val openedOffers = model.offerSlotNavigation.trackSlot()
         advanceUntilIdle()
@@ -262,7 +267,7 @@ internal class ExchangeIntentModelTest {
         openedOffers.shownOffer().primaryButton.onClick()
 
         // Assert
-        verify(exactly = 1) { appRouter.replaceCurrent(expectedSwapRoute(), any()) }
+        assertThat(rootStack).containsExactly(expectedSwapRoute())
         verify(exactly = 1) { router.pop(any()) }
         model.onDestroy()
     }
@@ -270,13 +275,12 @@ internal class ExchangeIntentModelTest {
     @Test
     fun `GIVEN account flow swap on top WHEN proceed THEN intent swap is pushed without replacing it`() = runTest {
         // Arrange
-        every { appRouter.stack } returns listOf(
-            AppRoute.Swap(
-                userWalletId = walletId,
-                screenSource = "Main",
-                accountFlow = AppRoute.Swap.AccountFlow.TopUp,
-            ),
+        val accountFlowSwap = AppRoute.Swap(
+            userWalletId = walletId,
+            screenSource = "Main",
+            accountFlow = AppRoute.Swap.AccountFlow.TopUp,
         )
+        rootStack = listOf(accountFlowSwap)
         val model = createModel(testScope = this)
         val openedOffers = model.offerSlotNavigation.trackSlot()
         advanceUntilIdle()
@@ -285,8 +289,7 @@ internal class ExchangeIntentModelTest {
         openedOffers.shownOffer().primaryButton.onClick()
 
         // Assert
-        verify(exactly = 1) { appRouter.push(expectedSwapRoute(), any()) }
-        verify(exactly = 0) { appRouter.replaceCurrent(any(), any()) }
+        assertThat(rootStack).containsExactly(accountFlowSwap, expectedSwapRoute()).inOrder()
         verify(exactly = 1) { router.pop(any()) }
         model.onDestroy()
     }
@@ -294,7 +297,7 @@ internal class ExchangeIntentModelTest {
     @Test
     fun `GIVEN intent swap covered by account flow WHEN proceed THEN existing intent swap is revealed`() = runTest {
         // Arrange
-        every { appRouter.stack } returns listOf(
+        rootStack = listOf(
             expectedSwapRoute(),
             AppRoute.Swap(
                 userWalletId = walletId,
@@ -310,9 +313,7 @@ internal class ExchangeIntentModelTest {
         openedOffers.shownOffer().primaryButton.onClick()
 
         // Assert
-        verify(exactly = 1) { appRouter.popTo(expectedSwapRoute(), any()) }
-        verify(exactly = 0) { appRouter.push(any(), any()) }
-        verify(exactly = 0) { appRouter.replaceCurrent(any(), any()) }
+        assertThat(rootStack).containsExactly(expectedSwapRoute())
         verify(exactly = 1) { router.pop(any()) }
         model.onDestroy()
     }
@@ -333,7 +334,7 @@ internal class ExchangeIntentModelTest {
             // Assert
             assertThat(openedOffers).containsExactly(offer, null).inOrder()
             verify(exactly = 1) { router.pop(any()) }
-            verify(exactly = 0) { appRouter.push(any(), any()) }
+            verify(exactly = 0) { router.navigate(any(), any()) }
             verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
             model.onDestroy()
         }
@@ -385,8 +386,7 @@ internal class ExchangeIntentModelTest {
 
             // Assert
             verify(exactly = testModel.expectedPops) { router.pop(any()) }
-            verify(exactly = testModel.expectedNavigations) { appRouter.push(expectedSwapRoute(), any()) }
-            verify(exactly = 0) { appRouter.replaceCurrent(any(), any()) }
+            verify(exactly = testModel.expectedNavigations) { router.navigate(any(), any()) }
             verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
             model.onDestroy()
         }
@@ -408,13 +408,13 @@ internal class ExchangeIntentModelTest {
             val model = createModel(testScope = this)
             val openedOffers = model.offerSlotNavigation.trackSlot()
             advanceUntilIdle()
-            every { appRouter.push(any(), any()) } answers { model.onClose() }
+            every { router.navigate(any(), any()) } answers { model.onClose() }
 
             // Act
             openedOffers.shownOffer().primaryButton.onClick()
 
             // Assert
-            verify(exactly = 1) { appRouter.push(expectedSwapRoute(), any()) }
+            verify(exactly = 1) { router.navigate(any(), any()) }
             verify(exactly = 1) { router.pop(any()) }
             model.onDestroy()
         }
@@ -446,7 +446,7 @@ internal class ExchangeIntentModelTest {
             // Assert
             assertThat(openedOffers.filterNotNull()).isEmpty()
             verify(exactly = 1) { router.pop(any()) }
-            verify(exactly = 0) { appRouter.push(any(), any()) }
+            verify(exactly = 0) { router.navigate(any(), any()) }
             verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
             model.onDestroy()
         }
@@ -512,7 +512,6 @@ internal class ExchangeIntentModelTest {
     private fun createModel(testScope: TestScope): ExchangeIntentModel = ExchangeIntentModel(
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         router = router,
-        appRouter = appRouter,
         messageSender = messageSender,
         getExchangeIntentUseCase = getExchangeIntentUseCase,
         userWalletsListRepository = userWalletsListRepository,

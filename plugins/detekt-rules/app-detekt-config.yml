@@ -2,5 +2,4 @@ tangem-rules:
   UnsafeStringResourceUsage:
     active: true
   AppRouterInComponentTree:
-    # Inactive until the existing models and components are migrated from AppRouter to Router
-    active: false
+    active: true

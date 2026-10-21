@@ -3,13 +3,12 @@ package com.tangem.feature.wallet.child.wallet
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.decompose.value.subscribe
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
@@ -21,6 +20,7 @@ import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
+import com.tangem.core.ui.extensions.trackUserInteraction
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.tokens.model.details.TokenAction
@@ -38,8 +38,6 @@ import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
-import com.tangem.features.feed.FeedFeatureToggles
-import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import com.tangem.features.feed.v2.FeedV2Component
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
@@ -55,6 +53,7 @@ import com.tangem.features.tangempay.eligibility.TangemPayWaitlistComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.moneyaccount.main.component.MoneyAccountMainBlockComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
+import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoBottomSheetComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -65,8 +64,6 @@ import kotlinx.coroutines.launch
 internal class WalletComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted navigate: (WalletRoute) -> Unit,
-    private val feedFeatureToggles: FeedFeatureToggles,
-    feedEntryComponentFactory: FeedEntryComponent.Factory,
     feedV2ComponentFactory: FeedV2Component.Factory,
     tangemPayMainBlockComponentFactory: TangemPayMainBlockComponent.Factory,
     moneyAccountMainBlockComponentFactory: MoneyAccountMainBlockComponent.Factory,
@@ -86,16 +83,11 @@ internal class WalletComponent @AssistedInject constructor(
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
     private val tangemPayWaitlistComponentFactory: TangemPayWaitlistComponent.Factory,
+    private val yieldModePromoBottomSheetComponentFactory: YieldModePromoBottomSheetComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: WalletModel = getOrCreateModel()
 
-    private val feedEntryComponent by lazy {
-        feedEntryComponentFactory.create(
-            context = child("feedEntryComponent"),
-            entryRoute = null,
-        )
-    }
     private val feedV2Component by lazy {
         feedV2ComponentFactory.create(
             context = child("feedV2Component"),
@@ -145,6 +137,7 @@ internal class WalletComponent @AssistedInject constructor(
     init {
         lifecycle.subscribe(model.screenLifecycleProvider)
         doOnResume { model.onResume() }
+        doOnResume(isOneTime = true) { model.suggestYieldModePromo() }
         componentScope.launch { model.innerWalletRouter.navigateToFlow.collect { navigate(it) } }
     }
 
@@ -224,6 +217,15 @@ internal class WalletComponent @AssistedInject constructor(
                             product = TangemPayProduct.BANKING_ACCOUNT,
                             countryCode = dialogConfig.countryCode,
                             regionCode = null,
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                        ),
+                    )
+                }
+                is WalletDialogConfig.YieldModePromo -> {
+                    yieldModePromoBottomSheetComponentFactory.create(
+                        context = childByContext(componentContext),
+                        params = YieldModePromoBottomSheetComponent.Params(
+                            offer = dialogConfig.offer,
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
                         ),
                     )
@@ -339,18 +341,17 @@ internal class WalletComponent @AssistedInject constructor(
         },
     )
 
+    init {
+        dialog.subscribe(lifecycle) { slot -> if (slot.child != null) model.onDialogShown() }
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         val bottomSheetState = remember { mutableStateOf(BottomSheetState.COLLAPSED) }
-        var headerSize by remember { mutableStateOf(0.dp) }
         val dialogSlot by dialog.subscribeAsState()
         val uiState by model.uiState.collectAsStateWithLifecycle()
         val isShtorkaBlurEnabled by feedV2Component.isSheetBlurEnabled.collectAsStateWithLifecycle()
-        val isShtorkaPartialExpansionSupported = if (feedFeatureToggles.isNewShtorkaEnabled) {
-            feedV2Component.isPartialExpansionSupported.subscribeAsState().value
-        } else {
-            false
-        }
+        val isShtorkaPartialExpansionSupported by feedV2Component.isPartialExpansionSupported.subscribeAsState()
         WalletScreen(
             state = uiState,
             promoBannersBlockComponent = promoBannersBlockComponent,
@@ -359,8 +360,7 @@ internal class WalletComponent @AssistedInject constructor(
             jointAccountComponent = jointAccountMainBlockComponent,
             polymarketComponent = polymarketWalletBlockComponent,
             collectiblesComponent = collectiblesWalletBlockComponent,
-            modifier = modifier,
-            isNewShtorkaEnabled = feedFeatureToggles.isNewShtorkaEnabled,
+            modifier = modifier.trackUserInteraction(model.userInteractionTracker),
             isHideMarketingWhileSystemEnabled = promoBannersFeatureToggles.isHideMarketingBannersWhileSystemEnabled,
             isShtorkaBlurEnabled = { isShtorkaBlurEnabled },
             isShtorkaPartialExpansionSupported = isShtorkaPartialExpansionSupported,
@@ -380,15 +380,6 @@ internal class WalletComponent @AssistedInject constructor(
                     modifier = Modifier,
                 )
             },
-            legacyBottomSheetContent = { onExpandSheet ->
-                BottomSheetContent(
-                    bottomSheetState = bottomSheetState,
-                    onHeaderSizeChange = { headerSize = it },
-                    onExpandSheet = onExpandSheet,
-                    modifier = Modifier,
-                )
-            },
-            bottomSheetHeaderHeightProvider = { headerSize },
             onBottomSheetStateChange = { bottomSheetState.value = it },
         )
 
@@ -400,21 +391,6 @@ internal class WalletComponent @AssistedInject constructor(
             is ComposableBottomSheetComponent -> dialogComponent.BottomSheet()
             else -> {}
         }
-    }
-
-    @Composable
-    private fun BottomSheetContent(
-        bottomSheetState: State<BottomSheetState>,
-        onHeaderSizeChange: (Dp) -> Unit,
-        onExpandSheet: () -> Unit,
-        modifier: Modifier = Modifier,
-    ) {
-        feedEntryComponent.BottomSheetContent(
-            bottomSheetState = bottomSheetState,
-            onHeaderSizeChange = onHeaderSizeChange,
-            onExpandSheet = onExpandSheet,
-            modifier = modifier,
-        )
     }
 
     @AssistedFactory

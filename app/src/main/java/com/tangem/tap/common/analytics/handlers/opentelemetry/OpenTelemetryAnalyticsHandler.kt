@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Mirrors [OtelIncludedEvent]-marked analytics events to OTLP metrics. Does nothing until the OTel
- * pipeline is initialized (feature toggle on + api key configured) and for unmarked events.
+ * pipeline is initialized (api key configured) and for unmarked events.
  */
 internal class OpenTelemetryAnalyticsHandler(
     private val metricsHolder: OpenTelemetryMetricsHolder,

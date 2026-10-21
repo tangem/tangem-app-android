@@ -16,7 +16,6 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.create
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.feature.swap.DefaultSwapFeedbackRepository
 import com.tangem.feature.swap.DefaultSwapRepository
 import com.tangem.feature.swap.DefaultSwapTransactionRepository
@@ -27,7 +26,6 @@ import com.tangem.feature.swap.converters.ErrorsDataConverter
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapFeedbackRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -51,8 +49,6 @@ internal class SwapDataModule {
         growPreferencesKeys: GrowPreferencesKeys,
         expressUtils: ExpressUtils,
         expressHistoryRepository: ExpressHistoryRepository,
-        txHistoryFeatureToggles: TxHistoryFeatureToggles,
-        swapFeatureToggles: SwapFeatureToggles,
     ): SwapRepository {
         return DefaultSwapRepository(
             tangemExpressApi = tangemExpressApi,
@@ -64,8 +60,6 @@ internal class SwapDataModule {
             growPreferencesKeys = growPreferencesKeys,
             expressUtils = expressUtils,
             expressHistoryRepository = expressHistoryRepository,
-            txHistoryFeatureToggles = txHistoryFeatureToggles,
-            swapFeatureToggles = swapFeatureToggles,
         )
     }
 

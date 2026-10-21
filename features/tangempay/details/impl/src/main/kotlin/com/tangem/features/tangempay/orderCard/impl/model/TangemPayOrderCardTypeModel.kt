@@ -16,7 +16,6 @@ import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.common.cardMainImageUrl
 import com.tangem.features.tangempay.common.tariffPlan
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardTypeComponent
@@ -47,7 +46,6 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
     private val getCustomerOffers: GetCustomerOffersUseCase,
     private val onboardingRepository: OnboardingRepository,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
-    private val featureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayOrderCardTypeComponent.Params>()
@@ -61,7 +59,7 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
             TangemPayOrderCardTypeUM(
                 isLoading = true,
                 isError = false,
-                availableTypes = availableTypesOf(isPlasticEnabled = featureToggles.isPlasticCardOrderEnabled),
+                availableTypes = availableTypesOf(),
                 cardImageUrl = null,
                 isBasicPlan = true,
                 virtual = TangemPayOrderCardTypeUM.Virtual(issueFee = ""),
@@ -150,26 +148,19 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
                 return@launch
             }
 
-            val plasticContent = if (featureToggles.isPlasticCardOrderEnabled) {
-                val customerInfo = onboardingRepository.getCustomerInfo(params.userWalletId).getOrNull()
-                if (customerInfo == null) {
-                    state.update { it.copy(isLoading = false, isError = true) }
-                    return@launch
-                }
-                offers.plastic?.toPlasticContent(customerInfo)
-                    ?: TangemPayOrderCardTypeUM.Plastic.Unavailable(
-                        country = CountryNames.getDisplayName(customerInfo.country),
-                        offerImageUrl = offers.plasticArtworkUrl,
-                    )
-            } else {
-                null
+            val customerInfo = onboardingRepository.getCustomerInfo(params.userWalletId).getOrNull()
+            if (customerInfo == null) {
+                state.update { it.copy(isLoading = false, isError = true) }
+                return@launch
             }
+            val plasticContent = offers.plastic?.toPlasticContent(customerInfo)
+                ?: TangemPayOrderCardTypeUM.Plastic.Unavailable(
+                    country = CountryNames.getDisplayName(customerInfo.country),
+                    offerImageUrl = offers.plasticArtworkUrl,
+                )
 
             val virtualOffer = offers.virtual
-            val availableTypes = availableTypesOf(
-                isPlasticEnabled = featureToggles.isPlasticCardOrderEnabled,
-                isVirtualAvailable = virtualOffer != null,
-            )
+            val availableTypes = availableTypesOf(isVirtualAvailable = virtualOffer != null)
             if (OrderCardType.Virtual !in availableTypes) {
                 displayedType = OrderCardType.Plastic
             }
@@ -183,7 +174,7 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
                         issueFee = virtualOffer?.fee?.let { fee -> fee.amount.formatFiat(fee.currency) }.orEmpty(),
                         offerImageUrl = virtualOffer?.mainImageUrl,
                     ),
-                    plastic = plasticContent ?: current.plastic,
+                    plastic = plasticContent,
                 )
             }
             sendNotEnoughMoneyAnalytics()

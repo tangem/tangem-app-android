@@ -96,7 +96,6 @@ private fun MembersFooter(state: JointAccountMembersUM.FooterUM, modifier: Modif
             size = TangemButton.Size.X12,
             text = resourceReference(CoreUiR.string.joint_account_confirm_shared_address),
             isEnabled = button.isEnabled,
-            isLoading = button.isLoading,
             onClick = button.onClick,
         )
     }
@@ -587,7 +586,6 @@ private fun previewFooter(hint: String?, hasButton: Boolean, isEnabled: Boolean)
     button = if (hasButton) {
         JointAccountMembersUM.ConfirmButtonUM(
             isEnabled = isEnabled,
-            isLoading = false,
             onClick = {},
         )
     } else {

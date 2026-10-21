@@ -43,7 +43,10 @@ internal class DefaultEarnRepository(
     private val earnFilterStore: EarnFilterStore,
     private val earnErrorResolver: EarnErrorResolver,
     private val excludedBlockchains: ExcludedBlockchains,
+    isMerklIncentivesEnabled: Boolean,
 ) : EarnRepository {
+
+    private val apyType: String? = GROSS_APY_TYPE.takeIf { isMerklIncentivesEnabled }
 
     private val cryptoCurrencyFactory: CryptoCurrencyFactory by lazy {
         CryptoCurrencyFactory(excludedBlockchains = excludedBlockchains)
@@ -55,6 +58,7 @@ internal class DefaultEarnRepository(
             batchSize = batchSize,
             userWalletsListRepository = userWalletsListRepository,
             cryptoCurrencyFactory = cryptoCurrencyFactory,
+            apyType = apyType,
         )
 
         return BatchListSource(
@@ -93,6 +97,7 @@ internal class DefaultEarnRepository(
             val response = tangemTechApi.getEarnTokens(
                 isForEarn = true,
                 limit = limit,
+                apyType = apyType,
             ).getOrThrow()
 
             val userWallet = selectedUnlockedWallet() ?: return@runCatching
@@ -119,6 +124,7 @@ internal class DefaultEarnRepository(
                     isForEarn = false,
                     page = page.toString(),
                     limit = CATALOG_PAGE_SIZE,
+                    apyType = apyType,
                 ).getOrThrow()
 
                 received += response.items
@@ -151,6 +157,7 @@ internal class DefaultEarnRepository(
                 page = FIRST_PAGE.toString(),
                 limit = YIELD_OFFERS_LIMIT,
                 type = YIELD_TYPE,
+                apyType = apyType,
             ).getOrThrow()
 
             EarnYieldOffers(
@@ -195,6 +202,7 @@ internal class DefaultEarnRepository(
         private const val CATALOG_PAGE_SIZE = 50
         private const val YIELD_OFFERS_LIMIT = 20
         private const val YIELD_TYPE = "yield"
+        private const val GROSS_APY_TYPE = "gross"
     }
 }
 
