@@ -15,7 +15,6 @@ import com.tangem.domain.models.staking.YieldToken
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.grow.datasource.stakekit.StakeKitApi
 import com.tangem.grow.datasource.stakekit.models.request.ActionRequestBody
@@ -47,14 +46,12 @@ internal class DefaultStakeKitRepositoryAdditionalAddressesTest {
     private val stakeKitApi: StakeKitApi = mockk()
     private val stakingYieldsStore: StakingYieldsStore = mockk()
     private val stakingValidatorDao: StakingValidatorDao = mockk()
-    private val txHistoryFeatureToggle: TxHistoryFeatureToggles = mockk()
     private val walletManagersFacade: WalletManagersFacade = mockk()
 
     private val repository = DefaultStakeKitRepository(
         stakeKitApi = stakeKitApi,
         stakingYieldsStore = stakingYieldsStore,
         stakingValidatorDao = stakingValidatorDao,
-        txHistoryFeatureToggle = txHistoryFeatureToggle,
         dispatchers = TestingCoroutineDispatcherProvider(),
         walletManagersFacade = walletManagersFacade,
         moshi = StakeKitRepositoryFixtures.moshi,

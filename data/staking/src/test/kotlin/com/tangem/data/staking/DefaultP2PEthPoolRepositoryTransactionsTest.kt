@@ -17,7 +17,6 @@ import com.tangem.domain.staking.model.ethpool.P2PEthPoolNetwork
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolUnsignedTx
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
 import com.tangem.grow.datasource.ethpool.models.request.P2PEthPoolBroadcastRequest
 import com.tangem.grow.datasource.ethpool.models.request.P2PEthPoolTransactionRequest
@@ -54,7 +53,6 @@ internal class DefaultP2PEthPoolRepositoryTransactionsTest {
     private val featureToggles: StakingFeatureToggles = mockk(relaxed = true)
     private val regionBlockedStore: P2PEthPoolRegionBlockedStore = mockk(relaxed = true)
     private val vaultDao: P2PEthPoolVaultDao = mockk(relaxed = true)
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles = mockk(relaxed = true)
 
     private val repository = DefaultP2PEthPoolRepository(
         p2pEthPoolApi = api,
@@ -64,7 +62,6 @@ internal class DefaultP2PEthPoolRepositoryTransactionsTest {
         tangemTechApi = tangemTechApi,
         dispatchers = TestingCoroutineDispatcherProvider(),
         stakingFeatureToggles = featureToggles,
-        txHistoryFeatureToggle = txHistoryFeatureToggles,
         p2pEthPoolRegionBlockedStore = regionBlockedStore,
     )
 
