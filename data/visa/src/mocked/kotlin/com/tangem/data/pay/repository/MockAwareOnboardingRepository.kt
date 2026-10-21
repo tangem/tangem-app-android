@@ -59,6 +59,9 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     private val isAuthMockMode: Boolean
         get() = isMockMode && System.getProperty(UITEST_REAL_AUTH_KEY) != "1"
 
+    private val isBannerDismissalMockMode: Boolean
+        get() = isMockMode && System.getProperty(UITEST_BANNER_DISMISSAL_KEY) != "1"
+
     override suspend fun validateDeeplink(link: String): Either<UniversalError, Boolean> = real.validateDeeplink(link)
 
     override suspend fun isTangemPayInitialDataProduced(userWalletId: UserWalletId): Boolean {
@@ -194,12 +197,12 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         real.getSavedCustomerInfo(userWalletId)
 
     override fun isMainOnboardingBannerHidden(userWalletId: UserWalletId): Flow<Boolean> {
-        if (isMockMode) return flowOf(false)
+        if (isBannerDismissalMockMode) return flowOf(false)
         return real.isMainOnboardingBannerHidden(userWalletId)
     }
 
     override suspend fun setHideMainOnboardingBanner(userWalletId: UserWalletId) {
-        if (isMockMode) return
+        if (isBannerDismissalMockMode) return
         real.setHideMainOnboardingBanner(userWalletId)
     }
 
@@ -230,6 +233,7 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     private companion object {
         const val UITEST_ORDER_FROM_API_KEY = "uitest.tangempay.onboarding_order_from_api"
         const val UITEST_REAL_AUTH_KEY = "uitest.tangempay.real_auth"
+        const val UITEST_BANNER_DISMISSAL_KEY = "uitest.tangempay.banner_dismissal"
         const val MOCK_ORDER_ID = "mock-order-id"
         const val MOCK_VA_ORDER_ID = "mock-va-order-id"
     }
