@@ -1,14 +1,19 @@
 package com.tangem.data.txhistory.repository
 
+import arrow.core.Either
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.data.txhistory.repository.converter.FinishedJointOperationConverter
 import com.tangem.data.txhistory.repository.converter.JointOperationEntityConverter
+import com.tangem.data.txhistory.repository.converter.JointOperationRecordConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.domain.jointaccount.model.FinishedJointOperation
+import com.tangem.domain.jointaccount.model.JointOperationRecord
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository
+import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository.FetchResult
 import com.tangem.store.datasource.jointaccount.JointAccountApi
 import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryDeltaResponse
 import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryItemDto
@@ -35,6 +40,7 @@ internal class DefaultJointOperationHistoryRepository @Inject constructor(
 
     private val entityConverter = JointOperationEntityConverter()
     private val finishedConverter = FinishedJointOperationConverter()
+    private val recordConverter = JointOperationRecordConverter(finishedConverter)
 
     suspend fun fetchHistory(userWalletId: UserWalletId, limit: Int = DEFAULT_LIMIT): JointOperationHistoryResponse {
         val state = syncState(userWalletId)
@@ -109,6 +115,44 @@ internal class DefaultJointOperationHistoryRepository @Inject constructor(
         )
         .map { it.toSet() }
         .distinctUntilChanged()
+
+    override fun observeOperation(userWalletId: UserWalletId, operationId: String): Flow<JointOperationRecord?> =
+        jointOperationDao.observeById(userWalletId = userWalletId.stringValue, operationId = operationId)
+            .distinctUntilChanged()
+            .map { entity ->
+                entity?.let { stored ->
+                    runCatching { recordConverter.convert(stored) }
+                        .onFailure { TangemLogger.e("Dropped the joint operation $operationId", it) }
+                        .getOrNull()
+                }
+            }
+
+    override suspend fun fetchOperation(
+        userWalletId: UserWalletId,
+        operationId: String,
+        eTag: String?,
+    ): Either<Throwable, FetchResult> = Either.catch {
+        val response = jointAccountApi.getJointOperation(
+            walletId = userWalletId.stringValue,
+            operationId = operationId,
+            eTag = eTag,
+        )
+
+        when (response) {
+            is ApiResponse.Success -> {
+                store(userWalletId, listOf(response.data))
+                FetchResult.Updated(eTag = response.headers[ETAG_HEADER]?.firstOrNull())
+            }
+            is ApiResponse.Error -> when ((response.cause as? ApiResponseError.HttpException)?.code) {
+                ApiResponseError.HttpException.Code.NOT_MODIFIED -> FetchResult.NotModified
+                ApiResponseError.HttpException.Code.BAD_REQUEST,
+                ApiResponseError.HttpException.Code.NOT_FOUND,
+                ApiResponseError.HttpException.Code.FORBIDDEN,
+                -> FetchResult.Gone
+                else -> throw response.cause
+            }
+        }
+    }
 
     /**
      * The backend answers a cursor it no longer accepts with 400. Dropping the sync state makes the next sync walk
