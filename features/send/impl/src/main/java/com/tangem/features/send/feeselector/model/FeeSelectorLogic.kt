@@ -280,6 +280,8 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 when {
                     error is GetFeeError.GaslessError.NotEnoughFunds -> error.left()
                     error.isTronActivationRefusal() -> error.left()
+                    // The amount does not fit next to the compensation; a TRX fee the wallet usually lacks hides that.
+                    error is GetFeeError.GaslessError.TronAllowanceTooHigh -> error.left()
                     // Only the automatic choice may fall back to the basic fee. Overriding a token the
                     // user picked explicitly would move the fee to the network coin behind their back,
                     // and the speed-only selector it leaves behind offers no way back to the token.
