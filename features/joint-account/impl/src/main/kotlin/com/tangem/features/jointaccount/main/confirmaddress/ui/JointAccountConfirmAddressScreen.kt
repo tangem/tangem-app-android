@@ -140,7 +140,7 @@ private fun AddressCard(address: String?, onShareClick: () -> Unit, modifier: Mo
             Icon(
                 imageVector = Icons.ic_share_android_20,
                 tint = TangemTheme.colors3.icon.primary,
-                contentDescription = null,
+                contentDescription = stringResourceSafe(CoreUiR.string.common_share),
                 modifier = Modifier.size(20.dp),
             )
         }
