@@ -294,6 +294,8 @@ interface TangemTechApi {
         @Query("limit") limit: Int? = null,
         @Query("type") type: String? = null,
         @Query("networkIds") networks: List<String>? = null,
+        /** `gross` adds Merkl incentive rewards to `apy` and sorts by it; omitted means base `apy`. */
+        @Query("apyType") apyType: String? = null,
     ): ApiResponse<EarnListResponse>
 
     @GET("v1/earn/networks")

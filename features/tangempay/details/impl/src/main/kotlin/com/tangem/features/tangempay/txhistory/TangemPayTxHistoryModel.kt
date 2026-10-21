@@ -104,8 +104,16 @@ internal class TangemPayTxHistoryModel @Inject constructor(
     }
 
     fun reload() {
+        // Empty is kept as is: an empty reload result doesn't change the list state, so Loading would never be replaced
         uiState.update { state ->
-            state as? TangemPayTxHistoryUM.Content ?: getLoadingState(state.isBalanceHidden)
+            when (state) {
+                is TangemPayTxHistoryUM.Content,
+                is TangemPayTxHistoryUM.Empty,
+                -> state
+                is TangemPayTxHistoryUM.Error,
+                is TangemPayTxHistoryUM.Loading,
+                -> getLoadingState(state.isBalanceHidden)
+            }
         }
         modelScope.launch { listManager.reload() }
     }

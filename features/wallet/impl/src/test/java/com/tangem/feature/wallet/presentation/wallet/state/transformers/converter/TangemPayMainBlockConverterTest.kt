@@ -9,6 +9,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.features.tangempay.entity.TangemPayMainUM
@@ -95,7 +96,11 @@ internal class TangemPayMainBlockConverterTest {
         val userWalletId = UserWalletId("011")
         val status = AccountStatus.Payment(
             account = mockk { every { this@mockk.userWalletId } returns userWalletId },
-            value = PaymentAccountStatusValue.KycRequired(source = StatusSource.ACTUAL, customerId = "customer"),
+            value = PaymentAccountStatusValue.KycRequired(
+                source = StatusSource.ACTUAL,
+                customerId = "customer",
+                customerResidency = RESIDENCY,
+            ),
         )
 
         // Act
@@ -104,7 +109,7 @@ internal class TangemPayMainBlockConverterTest {
         // Assert
         assertThat(result).isInstanceOf(TangemPayMainUM.ActionRequired::class.java)
         (result as TangemPayMainUM.ActionRequired).onClick()
-        verify(exactly = 1) { tangemPayIntents.onKycRequiredClicked(userWalletId) }
+        verify(exactly = 1) { tangemPayIntents.onKycRequiredClicked(userWalletId, "customer", RESIDENCY) }
     }
 
     @Test
@@ -162,5 +167,6 @@ internal class TangemPayMainBlockConverterTest {
 
     private companion object {
         const val USD_CURRENCY_CODE = "USD"
+        val RESIDENCY = TangemPayCustomerResidency(countryCode = "US", regionCode = "TX")
     }
 }
