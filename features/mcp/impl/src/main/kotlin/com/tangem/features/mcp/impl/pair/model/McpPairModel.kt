@@ -216,7 +216,7 @@ internal class McpPairModel @Inject constructor(
                 icon = null,
                 name = stringReference(wallet.name),
                 isAccountMode = false,
-                isMultiChoice = !portfolios.isSingleChoice,
+                isMultiChoice = portfolios.balances.size > 1,
                 onClick = { stackNavigation.pushNew(McpPairRoutes.PortfolioSelector) },
             ),
             notificationsWarning = if (connect.isPushDenied) notificationsWarning else null,
