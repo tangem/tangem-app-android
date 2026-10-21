@@ -375,7 +375,7 @@ private fun BottomActions(state: IntroductionUM, modifier: Modifier = Modifier) 
         LegalCaption(
             modifier = Modifier.padding(top = 16.dp),
             onTermsOfServiceClick = state.onTermsOfServiceClick,
-            onPrivacyPolicyClick = null,
+            onPrivacyPolicyClick = state.onPrivacyPolicyClick,
         )
     }
 }
@@ -425,6 +425,7 @@ private fun IntroductionScreenPreview() {
                 onBuyTangemClick = {},
                 onCreateWalletSheetCollapsed = {},
                 onTermsOfServiceClick = {},
+                onPrivacyPolicyClick = {},
             ),
         )
     }
