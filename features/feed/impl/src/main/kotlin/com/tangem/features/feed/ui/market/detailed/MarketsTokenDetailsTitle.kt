@@ -23,7 +23,6 @@ import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_sign_plus_24
-import com.tangem.features.feed.ui.LocalIsOpenedInBottomSheet
 import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM
 
 @Composable
@@ -87,11 +86,7 @@ private fun MarketsTokenDetailsRedesignTopBar(
                 )
             }
         },
-        type = if (LocalIsOpenedInBottomSheet.current) {
-            TangemTopBarType.BottomSheet
-        } else {
-            TangemTopBarType.Default
-        },
+        type = TangemTopBarType.Default,
     )
 }
 
