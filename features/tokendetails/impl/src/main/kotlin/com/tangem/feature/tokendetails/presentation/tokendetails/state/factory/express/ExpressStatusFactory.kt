@@ -14,7 +14,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTransactionsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotification
@@ -49,7 +48,6 @@ internal class ExpressStatusFactory @AssistedInject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     onrampStatusFactory: OnrampStatusFactory.Factory,
     exchangeStatusFactory: ExchangeStatusFactory.Factory,
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
 ) {
 
     private val exchangeStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -119,8 +117,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
             updateBalance(currentTx.toCryptoCurrency)
         }
 
-        val isShownInTxHistory = scope == ExpressTransactionsComponent.Scope.Currency &&
-            txHistoryFeatureToggles.isNewTxHistoryEnabled
+        val isShownInTxHistory = scope == ExpressTransactionsComponent.Scope.Currency
         val expressTxsToDisplay = if (isShownInTxHistory) {
             persistentListOf()
         } else {
