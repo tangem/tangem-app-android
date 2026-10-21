@@ -11,8 +11,11 @@ import com.tangem.utils.converter.Converter
  * [JointAccountStatusValue.Error.Unavailable]: nothing on this stage sets `cancelled`, and an unknown value is one
  * this build does not know — showing such an account as operational would be the dangerous reading. So does an
  * active account without a Safe address: there is nothing to read its money by.
+ * @property ownAddress this wallet's owner address, which tells whether it confirmed the account itself
  */
-object JointAccountStatusValueConverter : Converter<JointAccount, JointAccountStatusValue> {
+class JointAccountStatusValueConverter(
+    private val ownAddress: String?,
+) : Converter<JointAccount, JointAccountStatusValue> {
 
     override fun convert(value: JointAccount): JointAccountStatusValue = when (value.status) {
         JointAccount.Status.PENDING -> JointAccountStatusValue.Pending(
@@ -23,6 +26,8 @@ object JointAccountStatusValueConverter : Converter<JointAccount, JointAccountSt
         JointAccount.Status.CONFIRMING -> JointAccountStatusValue.Confirming(
             source = value.source,
             totalMembers = value.membersCount,
+            verifiedMembers = value.members.count { it.isVerified },
+            isOwnVerified = value.members.any { it.isVerified && it.address.equals(ownAddress, ignoreCase = true) },
         )
         JointAccount.Status.ACTIVE -> {
             val safeAddress = value.safeAddress
