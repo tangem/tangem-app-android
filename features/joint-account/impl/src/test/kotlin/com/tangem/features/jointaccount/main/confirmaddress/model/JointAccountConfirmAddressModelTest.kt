@@ -11,8 +11,6 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.account.models.AccountList
-import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -22,16 +20,12 @@ import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountActivationError
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
+import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
-import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatcher
-import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import com.tangem.features.jointaccount.main.confirmaddress.JointAccountConfirmAddressComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
@@ -68,9 +62,7 @@ internal class JointAccountConfirmAddressModelTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
-    private val compositionVerifier: JointAccountCompositionVerifier = mockk()
-    private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
-    private val jointAccountCompromisedAlert: JointAccountCompromisedAlert = mockk(relaxed = true)
+    private val pollingCoordinator: JointAccountPollingCoordinator = mockk()
 
     private val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
 
@@ -86,18 +78,9 @@ internal class JointAccountConfirmAddressModelTest {
             userWalletsListRepository,
             getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase,
-            compositionVerifier,
-            singleAccountListSupplier,
-            jointAccountCompromisedAlert,
+            pollingCoordinator,
         )
-        val localAccount = mockk<Account.Joint> {
-            every { accountId } returns AccountId.forJointAccount(USER_WALLET_ID, ACCOUNT_ID).getOrNull()!!
-            every { ownerKeyIndex } returns jointAccount.ownerKeyIndex
-        }
-        every { singleAccountListSupplier(USER_WALLET_ID) } returns
-            flowOf(mockk<AccountList> { every { accounts } returns listOf(localAccount) })
-        coEvery { compositionVerifier.isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any()) } returns
-            true
+        every { pollingCoordinator.poll(walletId = any()) } returns emptyFlow()
         val coldWallet = mockk<UserWallet.Cold> {
             every { walletId } returns USER_WALLET_ID
         }
@@ -271,19 +254,12 @@ internal class JointAccountConfirmAddressModelTest {
     }
 
     @Test
-    fun `GIVEN the composition does not verify WHEN the screen opens THEN it closes with the alert shown`() = runTest {
-        // Arrange
-        coEvery {
-            compositionVerifier.isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any())
-        } returns false
-
+    fun `GIVEN model created WHEN on screen THEN the joint accounts are polled for the wallet`() = runTest {
         // Act
-        val model = createModel()
+        createModel()
 
         // Assert
-        verify(exactly = 1) { router.pop() }
-        verify(exactly = 1) { jointAccountCompromisedAlert.show(USER_WALLET_ID) }
-        assertThat(model.uiState.value.address).isNull()
+        verify(exactly = 1) { pollingCoordinator.poll(walletId = USER_WALLET_ID) }
     }
 
     private fun confirmingAccount() = JointAccount(
@@ -314,11 +290,7 @@ internal class JointAccountConfirmAddressModelTest {
             userWalletsListRepository = userWalletsListRepository,
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
-            compromiseWatcher = JointAccountCompromiseWatcher(
-                singleAccountListSupplier = singleAccountListSupplier,
-                compositionVerifier = compositionVerifier,
-                jointAccountCompromisedAlert = jointAccountCompromisedAlert,
-            ),
+            pollingCoordinator = pollingCoordinator,
         )
         advanceUntilIdle()
 

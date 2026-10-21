@@ -26,7 +26,6 @@ import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatcher
-import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.converter.JointAccountToMembersUMConverter
 import com.tangem.features.jointaccount.main.entity.JointAccountMembersSheetConfig
@@ -65,7 +64,7 @@ internal class JointAccountMembersModel @Inject constructor(
     private val inviteSharing: JointAccountInviteSharing,
 ) : Model() {
 
-    private val params = paramsContainer.require<JointAccountMembersComponent.Params>()
+    private val params = paramsContainer.require<JointAccountMembersListParams>()
 
     val bottomSheetNavigation: SlotNavigation<JointAccountMembersSheetConfig> = SlotNavigation()
 
@@ -101,7 +100,7 @@ internal class JointAccountMembersModel @Inject constructor(
                 accounts.firstOrNull { params.cryptoAccountId == null || it.cryptoAccountId == params.cryptoAccountId }
             }
             .distinctUntilChanged(),
-        onCompromised = router::pop,
+        onCompromised = params.onCloseFlow,
     )
 
     init {
@@ -255,7 +254,7 @@ internal class JointAccountMembersModel @Inject constructor(
     }
 
     private fun onCloseClick() {
-        router.pop()
+        params.onCloseFlow()
     }
 
     private data class ResolvedAccount(

@@ -17,6 +17,7 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.confirmaddress.JointAccountConfirmAddressComponent
+import com.tangem.features.jointaccount.main.model.JointAccountMembersListParams
 import com.tangem.features.jointaccount.main.navigation.JointAccountMembersRoute
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -68,7 +69,11 @@ internal class DefaultJointAccountMembersComponent @AssistedInject constructor(
     ): ComposableContentComponent = when (route) {
         is JointAccountMembersRoute.Members -> JointAccountMembersListComponent(
             appComponentContext = childContext,
-            params = params,
+            params = JointAccountMembersListParams(
+                userWalletId = params.userWalletId,
+                cryptoAccountId = params.cryptoAccountId,
+                onCloseFlow = { router.pop() },
+            ),
             childFactory = childFactory,
         )
         is JointAccountMembersRoute.ConfirmAddress -> JointAccountConfirmAddressComponent(
