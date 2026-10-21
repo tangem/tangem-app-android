@@ -40,6 +40,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
@@ -74,7 +75,7 @@ import dev.chrisbanes.haze.rememberHazeState
  * Design-system v2 modal bottom sheet: a floating modal-material card with a drag indicator,
  * optional [title] slot and [content], shown above a dimmed scrim.
  *
- * Version: 1.1.1
+ * Version: 1.1.2
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=8256-1265&m=dev)
  *
@@ -200,7 +201,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
 /** Public namespace of the modal component. */
 object TangemModal {
 
-    val version = DsVersion(major = 1, minor = 1, patch = 1)
+    val version = DsVersion(major = 1, minor = 1, patch = 2)
 
     /**
      * Where the modal is presented.
@@ -277,6 +278,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> OverlayTangemMo
                         TangemModalContainer<T>(
                             config = config,
                             isMaterial = isMaterialEnabled,
+                            dismissOffset = transition::dismissOffset,
                             containerColor = containerColor,
                             showDragIndicator = showDragIndicator,
                             scrollableContent = scrollableContent,
@@ -499,6 +501,10 @@ internal class ModalTransition(
     fun openProgress(): Float {
         return combinedOpenProgress(openProgress = sheetState.openProgress(), backProgress = backProgress.value)
     }
+
+    fun dismissOffset(): Float {
+        return (1f - openProgress()) * sheetState.slideDistance()
+    }
 }
 
 @Composable
@@ -607,6 +613,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
     showDragIndicator: Boolean,
     scrollableContent: Boolean,
     chromePlacement: TangemModal.ChromePlacement,
+    noinline dismissOffset: () -> Float = { 0f },
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
 ) {
@@ -616,6 +623,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
     ModalMorphAnimationEffect(geometry = morphGeometry)
     val shape = remember(morphGeometry) { ModalMorphShape(geometry = morphGeometry) }
     val opaqueColor = containerColor ?: TangemTheme.colors3.bg.primary
+    val borderRevealDistance = with(LocalDensity.current) { ModalBorderRevealDistance.toPx() }
 
     Column(
         modifier = Modifier
@@ -629,7 +637,13 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
             ),
             isMaterial = isMaterial,
             materialStyle = TangemSurface.MaterialStyle.Modal,
-            isMaterialBorderEnabled = false,
+            materialBorderAlpha = {
+                modalBorderAlpha(
+                    flatten = morphGeometry.flatten,
+                    dismissOffset = dismissOffset(),
+                    revealDistance = borderRevealDistance,
+                )
+            },
             color = opaqueColor,
             shape = shape,
         ) {

@@ -51,6 +51,9 @@ private val ModalInsetMedium = 8.dp
 private val ModalTopCornerRadius = 36.dp
 private val ModalBottomCornerRadius = 32.dp
 
+@PublishedApi
+internal val ModalBorderRevealDistance = 32.dp
+
 /** Height fraction (of the available height) where the margin starts blending to edge-to-edge. */
 private const val TIER_FULL_START = 0.9f
 
@@ -287,6 +290,20 @@ internal fun TangemSheetState.openProgress(): Float {
 @PublishedApi
 internal fun combinedOpenProgress(openProgress: Float, backProgress: Float): Float {
     return openProgress * (1f - backProgress * MODAL_BACK_PREVIEW_FRACTION)
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@PublishedApi
+internal fun TangemSheetState.slideDistance(): Float {
+    val anchors = anchoredDraggableState.anchors
+    val distance = anchors.positionOf(TangemSheetValue.Hidden) - anchors.positionOf(TangemSheetValue.Expanded)
+    return if (distance.isNaN()) 0f else distance
+}
+
+@PublishedApi
+internal fun modalBorderAlpha(flatten: Float, dismissOffset: Float, revealDistance: Float): Float {
+    val detachment = if (revealDistance > 0f) (dismissOffset / revealDistance).coerceIn(0f, 1f) else 1f
+    return 1f - flatten * (1f - detachment)
 }
 
 /**
