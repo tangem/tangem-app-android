@@ -457,7 +457,10 @@ internal class PolymarketMainModel @Inject constructor(
         when (fundingRequisites.state.value) {
             is RequisitesState.Loading -> Unit
             is RequisitesState.Failed -> messageSender.send(
-                DialogMessage(message = resourceReference(R.string.prediction_add_funds_error_description)),
+                DialogMessage(
+                    message = resourceReference(R.string.prediction_add_funds_error_description),
+                    onDismissRequest = fundingRequisites::retryIfFailed,
+                ),
             )
             is RequisitesState.Ready -> action()
         }
