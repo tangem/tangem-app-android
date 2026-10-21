@@ -53,13 +53,22 @@ internal class PromoRegistrationOutcomeTest {
             expected = PromoRegistrationOutcome.Enrolled(Coverage.Single, listOf(mainId)),
         ),
         ResolveModel(
-            name = "every linked wallet in campaign",
+            name = "every linked wallet newly enrolled",
+            enrollments = enrollments(mainId, otherId),
+            result = listOf(
+                result(mainId, PromoRegistrationStatus.Enrolled),
+                result(otherId, PromoRegistrationStatus.Enrolled),
+            ).right(),
+            expected = PromoRegistrationOutcome.Enrolled(Coverage.All, listOf(mainId, otherId)),
+        ),
+        ResolveModel(
+            name = "main newly enrolled and a linked wallet already enrolled",
             enrollments = enrollments(mainId, otherId),
             result = listOf(
                 result(mainId, PromoRegistrationStatus.Enrolled),
                 result(otherId, PromoRegistrationStatus.AlreadyEnrolled),
             ).right(),
-            expected = PromoRegistrationOutcome.Enrolled(Coverage.All, listOf(mainId, otherId)),
+            expected = PromoRegistrationOutcome.Enrolled(Coverage.Partial, listOf(mainId, otherId)),
         ),
         ResolveModel(
             name = "a linked wallet ineligible",
@@ -80,13 +89,31 @@ internal class PromoRegistrationOutcomeTest {
             name = "main already enrolled with payout",
             enrollments = enrollments(mainId),
             result = listOf(result(mainId, PromoRegistrationStatus.AlreadyEnrolled, payout)).right(),
-            expected = PromoRegistrationOutcome.AlreadyEnrolled(payout),
+            expected = PromoRegistrationOutcome.AlreadyEnrolled(Coverage.Partial, payout),
         ),
         ResolveModel(
             name = "main already enrolled without payout",
             enrollments = enrollments(mainId),
             result = listOf(result(mainId, PromoRegistrationStatus.AlreadyEnrolled)).right(),
-            expected = PromoRegistrationOutcome.AlreadyEnrolled(payout = null),
+            expected = PromoRegistrationOutcome.AlreadyEnrolled(Coverage.Partial, payout = null),
+        ),
+        ResolveModel(
+            name = "every linked wallet already enrolled",
+            enrollments = enrollments(mainId, otherId),
+            result = listOf(
+                result(mainId, PromoRegistrationStatus.AlreadyEnrolled, payout),
+                result(otherId, PromoRegistrationStatus.AlreadyEnrolled),
+            ).right(),
+            expected = PromoRegistrationOutcome.AlreadyEnrolled(Coverage.All, payout),
+        ),
+        ResolveModel(
+            name = "main already enrolled and a linked wallet ineligible",
+            enrollments = enrollments(mainId, otherId),
+            result = listOf(
+                result(mainId, PromoRegistrationStatus.AlreadyEnrolled, payout),
+                result(otherId, PromoRegistrationStatus.Ineligible),
+            ).right(),
+            expected = PromoRegistrationOutcome.AlreadyEnrolled(Coverage.Partial, payout),
         ),
         ResolveModel(
             name = "main already enrolled and a linked wallet newly enrolled",
@@ -95,7 +122,7 @@ internal class PromoRegistrationOutcomeTest {
                 result(mainId, PromoRegistrationStatus.AlreadyEnrolled),
                 result(otherId, PromoRegistrationStatus.Enrolled),
             ).right(),
-            expected = PromoRegistrationOutcome.Enrolled(Coverage.All, listOf(mainId, otherId)),
+            expected = PromoRegistrationOutcome.Enrolled(Coverage.Partial, listOf(mainId, otherId)),
         ),
         ResolveModel(
             name = "main ineligible",

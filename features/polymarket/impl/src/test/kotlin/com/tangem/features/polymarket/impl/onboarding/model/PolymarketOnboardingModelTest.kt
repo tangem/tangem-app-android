@@ -17,7 +17,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.interactor.CheckNewPolymarketAccountAllowedInteractor
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
-import com.tangem.domain.polymarket.model.PolymarketDerivationError
+import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketNewAccountAllowance
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
@@ -199,7 +199,7 @@ internal class PolymarketOnboardingModelTest {
         fun `GIVEN an undetermined entry WHEN start is pressed THEN the run is launched`() = runTest {
             // Arrange
             gateResolves(PolymarketEntry.Undetermined)
-            every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Deriving)
+            every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.AwaitingSignature)
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
@@ -219,7 +219,7 @@ internal class PolymarketOnboardingModelTest {
                 gateResolves(PolymarketEntry.Undetermined)
                 every { runOnboardingUseCase(userWalletId) } returns flowOf(
                     PolymarketOnboardingProgress.Failed(
-                        error = PolymarketOnboardingError.Derivation(PolymarketDerivationError.UserCancelled),
+                        error = PolymarketOnboardingError.Signing(PolymarketSigningError.UserCancelled),
                         isRetryable = true,
                     ),
                 )
@@ -246,7 +246,7 @@ internal class PolymarketOnboardingModelTest {
             runTest {
                 // Arrange
                 gateResolves(PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED))
-                every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Deriving)
+                every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.AwaitingSignature)
                 val model = createModel(testScope = this)
                 advanceUntilIdle()
 
@@ -334,7 +334,7 @@ internal class PolymarketOnboardingModelTest {
     fun `GIVEN entry owes onboarding WHEN start clicked THEN run is launched`() = runTest {
         // Arrange
         owesOnboarding()
-        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Deriving)
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.AwaitingSignature)
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -367,7 +367,6 @@ internal class PolymarketOnboardingModelTest {
     inner class ProgressMapping {
 
         private fun provideTestModels() = listOf(
-            ProgressModel(progress = PolymarketOnboardingProgress.Deriving, expectedIsInProgress = true),
             ProgressModel(progress = PolymarketOnboardingProgress.AwaitingSignature, expectedIsInProgress = true),
             ProgressModel(
                 progress = PolymarketOnboardingProgress.Working(PolymarketWalletStatus.DEPLOYMENT_IN_PROGRESS),
@@ -767,7 +766,7 @@ internal class PolymarketOnboardingModelTest {
         // Arrange
         owesOnboarding()
         every { runOnboardingUseCase(userWalletId) } returns flow {
-            emit(PolymarketOnboardingProgress.Deriving)
+            emit(PolymarketOnboardingProgress.AwaitingSignature)
             awaitCancellation()
         }
         val model = createModel(testScope = this)
@@ -918,7 +917,7 @@ internal class PolymarketOnboardingModelTest {
             delay(RESOLUTION_DELAY_MILLIS)
             emit(
                 PolymarketOnboardingProgress.Failed(
-                    error = PolymarketOnboardingError.Derivation(PolymarketDerivationError.UserCancelled),
+                    error = PolymarketOnboardingError.Signing(PolymarketSigningError.UserCancelled),
                     isRetryable = true,
                 ),
             )

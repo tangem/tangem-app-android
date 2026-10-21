@@ -10,6 +10,7 @@ import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.impl.R
 import com.tangem.features.mcp.api.McpFeatureToggles
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -19,7 +20,10 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ItemsBuilderTest {
 
     private val router: Router = mockk(relaxUnitFun = true)
@@ -192,6 +196,46 @@ internal class ItemsBuilderTest {
     }
 
     @Test
+    fun `GIVEN shop block with tangem pay item WHEN addTangemPayItem THEN item not duplicated`() {
+        // Arrange
+        val items: ImmutableList<DetailsItemUM> = persistentListOf(
+            basicBlock(id = "shop", itemIds = listOf("buy_tangem_wallet", "get_tangem_pay")),
+        )
+
+        // Act
+        val result = itemsBuilder.addTangemPayItem(items = items, onClick = {})
+
+        // Assert
+        val shop = result.single { it.id == "shop" } as DetailsItemUM.Basic
+        assertThat(shop.items.map { it.id }).containsExactly("buy_tangem_wallet", "get_tangem_pay").inOrder()
+    }
+
+    @Test
+    fun `GIVEN shop block with money account item WHEN addMoneyAccountItem THEN item not duplicated`() {
+        // Arrange
+        val items: ImmutableList<DetailsItemUM> = persistentListOf(
+            basicBlock(id = "shop", itemIds = listOf("buy_tangem_wallet", "get_money_account")),
+        )
+
+        // Act
+        val result = itemsBuilder.addMoneyAccountItem(items = items, onClick = {})
+
+        // Assert
+        val shop = result.single { it.id == "shop" } as DetailsItemUM.Basic
+        assertThat(shop.items.map { it.id }).containsExactly("buy_tangem_wallet", "get_money_account").inOrder()
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun hasTangemPayItem(model: HasTangemPayItemModel) {
+        // Act
+        val actual = itemsBuilder.hasTangemPayItem(items = persistentListOf(basicBlock(id = "shop", model.itemIds)))
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
+    }
+
+    @Test
     fun `GIVEN shop block with tangem pay item WHEN removeTangemPayItem THEN item removed from shop only`() {
         // Arrange
         val items: ImmutableList<DetailsItemUM> = persistentListOf(
@@ -234,6 +278,13 @@ internal class ItemsBuilderTest {
             )
         }.toImmutableList(),
     )
+
+    private fun provideTestModels() = listOf(
+        HasTangemPayItemModel(itemIds = listOf("buy_tangem_wallet", "get_tangem_pay"), expected = true),
+        HasTangemPayItemModel(itemIds = listOf("buy_tangem_wallet"), expected = false),
+    )
+
+    data class HasTangemPayItemModel(val itemIds: List<String>, val expected: Boolean)
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
