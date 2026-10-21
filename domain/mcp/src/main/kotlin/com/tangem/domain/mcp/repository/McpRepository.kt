@@ -49,6 +49,11 @@ interface McpRepository {
      */
     fun getSessions(): Flow<List<McpSession>>
 
-    /** Revokes [sessionId], cutting off the client's access and refresh tokens. */
+    /**
+     * Revokes [sessionId], cutting off the client's access and refresh tokens.
+     *
+     * A session the service no longer knows is a success, not a failure: the authorization is gone
+     * either way, and the caller has nothing left to tell the owner about.
+     */
     suspend fun revokeSession(sessionId: String): Either<Throwable, Unit>
 }
