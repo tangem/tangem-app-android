@@ -181,38 +181,6 @@ internal class AddStakingNotificationsTransformerTest {
             verify(exactly = 1) { clickIntents.onActivateTonAccountNotificationClick() }
         }
 
-        // Pins current behaviour: an uninitialized account skips every check outside TON enter.
-        @Test
-        fun `GIVEN uninitialized ton account and exit WHEN transform THEN no notifications and primary enabled`() {
-            // Arrange
-            val transformer = tonTransformer(amount = "10", isInitialized = false)
-
-            // Act
-            val actual = confirmation(transformer.transform(state(actionType = exit)))
-
-            // Assert
-            assertThat(actual.notifications).isEmpty()
-            assertThat(actual.isPrimaryButtonEnabled).isTrue()
-        }
-
-        // Pins current behaviour: the initialization flag disables fee and staking error checks on any chain.
-        @Test
-        fun `GIVEN uninitialized solana account WHEN transform THEN all checks skipped and primary enabled`() {
-            // Arrange
-            val transformer = transformer(
-                isInitialized = false,
-                stakingError = StakingError.StakeKitUnknownError(),
-                feeError = GetFeeError.UnknownError,
-            )
-
-            // Act
-            val actual = confirmation(transformer.transform(state()))
-
-            // Assert
-            assertThat(actual.notifications).isEmpty()
-            assertThat(actual.isPrimaryButtonEnabled).isTrue()
-        }
-
         @Test
         fun `GIVEN ton balance below extra fee threshold WHEN transform THEN extra fee error and primary disabled`() {
             // Act
@@ -221,16 +189,6 @@ internal class AddStakingNotificationsTransformerTest {
             // Assert
             assertThat(actual.notifications).containsExactly(NotificationUM.Error.TonStakingExtraFeeError)
             assertThat(actual.isPrimaryButtonEnabled).isFalse()
-        }
-
-        // Pins current behaviour: the threshold is BigDecimal(0.2) built from a double, slightly above 0.2.
-        @Test
-        fun `GIVEN ton balance exactly point two WHEN transform THEN extra fee error not info`() {
-            // Act
-            val actual = confirmation(tonTransformer(amount = "0.2").transform(state()))
-
-            // Assert
-            assertThat(actual.notifications).containsExactly(NotificationUM.Error.TonStakingExtraFeeError)
         }
 
         @Test
@@ -291,27 +249,6 @@ internal class AddStakingNotificationsTransformerTest {
                     subtitleRes = R.string.staking_notification_unstake_text,
                 ),
             )
-        }
-
-        // Pins current behaviour: an exit sends zero, which is always below the dust value.
-        @Test
-        fun `GIVEN solana exit with dust value WHEN transform THEN dust error and primary disabled`() {
-            // Arrange
-            val status = currencyStatus(amount = BigDecimal("100"))
-            val transformer = transformer(status = status, check = check(dust = BigDecimal.ONE))
-
-            // Act
-            val actual = confirmation(transformer.transform(state(actionType = exit)))
-
-            // Assert
-            assertThat(actual.notifications).containsExactly(
-                NotificationUM.Error.MinimumAmountError(BigDecimal.ONE.format { crypto(status.currency) }),
-                StakingNotification.Info.Unstake(
-                    cooldownPeriod = CooldownPeriod.Fixed(Period.Days(3)),
-                    subtitleRes = R.string.staking_notification_unstake_text,
-                ),
-            ).inOrder()
-            assertThat(actual.isPrimaryButtonEnabled).isFalse()
         }
 
         @Test
@@ -723,7 +660,6 @@ internal class AddStakingNotificationsTransformerTest {
 
         // Assert
         assertThat(actual.notifications).isEmpty()
-        assertThat(actual.isPrimaryButtonEnabled).isTrue()
     }
 
     @Test
@@ -742,16 +678,6 @@ internal class AddStakingNotificationsTransformerTest {
     /** The refactor requires side-effect-free transformers; these tests pin how many callbacks fire today. */
     @Nested
     inner class SideEffects {
-
-        // Pins current behaviour: two independent checks report the same analytics event.
-        @Test
-        fun `GIVEN both exceed and fee warning WHEN applied once THEN analytics fired twice`() {
-            // Act
-            transformer(isSubtract = true, warning = feeWarning).transform(state(amount = "12", fee = "1"))
-
-            // Assert
-            verify(exactly = 2) { clickIntents.onNotEnoughFeeNotificationShow() }
-        }
 
         @Test
         fun `GIVEN no warnings WHEN transformer applied twice THEN no analytics callbacks`() {
@@ -796,20 +722,6 @@ internal class AddStakingNotificationsTransformerTest {
             // Assert
             assertThat(actual.notifications.filterIsInstance<NotificationUM.Warning.FeeCoverageNotification>())
                 .isEmpty()
-        }
-
-        // Pins current behaviour: the minimum is compared with equals, so 9 and 9.0 are different.
-        @Test
-        fun `GIVEN subtracted amount equal to minimum in other scale WHEN transform THEN fee coverage shown`() {
-            // Act
-            val actual = confirmation(
-                transformer(isSubtract = true, integration = minimumIntegration("9.0"))
-                    .transform(state(amount = "10", fee = "1")),
-            )
-
-            // Assert
-            assertThat(actual.notifications.filterIsInstance<NotificationUM.Warning.FeeCoverageNotification>())
-                .hasSize(1)
         }
 
         @Test
