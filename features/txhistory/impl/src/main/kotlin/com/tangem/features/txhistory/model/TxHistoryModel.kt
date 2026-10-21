@@ -18,17 +18,12 @@ import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.get
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
 import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.domain.txhistory.list.HistoryTxListManager
 import com.tangem.domain.txhistory.model.TxHistoryInfo
-import com.tangem.domain.txhistory.model.explorerHash
-import com.tangem.domain.txhistory.models.TxHistoryStateError
-import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
-import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.features.tokendetails.deeplink.ExpressDeepLinkListener
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.component.TxHistoryDetailsSlotConfig
@@ -40,17 +35,13 @@ import com.tangem.features.txhistory.entity.TxHistoryUpdateListener
 import com.tangem.features.txhistory.joint.JointHistoryPoller
 import com.tangem.features.txhistory.state.TxHistoryItemsSnapshot
 import com.tangem.features.txhistory.state.TxHistoryStateController
-import com.tangem.features.txhistory.utils.TxHistoryListManager
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
-import com.tangem.pagination.PaginationStatus
-import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -59,20 +50,17 @@ import javax.inject.Inject
 internal class TxHistoryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val urlOpener: UrlOpener,
     private val txHistoryUpdateListener: TxHistoryUpdateListener,
     private val stateController: TxHistoryStateController,
-    private val txHistoryFeatureToggle: TxHistoryFeatureToggles,
     private val historyTxListManagerFactory: HistoryTxListManager.Factory,
     private val appTxHistoryFetcher: AppTxHistoryFetcher,
     private val router: Router,
     private val cryptoCurrencyDeepLinkListener: ExpressDeepLinkListener,
     private val vibratorHapticManager: VibratorHapticManager,
     getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
-    repository: TxHistoryRepositoryV2,
     paramsContainer: ParamsContainer,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
 ) : Model(), TxHistoryUiActions {
@@ -90,29 +78,11 @@ internal class TxHistoryModel @Inject constructor(
         .flowOn(dispatchers.io)
         .stateIn(modelScope, SharingStarted.Eagerly, initialValue = emptySet())
 
-    @RemoveWithToggle("AND_15767_NEW_TX_HISTORY_ENABLED")
-    private val txHistoryListManager: TxHistoryListManager? = if (!txHistoryFeatureToggle.isNewTxHistoryEnabled) {
-        TxHistoryListManager(
-            repository = repository,
-            dispatchers = dispatchers,
-            userWalletId = params.userWalletId,
-            currency = params.currency,
-            txHistoryUiActions = this,
-            lookupDataFlow = lookupDataFlow,
-        )
-    } else {
-        null
-    }
-
-    val historyTxListManager: HistoryTxListManager? = if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
-        historyTxListManagerFactory.create(
-            userWalletId = params.userWalletId,
-            currency = params.currency,
-            modelScope = modelScope,
-        )
-    } else {
-        null
-    }
+    val historyTxListManager: HistoryTxListManager = historyTxListManagerFactory.create(
+        userWalletId = params.userWalletId,
+        currency = params.currency,
+        modelScope = modelScope,
+    )
 
     private val isResumed = MutableStateFlow(false)
     private val loadedPagesTracker = LoadedPagesTracker()
@@ -124,19 +94,15 @@ internal class TxHistoryModel @Inject constructor(
         stateController.setLoading(isBalanceHidden = true, onExploreClick = ::openExplorer)
         handleBalanceHiding()
         subscribeToUiItemChanges()
-        initListManager()
         loadTxInfo()
         subscribeToUpdateListener()
-        // The legacy list gives no signal that a requested page landed, so a reload could throw pages away unseen
-        if (historyTxListManager != null) {
-            JointHistoryPoller.launchIn(
-                scope = modelScope,
-                currency = params.currency,
-                isResumed = isResumed,
-                hasLoadedMorePages = loadedPagesTracker.hasLoadedMorePages,
-                reload = historyTxListManager::reload,
-            )
-        }
+        JointHistoryPoller.launchIn(
+            scope = modelScope,
+            currency = params.currency,
+            isResumed = isResumed,
+            hasLoadedMorePages = loadedPagesTracker.hasLoadedMorePages,
+            reload = historyTxListManager::reload,
+        )
         subscribeOnCurrencyStatusUpdates()
         deepLinkListener()
     }
@@ -151,30 +117,15 @@ internal class TxHistoryModel @Inject constructor(
     }
 
     private fun subscribeToUiItemChanges() {
-        txHistoryListManager
-            ?.uiItems
-            ?.onEach { snapshot -> stateController.setContent(
-                snapshot = snapshot,
-                loadMore = ::loadMoreItems,
-                onExploreClick = ::openExplorer,
-            ) }
-            ?.launchIn(modelScope)
-        txHistoryListManager
-            ?.paginationStatus
-            ?.onEach { paginationStatus -> handlePaginationStatus(paginationStatus) }
-            ?.launchIn(modelScope)
-
-        if (historyTxListManager != null) {
-            combine(
-                flow = historyTxListManager.state,
-                flow2 = lookupDataFlow,
-                flow3 = networkTokensFlow,
-                transform = { state, lookup, tokens -> Triple(state, lookup, tokens) },
-            )
-                .onEach { (state, lookup, tokens) -> applyHistoryState(state, lookup, tokens) }
-                .flowOn(dispatchers.default)
-                .launchIn(modelScope)
-        }
+        combine(
+            flow = historyTxListManager.state,
+            flow2 = lookupDataFlow,
+            flow3 = networkTokensFlow,
+            transform = { state, lookup, tokens -> Triple(state, lookup, tokens) },
+        )
+            .onEach { (state, lookup, tokens) -> applyHistoryState(state, lookup, tokens) }
+            .flowOn(dispatchers.default)
+            .launchIn(modelScope)
     }
 
     private fun applyHistoryState(
@@ -242,14 +193,7 @@ internal class TxHistoryModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun initListManager() {
-        modelScope.launch {
-            txHistoryListManager?.init()
-        }
-    }
-
     private fun deepLinkListener() {
-        if (!txHistoryFeatureToggle.isNewTxHistoryEnabled) return
         cryptoCurrencyDeepLinkListener.actionFlow
             .onEach { txId -> openHistoryDetailsById(txId) }
             .launchIn(modelScope)
@@ -257,20 +201,11 @@ internal class TxHistoryModel @Inject constructor(
 
     private fun loadTxInfo() {
         stateController.setLoadingIfNotContent(onExploreClick = ::openExplorer)
-        modelScope.launch {
-            txHistoryListManager?.let { legacy ->
-                txHistoryItemsCountUseCase.invoke(userWalletId = params.userWalletId, currency = params.currency)
-                    .onLeft(::handleErrorState)
-                    .onRight { legacy.startLoading() }
-            }
-        }
-        if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
-            val trigger = TxHistoryFetchTrigger.TokenDetailsOpen(
-                walletId = params.userWalletId,
-                currency = params.currency,
-            )
-            appTxHistoryFetcher.invoke(trigger)
-        }
+        val trigger = TxHistoryFetchTrigger.TokenDetailsOpen(
+            walletId = params.userWalletId,
+            currency = params.currency,
+        )
+        appTxHistoryFetcher.invoke(trigger)
     }
 
     fun onResume() {
@@ -284,27 +219,13 @@ internal class TxHistoryModel @Inject constructor(
     fun reload() {
         if (stateController.isNotSupported) return
         loadedPagesTracker.onReload()
+        historyTxListManager.reload()
 
-        if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
-            historyTxListManager?.reload()
-        } else {
-            stateController.setLoadingIfNotContent(onExploreClick = ::openExplorer)
-        }
-
-        modelScope.launch {
-            txHistoryListManager?.let { legacy ->
-                txHistoryItemsCountUseCase.invoke(userWalletId = params.userWalletId, currency = params.currency)
-                    .onLeft(::handleErrorState)
-                    .onRight { legacy.reload() }
-            }
-        }
-        if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
-            val trigger = TxHistoryFetchTrigger.TokenDetailsPTR(
-                walletId = params.userWalletId,
-                currency = params.currency,
-            )
-            appTxHistoryFetcher.invoke(trigger)
-        }
+        val trigger = TxHistoryFetchTrigger.TokenDetailsPTR(
+            walletId = params.userWalletId,
+            currency = params.currency,
+        )
+        appTxHistoryFetcher.invoke(trigger)
     }
 
     private fun handleBalanceHiding() {
@@ -316,40 +237,9 @@ internal class TxHistoryModel @Inject constructor(
     }
 
     private fun loadMoreItems(): Boolean {
-        historyTxListManager?.let { loadedPagesTracker.onLoadMore(current = it.state.value) }
-        historyTxListManager?.loadMore()
-        modelScope.launch {
-            txHistoryListManager?.loadMore(params.userWalletId, params.currency)
-        }
+        loadedPagesTracker.onLoadMore(current = historyTxListManager.state.value)
+        historyTxListManager.loadMore()
         return true
-    }
-
-    private fun handlePaginationStatus(status: PaginationStatus<*>) {
-        when (status) {
-            is PaginationStatus.InitialLoadingError -> stateController.setError(
-                onReloadClick = ::reload,
-                onExploreClick = ::openExplorer,
-            )
-            PaginationStatus.NextBatchLoading -> stateController.updateLoadingMore(isLoadingMore = true)
-            PaginationStatus.EndOfPagination,
-            is PaginationStatus.Paginating<*>,
-            -> stateController.updateLoadingMore(isLoadingMore = false)
-            PaginationStatus.InitialLoading,
-            PaginationStatus.None,
-            -> Unit
-        }
-    }
-
-    private fun handleErrorState(error: TxHistoryStateError) {
-        when (error) {
-            is TxHistoryStateError.DataError,
-            is TxHistoryStateError.AddressNotReady,
-            -> stateController.setError(onReloadClick = ::reload, onExploreClick = ::openExplorer)
-            TxHistoryStateError.EmptyTxHistories -> stateController.setEmpty(onExploreClick = ::openExplorer)
-            TxHistoryStateError.TxHistoryNotImplemented -> stateController.setNotSupported(
-                onExploreClick = ::openExplorer,
-            )
-        }
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
@@ -401,14 +291,8 @@ internal class TxHistoryModel @Inject constructor(
     }
 
     override fun onTransactionClick(item: TxHistoryInfo) {
-        // manager is non-null only under the new tx-history toggle.
-        val manager = historyTxListManager
-        if (manager != null) {
-            vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Tick)
-            txDetailsNavigation.activate(TxHistoryDetailsSlotConfig(item.txId))
-        } else {
-            item.explorerHash?.let(::openTxInExplorer)
-        }
+        vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Tick)
+        txDetailsNavigation.activate(TxHistoryDetailsSlotConfig(item.txId))
     }
 
     private fun openHistoryDetailsById(txId: String) {

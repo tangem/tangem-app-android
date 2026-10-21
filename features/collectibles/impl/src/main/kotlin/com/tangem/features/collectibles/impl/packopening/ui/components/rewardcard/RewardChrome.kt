@@ -27,11 +27,11 @@ import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_dot_12_filled
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.SellBackButtonUM
 import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardUM
 
 /** How far below its place each row starts; measured off the demo render. */
@@ -108,7 +108,8 @@ private fun titleText(um: RewardCardUM): AnnotatedString = buildAnnotatedString 
 
 @Composable
 internal fun RewardFooter(
-    um: RewardCardUM,
+    sellBack: SellBackButtonUM,
+    isKeepCardEnabled: Boolean,
     progress: Float,
     onKeepCardClick: () -> Unit,
     onSellBackClick: () -> Unit,
@@ -121,16 +122,16 @@ internal fun RewardFooter(
                     variant = TangemButton.Variant.Secondary,
                     size = TangemButton.Size.X12,
                     text = resourceReference(R.string.collectibles_open_pack_keep_card_button),
+                    isEnabled = isKeepCardEnabled,
                     onClick = onKeepCardClick,
                 )
                 TangemButton(
                     variant = TangemButton.Variant.Primary,
                     size = TangemButton.Size.X12,
-                    text = resourceReference(
-                        id = R.string.collectibles_open_pack_sell_back_button,
-                        formatArgs = wrappedList(um.sellBackValue),
-                    ),
-                    iconEnd = TangemIconUM.Icon(Icons.ic_logo_tangem_24),
+                    text = sellBack.textRef,
+                    iconEnd = TangemIconUM.Icon(Icons.ic_logo_tangem_24).takeIf { sellBack.isEnabled },
+                    isLoading = sellBack.isLoading,
+                    isEnabled = sellBack.isEnabled,
                     onClick = onSellBackClick,
                 )
             }

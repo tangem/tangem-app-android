@@ -1,5 +1,6 @@
 package com.tangem.tap.di.core.navigation.email
 
+import com.tangem.core.decompose.utils.ForegroundActivityProvider
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.tap.core.navigation.email.AndroidEmailSender
 import com.tangem.tap.core.navigation.email.EmailMessageTruncator
@@ -15,7 +16,8 @@ internal object EmailSenderModule {
 
     @Provides
     @Singleton
-    fun provideEmailSender(): EmailSender = AndroidEmailSender(
+    fun provideEmailSender(foregroundActivityProvider: ForegroundActivityProvider): EmailSender = AndroidEmailSender(
         messageTruncator = EmailMessageTruncator(),
+        foregroundActivityProvider = foregroundActivityProvider,
     )
 }

@@ -6,6 +6,7 @@ plugins {
 dependencies {
     api(projects.domain.account)
     api(projects.domain.models)
+    api(projects.domain.staking.models)
     api(projects.domain.yieldSupply.models)
     implementation(deps.arrow.core)
 }

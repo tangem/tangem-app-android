@@ -14,6 +14,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.core.navigation.notifications.SystemNotificationsStateProvider
+import com.tangem.core.ui.extensions.UserInteractionTracker
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
@@ -40,6 +41,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.*
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
+import com.tangem.domain.onboarding.repository.OnboardingRepository as WalletOnboardingRepository
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pushnotificationpreferences.PreloadWalletPushNotificationPreferencesUseCase
@@ -65,6 +67,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
+import com.tangem.feature.wallet.presentation.wallet.domain.YieldModePromoTrigger
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertUM
@@ -127,7 +130,9 @@ internal class WalletModel @Inject constructor(
     private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
+    private val yieldModePromoTrigger: YieldModePromoTrigger,
     private val tangemPayOnboardingRepository: OnboardingRepository,
+    private val walletOnboardingRepository: WalletOnboardingRepository,
     private val getAppThemeModeUseCase: GetAppThemeModeUseCase,
     private val trackingContextProxy: TrackingContextProxy,
     private val singleAccountListSupplier: SingleAccountListSupplier,
@@ -168,6 +173,15 @@ internal class WalletModel @Inject constructor(
     private var shouldRefreshWallet = false
     private val expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
 
+    private val refreshedYieldSupplyApy = modelScope.async(dispatchers.default) { yieldSupplyApyUpdateUseCase() }
+    private val isSurfaceBusy = MutableStateFlow(false)
+    private val hasUserInteracted = MutableStateFlow(false)
+    val userInteractionTracker = object : UserInteractionTracker {
+        override fun onUserInteraction() {
+            hasUserInteracted.value = true
+        }
+    }
+
     init {
         trackScreenOpened()
 
@@ -177,7 +191,6 @@ internal class WalletModel @Inject constructor(
         maybeSetWalletFirstTimeUsage()
         preloadPushNotificationPreferences()
         warmUpMarketingCampaigns()
-        updateYieldSupplyApy()
         subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
         subscribeOnSelectedWalletFlow()
@@ -205,6 +218,10 @@ internal class WalletModel @Inject constructor(
         suggestToOpenMarketsOnResume()
     }
 
+    fun onDialogShown() {
+        isSurfaceBusy.value = true
+    }
+
     private fun suggestToOpenMarketsOnResume() {
         modelScope.launch {
             if (shouldShowMarketsTooltipUseCase()) {
@@ -212,12 +229,6 @@ internal class WalletModel @Inject constructor(
                     it.copy(shouldShowMarketsOnboarding = true)
                 }
             }
-        }
-    }
-
-    private fun updateYieldSupplyApy() {
-        modelScope.launch(dispatchers.default) {
-            yieldSupplyApyUpdateUseCase()
         }
     }
 
@@ -261,6 +272,7 @@ internal class WalletModel @Inject constructor(
     private fun suggestToEnableBiometrics() {
         modelScope.launch(dispatchers.main) {
             if (shouldShowAskBiometryBottomSheet()) {
+                isSurfaceBusy.value = true
                 delay(timeMillis = 1_800)
 
                 innerWalletRouter.dialogNavigation.activate(
@@ -268,6 +280,32 @@ internal class WalletModel @Inject constructor(
                 )
             }
         }
+    }
+
+    fun suggestYieldModePromo() {
+        modelScope.launch {
+            val userWallet = userWalletsListRepository.selectedUserWalletSync() ?: return@launch
+            val userWalletId = userWallet.walletId
+            val offer = yieldModePromoTrigger.findOffer(
+                userWalletId = userWalletId,
+                yieldSupplyApy = refreshedYieldSupplyApy::await,
+                isSurfaceBusy = isSurfaceBusy,
+                isBusyOutsideSlot = { isBottomSheetExpectedOutsideSlot(userWallet) },
+                interruptions = merge(
+                    screenLifecycleProvider.isBackgroundState.filter { it },
+                    userWalletsListRepository.selectedUserWallet.map { it?.walletId }.filter { it != userWalletId },
+                    hasUserInteracted.filter { it },
+                ).map {},
+            ) ?: return@launch
+
+            innerWalletRouter.dialogNavigation.activate(WalletDialogConfig.YieldModePromo(offer))
+        }
+    }
+
+    /** The finish activation sheet of a hot wallet without a backup and the interrupted backup dialog skip the slot. */
+    private suspend fun isBottomSheetExpectedOutsideSlot(userWallet: UserWallet): Boolean {
+        val isActivationExpected = userWallet is UserWallet.Hot && !isWalletBackedUpUseCase(userWallet)
+        return isActivationExpected || walletOnboardingRepository.getUnfinishedFinalizeOnboarding() != null
     }
 
     private fun suggestToOpenMarkets() {
@@ -401,6 +439,7 @@ internal class WalletModel @Inject constructor(
                 return@launch
             }
 
+            isSurfaceBusy.value = true
             delay(timeMillis = 1_800)
 
             innerWalletRouter.dialogNavigation.activate(

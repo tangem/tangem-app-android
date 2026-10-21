@@ -6,7 +6,6 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.models.tron.TronGaslessToken
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -22,13 +21,7 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class IsTronGaslessSupportedUseCaseTest {
 
     private val repository: TronGaslessTransactionRepository = mockk()
-    private val walletManagersFacade: WalletManagersFacade = mockk()
-    private var isAccountActivationSponsored = true
-    private val useCase = IsTronGaslessSupportedUseCase(
-        repository = repository,
-        walletManagersFacade = walletManagersFacade,
-        isAccountActivationSponsored = { isAccountActivationSponsored },
-    )
+    private val useCase = IsTronGaslessSupportedUseCase(repository = repository)
     private val userWalletId = UserWalletId("011")
 
     private val factory = MockCryptoCurrencyFactory()
@@ -40,37 +33,27 @@ internal class IsTronGaslessSupportedUseCaseTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(repository, walletManagersFacade)
-        isAccountActivationSponsored = true
+        clearMocks(repository)
     }
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN sponsorship toggle and account state WHEN invoke THEN gasless is available only when payable`(
+    fun `GIVEN token support WHEN invoke THEN gasless is available only for a supported token`(
         model: InvokeModel,
     ) = runTest {
         // Arrange
-        isAccountActivationSponsored = model.isActivationSponsored
         coEvery { repository.getSupportedTokens() } returns if (model.isTokenSupported) listOf(usdt) else emptyList()
-        model.isActivated?.let { isActivated ->
-            coEvery { walletManagersFacade.isTronAccountActivated(userWalletId, usdtToken.network) } returns isActivated
-        }
 
         // Act
         val result = useCase(userWalletId = userWalletId, network = usdtToken.network, currency = usdtToken)
 
         // Assert
         assertThat(result).isEqualTo(model.expected)
-        if (model.isActivated == null) {
-            coVerify(exactly = 0) { walletManagersFacade.isTronAccountActivated(any(), any()) }
-        }
     }
 
     private fun provideTestModels() = listOf(
-        InvokeModel(isActivationSponsored = true, isTokenSupported = true, isActivated = null, expected = true),
-        InvokeModel(isActivationSponsored = false, isTokenSupported = true, isActivated = true, expected = true),
-        InvokeModel(isActivationSponsored = false, isTokenSupported = true, isActivated = false, expected = false),
-        InvokeModel(isActivationSponsored = false, isTokenSupported = false, isActivated = null, expected = false),
+        InvokeModel(isTokenSupported = true, expected = true),
+        InvokeModel(isTokenSupported = false, expected = false),
     )
 
     @Test
@@ -117,11 +100,8 @@ internal class IsTronGaslessSupportedUseCaseTest {
         coVerify(exactly = 0) { repository.getSupportedTokens() }
     }
 
-    /** [isActivated] is `null` when the use case must not ask whether the account is activated. */
     data class InvokeModel(
-        val isActivationSponsored: Boolean,
         val isTokenSupported: Boolean,
-        val isActivated: Boolean?,
         val expected: Boolean,
     )
 }

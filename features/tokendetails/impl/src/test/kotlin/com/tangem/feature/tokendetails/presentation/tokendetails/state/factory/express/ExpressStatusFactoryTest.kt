@@ -10,7 +10,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.model.OnrampStatus
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTransactionsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.MockExpressTransactionFactory.createExchange
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.MockExpressTransactionFactory.createOnramp
@@ -41,7 +40,6 @@ internal class ExpressStatusFactoryTest {
     private val userWallet: UserWallet = mockk()
     private val cryptoCurrency: CryptoCurrency = mockk()
     private val analyticsEventsHandler: AnalyticsEventHandler = mockk()
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles = mockk()
     private val exchangeStatusFactoryCreator: ExchangeStatusFactory.Factory = mockk()
     private val exchangeStatusFactory: ExchangeStatusFactory = mockk()
     private val onrampStatusFactoryCreator: OnrampStatusFactory.Factory = mockk()
@@ -62,7 +60,6 @@ internal class ExpressStatusFactoryTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(
-            txHistoryFeatureToggles,
             exchangeStatusFactoryCreator,
             exchangeStatusFactory,
             onrampStatusFactoryCreator,
@@ -142,11 +139,10 @@ internal class ExpressStatusFactoryTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN scope and new tx history toggle WHEN getStateWithUpdatedExpressTxs THEN expected txs displayed`(
+        fun `GIVEN scope WHEN getStateWithUpdatedExpressTxs THEN expected txs displayed`(
             model: TransactionsToDisplayModel,
         ) {
             // Arrange
-            every { txHistoryFeatureToggles.isNewTxHistoryEnabled } returns model.isNewTxHistoryEnabled
             val factory = createFactory(scope = model.scope)
 
             // Act
@@ -163,22 +159,10 @@ internal class ExpressStatusFactoryTest {
         private fun provideTestModels() = listOf(
             TransactionsToDisplayModel(
                 scope = ExpressTransactionsComponent.Scope.Currency,
-                isNewTxHistoryEnabled = true,
                 expected = emptyList(),
             ),
             TransactionsToDisplayModel(
-                scope = ExpressTransactionsComponent.Scope.Currency,
-                isNewTxHistoryEnabled = false,
-                expected = listOf(exchange, visibleOnramp),
-            ),
-            TransactionsToDisplayModel(
                 scope = accountScope,
-                isNewTxHistoryEnabled = true,
-                expected = listOf(exchange, visibleOnramp),
-            ),
-            TransactionsToDisplayModel(
-                scope = accountScope,
-                isNewTxHistoryEnabled = false,
                 expected = listOf(exchange, visibleOnramp),
             ),
         )
@@ -196,12 +180,10 @@ internal class ExpressStatusFactoryTest {
         analyticsEventsHandler = analyticsEventsHandler,
         onrampStatusFactory = onrampStatusFactoryCreator,
         exchangeStatusFactory = exchangeStatusFactoryCreator,
-        txHistoryFeatureToggles = txHistoryFeatureToggles,
     )
 
     internal data class TransactionsToDisplayModel(
         val scope: ExpressTransactionsComponent.Scope,
-        val isNewTxHistoryEnabled: Boolean,
         val expected: List<ExpressTransactionStateUM>,
     )
 }

@@ -21,7 +21,6 @@ dependencies {
     implementation(projects.common.routing)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
     implementation(projects.core.res)

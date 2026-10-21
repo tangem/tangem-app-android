@@ -52,24 +52,28 @@ internal interface UtilsModule {
     @Binds
     fun bindShareManager(impl: IntentShareManager): ShareManager
 
+    @Binds
+    @Singleton
+    fun bindForegroundActivityProvider(impl: ForegroundActivityObserver): ForegroundActivityProvider
+
     companion object {
 
         @Provides
         @Singleton
-        fun provideUrlOpener(): UrlOpener = CustomTabsUrlOpener()
+        fun provideUrlOpener(foregroundActivityProvider: ForegroundActivityProvider): UrlOpener =
+            CustomTabsUrlOpener(foregroundActivityProvider)
 
         @Provides
         @Singleton
-        fun provideAppFinisher(@ApplicationContext context: Context): AppFinisher = AndroidAppFinisher(context)
+        fun provideAppFinisher(
+            @ApplicationContext context: Context,
+            foregroundActivityProvider: ForegroundActivityProvider,
+        ): AppFinisher = AndroidAppFinisher(context, foregroundActivityProvider)
 
         @Provides
         @Singleton
         fun provideSettingsManager(@ApplicationContext context: Context): SettingsManager =
             IntentSettingsManager(context)
-
-        @Provides
-        @Singleton
-        fun provideForegroundActivityProvider(): ForegroundActivityProvider = ForegroundActivityObserver
 
         @Provides
         @Singleton

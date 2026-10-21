@@ -10,6 +10,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.popToOrReplaceCurrent
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
@@ -28,7 +29,6 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
@@ -85,7 +85,6 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val urlOpener: UrlOpener,
     private val router: Router,
-    private val appRouter: AppRouter,
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
     private val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase,
     private val boostStoryPreloader: YieldBoostStoryPreloader,
@@ -299,16 +298,9 @@ internal class YieldSupplyActiveModel @Inject constructor(
     fun onGoToTokenClick() {
         onClaimResultDismiss()
         // Matched by wallet and currency: the route in the stack may carry a navigation action or a market block flag
-        val tokenRoute = appRouter.stack.lastOrNull { route ->
-            route is AppRoute.CurrencyDetails &&
-                route.userWalletId == userWalletId &&
-                route.currency.id == cryptoCurrency.id
-        }
-        if (tokenRoute != null) {
-            appRouter.popTo(tokenRoute)
-        } else {
-            appRouter.replaceCurrent(AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = cryptoCurrency))
-        }
+        router.popToOrReplaceCurrent(
+            route = AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = cryptoCurrency),
+        ) { route -> route.userWalletId == userWalletId && route.currency.id == cryptoCurrency.id }
     }
 
     private fun subscribeOnClaimOutcome() {
