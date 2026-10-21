@@ -47,7 +47,6 @@ internal class StateBuilderProvidersBottomSheetTest {
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
             isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
-            isChooseTokenPulseEnabled = false,
         )
     }
 

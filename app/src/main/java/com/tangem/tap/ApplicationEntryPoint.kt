@@ -8,7 +8,6 @@ import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.remote.config.managers.ApiConfigsManager
-import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -47,8 +46,6 @@ internal interface ApplicationEntryPoint {
     fun getDeviceKeyManager(): DeviceKeyManager
 
     fun getDeviceRegistrar(): DeviceRegistrar
-
-    fun getAuthFeatureToggles(): AuthFeatureToggles
 
     fun getWalletRegistrationLauncher(): WalletRegistrationLauncher
 

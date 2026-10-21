@@ -13,15 +13,14 @@ import javax.inject.Singleton
 
 /**
 
- * (its disk storage must not be touched on the main thread) and only when the feature toggle is on
- * and the OTLP api key is configured, so consumers observe it through this holder instead of
+ * (its disk storage must not be touched on the main thread) and only when the OTLP api key is
+ * configured, so consumers observe it through this holder instead of
  * injecting the client directly.
  */
 @Singleton
 class OpenTelemetryMetricsHolder @Inject constructor(
     private val application: Application,
     private val environmentConfig: EnvironmentConfig,
-    private val featureToggles: OtelFeatureToggles,
     private val settingsRepository: SettingsRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val appScope: AppCoroutineScope,
@@ -32,7 +31,7 @@ class OpenTelemetryMetricsHolder @Inject constructor(
 
     fun initialize() {
         val apiKey = environmentConfig.otlpApiKey
-        if (!featureToggles.isMetricsEnabled || apiKey.isNullOrEmpty()) return
+        if (apiKey.isNullOrEmpty()) return
 
         // telemetry must never crash the app, so setup failures are logged and swallowed
         appScope.launch(dispatchers.io) {
