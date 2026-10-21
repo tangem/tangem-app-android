@@ -3,7 +3,8 @@ package com.tangem.core.decompose.utils
 import androidx.appcompat.app.AppCompatActivity
 
 /**
- * Provides the activity currently in the foreground, if there is one.
+ * Provides the most recently resumed activity that is not destroyed yet, if there is one. It stays available while
+ * the app is in the background, so it does not tell whether the app is visible.
  *
  * Unlike [ActivityHolder], which is bound to a component and always has an activity, this is meant
  * for application-scoped dependencies that have no component context to take the activity from —

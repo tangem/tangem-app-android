@@ -6,52 +6,46 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.core.decompose.utils.ForegroundActivityProvider
 import com.tangem.utils.logging.TangemLogger
+import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.reflect.KClass
 
 @Singleton
 internal class ForegroundActivityObserver @Inject constructor() : ForegroundActivityProvider {
 
-    private val activities = HashMap<KClass<out Activity>, AppCompatActivity>()
+    // Read from background threads too (push handling), so the list is only ever replaced as a whole
+    private val resumedActivities = AtomicReference<List<AppCompatActivity>>(emptyList())
 
     override val foregroundActivity: AppCompatActivity?
-        get() = activities.entries
-            .firstOrNull { entry ->
-                TangemLogger.i("foregroundActivity: ${entry.key} | ${entry.value.isDestroyed}")
-                !entry.value.isDestroyed
-            }
-            ?.value
+        get() = resumedActivities.get().lastOrNull { activity ->
+            TangemLogger.i("foregroundActivity: ${activity::class} | ${activity.isDestroyed}")
+            !activity.isDestroyed
+        }
 
     val callbacks: ActivityLifecycleCallbacks = Callbacks()
 
     private inner class Callbacks : ActivityLifecycleCallbacks {
-        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-        }
-
         override fun onActivityResumed(activity: Activity) {
             TangemLogger.i("onActivityResumed ${activity::class}")
             if (activity is AppCompatActivity) {
                 TangemLogger.i("onActivityResumed store activity")
-                activities[activity::class] = activity
+                resumedActivities.updateAndGet { it.without(activity) + activity }
             }
         }
 
         override fun onActivityDestroyed(activity: Activity) {
             TangemLogger.i("onActivityDestroyed")
-            activities.remove(activity::class)
+            resumedActivities.updateAndGet { it.without(activity) }
         }
 
-        override fun onActivityStarted(activity: Activity) {
-        }
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+        override fun onActivityStarted(activity: Activity) = Unit
+        override fun onActivityPaused(activity: Activity) = Unit
+        override fun onActivityStopped(activity: Activity) = Unit
+        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+    }
 
-        override fun onActivityPaused(activity: Activity) {
-        }
-
-        override fun onActivityStopped(activity: Activity) {
-        }
-
-        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
-        }
+    private fun List<AppCompatActivity>.without(activity: Activity): List<AppCompatActivity> {
+        return filterNot { it === activity }
     }
 }
