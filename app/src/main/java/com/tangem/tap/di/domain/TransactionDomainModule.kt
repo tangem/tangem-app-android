@@ -564,4 +564,10 @@ internal object TransactionDomainModule {
     fun provideCompleteSendIntentUseCase(sendIntentRepository: SendIntentRepository): CompleteSendIntentUseCase {
         return CompleteSendIntentUseCase(sendIntentRepository = sendIntentRepository)
     }
+
+    @Provides
+    @Singleton
+    fun provideReportSendIntentHashUseCase(sendIntentRepository: SendIntentRepository): ReportSendIntentHashUseCase {
+        return ReportSendIntentHashUseCase(sendIntentRepository = sendIntentRepository)
+    }
 }
