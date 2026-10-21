@@ -3,7 +3,7 @@ package com.tangem.domain.wallets.analytics
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.DetachedWalletEvent
+import com.tangem.core.analytics.models.TrackingContextExcludedEvent
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
@@ -19,7 +19,7 @@ internal class WalletSettingsAnalyticEventsTest {
         event: AnalyticsEvent,
     ) {
         // Assert
-        assertThat(event).isInstanceOf(DetachedWalletEvent::class.java)
+        assertThat(event).isInstanceOf(TrackingContextExcludedEvent::class.java)
         assertThat(event.params).containsEntry(
             AnalyticsParam.PRODUCT_TYPE,
             AnalyticsParam.ProductType.MobileWallet.value,

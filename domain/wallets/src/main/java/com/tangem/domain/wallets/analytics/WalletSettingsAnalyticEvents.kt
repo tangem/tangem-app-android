@@ -5,7 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.STATUS
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
-import com.tangem.core.analytics.models.DetachedWalletEvent
+import com.tangem.core.analytics.models.TrackingContextExcludedEvent
 import com.tangem.domain.sociallogin.models.SocialLoginError
 
 sealed class WalletSettingsAnalyticEvents(
@@ -110,7 +110,7 @@ sealed class WalletSettingsAnalyticEvents(
             event = "Social Recovery Deleted",
             params = mobileWalletParams(),
         ),
-        DetachedWalletEvent
+        TrackingContextExcludedEvent
 
     data class SocialRecoveryDeletionError(
         val error: SocialLoginError,
@@ -118,7 +118,7 @@ sealed class WalletSettingsAnalyticEvents(
         event = "Social Recovery Deletion Error",
         params = mobileWalletParams(AnalyticsParam.ERROR_MESSAGE to error.deletionMessage()),
     ),
-        DetachedWalletEvent
+        TrackingContextExcludedEvent
 
     data class CloudBackupDeletionError(
         val errorMessage: String,
@@ -146,7 +146,7 @@ sealed class WalletSettingsAnalyticEvents(
 
     class WalletForgotten :
         WalletSettingsAnalyticEvents(event = "Wallet Forgotten", params = mobileWalletParams()),
-        DetachedWalletEvent
+        TrackingContextExcludedEvent
 
     class LogOutRequest : WalletSettingsAnalyticEvents(
         event = "Log Out Request",
@@ -154,7 +154,7 @@ sealed class WalletSettingsAnalyticEvents(
 
     class WalletLoggedOut :
         WalletSettingsAnalyticEvents(event = "Wallet Logged Out", params = mobileWalletParams()),
-        DetachedWalletEvent
+        TrackingContextExcludedEvent
 
     class DeleteWalletRequest : WalletSettingsAnalyticEvents(
         event = "Delete Wallet Request",
@@ -166,7 +166,7 @@ sealed class WalletSettingsAnalyticEvents(
 
     class WalletDeleted :
         WalletSettingsAnalyticEvents(event = "Wallet Deleted", params = mobileWalletParams()),
-        DetachedWalletEvent
+        TrackingContextExcludedEvent
 
     data class DeleteWalletError(
         val errorMessage: String,
@@ -174,7 +174,7 @@ sealed class WalletSettingsAnalyticEvents(
         event = "Delete Wallet Error",
         params = mobileWalletParams(AnalyticsParam.ERROR_MESSAGE to errorMessage),
     ),
-        DetachedWalletEvent {
+        TrackingContextExcludedEvent {
 
         constructor(error: SocialLoginError) : this(errorMessage = error.deletionMessage())
     }
