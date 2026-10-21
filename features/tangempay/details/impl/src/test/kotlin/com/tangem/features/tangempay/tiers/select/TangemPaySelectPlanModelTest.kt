@@ -200,6 +200,37 @@ internal class TangemPaySelectPlanModelTest {
     }
 
     @Test
+    fun `GIVEN create onboarding order mode with money account WHEN model created THEN select button has icon`() {
+        // GIVEN + WHEN
+        val model = createModel(mode = CREATE_ONBOARDING_ORDER_MODE)
+
+        // THEN
+        assertThat(selectContent(model).selectButtonIconEnd).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN create onboarding order mode without money account WHEN model created THEN select button has no icon`() {
+        // GIVEN + WHEN
+        val model = createModel(
+            mode = TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder(
+                availableProducts = setOf(TangemPayProduct.PAYMENT_ACCOUNT),
+            ),
+        )
+
+        // THEN
+        assertThat(selectContent(model).selectButtonIconEnd).isNull()
+    }
+
+    @Test
+    fun `GIVEN change plan mode WHEN model created THEN select button has no icon`() {
+        // GIVEN + WHEN
+        val model = createModel(mode = TangemPaySelectPlanComponent.Mode.ChangePlan)
+
+        // THEN
+        assertThat(selectContent(model).selectButtonIconEnd).isNull()
+    }
+
+    @Test
     fun `GIVEN create onboarding order mode AND onboarding fails WHEN onSelectClick THEN processing reset and error shown`() {
         // GIVEN
         coEvery {

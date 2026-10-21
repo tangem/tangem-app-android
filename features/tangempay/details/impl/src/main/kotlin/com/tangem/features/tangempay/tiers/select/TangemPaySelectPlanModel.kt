@@ -8,9 +8,12 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
@@ -224,9 +227,17 @@ internal class TangemPaySelectPlanModel @Inject constructor(
 
     private fun buildSelectContent() = TangemPaySelectPlanUM.Content.Select(
         isProcessing = isProcessing,
+        selectButtonIconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24)
+            .takeIf { isMoneyAccountActivationRequired() },
         onComparePlansClick = ::onComparePlansClick,
         onSelectClick = ::onSelectClick,
     )
+
+    private fun isMoneyAccountActivationRequired(): Boolean {
+        val mode = params.mode
+        return mode is TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder &&
+            TangemPayProduct.BANKING_ACCOUNT in mode.availableProducts
+    }
 
     private fun buildCompare(): TangemPaySelectPlanUM.ComparePlans {
         val plans = listOfNotNull(tariffPlan?.plan) + allowedTransitionsForCompare.map { it.plan }
