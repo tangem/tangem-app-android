@@ -12,13 +12,13 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.jointaccount.main.JointAccountMembersComponent
+import com.tangem.features.jointaccount.main.model.JointAccountMembersListParams
 import com.tangem.features.jointaccount.main.model.JointAccountMembersModel
 import com.tangem.features.jointaccount.main.ui.JointAccountMembersScreen
 
 internal class JointAccountMembersListComponent(
     appComponentContext: AppComponentContext,
-    params: JointAccountMembersComponent.Params,
+    params: JointAccountMembersListParams,
     childFactory: JointAccountMembersChildFactory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
