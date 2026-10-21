@@ -1264,8 +1264,8 @@ internal class StakingModel @Inject constructor(
                         onDataLoaded(maybeStatus)
                     }
                     // The balance refresh started on InitialInfo may complete after the user has already
-                    // reached Confirmation; its ACTUAL sources are what unlock the primary button
-                    isAssentState() -> {
+                    // moved on; its ACTUAL sources are what unlock the primary button on Confirmation
+                    isAssentState() || value.currentStep in STEPS_BEFORE_CONFIRMATION -> {
                         cryptoCurrencyStatus = maybeStatus
                         updateNotifications()
                     }
@@ -1506,5 +1506,12 @@ internal class StakingModel @Inject constructor(
 
     private companion object {
         const val ALLOWANCE_UPDATE_DELAY = 10_000L
+
+        val STEPS_BEFORE_CONFIRMATION = setOf(
+            StakingStep.Amount,
+            StakingStep.RewardsValidators,
+            StakingStep.RestakeValidator,
+            StakingStep.Validators,
+        )
     }
 }
