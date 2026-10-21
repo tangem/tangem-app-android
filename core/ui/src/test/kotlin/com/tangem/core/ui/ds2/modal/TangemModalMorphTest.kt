@@ -252,6 +252,42 @@ internal class TangemModalMorphTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ModalBorderAlpha {
+
+        @ParameterizedTest
+        @MethodSource("provideTestModels")
+        fun `GIVEN flatten and dismiss offset WHEN modalBorderAlpha THEN border shows unless flat and docked`(
+            model: BorderAlphaModel,
+        ) {
+            // Act
+            val actual = modalBorderAlpha(
+                flatten = model.flatten,
+                dismissOffset = model.dismissOffset,
+                revealDistance = REVEAL_DISTANCE,
+            )
+
+            // Assert
+            assertThat(actual).isWithin(TOLERANCE).of(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            BorderAlphaModel(flatten = 0f, dismissOffset = 0f, expected = 1f),
+            BorderAlphaModel(flatten = 1f, dismissOffset = 0f, expected = 0f),
+            BorderAlphaModel(flatten = 0.5f, dismissOffset = 0f, expected = 0.5f),
+            BorderAlphaModel(flatten = 1f, dismissOffset = REVEAL_DISTANCE / 2, expected = 0.5f),
+            BorderAlphaModel(flatten = 1f, dismissOffset = REVEAL_DISTANCE, expected = 1f),
+            BorderAlphaModel(flatten = 1f, dismissOffset = REVEAL_DISTANCE * 3, expected = 1f),
+        )
+    }
+
+    internal data class BorderAlphaModel(
+        val flatten: Float,
+        val dismissOffset: Float,
+        val expected: Float,
+    )
+
     internal data class OpenProgressModel(
         val initialValue: TangemSheetValue,
         val skipPartiallyExpanded: Boolean,
@@ -283,6 +319,7 @@ internal class TangemModalMorphTest {
         const val EXPANDED_POSITION = 200f
         const val HALFWAY_DELTA = 400f
         const val TOLERANCE = 1e-4f
+        const val REVEAL_DISTANCE = 96f
         const val PROBE_WIDTH = 1000
         const val PROBED_HEIGHT = 600
         const val GROWN_HEIGHT = 800
