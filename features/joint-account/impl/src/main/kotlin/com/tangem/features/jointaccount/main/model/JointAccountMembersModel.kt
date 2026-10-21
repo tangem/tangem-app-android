@@ -3,8 +3,6 @@ package com.tangem.features.jointaccount.main.model
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
-import com.arkivanov.decompose.router.slot.navigate
-import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -13,53 +11,44 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.supplier.SingleAccountSupplier
-import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
-import com.tangem.domain.jointaccount.model.JointAccountActivationError
-import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountInvite
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
-import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.GetSharedJointAccountInvitesUseCase
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatcher
-import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.converter.JointAccountToMembersUMConverter
 import com.tangem.features.jointaccount.main.entity.JointAccountMembersSheetConfig
 import com.tangem.features.jointaccount.main.entity.MemberCardConfig
+import com.tangem.features.jointaccount.main.navigation.JointAccountMembersRoute
 import com.tangem.features.jointaccount.main.state.JointAccountMembersStateController
 import com.tangem.features.jointaccount.main.state.transformers.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import com.tangem.core.ui.R as CoreUiR
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Stable
 @ModelScoped
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LongParameterList")
 internal class JointAccountMembersModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    compromiseWatcher: JointAccountCompromiseWatcher,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val clipboardManager: ClipboardManager,
@@ -71,16 +60,11 @@ internal class JointAccountMembersModel @Inject constructor(
     private val getJointAccountInvitesUseCase: GetJointAccountInvitesUseCase,
     private val getSharedJointAccountInvitesUseCase: GetSharedJointAccountInvitesUseCase,
     private val ownerAddressResolver: JointOwnerAddressResolver,
-    private val activateJointAccountUseCase: ActivateJointAccountUseCase,
-    private val userWalletsListRepository: UserWalletsListRepository,
     private val stateController: JointAccountMembersStateController,
     private val inviteSharing: JointAccountInviteSharing,
-    private val compromiseWatcher: JointAccountCompromiseWatcher,
 ) : Model() {
 
-    private var activationJob: Job? = null
-
-    private val params = paramsContainer.require<JointAccountMembersComponent.Params>()
+    private val params = paramsContainer.require<JointAccountMembersListParams>()
 
     val bottomSheetNavigation: SlotNavigation<JointAccountMembersSheetConfig> = SlotNavigation()
 
@@ -93,7 +77,9 @@ internal class JointAccountMembersModel @Inject constructor(
             )
         },
         onInviteClick = ::onInviteClick,
-        onActivateClick = ::onActivateClick,
+        onConfirmAddressClick = { cryptoAccountId ->
+            router.push(JointAccountMembersRoute.ConfirmAddress(cryptoAccountId = cryptoAccountId))
+        },
         onApprovalsInfoClick = { threshold, total ->
             bottomSheetNavigation.activate(
                 JointAccountMembersSheetConfig.AboutSignatures(threshold = threshold, total = total),
@@ -102,14 +88,8 @@ internal class JointAccountMembersModel @Inject constructor(
         onCloseClick = ::onCloseClick,
     )
 
-    val isConfirmingActivation: StateFlow<Boolean>
-        field = MutableStateFlow(false)
-
     val uiState: StateFlow<JointAccountMembersUM>
         get() = stateController.uiState
-
-    /** The account a currently open activation confirmation sheet, if any, was opened for. */
-    private var confirmedAccountId: String? = null
 
     private val isResumed = MutableStateFlow(false)
 
@@ -120,7 +100,7 @@ internal class JointAccountMembersModel @Inject constructor(
                 accounts.firstOrNull { params.cryptoAccountId == null || it.cryptoAccountId == params.cryptoAccountId }
             }
             .distinctUntilChanged(),
-        onCompromised = router::pop,
+        onCompromised = params.onCloseFlow,
     )
 
     init {
@@ -162,22 +142,18 @@ internal class JointAccountMembersModel @Inject constructor(
                         userWalletId = params.userWalletId,
                         cryptoAccountId = account.cryptoAccountId,
                     ),
-                    flow3 = isConfirmingActivation,
-                ) { ownAccount, shared, isActivating ->
+                ) { ownAccount, shared ->
                     ResolvedAccount(
                         account = account,
                         invites = invites,
                         sharedInvites = shared,
                         ownAddress = ownAccount?.ownAddress,
-                        isActivating = isActivating,
                         name = ownAccount?.name,
                         icon = ownAccount?.icon,
                     )
                 }
             }
             .onEach { resolved ->
-                dismissStaleActivationConfirmation(resolvedAccountId = resolved?.account?.cryptoAccountId)
-
                 val transformer = resolved
                     ?.let { account ->
                         UpdateMembersAccountTransformer(
@@ -186,7 +162,6 @@ internal class JointAccountMembersModel @Inject constructor(
                             sharedInvites = account.sharedInvites,
                             ownAddress = account.ownAddress,
                             callbacks = converterCallbacks,
-                            isActivating = account.isActivating,
                             accountName = account.name,
                             accountIcon = account.icon,
                         )
@@ -250,124 +225,10 @@ internal class JointAccountMembersModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    /**
-     * A confirmation sheet only applies to the account it was opened for — if a fresh emission resolves to
-     * a different account (or none), its onConfirmClick would activate the wrong one, so the sheet is
-     * dropped. `params.cryptoAccountId == null` is the only case where the resolved account can change
-     * identity between emissions (legacy nav state falling back to "the wallet's first joint account").
-     */
-    private fun dismissStaleActivationConfirmation(resolvedAccountId: String?) {
-        val openConfirmationId = confirmedAccountId ?: return
-
-        if (openConfirmationId != resolvedAccountId) {
-            confirmedAccountId = null
-            isConfirmingActivation.value = false
-            dismissActivationConfirmation()
-        }
-    }
-
     private fun recordSharedInvites() {
         inviteSharing
             .recordShared(userWalletId = params.userWalletId, account = resolvedAccountFlow)
             .launchIn(modelScope)
-    }
-
-    private fun onActivateClick(cryptoAccountId: String) {
-        if (!IS_ACTIVATION_CONFIRMATION_SHOWN) {
-            onConfirmActivationClick(cryptoAccountId = cryptoAccountId)
-            return
-        }
-
-        val userWallet = userWalletsListRepository.getSyncOrNull(id = params.userWalletId)
-
-        confirmedAccountId = cryptoAccountId
-        isConfirmingActivation.value = false
-        bottomSheetNavigation.activate(
-            JointAccountMembersSheetConfig.ActivationConfirmation(
-                cryptoAccountId = cryptoAccountId,
-                walletInteractionIconRes = userWallet?.let(::walletInterationIcon),
-            ),
-        )
-    }
-
-    fun onConfirmActivationClick(cryptoAccountId: String) {
-        // The loader shows even when a signing is already in flight — a re-opened sheet joins the running
-        // attempt instead of silently ignoring the tap; its completion closes the sheet either way
-        isConfirmingActivation.value = true
-
-        if (activationJob?.isActive == true) return
-
-        activationJob = modelScope.launch {
-            val account = findAccount(cryptoAccountId = cryptoAccountId)
-
-            if (account == null) {
-                TangemLogger.e("Joint account activation failed: no account behind the shown members list")
-                isConfirmingActivation.value = false
-                dismissActivationConfirmation()
-                showActivationError()
-                return@launch
-            }
-
-            val result = activateJointAccountUseCase(account = account)
-            dismissActivationConfirmation()
-            result
-                .onLeft { error ->
-                    // On success the loader stays until the activated account takes the button away
-                    isConfirmingActivation.value = false
-                    onActivationError(error)
-                }
-                .onRight { onActivated() }
-        }
-    }
-
-    private fun dismissActivationConfirmation() {
-        bottomSheetNavigation.navigate { config ->
-            config.takeUnless { it is JointAccountMembersSheetConfig.ActivationConfirmation }
-        }
-    }
-
-    private fun onActivated() {
-        uiMessageSender.send(
-            SnackbarMessage(
-                message = resourceReference(CoreUiR.string.joint_account_activated_snackbar),
-                startIconId = CoreUiR.drawable.ic_success_20,
-                isIconTinted = false,
-            ),
-        )
-        router.pop()
-    }
-
-    private suspend fun findAccount(cryptoAccountId: String): Account.Joint? {
-        val accountId = AccountId
-            .forJointAccount(userWalletId = params.userWalletId, value = cryptoAccountId)
-            .getOrNull()
-            ?: return null
-
-        return withTimeoutOrNull(ACCOUNT_LOOKUP_TIMEOUT_MILLIS.milliseconds) {
-            singleAccountSupplier.filterJointAccount(accountId = accountId).firstOrNull()
-        }
-    }
-
-    private fun onActivationError(error: JointAccountActivationError) {
-        when (error) {
-            // Dismissing the signing is not a failure: the screen stays as it was
-            JointAccountFlowError.UserCancelled -> Unit
-            JointAccountActivationError.AccountNotFound,
-            JointAccountActivationError.NotReadyForActivation,
-            JointAccountActivationError.AddressMismatch,
-            JointAccountActivationError.NotCreator,
-            is JointAccountFlowError.Failed,
-            -> showActivationError()
-        }
-    }
-
-    private fun showActivationError() {
-        uiMessageSender.send(
-            DialogMessage(
-                title = resourceReference(CoreUiR.string.common_error),
-                message = resourceReference(CoreUiR.string.common_something_went_wrong),
-            ),
-        )
     }
 
     private fun onInviteClick(inviteId: String, accountName: TextReference) {
@@ -393,7 +254,7 @@ internal class JointAccountMembersModel @Inject constructor(
     }
 
     private fun onCloseClick() {
-        router.pop()
+        params.onCloseFlow()
     }
 
     private data class ResolvedAccount(
@@ -401,7 +262,6 @@ internal class JointAccountMembersModel @Inject constructor(
         val invites: List<JointAccountInvite>,
         val sharedInvites: Set<String>,
         val ownAddress: String?,
-        val isActivating: Boolean,
         val name: AccountName?,
         val icon: CryptoPortfolioIcon?,
     )
@@ -412,11 +272,4 @@ internal class JointAccountMembersModel @Inject constructor(
         val icon: CryptoPortfolioIcon,
         val ownAddress: String?,
     )
-
-    private companion object {
-        const val ACCOUNT_LOOKUP_TIMEOUT_MILLIS = 3_000L
-
-        /** The activation sheet is left out for now, activation starts at once; the step comes back by flipping this */
-        const val IS_ACTIVATION_CONFIRMATION_SHOWN = false
-    }
 }
