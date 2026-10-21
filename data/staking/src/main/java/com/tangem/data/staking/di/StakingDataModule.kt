@@ -31,7 +31,6 @@ import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.staking.utils.StakingCleaner
 import com.tangem.domain.staking.verification.StakingBlockAidRequestFactory
 import com.tangem.domain.staking.verification.StakingTransactionRecognizer
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -53,7 +52,6 @@ internal object StakingDataModule {
         stakingValidatorDao: StakingValidatorDao,
         dispatchers: CoroutineDispatcherProvider,
         walletManagersFacade: WalletManagersFacade,
-        txHistoryFeatureToggle: TxHistoryFeatureToggles,
         @NetworkMoshi moshi: Moshi,
     ): StakeKitRepository {
         return DefaultStakeKitRepository(
@@ -62,7 +60,6 @@ internal object StakingDataModule {
             stakingValidatorDao = stakingValidatorDao,
             dispatchers = dispatchers,
             walletManagersFacade = walletManagersFacade,
-            txHistoryFeatureToggle = txHistoryFeatureToggle,
             moshi = moshi,
         )
     }
@@ -94,7 +91,6 @@ internal object StakingDataModule {
         p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
         p2pVaultLimitsStore: P2PVaultLimitsStore,
         p2pEthPoolVaultDao: P2PEthPoolVaultDao,
-        txHistoryFeatureToggle: TxHistoryFeatureToggles,
         tangemTechApi: TangemTechApi,
         dispatchers: CoroutineDispatcherProvider,
         stakingFeatureToggles: StakingFeatureToggles,
@@ -108,7 +104,6 @@ internal object StakingDataModule {
             tangemTechApi = tangemTechApi,
             dispatchers = dispatchers,
             stakingFeatureToggles = stakingFeatureToggles,
-            txHistoryFeatureToggle = txHistoryFeatureToggle,
             p2pEthPoolRegionBlockedStore = p2pEthPoolRegionBlockedStore,
         )
     }
