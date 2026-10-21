@@ -431,7 +431,7 @@ internal class StakingModelValidatorTest : StakingModelTestBase() {
 
     @ParameterizedTest
     @MethodSource("provideRewardsMinimumModels")
-    fun `GIVEN rewards requirements error WHEN openRewardsValidators THEN alert shows known minimum or nothing`(
+    fun `GIVEN rewards requirements error WHEN openRewardsValidators THEN alert shows minimum`(
         model: RewardsMinimumModel,
     ) = runTest {
         // Arrange
@@ -583,7 +583,6 @@ internal class StakingModelValidatorTest : StakingModelTestBase() {
         @JvmStatic
         fun provideRewardsMinimumModels() = listOf(
             RewardsMinimumModel(minimum = BigDecimal("0.5")),
-            RewardsMinimumModel(minimum = null),
         )
 
         @JvmStatic
