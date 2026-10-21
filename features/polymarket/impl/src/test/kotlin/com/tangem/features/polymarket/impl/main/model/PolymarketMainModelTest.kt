@@ -1406,6 +1406,27 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
+    fun `GIVEN the default target has no minimum WHEN add funds clicked THEN the error alert is shown`() = runTest {
+        // Arrange
+        coEvery { refreshRequisites(USER_WALLET_ID) } returns REQUISITES_WITHOUT_MINIMUM.right()
+        val model = createModel(testScope = this)
+        val slot = FakeSlotHost(model.fundingSheetNavigation)
+        advanceUntilIdle()
+        val message = slot<EventMessage>()
+        every { messageSender.send(capture(message)) } returns Unit
+
+        // Act
+        model.uiState.value.balance.addFunds.onClick()
+
+        // Assert
+        assertThat(model.uiState.value.balance.addFunds.isDimmed).isTrue()
+        assertThat(slot.configuration).isNull()
+        assertThat((message.captured as DialogMessage).message)
+            .isEqualTo(resourceReference(R.string.prediction_add_funds_error_description))
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN requisites without a default target WHEN the screen resumes THEN they are retried`() = runTest {
         // Arrange
         coEvery { refreshRequisites(USER_WALLET_ID) } returns REQUISITES_WITHOUT_DEFAULT.right()
@@ -1750,10 +1771,16 @@ internal class PolymarketMainModelTest {
         val REQUISITES_WITHOUT_DEFAULT =
             requisites(symbol = "pUSD", tokenAddress = PolymarketContracts.COLLATERAL)
 
+        val REQUISITES_WITHOUT_MINIMUM = requisites(
+            symbol = "USDC",
+            tokenAddress = PolymarketContracts.USDC_TOKEN_ADDRESS,
+            minCheckoutUsd = null,
+        )
+
         private fun requisites(
             symbol: String,
             tokenAddress: String,
-            minCheckoutUsd: BigDecimal = BigDecimal.ONE,
+            minCheckoutUsd: BigDecimal? = BigDecimal.ONE,
         ) = PolymarketDepositRequisites(
             networks = listOf(
                 PolymarketDepositNetwork(
