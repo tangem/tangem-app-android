@@ -10,10 +10,10 @@ import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_DARK
 import androidx.browser.customtabs.CustomTabsIntent.COLOR_SCHEME_LIGHT
 import androidx.core.net.toUri
 import com.tangem.core.decompose.utils.ForegroundActivityProvider
+import com.tangem.core.decompose.utils.withForegroundActivity
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.getColorCompat
-import com.tangem.tap.withForegroundActivity
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
 
