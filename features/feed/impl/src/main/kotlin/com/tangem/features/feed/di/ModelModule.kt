@@ -9,11 +9,9 @@ import com.tangem.features.feed.components.v2.blocks.model.PredictionsBlockModel
 import com.tangem.features.feed.components.v2.blocks.model.ReferralBlockModel
 import com.tangem.features.feed.components.v2.blocks.model.TangemPayBlockModel
 import com.tangem.features.feed.components.v2.model.FeedHomeModel
-import com.tangem.features.feed.model.FeedEntryModel
 import com.tangem.features.feed.model.earn.EarnModel
 import com.tangem.features.feed.model.earn.filters.EarnNetworkFilterModel
 import com.tangem.features.feed.model.earn.filters.EarnTypeFilterModel
-import com.tangem.features.feed.model.feed.FeedComponentModel
 import com.tangem.features.feed.model.market.details.MarketsTokenDetailsModel
 import com.tangem.features.feed.model.market.list.MarketsListModel
 import com.tangem.features.feed.model.news.details.NewsDetailsModel
@@ -37,11 +35,6 @@ internal interface ModelModule {
 
     @Binds
     @IntoMap
-    @ClassKey(FeedComponentModel::class)
-    fun bindsFeedComponentModel(model: FeedComponentModel): Model
-
-    @Binds
-    @IntoMap
     @ClassKey(MarketsListModel::class)
     fun provideMarketsListModel(model: MarketsListModel): Model
 
@@ -59,11 +52,6 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(NewsListModel::class)
     fun provideNewsListModel(model: NewsListModel): Model
-
-    @Binds
-    @IntoMap
-    @ClassKey(FeedEntryModel::class)
-    fun provideFeedEntryModel(model: FeedEntryModel): Model
 
     @Binds
     @IntoMap

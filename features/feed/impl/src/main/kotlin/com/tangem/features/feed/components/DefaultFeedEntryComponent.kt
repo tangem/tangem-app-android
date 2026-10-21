@@ -3,14 +3,12 @@ package com.tangem.features.feed.components
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.Dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.*
 import com.arkivanov.decompose.value.Value
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
-import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
@@ -30,7 +28,6 @@ import com.tangem.features.feed.components.news.details.DefaultNewsDetailsCompon
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
-import com.tangem.features.feed.model.FeedEntryModel
 import com.tangem.features.feed.model.feed.FeedModelClickIntents
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
@@ -43,11 +40,9 @@ import dagger.assisted.AssistedInject
 @Stable
 internal class DefaultFeedEntryComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted entryRoute: FeedEntryRoute?,
+    @Assisted params: FeedEntryRoute,
     private val feedEntryChildFactory: FeedEntryChildFactory,
 ) : FeedEntryComponent, AppComponentContext by context {
-
-    private val model: FeedEntryModel = getOrCreateModel()
 
     private val stackNavigation = StackNavigation<FeedEntryChildFactory.Child>()
 
@@ -121,28 +116,8 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             )
         }
 
-        override fun onOpenAllNews() {
-            innerRouter.push(
-                FeedEntryChildFactory.Child.NewsList(
-                    params = buildNewsListParams(onBack = { onChildBack() }),
-                ),
-            )
-        }
-
-        override fun onOpenEarnPage() {
-            innerRouter.push(
-                FeedEntryChildFactory.Child.Earn(
-                    params = buildEarnParams(onBack = { onChildBack() }),
-                ),
-            )
-        }
-
         override fun openSearch(source: String) {
             stackNavigation.bringToFront(FeedEntryChildFactory.Child.Search(source))
-        }
-
-        override fun openForYou() {
-            stackNavigation.bringToFront(FeedEntryChildFactory.Child.ForYou)
         }
 
         override fun openTokenSummary(token: TokenSummaryComponent.Token, selectedTokenPeriodId: String?) {
@@ -160,7 +135,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             key = "main",
             source = stackNavigation,
             serializer = FeedEntryChildFactory.Child.serializer(),
-            initialConfiguration = mapEntryRouteToChild(entryRoute),
+            initialConfiguration = mapEntryRouteToChild(params),
             handleBackButton = false,
             childFactory = { configuration, factoryContext ->
                 feedEntryChildFactory.createChild(
@@ -174,35 +149,6 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                 )
             },
         )
-
-    @Composable
-    override fun BottomSheetContent(
-        bottomSheetState: State<BottomSheetState>,
-        onHeaderSizeChange: (Dp) -> Unit,
-        onExpandSheet: () -> Unit,
-        modifier: Modifier,
-    ) {
-        val bsState by bottomSheetState
-        val stackStack = stack.subscribeAsState()
-        BackHandler(
-            enabled = bottomSheetState.value == BottomSheetState.EXPANDED &&
-                stackStack.value.active.configuration !is FeedEntryChildFactory.Child.Feed,
-        ) {
-            onChildBack()
-        }
-
-        LaunchedEffect(bsState) {
-            model.containerBottomSheetState.value = bsState
-        }
-
-        EntryContent(
-            bottomSheetState = bottomSheetState,
-            stackState = stackStack,
-            onHeaderSizeChange = onHeaderSizeChange,
-            onExpandSheet = onExpandSheet,
-            isOpenedInBottomSheet = true,
-        )
-    }
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -219,23 +165,15 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             LocalMainBottomSheetColor provides remember { mutableStateOf(primaryBackground) }
                 .apply { value = primaryBackground },
         ) {
-            EntryContent(
-                bottomSheetState = bottomSheetState,
-                stackState = stack.subscribeAsState(),
-                onHeaderSizeChange = {},
-                onExpandSheet = {},
-                isOpenedInBottomSheet = false,
-            )
+            EntryContent(bottomSheetState = bottomSheetState, stackState = stack.subscribeAsState())
         }
     }
 
     private fun onChildBack() {
-        if (stack.value.active.configuration !is FeedEntryChildFactory.Child.Feed) {
-            if (stack.value.backStack.isEmpty()) {
-                router.pop()
-            } else {
-                stackNavigation.pop()
-            }
+        if (stack.value.backStack.isEmpty()) {
+            router.pop()
+        } else {
+            stackNavigation.pop()
         }
     }
 
@@ -258,7 +196,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             ) = clickIntents.openTokenSummary(token, selectedTokenPeriodId)
         }
 
-    private fun mapEntryRouteToChild(entryRoute: FeedEntryRoute?): FeedEntryChildFactory.Child {
+    private fun mapEntryRouteToChild(entryRoute: FeedEntryRoute): FeedEntryChildFactory.Child {
         return when (entryRoute) {
             is FeedEntryRoute.MarketTokenDetails -> FeedEntryChildFactory.Child.TokenDetails(
                 params = DefaultMarketsTokenDetailsComponent.Params(
@@ -314,7 +252,6 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                     preselectedNetworkId = entryRoute.preselectedNetworkId,
                 ),
             )
-            null -> FeedEntryChildFactory.Child.Feed
         }
     }
 
@@ -346,7 +283,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory : FeedEntryComponent.Factory {
-        override fun create(context: AppComponentContext, entryRoute: FeedEntryRoute?): DefaultFeedEntryComponent
+        override fun create(context: AppComponentContext, params: FeedEntryRoute): DefaultFeedEntryComponent
     }
 }
 

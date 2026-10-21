@@ -27,13 +27,8 @@ internal interface FeedModelClickIntents {
         screenSource: AnalyticsParam.ScreensSources,
         paginationConfig: NewsListConfig? = null,
     )
-    fun onOpenAllNews()
-
-    fun onOpenEarnPage()
 
     fun openSearch(source: String)
-
-    fun openForYou()
 
     fun openTokenSummary(token: TokenSummaryComponent.Token, selectedTokenPeriodId: String? = null)
 }
