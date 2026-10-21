@@ -1073,7 +1073,7 @@ internal class DexSwapFeeCalculatorTest {
                 allowanceContract = "TSpender",
             )
             val feeExtended = mockk<TransactionFeeExtended>()
-            coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+            coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
             coEvery { getTronGaslessFeeUseCase.forSwap(any(), any(), any()) } returns feeExtended.right()
 
             // Act
@@ -1113,7 +1113,7 @@ internal class DexSwapFeeCalculatorTest {
             contractAddress = TRON_USDT,
             isCoin = false,
         )
-        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns false
+        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns false
 
         // Act
         val result = sut.calculate(
@@ -1138,7 +1138,7 @@ internal class DexSwapFeeCalculatorTest {
             contractAddress = TRON_USDT,
             isCoin = false,
         )
-        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
 
         // Act
         val result = sut.calculate(
