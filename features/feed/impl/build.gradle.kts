@@ -52,6 +52,7 @@ dependencies {
     implementation(projects.domain.account)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.card)
+    implementation(projects.domain.collectibles)
     implementation(projects.domain.core)
     implementation(projects.domain.demo)
     implementation(projects.domain.referral)

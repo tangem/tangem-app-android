@@ -9,17 +9,20 @@ import com.arkivanov.decompose.router.slot.childSlot
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.account.CollectiblesAccountResIcon
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.ds2.ambient.TangemAmbientBackground
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.components.v2.blocks.model.CollectiblesBlockModel
-import com.tangem.features.feed.ui.v2.FeedTitleCard
+import com.tangem.features.feed.impl.R
+import com.tangem.features.feed.ui.v2.FeedPromoCard
 import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Entry into Collectibles, and the wallet chooser it opens when more than one wallet is eligible —
  * see [CollectiblesBlockModel] for how the wallet and the screen are settled.
- *
- * A title-only card until the feature contributes its own pitch.
  */
 internal class CollectiblesBlockComponent(
     context: AppComponentContext,
@@ -40,11 +43,13 @@ internal class CollectiblesBlockComponent(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        // TODO: [TWI-1608] real Collectibles pitch and its Lokalise key
-        FeedTitleCard(
-            title = "Collectibles",
+        FeedPromoCard(
+            title = stringResourceSafe(R.string.collectibles_entrance_card_title),
+            description = stringResourceSafe(R.string.collectibles_entrance_card_subtitle),
+            ambientVariant = TangemAmbientBackground.Variant.Yellow,
             onClick = model::onClick,
             modifier = modifier,
+            icon = { CollectiblesAccountResIcon(size = AccountIconSize.Default) },
         )
     }
 
