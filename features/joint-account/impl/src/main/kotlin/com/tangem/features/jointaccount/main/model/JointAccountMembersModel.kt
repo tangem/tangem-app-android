@@ -91,7 +91,7 @@ internal class JointAccountMembersModel @Inject constructor(
     val uiState: StateFlow<JointAccountMembersUM>
         get() = stateController.uiState
 
-    /** Fires when a member joined or confirmed between two updates; silent on the first render and on no-op refreshes */
+    /** Fires when a member joined or confirmed between two updates while the screen is resumed; silent on the first render */
     val memberStatusChanges: Flow<Unit>
         field = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
@@ -176,7 +176,8 @@ internal class JointAccountMembersModel @Inject constructor(
                 stateController.update(transformer)
                 val next = uiState.value.memberStatuses()
 
-                if (previous.isNotEmpty() && next.isNotEmpty() && previous != next) memberStatusChanges.tryEmit(Unit)
+                val isChanged = previous.isNotEmpty() && next.isNotEmpty() && previous != next
+                if (isChanged && isResumed.value) memberStatusChanges.tryEmit(Unit)
             }
             .launchIn(modelScope)
     }
