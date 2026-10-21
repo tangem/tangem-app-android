@@ -119,7 +119,7 @@ internal class TangemPayVerifiedModel @Inject constructor(
     }
 
     private fun onNotifyClick() {
-        // TODO v_rodionov: #[REDACTED_TASK_KEY]
+        // TODO v_rodiononov: #[REDACTED_TASK_KEY] Remove Notify Button
     }
 
     private fun onCloseClick() {
