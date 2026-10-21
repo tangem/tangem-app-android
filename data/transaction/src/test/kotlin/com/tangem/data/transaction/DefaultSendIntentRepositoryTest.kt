@@ -90,6 +90,41 @@ internal class DefaultSendIntentRepositoryTest {
     }
 
     @Test
+    fun `GIVEN service fails with 5xx WHEN getSendIntent THEN server error with that code is reported`() = runTest {
+        // Arrange
+        val failure = ApiResponseError.HttpException(
+            code = ApiResponseError.HttpException.Code.SERVICE_UNAVAILABLE,
+            message = null,
+            errorBody = null,
+        )
+        stubError(failure)
+
+        // Act
+        val actual = repository.getSendIntent(INTENT_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(Either.Left(SendIntentError.ServerError(INTENT_ID, httpCode = 503)))
+    }
+
+    @Test
+    fun `GIVEN service fails with 5xx WHEN completeSendIntent THEN the raw failure is returned to be retried`() =
+        runTest {
+            // Arrange
+            val failure = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR,
+                message = null,
+                errorBody = null,
+            )
+            stubConfirm(ApiResponse.Error(failure) as ApiResponse<Unit>)
+
+            // Act
+            val actual = repository.completeSendIntent(INTENT_ID, TX_HASH)
+
+            // Assert
+            assertThat(actual).isEqualTo(Either.Left(failure))
+        }
+
+    @Test
     fun `GIVEN no network WHEN getSendIntent THEN the raw failure is returned`() = runTest {
         // Arrange
         val failure = ApiResponseError.NetworkException()

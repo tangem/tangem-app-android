@@ -397,7 +397,12 @@ inline fun TextReference?.isNullOrEmpty(): Boolean {
 }
 
 private fun WrappedList<Any>.hasAnnotatedArgs(): Boolean {
-    return any { it is AnnotatedString || it is TextReference.Annotated }
+    return any { value ->
+        value is AnnotatedString ||
+            value is TextReference.Annotated ||
+            value is TextReference.StyledRes ||
+            value is TextReference.StyledStr
+    }
 }
 
 /**
@@ -419,6 +424,9 @@ private fun resolveWithAnnotatedArgs(
         val annotated = when (arg) {
             is AnnotatedString -> arg
             is TextReference.Annotated -> arg.value
+            is TextReference.StyledRes,
+            is TextReference.StyledStr,
+            -> arg.resolveAnnotatedReference()
             else -> null
         }
         when {

@@ -96,11 +96,12 @@ sealed interface StakingBalance : BalanceContribution {
 
             override val entries: List<StakingBalanceEntry> = accounts.flatMap { it.toStakingBalanceEntries() }
 
+            /** [totalRewards] is not added: P2P `stake.assets` already includes the auto-compounded earned rewards. */
             override fun totalDeltaCryptoAmount(): BigDecimal {
                 return if (isStakedIncludedInNetworkBalance) {
                     totalRewards
                 } else {
-                    totalStaked + unstakingAmount + withdrawableAmount + totalRewards
+                    totalStaked + unstakingAmount + withdrawableAmount
                 }
             }
         }
