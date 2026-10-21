@@ -41,7 +41,6 @@ internal class JointAccountToMembersUMConverter(
         val invites: List<JointAccountInvite>,
         val sharedInvites: Set<String>,
         val ownAddress: String?,
-        val isActivating: Boolean = false,
         val accountName: AccountName? = null,
         val accountIcon: CryptoPortfolioIcon? = null,
         val nowMillis: Long = System.currentTimeMillis(),
@@ -54,7 +53,7 @@ internal class JointAccountToMembersUMConverter(
             address: String,
         ) -> Unit,
         val onInviteClick: (inviteId: String, accountName: TextReference) -> Unit,
-        val onActivateClick: (cryptoAccountId: String) -> Unit,
+        val onConfirmAddressClick: (cryptoAccountId: String) -> Unit,
         val onApprovalsInfoClick: (threshold: Int, total: Int) -> Unit,
         val onCloseClick: () -> Unit,
     )
@@ -141,7 +140,7 @@ internal class JointAccountToMembersUMConverter(
         )
     }
 
-    /** The button runs the creator's activation until the verification flow exists, so only the creator can press it */
+    /** The next screen signs through the creator's activation until the verification flow exists */
     private fun footer(
         phase: MembersScreenPhase,
         input: Input,
@@ -150,8 +149,7 @@ internal class JointAccountToMembersUMConverter(
         val account = input.account
         val button = JointAccountMembersUM.ConfirmButtonUM(
             isEnabled = phase.stage == MembersScreenPhase.Stage.Confirming && phase.isThisDeviceCreator,
-            isLoading = input.isActivating,
-            onClick = { callbacks.onActivateClick(account.cryptoAccountId) },
+            onClick = { callbacks.onConfirmAddressClick(account.cryptoAccountId) },
         )
 
         return when (phase.stage) {

@@ -5,6 +5,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
@@ -16,6 +17,8 @@ import com.tangem.domain.polymarket.model.findOutcome
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketConst
+import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
+import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.positiondetails.PolymarketPositionDetailsComponent
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM
@@ -33,6 +36,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @ModelScoped
+@Suppress("LongParameterList")
 internal class PolymarketPositionDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
@@ -40,6 +44,8 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
     private val repository: PolymarketPositionsRepository,
     private val deriveAddresses: DerivePolymarketAddressesUseCase,
     private val getEvent: GetPolymarketEventUseCase,
+    private val messageSender: UiMessageSender,
+    private val regionAccess: PredictionRegionAccess,
 ) : Model() {
     private val params = paramsContainer.require<PolymarketPositionDetailsComponent.Params>()
     private val converter = PolymarketPositionDetailsConverter()
@@ -200,6 +206,8 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
     }
 
     private fun closePosition() {
+        if (regionAccess.isRestricted) return messageSender.send(regionRestrictionsMessage())
+
         val loaded = position ?: return
         val marketId = loaded.marketId ?: return
         router.push(
@@ -215,6 +223,8 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
         event?.takeIf { it.id == loaded.eventId }?.findMarket(loaded)
 
     private fun buyMore(market: PolymarketMarket, outcome: PolymarketOutcome) {
+        if (regionAccess.isRestricted) return messageSender.send(regionRestrictionsMessage())
+
         val loaded = position ?: return
         val eventId = loaded.eventId ?: return
         router.push(

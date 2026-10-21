@@ -7,14 +7,15 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.tangempay.components.TangemPaySelectPlanComponent
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 
-internal class TangemPaySelectPlanComponent(
-    appComponentContext: AppComponentContext,
-    params: Params,
-) : ComposableContentComponent, AppComponentContext by appComponentContext {
+internal class DefaultTangemPaySelectPlanComponent @AssistedInject constructor(
+    @Assisted appComponentContext: AppComponentContext,
+    @Assisted params: TangemPaySelectPlanComponent.Params,
+) : TangemPaySelectPlanComponent, AppComponentContext by appComponentContext {
 
     private val model: TangemPaySelectPlanModel = getOrCreateModel(params = params)
 
@@ -26,9 +27,11 @@ internal class TangemPaySelectPlanComponent(
         TangemPaySelectPlanScreen(state = state, modifier = modifier)
     }
 
-    data class Params(
-        val userWalletId: UserWalletId,
-        val tariffPlan: TangemPayCustomerTariffPlan,
-        val source: TangemPaySelectPlanSource,
-    )
+    @AssistedFactory
+    interface Factory : TangemPaySelectPlanComponent.Factory {
+        override fun create(
+            context: AppComponentContext,
+            params: TangemPaySelectPlanComponent.Params,
+        ): DefaultTangemPaySelectPlanComponent
+    }
 }

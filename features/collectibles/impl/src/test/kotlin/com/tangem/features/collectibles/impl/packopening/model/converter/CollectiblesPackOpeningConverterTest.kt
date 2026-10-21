@@ -3,6 +3,7 @@ package com.tangem.features.collectibles.impl.packopening.model.converter
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.features.collectibles.impl.packopening.model.BuybackState
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
@@ -153,6 +154,7 @@ internal class CollectiblesPackOpeningConverterTest {
             card = null,
             onKeepCardClick = {},
             onSellBackClick = {},
+            sellBack = CollectiblesSellBackButtonConverter.convert(BuybackState.Checking),
         ),
     )
 
