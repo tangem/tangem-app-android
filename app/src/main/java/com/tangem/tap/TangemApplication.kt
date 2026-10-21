@@ -135,7 +135,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
             store = NorthernLightsCrashGuardPreferences(context = this),
             appVersion = BuildConfig.VERSION_CODE,
         )
-        registerActivityLifecycleCallbacks(ForegroundActivityObserver.callbacks)
+        registerActivityLifecycleCallbacks(entryPoint.getForegroundActivityObserver().callbacks)
     }
 
     fun init() {
