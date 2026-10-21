@@ -54,6 +54,20 @@ internal class PredictionRegionAccessTest {
     }
 
     @Test
+    fun `GIVEN a restricted region WHEN a later check fails THEN the region stays restricted`() = runTest {
+        // Arrange
+        coEvery { checkGeoblock() } returns true.right() andThen PolymarketOnboardingError.Network.left()
+        val access = PredictionRegionAccess(checkGeoblock, createTestingCoroutineDispatcherProvider())
+        access.refresh()
+
+        // Act
+        access.refresh()
+
+        // Assert
+        assertThat(access.status.value).isEqualTo(PredictionRegionStatus.RESTRICTED)
+    }
+
+    @Test
     fun `GIVEN an older check answers last WHEN two refreshes overlap THEN the newer answer stays`() = runTest {
         // Arrange
         val olderAnswer = CompletableDeferred<Either<PolymarketOnboardingError, Boolean>>()
