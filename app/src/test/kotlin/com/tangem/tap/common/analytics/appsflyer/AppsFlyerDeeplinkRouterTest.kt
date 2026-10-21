@@ -10,7 +10,6 @@ import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
@@ -43,7 +42,6 @@ internal class AppsFlyerDeeplinkRouterTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
     private val appRouter: AppRouter = mockk(relaxed = true)
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
     private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory = mockk(relaxed = true)
     private val urisByString = listOf(DIRECT_URI, UNSUPPORTED_URI).associateWith { mockk<Uri>() }
     private val directUri: Uri = urisByString.getValue(DIRECT_URI)
@@ -53,7 +51,6 @@ internal class AppsFlyerDeeplinkRouterTest {
         userWalletsListRepository = userWalletsListRepository,
         clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
         appRouter = appRouter,
-        tangemPayFeatureToggles = tangemPayFeatureToggles,
         onboardVisaDeepLink = onboardVisaDeepLink,
     )
 
@@ -75,13 +72,11 @@ internal class AppsFlyerDeeplinkRouterTest {
             userWalletsListRepository,
             clearAppsFlyerDeeplinkUseCase,
             appRouter,
-            tangemPayFeatureToggles,
             onboardVisaDeepLink,
         )
         // Happy baseline: deep link pending, authorized.
         every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf("tpay_mobileonboard")
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
-        every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns true
     }
 
     // region navigation blocklist
@@ -351,46 +346,6 @@ internal class AppsFlyerDeeplinkRouterTest {
             // Assert
             verify { appRouter.replaceAll(AppRoute.TangemPayCampaign(CAMPAIGN_VALUE), onComplete = any()) }
             coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
-        }
-
-    @Test
-    fun `GIVEN campaign deeplink and toggle disabled WHEN observe THEN does not route, not cleared`() =
-        runTest(UnconfinedTestDispatcher()) {
-            // Arrange
-            every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns false
-            every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(CAMPAIGN_VALUE)
-            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Home())
-
-            // Act
-            router.observe(backgroundScope, currentRoute)
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 0) { appRouter.push(any(), any()) }
-            verify(exactly = 0) { appRouter.replaceAll(any(), onComplete = any()) }
-            coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
-        }
-
-    @Test
-    fun `GIVEN toggle disabled WHEN observe THEN mobile onboarding still routes`() =
-        runTest(UnconfinedTestDispatcher()) {
-            // Arrange
-            every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns false
-            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
-            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
-
-            // Act
-            router.observe(backgroundScope, currentRoute)
-            advanceUntilIdle()
-
-            // Assert
-            verify {
-                appRouter.push(
-                    route = AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.MobileOnboardingDeeplink),
-                    onComplete = any(),
-                )
-            }
-            coVerify { clearAppsFlyerDeeplinkUseCase() }
         }
 
     @Test

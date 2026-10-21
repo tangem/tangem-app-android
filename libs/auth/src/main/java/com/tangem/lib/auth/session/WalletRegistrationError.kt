@@ -30,9 +30,6 @@ sealed class WalletRegistrationError {
      */
     data class PersistenceFailed(val cause: Throwable) : WalletRegistrationError()
 
-    /** Registrar is disabled via `AND_15438_BACKEND_AUTHENTICATION_ENABLED` feature toggle. */
-    data object Disabled : WalletRegistrationError()
-
     /**
      * No session tokens are present, so `/wallet/register` (which is session-authenticated) would go
      * out unauthenticated and 401. Registration bails before consuming the one-time wallet nonce and

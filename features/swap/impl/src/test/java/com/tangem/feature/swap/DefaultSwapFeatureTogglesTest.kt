@@ -15,62 +15,6 @@ internal class DefaultSwapFeatureTogglesTest {
     private val toggles = DefaultSwapFeatureToggles(featureTogglesManager)
 
     @Test
-    fun `GIVEN pulse toggle enabled WHEN read isChooseTokenPulseEnabled THEN true`() {
-        // Arrange
-        every {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16357_CHOOSE_TOKEN_PULSE_ANIMATION)
-        } returns true
-
-        // Act
-        val actual = toggles.isChooseTokenPulseEnabled
-
-        // Assert
-        assertThat(actual).isTrue()
-    }
-
-    @Test
-    fun `GIVEN pulse toggle disabled WHEN read isChooseTokenPulseEnabled THEN false`() {
-        // Arrange
-        every {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16357_CHOOSE_TOKEN_PULSE_ANIMATION)
-        } returns false
-
-        // Act
-        val actual = toggles.isChooseTokenPulseEnabled
-
-        // Assert
-        assertThat(actual).isFalse()
-    }
-
-    @Test
-    fun `GIVEN geo blocking toggle enabled WHEN read isExpressCategoriesGeoBlockingEnabled THEN true`() {
-        // Arrange
-        every {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED)
-        } returns true
-
-        // Act
-        val actual = toggles.isExpressCategoriesGeoBlockingEnabled
-
-        // Assert
-        assertThat(actual).isTrue()
-    }
-
-    @Test
-    fun `GIVEN geo blocking toggle disabled WHEN read isExpressCategoriesGeoBlockingEnabled THEN false`() {
-        // Arrange
-        every {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED)
-        } returns false
-
-        // Act
-        val actual = toggles.isExpressCategoriesGeoBlockingEnabled
-
-        // Assert
-        assertThat(actual).isFalse()
-    }
-
-    @Test
     fun `GIVEN Tron gasless swap toggle enabled WHEN read isTronGaslessSwapEnabled THEN true`() {
         // Arrange
         every {
