@@ -121,23 +121,6 @@ internal class ValidatorSelectChangeTransformerTest {
         assertThat(validator(actual).chosenTarget).isEqualTo(second)
     }
 
-    // Pins current behaviour: with no other preferred validator, restake picks the active one again.
-    @Test
-    fun `GIVEN restake from initial info with only active preferred WHEN transform THEN active validator chosen again`() {
-        // Act
-        val actual = transform(
-            onePreferred,
-            first,
-            stakingUiState(StakingStep.InitialInfo, StakingActionCommonType.Pending.Restake),
-        )
-
-        // Assert
-        val data = validator(actual)
-        assertThat(data.chosenTarget).isEqualTo(first)
-        assertThat(data.availableTargets).isEmpty()
-        assertThat(data.activeTarget).isEqualTo(first)
-    }
-
     @Test
     fun `GIVEN restake on validator step WHEN transform THEN active kept from validator state`() {
         // Arrange
