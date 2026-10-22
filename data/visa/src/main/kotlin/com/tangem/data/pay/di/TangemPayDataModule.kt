@@ -608,6 +608,13 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideCreateOnboardingOrderUseCase(
+            customerOrderRepository: CustomerOrderRepository,
+        ): CreateOnboardingOrderUseCase {
+            return CreateOnboardingOrderUseCase(customerOrderRepository = customerOrderRepository)
+        }
+
+        @Provides
         fun provideSubmitTariffTransitionUseCase(
             createTransitionOrder: CreateTariffPlanTransitionOrderUseCase,
             setPendingTransition: SetTariffPlanPendingTransitionUseCase,
