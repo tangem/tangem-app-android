@@ -58,7 +58,7 @@ internal data class PolymarketPositionDetailsUM(
     data class Metrics(
         val quantity: TextReference,
         val priceChanges: TextReference,
-        val unrealizedPnl: TextReference,
+        val unrealizedPnl: TangemPriceChange.State,
         val realizedPnl: TextReference,
     )
 
