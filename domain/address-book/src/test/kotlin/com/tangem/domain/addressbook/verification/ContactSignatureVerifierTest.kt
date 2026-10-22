@@ -223,7 +223,7 @@ class ContactSignatureVerifierTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class IsNameKycApproved {
+    inner class IsNameVerified {
 
         @Test
         fun `GIVEN at least one valid entry WHEN isNameVerified THEN true`() = runTest {
