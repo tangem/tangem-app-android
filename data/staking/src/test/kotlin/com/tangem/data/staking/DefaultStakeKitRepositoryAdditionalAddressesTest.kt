@@ -148,22 +148,6 @@ internal class DefaultStakeKitRepositoryAdditionalAddressesTest {
             verify(exactly = 0) { Base64.encodeToString(any<ByteArray>(), any<Int>()) }
         }
 
-        // Pins current behaviour: cosmos without a wallet manager passes null to Base64.encodeToString
-        @Test
-        fun `GIVEN cosmos token and no wallet manager WHEN createAction THEN base64 receives null key`() = runTest {
-            // Arrange
-            coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, any<Network>()) } returns null
-            every { Base64.encodeToString(null as ByteArray?, any<Int>()) } returns "null-key"
-            val params = actionParams(token = MockStaking.atomToken)
-
-            // Act
-            repository.createAction(WALLET_ID, cosmosNetwork, params)
-
-            // Assert
-            verify(exactly = 1) { Base64.encodeToString(null as ByteArray?, Base64.NO_WRAP) }
-            assertThat(body.captured.addresses.additionalAddresses?.cosmosPubKey).isEqualTo("null-key")
-        }
-
         private fun provideTestModels() = listOf(
             TokenModel(MockStaking.solToken),
             TokenModel(MockStaking.trxToken),

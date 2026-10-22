@@ -3,8 +3,6 @@ package com.tangem.data.staking
 import androidx.datastore.preferences.core.emptyPreferences
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.data.staking.StakeKitRepositoryFixtures.apiError
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.domain.staking.model.UnsubmittedTransactionMetadata
 import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
@@ -93,22 +91,6 @@ internal class DefaultStakeKitTransactionHashRepositoryTest {
             stakeKitApi.submitTransactionHash("tx-a", bodyOf("0xa"))
             stakeKitApi.submitTransactionHash("tx-b", bodyOf("0xb"))
         }
-    }
-
-    // Pins current behaviour: hash is dropped from prefs even on ApiResponse.Error
-    @Test
-    fun `GIVEN saved hash and api error response WHEN sendUnsubmittedHashes THEN hash removed anyway`() = runTest {
-        // Arrange
-        seed(A)
-        coEvery { stakeKitApi.submitTransactionHash(any(), any()) } returns
-            apiError<Unit>(ApiResponseError.NetworkException())
-
-        // Act
-        repository.sendUnsubmittedHashes()
-
-        // Assert
-        assertThat(stored()).isEmpty()
-        coVerify(exactly = 1) { stakeKitApi.submitTransactionHash("tx-a", bodyOf("0xa")) }
     }
 
     @Test

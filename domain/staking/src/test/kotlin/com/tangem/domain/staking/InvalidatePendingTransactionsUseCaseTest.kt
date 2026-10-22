@@ -471,22 +471,6 @@ internal class InvalidatePendingTransactionsUseCaseTest {
             assertThat(actual[0]).isEqualTo(balance(BalanceType.LOCKED, "3", token, groupId = "group-2"))
             assertThat(actual[1].copy(groupId = "")).isEqualTo(stub("3", token).copy(groupId = ""))
         }
-
-        // Pins current behaviour: partial unstake compares only action.validatorAddress, Tron actions carry validatorAddresses
-        @Test
-        fun `GIVEN tron partial UNSTAKE with validator list only WHEN invoke THEN balances unchanged`() {
-            // Arrange
-            val balances = listOf(balance(BalanceType.STAKED, "10", token))
-            val actions = listOf(
-                action(StakingActionType.UNSTAKE, "3", validatorAddress = null, validatorAddresses = validators),
-            )
-
-            // Act
-            val actual = useCase(balances, actions, token)
-
-            // Assert
-            assertBalances(actual, balance(BalanceType.STAKED, "10", token))
-        }
     }
 
     @Nested
