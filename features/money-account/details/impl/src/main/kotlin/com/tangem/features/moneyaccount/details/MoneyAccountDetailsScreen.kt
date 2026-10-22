@@ -42,7 +42,6 @@ import com.tangem.features.moneyaccount.common.ui.TangemCircleActionButton
 import com.tangem.features.moneyaccount.details.impl.R
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
-import com.tangem.features.txhistory.entity.TxHistoryUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -342,15 +341,9 @@ private fun MoneyAccountDetailsScreenBalanceUnavailablePreview() {
 }
 
 private object PreviewTxHistoryComponent : TxHistoryComponent {
-    override val legacyTxHistoryState: StateFlow<TxHistoryUM> = MutableStateFlow(
-        value = TxHistoryUM.Empty(isBalanceHidden = false, onExploreClick = {}),
-    )
-
     override val txHistoryState: StateFlow<TxHistoryItemsUM> = MutableStateFlow(
         value = TxHistoryItemsUM.Empty(isBalanceHidden = false, onExploreClick = {}),
     )
-
-    override fun LazyListScope.txHistoryContentLegacy(listState: LazyListState, state: TxHistoryUM) = Unit
 
     override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryItemsUM) = Unit
 
