@@ -117,10 +117,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             .filterNotNull()
     }
 
-    private fun reduceAccountState(
-        previous: AccountState?,
-        update: Pair<AccountStatusList, Boolean>,
-    ): AccountState {
+    private fun reduceAccountState(previous: AccountState?, update: Pair<AccountStatusList, Boolean>): AccountState {
         val (accountList, isTangemPayPromoHidden) = update
 
         return AccountState(
