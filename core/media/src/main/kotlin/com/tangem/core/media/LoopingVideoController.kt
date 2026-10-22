@@ -44,7 +44,6 @@ class LoopingVideoController internal constructor(
     )
 
     private var hasRenderedFrame = false
-    private var isRunRequested = false
 
     /** Starts over at every pass of the loop. */
     val positionMs: Long
@@ -52,8 +51,9 @@ class LoopingVideoController internal constructor(
 
     /** Whether the screen is resumed and nothing covers the video. */
     fun setRunning(isRunning: Boolean) {
-        isRunRequested = isRunning
-        applyRunning()
+        if (state.value.isFailed) return
+        player.setRunning(isRunning = isRunning)
+        state.update { it.copy(isRunning = isRunning) }
     }
 
     fun restart() {
@@ -76,12 +76,6 @@ class LoopingVideoController internal constructor(
         updateSurface { it.copy(isFirstFrameShown = false) }
     }
 
-    private fun applyRunning() {
-        val isRunning = isRunRequested && !state.value.isFailed
-        player.setRunning(isRunning = isRunning)
-        state.update { it.copy(isRunning = isRunning) }
-    }
-
     private fun replaceSurface() {
         updateSurface { it.copy(key = it.key + 1, isFirstFrameShown = false) }
     }
@@ -92,13 +86,15 @@ class LoopingVideoController internal constructor(
     }
 
     private fun fail(error: Throwable) {
+        // The player and the watchdog can both give up on the same video.
+        if (state.value.isFailed) return
         val stage = if (hasRenderedFrame) "after" else "before"
         TangemLogger.e("$diagnosticsSubject failed $stage its first frame", error)
         onFailed(error, hasRenderedFrame)
-        // The poster stays: a SurfaceView without a frame is a hole through the window.
-        state.update { it.copy(isFailed = true) }
         // The watchdog giving up, unlike a player error, does not stop the player.
-        applyRunning()
+        player.setRunning(isRunning = false)
+        // The poster stays: a SurfaceView without a frame is a hole through the window.
+        state.update { it.copy(isRunning = false, isFailed = true) }
     }
 
     private inline fun updateSurface(transform: (VideoSurfaceState) -> VideoSurfaceState) {
