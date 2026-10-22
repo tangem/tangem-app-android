@@ -109,6 +109,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
                 contract = contract,
                 fromCreatedAtIso = fromCreatedAtIso,
                 activeStatuses = ExpressStatusMapper.activeExchangeStatuses,
+                excludedStatus = ExpressStatusMapper.expiredExchangeStatus,
             ).distinctUntilChanged(),
             flow2 = expressHistoryDao.observeIncomingSwaps(
                 payoutAddresses = addresses,
@@ -116,6 +117,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
                 contract = contract,
                 fromCreatedAtIso = fromCreatedAtIso,
                 activeStatuses = ExpressStatusMapper.activeExchangeStatuses,
+                excludedStatus = ExpressStatusMapper.expiredExchangeStatus,
             ).distinctUntilChanged(),
             flow3 = expressHistoryDao.observeIncomingOnramps(
                 payoutAddresses = addresses,
@@ -123,6 +125,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
                 contract = contract,
                 fromCreatedAtIso = fromCreatedAtIso,
                 activeStatuses = ExpressStatusMapper.activeOnrampStatuses,
+                excludedStatus = ExpressStatusMapper.expiredOnrampStatus,
             ).distinctUntilChanged(),
             flow4 = expressHistoryDao.getProvidersById().distinctUntilChanged(),
             flow5 = expressHistoryDao.getCurrenciesByCode().distinctUntilChanged(),
