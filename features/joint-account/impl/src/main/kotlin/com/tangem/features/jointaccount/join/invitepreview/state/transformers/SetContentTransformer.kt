@@ -31,7 +31,6 @@ internal class SetContentTransformer(
             creatorName = preview.creator.name,
             creatorAddress = preview.creator.address,
             wallet = resolveWalletRow(wallets, selectedWallet, onWalletRowClick),
-            confirmation = null,
             onRequiredApprovalsClick = onRequiredApprovalsClick,
             onCreatorInfoClick = onCreatorInfoClick,
             onContinueClick = onContinueClick,
