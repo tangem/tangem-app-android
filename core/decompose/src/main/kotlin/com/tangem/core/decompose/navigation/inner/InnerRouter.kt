@@ -64,20 +64,18 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
     }
 
     override fun pop(onComplete: (Boolean) -> Unit) {
-        popCallback(withDefaultCompletion(onComplete) { "Unable to pop route" })
+        popCallback(onComplete)
     }
 
     override fun popTo(route: Route, onComplete: (Boolean) -> Unit) {
         if (route is T) {
-            val onCompleteOrReport = withDefaultCompletion(onComplete) { "Unable to pop to $route" }
-
             stackNavigation.navigate(
                 transformer = { stack ->
                     stack
                         .dropLastWhile { it != route }
                         .ifEmpty { stack }
                 },
-                onComplete = { newStack, oldStack -> onCompleteOrReport(newStack.size < oldStack.size) },
+                onComplete = { newStack, oldStack -> onComplete(newStack.size < oldStack.size) },
             )
         } else {
             fallBackRouter.popTo(route, onComplete)
@@ -86,15 +84,13 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
 
     override fun popTo(routeClass: KClass<out Route>, onComplete: (Boolean) -> Unit) {
         if (routeClass == T::class) {
-            val onCompleteOrReport = withDefaultCompletion(onComplete) { "Unable to pop to $routeClass" }
-
             stackNavigation.navigate(
                 transformer = { stack ->
                     stack
                         .dropLastWhile { it::class != routeClass }
                         .ifEmpty { stack }
                 },
-                onComplete = { newStack, oldStack -> onCompleteOrReport(newStack.size < oldStack.size) },
+                onComplete = { newStack, oldStack -> onComplete(newStack.size < oldStack.size) },
             )
         } else {
             fallBackRouter.popTo(routeClass, onComplete)
@@ -108,13 +104,9 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
     ) {
         if (T::class.java.isAssignableFrom(routeClass.java)) {
             val matches: (Route) -> Boolean = { route -> routeClass.safeCast(route)?.let(predicate) == true }
-            val onCompleteOrReport = withDefaultCompletion(onComplete) {
-                "Unable to pop to the last matching $routeClass"
-            }
-
             stackNavigation.navigate(
                 transformer = { stack -> stack.dropLastWhile { !matches(it) }.ifEmpty { stack } },
-                onComplete = { newStack, _ -> onCompleteOrReport(newStack.lastOrNull()?.let(matches) == true) },
+                onComplete = { newStack, _ -> onComplete(newStack.lastOrNull()?.let(matches) == true) },
             )
         } else {
             fallBackRouter.popToMatching(routeClass, predicate, onComplete)

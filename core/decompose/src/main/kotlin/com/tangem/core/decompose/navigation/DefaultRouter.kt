@@ -57,14 +57,14 @@ internal class DefaultRouter(
 
     override fun pop(onComplete: (isSuccess: Boolean) -> Unit) {
         logger.i("Pop route")
-        navigateSafely(withDefaultCompletion(onComplete) { "Unable to pop route" }) { complete -> this.pop(complete) }
+        navigateSafely(onComplete) { complete -> this.pop(complete) }
     }
 
     override fun popTo(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
         logger.i("Pop to $route")
         popTo(
             predicate = { it != route },
-            onComplete = withDefaultCompletion(onComplete) { "Unable to pop to $route" },
+            onComplete = onComplete,
         )
     }
 
@@ -72,7 +72,7 @@ internal class DefaultRouter(
         logger.i("Pop to $routeClass")
         popTo(
             predicate = { it::class != routeClass },
-            onComplete = withDefaultCompletion(onComplete) { "Unable to pop to $routeClass" },
+            onComplete = onComplete,
         )
     }
 
@@ -83,9 +83,7 @@ internal class DefaultRouter(
     ) {
         logger.i("Pop to the last matching $routeClass")
         val matches: (Route) -> Boolean = { route -> routeClass.safeCast(route)?.let(predicate) == true }
-        val onCompleteOrReport = withDefaultCompletion(onComplete) { "Unable to pop to the last matching $routeClass" }
-
-        navigateSafely(onCompleteOrReport) { complete ->
+        navigateSafely(onComplete) { complete ->
             navigate(
                 transformer = { stack -> stack.dropLastWhile { !matches(it) }.ifEmpty { stack } },
                 onComplete = { newStack, _ -> complete(newStack.lastOrNull()?.let(matches) == true) },
@@ -142,7 +140,11 @@ internal class DefaultRouter(
 
             runCatching { navigation.block(complete) }.onFailure { throwable ->
                 logger.e(messageString = "Navigation failed", throwable = throwable)
-                if (!isCompleted) complete(false)
+                if (isCompleted) return@onFailure
+
+                complete(false)
+                // Popping onto a stack it can't shrink is no failure, but a throw always is
+                if (onComplete === Router.NoCompletion) defaultCompletionHandler(false, "Navigation failed: $throwable")
             }
         }
 

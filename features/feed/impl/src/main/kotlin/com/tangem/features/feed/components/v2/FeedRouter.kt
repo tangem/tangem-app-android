@@ -5,7 +5,6 @@ import com.arkivanov.decompose.router.stack.bringToFront
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.navigation.withDefaultCompletion
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.utils.logging.TangemLogger
@@ -42,18 +41,16 @@ internal fun AppComponentContext.FeedRouter(
     return object : Router by innerRouter {
 
         override fun push(route: Route, onComplete: (Boolean) -> Unit) {
-            if (route !is FeedRoute) return innerRouter.push(route, onComplete)
-
-            val onCompleteOrReport = withDefaultCompletion(onComplete) { "Unable to push $route" }
             when {
+                route !is FeedRoute -> innerRouter.push(route, onComplete)
                 !isRouteRegistered(route) -> {
                     TangemLogger.e("No feed screen registered for $route")
-                    onCompleteOrReport(false)
+                    onComplete(false)
                 }
-                route.isSingleInstance -> stackNavigation.bringToFront(route) { onCompleteOrReport(true) }
+                route.isSingleInstance -> stackNavigation.bringToFront(route) { onComplete(true) }
                 else -> stackNavigation.navigate(
                     transformer = { stack -> stack.pushOrPopTo(route) },
-                    onComplete = { newStack, oldStack -> onCompleteOrReport(newStack != oldStack) },
+                    onComplete = { newStack, oldStack -> onComplete(newStack != oldStack) },
                 )
             }
         }
