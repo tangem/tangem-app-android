@@ -7,14 +7,18 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.TangemPayStorage
+import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
+import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerOrderRequest
+import com.tangem.domain.pay.model.CustomerSummary
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.OrderRequest
+import com.tangem.spend.datasource.pay.models.response.CustomerSummaryResponse
 import com.tangem.spend.datasource.pay.models.response.FeesResponse
 import com.tangem.spend.datasource.pay.models.response.OrderResponse
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -431,6 +435,92 @@ internal class DefaultOnboardingRepositoryTest {
             amount = amount,
             currency = currency,
             description = "fee",
+        )
+    }
+
+    @Nested
+    inner class GetCustomerSummary {
+
+        @Test
+        fun `GIVEN summary returned WHEN getCustomerSummary THEN converted summary returned`() = runTest {
+            // Arrange
+            coEvery { tangemPayApi.getCustomerSummary(authHeader = AUTH_HEADER) } returns
+                ApiResponse.Success(CustomerSummaryResponse(result = customerSummaryResult()))
+            val expected = CustomerSummary(
+                customerId = "customer",
+                customerStatus = CustomerInfo.State.ACTIVE,
+                isHidden = false,
+                kycStatus = KycStatus.APPROVED,
+                paymentAccount = CustomerSummary.PaymentAccount(
+                    id = "payment-account",
+                    activation = CustomerSummary.Activation(
+                        status = CustomerSummary.Activation.Status.COMPLETED,
+                        step = null,
+                        failureReason = null,
+                    ),
+                    cards = CustomerSummary.Cards(active = 1, frozen = 0, pending = 0),
+                ),
+                bankingAccount = CustomerSummary.BankingAccount(
+                    id = null,
+                    activation = CustomerSummary.Activation(
+                        status = CustomerSummary.Activation.Status.PROCESSING,
+                        step = CustomerSummary.Activation.Step.AWAITING_KYC,
+                        failureReason = null,
+                    ),
+                ),
+            )
+
+            // Act
+            val actual = repository.getCustomerSummary(USER_WALLET_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(expected.right())
+        }
+
+        @Test
+        fun `GIVEN response without result WHEN getCustomerSummary THEN error`() = runTest {
+            // Arrange
+            coEvery { tangemPayApi.getCustomerSummary(authHeader = AUTH_HEADER) } returns
+                ApiResponse.Success(CustomerSummaryResponse(result = null))
+
+            // Act
+            val actual = repository.getCustomerSummary(USER_WALLET_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(VisaApiError.UnknownWithoutCode.left())
+        }
+
+        @Test
+        fun `GIVEN failing request WHEN getCustomerSummary THEN api error`() = runTest {
+            // Arrange
+            coEvery { tangemPayApi.getCustomerSummary(authHeader = AUTH_HEADER) } returns
+                ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<CustomerSummaryResponse>
+
+            // Act
+            val actual = repository.getCustomerSummary(USER_WALLET_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(VisaApiError.Unspecified.left())
+        }
+
+        private fun customerSummaryResult() = CustomerSummaryResponse.Result(
+            customerId = "customer",
+            customerStatus = "ACTIVE",
+            isHidden = false,
+            kycStatus = "APPROVED",
+            paymentAccount = CustomerSummaryResponse.PaymentAccount(
+                id = "payment-account",
+                activation = CustomerSummaryResponse.Activation(status = "COMPLETED", step = null, failureReason = null),
+                cards = CustomerSummaryResponse.Cards(active = 1, frozen = 0, pending = 0),
+            ),
+            bankingAccount = CustomerSummaryResponse.BankingAccount(
+                id = null,
+                activation = CustomerSummaryResponse.Activation(
+                    status = "PROCESSING",
+                    step = "AWAITING_KYC",
+                    failureReason = null,
+                ),
+            ),
         )
     }
 
