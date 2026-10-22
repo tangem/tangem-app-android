@@ -8,14 +8,17 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderState
+import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
+import com.tangem.domain.pay.model.bankofframp.BankOfframpRoute
+import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.repository.BankOfframpOrderRepository
 import com.tangem.spend.datasource.config.TangemPay
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * The mocked BFF serves recipients and routes but has no order endpoints, so against it a withdrawal is placed
- * in memory by [MockBankOfframpOrderRepository]; every other environment goes to the backend.
+ * The mocked BFF serves recipients and rails but has no order or route endpoints, so against it a withdrawal is
+ * placed in memory by [MockBankOfframpOrderRepository]; every other environment goes to the backend.
  */
 @Singleton
 internal class MockAwareBankOfframpOrderRepository @Inject constructor(
@@ -68,6 +71,20 @@ internal class MockAwareBankOfframpOrderRepository @Inject constructor(
 
     override suspend fun cancelOrder(userWalletId: UserWalletId, orderId: String): Either<BankOfframpError, Unit> =
         delegate.cancelOrder(userWalletId = userWalletId, orderId = orderId)
+
+    override suspend fun createRoute(
+        userWalletId: UserWalletId,
+        productInstanceId: String,
+        rail: BankRail,
+        recipient: BankOfframpRecipient,
+        idempotencyKey: String,
+    ): Either<BankOfframpError, BankOfframpRoute> = delegate.createRoute(
+        userWalletId = userWalletId,
+        productInstanceId = productInstanceId,
+        rail = rail,
+        recipient = recipient,
+        idempotencyKey = idempotencyKey,
+    )
 
     companion object {
         const val UITEST_ORDERS_FROM_API_KEY = "uitest.tangempay.bank_offramp_orders_from_api"
