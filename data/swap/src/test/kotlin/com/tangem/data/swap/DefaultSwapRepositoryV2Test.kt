@@ -1,10 +1,10 @@
 package com.tangem.data.swap
 
+import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.models.*
@@ -19,6 +19,7 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.swap.models.SwapTxType
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.grow.datasource.express.TangemExpressApi
@@ -42,7 +43,7 @@ internal class DefaultSwapRepositoryV2Test {
     private val dataSignatureVerifier: DataSignatureVerifier = mockk()
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier = mockk()
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher = mockk()
-    private val featureTogglesManager: FeatureTogglesManager = mockk()
+    private val walletManagersFacade: WalletManagersFacade = mockk()
     private val moshi: Moshi = Moshi.Builder().build()
 
     private val repository = DefaultSwapRepositoryV2(
@@ -53,7 +54,7 @@ internal class DefaultSwapRepositoryV2Test {
         dataSignatureVerifier = dataSignatureVerifier,
         singleQuoteStatusSupplier = singleQuoteStatusSupplier,
         singleQuoteStatusFetcher = singleQuoteStatusFetcher,
-        featureTogglesManager = featureTogglesManager,
+        walletManagersFacade = walletManagersFacade,
         moshi = moshi,
     )
 
@@ -66,8 +67,9 @@ internal class DefaultSwapRepositoryV2Test {
             dataSignatureVerifier,
             singleQuoteStatusSupplier,
             singleQuoteStatusFetcher,
-            featureTogglesManager,
+            walletManagersFacade,
         )
+        coEvery { walletManagersFacade.getScaledUiAmountMultiplier(any(), any()) } returns null.right()
     }
 
     // region getPairs(SwapCurrencyStatus, SwapCurrencyStatus)
@@ -355,12 +357,6 @@ internal class DefaultSwapRepositoryV2Test {
                 )
             } returns ApiResponse.Success(quoteResponse)
 
-            every {
-                featureTogglesManager.isFeatureEnabled(
-                    FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED,
-                )
-            } returns true
-
             // Act
             val result = repository.getSwapQuote(
                 userWallet = userWallet,
@@ -375,61 +371,6 @@ internal class DefaultSwapRepositoryV2Test {
             // Assert — the quote still loads with amounts, restriction is a flag, not a failure
             assertThat(result.isRestricted).isTrue()
             assertThat(result.toTokenAmount).isEqualTo(BigDecimal("1.00000000"))
-        }
-
-    @Test
-    fun `GIVEN geo blocking toggle disabled WHEN getSwapQuote THEN restricted response is not propagated`() =
-        runTest {
-            // Arrange
-            val quoteResponse = ExchangeQuoteResponse(
-                fromAmount = "1000000000000000000",
-                fromDecimals = 18,
-                toAmount = "100000000",
-                toDecimals = 8,
-                allowanceContract = null,
-                minAmount = BigDecimal.ONE,
-                quoteId = "quote-123",
-                isRestricted = true,
-            )
-
-            coEvery {
-                tangemExpressApi.getExchangeQuote(
-                    fromAmount = any(),
-                    toAmount = any(),
-                    fromNetwork = any(),
-                    fromContractAddress = any(),
-                    fromDecimals = any(),
-                    toNetwork = any(),
-                    toContractAddress = any(),
-                    toDecimals = any(),
-                    providerId = any(),
-                    rateType = any(),
-                    userWalletId = any(),
-                    refCode = any(),
-                )
-            } returns ApiResponse.Success(quoteResponse)
-
-            every {
-                featureTogglesManager.isFeatureEnabled(
-                    FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED,
-                )
-            } returns false
-
-            // Act
-            val result = repository.getSwapQuote(
-                userWallet = userWallet,
-                fromCryptoCurrency = primaryCoin,
-                toCryptoCurrency = secondaryCoin,
-                amount = BigDecimal.ONE,
-                amountType = SwapAmountType.From,
-                provider = expressProvider,
-                rateType = ExpressRateType.Float,
-            )
-
-            // Assert — pre-geo-blocking behaviour: the flag is dropped, the quote is unchanged otherwise
-            assertThat(result.isRestricted).isFalse()
-            assertThat(result.toTokenAmount).isEqualTo(BigDecimal("1.00000000"))
-            assertThat(result.quoteId).isEqualTo("quote-123")
         }
 
     @Test
@@ -551,6 +492,118 @@ internal class DefaultSwapRepositoryV2Test {
             )
         }
     }
+
+    @Test
+    fun `GIVEN scaled source token WHEN getSwapQuote with From amount THEN on-chain amount is sent`() = runTest {
+        // Arrange
+        coEvery { walletManagersFacade.getScaledUiAmountMultiplier(any(), primaryCoin) } returns
+            BigDecimal("5").right()
+        stubExchangeQuote(createQuoteResponse(fromAmount = "600000000000000000"))
+
+        // Act
+        repository.getSwapQuote(
+            userWallet = userWallet,
+            fromCryptoCurrency = primaryCoin,
+            toCryptoCurrency = secondaryCoin,
+            amount = BigDecimal("3"),
+            amountType = SwapAmountType.From,
+            provider = expressProvider,
+            rateType = ExpressRateType.Float,
+        )
+
+        // Assert
+        coVerify {
+            tangemExpressApi.getExchangeQuote(
+                fromAmount = "600000000000000000",
+                toAmount = null,
+                fromNetwork = any(),
+                fromContractAddress = any(),
+                fromDecimals = any(),
+                toNetwork = any(),
+                toContractAddress = any(),
+                toDecimals = any(),
+                providerId = any(),
+                rateType = any(),
+                userWalletId = any(),
+                refCode = any(),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN scaled source token WHEN getSwapQuote with To amount THEN from amount is displayed scaled`() = runTest {
+        // Arrange
+        coEvery { walletManagersFacade.getScaledUiAmountMultiplier(any(), primaryCoin) } returns
+            BigDecimal("5").right()
+        stubExchangeQuote(createQuoteResponse(fromAmount = "600000000000000000"))
+
+        // Act
+        val actual = repository.getSwapQuote(
+            userWallet = userWallet,
+            fromCryptoCurrency = primaryCoin,
+            toCryptoCurrency = secondaryCoin,
+            amount = BigDecimal("1.5"),
+            amountType = SwapAmountType.To,
+            provider = expressProvider,
+            rateType = ExpressRateType.Fixed,
+        )
+
+        // Assert
+        assertThat(actual.fromTokenAmount).isEqualToIgnoringScale(BigDecimal("3"))
+    }
+
+    @Test
+    fun `GIVEN unresolvable multiplier WHEN getSwapQuote THEN throws without requesting quote`() = runTest {
+        // Arrange
+        val error = IllegalStateException("providers disagree")
+        coEvery { walletManagersFacade.getScaledUiAmountMultiplier(any(), primaryCoin) } returns error.left()
+
+        // Act
+        val actual = runCatching {
+            repository.getSwapQuote(
+                userWallet = userWallet,
+                fromCryptoCurrency = primaryCoin,
+                toCryptoCurrency = secondaryCoin,
+                amount = BigDecimal("3"),
+                amountType = SwapAmountType.From,
+                provider = expressProvider,
+                rateType = ExpressRateType.Float,
+            )
+        }.exceptionOrNull()
+
+        // Assert
+        assertThat(actual).isEqualTo(error)
+        coVerify(exactly = 0) { anyExchangeQuoteRequest() }
+    }
+
+    private fun stubExchangeQuote(response: ExchangeQuoteResponse) {
+        coEvery { anyExchangeQuoteRequest() } returns ApiResponse.Success(response)
+    }
+
+    private suspend fun MockKMatcherScope.anyExchangeQuoteRequest() = tangemExpressApi.getExchangeQuote(
+        fromAmount = any(),
+        toAmount = any(),
+        fromNetwork = any(),
+        fromContractAddress = any(),
+        fromDecimals = any(),
+        toNetwork = any(),
+        toContractAddress = any(),
+        toDecimals = any(),
+        providerId = any(),
+        rateType = any(),
+        userWalletId = any(),
+        refCode = any(),
+    )
+
+    private fun createQuoteResponse(fromAmount: String) = ExchangeQuoteResponse(
+        fromAmount = fromAmount,
+        fromDecimals = 18,
+        toAmount = "100000000",
+        toDecimals = 8,
+        allowanceContract = null,
+        minAmount = BigDecimal.ONE,
+        quoteId = null,
+    )
 
     // endregion
 
@@ -819,6 +872,70 @@ internal class DefaultSwapRepositoryV2Test {
                 quoteId = null,
             )
         }
+    }
+
+    @Test
+    fun `GIVEN scaled source token WHEN getSwapData THEN transaction from amount is displayed scaled`() = runTest {
+        // Arrange
+        val requestId = slot<String>()
+        coEvery { walletManagersFacade.getScaledUiAmountMultiplier(any(), primaryCoin) } returns
+            BigDecimal("5").right()
+        coEvery {
+            tangemExpressApi.getExchangeData(
+                fromContractAddress = any(),
+                toContractAddress = any(),
+                fromNetwork = any(),
+                toNetwork = any(),
+                fromAddress = any(),
+                toAddress = any(),
+                fromDecimals = any(),
+                toDecimals = any(),
+                fromAmount = any(),
+                toAmount = any(),
+                providerId = any(),
+                rateType = any(),
+                requestId = capture(requestId),
+                refundAddress = any(),
+                refundExtraId = any(),
+                userWalletId = any(),
+                partnerOperationType = any(),
+                refCode = any(),
+                toExtraId = any(),
+                quoteId = any(),
+            )
+        } answers {
+            ApiResponse.Success(
+                ExchangeDataResponse(
+                    fromAmount = "600000000000000000",
+                    fromDecimals = 18,
+                    toAmount = "100000000",
+                    toDecimals = 8,
+                    txId = "tx-123",
+                    txDetailsJson = """{"payoutAddress":"0xToAddress","requestId":"${requestId.captured}",""" +
+                        """"txType":"send","txTo":"0xDeposit","externalTxId":"ext","externalTxUrl":"url"}""",
+                    signature = "sig",
+                ),
+            )
+        }
+        every { dataSignatureVerifier.verifySignature(any(), any()) } returns true
+
+        // Act
+        val actual = repository.getSwapData(
+            userWallet = userWallet,
+            fromCryptoCurrencyStatus = createCryptoCurrencyStatus(primaryCoin),
+            toCryptoCurrency = secondaryCoin,
+            amount = BigDecimal("1.5"),
+            amountType = SwapAmountType.To,
+            toAddress = "0xToAddress",
+            toExtraId = null,
+            expressProvider = cexProvider,
+            rateType = ExpressRateType.Fixed,
+            expressOperationType = ExpressOperationType.SWAP,
+            quoteId = null,
+        )
+
+        // Assert
+        assertThat(actual.transaction.fromAmount).isEqualToIgnoringScale(BigDecimal("3"))
     }
 
     // endregion
