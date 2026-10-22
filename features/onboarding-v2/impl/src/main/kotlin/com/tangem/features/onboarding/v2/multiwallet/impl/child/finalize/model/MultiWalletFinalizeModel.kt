@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
+import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -24,6 +25,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.scan.isRing
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.models.wallet.requireHotWallet
 import com.tangem.domain.onboarding.repository.OnboardingRepository
@@ -31,6 +33,7 @@ import com.tangem.domain.wallets.backup.CardBackupConverter
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
+import com.tangem.domain.wallets.models.backup.CardBackupError
 import com.tangem.domain.wallets.models.backup.CardBackupStatus
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -132,7 +135,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     }
 
     fun onBack() {
-        if (uiState.value.scanPrimary) {
+        if (uiState.value.shouldScanPrimary) {
             modelScope.launch { onBackFlow.emit(Unit) }
         } else {
             uiMessageSender.send(CantLeaveBackupDialog)
@@ -158,7 +161,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         return MultiWalletFinalizeUM(
             isRing = batchId?.let { isRing(it) } == true,
             onScanClick = ::onLinkClick,
-            scanPrimary = initialStep == MultiWalletFinalizeUM.Step.Primary,
+            shouldScanPrimary = initialStep == MultiWalletFinalizeUM.Step.Primary,
             cardNumber = cardId?.lastMasked().orEmpty(),
             step = initialStep,
         )
@@ -214,12 +217,15 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                         st.copy(
                             step = MultiWalletFinalizeUM.Step.BackupDevice1,
                             isRing = backupService.backupCardsBatchIds.getOrNull(0)?.let(::isRing) == true,
-                            scanPrimary = false,
+                            shouldScanPrimary = false,
                             cardNumber = backupService.backupCardIds.firstOrNull()?.lastMasked().orEmpty(),
                         )
                     }
                 }
-                is CompletionResult.Failure -> Unit
+                is CompletionResult.Failure -> reportFailedCard(
+                    role = WalletCardBackup.Role.PRIMARY,
+                    error = result.error,
+                )
             }
             tangemSdkManager.clearProductType()
         }
@@ -278,6 +284,10 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                     }
                 }
                 is CompletionResult.Failure -> {
+                    WalletCardsBackupReporter.BACKUP_ROLES.getOrNull(cardIndex)?.let { role ->
+                        reportFailedCard(role = role, error = result.error)
+                    }
+
                     if (result.error is TangemSdkError.WalletAlreadyCreated) {
                         // show should reset dialog
                         handleActivationError()
@@ -381,18 +391,9 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                         launch(NonCancellable) {
                             runSuspendCatching { walletsRepository.upgradeWallet(userWalletCreated.walletId) }
                                 .onFailure { TangemLogger.e("Failed to mark the wallet as upgraded", it) }
-                                .onSuccess {
-                                    if (!hasSocialBackup) return@onSuccess
-                                    deleteSocialBackupAfterUpgradeUseCase(userWalletCreated.walletId)
-                                        .onLeft { error ->
-                                            TangemLogger.e("Failed to delete the social backup after upgrade: $error")
-                                        }
-                                        .onRight {
-                                            analyticsEventHandler.send(
-                                                WalletSettingsAnalyticEvents.SocialRecoveryDeleted(),
-                                            )
-                                        }
-                                }
+                        }
+                        if (hasSocialBackup) {
+                            launch(NonCancellable) { deleteSocialBackupAfterUpgrade(userWalletCreated.walletId) }
                         }
                     }.getOrElse {
                         error("Failed to upgrade to cold wallet. Error: $it")
@@ -426,13 +427,35 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         }
     }
 
+    private suspend fun deleteSocialBackupAfterUpgrade(walletId: UserWalletId) {
+        deleteSocialBackupAfterUpgradeUseCase(walletId).fold(
+            ifLeft = { error ->
+                TangemLogger.e("Failed to delete the social backup after upgrade: $error")
+                analyticsEventHandler.send(WalletSettingsAnalyticEvents.SocialRecoveryDeletionError(error))
+            },
+            ifRight = { analyticsEventHandler.send(WalletSettingsAnalyticEvents.SocialRecoveryDeleted()) },
+        )
+    }
+
     /**
      * Reports every card of the wallet after one of them has been finalized: the finalized ones with the status and
      * curves the card itself returned, the remaining backup cards as still not backed up.
      */
     private fun reportFinalizedCard(role: WalletCardBackup.Role, card: CardDTO) {
         finalizedCards[role] = card
+        reportCards()
+    }
 
+    private fun reportFailedCard(role: WalletCardBackup.Role, error: TangemError) {
+        if (error is TangemSdkError.UserCancelled) return
+
+        reportCards(
+            failedRole = role,
+            error = CardBackupError(code = error.code.toString(), message = error.toString()),
+        )
+    }
+
+    private fun reportCards(failedRole: WalletCardBackup.Role? = null, error: CardBackupError? = null) {
         val scanResponse = multiWalletState.value.currentScanResponse
         // when the primary card was finalized in an earlier session, the scan response is all the app knows about it
         val primaryCard = finalizedCards[WalletCardBackup.Role.PRIMARY] ?: scanResponse.card
@@ -451,11 +474,15 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             }
         }
 
+        val reportedCards = cards.map { card ->
+            if (card.role == failedRole) card.copy(backupStatus = CardBackupStatus.NO_BACKUP, error = error) else card
+        }
+
         walletCardsBackupReporter.report(
             // the finalized primary card is what carries the wallet id: on the newest firmware the wallet appears on
             // the card only once the primary card is finalized
             scanResponse = scanResponse.copy(card = primaryCard),
-            cards = cards,
+            cards = reportedCards,
             usedSeed = scanResponse.usedSeedPhrase(),
         )
     }

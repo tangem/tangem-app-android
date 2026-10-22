@@ -3,6 +3,10 @@ package com.tangem.data.pay.di
 import android.content.Context
 import androidx.datastore.dataStoreFile
 import com.tangem.core.local.datastore.DeleteObsoleteFileMigration
+import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
+import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.core.remote.json.NetworkJson
+import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.pay.DefaultTangemPayEligibilityManager
 import com.tangem.data.pay.TangemPayUserWalletDataCleaner
 import com.tangem.data.pay.converter.PaymentAccountStatusValueDMConverter
@@ -13,39 +17,27 @@ import com.tangem.data.pay.repository.*
 import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.DefaultPaymentAccountRecentsStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
+import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawWithSwapUseCase
-import com.tangem.core.remote.json.NetworkJson
-import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
-import com.tangem.core.local.datastore.RuntimeSharedStore
-import com.tangem.spend.datasource.pay.store.entity.CashbackSummaryDM
-import com.tangem.spend.datasource.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
+import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.*
-import com.tangem.domain.pay.usecase.bankofframp.AwaitBankOfframpSignatureUseCase
-import com.tangem.domain.pay.usecase.bankofframp.CancelBankOfframpOrderUseCase
-import com.tangem.domain.pay.usecase.bankofframp.CreateBankOfframpOrderUseCase
-import com.tangem.domain.pay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
-import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
-import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
-import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
-import com.tangem.domain.pay.usecase.bankofframp.SignBankOfframpOrderUseCase
+import com.tangem.domain.pay.usecase.bankofframp.*
 import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSendUseCase
 import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
@@ -53,6 +45,11 @@ import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
+import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.spend.datasource.pay.TangemPayApi
+import com.tangem.spend.datasource.pay.store.entity.CashbackSummaryDM
+import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
+import com.tangem.spend.datasource.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
@@ -64,8 +61,8 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
-import javax.inject.Singleton
 import kotlinx.serialization.json.Json
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -74,10 +71,6 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindKycRepository(repository: DefaultKycRepository): KycRepository
-
-    @Binds
-    @Singleton
-    fun bindTangemPaySwapRepository(repository: DefaultTangemPayWithdrawRepository): TangemPayWithdrawRepository
 
     @Binds
     @Singleton
@@ -354,10 +347,42 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideGetTangemPayProductsAvailabilityUseCase(
+            checkTangemPayEligibilityForCustomerUseCase: CheckTangemPayEligibilityForCustomerUseCase,
+        ): GetTangemPayProductsAvailabilityUseCase {
+            return GetTangemPayProductsAvailabilityUseCase(checkTangemPayEligibilityForCustomerUseCase)
+        }
+
+        @Provides
+        fun provideGetTangemPayProductsAvailabilityForCountryUseCase(
+            checkTangemPayEligibilityUseCase: CheckTangemPayEligibilityUseCase,
+        ): GetTangemPayProductsAvailabilityForCountryUseCase {
+            return GetTangemPayProductsAvailabilityForCountryUseCase(checkTangemPayEligibilityUseCase)
+        }
+
+        @Provides
+        fun provideStoreTangemPayCustomerResidencyUseCase(
+            onboardingRepository: OnboardingRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): StoreTangemPayCustomerResidencyUseCase {
+            return StoreTangemPayCustomerResidencyUseCase(onboardingRepository, paymentAccountStatusFetcher)
+        }
+
+        @Provides
+        fun provideClearTangemPayCustomerResidencyUseCase(
+            onboardingRepository: OnboardingRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): ClearTangemPayCustomerResidencyUseCase {
+            return ClearTangemPayCustomerResidencyUseCase(onboardingRepository, paymentAccountStatusFetcher)
+        }
+
+        @Provides
         fun provideJoinTangemPayWaitlistUseCase(
             waitlistRepository: TangemPayWaitlistRepository,
+            onboardingRepository: OnboardingRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         ): JoinTangemPayWaitlistUseCase {
-            return JoinTangemPayWaitlistUseCase(waitlistRepository)
+            return JoinTangemPayWaitlistUseCase(waitlistRepository, onboardingRepository, paymentAccountStatusFetcher)
         }
 
         @Provides
@@ -604,14 +629,8 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideGetCurrentTariffUseCase(
-            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
-            paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
-        ): GetCurrentTariffUseCase {
-            return GetCurrentTariffUseCase(
-                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
-                paymentAccountStatusSupplier = paymentAccountStatusSupplier,
-            )
+        fun provideGetCurrentTariffUseCase(onboardingRepository: OnboardingRepository): GetCurrentTariffUseCase {
+            return GetCurrentTariffUseCase(onboardingRepository = onboardingRepository)
         }
 
         @Provides
@@ -629,6 +648,33 @@ internal interface TangemPayDataModule {
         fun provideTangemPayResidencyRepository(
             repository: DefaultTangemPayResidencyRepository,
         ): TangemPayResidencyRepository = CachingTangemPayResidencyRepository(origin = repository)
+
+        @Suppress("LongParameterList")
+        @Provides
+        @Singleton
+        fun provideTangemPayWithdrawRepository(
+            tangemPayApi: TangemPayApi,
+            requestHelper: TangemPayRequestPerformer,
+            authDataSource: TangemPayAuthDataSource,
+            quotesFetcher: QuotesFetcher,
+            tangemPayStorage: TangemPayStorage,
+            swapRepository: SwapRepository,
+            orderRepository: CustomerOrderRepository,
+            withdrawSourceResolver: WithdrawSourceResolver,
+            withdrawPollingScope: AppCoroutineScope,
+        ): TangemPayWithdrawRepository {
+            return DefaultTangemPayWithdrawRepository(
+                tangemPayApi = tangemPayApi,
+                requestHelper = requestHelper,
+                authDataSource = authDataSource,
+                quotesFetcher = quotesFetcher,
+                tangemPayStorage = tangemPayStorage,
+                swapRepository = swapRepository,
+                orderRepository = orderRepository,
+                withdrawSourceResolver = withdrawSourceResolver,
+                withdrawPollingScope = withdrawPollingScope,
+            )
+        }
 
         @Provides
         @Singleton

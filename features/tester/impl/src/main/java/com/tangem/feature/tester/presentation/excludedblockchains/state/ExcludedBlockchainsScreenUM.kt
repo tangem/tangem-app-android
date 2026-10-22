@@ -7,7 +7,7 @@ internal data class ExcludedBlockchainsScreenUM(
     val popBack: () -> Unit,
     val search: SearchBarUM,
     val blockchains: PersistentList<BlockchainUM>,
-    val showRecoverWarning: Boolean,
+    val shouldShowRecoverWarning: Boolean,
     val appVersion: String,
     val onRecoverClick: () -> Unit,
     val onRestartClick: () -> Unit,

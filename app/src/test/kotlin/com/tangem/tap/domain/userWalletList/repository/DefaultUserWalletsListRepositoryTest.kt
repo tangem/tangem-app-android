@@ -352,7 +352,7 @@ internal class DefaultUserWalletsListRepositoryTest {
             walletId = walletId,
             hotWalletId = mockk(relaxed = true),
             wallets = null, // locked
-            backedUp = false,
+            isBackedUp = false,
         )
         repository.userWallets.value = listOf(lockedHot)
         val key = UserWalletEncryptionKey(walletId = walletId, encryptionKey = ByteArray(size = 32) { 1 })
@@ -383,7 +383,7 @@ internal class DefaultUserWalletsListRepositoryTest {
             walletId = walletId,
             hotWalletId = mockk(relaxed = true),
             wallets = null, // locked
-            backedUp = false,
+            isBackedUp = false,
         )
         repository.userWallets.value = listOf(lockedHot)
         val accessCode = "111111".toCharArray()

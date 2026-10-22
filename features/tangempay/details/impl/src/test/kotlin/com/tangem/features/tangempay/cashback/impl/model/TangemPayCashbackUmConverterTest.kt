@@ -57,7 +57,7 @@ internal class TangemPayCashbackUmConverterTest {
         cashback: TangemPayCashback?,
     ) {
         // Act
-        val actual = converter.convert(cashback)
+        val actual = converter.convert(value = cashback, isBalanceHidden = false)
 
         // Assert
         val expected = TangemPayCashbackUM(
@@ -81,7 +81,7 @@ internal class TangemPayCashbackUmConverterTest {
         )
 
         // Act
-        val actual = converter.convert(cashback)
+        val actual = converter.convert(value = cashback, isBalanceHidden = false)
 
         // Assert
         val expected = TangemPayCashbackUM(
@@ -115,7 +115,7 @@ internal class TangemPayCashbackUmConverterTest {
         )
 
         // Act
-        val actual = converter.convert(cashback)
+        val actual = converter.convert(value = cashback, isBalanceHidden = false)
 
         // Assert
         val expected = TangemPayCashbackUM(
@@ -149,7 +149,7 @@ internal class TangemPayCashbackUmConverterTest {
         )
 
         // Act
-        val actual = converter.convert(cashback)
+        val actual = converter.convert(value = cashback, isBalanceHidden = false)
 
         // Assert
         val expected = TangemPayCashbackUM(
@@ -179,7 +179,7 @@ internal class TangemPayCashbackUmConverterTest {
         )
 
         // Act
-        val actual = converter.convert(cashback)
+        val actual = converter.convert(value = cashback, isBalanceHidden = false)
 
         // Assert
         assertThat(actual.banner).isNull()
@@ -196,7 +196,7 @@ internal class TangemPayCashbackUmConverterTest {
         )
 
         // Act
-        val actual = converter.convert(cashback)
+        val actual = converter.convert(value = cashback, isBalanceHidden = false)
 
         // Assert
         assertThat(actual.banner).isNull()
@@ -213,7 +213,7 @@ internal class TangemPayCashbackUmConverterTest {
         )
 
         // Act
-        val actual = converter.convert(cashback)
+        val actual = converter.convert(value = cashback, isBalanceHidden = false)
 
         // Assert
         assertThat(actual.banner).isEqualTo(
@@ -233,7 +233,7 @@ internal class TangemPayCashbackUmConverterTest {
         val cashback = createCashback(confirmedAmount = BigDecimal("22.54"), previousPayout = null)
 
         // Act
-        val actual = converter.convert(cashback)
+        val actual = converter.convert(value = cashback, isBalanceHidden = false)
 
         // Assert
         val expected = TangemPayCashbackUM(
@@ -261,7 +261,7 @@ internal class TangemPayCashbackUmConverterTest {
         )
 
         // Act
-        val actual = converter.convert(cashback)
+        val actual = converter.convert(value = cashback, isBalanceHidden = false)
 
         // Assert
         assertThat(actual.subtitle).isNull()
@@ -288,7 +288,7 @@ internal class TangemPayCashbackUmConverterTest {
         )
 
         // Act
-        val actual = converter.convert(cashback)
+        val actual = converter.convert(value = cashback, isBalanceHidden = false)
 
         // Assert
         val expected = TangemPayCashbackUM(
@@ -312,7 +312,7 @@ internal class TangemPayCashbackUmConverterTest {
         val cashback = createCashback(payoutStart = null, payoutEnd = null)
 
         // Act
-        val actual = converter.convert(cashback)
+        val actual = converter.convert(value = cashback, isBalanceHidden = false)
 
         // Assert
         val expected = TangemPayCashbackUM(
@@ -337,7 +337,7 @@ internal class TangemPayCashbackUmConverterTest {
         )
 
         // Act
-        val actual = converter.convert(cashback)
+        val actual = converter.convert(value = cashback, isBalanceHidden = false)
 
         // Assert
         assertThat(actual.subtitle).isNull()
@@ -347,6 +347,39 @@ internal class TangemPayCashbackUmConverterTest {
                 type = TangemPayCashbackUM.Banner.Type.Error,
             ),
         )
+    }
+
+    @Test
+    fun `GIVEN balance hidden WHEN convert THEN earned and deposit amounts masked`() {
+        // Arrange
+        val cashback = createCashback(
+            confirmedAmount = BigDecimal("22.54"),
+            previousPayout = TangemPayCashback.PreviousPayout(
+                endDate = DateTime.parse("2026-07-03"),
+                amount = BigDecimal("10.50"),
+            ),
+        )
+
+        // Act
+        val actual = converter.convert(value = cashback, isBalanceHidden = true)
+
+        // Assert
+        val expected = TangemPayCashbackUM(
+            title = resourceReference(
+                R.string.tangempay_cashback_earned_title,
+                wrappedList("***", arrayItemReference(R.array.common_month_in, index = 5)),
+            ),
+            subtitle = resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(PAYOUT_WINDOW)),
+            isEmpty = false,
+            banner = TangemPayCashbackUM.Banner(
+                text = resourceReference(
+                    id = R.string.tangempay_cashback_deposit_banner,
+                    formatArgs = wrappedList("***", "June", "July 3"),
+                ),
+                type = TangemPayCashbackUM.Banner.Type.Info,
+            ),
+        )
+        assertThat(actual).isEqualTo(expected)
     }
 
     private fun emptyStateCashback(): List<TangemPayCashback?> = listOf(

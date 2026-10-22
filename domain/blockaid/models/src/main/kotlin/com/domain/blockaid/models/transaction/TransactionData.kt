@@ -6,13 +6,13 @@ package com.domain.blockaid.models.transaction
  * @property chain Chain name, for ex. "ethereum"
  * @property accountAddress The address of the account (wallet) received the request in hex string format
  * @property method Transaction method, for ex. "eth_signTransaction"
- * @property domainUrl Url of the DApp domain
+ * @property domainUrl Url of the DApp domain; `null` for a transaction the wallet built itself, sent as `non_dapp`
  */
 data class TransactionData(
     val chain: String,
     val accountAddress: String,
     val method: String,
-    val domainUrl: String,
+    val domainUrl: String?,
     val params: TransactionParams,
 )
 

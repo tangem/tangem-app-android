@@ -75,7 +75,7 @@ internal fun OnboardingNoteCreateWallet(state: OnboardingNoteCreateWalletUM, mod
             iconResId = R.drawable.ic_tangem_24,
             text = stringResourceSafe(R.string.onboarding_create_wallet_button_create_wallet),
             onClick = state.onCreateClick,
-            showProgress = state.createWalletInProgress,
+            showProgress = state.isCreateWalletInProgress,
         )
     }
 }
@@ -87,7 +87,7 @@ private fun OnboardingNoteCreatePreview() {
         OnboardingNoteCreateWallet(
             state = OnboardingNoteCreateWalletUM(
                 artwork = null,
-                createWalletInProgress = false,
+                isCreateWalletInProgress = false,
                 onCreateClick = {},
             ),
         )

@@ -13,6 +13,7 @@ import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.services.InMemoryStorage
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.decompose.utils.ForegroundActivityProvider
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.jointaccount.model.JointAccountSignResult
@@ -35,10 +36,11 @@ import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import com.tangem.tap.domain.sdk.mocks.showMockCardPicker
 import com.tangem.tap.domain.tasks.jointaccount.JointAccountSignTask
-import com.tangem.tap.foregroundActivityObserver
 
 @Suppress("TooManyFunctions")
-class MockTangemSdkManager : TangemSdkManager {
+class MockTangemSdkManager(
+    private val foregroundActivityProvider: ForegroundActivityProvider,
+) : TangemSdkManager {
 
     private var userCodeRequestPolicyInternal: UserCodeRequestPolicy = UserCodeRequestPolicy.Default
 
@@ -65,7 +67,7 @@ class MockTangemSdkManager : TangemSdkManager {
         source: AnalyticsParam.ScreensSources,
     ): CompletionResult<ScanResponse> {
         if (!MockProvider.isPreset) {
-            val activity = foregroundActivityObserver.foregroundActivity
+            val activity = foregroundActivityProvider.foregroundActivity
             if (activity != null) {
                 val selectedMock = showMockCardPicker(activity)
                 if (selectedMock != null) {

@@ -46,7 +46,7 @@ sealed class BatchAction<out TKey, out TRequestParams, out TUpdate> {
     class UpdateBatches<TKey, TUpdate>(
         val keys: Set<TKey>,
         val updateRequest: TUpdate,
-        val async: Boolean = false,
+        val isAsync: Boolean = false,
         val operationId: String = UUID.randomUUID().toString(),
     ) : BatchAction<TKey, Nothing, TUpdate>()
 

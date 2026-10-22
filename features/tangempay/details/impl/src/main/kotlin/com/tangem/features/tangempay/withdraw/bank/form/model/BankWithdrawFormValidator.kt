@@ -86,8 +86,11 @@ internal object BankWithdrawFormValidator {
             BankWithdrawFormField.BankCity,
             BankWithdrawFormField.BankAddressLine1,
             -> value.length <= ADDRESS_MAX_LENGTH
-            BankWithdrawFormField.PostalCode ->
-                if (isUsAddress) US_ZIP.matches(value) else value.length <= POSTAL_CODE_MAX_LENGTH
+            BankWithdrawFormField.PostalCode -> if (isUsAddress) {
+                US_ZIP.matches(value)
+            } else {
+                value.length <= POSTAL_CODE_MAX_LENGTH && TangemPayFormCharset.isPostalCodeCharsetValid(value)
+            }
             // Bank rails are US-only: the form has no bank country and the order always sends US.
             BankWithdrawFormField.BankRegion -> TWO_LETTER_CODE.matches(value)
             BankWithdrawFormField.BankPostalCode -> US_ZIP.matches(value)

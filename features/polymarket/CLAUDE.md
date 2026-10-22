@@ -31,6 +31,10 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
   `UNDETERMINED` refuses with a snackbar. A run failure leaves the screen idle; the button is the only retry.
 - Region-restricted users (`READ_ONLY`) still reach Main, browse and withdraw. `READ_ONLY` explains itself
   as a region restriction — reuse it for another cause and the UI lies.
+- After the gate the region lives in the process-wide `PredictionRegionAccess`, refreshed by Main on open and
+  on pull-to-refresh. While it is restricted, Main shows the banner, Add funds is dimmed, and every order
+  entry (feed, search, event, Buy more, Close) shows the restrictions modal instead of opening. A failed check
+  keeps the last answer and counts as allowed only when there is none; the amount step still checks on its own.
 - Main returns here (`replaceAll(Onboarding)`) the moment the stored credentials are gone, even from under a
   child: nothing above Main can sign without them. So the order summary answers an `Unauthorized`
   placement with no dialog and leaves the gate to explain it.
@@ -81,9 +85,13 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 ## Positions
 
 - The BFF distinguishes only ACTIVE and FINISHED endpoints; the status filters are applied locally.
-- Close and Buy more share one rule, `resolutionStatus == OPEN && isAcceptingOrders`, as on iOS. Close
-  needs a known `marketId` — a row whose market lookup failed must not build `ClosePosition`. Otherwise
-  both buttons stay enabled, and a tap on an untradable market opens the market-closed sheet.
+- Close follows the position, `resolutionStatus == OPEN && isAcceptingOrders`, and needs a known `marketId` —
+  a row whose market lookup failed must not build `ClosePosition`. Buy more reads `isAcceptingOrders` off the
+  event's market (found by `conditionId`, outcome by `outcomeIndex`, else by current or legacy asset id) and
+  trades the outcome's current asset id: a position still held in a market's legacy token reports no orders
+  while the market trades on under its new token. The resolution status stays the position's, and without a
+  market Buy more falls back to the position's rule. Either button stays enabled and opens the market-closed
+  sheet when untradable.
 - Status: a settled `result` (WON / LOST / SPLIT) wins; otherwise `resolutionStatus` decides, so an
   unrecognised `result` never hides Pending or Disputed. The BFF sends `status` only once `RESOLVED`, and
   a resolved market can still arrive without one while the payout settles — no badge, opens details.
@@ -92,5 +100,7 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 
 ## History
 
-BUY / WITHDRAW are outgoing, SELL / DEPOSIT / REDEEM incoming, a lost redemption shows a dash. Search and
-CSV are inert placeholders.
+BUY / WITHDRAW are outgoing, SELL / DEPOSIT / REDEEM incoming, a lost redemption shows a dash.
+CSV exports every page of the selected filter independently of list pagination, deduplicating IDs.
+Search is an inert placeholder. Activity details use `TangemModal`; LOST hides its amount until the
+activity API supplies the lost stake, and outcome price appears only when an order provides it.

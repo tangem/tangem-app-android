@@ -160,7 +160,7 @@ private fun CardContainer(state: WalletCardState, isBalanceHidden: Boolean, item
 
             AdditionalInfo(
                 content = state.additionalInfo?.content,
-                hideable = state.additionalInfo?.hideable == true,
+                hideable = state.additionalInfo?.isHideable == true,
                 isBalanceHidden = isBalanceHidden,
                 modifier = Modifier.conditional(
                     state.imageResId == null,
@@ -417,7 +417,7 @@ private class WalletCardStateProvider : CollectionPreviewParameterProvider<Walle
         WalletPreviewDataLegacy.walletCardContentState.copy(
             title = "Title",
             additionalInfo = WalletAdditionalInfo(
-                hideable = false,
+                isHideable = false,
                 content = WalletAdditionalInfo.Content.Text(TextReference.Str("3 cards")),
             ),
         ),

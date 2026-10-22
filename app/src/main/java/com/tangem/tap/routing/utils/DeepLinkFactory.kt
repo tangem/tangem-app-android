@@ -163,7 +163,10 @@ internal class DeepLinkFactory @Inject constructor(
     private fun openWebLinkFromPush(deeplinkUri: Uri) {
         val url = deeplinkUri.toString()
         val host = deeplinkUri.host
+        // Tangem links never carry user info, while parsers disagree on where it ends: an unpatched Uri reads
+        // `https://evil.com\@tangem.com` as host tangem.com, a browser as evil.com
         val isTrustedWebLink = deeplinkUri.scheme == DeepLinkScheme.Https.scheme &&
+            deeplinkUri.userInfo == null &&
             (ExternalUrlValidator.isHostTrusted(host) || host?.lowercase() in APPSFLYER_ONELINK_HOSTS)
 
         if (isTrustedWebLink) {

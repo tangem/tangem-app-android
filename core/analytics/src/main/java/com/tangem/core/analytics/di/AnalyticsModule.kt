@@ -12,6 +12,7 @@ import com.tangem.core.analytics.api.ParamsInterceptorHolder
 import com.tangem.core.analytics.filter.AppsFlyerEventFilter
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.analytics.paramsinterceptor.SendTransactionSignerInfoInterceptor
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.domain.analytics.repository.AnalyticsRepository
 import dagger.Binds
 import dagger.Module
@@ -42,6 +43,9 @@ internal interface AnalyticsModule {
 
     @Multibinds
     fun analyticsHandlers(): Set<AnalyticsHandler>
+
+    @Multibinds
+    fun trackingContextObservers(): Set<TrackingContextProxy.Observer>
 
     @Binds
     @IntoSet

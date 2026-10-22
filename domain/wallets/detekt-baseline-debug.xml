@@ -2,11 +2,7 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>BooleanPropertyNaming:HotWalletAccessCodeAttemptsRepository.kt$HotWalletAccessCodeAttemptsRepository.AttemptId$val auth: Boolean</ID>
-    <ID>BooleanPropertyNaming:HotWalletPasswordRequester.kt$HotWalletPasswordRequester.AttemptRequest$val authMode: Boolean</ID>
-    <ID>BooleanPropertyNaming:SaveWalletUseCase.kt$SaveWalletUseCase$val newUserWallet = userWalletsListRepository.userWalletsSync().none { it.walletId == userWallet.walletId }</ID>
     <ID>MaxChainedCallsOnSameLine:UserWalletExtensions.kt$wallets.orEmpty().first { it.curve == primaryCurve }.derivedKeys.keys.any { it == dp }</ID>
-    <ID>NoNameShadowing:SaveWalletUseCase.kt$SaveWalletUseCase$userWallet</ID>
     <ID>RedundantSuspendModifier:GetHotWalletContextualUnlockUseCase.kt$GetHotWalletContextualUnlockUseCase$suspend</ID>
     <ID>SuspendFunSwallowedCancellation:RenameWalletUseCase.kt$RenameWalletUseCase$runCatching</ID>
     <ID>UnsafeCallOnNullableType:GetWalletsUseCase.kt$GetWalletsUseCase$userWalletsListRepository.userWallets.value!!</ID>

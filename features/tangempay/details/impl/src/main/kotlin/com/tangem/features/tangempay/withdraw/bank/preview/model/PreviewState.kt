@@ -7,6 +7,7 @@ internal data class PreviewState(
     val resumableOrderId: String? = null,
     /** A cold wallet signs the transfer with a card tap; a hot one signs without a card. */
     val isColdWallet: Boolean = true,
+    val isBalanceHidden: Boolean = false,
 ) {
 
     val isSending: Boolean get() = send != SendState.Idle

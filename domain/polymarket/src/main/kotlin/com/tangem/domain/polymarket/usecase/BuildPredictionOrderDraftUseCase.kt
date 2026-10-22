@@ -4,8 +4,10 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import arrow.core.raise.ensureNotNull
 import arrow.core.right
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
 import com.tangem.domain.polymarket.model.PredictionOrderDraft
 import com.tangem.domain.polymarket.model.PredictionOrderDraftError
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
@@ -21,6 +23,8 @@ class BuildPredictionOrderDraftUseCase {
      *
      * @param quote the only source of the legs — the typed amount is deliberately not a parameter, since
      *  the backend normalises it onto the market's grid and only the returned figure may be signed
+     * @param isNegRisk the market's own flag; with the quoted market version it names the only exchange domain
+     *  the quote may ask to sign for
      */
     operator fun invoke(
         quote: PredictionOrderQuote,
@@ -34,6 +38,7 @@ class BuildPredictionOrderDraftUseCase {
         ensure(quote.side == side) {
             PredictionOrderDraftError.SideMismatch(quoted = quote.side, requested = side)
         }
+        val domain = quote.exchangeDomain(isNegRisk = isNegRisk).bind()
 
         val collateral = quote.notional.toOnChainUnit().bind()
         val shares = quote.shares.toOnChainUnit().bind()
@@ -42,7 +47,7 @@ class BuildPredictionOrderDraftUseCase {
 
         PredictionOrderDraft(
             tokenId = assetId,
-            isNegRisk = isNegRisk,
+            domain = domain,
             side = side,
             makerAmount = if (isBuy) collateral else shares,
             takerAmount = if (isBuy) shares else collateral,
@@ -50,6 +55,23 @@ class BuildPredictionOrderDraftUseCase {
             worstCasePrice = quote.worstCasePrice,
             builderCode = quote.builderCode,
         )
+    }
+
+    private fun PredictionOrderQuote.exchangeDomain(
+        isNegRisk: Boolean,
+    ): Either<PredictionOrderDraftError, PolymarketExchangeDomain> = either {
+        val expected = ensureNotNull(PolymarketExchangeDomain.of(version = version, isNegRisk = isNegRisk)) {
+            PredictionOrderDraftError.UnknownMarketVersion
+        }
+        ensure(exchange.equals(expected.exchange, ignoreCase = true) && signingDomainVersion == expected.version) {
+            PredictionOrderDraftError.ExchangeMismatch(
+                expected = expected,
+                quotedExchange = exchange,
+                quotedDomainVersion = signingDomainVersion,
+            )
+        }
+
+        expected
     }
 
     private fun BigDecimal.toOnChainUnit(): Either<PredictionOrderDraftError, BigInteger> {

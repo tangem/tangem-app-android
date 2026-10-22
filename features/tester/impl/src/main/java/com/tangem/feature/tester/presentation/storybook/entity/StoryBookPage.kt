@@ -6,6 +6,7 @@ import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.field.search.TangemFieldShape
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
+import com.tangem.core.ui.ds2.actionmessage.TangemActionMessage
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -186,6 +187,7 @@ internal data class TangemButtonStory(
     val size: TangemButton.Size,
     val background: Background,
     val isLoading: Boolean,
+    val hasLoadingText: Boolean,
     val isEnabled: Boolean,
     val hasIconStart: Boolean,
     val hasIconEnd: Boolean,
@@ -196,6 +198,7 @@ internal data class TangemButtonStory(
     val onSizeChange: (TangemButton.Size) -> Unit,
     val onBackgroundChange: (Background) -> Unit,
     val onLoadingToggle: () -> Unit,
+    val onLoadingTextToggle: () -> Unit,
     val onEnabledToggle: () -> Unit,
     val onIconStartToggle: () -> Unit,
     val onIconEndToggle: () -> Unit,
@@ -485,6 +488,13 @@ internal data class TangemGlowRingStory(
     }
 }
 
+internal data class TangemActionMessageStory(
+    val variant: TangemActionMessage.Variant,
+    val isLongText: Boolean,
+    val onVariantChange: (TangemActionMessage.Variant) -> Unit,
+    val onLongTextToggle: () -> Unit,
+) : DsStoryBookPage
+
 @Suppress("BooleanPropertyNaming")
 internal data class TangemMessageBannerStory(
     val variant: TangemMessageBanner.Variant,
@@ -659,7 +669,9 @@ internal data class TangemModalTemplatesState(
     val hasInformerExtraBottom: Boolean = false,
     val hasMenuAvatars: Boolean = true,
     val hasMenuSubtitles: Boolean = true,
+    val isTemplateMessageShown: Boolean = false,
     val openedExample: TangemModalStatusExample? = null,
+    val openedMessage: MessageModalSample? = null,
 )
 
 /** Content templates of a `TangemModal`. */
@@ -763,6 +775,14 @@ internal enum class TangemModalStatusExample(val label: String) {
     PredictionAmount(label = "Prediction amount + rows"),
     PaymentCompleted(label = "Payment completed"),
     PredictionLoss(label = "Prediction loss + recipient"),
+}
+
+/** `MessageModal`s built with the `messageModalUM` DSL, one per content template plus the legacy grammar. */
+internal enum class MessageModalSample(val label: String) {
+    Status(label = "MessageModal: status"),
+    Informer(label = "MessageModal: informer"),
+    Menu(label = "MessageModal: menu"),
+    Legacy(label = "MessageModal: legacy infoBlock grammar"),
 }
 
 internal data class TangemStatusScreenStory(

@@ -32,7 +32,6 @@ import com.tangem.domain.staking.model.ethpool.VaultLimitInfo
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -51,7 +50,6 @@ internal class DefaultP2PEthPoolRepository(
     private val p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
     private val p2pVaultLimitsStore: P2PVaultLimitsStore,
     private val p2pEthPoolVaultDao: P2PEthPoolVaultDao,
-    private val txHistoryFeatureToggle: TxHistoryFeatureToggles,
     private val tangemTechApi: TangemTechApi,
     private val dispatchers: CoroutineDispatcherProvider,
     private val stakingFeatureToggles: StakingFeatureToggles,
@@ -112,9 +110,7 @@ internal class DefaultP2PEthPoolRepository(
         withContext(dispatchers.io) {
             val vaultDtos = handleApiResponse(p2pEthPoolApi.getVaults(network.value)) { result -> result.vaults }
 
-            if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
-                p2pEthPoolVaultDao.upsert(vaultDtos.map(P2PEthPoolVaultEntityConverter::convert))
-            }
+            p2pEthPoolVaultDao.upsert(vaultDtos.map(P2PEthPoolVaultEntityConverter::convert))
 
             vaultDtos
                 .map { vaultConverter.convert(it) }

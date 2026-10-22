@@ -42,23 +42,27 @@ internal fun createJointAccount(
 )
 
 internal fun createMembersUM(
-    topBar: JointAccountMembersUM.TopBarUM = JointAccountMembersUM.TopBarUM.Dismissible(
-        canArchive = false,
-        onArchiveClick = {},
-        onCloseClick = {},
-    ),
+    topBar: JointAccountMembersUM.TopBarUM = JointAccountMembersUM.TopBarUM.Dismissible(onCloseClick = {}),
     header: JointAccountMembersUM.HeaderUM? = null,
-    shareSafely: JointAccountMembersUM.ShareSafelyUM? = null,
+    summaryCard: JointAccountMembersUM.SummaryCardUM? = null,
     joined: ImmutableList<JointAccountMembersUM.MemberUM.Joined> = persistentListOf(),
     freeSlots: ImmutableList<JointAccountMembersUM.MemberUM.FreeSlot> = persistentListOf(),
-    otherMembersLabel: TextReference? = null,
-    activateButton: JointAccountMembersUM.ActivateButtonUM? = null,
+    membersLabel: TextReference? = null,
+    waitingLabel: TextReference? = null,
+    footer: JointAccountMembersUM.FooterUM? = null,
 ): JointAccountMembersUM = JointAccountMembersUM(
     topBar = topBar,
     header = header,
-    shareSafely = shareSafely,
+    summaryCard = summaryCard,
     joined = joined,
     freeSlots = freeSlots,
-    otherMembersLabel = otherMembersLabel,
-    activateButton = activateButton,
+    membersLabel = membersLabel,
+    waitingLabel = waitingLabel,
+    footer = footer,
 )
+
+internal fun JointAccountMembersUM.SlotActionUM?.click() = when (this) {
+    is JointAccountMembersUM.SlotActionUM.Invite -> onClick()
+    is JointAccountMembersUM.SlotActionUM.ReInvite -> onClick()
+    is JointAccountMembersUM.SlotActionUM.Loading, null -> error("The slot offers no button to press")
+}

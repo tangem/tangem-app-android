@@ -6,10 +6,24 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class TronEstimateRequestBody(
     @Json(name = "fromAddress") val fromAddress: String,
-    @Json(name = "toAddress") val toAddress: String,
+    @Json(name = "toAddress") val toAddress: String?,
     @Json(name = "tokenContract") val tokenContract: String,
     @Json(name = "amount") val amount: String,
     @Json(name = "feeTokenContract") val feeTokenContract: String?,
+    @Json(name = "swap") val swap: TronSwapRequest? = null,
+    @Json(name = "approve") val approve: TronApproveRequest? = null,
+)
+
+@JsonClass(generateAdapter = true)
+data class TronApproveRequest(
+    @Json(name = "spender") val spender: String,
+)
+
+@JsonClass(generateAdapter = true)
+data class TronSwapRequest(
+    @Json(name = "contractAddress") val contractAddress: String,
+    @Json(name = "data") val data: String,
+    @Json(name = "spender") val spender: String,
 )
 
 @JsonClass(generateAdapter = true)

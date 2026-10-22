@@ -88,12 +88,14 @@ sealed class AppRoute(val path: String) : Route {
         val tag: String? = null,
         val destinationAddress: String? = null,
         val entryType: EntryType = EntryType.Manual,
+        val intentId: String? = null,
     ) : AppRoute(
         path = "/send/${userWalletId.stringValue}/${currency.id.value}?" +
             "&$transactionId" +
             "&$amount" +
             "&$tag" +
-            "&$destinationAddress",
+            "&$destinationAddress" +
+            "&$intentId",
     ) {
         @Serializable
         enum class EntryType {
@@ -274,6 +276,7 @@ sealed class AppRoute(val path: String) : Route {
          * a wallet key but submitted as a signed batch through our backend.
          * PredictionTopUp anchors the prediction account as the concrete TO — its deposit token at the bridge
          * address — and is the only way the app funds that account through the swap screen.
+         * MoneyTopUp anchors the Money account's USDC as the concrete TO at its deposit address.
          */
         @Serializable
         sealed interface AccountFlow {
@@ -286,6 +289,8 @@ sealed class AppRoute(val path: String) : Route {
             @Serializable data object PredictionTopUp : AccountFlow
 
             @Serializable data object CollectiblesTopUp : AccountFlow
+
+            @Serializable data object MoneyTopUp : AccountFlow
         }
     }
 
@@ -664,9 +669,9 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
-    data class MoneyAccountMain(
+    data class MoneyAccountDetails(
         val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/money_account_main/${userWalletId.stringValue}")
+    ) : AppRoute(path = "/money_account_details/${userWalletId.stringValue}")
 
     @Serializable
     data class Survey(val token: String, val displayId: String? = null) : AppRoute(path = "/survey")

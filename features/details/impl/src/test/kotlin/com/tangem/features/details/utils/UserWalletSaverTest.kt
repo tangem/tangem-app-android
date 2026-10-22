@@ -10,6 +10,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.card.models.ScanConfig
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
@@ -54,7 +55,7 @@ internal class UserWalletSaverTest {
 
     @Test
     fun `GIVEN onWalletNotCreated WHEN scanAndSaveUserWallet THEN no message AND no save`() = runTest {
-        mockScanCallback(callbackName = ON_WALLET_NOT_CREATED)
+        mockScanCallback(callbackName = ON_ONBOARDING_REQUIRED)
 
         createSaver().scanAndSaveUserWallet(this)
 
@@ -64,7 +65,7 @@ internal class UserWalletSaverTest {
 
     @Test
     fun `GIVEN onCancel WHEN scanAndSaveUserWallet THEN no message AND no save`() = runTest {
-        mockScanCallback(callbackName = ON_CANCEL)
+        mockScanCallback(callbackName = ON_CARD_VERIFICATION_FAILED)
 
         createSaver().scanAndSaveUserWallet(this)
 
@@ -298,55 +299,28 @@ internal class UserWalletSaverTest {
 
     private fun mockScanCallback(callbackName: String) {
         coEvery {
-            scanCardProcessor.scan(
-                analyticsSource = any(),
-                shouldCheckIsAlreadyActivated = any(),
-                cardId = any(),
-                onProgressStateChange = any(),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any(),
-            )
+            scanCardProcessor.scan(config = any())
         } coAnswers {
             when (callbackName) {
-                ON_WALLET_NOT_CREATED -> arg<suspend () -> Unit>(ON_WALLET_NOT_CREATED_INDEX).invoke()
-                ON_CANCEL -> arg<suspend () -> Unit>(ON_CANCEL_INDEX).invoke()
+                ON_ONBOARDING_REQUIRED -> firstArg<ScanConfig>().callback.onOnboardingRequired()
+                ON_CARD_VERIFICATION_FAILED -> firstArg<ScanConfig>().callback.onCardVerificationFailed()
             }
         }
     }
 
     private fun mockScanFailure(tangemError: TangemError) {
         coEvery {
-            scanCardProcessor.scan(
-                analyticsSource = any(),
-                shouldCheckIsAlreadyActivated = any(),
-                cardId = any(),
-                onProgressStateChange = any(),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any(),
-            )
+            scanCardProcessor.scan(config = any())
         } coAnswers {
-            arg<suspend (TangemError) -> Unit>(ON_FAILURE_INDEX).invoke(tangemError)
+            firstArg<ScanConfig>().callback.onFailure(tangemError)
         }
     }
 
     private fun mockScanSuccess(scanResponse: ScanResponse) {
         coEvery {
-            scanCardProcessor.scan(
-                analyticsSource = any(),
-                shouldCheckIsAlreadyActivated = any(),
-                cardId = any(),
-                onProgressStateChange = any(),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any(),
-            )
+            scanCardProcessor.scan(config = any())
         } coAnswers {
-            arg<suspend (ScanResponse) -> Unit>(ON_SUCCESS_INDEX).invoke(scanResponse)
+            firstArg<ScanConfig>().callback.onSuccess(scanResponse)
         }
     }
 
@@ -371,12 +345,7 @@ internal class UserWalletSaverTest {
     }
 
     private companion object {
-        const val ON_WALLET_NOT_CREATED = "onWalletNotCreated"
-        const val ON_CANCEL = "onCancel"
-
-        const val ON_WALLET_NOT_CREATED_INDEX = 4
-        const val ON_CANCEL_INDEX = 5
-        const val ON_FAILURE_INDEX = 6
-        const val ON_SUCCESS_INDEX = 7
+        const val ON_ONBOARDING_REQUIRED = "onOnboardingRequired"
+        const val ON_CARD_VERIFICATION_FAILED = "onCardVerificationFailed"
     }
 }

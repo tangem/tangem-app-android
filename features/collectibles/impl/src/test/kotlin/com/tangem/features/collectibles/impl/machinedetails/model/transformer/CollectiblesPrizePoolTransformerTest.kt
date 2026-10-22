@@ -154,8 +154,8 @@ internal class CollectiblesPrizePoolTransformerTest {
                 status = PaginationStatus.Paginating(
                     BatchFetchResult.Success(
                         data = emptyList(),
-                        empty = true,
-                        last = true
+                        isEmpty = true,
+                        isLast = true
                     )
                 ),
             ),

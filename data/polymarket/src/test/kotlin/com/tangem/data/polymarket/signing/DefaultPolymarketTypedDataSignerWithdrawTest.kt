@@ -10,7 +10,6 @@ import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.data.polymarket.builder.PolymarketTypedDataBuilder
-import com.tangem.data.polymarket.derivation.PolymarketAddressFactory
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -55,7 +54,7 @@ internal class DefaultPolymarketTypedDataSignerWithdrawTest {
         derivationsRepository = derivationsRepository,
         cardSdkConfigRepository = cardSdkConfigRepository,
         hotSignerFactory = hotSignerFactory,
-        addressFactory = PolymarketAddressFactory(),
+        digestFactory = PolymarketDigestFactory(),
         formatter = PolymarketSignatureFormatter(),
         dispatchers = TestingCoroutineDispatcherProvider(),
     )

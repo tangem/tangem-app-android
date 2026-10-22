@@ -88,7 +88,7 @@ internal class DefaultNewsRepository(
             .combine(newsViewedStore.getAll()) { articlesToUpdate, viewedFlags ->
                 articlesToUpdate.map { article ->
                     val isViewed = viewedFlags[article.id] == true
-                    article.copy(viewed = isViewed)
+                    article.copy(isViewed = isViewed)
                 }
             }
             .map<List<ShortArticle>, Either<Throwable, List<ShortArticle>>> { it.right() }
@@ -125,9 +125,9 @@ internal class DefaultNewsRepository(
                 is TrendingNews.Data -> {
                     val articlesWithViewedFlags = trendingNews.articles
                         .map { article ->
-                            article.copy(viewed = viewedFlags[article.id] == true)
+                            article.copy(isViewed = viewedFlags[article.id] == true)
                         }
-                        .sortedBy { it.viewed }
+                        .sortedBy { it.isViewed }
                     TrendingNews.Data(articlesWithViewedFlags)
                 }
                 is TrendingNews.Error -> trendingNews
@@ -294,7 +294,7 @@ internal class DefaultNewsRepository(
                 IllegalStateException("fetchFirst must be called"),
             )
 
-            if (lastResult is BatchFetchResult.Success && lastResult.last && overrideRequestParams == null) {
+            if (lastResult is BatchFetchResult.Success && lastResult.isLast && overrideRequestParams == null) {
                 return BatchFetchResult.Error(EndOfPaginationException())
             }
 
@@ -339,13 +339,13 @@ internal class DefaultNewsRepository(
 
             val items = articles.map { article ->
                 val isViewed = viewedFlags[article.id] == true
-                article.copy(viewed = isViewed)
+                article.copy(isViewed = isViewed)
             }
 
             val batchResult = BatchFetchResult.Success(
                 data = items,
-                empty = items.isEmpty(),
-                last = response.meta.hasNext.not(),
+                isEmpty = items.isEmpty(),
+                isLast = response.meta.hasNext.not(),
             )
 
             return PageLoadResult(
@@ -383,7 +383,7 @@ internal class DefaultNewsRepository(
             val updatedBatches = batchListState.data.map { batch ->
                 val updatedArticles = batch.data.map { article ->
                     val isViewed = viewedFlags[article.id] == true
-                    article.copy(viewed = isViewed)
+                    article.copy(isViewed = isViewed)
                 }
                 Batch(key = batch.key, data = updatedArticles)
             }

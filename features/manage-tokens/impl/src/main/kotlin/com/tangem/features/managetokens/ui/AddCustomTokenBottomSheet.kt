@@ -52,7 +52,7 @@ private fun Title(model: AddCustomTokenUM, modifier: Modifier = Modifier) {
         modifier = modifier,
         title = model.title,
         titleAlignment = Alignment.CenterHorizontally,
-        startButton = TopAppBarButtonUM.Back(model.popBack).takeIf { model.showBackButton },
+        startButton = TopAppBarButtonUM.Back(model.popBack).takeIf { model.shouldShowBackButton },
         height = TangemTopAppBarHeight.BOTTOM_SHEET,
     )
 }

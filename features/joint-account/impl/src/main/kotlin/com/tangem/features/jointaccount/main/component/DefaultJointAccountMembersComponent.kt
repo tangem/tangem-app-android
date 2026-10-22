@@ -1,111 +1,97 @@
 package com.tangem.features.jointaccount.main.component
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.slide
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.arkivanov.decompose.router.slot.childSlot
-import com.arkivanov.decompose.router.slot.dismiss
-import com.arkivanov.essenty.lifecycle.doOnPause
-import com.arkivanov.essenty.lifecycle.doOnResume
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
-import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.decompose.navigation.inner.InnerRouter
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
-import com.tangem.features.jointaccount.main.entity.ActivationConfirmationConfig
-import com.tangem.features.jointaccount.main.entity.MemberCardConfig
-import com.tangem.features.jointaccount.main.model.JointAccountMembersModel
-import com.tangem.features.jointaccount.main.ui.JointAccountMembersScreen
+import com.tangem.features.jointaccount.main.confirmaddress.JointAccountConfirmAddressComponent
+import com.tangem.features.jointaccount.main.model.JointAccountMembersListParams
+import com.tangem.features.jointaccount.main.navigation.JointAccountMembersRoute
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
 internal class DefaultJointAccountMembersComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
-    @Assisted params: JointAccountMembersComponent.Params,
+    @Assisted private val params: JointAccountMembersComponent.Params,
+    private val childFactory: JointAccountMembersChildFactory,
 ) : JointAccountMembersComponent, AppComponentContext by appComponentContext {
 
-    private val model: JointAccountMembersModel = getOrCreateModel(params = params)
+    private val stackNavigation = StackNavigation<JointAccountMembersRoute>()
 
-    private val memberCardSlot = childSlot(
-        source = model.bottomSheetNavigation,
-        serializer = null,
-        handleBackButton = false,
-        key = "memberCardSlot",
-        childFactory = ::memberCardChild,
+    private val innerRouter = InnerRouter<JointAccountMembersRoute>(
+        stackNavigation = stackNavigation,
+        popCallback = { onChildBack() },
     )
 
-    private val shareSafelySlot = childSlot(
-        source = model.shareSafelyNavigation,
+    private val stack = childStack(
+        key = "jointAccountMembersStack",
+        source = stackNavigation,
         serializer = null,
-        handleBackButton = false,
-        key = "shareSafelySlot",
-        childFactory = { _, componentContext -> shareSafelyChild(componentContext) },
+        initialConfiguration = JointAccountMembersRoute.Members,
+        handleBackButton = true,
+        childFactory = { route, factoryContext ->
+            createChild(
+                route = route,
+                childContext = childByContext(componentContext = factoryContext, router = innerRouter),
+            )
+        },
     )
-
-    private val activationConfirmationSlot = childSlot(
-        source = model.activationConfirmationNavigation,
-        serializer = null,
-        handleBackButton = false,
-        key = "activationConfirmationSlot",
-        childFactory = ::activationConfirmationChild,
-    )
-
-    init {
-        lifecycle.doOnResume { model.onResume() }
-        lifecycle.doOnPause { model.onPause() }
-    }
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state by model.uiState.collectAsStateWithLifecycle()
-        val memberCard by memberCardSlot.subscribeAsState()
-        val shareSafely by shareSafelySlot.subscribeAsState()
-        val activationConfirmation by activationConfirmationSlot.subscribeAsState()
+        val childStack by stack.subscribeAsState()
 
-        JointAccountMembersScreen(state = state, modifier = modifier)
-
-        memberCard.child?.instance?.BottomSheet()
-        shareSafely.child?.instance?.BottomSheet()
-        activationConfirmation.child?.instance?.BottomSheet()
+        Children(
+            stack = childStack,
+            modifier = modifier,
+            animation = stackAnimation { slide() },
+        ) { child ->
+            child.instance.Content(Modifier.fillMaxSize())
+        }
     }
 
-    private fun memberCardChild(
-        config: MemberCardConfig,
-        componentContext: ComponentContext,
-    ): ComposableBottomSheetComponent = MemberCardComponent(
-        appComponentContext = childByContext(componentContext),
-        params = MemberCardComponent.Params(
-            avatar = config.avatar,
-            name = config.name,
-            address = stringReference(config.address),
-            onCopyClick = { model.onCopyAddressClick(config.address) },
-            onDismiss = model.bottomSheetNavigation::dismiss,
-        ),
-    )
-
-    private fun shareSafelyChild(componentContext: ComponentContext): ComposableBottomSheetComponent =
-        ShareSafelyComponent(
-            appComponentContext = childByContext(componentContext),
-            params = ShareSafelyComponent.Params(onDismiss = model.shareSafelyNavigation::dismiss),
+    private fun createChild(
+        route: JointAccountMembersRoute,
+        childContext: AppComponentContext,
+    ): ComposableContentComponent = when (route) {
+        is JointAccountMembersRoute.Members -> JointAccountMembersListComponent(
+            appComponentContext = childContext,
+            params = JointAccountMembersListParams(
+                userWalletId = params.userWalletId,
+                cryptoAccountId = params.cryptoAccountId,
+                onCloseFlow = { router.pop() },
+            ),
+            childFactory = childFactory,
         )
+        is JointAccountMembersRoute.ConfirmAddress -> JointAccountConfirmAddressComponent(
+            appComponentContext = childContext,
+            params = JointAccountConfirmAddressComponent.Params(
+                userWalletId = params.userWalletId,
+                cryptoAccountId = route.cryptoAccountId,
+            ),
+        )
+    }
 
-    private fun activationConfirmationChild(
-        config: ActivationConfirmationConfig,
-        componentContext: ComponentContext,
-    ): ComposableBottomSheetComponent = ActivationConfirmationComponent(
-        appComponentContext = childByContext(componentContext),
-        params = ActivationConfirmationComponent.Params(
-            walletInteractionIconRes = config.walletInteractionIconRes,
-            isConfirming = model.isConfirmingActivation,
-            onConfirmClick = { model.onConfirmActivationClick(cryptoAccountId = config.cryptoAccountId) },
-            onDismiss = model.activationConfirmationNavigation::dismiss,
-        ),
-    )
+    private fun onChildBack() {
+        if (stack.value.backStack.isEmpty()) {
+            router.pop()
+        } else {
+            stackNavigation.pop()
+        }
+    }
 
     @AssistedFactory
     interface Factory : JointAccountMembersComponent.Factory {

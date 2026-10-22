@@ -2,6 +2,9 @@ package com.tangem.features.jointaccount.main.model
 
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.MarkJointAccountInviteSharedUseCase
@@ -14,8 +17,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import javax.inject.Inject
+import com.tangem.core.ui.R as CoreUiR
 
-/** Shares a slot's invite link and records the invite once the user picks where to send it */
+/** Shares a slot's invite message and records the invite once the user picks where to send it */
 @ModelScoped
 internal class JointAccountInviteSharing @Inject constructor(
     private val shareManager: ShareManager,
@@ -24,8 +28,13 @@ internal class JointAccountInviteSharing @Inject constructor(
 ) {
 
     /** The slot's own invite: a link issued for one slot cannot be redeemed for another */
-    fun share(inviteId: String) {
-        shareManager.shareTrackedText(text = JointAccountInviteLinkBuilder.build(inviteId = inviteId))
+    fun message(inviteId: String, accountName: TextReference): TextReference = resourceReference(
+        id = CoreUiR.string.joint_account_invite_member_message,
+        formatArgs = wrappedList(accountName, JointAccountInviteLinkBuilder.build(inviteId = inviteId)),
+    )
+
+    fun share(message: String) {
+        shareManager.shareTrackedText(text = message)
     }
 
     /**
@@ -40,7 +49,8 @@ internal class JointAccountInviteSharing @Inject constructor(
             shareManager.sharedTexts
                 .mapNotNull { text ->
                     getJointAccountInvitesUseCase(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId)
-                        .firstOrNull { inviteId -> JointAccountInviteLinkBuilder.build(inviteId = inviteId) == text }
+                        .firstOrNull { invite -> text.containsLink(JointAccountInviteLinkBuilder.build(invite.id)) }
+                        ?.id
                 }
                 .map { inviteId ->
                     markJointAccountInviteSharedUseCase(
@@ -51,3 +61,8 @@ internal class JointAccountInviteSharing @Inject constructor(
                 }
         }
 }
+
+/** A whole word of the message, so one invite's link never matches another's that merely starts with it */
+private fun String.containsLink(link: String): Boolean = split(WHITESPACE).any { word -> word == link }
+
+private val WHITESPACE = Regex(pattern = "\\s+")

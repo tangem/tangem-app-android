@@ -182,7 +182,7 @@ private fun LazyItemScope.DraggableItem(
         mutableStateOf(value = false)
     }
 
-    val itemModifier = Modifier.applyShapeAndShadow(item.roundingModeUM, item.showShadow)
+    val itemModifier = Modifier.applyShapeAndShadow(item.roundingModeUM, item.shouldShowShadow)
 
     ReorderableItem(
         reorderableState = reorderableState,
@@ -330,7 +330,7 @@ private fun Actions(config: OrganizeTokensState.ActionsConfig, modifier: Modifie
                 .testTag(OrganizeTokensScreenTestTags.APPLY_BUTTON),
             text = stringResourceSafe(id = R.string.common_apply),
             onClick = config.onApplyClick,
-            showProgress = config.showApplyProgress,
+            showProgress = config.shouldShowApplyProgress,
             enabled = config.canApply,
         )
     }

@@ -8,19 +8,30 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchAction
 import com.tangem.data.collectibles.error.CollectiblesErrorResolver
 import com.tangem.data.collectibles.store.CollectiblesMachineStore
+import com.tangem.domain.collectibles.models.CollectibleBuybackOffer
+import com.tangem.domain.collectibles.models.CollectibleBuybackStatus
+import com.tangem.domain.collectibles.models.CollectibleBuybackTx
 import com.tangem.domain.collectibles.models.CollectibleException
 import com.tangem.domain.collectibles.models.CollectiblePurchaseTx
 import com.tangem.domain.collectibles.models.CollectibleRarity
 import com.tangem.domain.collectibles.models.CollectibleTurboMode
 import com.tangem.domain.collectibles.models.CollectibleTxState
 import com.tangem.domain.collectibles.models.CollectibleTxStatus
+import com.tangem.domain.collectibles.models.GenerateBuybackTxParams
 import com.tangem.domain.collectibles.models.GeneratePurchaseTxParams
 import com.tangem.domain.collectibles.models.OpenedCollectiblePack
 import com.tangem.grow.datasource.collectibles.CollectiblesApi
+import com.tangem.grow.datasource.collectibles.models.request.BuybackTxSentRequestBody
 import com.tangem.grow.datasource.collectibles.models.request.CollectibleTxRequestBody
+import com.tangem.grow.datasource.collectibles.models.request.GenerateBuybackDataRequestBody
 import com.tangem.grow.datasource.collectibles.models.request.GeneratePurchaseTxRequestBody
 import com.tangem.grow.datasource.collectibles.models.request.PurchaseTxSentRequestBody
+import com.tangem.grow.datasource.collectibles.models.response.BuybackAvailabilityResponse
+import com.tangem.grow.datasource.collectibles.models.response.BuybackStatusResponse
+import com.tangem.grow.datasource.collectibles.models.response.BuybackStatusResponse.BuybackStatusDTO
 import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse
+import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse.CollectibleTxStatusDTO
+import com.tangem.grow.datasource.collectibles.models.response.GenerateBuybackDataResponse
 import com.tangem.grow.datasource.collectibles.models.response.GeneratePurchaseTxResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachineCategoriesResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachinesResponse
@@ -28,6 +39,7 @@ import com.tangem.grow.datasource.collectibles.models.response.model.MachineDTO
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchingContext
 import com.tangem.pagination.PaginationStatus
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -44,6 +56,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 internal class DefaultCollectiblesRepositoryTest {
@@ -325,7 +338,7 @@ internal class DefaultCollectiblesRepositoryTest {
             runTest {
                 // Arrange
                 coEvery { collectiblesApi.purchaseTxSent(any(), any()) } returns
-                    ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = "purchase-tx-hash"))
+                    ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = CollectibleTxStatusDTO.PURCHASE_TX_HASH))
 
                 // Act
                 val actual = repository.reportPurchaseTxSent(userWalletId, txId = "tx-id", txHash = "hash")
@@ -370,7 +383,7 @@ internal class DefaultCollectiblesRepositoryTest {
             } returns ApiResponse.Success(
                 CollectibleTxResponse(
                     txId = "tx-id",
-                    status = "pack-opened",
+                    status = CollectibleTxStatusDTO.PACK_OPENED,
                     nftWon = CollectibleTxResponse.NftWonDTO(
                         nftAddress = "nft",
                         gradingCompany = "PSA",
@@ -415,7 +428,7 @@ internal class DefaultCollectiblesRepositoryTest {
         fun `GIVEN no card in the answer WHEN openPack THEN only the status is returned`() = runTest {
             // Arrange
             coEvery { collectiblesApi.openPack(any(), any(), any()) } returns
-                ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = "pack-opened"))
+                ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = CollectibleTxStatusDTO.PACK_OPENED))
 
             // Act
             val actual = repository.openPack(userWalletId, txId = "tx-id")
@@ -551,6 +564,185 @@ internal class DefaultCollectiblesRepositoryTest {
                 .isInstanceOf(ApiResponseError.NetworkException::class.java)
             coVerify(exactly = 1) { collectiblesApi.getMachines(any(), any(), any(), any()) }
             sourceScope.cancel()
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetBuybackOffer {
+
+        @Test
+        fun `GIVEN buyback available WHEN getBuybackOffer THEN the offer is returned`() = runTest {
+            // Arrange
+            coEvery {
+                collectiblesApi.getBuybackAvailability(userWalletId = userWalletId.stringValue, nftAddress = "nft")
+            } returns ApiResponse.Success(BuybackAvailabilityResponse(isAvailable = true, amount = 4250L))
+
+            // Act
+            val actual = repository.getBuybackOffer(userWalletId, nftAddress = "nft")
+
+            // Assert
+            assertThat(actual).isEqualTo(CollectibleBuybackOffer(amount = BigDecimal("42.50"), expiresAt = null))
+        }
+
+        @Test
+        fun `GIVEN buyback not available yet WHEN getBuybackOffer THEN null is returned`() = runTest {
+            // Arrange
+            coEvery { collectiblesApi.getBuybackAvailability(any(), any()) } returns
+                ApiResponse.Success(BuybackAvailabilityResponse(isAvailable = false))
+
+            // Act
+            val actual = repository.getBuybackOffer(userWalletId, nftAddress = "nft")
+
+            // Assert
+            assertThat(actual).isNull()
+        }
+
+        @Test
+        fun `GIVEN api fails WHEN getBuybackOffer THEN the api error is thrown`() = runTest {
+            // Arrange
+            coEvery { collectiblesApi.getBuybackAvailability(any(), any()) } returns
+                networkError<BuybackAvailabilityResponse>()
+
+            // Act
+            val actual = runCatching { repository.getBuybackOffer(userWalletId, nftAddress = "nft") }.exceptionOrNull()
+
+            // Assert
+            assertThat(actual).isInstanceOf(ApiResponseError.NetworkException::class.java)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GenerateBuybackTx {
+
+        @Test
+        fun `GIVEN buyback data WHEN generateBuybackTx THEN params reach the body and the tx is mapped`() = runTest {
+            // Arrange
+            coEvery { collectiblesApi.generateBuybackData(any(), any()) } returns
+                ApiResponse.Success(buybackDataResponse())
+
+            // Act
+            val actual = generate()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                CollectibleBuybackTx(
+                    buybackId = "buyback-id",
+                    memo = "cc-memo",
+                    amount = BigDecimal("42.500000"),
+                    transaction = "AQID",
+                ),
+            )
+            coVerify(exactly = 1) {
+                collectiblesApi.generateBuybackData(
+                    userWalletId = userWalletId.stringValue,
+                    body = GenerateBuybackDataRequestBody(
+                        fromAddress = "owner",
+                        nftAddress = "nft",
+                        toAddress = "owner",
+                    ),
+                )
+            }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a failed request WHEN generateBuybackTx THEN the error is mapped`(model: FailureModel) = runTest {
+            // Arrange
+            coEvery { collectiblesApi.generateBuybackData(any(), any()) } returns model.response
+
+            // Act
+            val actual = runCatching { generate() }.exceptionOrNull()
+
+            // Assert
+            assertThat(actual).isInstanceOf(model.expected)
+        }
+
+        private suspend fun generate() = repository.generateBuybackTx(
+            userWalletId = userWalletId,
+            params = GenerateBuybackTxParams(fromAddress = "owner", nftAddress = "nft", toAddress = "owner"),
+        )
+
+        private fun buybackDataResponse() = GenerateBuybackDataResponse(
+            buybackId = "buyback-id",
+            txData = GenerateBuybackDataResponse.TxDataDTO(
+                memo = "cc-memo",
+                toDecimals = 6,
+                toAmount = "42500000",
+                tx = "AQID",
+            ),
+        )
+
+        private fun provideTestModels() = listOf(
+            FailureModel(
+                response = httpError(code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR, body = null),
+                expected = ApiResponseError.HttpException::class.java,
+            ),
+            FailureModel(
+                response = timeoutError(),
+                expected = ApiResponseError.TimeoutException::class.java,
+            ),
+        )
+    }
+
+    internal data class FailureModel(
+        val response: ApiResponse<GenerateBuybackDataResponse>,
+        val expected: Class<out Throwable>,
+    )
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class BuybackStatus {
+
+        @Test
+        fun `GIVEN a hash WHEN reportBuybackTxSent THEN it is sent with the buyback id and the status is parsed`() =
+            runTest {
+                // Arrange
+                coEvery { collectiblesApi.buybackTxSent(any(), any()) } returns ApiResponse.Success(
+                    BuybackStatusResponse(buybackId = "buyback-id", status = BuybackStatusDTO.BUYBACK_TX_SENT),
+                )
+
+                // Act
+                val actual = repository.reportBuybackTxSent(userWalletId, buybackId = "buyback-id", txHash = "hash")
+
+                // Assert
+                assertThat(actual).isEqualTo(CollectibleBuybackStatus.BUYBACK_TX_SENT)
+                coVerify(exactly = 1) {
+                    collectiblesApi.buybackTxSent(
+                        userWalletId = userWalletId.stringValue,
+                        body = BuybackTxSentRequestBody(buybackId = "buyback-id", txHash = "hash"),
+                    )
+                }
+            }
+
+        @Test
+        fun `GIVEN a confirmed buyback WHEN getBuybackStatus THEN confirmed is returned`() = runTest {
+            // Arrange
+            coEvery {
+                collectiblesApi.getBuybackStatus(userWalletId = userWalletId.stringValue, buybackId = "buyback-id")
+            } returns ApiResponse.Success(
+                BuybackStatusResponse(buybackId = "buyback-id", status = BuybackStatusDTO.CONFIRMED),
+            )
+
+            // Act
+            val actual = repository.getBuybackStatus(userWalletId, buybackId = "buyback-id")
+
+            // Assert
+            assertThat(actual).isEqualTo(CollectibleBuybackStatus.CONFIRMED)
+        }
+
+        @Test
+        fun `GIVEN api fails WHEN getBuybackStatus THEN the api error is thrown`() = runTest {
+            // Arrange
+            coEvery { collectiblesApi.getBuybackStatus(any(), any()) } returns networkError<BuybackStatusResponse>()
+
+            // Act
+            val actual = runCatching { repository.getBuybackStatus(userWalletId, buybackId = "buyback-id") }
+                .exceptionOrNull()
+
+            // Assert
+            assertThat(actual).isInstanceOf(ApiResponseError.NetworkException::class.java)
         }
     }
 

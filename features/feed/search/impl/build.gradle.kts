@@ -22,15 +22,11 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 
-    /* Project - Domain */
-    implementation(projects.domain.feed.search)
-
     /* Compose */
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.material3)
-    implementation(deps.lifecycle.compose)
 
     /* Other */
     implementation(deps.androidx.appCompat)

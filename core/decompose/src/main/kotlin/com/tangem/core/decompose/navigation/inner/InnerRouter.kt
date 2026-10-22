@@ -7,7 +7,10 @@ import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.utils.stack
+import kotlinx.coroutines.withContext
 import kotlin.reflect.KClass
+import kotlin.reflect.safeCast
 
 /**
  * Creates a router that can handle a specific type of route.
@@ -86,5 +89,44 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
         } else {
             fallBackRouter.popTo(routeClass, onComplete)
         }
+    }
+
+    override fun <R : Route> popToMatching(
+        routeClass: KClass<R>,
+        predicate: (R) -> Boolean,
+        onComplete: (Boolean) -> Unit,
+    ) {
+        if (T::class.java.isAssignableFrom(routeClass.java)) {
+            val matches: (Route) -> Boolean = { route -> routeClass.safeCast(route)?.let(predicate) == true }
+
+            stackNavigation.navigate(
+                transformer = { stack -> stack.dropLastWhile { !matches(it) }.ifEmpty { stack } },
+                onComplete = { newStack, _ -> onComplete(newStack.lastOrNull()?.let(matches) == true) },
+            )
+        } else {
+            fallBackRouter.popToMatching(routeClass, predicate, onComplete)
+        }
+    }
+
+    override fun navigate(transformer: (stack: List<Route>) -> List<Route>, onComplete: (Boolean) -> Unit) {
+        var isApplied = false
+        stackNavigation.navigate(
+            transformer = { stack ->
+                val newStack = transformer(stack)
+                if (newStack.all { it is T }) {
+                    isApplied = true
+                    newStack.filterIsInstance<T>()
+                } else {
+                    stack
+                }
+            },
+            onComplete = { _, _ -> onComplete(isApplied) },
+        )
+    }
+
+    override suspend fun contains(route: Route): Boolean {
+        if (route !is T) return fallBackRouter.contains(route)
+
+        return withContext(dispatchers.mainImmediate) { route in stackNavigation.stack() }
     }
 }

@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -10,11 +11,13 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_checkmark_16
 import com.tangem.core.ui.res.generated.icons.ic_clock_16
 import com.tangem.core.ui.res.generated.icons.ic_user_plus_16
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.tokenlist.TokenList
@@ -38,12 +41,14 @@ internal class WalletJointAccountItemConverterTest {
     private val account = MockAccounts.createJointAccount(ownerKeyIndex = 0, userWalletId = userWalletId)
 
     private val clickedAccounts = mutableListOf<Pair<UserWalletId, String>>()
+    private val compromisedClicks = mutableListOf<UserWalletId>()
 
     private val converter = createConverter(accountIdsWithInvites = emptySet())
 
     @BeforeEach
     fun resetClicks() {
         clickedAccounts.clear()
+        compromisedClicks.clear()
     }
 
     private fun createConverter(accountIdsWithInvites: Set<String>) = WalletJointAccountItemConverter(
@@ -51,10 +56,11 @@ internal class WalletJointAccountItemConverterTest {
         userWalletId = userWalletId,
         accountIdsWithInvites = accountIdsWithInvites,
         onAccountClick = { walletId, accountId -> clickedAccounts += walletId to accountId },
+        onCompromisedAccountClick = { walletId -> compromisedClicks += walletId },
     )
 
     @Test
-    fun `GIVEN pending status WHEN convert THEN members progress and zero balance without inviting`() {
+    fun `GIVEN pending status WHEN convert THEN members count, zero balance and a waiting banner for a member`() {
         // Arrange
         val status = createStatus(
             JointAccountStatusValue.Pending(StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 3),
@@ -67,8 +73,7 @@ internal class WalletJointAccountItemConverterTest {
         assertThat(actual.accountId).isEqualTo(account.accountId.value)
         val state = actual.state as JointAccountMainUM.WaitingMembers
         assertThat(state.title).isEqualTo(stringReference("Joint #0"))
-        assertThat(state.subtitle)
-            .isEqualTo(resourceReference(R.string.joint_account_members_progress, wrappedList(1, 3)))
+        assertThat(state.subtitle).isEqualTo(MEMBERS_THREE)
         assertThat(state.icon).isEqualTo(CryptoPortfolioIconConverter.convert(account.icon))
         assertThat(state.balance).isEqualTo(stringReference(zeroBalance()))
         assertThat(state.priceChange).isEqualTo(
@@ -77,7 +82,11 @@ internal class WalletJointAccountItemConverterTest {
                 direction = TangemPriceChange.Direction.Neutral,
             ),
         )
-        assertThat(state.banner).isNull()
+        val banner = requireNotNull(state.banner)
+        assertThat(banner.text).isEqualTo(
+            pluralReference(R.plurals.joint_account_main_waiting_members, count = 2, formatArgs = wrappedList(2)),
+        )
+        assertThat(banner.icon).isEqualTo(Icons.ic_clock_16)
     }
 
     @Test
@@ -115,38 +124,51 @@ internal class WalletJointAccountItemConverterTest {
     }
 
     @Test
-    fun `GIVEN confirming status WHEN convert THEN waiting for activation without a banner for a member`() {
+    fun `GIVEN confirming status not confirmed by this wallet WHEN convert THEN the confirm banner for everyone`() {
         // Arrange
         val status = createStatus(JointAccountStatusValue.Confirming(StatusSource.ACTUAL, totalMembers = 3))
-
-        // Act
-        val actual = converter.convert(status)
-
-        // Assert
-        val state = actual.state as JointAccountMainUM.WaitingMembers
-        assertThat(state.subtitle).isEqualTo(resourceReference(R.string.joint_account_waiting_activation))
-        assertThat(state.banner).isNull()
-    }
-
-    @Test
-    fun `GIVEN invites on this device WHEN convert confirming THEN the activate banner is offered`() {
-        // Arrange
         val inviting = createConverter(accountIdsWithInvites = setOf(account.accountId.value))
-        val status = createStatus(JointAccountStatusValue.Confirming(StatusSource.ACTUAL, totalMembers = 3))
 
         // Act
-        val state = inviting.convert(status).state as JointAccountMainUM.WaitingMembers
+        val memberState = converter.convert(status).state as JointAccountMainUM.WaitingMembers
+        val creatorState = inviting.convert(status).state as JointAccountMainUM.WaitingMembers
 
         // Assert
-        val banner = requireNotNull(state.banner)
-        assertThat(banner.text).isEqualTo(resourceReference(R.string.joint_account_activation_account_button_title))
-        assertThat(banner.icon).isEqualTo(Icons.ic_clock_16)
+        assertThat(memberState.subtitle).isEqualTo(MEMBERS_THREE)
+        listOf(memberState, creatorState).forEach { state ->
+            val banner = requireNotNull(state.banner)
+            assertThat(banner.text).isEqualTo(resourceReference(R.string.joint_account_confirm_shared_address))
+            assertThat(banner.icon).isEqualTo(Icons.ic_checkmark_16)
+        }
 
         // Act
-        banner.onClick()
+        requireNotNull(memberState.banner).onClick()
 
         // Assert
         assertThat(clickedAccounts).containsExactly(userWalletId to account.accountId.value)
+    }
+
+    @Test
+    fun `GIVEN confirming status confirmed by this wallet WHEN convert THEN waiting for the others' confirmations`() {
+        // Arrange
+        val status = createStatus(
+            JointAccountStatusValue.Confirming(
+                source = StatusSource.ACTUAL,
+                totalMembers = 3,
+                verifiedMembers = 1,
+                isOwnVerified = true,
+            ),
+        )
+
+        // Act
+        val state = converter.convert(status).state as JointAccountMainUM.WaitingMembers
+
+        // Assert
+        val banner = requireNotNull(state.banner)
+        assertThat(banner.text).isEqualTo(
+            pluralReference(R.plurals.joint_account_main_waiting_confirmations, count = 2, formatArgs = wrappedList(2)),
+        )
+        assertThat(banner.icon).isEqualTo(Icons.ic_clock_16)
     }
 
     @Test
@@ -158,6 +180,46 @@ internal class WalletJointAccountItemConverterTest {
         // Assert
         assertThat(loading.state).isEqualTo(JointAccountMainUM.Loading)
         assertThat(unavailable.state).isEqualTo(JointAccountMainUM.TemporaryUnavailable)
+    }
+
+    @Test
+    fun `GIVEN compromised status WHEN convert THEN a blocked row with the account figures`() {
+        // Arrange
+        val status = createStatus(
+            JointAccountStatusValue.Error.Compromised(
+                totalMembers = 5,
+                tokensCount = 6,
+                fiatBalance = TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
+            ),
+        )
+
+        // Act
+        val state = converter.convert(status).state as JointAccountMainUM.Blocked
+
+        // Assert
+        assertThat(state.title).isEqualTo(stringReference("Joint #0"))
+        assertThat(state.balance).isEqualTo(stringReference(zeroBalance()))
+        assertThat(state.icon).isEqualTo(CryptoPortfolioIconConverter.convert(account.icon))
+        assertThat(state.priceChange).isNull()
+    }
+
+    @Test
+    fun `GIVEN compromised status WHEN row tapped THEN the alert is requested instead of the members screen`() {
+        // Arrange
+        val status = createStatus(
+            JointAccountStatusValue.Error.Compromised(
+                totalMembers = 5,
+                tokensCount = 6,
+                fiatBalance = TotalFiatBalance.Loading,
+            ),
+        )
+
+        // Act
+        (converter.convert(status).state as JointAccountMainUM.Blocked).onClick()
+
+        // Assert
+        assertThat(compromisedClicks).containsExactly(userWalletId)
+        assertThat(clickedAccounts).isEmpty()
     }
 
     @Test
@@ -199,5 +261,9 @@ internal class WalletJointAccountItemConverterTest {
         return BigDecimal.ZERO.format {
             fiat(fiatCurrencyCode = AppCurrency.Default.code, fiatCurrencySymbol = AppCurrency.Default.symbol)
         }
+    }
+
+    private companion object {
+        val MEMBERS_THREE = pluralReference(R.plurals.joint_account_members_count, count = 3, formatArgs = wrappedList(3))
     }
 }

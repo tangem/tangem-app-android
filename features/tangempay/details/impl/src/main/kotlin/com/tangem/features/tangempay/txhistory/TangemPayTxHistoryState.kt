@@ -5,6 +5,6 @@ import com.tangem.pagination.PaginationStatus
 
 internal data class TangemPayTxHistoryState(
     val status: PaginationStatus<*> = PaginationStatus.None,
-    val uiBatches: List<Batch<Int, List<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM>>> = listOf(),
+    val uiBatches: List<Batch<Int, List<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM>>> = emptyList(),
     val isEmpty: Boolean = false,
 )

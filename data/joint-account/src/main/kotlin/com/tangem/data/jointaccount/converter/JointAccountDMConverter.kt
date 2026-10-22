@@ -29,6 +29,7 @@ internal class JointAccountDMConverter @Inject constructor() : TwoWayConverter<J
                 address = member.address,
                 role = member.role.toRawString(),
                 inviteId = member.inviteId,
+                isVerified = member.isVerified,
             )
         },
         operations = value.inFlightOperations.values.map { operation ->
@@ -71,6 +72,7 @@ internal class JointAccountDMConverter @Inject constructor() : TwoWayConverter<J
                 address = member.address,
                 role = JointAccountFieldsConverter.convertRole(member.role),
                 inviteId = member.inviteId,
+                isVerified = member.isVerified,
             )
         },
         source = StatusSource.CACHE,

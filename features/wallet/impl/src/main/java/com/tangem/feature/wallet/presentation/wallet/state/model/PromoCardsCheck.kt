@@ -8,7 +8,10 @@ internal enum class PromoCardsCheck {
 
     None,
 
-    /** The wallet page was opened: decided once its cards are built from a resolved balance, cache included */
+    /**
+     * The wallet page was opened: decided once its cards are built from a resolved balance, cache included, and its
+     * pending joint operations are known
+     */
     OnOpen,
 
     /** A refresh finished: decided once the refreshed balance reaches the cards, not at the end of the spinner */

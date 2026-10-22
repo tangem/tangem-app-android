@@ -6,7 +6,7 @@ internal data class TangemPayChangePinUM(
     val pinCode: String,
     val error: TextReference?,
     val onPinCodeChange: (String) -> Unit,
-    val submitButtonLoading: Boolean,
-    val submitButtonEnabled: Boolean,
+    val isSubmitButtonLoading: Boolean,
+    val isSubmitButtonEnabled: Boolean,
     val onSubmitClick: () -> Unit,
 )

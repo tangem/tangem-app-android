@@ -34,7 +34,7 @@ class ValidateWalletAddressUseCase(
         address = address,
         allowSelfSend = allowSelfSend,
         isCurrentAddress = { toValidate ->
-            currencyAddresses?.any { it.value == toValidate } ?: true
+            currencyAddresses?.any { it.value == toValidate } != false
         },
     )
 
@@ -68,8 +68,8 @@ class ValidateWalletAddressUseCase(
         val isSelfSendAvailable = walletManagersFacade.checkSelfSendAvailability(userWalletId, network)
 
         val addressToValidate = decodedXAddress?.address ?: address
-        val current = isCurrentAddress(addressToValidate)
-        val isForbidSelfSend = current && !isSelfSendAvailable && !allowSelfSend
+        val isCurrent = isCurrentAddress(addressToValidate)
+        val isForbidSelfSend = isCurrent && !isSelfSendAvailable && !allowSelfSend
         val isValidAddress = walletAddressServiceRepository.validateAddress(userWalletId, network, addressToValidate)
 
         return when {

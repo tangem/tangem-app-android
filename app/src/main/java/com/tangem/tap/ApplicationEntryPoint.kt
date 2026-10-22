@@ -7,12 +7,10 @@ import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.remote.config.managers.ApiConfigsManager
-import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
-import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.AnalyticsHandlersInitializer
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
@@ -25,15 +23,13 @@ import dagger.hilt.components.SingletonComponent
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 @Suppress("TooManyFunctions")
-interface ApplicationEntryPoint {
+internal interface ApplicationEntryPoint {
 
     fun getFeatureTogglesManager(): FeatureTogglesManager
 
     fun getExcludedBlockchainsManager(): ExcludedBlockchainsManager
 
     fun getGetAppThemeModeUseCase(): GetAppThemeModeUseCase
-
-    fun getWalletsRepository(): WalletsRepository
 
     fun getTangemLoggingInitializer(): TangemLoggingInitializer
 
@@ -51,8 +47,6 @@ interface ApplicationEntryPoint {
 
     fun getDeviceRegistrar(): DeviceRegistrar
 
-    fun getAuthFeatureToggles(): AuthFeatureToggles
-
     fun getWalletRegistrationLauncher(): WalletRegistrationLauncher
 
     fun getUserWalletsListRepository(): UserWalletsListRepository
@@ -62,4 +56,6 @@ interface ApplicationEntryPoint {
     fun getAnalyticsEventHandler(): AnalyticsEventHandler
 
     fun getAnalyticsHandlersInitializer(): AnalyticsHandlersInitializer
+
+    fun getForegroundActivityObserver(): ForegroundActivityObserver
 }

@@ -50,7 +50,7 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
                 currentStep = 0,
                 steps = 0,
                 title = model.titleProvider.currentTitle.value,
-                showProgress = false,
+                shouldShowProgress = false,
             ),
             popBack = {
                 popInternal { success ->
@@ -107,7 +107,7 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
                                 currentStep = state.stackSize,
                                 steps = state.stackMaxSize ?: 0,
                                 title = model.titleProvider.currentTitle.value,
-                                showProgress = state.stackMaxSize != null,
+                                shouldShowProgress = state.stackMaxSize != null,
                             )
                         }
                     }
@@ -132,7 +132,7 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
                         },
                         steps = 10,
                         title = OnboardingTitle(titleText),
-                        showProgress = true,
+                        shouldShowProgress = true,
                     )
                 }
             }

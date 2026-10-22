@@ -590,6 +590,32 @@ internal class TangemPayOnboardingStarterTest {
         }
 
         @Test
+        fun `GIVEN back stack kept WHEN startOnboarding THEN residency replaces only current screen`() = runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
+            val keepingCallbacks = TangemPayOnboardingStarter.Callbacks(
+                onLoadingChange = { isLoading -> loadingChanges += isLoading },
+                onExit = { exitCount++ },
+                shouldKeepBackStack = true,
+            )
+
+            // Act
+            starter.startOnboarding(USER_WALLET_ID, campaignKey = null, keepingCallbacks)
+
+            // Assert
+            verify(exactly = 1) {
+                router.replaceCurrent(
+                    AppRoute.TangemPayEligibility(
+                        product = TangemPayProduct.PAYMENT_ACCOUNT,
+                        userWalletId = USER_WALLET_ID,
+                    ),
+                    onComplete = any(),
+                )
+            }
+            verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
+        }
+
+        @Test
         fun `GIVEN residency step enabled and campaign WHEN startOnboarding THEN order created before residency`() =
             runTest {
                 // Arrange

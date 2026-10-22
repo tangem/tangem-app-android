@@ -2,6 +2,7 @@ package com.tangem.domain.yield.supply.usecase
 
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldMarketToken
+import com.tangem.domain.yield.supply.models.activeEffectiveApys
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.math.BigDecimal
@@ -18,11 +19,6 @@ class YieldSupplyApyFlowUseCase(
 ) {
 
     operator fun invoke(): Flow<Map<String, BigDecimal>> {
-        return yieldSupplyRepository.getMarketsFlow()
-            .map { yieldMarketTokenList ->
-                yieldMarketTokenList.filter { it.isActive }.associate { token ->
-                    token.yieldSupplyKey to token.effectiveApy
-                }
-            }
+        return yieldSupplyRepository.getMarketsFlow().map { it.activeEffectiveApys() }
     }
 }

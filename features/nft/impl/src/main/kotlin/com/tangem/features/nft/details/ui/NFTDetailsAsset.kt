@@ -68,7 +68,7 @@ internal fun NFTDetailsAsset(
                     .padding(top = 12.dp),
                 items = state.traits,
                 title = resourceReference(R.string.nft_details_traits),
-                action = if (state.showAllTraitsButton) {
+                action = if (state.shouldShowAllTraitsButton) {
                     {
                         NFTBlocksGroupAction(
                             text = resourceReference(R.string.common_see_all),
@@ -132,7 +132,7 @@ private class NFTAssetProvider : CollectionPreviewParameterProvider<NFTAssetUM>(
                 rarity = NFTAssetUM.Rarity.Content(
                     rank = "Top 1% rarity",
                     label = "115.28",
-                    showDivider = true,
+                    shouldShowDivider = true,
                     onRankClick = { },
                     onLabelClick = { },
                 ),
@@ -141,56 +141,56 @@ private class NFTAssetProvider : CollectionPreviewParameterProvider<NFTAssetUM>(
                 NFTAssetUM.BlockItem(
                     title = stringReference("Tier"),
                     value = "Infinite",
-                    showInfoButton = false,
+                    shouldShowInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Phygital Toy"),
                     value = "None",
-                    showInfoButton = false,
+                    shouldShowInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Class"),
                     value = "CYBER",
-                    showInfoButton = false,
+                    shouldShowInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Accessory"),
                     value = "No accessory",
-                    showInfoButton = false,
+                    shouldShowInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Sneakers"),
                     value = "Boots",
-                    showInfoButton = false,
+                    shouldShowInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Artist"),
                     value = "DJ Dragoon",
-                    showInfoButton = false,
+                    shouldShowInfoButton = false,
                 ),
             ),
-            showAllTraitsButton = true,
+            shouldShowAllTraitsButton = true,
             baseInfoItems = persistentListOf(
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_token_standard),
                     value = "ERC-721",
-                    showInfoButton = true,
+                    shouldShowInfoButton = true,
                 ),
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_contract_address),
                     value = "0x6811f2fgd892ac83f719",
                     valueTextEllipsis = TextEllipsis.Middle,
-                    showInfoButton = true,
+                    shouldShowInfoButton = true,
                 ),
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_token_id),
                     value = "100200273",
-                    showInfoButton = true,
+                    shouldShowInfoButton = true,
                 ),
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_chain),
                     value = "Ethereum",
-                    showInfoButton = true,
+                    shouldShowInfoButton = true,
                 ),
             ),
         ),
