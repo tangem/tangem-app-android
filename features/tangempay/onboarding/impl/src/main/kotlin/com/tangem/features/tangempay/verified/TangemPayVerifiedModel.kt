@@ -45,7 +45,6 @@ internal class TangemPayVerifiedModel @Inject constructor(
     private val stateFactory = TangemPayVerifiedUMFactory(
         onChoosePlanClick = ::onChoosePlanClick,
         onOpenMoneyAccountClick = ::onOpenMoneyAccountClick,
-        onNotifyClick = ::onNotifyClick,
         onCloseClick = ::onCloseClick,
     )
 
@@ -117,10 +116,6 @@ internal class TangemPayVerifiedModel @Inject constructor(
                 message = resourceReference(R.string.common_try_again_later),
             ),
         )
-    }
-
-    private fun onNotifyClick() {
-        // TODO v_rodiononov: #[REDACTED_TASK_KEY] Remove Notify Button
     }
 
     private fun onCloseClick() {
