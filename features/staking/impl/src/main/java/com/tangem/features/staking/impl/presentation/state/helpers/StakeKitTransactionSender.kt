@@ -28,7 +28,6 @@ import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
-import com.tangem.features.staking.impl.di.StakingClock
 import com.tangem.features.staking.impl.presentation.state.FeeState
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingStates
@@ -44,11 +43,7 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import java.math.BigDecimal
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LongParameterList", "LargeClass")
 internal class StakeKitTransactionSender @AssistedInject constructor(
@@ -62,7 +57,6 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
     private val saveUnsubmittedHashUseCase: SaveUnsubmittedHashUseCase,
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
     private val checkStakingTransactionUseCase: CheckStakingTransactionUseCase,
-    @StakingClock private val clock: Clock,
     @Assisted private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val integration: StakeKitIntegration,
@@ -78,8 +72,8 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
         get() = stakingBalanceUpdater.create(cryptoCurrencyStatus, userWallet, integration)
 
     // The transactions validated in [validate] are cached here and reused in [send] so we don't build
-    // and validate them twice. The cache is only reused when the build inputs are unchanged ([BuildKey])
-    // and the build is not stale (see [ValidatedBuild.isStaleForSend]).
+    // and validate them twice. The cache is only reused when the build inputs are unchanged ([BuildKey]).
+    // A Solana build does not go stale: the SDK replaces its blockhash right before signing.
     private var validatedBuild: ValidatedBuild? = null
 
     override suspend fun validate(): StakingTransactionVerdict {
@@ -110,7 +104,6 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
                 key = key,
                 transactions = fullTransactionsData,
                 verdict = verdict,
-                builtAt = clock.now(),
             )
         }
         return verdict
@@ -423,12 +416,12 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
         )
     }
 
-    // Returns the previously validated build only if it still matches the current inputs and is not
-    // stale; otherwise the caller must rebuild and re-validate.
+    // Returns the previously validated build only if it still matches the current inputs; otherwise the
+    // caller must rebuild and re-validate.
     private fun reusableBuild(state: StakingUiState): ValidatedBuild? {
         val cached = validatedBuild ?: return null
         val key = currentBuildKey(state) ?: return null
-        return cached.takeIf { it.key == key && !it.isStaleForSend(clock.now()) }
+        return cached.takeIf { it.key == key }
     }
 
     // The inputs that determine the built transactions. If any of them changed between [validate] and
@@ -459,20 +452,7 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
         val key: BuildKey,
         val transactions: List<FullTransactionData>,
         val verdict: StakingTransactionVerdict,
-        val builtAt: Instant,
-    ) {
-        // Solana transactions embed a recentBlockhash that expires. A cached Solana build may be reused
-        // only while it is fresh; past [SOLANA_BUILD_TTL] it is rebuilt + re-validated so we never sign
-        // an expired blockhash. Freshness is measured on the wall clock, which can jump backwards
-        // (NTP/manual change) — a negative elapsed is untrustworthy and also treated as stale. Other
-        // chains are deterministic and never go stale.
-        fun isStaleForSend(now: Instant): Boolean {
-            val isSolana = transactions.any { it.stakeKitTransaction.network == NetworkType.SOLANA }
-            if (!isSolana) return false
-            val elapsed = now - builtAt
-            return elapsed < Duration.ZERO || elapsed >= SOLANA_BUILD_TTL
-        }
-    }
+    )
 
     // Every field here must influence the built transaction, so that an equal key guarantees identical
     // built bytes. [pendingAction] (its passthrough/type) and [reduceAmountBy] are folded into the
@@ -501,8 +481,3 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
 }
 
 private const val STAKEKIT_PROVIDER = "StakeKit"
-
-// Reuse window for a built Solana transaction before its recentBlockhash risks expiring (blockhashes
-// live ~60-90s on-chain). Measured from validate() (confirmation-screen entry), so it must leave
-// headroom for the post-send signing + broadcast latency that accrues after this check.
-private val SOLANA_BUILD_TTL = 50.seconds

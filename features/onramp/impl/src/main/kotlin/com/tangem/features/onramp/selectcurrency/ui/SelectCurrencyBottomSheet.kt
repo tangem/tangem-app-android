@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import coil.compose.AsyncImage
 import com.tangem.core.ui.components.CircleShimmer
@@ -43,12 +44,12 @@ internal fun SelectCurrencyBottomSheet(config: TangemBottomSheetConfig, content:
 internal fun OnrampCurrencyList(state: CurrenciesListUM, modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier.testTag(BuyTokenFiatListTestTags.LAZY_LIST),
-        contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
+        contentPadding = PaddingValues(horizontal = 16.dp),
     ) {
         item(key = "search_bar") {
             SearchBar(
                 state = state.searchBarUM,
-                modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing20),
+                modifier = Modifier.padding(bottom = 20.dp),
             )
         }
         when (state) {
@@ -74,7 +75,7 @@ private fun LazyListScope.currencyListError(state: CurrenciesListUM.Error) {
                 color = TangemTheme.colors.text.tertiary,
             )
             SecondarySmallButton(
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
+                modifier = Modifier.padding(top = 12.dp),
                 config = SmallButtonConfig(
                     text = resourceReference(id = R.string.try_to_load_data_again_button_title),
                     onClick = state.onRetry,
@@ -91,7 +92,7 @@ private fun LazyListScope.currencyListLoading(state: CurrenciesListUM.Loading) {
             items = section.items,
             key = { item -> item.id },
             contentType = { item -> item::class.java },
-            itemContent = { CurrencyLoading(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing16)) },
+            itemContent = { CurrencyLoading(modifier = Modifier.padding(vertical = 16.dp)) },
         )
     }
 }
@@ -108,7 +109,7 @@ private fun LazyListScope.currencyListContent(state: CurrenciesListUM.Content) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable(onClick = item.onClick)
-                        .padding(vertical = TangemTheme.dimens.spacing16)
+                        .padding(vertical = 16.dp)
                         .testTag(BuyTokenFiatListTestTags.LAZY_LIST_ITEM),
                     currency = item,
                 )
@@ -131,17 +132,17 @@ private fun GroupTitle(title: String, modifier: Modifier = Modifier) {
 private fun CurrencyContent(currency: CurrencyItemState.Content, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(
             modifier = Modifier
-                .size(TangemTheme.dimens.size36)
+                .size(36.dp)
                 .clip(CircleShape),
             model = currency.onrampCurrency.image,
             contentDescription = null,
         )
-        Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2)) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = currency.onrampCurrency.code,
                 style = TangemTheme.typography.subtitle2,
@@ -160,17 +161,17 @@ private fun CurrencyContent(currency: CurrencyItemState.Content, modifier: Modif
 private fun CurrencyLoading(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CircleShimmer(modifier = Modifier.size(TangemTheme.dimens.size36))
-        Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6)) {
+        CircleShimmer(modifier = Modifier.size(36.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             TextShimmer(
-                modifier = Modifier.width(width = TangemTheme.dimens.size70),
+                modifier = Modifier.width(width = 70.dp),
                 style = TangemTheme.typography.subtitle2,
             )
             TextShimmer(
-                modifier = Modifier.width(width = TangemTheme.dimens.size52),
+                modifier = Modifier.width(width = 52.dp),
                 style = TangemTheme.typography.caption2,
             )
         }

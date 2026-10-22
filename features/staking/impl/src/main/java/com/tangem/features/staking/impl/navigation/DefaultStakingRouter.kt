@@ -1,9 +1,9 @@
 package com.tangem.features.staking.impl.navigation
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.utils.popAndPush
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.popToOrReplaceCurrent
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -12,7 +12,7 @@ import javax.inject.Inject
 @ModelScoped
 internal class DefaultStakingRouter @Inject constructor(
     private val urlOpener: UrlOpener,
-    private val router: AppRouter,
+    private val router: Router,
 ) : InnerStakingRouter {
 
     override fun openUrl(url: String) {
@@ -20,7 +20,7 @@ internal class DefaultStakingRouter @Inject constructor(
     }
 
     override fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency) {
-        router.popAndPush(
+        router.popToOrReplaceCurrent(
             AppRoute.CurrencyDetails(
                 userWalletId = userWalletId,
                 currency = currency,

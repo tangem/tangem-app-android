@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -17,7 +18,7 @@ import com.tangem.features.tokendetails.impl.R
 @Composable
 internal fun StakingTemporaryUnavailableBlock(modifier: Modifier = Modifier) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = modifier.fillMaxWidth(),
     ) {
         Text(
@@ -40,7 +41,7 @@ internal fun StakingTemporaryUnavailableBlock(modifier: Modifier = Modifier) {
 private fun StakingTemporaryUnavailableBlock_Preview() {
     TangemThemePreview {
         StakingTemporaryUnavailableBlock(
-            modifier = Modifier.padding(TangemTheme.dimens.spacing16),
+            modifier = Modifier.padding(16.dp),
         )
     }
 }

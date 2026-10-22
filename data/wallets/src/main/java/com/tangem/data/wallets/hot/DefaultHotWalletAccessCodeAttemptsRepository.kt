@@ -46,7 +46,7 @@ class DefaultHotWalletAccessCodeAttemptsRepository @Inject constructor(
     override suspend fun resetAttempts(hotWalletId: HotWalletId) {
         val authAttemptId = HotWalletAccessCodeAttemptsRepository.AttemptId(
             hotWalletId = hotWalletId,
-            auth = true,
+            isAuth = true,
         )
 
         appPreferencesStore.editData { data ->
@@ -66,10 +66,17 @@ class DefaultHotWalletAccessCodeAttemptsRepository @Inject constructor(
             )
         }.distinctUntilChanged()
 
-        return flow.transformLatest {
+        return flow.transformLatest { attemptRecord ->
             while (true) {
-                emit(toState(id, it.attempts, it.deadline, it.bootCount))
-                val remaining = remainingSeconds(it.deadline, it.bootCount)
+                emit(
+                    toState(
+                        id = id,
+                        count = attemptRecord.attempts,
+                        deadlineElapsed = attemptRecord.deadline,
+                        bootStored = attemptRecord.bootCount,
+                    ),
+                )
+                val remaining = remainingSeconds(attemptRecord.deadline, attemptRecord.bootCount)
                 if (remaining <= 0) break
                 delay(timeMillis = 1000)
             }
@@ -106,14 +113,14 @@ class DefaultHotWalletAccessCodeAttemptsRepository @Inject constructor(
 
         return when {
             count < fast -> Attempts.FastForward(count)
-            id.auth && count >= deletion -> Attempts.Deletion
-            id.auth && count >= attention -> {
+            id.isAuth && count >= deletion -> Attempts.Deletion
+            id.isAuth && count >= attention -> {
                 val remaining = remainingSeconds(deadlineElapsed, bootStored)
                 Attempts.BeforeDeletion(count, remaining, deletion - count)
             }
             else -> {
                 val remaining = remainingSeconds(deadlineElapsed, bootStored)
-                val newCount = if (id.auth) {
+                val newCount = if (id.isAuth) {
                     count
                 } else {
                     MAX_FAST_FORWARD_ATTEMPTS

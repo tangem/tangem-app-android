@@ -75,6 +75,13 @@ interface WalletRegistrar {
     suspend fun forgetRegistration(walletId: String): Either<WalletRegistrationError, Unit>
 
     /**
+     * Records [walletId] as registered without a network call, for a registration that reached the same endpoint
+     * through another client (the social binding), so the next [register] is skipped. Takes no wallet lock: that
+     * client calls it while still holding one.
+     */
+    suspend fun markRegistered(walletId: String): Either<WalletRegistrationError, Unit>
+
+    /**
      * Phase 2: sends the [prepared] registration, persists the reissued tokens, and marks the wallet
      * registered. No card needed — safe to run after the session has closed.
      */

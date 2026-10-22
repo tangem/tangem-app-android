@@ -24,7 +24,7 @@ internal class StakingBalanceEntryConverterTest {
             address = JAILED_ADDRESS,
             status = Yield.Validator.ValidatorStatus.JAILED,
             name = "Jailed validator",
-            preferred = false,
+            isPreferred = false,
             isStrategicPartner = false,
         ),
     )

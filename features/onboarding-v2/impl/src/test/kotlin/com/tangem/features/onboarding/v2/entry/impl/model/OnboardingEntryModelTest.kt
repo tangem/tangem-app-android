@@ -93,7 +93,7 @@ internal class OnboardingEntryModelTest {
 
         val route = model.startRoute as OnboardingRoute.MultiWallet
         Assertions.assertEquals(expectedMultiWalletMode, route.mode)
-        Assertions.assertEquals(true, route.withSeedPhraseFlow)
+        Assertions.assertEquals(true, route.isSeedPhraseFlow)
     }
 
     @ParameterizedTest
@@ -119,7 +119,7 @@ internal class OnboardingEntryModelTest {
         val model = createModel(this)
 
         val route = model.startRoute as OnboardingRoute.MultiWallet
-        Assertions.assertEquals(false, route.withSeedPhraseFlow)
+        Assertions.assertEquals(false, route.isSeedPhraseFlow)
     }
 
     @Test

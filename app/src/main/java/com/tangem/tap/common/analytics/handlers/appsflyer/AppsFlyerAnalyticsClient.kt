@@ -11,6 +11,7 @@ import com.tangem.tap.common.analytics.appsflyer.TangemAFConversionListener
 import com.tangem.tap.common.analytics.handlers.firebase.UnderscoreAnalyticsEventConverter
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
+import com.tangem.wallet.BuildConfig
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -34,7 +35,7 @@ class AppsFlyerClient @AssistedInject constructor(
     init {
         with(appsFlyerLib) {
             setAppId(context.packageName)
-            setDebugLog(true)
+            setDebugLog(BuildConfig.LOG_ENABLED)
 
             init(apiKey, tangemAFConversionListener, context)
             subscribeForDeepLink(appsFlyerDeepLinkListener)

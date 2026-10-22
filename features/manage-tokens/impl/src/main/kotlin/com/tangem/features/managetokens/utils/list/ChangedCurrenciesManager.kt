@@ -52,7 +52,7 @@ internal class ChangedCurrenciesManager {
             }
         } else {
             addToIfNotPresent.update { items ->
-                val alreadyAdded = items[currency] ?: emptySet()
+                val alreadyAdded = items[currency].orEmpty()
                 if (network in alreadyAdded) {
                     return@update items
                 }

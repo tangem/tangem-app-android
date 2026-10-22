@@ -21,7 +21,7 @@ import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.BatchUpdateFetcher
 import com.tangem.pagination.BatchUpdateResult
-import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
+import com.tangem.pagination.fetcher.BatchFetcher
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -49,6 +49,7 @@ internal class PolymarketPositionsLoaderTest {
     private val deriveAddresses: DerivePolymarketAddressesUseCase = mockk()
     private val wallet = UserWalletId("011")
     private val addresses: PolymarketAddresses = mockk()
+    /** Every page read, as the list identity and the zero-based page index. */
     private val requests = mutableListOf<Pair<PolymarketPositionsListConfig, Int>>()
     private var fetch: suspend (PolymarketPositionsListConfig, Int) -> BatchFetchResult<List<PolymarketPosition>> =
         { _, _ -> page("one") }
@@ -90,7 +91,7 @@ internal class PolymarketPositionsLoaderTest {
         // Arrange
         val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
         val response = CompletableDeferred<BatchFetchResult<List<PolymarketPosition>>>()
-        fetch = { _, offset -> if (offset == 0) page("active", last = false) else response.await() }
+        fetch = { _, index -> if (index == 0) page("active", last = false) else response.await() }
         feed.resume(backgroundScope)
         runCurrent()
 
@@ -101,8 +102,8 @@ internal class PolymarketPositionsLoaderTest {
         response.complete(
             BatchFetchResult.Success(
                 listOf(createPolymarketPosition(assetId = "won", result = PolymarketPositionResult.WON)),
-                empty = false,
-                last = true,
+                isEmpty = false,
+                isLast = true,
             ),
         )
         runCurrent()
@@ -114,7 +115,7 @@ internal class PolymarketPositionsLoaderTest {
         assertThat(loading).isEqualTo(Content.Loading)
         assertThat(matched).containsExactly("condition:won")
         assertThat(ids(feed)).containsExactly("condition:active", "condition:won").inOrder()
-        assertThat(requests.map { it.second }).containsExactly(0, 30).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1).inOrder()
     }
 
     @Test
@@ -141,7 +142,7 @@ internal class PolymarketPositionsLoaderTest {
     fun `GIVEN filtered continuation fails without matches WHEN retried THEN keeps the filter and retry offset`() = runTest {
         // Arrange
         val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
-        fetch = { _, offset -> if (offset == 0) page("active", last = false) else error() }
+        fetch = { _, index -> if (index == 0) page("active", last = false) else error() }
         feed.resume(backgroundScope)
         runCurrent()
 
@@ -155,7 +156,7 @@ internal class PolymarketPositionsLoaderTest {
 
         // Assert
         assertThat(feed.state.value.content).isEqualTo(Content.Empty)
-        assertThat(requests.map { it.second }).containsExactly(0, 30, 30).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1, 1).inOrder()
     }
 
     @Test
@@ -163,8 +164,8 @@ internal class PolymarketPositionsLoaderTest {
         // Arrange
         val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
         val response = CompletableDeferred<BatchFetchResult<List<PolymarketPosition>>>()
-        fetch = { _, offset ->
-            if (offset == 0) BatchFetchResult.Success(emptyList(), empty = true, last = false) else response.await()
+        fetch = { _, index ->
+            if (index == 0) BatchFetchResult.Success(emptyList(), isEmpty = true, isLast = false) else response.await()
         }
 
         // Act
@@ -181,14 +182,14 @@ internal class PolymarketPositionsLoaderTest {
         // Assert
         assertThat(loading).isEqualTo(Content.Loading)
         assertThat(ids(feed)).containsExactly("condition:one")
-        assertThat(requests.map { it.second }).containsExactly(0, 30, 30).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1, 1).inOrder()
     }
 
     @Test
-    fun `GIVEN failed next page WHEN retry tapped THEN retries same offset and stops at the end`() = runTest {
+    fun `GIVEN failed next page WHEN retry tapped THEN retries same page and stops at the end`() = runTest {
         // Arrange
         val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
-        fetch = { _, offset -> if (offset == 0) page("one", last = false) else error() }
+        fetch = { _, index -> if (index == 0) page("one", last = false) else error() }
         feed.resume(backgroundScope)
         runCurrent()
         val loadMore = (data(feed).nextPage as NextPage.Ready).onLoadMore
@@ -208,7 +209,7 @@ internal class PolymarketPositionsLoaderTest {
         assertThat(failed.positions.map { it.id }).containsExactly("condition:one")
         assertThat(ids(feed)).containsExactly("condition:one", "condition:two").inOrder()
         assertThat(data(feed).nextPage).isEqualTo(NextPage.End)
-        assertThat(requests.map { it.second }).containsExactly(0, 30, 30).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1, 1).inOrder()
     }
 
     @Test
@@ -223,7 +224,7 @@ internal class PolymarketPositionsLoaderTest {
 
         // Assert
         assertThat(feed.state.value.content).isSameInstanceAs(initial)
-        assertThat(requests.map { it.second }).containsExactly(0, 30).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1).inOrder()
     }
 
     @Test
@@ -231,12 +232,12 @@ internal class PolymarketPositionsLoaderTest {
         runTest {
             // Arrange
             val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
-            fetch = { _, offset -> page(offset.toString(), last = offset == 60) }
+            fetch = { _, index -> page(index.toString(), last = index == 2) }
             feed.resume(backgroundScope)
             runCurrent()
             (data(feed).nextPage as NextPage.Ready).onLoadMore()
             runCurrent()
-            fetch = { _, offset -> page(if (offset == 30) "31" else offset.toString(), last = offset == 60) }
+            fetch = { _, index -> page(if (index == 1) "1b" else index.toString(), last = index == 2) }
 
             // Act
             feed.pause()
@@ -247,9 +248,9 @@ internal class PolymarketPositionsLoaderTest {
             runCurrent()
 
             // Assert
-            assertThat(returned.positions.map { it.id }).containsExactly("condition:0", "condition:31").inOrder()
-            assertThat(ids(feed)).containsExactly("condition:0", "condition:31", "condition:60").inOrder()
-            assertThat(requests.map { it.second }).containsExactly(0, 30, 0, 30, 60).inOrder()
+            assertThat(returned.positions.map { it.id }).containsExactly("condition:0", "condition:1b").inOrder()
+            assertThat(ids(feed)).containsExactly("condition:0", "condition:1b", "condition:2").inOrder()
+            assertThat(requests.map { it.second }).containsExactly(0, 1, 0, 1, 2).inOrder()
         }
 
     @Test
@@ -265,18 +266,18 @@ internal class PolymarketPositionsLoaderTest {
 
         // Assert
         assertThat(ids(reopened)).containsExactly("condition:one")
-        assertThat(requests.map { it.second }).containsExactly(0, 30, 0).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1, 0).inOrder()
     }
 
     @Test
     fun `GIVEN page overlaps with previous page WHEN appended THEN retains unique cards in server order`() = runTest {
         // Arrange
         val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
-        fetch = { _, offset ->
-            if (offset == 0) page("one", last = false) else BatchFetchResult.Success(
+        fetch = { _, index ->
+            if (index == 0) page("one", last = false) else BatchFetchResult.Success(
                 listOf(createPolymarketPosition(assetId = "one"), createPolymarketPosition(assetId = "two")),
-                empty = false,
-                last = true,
+                isEmpty = false,
+                isLast = true,
             )
         }
         feed.resume(backgroundScope)
@@ -393,7 +394,7 @@ internal class PolymarketPositionsLoaderTest {
         val feed = createLoader().createFeed(
             wallet, PolymarketPositionsTab.FINISHED, onClosedPositionClick = onClosedClick,
         )
-        fetch = { _, _ -> BatchFetchResult.Success(listOf(selected, other), empty = false, last = true) }
+        fetch = { _, _ -> BatchFetchResult.Success(listOf(selected, other), isEmpty = false, isLast = true) }
         feed.resume(backgroundScope)
         runCurrent()
         val initial = data(feed)
@@ -465,7 +466,7 @@ internal class PolymarketPositionsLoaderTest {
             assertThat(failed.onRefreshRetry).isNotNull()
 
             // Act
-            fetch = { _, _ -> BatchFetchResult.Success(emptyList(), empty = true, last = true) }
+            fetch = { _, _ -> BatchFetchResult.Success(emptyList(), isEmpty = true, isLast = true) }
             requireNotNull(failed.onRefreshRetry).invoke()
             runCurrent()
 
@@ -482,7 +483,7 @@ internal class PolymarketPositionsLoaderTest {
     ) = runTest {
         // Arrange
         val feed = createLoader().createFeed(wallet, tab)
-        fetch = { _, _ -> BatchFetchResult.Success(emptyList(), empty = true, last = true) }
+        fetch = { _, _ -> BatchFetchResult.Success(emptyList(), isEmpty = true, isLast = true) }
         feed.resume(backgroundScope)
         runCurrent()
         fetch = { _, _ -> error() }
@@ -509,7 +510,7 @@ internal class PolymarketPositionsLoaderTest {
 
     private suspend fun TestScope.twoPages(): PolymarketPositionsLoader.Feed {
         val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
-        fetch = { _, offset -> if (offset == 0) page("one", last = false) else page("two") }
+        fetch = { _, index -> if (index == 0) page("one", last = false) else page("two") }
         feed.resume(backgroundScope)
         runCurrent()
         (data(feed).nextPage as NextPage.Ready).onLoadMore()
@@ -528,15 +529,8 @@ internal class PolymarketPositionsLoaderTest {
                 fetchDispatcher = dispatcher,
                 context = context,
                 generateNewKey = { keys -> keys.size },
-                batchFetcher = LimitOffsetBatchFetcher<PolymarketPositionsListConfig, List<PolymarketPosition>>(
-                    prefetchDistance = size,
-                    batchSize = size,
-                    subFetcher = { request, _, _ ->
-                        requests += request.params to request.offset
-                        fetch(request.params, request.offset)
-                    },
-                ),
-                updateFetcher = refreshByOffset(size),
+                batchFetcher = PagesFetcher(),
+                updateFetcher = refreshByWalking(),
             ).toBatchFlow()
         }
         val dispatchers = TestingCoroutineDispatcherProvider(dispatcher, dispatcher, dispatcher, dispatcher, dispatcher)
@@ -552,7 +546,7 @@ internal class PolymarketPositionsLoaderTest {
     }
 
     private fun page(id: String, last: Boolean = true): BatchFetchResult<List<PolymarketPosition>> =
-        BatchFetchResult.Success(listOf(createPolymarketPosition(assetId = id)), empty = false, last = last)
+        BatchFetchResult.Success(listOf(createPolymarketPosition(assetId = id)), isEmpty = false, isLast = last)
 
     private fun error() = BatchFetchResult.Error(IllegalStateException("Offline"))
 
@@ -560,18 +554,53 @@ internal class PolymarketPositionsLoaderTest {
 
     private fun ids(feed: PolymarketPositionsLoader.Feed) = data(feed).positions.map { it.id }
 
-    /** Mirrors the production update fetcher: page `k` is read again at offset `k * size` and replaced. */
-    private fun refreshByOffset(size: Int) =
+    /** Mirrors the production batch fetcher: pages are read in order, a failed page is read again. */
+    private inner class PagesFetcher : BatchFetcher<PolymarketPositionsListConfig, List<PolymarketPosition>> {
+
+        private var config: PolymarketPositionsListConfig? = null
+        private var index = 0
+
+        override suspend fun fetchFirst(
+            requestParams: PolymarketPositionsListConfig,
+        ): BatchFetchResult<List<PolymarketPosition>> {
+            config = requestParams
+            index = 0
+            return read()
+        }
+
+        override suspend fun fetchNext(
+            overrideRequestParams: PolymarketPositionsListConfig?,
+            lastResult: BatchFetchResult<List<PolymarketPosition>>,
+        ): BatchFetchResult<List<PolymarketPosition>> =
+            if (overrideRequestParams != null) fetchFirst(overrideRequestParams) else read()
+
+        private suspend fun read(): BatchFetchResult<List<PolymarketPosition>> {
+            val config = requireNotNull(config)
+            requests += config to index
+            return fetch(config, index).also { if (it is BatchFetchResult.Success) index++ }
+        }
+    }
+
+    /**
+     * Mirrors the production update fetcher: page `k` is read again through the pages before it, so a page past
+     * the end of a shrunk list is emptied without a read.
+     */
+    private fun refreshByWalking() =
         object : BatchUpdateFetcher<Int, List<PolymarketPosition>, PolymarketPositionsUpdateRequest> {
             override suspend fun BatchUpdateFetcher.UpdateContext<Int, List<PolymarketPosition>>.fetchUpdateAsync(
                 toUpdate: List<Batch<Int, List<PolymarketPosition>>>,
                 updateRequest: PolymarketPositionsUpdateRequest,
             ) {
-                toUpdate.forEach { batch ->
-                    requests += updateRequest.config to batch.key * size
-                    val positions = when (val result = fetch(updateRequest.config, batch.key * size)) {
-                        is BatchFetchResult.Success -> result.data
-                        is BatchFetchResult.Error -> throw result.throwable
+                var hasNext = true
+                toUpdate.sortedBy { it.key }.forEach { batch ->
+                    val positions = if (hasNext) {
+                        requests += updateRequest.config to batch.key
+                        when (val result = fetch(updateRequest.config, batch.key)) {
+                            is BatchFetchResult.Success -> result.data.also { hasNext = !result.isLast }
+                            is BatchFetchResult.Error -> throw result.throwable
+                        }
+                    } else {
+                        emptyList()
                     }
                     update {
                         BatchUpdateResult.Success(

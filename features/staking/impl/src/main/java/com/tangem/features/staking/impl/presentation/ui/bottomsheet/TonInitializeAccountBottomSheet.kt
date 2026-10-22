@@ -45,9 +45,9 @@ internal fun TonInitializeAccountBottomSheet(config: TangemBottomSheetConfig) {
         Column(
             modifier = Modifier
                 .padding(
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
-                    bottom = TangemTheme.dimens.spacing16,
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 16.dp,
                 )
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,

@@ -50,14 +50,14 @@ internal class YieldSupplyPromoV2Model @Inject constructor(
 
         modelScope.launch(dispatchers.io) {
             val market = yieldSupplyGetTokenStatusUseCase(token).getOrNull()
-            val rewardsApr = market
+            val rewardsApy = market
                 ?.campaign
                 ?.takeIf { it.hasActiveCampaign }
-                ?.rewardsApr
+                ?.rewardsApy
                 ?.takeIf { it > BigDecimal.ZERO }
 
             plainApy.update { market?.apy?.toPlainString() }
-            uiState.update { it.copy(incentiveChip = incentiveChipOf(rewardsApr)) }
+            uiState.update { it.copy(incentiveChip = incentiveChipOf(rewardsApy)) }
         }
     }
 
@@ -73,10 +73,10 @@ internal class YieldSupplyPromoV2Model @Inject constructor(
         policyLink = AAVE_PRIVACY_URL,
     )
 
-    private fun incentiveChipOf(rewardsApr: BigDecimal?) = rewardsApr?.let { apr ->
+    private fun incentiveChipOf(rewardsApy: BigDecimal?) = rewardsApy?.let { apy ->
         resourceReference(
             id = R.string.yield_module_promo_screen_incentivised_chip,
-            formatArgs = wrappedList(apr.formatApy()),
+            formatArgs = wrappedList(apy.formatApy()),
         )
     }
 

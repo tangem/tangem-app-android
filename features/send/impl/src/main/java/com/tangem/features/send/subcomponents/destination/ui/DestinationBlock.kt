@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIcon
 import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.account.AccountIconSize
@@ -49,7 +50,7 @@ internal fun DestinationBlock(
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
             .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)
-            .padding(TangemTheme.dimens.spacing12)
+            .padding(12.dp)
             .testTag(SendConfirmScreenTestTags.RECIPIENT_BLOCK),
     ) {
         AddressWithMemoBlock(
@@ -63,7 +64,7 @@ internal fun DestinationBlock(
                 onClick = onAddContactClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = TangemTheme.dimens.spacing12),
+                    .padding(top = 12.dp),
             )
         }
     }
@@ -81,8 +82,8 @@ private fun AddressWithMemoBlock(
     )
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
-        modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
+        horizontalArrangement = Arrangement.spacedBy(24.dp),
+        modifier = Modifier.padding(top = 8.dp),
     ) {
         val contactName = address.contactName
         val contactIcon = address.contactIcon
@@ -114,8 +115,8 @@ private fun AddressWithMemoBlock(
             IdentIcon(
                 address = address.value,
                 modifier = Modifier
-                    .size(TangemTheme.dimens.size36)
-                    .clip(RoundedCornerShape(TangemTheme.dimens.radius18))
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(18.dp))
                     .background(TangemTheme.colors.background.tertiary)
                     .testTag(SendConfirmScreenTestTags.RECIPIENT_ADDRESS_ICON),
             )
@@ -128,7 +129,7 @@ private fun AddressWithMemoBlock(
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing8)
+                .padding(top = 8.dp)
                 .testTag(SendConfirmScreenTestTags.RECIPIENT_MEMO),
         )
     }

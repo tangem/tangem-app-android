@@ -76,9 +76,9 @@ private fun ManagedCryptoCurrency.Token.toUiModel(
             NetworksUM.Collapsed
         } else {
             NetworksUM.Expanded(
-                availableNetworks.map {
-                    it.toCurrencyNetworkModel(
-                        isSelected = it.network in addedIn,
+                availableNetworks.map { sourceNetwork ->
+                    sourceNetwork.toCurrencyNetworkModel(
+                        isSelected = sourceNetwork.network in addedIn,
                         isEditable = false,
                         onSelectedStateChange = { _, _ -> },
                         onLongTap = { _ -> },

@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -29,10 +30,10 @@ fun TxHistoryTitle(onExploreClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
-            .padding(top = TangemTheme.dimens.spacing12)
-            .padding(horizontal = TangemTheme.dimens.spacing12)
+            .padding(top = 12.dp)
+            .padding(horizontal = 12.dp)
             .fillMaxWidth()
-            .heightIn(min = TangemTheme.dimens.size24),
+            .heightIn(min = 24.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -48,10 +49,10 @@ fun TxHistoryTitle(onExploreClick: () -> Unit, modifier: Modifier = Modifier) {
                 .clickable(onClick = onExploreClick)
                 .testTag(TransactionHistoryBlockTestTags.EXPLORER_ICON),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing2),
+            horizontalArrangement = Arrangement.spacedBy(space = 2.dp),
         ) {
             Icon(
-                modifier = Modifier.size(size = TangemTheme.dimens.size20),
+                modifier = Modifier.size(size = 20.dp),
                 painter = painterResource(id = R.drawable.ic_compass_24),
                 tint = TangemTheme.colors.icon.informative,
                 contentDescription = null,

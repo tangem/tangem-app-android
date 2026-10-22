@@ -13,7 +13,6 @@ import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.express.ExpressErrorResolver
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.ExpressServiceFetcher
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -41,14 +40,12 @@ internal object ExpressDataModule {
         expressHistoryDao: ExpressHistoryDao,
         expressUtils: ExpressUtils,
         dispatchers: CoroutineDispatcherProvider,
-        txHistoryFeatureToggles: TxHistoryFeatureToggles,
     ): ExpressRepository {
         return DefaultExpressRepository(
             tangemExpressApi = tangemExpressApi,
             expressHistoryDao = expressHistoryDao,
             expressUtils = expressUtils,
             dispatchers = dispatchers,
-            txHistoryFeatureToggles = txHistoryFeatureToggles,
         )
     }
 

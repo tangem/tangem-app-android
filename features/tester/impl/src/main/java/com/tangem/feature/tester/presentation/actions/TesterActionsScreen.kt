@@ -202,9 +202,9 @@ private fun createEmailShareIntent(activity: Activity, file: File?): Intent {
     val builder = ShareCompat.IntentBuilder(activity)
         .setType("text/plain")
 
-    file?.let {
+    file?.let { existingFile ->
         builder.setStream(
-            FileProvider.getUriForFile(activity, "${activity.packageName}.provider", it),
+            FileProvider.getUriForFile(activity, "${activity.packageName}.provider", existingFile),
         )
     }
 

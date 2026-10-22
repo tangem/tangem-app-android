@@ -46,12 +46,12 @@ internal fun MultiWalletSeedPhraseStart(state: MultiWalletSeedPhraseUM.Start, mo
                 modifier = Modifier
                     .background(
                         color = TangemTheme.colors.icon.warning.copy(alpha = 0.12f),
-                        shape = RoundedCornerShape(TangemTheme.dimens.radius8),
+                        shape = RoundedCornerShape(8.dp),
                     ),
             ) {
                 Text(
                     modifier = Modifier
-                        .padding(horizontal = TangemTheme.dimens.size12, vertical = TangemTheme.dimens.size4),
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
                     text = stringResourceSafe(id = R.string.onboarding_seed_phrase_intro_legacy),
                     color = TangemTheme.colors.text.warning,
                     style = TangemTheme.typography.body1,

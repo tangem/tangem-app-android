@@ -16,16 +16,17 @@ private const val PERCENT_SCALE = 2
  * The point is moved left because the shared formatter takes a share, not a percentage, and a rate that is absent
  * reads as the dash the shared formatter falls back to.
  */
-internal fun BigDecimal?.formatApy(): TextReference = stringReference(
-    this?.movePointLeft(PERCENT_SCALE).format { percent(canBeLower = true) },
-)
+internal fun BigDecimal?.formatApy(): TextReference = stringReference(formatApyText())
+
+internal fun BigDecimal?.formatApyText(): String =
+    this?.movePointLeft(PERCENT_SCALE).format { percent(canBeLower = true) }
 
 /** The same rate as it reaches a screen over a route — a raw backend string such as `9.1149999999999998`. */
 internal fun String?.formatApy(): TextReference = this?.toBigDecimalOrNull().formatApy()
 
 /** [formatApy] without the percent sign, for the strings that carry their own. */
-internal fun String?.formatApyValue(): TextReference = stringReference(
-    this?.toBigDecimalOrNull()
-        ?.movePointLeft(PERCENT_SCALE)
-        .format { percent(canBeLower = true, withPercentSign = false) },
+internal fun BigDecimal?.formatApyValue(): TextReference = stringReference(
+    this?.movePointLeft(PERCENT_SCALE).format { percent(canBeLower = true, withPercentSign = false) },
 )
+
+internal fun String?.formatApyValue(): TextReference = this?.toBigDecimalOrNull().formatApyValue()

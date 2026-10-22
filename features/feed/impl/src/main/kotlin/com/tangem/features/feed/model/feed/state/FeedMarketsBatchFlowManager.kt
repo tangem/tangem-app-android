@@ -285,7 +285,7 @@ internal class FeedMarketsBatchFlowManager(
                         updateRequest = TokenMarketUpdateRequest.UpdateQuotes(
                             currencyId = fiatPriceCurrency,
                         ),
-                        async = true,
+                        isAsync = true,
                         operationId = "update quotes",
                     ),
                 )
@@ -313,7 +313,7 @@ internal class FeedMarketsBatchFlowManager(
                                 interval = TokenMarketListConfig.Interval.H24,
                                 currency = currentAppCurrency().code,
                             ),
-                            async = true,
+                            isAsync = true,
                             operationId = batchesKeysToLoad.toString() + "h24",
                         ),
                     )

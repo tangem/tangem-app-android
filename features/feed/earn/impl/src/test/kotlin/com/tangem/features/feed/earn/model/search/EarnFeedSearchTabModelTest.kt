@@ -5,12 +5,12 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.ui.markets.tokenselector.TokenSelectorSectionUM
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -84,7 +84,7 @@ internal class EarnFeedSearchTabModelTest {
     private val getWalletIconUseCase: GetWalletIconUseCase = mockk()
     private val walletIconUMConverter: WalletIconUMConverter = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val addToPortfolioManager: AddToPortfolioManager = mockk(relaxed = true) {
         // real channels: `receiveAsFlow()` on a relaxed Channel spins on a stubbed ChannelResult
         every { onDismiss } returns Channel()
@@ -110,7 +110,7 @@ internal class EarnFeedSearchTabModelTest {
             userWalletsListRepository,
             getSearchResultsUseCase,
             analyticsEventHandler,
-            appRouter,
+            router,
         )
         catalog.value = null
         fetchCount = 0
@@ -341,7 +341,7 @@ internal class EarnFeedSearchTabModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { appRouter.push(ofType<AppRoute.CurrencyDetails>(), any()) }
+        verify(exactly = 1) { router.push(ofType<AppRoute.CurrencyDetails>(), any()) }
         verify(exactly = 1) { analyticsEventHandler.send(ofType<EarnSearchAnalyticsEvent.PortfolioItemClicked>()) }
     }
 
@@ -425,7 +425,7 @@ internal class EarnFeedSearchTabModelTest {
             getWalletIconUseCase = getWalletIconUseCase,
             walletIconUMConverter = walletIconUMConverter,
             analyticsEventHandler = analyticsEventHandler,
-            appRouter = appRouter,
+            router = router,
             addToPortfolioManagerFactory = addToPortfolioManagerFactory,
         ).also { model = it }
     }

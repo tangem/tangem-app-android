@@ -1,7 +1,6 @@
 package com.tangem.data.polymarket.pagination
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.polymarket.error.PolymarketEmptyFeedException
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketEventsPage
@@ -31,7 +30,7 @@ internal class PolymarketEventsBatchFetcherTest {
         assertThat(result).isInstanceOf(BatchFetchResult.Success::class.java)
         val success = result as BatchFetchResult.Success
         assertThat(success.data.events).containsExactly(event)
-        assertThat(success.last).isFalse()
+        assertThat(success.isLast).isFalse()
     }
 
     @Test
@@ -43,7 +42,7 @@ internal class PolymarketEventsBatchFetcherTest {
         val result = fetcher.fetchFirst(config)
 
         // Assert
-        assertThat((result as BatchFetchResult.Success).last).isTrue()
+        assertThat((result as BatchFetchResult.Success).isLast).isTrue()
     }
 
     @Test
@@ -79,25 +78,29 @@ internal class PolymarketEventsBatchFetcherTest {
     }
 
     @Test
-    fun `GIVEN a first page that stays empty WHEN fetchFirst THEN it is reported as an empty feed`() = runTest {
+    fun `GIVEN an empty first page with nothing behind WHEN fetchFirst THEN the feed is empty and ends`() = runTest {
         // Arrange
-        val fetcher = createFetcher(pages = List(size = 2) { Result.success(page(events = emptyList())) })
+        val fetcher = createFetcher(
+            pages = listOf(Result.success(page(events = emptyList(), hasNext = false, cursor = null))),
+        )
 
         // Act
         val result = fetcher.fetchFirst(config)
 
         // Assert
-        assertThat((result as BatchFetchResult.Error).throwable)
-            .isInstanceOf(PolymarketEmptyFeedException::class.java)
+        val success = result as BatchFetchResult.Success
+        assertThat(success.isEmpty).isTrue()
+        assertThat(success.isLast).isTrue()
+        assertThat(requestedCursors).containsExactly(null)
     }
 
     @Test
-    fun `GIVEN an empty first page that fills up WHEN fetchFirst THEN the retry succeeds`() = runTest {
+    fun `GIVEN an empty first page with more behind WHEN fetchFirst THEN its cursor is followed at once`() = runTest {
         // Arrange
         val fetcher = createFetcher(
             pages = listOf(
-                Result.success(page(events = emptyList())),
-                Result.success(page()),
+                Result.success(page(events = emptyList(), hasNext = true, cursor = "cursor-1")),
+                Result.success(page(hasNext = true, cursor = "cursor-2")),
             ),
         )
 
@@ -105,7 +108,70 @@ internal class PolymarketEventsBatchFetcherTest {
         val result = fetcher.fetchFirst(config)
 
         // Assert
-        assertThat((result as BatchFetchResult.Success).data.events).containsExactly(event)
+        val success = result as BatchFetchResult.Success
+        assertThat(success.data.events).containsExactly(event)
+        assertThat(success.data.requestCursor).isEqualTo("cursor-1")
+        assertThat(success.isLast).isFalse()
+        assertThat(requestedCursors).containsExactly(null, "cursor-1").inOrder()
+    }
+
+    @Test
+    fun `GIVEN a followed empty page WHEN fetchNext THEN the cursor of the served page is requested`() = runTest {
+        // Arrange
+        val fetcher = createFetcher(
+            pages = listOf(
+                Result.success(page(events = emptyList(), hasNext = true, cursor = "cursor-1")),
+                Result.success(page(hasNext = true, cursor = "cursor-2")),
+                Result.success(page(hasNext = false, cursor = null)),
+            ),
+        )
+        val first = fetcher.fetchFirst(config)
+
+        // Act
+        fetcher.fetchNext(overrideRequestParams = null, lastResult = first)
+
+        // Assert
+        assertThat(requestedCursors).containsExactly(null, "cursor-1", "cursor-2").inOrder()
+    }
+
+    @Test
+    fun `GIVEN empty pages that keep promising more WHEN fetchFirst THEN the feed ends after the followed ones`() =
+        runTest {
+            // Arrange
+            val fetcher = createFetcher(
+                pages = List(size = 5) { index ->
+                    Result.success(page(events = emptyList(), hasNext = true, cursor = "cursor-$index"))
+                },
+            )
+
+            // Act
+            val result = fetcher.fetchFirst(config)
+
+            // Assert
+            val success = result as BatchFetchResult.Success
+            assertThat(success.isEmpty).isTrue()
+            assertThat(success.isLast).isTrue()
+            assertThat(requestedCursors).containsExactly(null, "cursor-0", "cursor-1", "cursor-2").inOrder()
+        }
+
+    @Test
+    fun `GIVEN a failure behind an empty page WHEN fetchFirst THEN the failure is reported`() = runTest {
+        // Arrange
+        val failure = IOException("boom")
+        val fetcher = createFetcher(
+            pages = listOf(
+                Result.success(page(events = emptyList(), hasNext = true, cursor = "cursor-1")),
+                Result.failure(failure),
+                Result.failure(failure),
+            ),
+        )
+
+        // Act
+        val result = fetcher.fetchFirst(config)
+
+        // Assert
+        assertThat((result as BatchFetchResult.Error).throwable).isEqualTo(failure)
+        assertThat(requestedCursors).containsExactly(null, "cursor-1", "cursor-1").inOrder()
     }
 
     @Test
@@ -124,7 +190,7 @@ internal class PolymarketEventsBatchFetcherTest {
 
         // Assert
         assertThat(requestedCursors).containsExactly(null, "cursor-1").inOrder()
-        assertThat((second as BatchFetchResult.Success).last).isTrue()
+        assertThat((second as BatchFetchResult.Success).isLast).isTrue()
     }
 
     @Test
@@ -143,6 +209,29 @@ internal class PolymarketEventsBatchFetcherTest {
     }
 
     @Test
+    fun `GIVEN an empty next page with more behind WHEN fetchNext THEN the page behind it is served`() = runTest {
+        // Arrange
+        val fetcher = createFetcher(
+            pages = listOf(
+                Result.success(page(hasNext = true, cursor = "cursor-1")),
+                Result.success(page(events = emptyList(), hasNext = true, cursor = "cursor-2")),
+                Result.success(page(hasNext = false, cursor = "cursor-3")),
+            ),
+        )
+        val first = fetcher.fetchFirst(config)
+
+        // Act
+        val second = fetcher.fetchNext(overrideRequestParams = null, lastResult = first)
+
+        // Assert
+        val success = second as BatchFetchResult.Success
+        assertThat(success.data.events).containsExactly(event)
+        assertThat(success.data.requestCursor).isEqualTo("cursor-2")
+        assertThat(success.isLast).isTrue()
+        assertThat(requestedCursors).containsExactly(null, "cursor-1", "cursor-2").inOrder()
+    }
+
+    @Test
     fun `GIVEN an empty next page WHEN fetchNext THEN it ends the feed instead of failing`() = runTest {
         // Arrange
         val fetcher = createFetcher(
@@ -158,8 +247,8 @@ internal class PolymarketEventsBatchFetcherTest {
 
         // Assert
         val success = second as BatchFetchResult.Success
-        assertThat(success.empty).isTrue()
-        assertThat(success.last).isTrue()
+        assertThat(success.isEmpty).isTrue()
+        assertThat(success.isLast).isTrue()
     }
 
     @Test

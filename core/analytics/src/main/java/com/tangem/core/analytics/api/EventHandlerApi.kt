@@ -29,8 +29,3 @@ interface AnalyticsHandler : AnalyticsEventHandler {
 
     override fun send(event: AnalyticsEvent)
 }
-
-interface AnalyticsHandlerHolder {
-    fun addHandler(name: String, handler: AnalyticsHandler)
-    fun removeHandler(name: String): AnalyticsHandler?
-}

@@ -7,21 +7,18 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.children.ChildNavState
 import com.arkivanov.decompose.router.pages.*
 import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.features.feed.nav.*
 import com.tangem.features.feed.search.FeedSearchComponent
 import com.tangem.features.feed.search.model.FeedSearchModel
-import com.tangem.features.feed.search.ui.FeedSearchPlaceholder
 import com.tangem.features.feed.search.ui.FeedSearchTabsContent
 import com.tangem.features.feed.ui.FeedTabUM
 import com.tangem.features.feed.v2.FeedV2Component
@@ -48,8 +45,6 @@ internal class DefaultFeedSearchComponent @AssistedInject constructor(
         .map { FeedTabUM(id = it.id.value, title = it.title, icon = it.icon) }
         .toImmutableList()
 
-    private val emptySearchPage: FeedEmptySearchComponent? = buildEmptySearchPage()
-
     private val pagesNavigation = PagesNavigation<FeedTabId>()
 
     private val pages: Value<ChildPages<FeedTabId, FeedTabComponent>> = childPages(
@@ -72,19 +67,6 @@ internal class DefaultFeedSearchComponent @AssistedInject constructor(
         onExpandSheet: () -> Unit,
         modifier: Modifier,
     ) {
-        val state by model.uiState.collectAsStateWithLifecycle()
-
-        if (state.query.isBlank()) {
-            FeedSearchPlaceholder(
-                recentQueries = state.recentQueries,
-                marketList = emptySearchPage,
-                bottomSheetState = bottomSheetState,
-                contentPadding = contentPadding,
-                modifier = modifier,
-            )
-            return
-        }
-
         val pagesState by pages.subscribeAsState()
 
         FeedSearchTabsContent(
@@ -105,12 +87,6 @@ internal class DefaultFeedSearchComponent @AssistedInject constructor(
                 modifier = tabModifier.fillMaxSize(),
             )
         }
-    }
-
-    private fun buildEmptySearchPage(): FeedEmptySearchComponent? {
-        val childContext = child(key = "emptySearchPage")
-
-        return contributors.firstNotNullOfOrNull { it.createEmptySearchPage(context = childContext) }
     }
 
     private fun createSearchTab(id: FeedTabId, componentContext: ComponentContext): FeedTabComponent {

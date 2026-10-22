@@ -36,7 +36,7 @@ internal class WcPortfolioNameDelegate @AssistedInject constructor(
             )
         } else {
             AccountTitleUM.Text(stringReference(value.wallet.name))
-                .takeIf { value.showWalletInfo }
+                .takeIf { value.shouldShowWalletInfo }
         }
     }
 

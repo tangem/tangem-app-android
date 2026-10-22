@@ -74,7 +74,6 @@ class GetAvailableFeeTokensUseCase(
                                 add(nativeCurrencyStatus)
                                 addAll(
                                     getTronGaslessTokens(
-                                        userWallet = userWallet,
                                         network = network,
                                         sentCurrencyStatus = sentCurrencyStatus,
                                         userCurrenciesStatuses = userCurrenciesStatuses,
@@ -144,12 +143,11 @@ class GetAvailableFeeTokensUseCase(
      * only token that can pay. Sponsorability is decided by [isTronGaslessSupportedUseCase] — the one the
      * quote path uses — so the offered list and the quote cannot disagree.
      *
-     * When the service sponsors account activation, a non-activated account still gets the token offered:
+     * The service sponsors account activation, so a non-activated account still gets the token offered:
      * the quote path refuses it with a fee-row error when the balance is below the activation minimum,
      * which tells the user what to do, whereas dropping the token silently leaves only TRX they do not have.
      */
     private suspend fun getTronGaslessTokens(
-        userWallet: UserWallet,
         network: Network,
         sentCurrencyStatus: CryptoCurrencyStatus,
         userCurrenciesStatuses: List<CryptoCurrencyStatus>,
@@ -157,11 +155,7 @@ class GetAvailableFeeTokensUseCase(
         val sentCurrency = sentCurrencyStatus.currency
         if (sentCurrency.network.id != network.id) return emptyList()
 
-        val isSupported = isTronGaslessSupportedUseCase(
-            userWalletId = userWallet.walletId,
-            network = network,
-            currency = sentCurrency,
-        )
+        val isSupported = isTronGaslessSupportedUseCase(network = network, currency = sentCurrency)
         if (!isSupported) return emptyList()
 
         // The caller's status is a screen-entry snapshot, so prefer the account list — but fall back to

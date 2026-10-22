@@ -3,11 +3,11 @@ package com.tangem.tap.features.details.ui.securitymode.model
 import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -32,7 +32,7 @@ internal class SecurityModeModel @Inject constructor(
     private val cardSettingsInteractor: CardSettingsInteractor,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
-    private val appRouter: AppRouter,
+    private val router: Router,
 ) : Model() {
 
     private val scannedScanResponse = cardSettingsInteractor.scannedScanResponse.value
@@ -97,7 +97,7 @@ internal class SecurityModeModel @Inject constructor(
                     val paramValue = AnalyticsParam.SecurityMode.from(selectedOption)
                     analyticsEventHandler.send(Settings.CardSettings.SecurityModeChanged(paramValue))
 
-                    appRouter.pop()
+                    router.pop()
                 }
                 is CompletionResult.Failure -> {
                     // The user cancelled the operation or it failed, so the card keeps its previous security option

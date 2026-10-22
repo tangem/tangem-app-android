@@ -13,9 +13,15 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.domain.express.models.ExpressOperationType
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.models.GaslessProtocolData
+import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.tron.TronGaslessQuote
+import com.tangem.domain.transaction.models.tron.TronGaslessSwap
+import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
@@ -460,6 +466,115 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
 
     // endregion
 
+    // region Tron gasless swap (onSwapTronGaslessDex)
+
+    @Test
+    fun `GIVEN Tron gasless fee WHEN onSwap THEN service relays the swap with its compensation`() =
+        runTest {
+            // Arrange
+            val tronStatus = tronTokenStatus()
+            val swapTx = swapTxUncompiled()
+            coEvery {
+                createTransactionUseCase(
+                    amount = any(), fee = any(), memo = any(),
+                    destination = any(), userWalletId = any(), network = any(), txExtras = any(),
+                )
+            } returns swapTx.right()
+            coEvery {
+                createAndSendTronGaslessTransactionUseCase.sendSwap(any(), any(), any(), any())
+            } returns SWAP_HASH.right()
+
+            // Act
+            val result = sut.onSwap(
+                fromSwapCurrencyStatus = tronStatus,
+                toSwapCurrencyStatus = hotStatus(),
+                swapProvider = buildSwapProvider(ExchangeProviderType.DEX),
+                swapData = tronDexSwapData(),
+                amountToSwap = "1.0",
+                balanceStatus = SwapBalanceStatus.Sufficient,
+                fee = tronGaslessSwapFee(tronStatus.status),
+                expressOperationType = ExpressOperationType.SWAP,
+                isTangemPayWithdrawal = false,
+            )
+
+            // Assert
+            assertThat((result as? SwapTransactionState.TxSent)?.txHash).isEqualTo(SWAP_HASH)
+            val userWallet = tronStatus.userWallet
+            coVerify(exactly = 1) {
+                createAndSendTronGaslessTransactionUseCase.sendSwap(
+                    userWallet = userWallet,
+                    swap = TRON_SWAP,
+                    swapTransaction = swapTx,
+                    fee = any(),
+                )
+            }
+            coVerify(exactly = 0) { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) }
+            coVerify(exactly = 0) {
+                sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
+            }
+        }
+
+    private fun tronTokenStatus(): SwapCurrencyStatus {
+        val hotWallet = mockk<UserWallet.Hot>(relaxed = true)
+        return buildSwapCurrencyStatus(
+            networkRawId = Blockchain.Tron.toNetworkId(),
+            contractAddress = TRON_USDT,
+            isCoin = false,
+            decimals = 6,
+        ).let { SwapCurrencyStatus(userWallet = hotWallet, status = it.status, account = it.account) }
+    }
+
+    private fun tronDexSwapData(): SwapDataModel = SwapDataModel(
+        toTokenAmount = SwapAmount(BigDecimal("0.5"), 18),
+        transaction = ExpressTransactionModel.DEX(
+            fromAmount = SwapAmount(BigDecimal("1.0"), 6),
+            toAmount = SwapAmount(BigDecimal("0.5"), 18),
+            txValue = "0",
+            txId = "tx-id",
+            txTo = TRON_SWAP.routerAddress,
+            txExtraId = null,
+            txFrom = TRON_SWAP.fromAddress,
+            txData = TRON_SWAP.callDataHex,
+            otherNativeFeeWei = null,
+            gas = null,
+            allowanceContract = TRON_SPENDER,
+        ),
+    )
+
+    private fun tronGaslessSwapFee(feeTokenStatus: CryptoCurrencyStatus): SwapFee {
+        val compensation = Fee.Common(
+            amount = Amount(currencySymbol = "USDT", value = BigDecimal("2.75"), decimals = 6),
+        )
+        val quote = TronGaslessQuote(
+            quoteId = "q_1",
+            quotedAmountRaw = TRON_SWAP.amount,
+            quotedToAddress = TRON_SWAP.routerAddress,
+            feeRecipient = "TFee",
+            compensationToken = TRON_USDT,
+            compensationAmountRaw = BigInteger("2750000"),
+            compensationAmountDecimal = BigDecimal("2.75"),
+            energy = 1,
+            bandwidth = 1,
+            trxCost = BigDecimal.ONE,
+            expiresAtEpochMs = 1,
+            quotedSwap = TRON_SWAP,
+        )
+        val feeExtended = TransactionFeeExtended(
+            transactionFee = TransactionFee.Single(normal = compensation),
+            feeTokenId = feeTokenStatus.currency.id,
+            gaslessProtocolData = GaslessProtocolData.Tron(quote = quote),
+        )
+        return SwapFee(
+            fee = compensation,
+            transactionFeeResult = TransactionFeeResult.LoadedExtended(feeExtended),
+            selectedFeeToken = feeTokenStatus,
+            otherNativeFee = BigDecimal.ZERO,
+            feeBucket = FeeBucket.MARKET,
+        )
+    }
+
+    // endregion
+
     // region helpers
 
     private suspend fun onSwap(provider: ExchangeProviderType, swapData: SwapDataModel?, intentId: String? = null) {
@@ -548,6 +663,17 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
         const val YIELD_PROXY = "0xYieldProxy"
         const val WALLET_ADDRESS = "0xTestAddress"
         const val INTENT_ID = "intent-id"
+        const val TRON_USDT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+        const val TRON_SPENDER = "TSpender"
+
+        val TRON_SWAP = TronGaslessSwap(
+            fromAddress = "TSender",
+            tokenContract = TRON_USDT,
+            amount = BigInteger("1000000"),
+            routerAddress = "TRouter",
+            callDataHex = "4c279d6b",
+            spenderAddress = TRON_SPENDER,
+        )
 
         val MIN_FEE: Fee = feeOf(BigDecimal("0.001"))
         val NORMAL_FEE: Fee = feeOf(BigDecimal("0.002"))

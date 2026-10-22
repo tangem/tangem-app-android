@@ -29,7 +29,7 @@ internal class PredictionTopUpLimitsResolverTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(getPredictionTopUpMinimumUseCase, getCurrencyUSDQuoteUseCase)
-        coEvery { getPredictionTopUpMinimumUseCase(USER_WALLET_ID) } returns BigDecimal("2")
+        coEvery { getPredictionTopUpMinimumUseCase(USER_WALLET_ID, any()) } returns BigDecimal("2")
         coEvery { getCurrencyUSDQuoteUseCase(USDC_RAW_ID) } returns BigDecimal("0.9999")
     }
 
@@ -48,7 +48,7 @@ internal class PredictionTopUpLimitsResolverTest {
     @Test
     fun `GIVEN no minimum WHEN resolve THEN no limits`() = runTest {
         // Arrange
-        coEvery { getPredictionTopUpMinimumUseCase(USER_WALLET_ID) } returns null
+        coEvery { getPredictionTopUpMinimumUseCase(USER_WALLET_ID, any()) } returns null
 
         // Act
         val actual = resolver.resolve(USER_WALLET_ID, usdc())
@@ -58,7 +58,21 @@ internal class PredictionTopUpLimitsResolverTest {
     }
 
     @Test
-    fun `GIVEN no USD quote WHEN resolve THEN no limits`() = runTest {
+    fun `GIVEN the minimum of the receive currency WHEN resolve THEN it is looked up for that currency`() = runTest {
+        // Arrange
+        val receiveCurrency = usdc()
+        coEvery { getPredictionTopUpMinimumUseCase(USER_WALLET_ID, receiveCurrency) } returns BigDecimal("7")
+        coEvery { getCurrencyUSDQuoteUseCase(USDC_RAW_ID) } returns BigDecimal.ONE
+
+        // Act
+        val actual = resolver.resolve(USER_WALLET_ID, receiveCurrency)
+
+        // Assert
+        assertThat(actual?.minimum).isEqualTo(BigDecimal("7.000000"))
+    }
+
+    @Test
+    fun `GIVEN no USD quote WHEN resolve THEN limits are converted one to one`() = runTest {
         // Arrange
         coEvery { getCurrencyUSDQuoteUseCase(USDC_RAW_ID) } returns null
 
@@ -66,12 +80,13 @@ internal class PredictionTopUpLimitsResolverTest {
         val actual = resolver.resolve(USER_WALLET_ID, usdc())
 
         // Assert
-        assertThat(actual).isNull()
+        assertThat(actual?.minimum).isEqualTo(BigDecimal("2.000000"))
+        assertThat(actual?.maximum).isEqualTo(BigDecimal("50000.000000"))
     }
 
     @ParameterizedTest
     @ValueSource(strings = ["0", "-1"])
-    fun `GIVEN a non-positive USD quote WHEN resolve THEN no limits`(rate: String) = runTest {
+    fun `GIVEN a non-positive USD quote WHEN resolve THEN limits are converted one to one`(rate: String) = runTest {
         // Arrange
         coEvery { getCurrencyUSDQuoteUseCase(USDC_RAW_ID) } returns BigDecimal(rate)
 
@@ -79,16 +94,16 @@ internal class PredictionTopUpLimitsResolverTest {
         val actual = resolver.resolve(USER_WALLET_ID, usdc())
 
         // Assert
-        assertThat(actual).isNull()
+        assertThat(actual?.minimum).isEqualTo(BigDecimal("2.000000"))
     }
 
     @Test
-    fun `GIVEN a currency without raw id WHEN resolve THEN no limits`() = runTest {
+    fun `GIVEN a currency without raw id WHEN resolve THEN limits are converted one to one`() = runTest {
         // Act
         val actual = resolver.resolve(USER_WALLET_ID, usdc(rawId = null))
 
         // Assert
-        assertThat(actual).isNull()
+        assertThat(actual?.minimum).isEqualTo(BigDecimal("2.000000"))
     }
 
     private fun usdc(rawId: CryptoCurrency.RawID? = USDC_RAW_ID): CryptoCurrency {

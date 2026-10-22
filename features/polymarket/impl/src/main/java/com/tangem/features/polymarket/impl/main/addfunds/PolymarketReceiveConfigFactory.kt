@@ -19,7 +19,7 @@ internal object PolymarketReceiveConfigFactory {
         shouldShowWarning = true,
         cryptoCurrency = cryptoCurrency,
         userWalletId = userWalletId,
-        showMemoDisclaimer = false,
+        shouldShowMemoDisclaimer = false,
         receiveAddress = listOf(
             ReceiveAddressModel(
                 displayType = ReceiveAddressModel.DisplayType.Default,
