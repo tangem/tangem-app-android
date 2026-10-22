@@ -19,7 +19,6 @@ import com.tangem.domain.cloudbackup.models.RestoredCloudBackup
 import com.tangem.domain.cloudbackup.usecase.RestoreCloudBackupUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImporter
@@ -48,9 +47,6 @@ internal class RestoreCloudBackupModelTest {
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     private val getBackupPasswordUseCase: GetBackupPasswordUseCase = mockk {
         coEvery { this@mockk.invoke() } returns null
-    }
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk {
-        every { isPasswordManagerEnabled } returns true
     }
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase = mockk(relaxed = true)
     private val mnemonicRepository: MnemonicRepository = mockk()
@@ -131,22 +127,6 @@ internal class RestoreCloudBackupModelTest {
         val state = model.uiState.value as RestoreCloudBackupUM.EnterPassword
         assertThat(state.password).isEqualTo("Str0ng!Pass")
         assertThat(state.isRestoreEnabled).isTrue()
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN the password manager is off WHEN EnterPassword opens THEN it is never asked`() = runTest {
-        // Arrange
-        every { hotWalletFeatureToggles.isPasswordManagerEnabled } returns false
-        val holder = holderOf(backupInfo)
-
-        // Act
-        val model = createModel(this, holder)
-        advanceUntilIdle()
-
-        // Assert
-        assertThat((model.uiState.value as RestoreCloudBackupUM.EnterPassword).password).isEmpty()
-        coVerify(exactly = 0) { getBackupPasswordUseCase() }
         model.onDestroy()
     }
 
@@ -508,7 +488,6 @@ internal class RestoreCloudBackupModelTest {
             hotWalletImporter = hotWalletImporter,
             uiMessageSender = uiMessageSender,
             analyticsEventHandler = analyticsEventHandler,
-            hotWalletFeatureToggles = hotWalletFeatureToggles,
             getBackupPasswordUseCase = getBackupPasswordUseCase,
         )
     }

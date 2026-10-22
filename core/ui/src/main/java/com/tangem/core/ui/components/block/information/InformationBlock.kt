@@ -12,6 +12,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
@@ -32,7 +33,7 @@ class InformationBlockContentScope(val scope: BoxScope) : BoxScope by scope
 fun InformationBlock(
     title: (@Composable BoxScope.() -> Unit)?,
     modifier: Modifier = Modifier,
-    contentHorizontalPadding: Dp = TangemTheme.dimens.spacing12,
+    contentHorizontalPadding: Dp = 12.dp,
     shape: Shape = TangemTheme.shapes.roundedCornersXMedium,
     action: (@Composable BoxScope.() -> Unit)? = null,
     content: (@Composable InformationBlockContentScope.() -> Unit)? = null,
@@ -119,7 +120,7 @@ private fun Preview_List() {
                     itemContent = {
                         PreviewItem(it)
                     },
-                    verticalArragement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+                    verticalArragement = Arrangement.spacedBy(8.dp),
                 )
             },
         )
@@ -134,7 +135,7 @@ private fun Preview_Plain() {
         InformationBlock(
             title = {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     TooltipText(
                         text = stringReference("Title"),
@@ -174,7 +175,7 @@ private fun Preview_Tree() {
                         stringReference("Second item"),
                         stringReference("Third item"),
                     ),
-                    itemPadding = PaddingValues(vertical = TangemTheme.dimens.spacing4),
+                    itemPadding = PaddingValues(vertical = 4.dp),
                     rootContent = {
                         PreviewItem(stringReference("Root"))
                     },
@@ -193,7 +194,7 @@ private fun PreviewItem(text: TextReference) {
         modifier = Modifier
             .fillMaxWidth()
             .background(TangemTheme.colors.background.secondary)
-            .padding(all = TangemTheme.dimens.spacing12),
+            .padding(all = 12.dp),
     ) {
         Text(
             text = text.resolveReference(),

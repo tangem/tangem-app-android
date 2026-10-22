@@ -2,12 +2,10 @@ package com.tangem.domain.polymarket.model
 
 /**
  * Failure surface of the onboarding prerequisites. Source errors are wrapped rather than flattened:
- * [Derivation] keeps user cancellation distinguishable from a real failure, and [Wallet] keeps the
+ * [Signing] keeps user cancellation distinguishable from a real failure, and [Wallet] keeps the
  * signal that decides whether the caller may retry.
  */
 sealed interface PolymarketOnboardingError : PolymarketError {
-
-    data class Derivation(val cause: PolymarketDerivationError) : PolymarketOnboardingError
 
     data class Wallet(val cause: PolymarketWalletError) : PolymarketOnboardingError
 

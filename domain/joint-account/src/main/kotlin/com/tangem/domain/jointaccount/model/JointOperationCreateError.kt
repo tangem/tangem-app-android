@@ -21,6 +21,9 @@ sealed interface JointOperationCreateError {
      */
     data object NetworkStateMoved : JointOperationCreateError
 
+    /** Blockaid flagged the operation as malicious — it is never signed */
+    data object Malicious : JointOperationCreateError
+
     /** The user dismissed the signing dialog */
     data object UserCancelled : JointOperationCreateError
 

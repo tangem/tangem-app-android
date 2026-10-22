@@ -285,8 +285,8 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
             val wrappedItems = loadItems(request, batchSize)
             BatchFetchResult.Success(
                 data = wrappedItems,
-                empty = wrappedItems.items.isEmpty(),
-                last = wrappedItems.nextPage is Page.LastPage,
+                isEmpty = wrappedItems.items.isEmpty(),
+                isLast = wrappedItems.nextPage is Page.LastPage,
             )
         }
 

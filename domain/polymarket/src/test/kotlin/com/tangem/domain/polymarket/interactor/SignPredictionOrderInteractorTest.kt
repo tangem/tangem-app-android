@@ -5,10 +5,13 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketAddresses
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderDraft
 import com.tangem.domain.polymarket.model.PredictionOrderDraftError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
+import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderValidationError
 import com.tangem.domain.polymarket.model.PredictionOrderSide
@@ -18,6 +21,7 @@ import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.domain.polymarket.signing.PredictionOrderPayload
 import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
 import com.tangem.domain.polymarket.usecase.ValidatePredictionOrderUseCase
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -31,6 +35,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 import java.math.BigInteger
+import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SignPredictionOrderInteractorTest {
@@ -51,7 +56,7 @@ internal class SignPredictionOrderInteractorTest {
 
         every { buildDraft(any(), any(), any(), any()) } returns DRAFT.right()
         coEvery { signer.signOrder(any(), any()) } returns SIGNED_ORDER.right()
-        every { validateOrder(any(), any(), any(), any(), any(), any(), any()) } returns Unit.right()
+        every { validateOrder(any(), any(), any(), any(), any(), any(), any(), any()) } returns Unit.right()
     }
 
     @Test
@@ -95,7 +100,7 @@ internal class SignPredictionOrderInteractorTest {
             val receivedAt = slot<Long>()
             val now = slot<Long>()
             every {
-                validateOrder(any(), any(), any(), any(), any(), capture(receivedAt), capture(now))
+                validateOrder(any(), any(), any(), any(), any(), any(), capture(receivedAt), capture(now))
             } returns Unit.right()
 
             // Act
@@ -121,6 +126,50 @@ internal class SignPredictionOrderInteractorTest {
         verifyNothingValidated()
     }
 
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN a placeable quote for an exchange outside the table WHEN signed THEN nothing is asked of the card`(
+        model: ForeignDomainModel,
+    ) = runTest {
+        // Arrange
+        val realInteractor = SignPredictionOrderInteractor(
+            buildDraft = BuildPredictionOrderDraftUseCase(),
+            validateOrder = validateOrder,
+            signer = signer,
+        )
+        val quote = createPlaceableQuote(
+            version = model.version,
+            exchange = model.exchange,
+            signingDomainVersion = model.signingDomainVersion,
+        )
+
+        // Act
+        val actual = realInteractor(request = createRequest().copy(quote = quote))
+
+        // Assert
+        assertThat(actual.leftOrNull()).isEqualTo(PredictionOrderFailure.Draft(error = model.expected))
+        coVerify(exactly = 0) { signer.signOrder(any(), any()) }
+    }
+
+    private fun provideTestModels(): List<ForeignDomainModel> = listOf(
+        ForeignDomainModel(
+            version = PolymarketMarketVersion.UNKNOWN,
+            exchange = "0xe3333700cA9d93003F00f0F71f8515005F6c00Aa",
+            signingDomainVersion = "3",
+            expected = PredictionOrderDraftError.UnknownMarketVersion,
+        ),
+        ForeignDomainModel(
+            version = PolymarketMarketVersion.V1,
+            exchange = FOREIGN_EXCHANGE,
+            signingDomainVersion = "2",
+            expected = PredictionOrderDraftError.ExchangeMismatch(
+                expected = PolymarketExchangeDomain.CTF,
+                quotedExchange = FOREIGN_EXCHANGE,
+                quotedDomainVersion = "2",
+            ),
+        ),
+    )
+
     @Test
     fun `GIVEN signing fails WHEN signed THEN there is nothing to check`() = runTest {
         // Arrange
@@ -140,7 +189,7 @@ internal class SignPredictionOrderInteractorTest {
     fun `GIVEN the order fails its checks WHEN signed THEN the failure is returned and not the order`() = runTest {
         // Arrange
         val error = PredictionOrderValidationError.StaleQuote(ageMillis = 120_000)
-        every { validateOrder(any(), any(), any(), any(), any(), any(), any()) } returns error.left()
+        every { validateOrder(any(), any(), any(), any(), any(), any(), any(), any()) } returns error.left()
 
         // Act
         val actual = interactor(request = createRequest())
@@ -155,9 +204,19 @@ internal class SignPredictionOrderInteractorTest {
         val signedOrder = slot<PredictionSignedOrder>()
         val draft = slot<PredictionOrderDraft>()
         val tokenId = slot<String>()
+        val marketVersion = slot<PolymarketMarketVersion>()
         val isNegRisk = slot<Boolean>()
         every {
-            validateOrder(capture(signedOrder), capture(draft), any(), capture(tokenId), capture(isNegRisk), any(), any())
+            validateOrder(
+                capture(signedOrder),
+                capture(draft),
+                any(),
+                capture(tokenId),
+                capture(marketVersion),
+                capture(isNegRisk),
+                any(),
+                any(),
+            )
         } returns Unit.right()
 
         // Act
@@ -167,6 +226,7 @@ internal class SignPredictionOrderInteractorTest {
         assertThat(signedOrder.captured).isEqualTo(SIGNED_ORDER)
         assertThat(draft.captured).isEqualTo(DRAFT)
         assertThat(tokenId.captured).isEqualTo(ASSET_ID)
+        assertThat(marketVersion.captured).isEqualTo(PolymarketMarketVersion.V1)
         assertThat(isNegRisk.captured).isFalse()
     }
 
@@ -179,8 +239,39 @@ internal class SignPredictionOrderInteractorTest {
         quoteReceivedAtMillis = RECEIVED_AT,
     )
 
+    private fun createPlaceableQuote(
+        version: PolymarketMarketVersion,
+        exchange: String?,
+        signingDomainVersion: String?,
+    ) = PredictionOrderQuote(
+        status = PredictionQuoteStatus.FULL,
+        side = PredictionOrderSide.BUY,
+        shares = BigDecimal("97.95918"),
+        notional = BigDecimal("72.00"),
+        expectedExecutionAmount = BigDecimal("100.00000"),
+        averagePrice = BigDecimal("0.720"),
+        worstCasePrice = BigDecimal("0.735"),
+        fees = PredictionOrderFees(market = BigDecimal.ZERO, builder = BigDecimal.ZERO, total = BigDecimal.ZERO),
+        total = BigDecimal("72.00"),
+        builderCode = "0x" + "00".repeat(n = 32),
+        minOrderSize = BigDecimal.ONE,
+        minOrderAmount = BigDecimal.ONE,
+        tickSize = BigDecimal("0.001"),
+        isLive = false,
+        version = version,
+        exchange = exchange,
+        signingDomainVersion = signingDomainVersion,
+    )
+
+    internal data class ForeignDomainModel(
+        val version: PolymarketMarketVersion,
+        val exchange: String?,
+        val signingDomainVersion: String?,
+        val expected: PredictionOrderDraftError,
+    )
+
     private fun verifyNothingValidated() {
-        verify(exactly = 0) { validateOrder(any(), any(), any(), any(), any(), any(), any()) }
+        verify(exactly = 0) { validateOrder(any(), any(), any(), any(), any(), any(), any(), any()) }
     }
 
     private companion object {
@@ -191,6 +282,7 @@ internal class SignPredictionOrderInteractorTest {
         const val DEPOSIT_WALLET = "0x5A057dc6394196fBa51D84457DA3FB8FA241Fc20"
         const val RECEIVED_AT = 1_787_300_000_000L
         const val MILLIS_THRESHOLD = 1_000_000_000_000L
+        const val FOREIGN_EXCHANGE = "0x000000000000000000000000000000000000dEaD"
 
         val ADDRESSES: PolymarketAddresses = mockk(relaxed = true) {
             every { depositWalletAddress } returns DEPOSIT_WALLET
@@ -202,7 +294,7 @@ internal class SignPredictionOrderInteractorTest {
 
         val DRAFT = PredictionOrderDraft(
             tokenId = ASSET_ID,
-            isNegRisk = false,
+            domain = PolymarketExchangeDomain.CTF,
             side = PredictionOrderSide.BUY,
             makerAmount = BigInteger("72000000"),
             takerAmount = BigInteger("97959184"),
@@ -211,6 +303,8 @@ internal class SignPredictionOrderInteractorTest {
             builderCode = "0x" + "00".repeat(n = 32),
         )
 
-        val QUOTE: PredictionOrderQuote = mockk(relaxed = true)
+        val QUOTE: PredictionOrderQuote = mockk(relaxed = true) {
+            every { version } returns PolymarketMarketVersion.V1
+        }
     }
 }

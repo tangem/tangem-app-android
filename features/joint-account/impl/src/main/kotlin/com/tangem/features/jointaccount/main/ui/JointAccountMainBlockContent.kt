@@ -12,6 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -19,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountRow
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.account.AccountIconSize
@@ -30,12 +34,12 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_checkmark_16
 import com.tangem.core.ui.res.generated.icons.ic_clock_16
 import com.tangem.core.ui.res.generated.icons.ic_user_plus_16
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.jointaccount.main.JointAccountMainUM
 import com.tangem.utils.StringsSigns.DASH_SIGN
-import com.tangem.core.ui.R as CoreUiR
 
 @Composable
 internal fun JointAccountMainBlockContent(
@@ -83,7 +87,11 @@ private fun JointAccountBlocked(
         title = state.title,
         subtitle = state.subtitle,
         icon = state.icon,
-        balance = state.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
+        balance = buildAnnotatedString {
+            withStyle(SpanStyle(color = TangemTheme.colors3.text.tertiary)) {
+                append(state.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference())
+            }
+        },
         priceChange = state.priceChange,
         onClick = state.onClick,
     )
@@ -221,7 +229,7 @@ private class JointAccountMainPreviewProvider : CollectionPreviewParameterProvid
         JointAccountMainUM.Loading,
         JointAccountMainUM.WaitingMembers(
             title = stringReference("Joint account"),
-            subtitle = stringReference("1 of 5 members"),
+            subtitle = stringReference("5 members"),
             icon = previewIcon,
             balance = stringReference("$0.00"),
             priceChange = previewNeutralPriceChange,
@@ -234,24 +242,28 @@ private class JointAccountMainPreviewProvider : CollectionPreviewParameterProvid
         ),
         JointAccountMainUM.WaitingMembers(
             title = stringReference("Joint account"),
-            subtitle = stringReference("Waiting for activation"),
+            subtitle = stringReference("5 members"),
             icon = previewIcon,
             balance = stringReference("$0.00"),
             priceChange = previewNeutralPriceChange,
             banner = JointAccountMainUM.BannerUM(
-                text = stringReference("Activate account"),
-                icon = Icons.ic_clock_16,
+                text = stringReference("Confirm shared address"),
+                icon = Icons.ic_checkmark_16,
                 onClick = {},
             ),
             onClick = {},
         ),
         JointAccountMainUM.WaitingMembers(
             title = stringReference("Joint account"),
-            subtitle = stringReference("3 of 5 members"),
+            subtitle = stringReference("5 members"),
             icon = previewIcon,
             balance = stringReference("$0.00"),
             priceChange = previewNeutralPriceChange,
-            banner = null,
+            banner = JointAccountMainUM.BannerUM(
+                text = stringReference("Waiting for 2 confirmations"),
+                icon = Icons.ic_clock_16,
+                onClick = {},
+            ),
             onClick = {},
         ),
         JointAccountMainUM.Blocked(
@@ -260,7 +272,6 @@ private class JointAccountMainPreviewProvider : CollectionPreviewParameterProvid
             icon = previewIcon,
             balance = stringReference("$0.00"),
             priceChange = previewNeutralPriceChange,
-            warning = stringReference("This account is temporarily unavailable"),
             onClick = {},
         ),
         JointAccountMainUM.TemporaryUnavailable,

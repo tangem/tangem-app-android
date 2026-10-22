@@ -18,7 +18,6 @@ internal class UpdateMembersInitialStateTransformerTest {
 
         // Assert
         val topBar = actual.topBar as JointAccountMembersUM.TopBarUM.Dismissible
-        assertThat(topBar.canArchive).isFalse()
         topBar.onCloseClick()
         assertThat(closed).isTrue()
     }

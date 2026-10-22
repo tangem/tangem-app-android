@@ -79,11 +79,11 @@ internal class SetRefreshStateTransformer(
         return mutate { items ->
             items.mapNotNull { button ->
                 when (button) {
-                    is WalletManageButton.Buy -> button.copy(enabled = isButtonsEnabled)
-                    is WalletManageButton.AddFunds -> button.copy(enabled = isButtonsEnabled)
-                    is WalletManageButton.Send -> button.copy(enabled = isButtonsEnabled)
-                    is WalletManageButton.Sell -> button.copy(enabled = isButtonsEnabled)
-                    is WalletManageButton.Transfer -> button.copy(enabled = isButtonsEnabled)
+                    is WalletManageButton.Buy -> button.copy(isEnabled = isButtonsEnabled)
+                    is WalletManageButton.AddFunds -> button.copy(isEnabled = isButtonsEnabled)
+                    is WalletManageButton.Send -> button.copy(isEnabled = isButtonsEnabled)
+                    is WalletManageButton.Sell -> button.copy(isEnabled = isButtonsEnabled)
+                    is WalletManageButton.Transfer -> button.copy(isEnabled = isButtonsEnabled)
                     is WalletManageButton.Receive -> button
                     is WalletManageButton.Stake -> null
                     is WalletManageButton.Swap -> null

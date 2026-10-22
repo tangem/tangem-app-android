@@ -20,6 +20,7 @@ internal class PolymarketCategoryTabUMConverter(
             PolymarketCategoryTabUM(
                 id = category.id,
                 label = category.label,
+                icon = category.icon,
                 isSelected = category.id == value.selectedCategoryId,
                 onClick = { onCategoryClick(category.id) },
             )
@@ -28,7 +29,7 @@ internal class PolymarketCategoryTabUMConverter(
 
     /**
      * @property categories categories in the order the backend serves them
-     * @property selectedCategoryId id of the category the feed is filtered by, `null` when it runs unfiltered
+     * @property selectedCategoryId id of the category the feed is filtered by, `null` while there is none to select
      */
     data class Input(
         val categories: List<PolymarketCategory>,

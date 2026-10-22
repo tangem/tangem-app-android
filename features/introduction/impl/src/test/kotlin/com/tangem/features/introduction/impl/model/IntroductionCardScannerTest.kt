@@ -3,7 +3,6 @@ package com.tangem.features.introduction.impl.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -15,6 +14,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
+import com.tangem.domain.card.models.ScanConfig
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
@@ -92,17 +92,8 @@ internal class IntroductionCardScannerTest {
         coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
         // The processor is the sdk boundary; deliver a read card straight to the success callback.
         coEvery {
-            scanCardProcessor.scan(
-                analyticsSource = any(),
-                shouldCheckIsAlreadyActivated = any(),
-                cardId = any(),
-                onProgressStateChange = any(),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any(),
-            )
-        } coAnswers { arg<suspend (ScanResponse) -> Unit>(n = 7).invoke(scanResponse) }
+            scanCardProcessor.scan(config = any())
+        } coAnswers { firstArg<ScanConfig>().callback.onSuccess(scanResponse) }
         coEvery { shouldAskPermissionUseCase(any()) } returns false
     }
 
@@ -202,17 +193,8 @@ internal class IntroductionCardScannerTest {
     fun `GIVEN the viewer cancels the scan WHEN the processor reports it THEN the cancellation is reported`() = runTest {
         // Arrange
         coEvery {
-            scanCardProcessor.scan(
-                analyticsSource = any(),
-                shouldCheckIsAlreadyActivated = any(),
-                cardId = any(),
-                onProgressStateChange = any(),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any(),
-            )
-        } coAnswers { arg<suspend (TangemError) -> Unit>(n = 6).invoke(TangemSdkError.UserCancelled()) }
+            scanCardProcessor.scan(config = any())
+        } coAnswers { firstArg<ScanConfig>().callback.onFailure(TangemSdkError.UserCancelled()) }
         var isFailureReported = false
 
         // Act
@@ -232,17 +214,8 @@ internal class IntroductionCardScannerTest {
     fun `GIVEN the scan fails for another reason WHEN the processor reports it THEN no cancellation is reported`() = runTest {
         // Arrange
         coEvery {
-            scanCardProcessor.scan(
-                analyticsSource = any(),
-                shouldCheckIsAlreadyActivated = any(),
-                cardId = any(),
-                onProgressStateChange = any(),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any(),
-            )
-        } coAnswers { arg<suspend (TangemError) -> Unit>(n = 6).invoke(TangemSdkError.NfcFeatureIsUnavailable()) }
+            scanCardProcessor.scan(config = any())
+        } coAnswers { firstArg<ScanConfig>().callback.onFailure(TangemSdkError.NfcFeatureIsUnavailable()) }
         var isFailureReported = false
 
         // Act
@@ -282,17 +255,8 @@ internal class IntroductionCardScannerTest {
     fun `GIVEN the user cancels the scan WHEN scanning THEN the caller is told it failed`() = runTest {
         // Arrange
         coEvery {
-            scanCardProcessor.scan(
-                analyticsSource = any(),
-                shouldCheckIsAlreadyActivated = any(),
-                cardId = any(),
-                onProgressStateChange = any(),
-                onWalletNotCreated = any(),
-                onCancel = any(),
-                onFailure = any(),
-                onSuccess = any(),
-            )
-        } coAnswers { arg<suspend () -> Unit>(n = 5).invoke() }
+            scanCardProcessor.scan(config = any())
+        } coAnswers { firstArg<ScanConfig>().callback.onCardVerificationFailed() }
         var isFailureReported = false
 
         // Act
@@ -312,17 +276,8 @@ internal class IntroductionCardScannerTest {
         runTest {
             // Arrange
             coEvery {
-                scanCardProcessor.scan(
-                    analyticsSource = any(),
-                    shouldCheckIsAlreadyActivated = any(),
-                    cardId = any(),
-                    onProgressStateChange = any(),
-                    onWalletNotCreated = any(),
-                    onCancel = any(),
-                    onFailure = any(),
-                    onSuccess = any(),
-                )
-            } coAnswers { arg<suspend () -> Unit>(n = 4).invoke() }
+                scanCardProcessor.scan(config = any())
+            } coAnswers { firstArg<ScanConfig>().callback.onOnboardingRequired() }
             var isLeavingReported = false
 
             // Act

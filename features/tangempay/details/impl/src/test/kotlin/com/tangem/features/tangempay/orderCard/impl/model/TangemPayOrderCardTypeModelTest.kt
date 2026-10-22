@@ -21,7 +21,6 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.customerTariffPlan
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardTypeComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderCardType
@@ -35,7 +34,6 @@ import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.CountryNames
 import io.mockk.clearMocks
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -67,7 +65,6 @@ internal class TangemPayOrderCardTypeModelTest {
     private val customerOffersRepository: CustomerOffersRepository = mockk()
     private val onboardingRepository: OnboardingRepository = mockk()
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
-    private val featureToggles: TangemPayFeatureToggles = mockk()
 
     private val status: AccountStatus.Payment = mockk {
         every { value } returns PaymentAccountStatusValue.Loading
@@ -81,7 +78,6 @@ internal class TangemPayOrderCardTypeModelTest {
         clearMocks(analytics)
         Locale.setDefault(Locale.US)
         selectedPlasticEta = null
-        every { featureToggles.isPlasticCardOrderEnabled } returns true
         every { paymentAccountStatusSupplier(userWalletId) } returns flowOf(status)
         coEvery { customerOffersRepository.getOffers(userWalletId) } returns
             customerOffers(virtualOffer(), plasticOffer()).right()
@@ -221,21 +217,6 @@ internal class TangemPayOrderCardTypeModelTest {
         // Assert
         assertThat(model.state.value.availablePlastic?.feeState).isEqualTo(FeeState.InsufficientFunds)
     }
-
-    @Test
-    fun `GIVEN plastic toggle disabled WHEN model created THEN virtual only and no customer info requested`() =
-        runTest {
-            // Arrange
-            every { featureToggles.isPlasticCardOrderEnabled } returns false
-
-            // Act
-            val model = createModel(testScope = this)
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(model.state.value.availableTypes).containsExactly(OrderCardType.Virtual)
-            coVerify(exactly = 0) { onboardingRepository.getCustomerInfo(any()) }
-        }
 
     @Test
     fun `GIVEN no plastic offer WHEN model created THEN plastic is unavailable with the residence country`() =
@@ -604,7 +585,6 @@ internal class TangemPayOrderCardTypeModelTest {
         getCustomerOffers = GetCustomerOffersUseCase(customerOffersRepository),
         onboardingRepository = onboardingRepository,
         paymentAccountStatusSupplier = paymentAccountStatusSupplier,
-        featureToggles = featureToggles,
     ).also { model = it }
 
     private fun virtualOffer() = Offer(

@@ -12,7 +12,6 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
-import com.tangem.domain.settings.SettingsFeatureToggles
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.datastore.MockStateDataStore
@@ -47,14 +46,12 @@ internal class DefaultSettingsRepositoryTest {
     )
     private val appLogsStore: AppLogsStore = mockk(relaxed = true)
     private val tangemTechApi: TangemTechApi = mockk()
-    private val settingsFeatureToggles: SettingsFeatureToggles = mockk()
 
     private val defaultLocale: Locale = Locale.getDefault()
 
     @BeforeEach
     fun setup() {
-        clearMocks(tangemTechApi, settingsFeatureToggles)
-        every { settingsFeatureToggles.isGeoCountryCacheFallbackEnabled } returns true
+        clearMocks(tangemTechApi)
         runBlocking { dataStore.updateData { emptyPreferences() } }
     }
 
@@ -84,54 +81,6 @@ internal class DefaultSettingsRepositoryTest {
         assertThat(repository.getUserCountryCode().value).isEqualTo(model.expectedCountry)
         assertThat(appPreferencesStore.getSyncOrNull(GEO_COUNTRY_KEY)).isEqualTo(model.expectedCachedCode)
         coVerify(exactly = 1) { tangemTechApi.getUserCountryCode() }
-    }
-
-    @Test
-    fun `GIVEN toggle disabled and GB locale WHEN fetchUserCountryCode THEN geo is not requested`() = runTest {
-        // Arrange
-        every { settingsFeatureToggles.isGeoCountryCacheFallbackEnabled } returns false
-        Locale.setDefault(Locale.UK)
-        val repository = createRepository()
-
-        // Act
-        repository.fetchUserCountryCode()
-
-        // Assert
-        assertThat(repository.getUserCountryCode().value).isEqualTo(UserCountry.Other(code = "GB"))
-        assertThat(appPreferencesStore.getSyncOrNull(GEO_COUNTRY_KEY)).isNull()
-        coVerify(exactly = 0) { tangemTechApi.getUserCountryCode() }
-    }
-
-    @Test
-    fun `GIVEN toggle disabled and geo returned ru WHEN fetchUserCountryCode THEN maps to Russia`() = runTest {
-        // Arrange
-        every { settingsFeatureToggles.isGeoCountryCacheFallbackEnabled } returns false
-        Locale.setDefault(Locale.GERMANY)
-        val repository = createRepository()
-        coEvery { tangemTechApi.getUserCountryCode() } returns GeoResponse(code = "RU")
-
-        // Act
-        repository.fetchUserCountryCode()
-
-        // Assert
-        assertThat(repository.getUserCountryCode().value).isEqualTo(UserCountry.Russia)
-        assertThat(appPreferencesStore.getSyncOrNull(GEO_COUNTRY_KEY)).isNull()
-    }
-
-    @Test
-    fun `GIVEN toggle disabled and geo failed WHEN fetchUserCountryCode THEN cache is ignored`() = runTest {
-        // Arrange
-        every { settingsFeatureToggles.isGeoCountryCacheFallbackEnabled } returns false
-        Locale.setDefault(Locale.GERMANY)
-        val repository = createRepository()
-        appPreferencesStore.store(key = GEO_COUNTRY_KEY, value = "fr")
-        coEvery { tangemTechApi.getUserCountryCode() } throws IOException("timeout")
-
-        // Act
-        repository.fetchUserCountryCode()
-
-        // Assert
-        assertThat(repository.getUserCountryCode().value).isEqualTo(UserCountry.Other(code = "de"))
     }
 
     @Test
@@ -227,7 +176,6 @@ internal class DefaultSettingsRepositoryTest {
         storePreferencesKeys = storePreferencesKeys,
         appLogsStore = appLogsStore,
         tangemTechApi = tangemTechApi,
-        settingsFeatureToggles = settingsFeatureToggles,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 

@@ -25,7 +25,22 @@ data class CollectibleGachaMachine(
     val expectedValue: BigDecimal,
     val imageUrl: String?,
     val categoryId: String,
+    val revealAssets: RevealAssets?,
 ) {
+
+    /**
+     * What the opening animation plays: the full reveal video per app theme, and the skip sound played when
+     * the video is skipped or could not be loaded in time.
+     */
+    data class RevealAssets(
+        val lightVideoUrl: String,
+        val darkVideoUrl: String,
+        val skipAudioUrl: String,
+    )
+
+    /** What one spin costs: the backend sends the price and the fee, not their sum. */
+    val total: BigDecimal
+        get() = price + feeAmount
 
     /** Drop chance per rarity tier, in percent. */
     data class Odds(

@@ -22,7 +22,6 @@ import java.io.File
 
 internal class OpenTelemetryMetricsHolderTest {
 
-    private val featureToggles: OtelFeatureToggles = mockk()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     @TempDir
@@ -34,18 +33,15 @@ internal class OpenTelemetryMetricsHolderTest {
 
     private fun createHolder(
         apiKey: String?,
-        isToggleEnabled: Boolean,
         appScope: AppCoroutineScope,
         application: Application = createApplication(),
     ): OpenTelemetryMetricsHolder {
-        every { featureToggles.isMetricsEnabled } returns isToggleEnabled
         val settingsRepository: SettingsRepository = mockk {
             every { getUserCountryCodeSync() } returns UserCountry.Other(code = "de")
         }
         return OpenTelemetryMetricsHolder(
             application = application,
             environmentConfig = EnvironmentConfig(otlpApiKey = apiKey),
-            featureToggles = featureToggles,
             settingsRepository = settingsRepository,
             dispatchers = dispatchers,
             appScope = appScope,
@@ -58,11 +54,10 @@ internal class OpenTelemetryMetricsHolderTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN toggle or key missing WHEN initialize THEN meter stays null`(model: SkipModel) = runTest {
+        fun `GIVEN key missing WHEN initialize THEN meter stays null`(model: SkipModel) = runTest {
             // Arrange
             val holder = createHolder(
                 apiKey = model.apiKey,
-                isToggleEnabled = model.isToggleEnabled,
                 appScope = TestAppCoroutineScope(testScope = this),
             )
 
@@ -75,20 +70,18 @@ internal class OpenTelemetryMetricsHolderTest {
         }
 
         private fun provideTestModels() = listOf(
-            SkipModel(isToggleEnabled = false, apiKey = "key"),
-            SkipModel(isToggleEnabled = true, apiKey = null),
-            SkipModel(isToggleEnabled = true, apiKey = ""),
+            SkipModel(apiKey = null),
+            SkipModel(apiKey = ""),
         )
     }
 
-    data class SkipModel(val isToggleEnabled: Boolean, val apiKey: String?)
+    data class SkipModel(val apiKey: String?)
 
     @Test
-    fun `GIVEN toggle on and key present WHEN initialize THEN meter is available and flush succeeds`() = runTest {
+    fun `GIVEN key present WHEN initialize THEN meter is available and flush succeeds`() = runTest {
         // Arrange
         val holder = createHolder(
             apiKey = "dev-key",
-            isToggleEnabled = true,
             appScope = TestAppCoroutineScope(testScope = this),
         )
 
@@ -109,7 +102,6 @@ internal class OpenTelemetryMetricsHolderTest {
         }
         val holder = createHolder(
             apiKey = "dev-key",
-            isToggleEnabled = true,
             appScope = TestAppCoroutineScope(testScope = this),
             application = application,
         )

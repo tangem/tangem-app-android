@@ -1,6 +1,8 @@
 package com.tangem.data.earn.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.earn.DefaultEarnErrorResolver
 import com.tangem.data.earn.datastore.EarnFilterStore
 import com.tangem.data.earn.datastore.EarnNetworksStore
@@ -11,6 +13,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.earn.EarnErrorResolver
 import com.tangem.domain.earn.repository.EarnRepository
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -27,6 +30,10 @@ internal object EarnDataModule {
 
     @Provides
     @Singleton
+    @RemoveWithToggle(
+        toggleName = "TWI_1520_MERKL_INCENTIVES_ENABLED",
+        description = "Drop isMerklIncentivesEnabled from DefaultEarnRepository and always send GROSS_APY_TYPE.",
+    )
     fun provideEarnRepository(
         tangemTechApi: TangemTechApi,
         dispatchers: CoroutineDispatcherProvider,
@@ -37,6 +44,7 @@ internal object EarnDataModule {
         earnFilterStore: EarnFilterStore,
         earnErrorResolver: EarnErrorResolver,
         excludedBlockchains: ExcludedBlockchains,
+        featureTogglesManager: FeatureTogglesManager,
     ): EarnRepository {
         return DefaultEarnRepository(
             tangemTechApi = tangemTechApi,
@@ -48,6 +56,9 @@ internal object EarnDataModule {
             earnErrorResolver = earnErrorResolver,
             excludedBlockchains = excludedBlockchains,
             earnFilterStore = earnFilterStore,
+            isMerklIncentivesEnabled = featureTogglesManager.isFeatureEnabled(
+                FeatureToggles.TWI_1520_MERKL_INCENTIVES_ENABLED,
+            ),
         )
     }
 }

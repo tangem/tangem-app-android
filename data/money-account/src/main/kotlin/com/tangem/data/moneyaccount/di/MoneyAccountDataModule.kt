@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.dataStoreFile
 import com.tangem.core.local.datastore.DeleteObsoleteFileMigration
 import com.tangem.data.moneyaccount.converter.MoneyAccountStatusValueDMConverter
+import com.tangem.data.moneyaccount.currency.DefaultMoneyAccountCurrencyFactory
 import com.tangem.data.moneyaccount.flow.DefaultMoneyAccountStatusFetcher
 import com.tangem.data.moneyaccount.flow.DefaultMoneyAccountStatusProducer
 import com.tangem.data.moneyaccount.repository.DefaultMoneyAccountActivationRepository
@@ -14,13 +15,13 @@ import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
 import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
 import com.tangem.datasource.utils.AppDataStoreFactory
+import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusProducer
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
-import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.pay.repository.OnboardingRepository
@@ -32,6 +33,8 @@ import com.tangem.domain.moneyaccount.usecase.ActivateMoneyAccountUseCase
 import com.tangem.domain.moneyaccount.usecase.CreateMoneyAccountOrderUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountFeeTableUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountStatusUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountSuitableWalletsUseCase
@@ -68,6 +71,10 @@ internal interface MoneyAccountDataModule {
     fun bindMoneyAccountActivationRepository(
         impl: DefaultMoneyAccountActivationRepository,
     ): MoneyAccountActivationRepository
+
+    @Binds
+    @Singleton
+    fun bindMoneyAccountCurrencyFactory(impl: DefaultMoneyAccountCurrencyFactory): MoneyAccountCurrencyFactory
 
     companion object {
 
@@ -129,14 +136,12 @@ internal interface MoneyAccountDataModule {
         @Provides
         @Singleton
         fun provideGetMoneyAccountBalanceUseCase(
-            tangemPayCurrencyFactory: TangemPayCurrencyFactory,
             singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
             singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
             singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
             singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
         ): GetMoneyAccountBalanceUseCase {
             return GetMoneyAccountBalanceUseCase(
-                tangemPayCurrencyFactory = tangemPayCurrencyFactory,
                 singleNetworkStatusFetcher = singleNetworkStatusFetcher,
                 singleNetworkStatusSupplier = singleNetworkStatusSupplier,
                 singleQuoteStatusFetcher = singleQuoteStatusFetcher,
@@ -200,6 +205,14 @@ internal interface MoneyAccountDataModule {
         }
 
         @Provides
+        @Singleton
+        fun provideGetMoneyAccountCryptoCurrencyStatusUseCase(
+            moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
+        ): GetMoneyAccountCryptoCurrencyStatusUseCase {
+            return GetMoneyAccountCryptoCurrencyStatusUseCase(moneyAccountStatusSupplier = moneyAccountStatusSupplier)
+        }
+
+        @Provides
         fun provideGetMoneyAccountEligibilityUseCase(
             getMoneyAccountSuitableWalletsUseCase: GetMoneyAccountSuitableWalletsUseCase,
             getMoneyAccountStatusUseCase: GetMoneyAccountStatusUseCase,
@@ -214,6 +227,13 @@ internal interface MoneyAccountDataModule {
                 onboardingRepository = onboardingRepository,
                 singleAccountListSupplier = singleAccountListSupplier,
             )
+        }
+
+        @Provides
+        fun provideGetMoneyAccountBankCredentialsUseCase(
+            onboardingRepository: OnboardingRepository,
+        ): GetMoneyAccountBankCredentialsUseCase {
+            return GetMoneyAccountBankCredentialsUseCase(onboardingRepository = onboardingRepository)
         }
 
         @Provides

@@ -75,7 +75,7 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
     }
 
     fun onBack() {
-        if (uiState.value.buttonLoading) return
+        if (uiState.value.isButtonLoading) return
 
         when (uiState.value.step) {
             OnboardingVisaAccessCodeUM.Step.Enter -> modelScope.launch { onBack.emit(Unit) }
@@ -88,26 +88,26 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
         return OnboardingVisaAccessCodeUM(
             onAccessCodeFirstChange = ::onAccessCodeFirstChange,
             onAccessCodeSecondChange = ::onAccessCodeSecondChange,
-            onAccessCodeHideClick = { _uiState.update { it.copy(accessCodeHidden = !it.accessCodeHidden) } },
+            onAccessCodeHideClick = { _uiState.update { it.copy(isAccessCodeHidden = !it.isAccessCodeHidden) } },
             onContinue = { onContinue() },
         )
     }
 
     private fun onAccessCodeFirstChange(textFieldValue: TextFieldValue) {
-        _uiState.update {
-            it.copy(
+        _uiState.update { state ->
+            state.copy(
                 accessCodeFirst = textFieldValue,
                 accessCodeSecond = TextFieldValue(),
-                atLeastMinCharsError = false,
+                hasAtLeastMinCharsError = false,
             )
         }
     }
 
     private fun onAccessCodeSecondChange(textFieldValue: TextFieldValue) {
-        _uiState.update {
-            it.copy(
+        _uiState.update { state ->
+            state.copy(
                 accessCodeSecond = textFieldValue,
-                codesNotMatchError = false,
+                hasCodesNotMatchError = false,
             )
         }
     }
@@ -132,7 +132,7 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
         val first = uiState.value.accessCodeFirst.text
 
         if (first.length < ACCESS_CODE_MIN_LENGTH) {
-            _uiState.update { it.copy(atLeastMinCharsError = true) }
+            _uiState.update { it.copy(hasAtLeastMinCharsError = true) }
             return false
         }
 
@@ -144,7 +144,7 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
         val second = uiState.value.accessCodeSecond.text
 
         if (first != second) {
-            _uiState.update { it.copy(codesNotMatchError = true) }
+            _uiState.update { it.copy(hasCodesNotMatchError = true) }
             return false
         }
 
@@ -159,8 +159,8 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
             val challengeToSign = visaAuthRemoteDataSource.getCardAuthChallenge(
                 cardId = activationInput.cardId,
                 cardPublicKey = activationInput.cardPublicKey,
-            ).getOrElse {
-                onError(it)
+            ).getOrElse { error ->
+                onError(error)
                 return@launch
             }
 
@@ -181,8 +181,8 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
             }
 
             visaActivationRepository.activateCard(resultData.signedActivationData)
-                .onLeft {
-                    onError(it)
+                .onLeft { error ->
+                    onError(error)
                     return@launch
                 }
 
@@ -218,7 +218,7 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
     }
 
     private fun loading(state: Boolean) {
-        _uiState.update { it.copy(buttonLoading = state) }
+        _uiState.update { it.copy(isButtonLoading = state) }
     }
 
     private companion object {

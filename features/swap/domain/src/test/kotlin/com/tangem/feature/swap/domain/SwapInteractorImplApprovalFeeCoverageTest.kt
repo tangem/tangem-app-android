@@ -126,6 +126,42 @@ internal class SwapInteractorImplApprovalFeeCoverageTest : SwapInteractorImplTes
         }
 
     @Test
+    fun `GIVEN Tron gasless relays the token WHEN findBestQuote with no TRX THEN approval stays offered`() = runTest {
+        // Arrange — the approval is paid in the token through the gasless service, not in TRX
+        every { swapFeatureToggles.isTronGaslessDexSwapEnabled } returns true
+        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
+        stubNativeFeeCoinBalance(balance = BigDecimal.ZERO)
+        stubApproveFeeEstimation(feeValue = BigDecimal("13"))
+        val provider = stubTronDexQuote()
+
+        // Act
+        val result = invokeTronTokenQuote(provider)
+
+        // Assert
+        val loaded = result[provider] as SwapState.QuotesLoadedState
+        assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)
+        assertThat(loaded.permissionState).isInstanceOf(PermissionDataState.PermissionRequired::class.java)
+    }
+
+    @Test
+    fun `GIVEN Tron gasless does not relay the token WHEN findBestQuote with no TRX THEN InsufficientFee`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isTronGaslessDexSwapEnabled } returns true
+        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns false
+        stubNativeFeeCoinBalance(balance = BigDecimal.ZERO)
+        stubApproveFeeEstimation(feeValue = BigDecimal("13"))
+        val provider = stubTronDexQuote()
+
+        // Act
+        val result = invokeTronTokenQuote(provider)
+
+        // Assert
+        val loaded = result[provider] as SwapState.QuotesLoadedState
+        assertThat(loaded.preparedSwapConfigState.balanceStatus)
+            .isInstanceOf(SwapBalanceStatus.InsufficientFee::class.java)
+    }
+
+    @Test
     fun `GIVEN fee coin covers approve fee WHEN findBestQuote THEN balance status stays Pending`() = runTest {
         // Arrange
         stubNativeFeeCoinBalance(balance = BigDecimal("50"))

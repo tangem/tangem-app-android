@@ -15,48 +15,48 @@ internal class AddExistingWalletStepperStateManager {
                 currentStep = STEP_IMPORT,
                 steps = STEPS_COUNT,
                 title = resourceReference(R.string.wallet_import_seed_navtitle),
-                showBackButton = true,
-                showSkipButton = false,
+                shouldShowBackButton = true,
+                shouldShowSkipButton = false,
             )
 
             is AddExistingWalletRoute.BackupCompleted -> HotWalletStepperComponent.StepperUM(
                 currentStep = STEP_BACKUP,
                 steps = STEPS_COUNT,
                 title = resourceReference(R.string.wallet_import_title),
-                showBackButton = false,
-                showSkipButton = false,
+                shouldShowBackButton = false,
+                shouldShowSkipButton = false,
             )
 
             is AddExistingWalletRoute.SetAccessCode -> HotWalletStepperComponent.StepperUM(
                 currentStep = STEP_ACCESS_CODE,
                 steps = STEPS_COUNT,
                 title = resourceReference(R.string.access_code_navtitle),
-                showBackButton = false,
-                showSkipButton = true,
+                shouldShowBackButton = false,
+                shouldShowSkipButton = true,
             )
 
             is AddExistingWalletRoute.ConfirmAccessCode -> HotWalletStepperComponent.StepperUM(
                 currentStep = STEP_ACCESS_CODE,
                 steps = STEPS_COUNT,
                 title = resourceReference(R.string.access_code_navtitle),
-                showBackButton = true,
-                showSkipButton = true,
+                shouldShowBackButton = true,
+                shouldShowSkipButton = true,
             )
 
             is AddExistingWalletRoute.PushNotifications -> HotWalletStepperComponent.StepperUM(
                 currentStep = STEP_NOTIFICATIONS,
                 steps = STEPS_COUNT,
                 title = resourceReference(R.string.onboarding_title_notifications),
-                showBackButton = false,
-                showSkipButton = false,
+                shouldShowBackButton = false,
+                shouldShowSkipButton = false,
             )
 
             is AddExistingWalletRoute.SetupFinished -> HotWalletStepperComponent.StepperUM(
                 currentStep = STEP_DONE,
                 steps = STEPS_COUNT,
                 title = resourceReference(R.string.common_done),
-                showBackButton = false,
-                showSkipButton = false,
+                shouldShowBackButton = false,
+                shouldShowSkipButton = false,
             )
         }
     }

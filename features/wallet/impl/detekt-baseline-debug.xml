@@ -2,58 +2,16 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>BooleanPropertyNaming:DefaultUserWalletsFetcher.kt$DefaultUserWalletsFetcher$@Assisted("onlyMultiCurrency") private val onlyMultiCurrency: Boolean</ID>
-    <ID>BooleanPropertyNaming:DraggableItem.kt$DraggableItem$abstract val showShadow: Boolean</ID>
-    <ID>BooleanPropertyNaming:OrganizeTokensState.kt$OrganizeTokensState.ActionsConfig$val showApplyProgress: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:ScrollToWalletTransformer.kt$ScrollToWalletTransformer$private val withScrollAnimation: Boolean = true</ID>
-    <ID>BooleanPropertyNaming:UpdateMultiWalletActionButtonBadgeTransformer.kt$UpdateMultiWalletActionButtonBadgeTransformer$private val showSwapBadge: Boolean</ID>
-    <ID>BooleanPropertyNaming:WalletAdditionalInfo.kt$WalletAdditionalInfo$val hideable: Boolean</ID>
-    <ID>BooleanPropertyNaming:WalletCurrencyActionsClickIntents.kt$WalletCurrencyActionsClickIntentsImplementor$val showSwapStories = maybeSwapStories.getOrNull() != null</ID>
-    <ID>BooleanPropertyNaming:WalletManageButton.kt$WalletManageButton$/** Is click enabled */ abstract val enabled: Boolean</ID>
-    <ID>BooleanPropertyNaming:WalletManageButton.kt$WalletManageButton$/** Whether to dim content */ abstract val dimContent: Boolean</ID>
-    <ID>BooleanPropertyNaming:WalletManageButton.kt$WalletManageButton.Swap$val showBadge: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:WalletScreen.kt$val showMarketsHint by remember { derivedStateOf { // Show hint only when there are items in the list // and when there a no items to scroll listState.layoutInfo.totalItemsCount &gt; 0 &amp;&amp; !listState.canScrollBackward &amp;&amp; !listState.canScrollForward || listState.canScrollBackward &amp;&amp; !listState.canScrollForward } }</ID>
-    <ID>BooleanPropertyNaming:WalletScreen.kt$var visible by remember { mutableStateOf(value = false) }</ID>
-    <ID>BooleanPropertyNaming:WalletScreenState.kt$WalletScreenState$val showMarketsOnboarding: Boolean</ID>
-    <ID>BooleanPropertyNaming:WalletWithFundsChecker.kt$WalletWithFundsChecker$val prevStatus = statusByWalletId.get(userWalletId)</ID>
     <ID>MaxChainedCallsOnSameLine:HasSingleWalletSignedHashesUseCase.kt$HasSingleWalletSignedHashesUseCase$userWallet.scanResponse.card.wallets.firstOrNull()?.totalSignedHashes</ID>
-    <ID>MultilineLambdaItParameter:DefaultUserWalletImageFetcher.kt$DefaultUserWalletImageFetcher${ it.fold( ifLeft = { emit(UserWalletItemUM.ImageState.Loading) }, ifRight = { wallet -&gt; emitAll(walletImage(wallet, size)) }, ) }</ID>
-    <ID>MultilineLambdaItParameter:TokenListAnalyticsSender.kt$TokenListAnalyticsSender${ val status = it.value if (status is CryptoCurrencyStatus.Loaded) { sendTokenBalancesForSpecificBlockchains(it, status) } }</ID>
-    <ID>MultilineLambdaItParameter:TokenListStateConverter.kt$TokenListStateConverter${ if (isExtend) { clickIntents.onAccountCollapseClick(it) } else { clickIntents.onAccountExpandClick(it) } }</ID>
-    <ID>MultilineLambdaItParameter:WalletCard.kt${ haptic.performHapticFeedback(HapticFeedbackType.LongPress) isMenuVisible = true pressOffset = DpOffset(x = it.x.toDp(), y = it.y.toDp()) }</ID>
-    <ID>MultilineLambdaItParameter:WalletCard.kt${ val press = PressInteraction.Press(it) interactionSource.emit(press) tryAwaitRelease() interactionSource.emit(PressInteraction.Release(press)) }</ID>
-    <ID>MultilineLambdaItParameter:WalletCurrencyActionsClickIntents.kt$WalletCurrencyActionsClickIntentsImplementor${ onAddressTypeSelected( userWalletId = userWalletId, currency = currency, addressModel = it, ) }</ID>
-    <ID>MultilineLambdaItParameter:WalletScreen.kt${ PaddingValues( bottom = it.calculateBottomPadding() + marketHintAproxHeight + 52.dp, ) }</ID>
-    <ID>MultilineLambdaItParameter:WalletScreen.kt${ WalletSnackbarHost( snackbarHostState = it, event = state.event, modifier = Modifier .padding(bottom = TangemTheme.dimens.spacing4) .navigationBarsPadding(), ) }</ID>
-    <ID>MultilineLambdaItParameter:WalletScreen.kt${ nftCollections( modifier = itemModifier, state = it.nftState, ) }</ID>
-    <ID>MultilineLambdaItParameter:WalletWarningsClickIntents.kt$WalletWarningsClickIntentsImplementor${ router.openOnboardingScreen( scanResponse = it.scanResponse, continueBackup = true, ) }</ID>
-    <ID>MultilineLambdaItParameter:WalletWithFundsChecker.kt$WalletWithFundsChecker${ val amount = it.value.amount ?: return@any false !amount.isZero() }</ID>
     <ID>NamedArguments:TangemSnapFlingBehavior.kt$HighVelocityApproachAnimation$animateDecay(offset, animationState, decayAnimationSpec, onAnimationStep)</ID>
     <ID>NamedArguments:TangemSnapFlingBehavior.kt$TangemSnapFlingBehavior$animateSnap( closestOffset, closestOffset, animationState, snapAnimationSpec, ) { delta -&gt; remainingScrollOffset -= delta onRemainingScrollOffsetUpdate(remainingScrollOffset) }</ID>
     <ID>NamedArguments:TangemSnapFlingBehavior.kt$TangemSnapFlingBehavior$animateSnap( remainingOffset, remainingOffset, animationState.copy(value = 0f), snapAnimationSpec, ) { delta -&gt; remainingScrollOffset -= delta onAnimationStep(remainingScrollOffset) }</ID>
     <ID>NamedArguments:TangemSnapFlingBehavior.kt$TangemSnapFlingBehavior$approach( initialTargetOffset, initialVelocity, animation, snapLayoutInfoProvider, density, onAnimationStep, )</ID>
     <ID>NamedArguments:TangemSnapFlingBehavior.kt$approachAnimation( this, initialTargetOffset, initialVelocity, onAnimationStep, )</ID>
-    <ID>NamedArguments:WalletContent.kt$txHistoryItems(state.txHistoryState, txHistoryItems, isBalanceHidden, modifier)</ID>
-    <ID>NestedScopeFunctions:WalletScreen.kt$let { marketPriceBlockState -&gt; marketPriceBlock(state = marketPriceBlockState, modifier = itemModifier) }</ID>
-    <ID>NoNameShadowing:DefaultUserWalletsFetcher.kt$DefaultUserWalletsFetcher${ it.isMultiCurrency }</ID>
-    <ID>NoNameShadowing:WalletComponent.kt$WalletComponent$dialog</ID>
-    <ID>NoNameShadowing:WalletNFTItem.kt$modifier</ID>
     <ID>PropertyUsedBeforeDeclaration:BaseWalletClickIntents.kt$BaseWalletClickIntents$_modelScope</ID>
     <ID>PropertyUsedBeforeDeclaration:BaseWalletClickIntents.kt$BaseWalletClickIntents$_router</ID>
     <ID>PropertyUsedBeforeDeclaration:WalletStateController.kt$WalletStateController$mutableUiState</ID>
-    <ID>ReusedModifierInstance:DefaultWalletEntryComponent.kt$DefaultWalletEntryComponent$Content(modifier)</ID>
-    <ID>ReusedModifierInstance:WalletNFTItem.kt$Image( modifier = modifier .background(TangemTheme.colors.stroke.primary), painter = painterResource(R.drawable.ic_nft_preview_more_16), contentDescription = null, )</ID>
-    <ID>ReusedModifierInstance:WalletNFTItem.kt$SubcomposeAsyncImage( modifier = modifier, model = s.url, loading = { RectangleShimmer(radius = 0.dp) }, error = { Box( modifier = Modifier.background(TangemTheme.colors.field.primary), ) }, contentDescription = null, )</ID>
-    <ID>ReusedModifierInstance:WalletNFTItem.kt$take(modifiers.size)</ID>
     <ID>SuspendFunSwallowedCancellation:WalletModel.kt$WalletModel$runCatching</ID>
-    <ID>UnnecessaryLet:TangemSnapFlingBehavior.kt$TangemSnapFlingBehavior$let { abs(it) * sign(initialVelocity) // ensure offset sign is correct }</ID>
-    <ID>UnnecessaryLet:WalletClickIntents.kt$WalletClickIntents$let(::add)</ID>
-    <ID>UseEmptyCounterpart:DefaultUserWalletImageFetcher.kt$DefaultUserWalletImageFetcher$mapOf&lt;String, ArtworkUM&gt;()</ID>
-    <ID>UseEmptyCounterpart:PortfolioOrganizeTokensAnalyticsEvent.kt$PortfolioOrganizeTokensAnalyticsEvent$mapOf()</ID>
-    <ID>UseEmptyCounterpart:PromoActivationAnalytics.kt$PromoActivationAnalytics$mapOf()</ID>
-    <ID>UseEmptyCounterpart:TokenListStateConverter.kt$TokenListStateConverter$listOf()</ID>
-    <ID>UseEmptyCounterpart:WalletScreenAnalyticsEvent.kt$WalletScreenAnalyticsEvent.MainScreen$mapOf()</ID>
-    <ID>UseEmptyCounterpart:WalletScreenAnalyticsEvent.kt$WalletScreenAnalyticsEvent.PushBannerPromo$mapOf()</ID>
     <ID>UseSumOfInsteadOfFlatMapSize:TokenListStateConverter.kt$TokenListStateConverter$flatMap(NetworkGroup::currencies)</ID>
     <ID>VarCouldBeVal:TangemSnapFlingBehavior.kt$TangemSnapFlingBehavior$private var motionScaleDuration = DefaultScrollMotionDurationScale</ID>
   </CurrentIssues>

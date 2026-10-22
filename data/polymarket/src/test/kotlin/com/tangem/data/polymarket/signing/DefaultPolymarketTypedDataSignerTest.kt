@@ -24,12 +24,11 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.derivation.POLYMARKET_OWNER_DERIVATION_PATH
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
-import com.tangem.domain.polymarket.model.PolymarketOnboardingSignatures
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderDraft
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.signing.PolymarketApprovalsPayload
-import com.tangem.domain.polymarket.signing.PolymarketClobAuthData
 import com.tangem.domain.polymarket.signing.PredictionOrderPayload
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
@@ -72,7 +71,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
         derivationsRepository = derivationsRepository,
         cardSdkConfigRepository = cardSdkConfigRepository,
         hotSignerFactory = hotSignerFactory,
-        addressFactory = PolymarketAddressFactory(),
+        digestFactory = PolymarketDigestFactory(),
         formatter = PolymarketSignatureFormatter(),
         dispatchers = dispatchers,
     )
@@ -87,7 +86,6 @@ internal class DefaultPolymarketTypedDataSignerTest {
         chainCode = "00".repeat(CHAIN_CODE_SIZE).hexToBytes(),
     )
 
-    private val clobAuth = PolymarketClobAuthData(timestamp = "1735689600")
     private val approvals = PolymarketApprovalsPayload(
         depositWalletAddress = "0xfAeA0f08159fcF2f573fE24E9E989B0d48f7651B",
         nonce = "0",
@@ -151,7 +149,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
     }
 
     @Test
-    fun `GIVEN both payloads WHEN signOnboarding THEN signs both hashes in one call`() = runTest {
+    fun `GIVEN a cold wallet WHEN signRelayedBatch THEN signs one hash with the card signer`() = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
         stubDerivedKey()
@@ -162,18 +160,17 @@ internal class DefaultPolymarketTypedDataSignerTest {
         }
 
         // Act
-        val result = signer.signOnboarding(userWalletId, clobAuth, approvals)
+        val result = signer.signRelayedBatch(userWalletId, approvals)
 
         // Assert
         assertThat(result.isRight()).isTrue()
-        assertThat(hashes.captured).hasSize(2)
+        assertThat(hashes.captured).hasSize(1)
         coVerify(exactly = 1) { transactionSigner.sign(any<List<ByteArray>>(), any()) }
-        // Card is not backed up (backupStatus == null) and not a twin, so its id is passed to the signer
         verify(exactly = 1) { cardSdkConfigRepository.getCommonSigner(cardId = "CB79", twinKey = null, userWalletId) }
     }
 
     @Test
-    fun `GIVEN both payloads WHEN signOnboarding THEN maps signatures to the matching fields`() = runTest {
+    fun `GIVEN a batch WHEN signRelayedBatch THEN formats the signature over the batch digest`() = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
         stubDerivedKey()
@@ -183,25 +180,11 @@ internal class DefaultPolymarketTypedDataSignerTest {
         coEvery { transactionSigner.sign(capture(hashes), capture(publicKey)) } answers {
             CompletionResult.Success(hashes.captured.map { sign(it) })
         }
-        val formatter = PolymarketSignatureFormatter()
 
         // Act
-        val result = signer.signOnboarding(userWalletId, clobAuth, approvals)
+        val result = signer.signRelayedBatch(userWalletId, approvals)
 
         // Assert
-        val expected = PolymarketOnboardingSignatures(
-            l1Signature = formatter.format(sign(hashes.captured[0]), hashes.captured[0], publicKey.captured),
-            batchSignature = formatter.format(sign(hashes.captured[1]), hashes.captured[1], publicKey.captured),
-        )
-        assertThat(result.getOrNull()).isEqualTo(expected)
-        val ownerAddress = PolymarketAddressFactory().createAddress(ownerKey)
-        val expectedClobDigest = EthereumUtils.makeTypedDataHash(
-            PolymarketTypedDataBuilder.buildClobAuth(
-                address = ownerAddress,
-                timestamp = clobAuth.timestamp,
-                nonce = clobAuth.nonce,
-            ),
-        )
         val expectedBatchDigest = EthereumUtils.makeTypedDataHash(
             PolymarketTypedDataBuilder.buildApprovalsBatch(
                 depositWallet = approvals.depositWalletAddress,
@@ -210,12 +193,14 @@ internal class DefaultPolymarketTypedDataSignerTest {
                 calls = approvals.calls,
             ),
         )
-        assertThat(hashes.captured[0]).isEqualTo(expectedClobDigest)
-        assertThat(hashes.captured[1]).isEqualTo(expectedBatchDigest)
+        assertThat(hashes.captured.single()).isEqualTo(expectedBatchDigest)
+        assertThat(result.getOrNull()).isEqualTo(
+            PolymarketSignatureFormatter().format(sign(expectedBatchDigest), expectedBatchDigest, publicKey.captured),
+        )
     }
 
     @Test
-    fun `GIVEN signing key WHEN signOnboarding THEN passes seed key and owner path`() = runTest {
+    fun `GIVEN signing key WHEN signRelayedBatch THEN passes seed key and owner path`() = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
         stubDerivedKey()
@@ -227,7 +212,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
         }
 
         // Act
-        signer.signOnboarding(userWalletId, clobAuth, approvals)
+        signer.signRelayedBatch(userWalletId, approvals)
 
         // Assert
         assertThat(publicKey.captured.seedKey).isEqualTo(seedKey)
@@ -236,50 +221,32 @@ internal class DefaultPolymarketTypedDataSignerTest {
     }
 
     @Test
-    fun `GIVEN owner key not derived WHEN signOnboarding THEN returns NotDerived`() = runTest {
+    fun `GIVEN owner key not derived WHEN signRelayedBatch THEN returns NotDerived`() = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
         stubDerivedKey(present = false)
 
         // Act
-        val result = signer.signOnboarding(userWalletId, clobAuth, approvals)
+        val result = signer.signRelayedBatch(userWalletId, approvals)
 
         // Assert
         assertThat(result).isEqualTo(PolymarketSigningError.NotDerived.left())
     }
 
     @Test
-    fun `GIVEN wallet without secp256k1 key WHEN signOnboarding THEN returns MissingWallet`() = runTest {
+    fun `GIVEN wallet without secp256k1 key WHEN signRelayedBatch THEN returns MissingWallet`() = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet(hasSecpWallet = false)
 
         // Act
-        val result = signer.signOnboarding(userWalletId, clobAuth, approvals)
+        val result = signer.signRelayedBatch(userWalletId, approvals)
 
         // Assert
         assertThat(result).isEqualTo(PolymarketSigningError.MissingWallet.left())
     }
 
     @Test
-    fun `GIVEN signer returns fewer signatures than hashes WHEN signOnboarding THEN returns Unknown`() = runTest {
-        // Arrange
-        every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
-        stubDerivedKey()
-        stubColdSigner()
-        val hashes = slot<List<ByteArray>>()
-        coEvery { transactionSigner.sign(capture(hashes), any()) } answers {
-            CompletionResult.Success(listOf(sign(hashes.captured.first())))
-        }
-
-        // Act
-        val result = signer.signOnboarding(userWalletId, clobAuth, approvals)
-
-        // Assert
-        assertThat(result).isEqualTo(PolymarketSigningError.Unknown.left())
-    }
-
-    @Test
-    fun `GIVEN signer returns no signatures WHEN signClobAuth THEN returns Unknown`() = runTest {
+    fun `GIVEN signer returns no signatures WHEN signRelayedBatch THEN returns Unknown`() = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
         stubDerivedKey()
@@ -288,7 +255,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
             CompletionResult.Success(emptyList())
 
         // Act
-        val result = signer.signClobAuth(userWalletId, clobAuth)
+        val result = signer.signRelayedBatch(userWalletId, approvals)
 
         // Assert
         assertThat(result).isEqualTo(PolymarketSigningError.Unknown.left())
@@ -296,7 +263,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN signing fails WHEN signOnboarding THEN maps the error`(model: SigningFailureModel) = runTest {
+    fun `GIVEN signing fails WHEN signRelayedBatch THEN maps the error`(model: SigningFailureModel) = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
         stubDerivedKey()
@@ -305,7 +272,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
             CompletionResult.Failure(model.error)
 
         // Act
-        val result = signer.signOnboarding(userWalletId, clobAuth, approvals)
+        val result = signer.signRelayedBatch(userWalletId, approvals)
 
         // Assert
         assertThat(result).isEqualTo(model.expected.left())
@@ -314,29 +281,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
     internal data class SigningFailureModel(val error: TangemSdkError, val expected: PolymarketSigningError)
 
     @Test
-    fun `GIVEN clob auth only WHEN signClobAuth THEN signs a single hash`() = runTest {
-        // Arrange
-        every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
-        stubDerivedKey()
-        stubColdSigner()
-        val hashes = slot<List<ByteArray>>()
-        val publicKey = slot<Wallet.PublicKey>()
-        coEvery { transactionSigner.sign(capture(hashes), capture(publicKey)) } answers {
-            CompletionResult.Success(hashes.captured.map { sign(it) })
-        }
-
-        // Act
-        val result = signer.signClobAuth(userWalletId, clobAuth)
-
-        // Assert
-        assertThat(hashes.captured).hasSize(1)
-        assertThat(result.getOrNull()).isEqualTo(
-            PolymarketSignatureFormatter().format(sign(hashes.captured[0]), hashes.captured[0], publicKey.captured),
-        )
-    }
-
-    @Test
-    fun `GIVEN hot wallet WHEN signOnboarding THEN uses the hot signer`() = runTest {
+    fun `GIVEN hot wallet WHEN signRelayedBatch THEN uses the hot signer`() = runTest {
         // Arrange
         val hotWallet = mockk<UserWallet.Hot> {
             every { walletId } returns userWalletId
@@ -359,7 +304,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
         }
 
         // Act
-        val result = signer.signOnboarding(userWalletId, clobAuth, approvals)
+        val result = signer.signRelayedBatch(userWalletId, approvals)
 
         // Assert
         assertThat(result.isRight()).isTrue()
@@ -385,7 +330,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
             // Assert
             val expectedDigest = PolymarketErc7739SignatureBuilder.digest(
                 order = result.getOrNull()!!.order,
-                isNegRisk = false,
+                domain = PolymarketExchangeDomain.CTF,
                 depositWalletAddress = DEPOSIT_WALLET,
             )
             assertThat(hashes.captured).hasSize(1)
@@ -429,7 +374,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
                 val expected = PolymarketErc7739SignatureBuilder.wrap(
                     innerSignature = inner,
                     order = result.getOrNull()!!.order,
-                    isNegRisk = false,
+                    domain = PolymarketExchangeDomain.CTF,
                 )
                 assertThat(result.getOrNull()!!.signature).isEqualTo(expected)
                 assertThat(result.getOrNull()!!.signature).isNotEqualTo(inner)
@@ -508,7 +453,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
         private fun orderPayload(): PredictionOrderPayload = PredictionOrderPayload(
             draft = PredictionOrderDraft(
                 tokenId = "1116017998421700000000000000000000000000000000000000000000000000047",
-                isNegRisk = false,
+                domain = PolymarketExchangeDomain.CTF,
                 side = PredictionOrderSide.BUY,
                 makerAmount = BigInteger("72000000"),
                 takerAmount = BigInteger("97959180"),

@@ -44,6 +44,7 @@ internal class PolymarketFeedPoller(
 
     private var visibleEventIds: Set<String> = emptySet()
     private var config: PolymarketEventsListConfig? = null
+    private var initialRequestStartedAt: TimeMark? = null
 
     /** Relies on [scope] being single-threaded: [pageMeta] and [refreshesInFlight] are unguarded. */
     fun start() {
@@ -73,8 +74,11 @@ internal class PolymarketFeedPoller(
 
     fun onFeedReloaded(config: PolymarketEventsListConfig) {
         this.config = config
+        initialRequestStartedAt = timeSource.markNow()
         pageMeta.clear()
         refreshesInFlight.clear()
+        // A reload starts a new interval, even if the previous ticker was between ticks.
+        if (tickerJob.isActive) resume()
     }
 
     fun setVisibleEventIds(eventIds: Set<String>) {
@@ -95,10 +99,13 @@ internal class PolymarketFeedPoller(
 
         keys.forEach { key ->
             pageMeta.getOrPut(key) {
-                val loadedAt = timeSource.markNow()
-                PageMeta(fetchedAt = loadedAt, lastAttemptAt = loadedAt, failCount = 0)
+                val fetchedAt = initialRequestStartedAt
+                    ?.takeIf { key == state.data.firstOrNull()?.key }
+                    ?: timeSource.markNow()
+                PageMeta(fetchedAt = fetchedAt, lastAttemptAt = fetchedAt, failCount = 0)
             }
         }
+        if (keys.isNotEmpty()) initialRequestStartedAt = null
     }
 
     private suspend fun tick() {
@@ -122,7 +129,7 @@ internal class PolymarketFeedPoller(
                 BatchAction.UpdateBatches(
                     keys = setOf(key),
                     updateRequest = PolymarketEventsUpdateRequest(batchKey = key, config = config),
-                    async = true,
+                    isAsync = true,
                     operationId = REFRESH_OPERATION_PREFIX + key,
                 ),
             )
@@ -141,7 +148,8 @@ internal class PolymarketFeedPoller(
 
         when (result) {
             is BatchUpdateResult.Success -> {
-                pageMeta[key] = meta.copy(fetchedAt = timeSource.markNow(), failCount = 0)
+                // Response latency must not make the next scheduled tick treat this page as still fresh.
+                pageMeta[key] = meta.copy(fetchedAt = meta.lastAttemptAt, failCount = 0)
             }
             is BatchUpdateResult.Error -> {
                 if (result.throwable is CancellationException) return

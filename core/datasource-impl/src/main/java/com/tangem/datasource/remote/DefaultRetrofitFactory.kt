@@ -42,7 +42,6 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import javax.inject.Named
 import javax.inject.Provider
 import javax.inject.Singleton
 
@@ -71,7 +70,6 @@ internal class DefaultRetrofitFactory @Inject constructor(
     private val environmentConfig: EnvironmentConfig,
     @SessionAuthInterceptor private val sessionAuthInterceptor: Provider<Interceptor>,
     @SessionAuthAuthenticator private val sessionAuthenticator: Provider<Authenticator>,
-    @Named("isBackendAuthenticationEnabled") private val isBackendAuthEnabled: Provider<Boolean>,
 ) : RetrofitFactory {
 
     private val configsBaseUrls: Map<ApiConfig.ID, Set<String>> = getConfigsBaseUrls()
@@ -143,10 +141,7 @@ internal class DefaultRetrofitFactory @Inject constructor(
     }
 
     private fun OkHttpClient.Builder.applySessionAuth(condition: Boolean): OkHttpClient.Builder {
-        // Belt-and-suspenders: callers opt in via the `sessionAuth` flag, but if the backend-auth
-        // feature toggle is OFF we skip installing the hooks entirely (avoids wiring up DPoP
-        // header generation and 401 retry logic on builds where auth isn't live yet).
-        if (condition && isBackendAuthEnabled.get()) {
+        if (condition) {
             // Resolve the providers lazily, at request time, instead of eagerly here. The session
             // authenticator depends (via SessionTokenRefresher) back on AuthApi, so calling `.get()`
             // while AuthApi is still being built would recurse into provideAuthApi → applySessionAuth

@@ -48,7 +48,7 @@ class MissedDerivationsFinder private constructor(
 
     /** Find missed derivations for given currencies [currencies] */
     fun find(currencies: List<CryptoCurrency>): Derivations {
-        return currencies.map { it.network }.let(::findByNetworks)
+        return findByNetworks(currencies.map { it.network })
     }
 
     /** Find missed derivations for given [Network] list */

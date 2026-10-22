@@ -22,5 +22,6 @@ internal interface YieldIncentivesCache {
         fetch: suspend () -> Either<YieldIncentivesError, T>,
     ): Either<YieldIncentivesError, T>
 
+    /** Drops [key]; a fetch already in flight for it may still finish, but its answer is no longer stored. */
     suspend fun invalidate(key: String)
 }

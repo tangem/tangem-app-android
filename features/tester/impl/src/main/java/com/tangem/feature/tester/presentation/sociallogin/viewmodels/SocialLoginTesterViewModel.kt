@@ -111,7 +111,7 @@ internal class SocialLoginTesterViewModel @Inject constructor(
 
         hotWallets.forEach { wallet ->
             val isFlagged = socialBackupRepository.isSocialBackupCompleted(wallet.walletId)
-            add(action("${wallet.name}: revoke social recovery") { revoke(wallet.walletId) })
+            add(action("${wallet.name}: revoke social recovery") { revoke(wallet) })
             add(
                 action("${wallet.name}: ${if (isFlagged) "clear" else "set"} the social flag") {
                     setFlag(wallet.walletId, isCompleted = !isFlagged)
@@ -142,8 +142,8 @@ internal class SocialLoginTesterViewModel @Inject constructor(
         return "$outcome\nstages: ${stages.joinToString(separator = " → ")}"
     }
 
-    private suspend fun revoke(walletId: UserWalletId): String =
-        revokeSocialRecoveryUseCase(walletId).fold(ifLeft = { "failed: $it" }, ifRight = { "done" })
+    private suspend fun revoke(userWallet: UserWallet.Hot): String =
+        revokeSocialRecoveryUseCase(userWallet).fold(ifLeft = { "failed: $it" }, ifRight = { "done" })
 
     private suspend fun setFlag(walletId: UserWalletId, isCompleted: Boolean): String = socialBackupRepository
         .setSocialBackupCompleted(walletId = walletId, isCompleted = isCompleted)

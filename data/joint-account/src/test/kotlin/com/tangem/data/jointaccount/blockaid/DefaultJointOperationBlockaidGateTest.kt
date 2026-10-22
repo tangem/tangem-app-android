@@ -11,6 +11,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.model.SafeTx
+import com.tangem.domain.jointaccount.safe.SafeDeployment
 import com.tangem.data.jointaccount.safe.SafeTxTypedDataBuilder
 import com.tangem.domain.models.network.Network
 import com.tangem.test.core.ProvideTestModels
@@ -62,6 +63,7 @@ internal class DefaultJointOperationBlockaidGateTest {
             chainId = CHAIN_ID,
             safeAddress = SAFE_ADDRESS,
             ownerAddress = OWNER,
+            deployment = SafeDeployment.DEPLOYED,
         )
 
         // Assert
@@ -97,6 +99,7 @@ internal class DefaultJointOperationBlockaidGateTest {
             chainId = CHAIN_ID,
             safeAddress = SAFE_ADDRESS,
             ownerAddress = OWNER,
+            deployment = SafeDeployment.DEPLOYED,
         )
 
         // Assert
@@ -112,6 +115,69 @@ internal class DefaultJointOperationBlockaidGateTest {
     }
 
     @Test
+    fun `GIVEN a safe not deployed yet WHEN verify THEN blockaid checks the inner call sent by the safe`() = runTest {
+        // Arrange
+        val dataSlot = slot<TransactionData>()
+        coEvery { blockAidVerifier.verifyTransaction(data = capture(dataSlot)) } returns
+            CheckTransactionResult(
+                validation = ValidationResult.SAFE,
+                simulation = SimulationResult.FailedToSimulate,
+            ).right()
+
+        // Act
+        val actual = gate.verify(
+            network = network,
+            safeTx = SAFE_TX,
+            chainId = CHAIN_ID,
+            safeAddress = SAFE_ADDRESS,
+            ownerAddress = OWNER,
+            deployment = SafeDeployment.NOT_DEPLOYED,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(JointOperationBlockaidGate.Verdict.SAFE)
+        assertThat(dataSlot.captured).isEqualTo(
+            TransactionData(
+                chain = "polygon",
+                accountAddress = SAFE_ADDRESS,
+                method = "eth_signTransaction",
+                domainUrl = null,
+                params = TransactionParams.Evm(
+                    params = "[{\"from\":\"$SAFE_ADDRESS\",\"to\":\"${SAFE_TX.to}\"," +
+                        "\"value\":\"0xde0b6b3a7640000\",\"data\":\"0x\"}]",
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN unprefixed recipient and empty data WHEN verify the first operation THEN both reach blockaid as hex`() =
+        runTest {
+            // Arrange
+            val dataSlot = slot<TransactionData>()
+            coEvery { blockAidVerifier.verifyTransaction(data = capture(dataSlot)) } returns
+                CheckTransactionResult(
+                    validation = ValidationResult.SAFE,
+                    simulation = SimulationResult.FailedToSimulate,
+                ).right()
+
+            // Act
+            gate.verify(
+                network = network,
+                safeTx = SAFE_TX.copy(to = SAFE_TX.to.removePrefix("0x"), data = ""),
+                chainId = CHAIN_ID,
+                safeAddress = SAFE_ADDRESS,
+                ownerAddress = OWNER,
+                deployment = SafeDeployment.NOT_DEPLOYED,
+            )
+
+            // Assert
+            val params = (dataSlot.captured.params as TransactionParams.Evm).params
+            assertThat(params).contains("\"to\":\"${SAFE_TX.to}\"")
+            assertThat(params).contains("\"data\":\"0x\"")
+        }
+
+    @Test
     fun `GIVEN blockaid transport fails WHEN verify THEN UNAVAILABLE, apart from a verdict it could not give`() = runTest {
         // Arrange
         coEvery { blockAidVerifier.verifyTransaction(data = any()) } returns
@@ -124,6 +190,7 @@ internal class DefaultJointOperationBlockaidGateTest {
             chainId = CHAIN_ID,
             safeAddress = SAFE_ADDRESS,
             ownerAddress = OWNER,
+            deployment = SafeDeployment.DEPLOYED,
         )
 
         // Assert
@@ -139,6 +206,7 @@ internal class DefaultJointOperationBlockaidGateTest {
             chainId = CHAIN_ID,
             safeAddress = SAFE_ADDRESS,
             ownerAddress = OWNER,
+            deployment = SafeDeployment.DEPLOYED,
         )
 
         // Assert
@@ -158,6 +226,7 @@ internal class DefaultJointOperationBlockaidGateTest {
             chainId = CHAIN_ID,
             safeAddress = SAFE_ADDRESS,
             ownerAddress = OWNER,
+            deployment = SafeDeployment.DEPLOYED,
         )
 
         // Assert

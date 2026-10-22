@@ -16,14 +16,12 @@ import com.tangem.core.remote.build
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.devicekey.internal.DefaultDeviceKeyManager
 import com.tangem.lib.auth.devicekey.internal.DisabledDeviceKeyManager
 import com.tangem.lib.auth.dpop.DpopProofFactory
 import com.tangem.lib.auth.dpop.internal.DefaultDpopProofFactory
-import com.tangem.lib.auth.dpop.internal.DisabledDpopProofFactory
 import com.tangem.lib.auth.http.DpopAuthorizationInterceptor
 import com.tangem.lib.auth.http.SessionAuthenticator
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
@@ -41,9 +39,6 @@ import com.tangem.lib.auth.session.internal.DefaultDeviceRegistrar
 import com.tangem.lib.auth.session.internal.DefaultSessionTokenRefresher
 import com.tangem.lib.auth.session.internal.DefaultSessionTokensStore
 import com.tangem.lib.auth.session.internal.DefaultWalletRegistrar
-import com.tangem.lib.auth.session.internal.DisabledDeviceRegistrar
-import com.tangem.lib.auth.session.internal.DisabledSessionTokenRefresher
-import com.tangem.lib.auth.session.internal.DisabledWalletRegistrar
 import com.tangem.lib.auth.session.internal.DisabledSessionTokensStore
 import com.tangem.lib.auth.session.internal.WalletRegistrationLocks
 import com.tangem.lib.auth.session.internal.SignedRequestPayload
@@ -64,7 +59,6 @@ import kotlin.time.Duration.Companion.seconds
 import okhttp3.Authenticator
 import okhttp3.Interceptor
 import java.security.KeyStore
-import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -98,24 +92,9 @@ internal object AuthModule {
         )
     }
 
-    /**
-     * Exposes the backend-authentication feature toggle as a plain `Boolean` so that callers
-     * in `core:datasource` (which can't depend on `libs:auth` for layering reasons) can gate
-     * session-auth wiring without importing [AuthFeatureToggles].
-     */
-    @Provides
-    @Named("isBackendAuthenticationEnabled")
-    fun provideIsBackendAuthenticationEnabled(authFeatureToggles: AuthFeatureToggles): Boolean =
-        authFeatureToggles.isBackendAuthenticationEnabled
-
     @Provides
     @Singleton
-    fun provideDeviceKeyManager(
-        authFeatureToggles: AuthFeatureToggles,
-        dispatchers: CoroutineDispatcherProvider,
-    ): DeviceKeyManager {
-        if (!authFeatureToggles.isBackendAuthenticationEnabled) return DisabledDeviceKeyManager
-
+    fun provideDeviceKeyManager(dispatchers: CoroutineDispatcherProvider): DeviceKeyManager {
         return runCatching {
             val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
             DefaultDeviceKeyManager(keyStore, dispatchers)
@@ -129,12 +108,9 @@ internal object AuthModule {
     @Provides
     @Singleton
     fun provideAuthNonceDecryptor(
-        authFeatureToggles: AuthFeatureToggles,
         authServiceConfig: AuthServiceConfig,
         dispatchers: CoroutineDispatcherProvider,
     ): AuthNonceDecryptor {
-        if (!authFeatureToggles.isBackendAuthenticationEnabled) return DisabledAuthNonceDecryptor
-
         val authServiceKey = authServiceConfig.authServiceKey
         if (authServiceKey.isNullOrEmpty()) return DisabledAuthNonceDecryptor
 
@@ -149,13 +125,10 @@ internal object AuthModule {
     @Provides
     @Singleton
     fun provideSessionTokensStore(
-        authFeatureToggles: AuthFeatureToggles,
         @ApplicationContext context: Context,
         @NetworkMoshi moshi: Moshi,
         dispatchers: CoroutineDispatcherProvider,
     ): SessionTokensStore {
-        if (!authFeatureToggles.isBackendAuthenticationEnabled) return DisabledSessionTokensStore
-
         return runCatching {
             val storage: SecureStorage = AndroidSecureStorageV2(
                 appContext = context,
@@ -173,12 +146,9 @@ internal object AuthModule {
     @Provides
     @Singleton
     fun provideDpopProofFactory(
-        authFeatureToggles: AuthFeatureToggles,
         deviceKeyManager: DeviceKeyManager,
         dispatchers: CoroutineDispatcherProvider,
     ): DpopProofFactory {
-        if (!authFeatureToggles.isBackendAuthenticationEnabled) return DisabledDpopProofFactory
-
         return DefaultDpopProofFactory(
             deviceKeyManager = deviceKeyManager,
             json = Json.Default,
@@ -191,7 +161,6 @@ internal object AuthModule {
     @Provides
     @Singleton
     fun provideSessionTokenRefresher(
-        authFeatureToggles: AuthFeatureToggles,
         authApi: AuthApi,
         store: SessionTokensStore,
         deviceKeyManager: DeviceKeyManager,
@@ -203,8 +172,6 @@ internal object AuthModule {
         deviceRegistrar: Lazy<DeviceRegistrar>,
         dispatchers: CoroutineDispatcherProvider,
     ): SessionTokenRefresher {
-        if (!authFeatureToggles.isBackendAuthenticationEnabled) return DisabledSessionTokenRefresher
-
         return DefaultSessionTokenRefresher(
             authApi = authApi,
             store = store,
@@ -224,7 +191,6 @@ internal object AuthModule {
     @Provides
     @Singleton
     fun provideDeviceRegistrar(
-        authFeatureToggles: AuthFeatureToggles,
         authApi: AuthApi,
         store: SessionTokensStore,
         deviceKeyManager: DeviceKeyManager,
@@ -238,8 +204,6 @@ internal object AuthModule {
         walletRegistrar: WalletRegistrar,
         dispatchers: CoroutineDispatcherProvider,
     ): DeviceRegistrar {
-        if (!authFeatureToggles.isBackendAuthenticationEnabled) return DisabledDeviceRegistrar
-
         return DefaultDeviceRegistrar(
             authApi = authApi,
             store = store,
@@ -260,7 +224,6 @@ internal object AuthModule {
     @Provides
     @Singleton
     fun provideWalletRegistrar(
-        authFeatureToggles: AuthFeatureToggles,
         authApi: AuthApi,
         store: SessionTokensStore,
         deviceKeyManager: DeviceKeyManager,
@@ -273,8 +236,6 @@ internal object AuthModule {
         locks: WalletRegistrationLocks,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletRegistrar {
-        if (!authFeatureToggles.isBackendAuthenticationEnabled) return DisabledWalletRegistrar
-
         return DefaultWalletRegistrar(
             authApi = authApi,
             store = store,

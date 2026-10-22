@@ -6,7 +6,7 @@ import com.tangem.features.onboarding.v2.common.ui.OnboardingDialogUM
 internal data class MultiWalletCreateWalletUM(
     val title: TextReference,
     val bodyText: TextReference,
-    val showOtherOptionsButton: Boolean,
+    val shouldShowOtherOptionsButton: Boolean,
     val onCreateWalletClick: () -> Unit,
     val onOtherOptionsClick: () -> Unit,
     val onTermsOfUseClick: () -> Unit,

@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
@@ -34,7 +35,7 @@ fun RowScope.TokenRowPriceChangeContent(
     AnimatedContent(
         targetState = priceChangeState.type,
         label = "Update the price change's arrow",
-        modifier = Modifier.padding(start = TangemTheme.dimens2.x1),
+        modifier = Modifier.padding(start = 4.dp),
     ) { animatedType ->
         Icon(
             painter = rememberVectorPainter(
@@ -48,14 +49,14 @@ fun RowScope.TokenRowPriceChangeContent(
             ),
             tint = color,
             contentDescription = null,
-            modifier = Modifier.size(TangemTheme.dimens2.x3),
+            modifier = Modifier.size(12.dp),
         )
     }
 
     AnimatedContent(
         targetState = priceChangeState.valueInPercent,
         label = "Update the price text",
-        modifier = modifier.padding(start = TangemTheme.dimens2.x0_5),
+        modifier = modifier.padding(start = 2.dp),
     ) { animatedText ->
         Text(
             text = animatedText,

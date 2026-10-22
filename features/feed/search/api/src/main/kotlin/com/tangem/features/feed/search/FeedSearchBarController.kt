@@ -2,7 +2,6 @@ package com.tangem.features.feed.search
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -10,8 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
  * header), while search results are a feed screen in another module — this controller is the seam
  * between them:
  *
- * - the host's search bar reports typing and focus via [onQueryChange]/[onActiveChange];
- * - the feed host reacts to [FeedSearchBarUM.isActive] by pushing/popping the search route;
+ * - the host's search bar reports typing, focus and its close button via [onQueryChange]/[onFocusChange]/[onClose];
+ * - the feed host opens the search route on the first typed character and closes it on [onClose];
  * - the search screen observes [FeedSearchBarUM.query] to drive results.
  */
 @Stable
@@ -19,21 +18,18 @@ interface FeedSearchBarController {
 
     val state: StateFlow<FeedSearchBarUM>
 
-    /**
-     * Emits when the user commits the query from the keyboard's search action. Carries nothing —
-     * the query itself is in [state] — and is not replayed, so a screen that starts collecting later
-     * does not see earlier submissions.
-     */
-    val submits: SharedFlow<Unit>
-
     fun onQueryChange(query: String)
 
-    /** Focus/unfocus of the search bar; `true` opens the search screen, `false` closes it. */
-    fun onActiveChange(isActive: Boolean)
+    /** Focus/unfocus of the search bar. Focus alone keeps the current feed screen; typing opens the search. */
+    fun onFocusChange(isFocused: Boolean)
 
-    fun onSubmit()
+    /** The search bar's close button: leaves the search screen and drops the query. */
+    fun onClose()
 }
 
+/**
+ * @property isActive the bar is in a search session: focused, or the search screen is open
+ */
 @Immutable
 data class FeedSearchBarUM(
     val query: String = "",

@@ -45,7 +45,7 @@ internal fun OnrampAmountContent(state: OnrampMainComponentUM.Content, modifier:
             .fillMaxWidth()
             .background(
                 color = TangemTheme.colors.background.action,
-                shape = RoundedCornerShape(size = TangemTheme.dimens.radius16),
+                shape = RoundedCornerShape(size = 16.dp),
             )
             .padding(vertical = 24.dp, horizontal = 16.dp)
             .animateContentSize(),
@@ -115,12 +115,12 @@ private fun OnrampAmountField(amountField: AmountFieldModel, currencyCode: Strin
         modifier = Modifier
             .focusRequester(requester)
             .padding(
-                top = TangemTheme.dimens.spacing8,
-                bottom = TangemTheme.dimens.spacing4,
-                start = TangemTheme.dimens.spacing12,
-                end = TangemTheme.dimens.spacing12,
+                top = 8.dp,
+                bottom = 4.dp,
+                start = 12.dp,
+                end = 12.dp,
             )
-            .requiredHeightIn(min = TangemTheme.dimens.size32)
+            .requiredHeightIn(min = 32.dp)
             .testTag(BuyTokenDetailsScreenTestTags.FIAT_AMOUNT_TEXT_FIELD),
     )
 
@@ -137,9 +137,9 @@ private fun OnrampAmountSecondary(state: OnrampSecondaryFieldErrorUM.Error) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                top = TangemTheme.dimens.spacing8,
-                start = TangemTheme.dimens.spacing12,
-                end = TangemTheme.dimens.spacing12,
+                top = 8.dp,
+                start = 12.dp,
+                end = 12.dp,
             ),
         contentAlignment = Alignment.Center,
     ) {
@@ -179,7 +179,7 @@ private fun OnrampCurrencyIcon(currencyUM: OnrampCurrencyUM, modifier: Modifier 
         )
         Icon(
             modifier = Modifier
-                .size(TangemTheme.dimens.size16)
+                .size(16.dp)
                 .testTag(BuyTokenDetailsScreenTestTags.EXPAND_FIAT_LIST_BUTTON),
             painter = painterResource(id = R.drawable.ic_chevron_24),
             tint = TangemTheme.colors.icon.informative,
