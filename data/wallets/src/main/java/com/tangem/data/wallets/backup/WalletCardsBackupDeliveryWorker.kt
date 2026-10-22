@@ -16,11 +16,18 @@ internal class WalletCardsBackupDeliveryWorker @AssistedInject constructor(
     private val sendPendingWalletCardsBackupUseCase: SendPendingWalletCardsBackupUseCase,
 ) : CoroutineWorker(context, params) {
 
-    override suspend fun doWork(): Result = sendPendingWalletCardsBackupUseCase().fold(
-        ifLeft = { error ->
-            TangemLogger.e("Pending cards backup reports deferred, attempt $runAttemptCount: $error")
-            Result.retry()
-        },
-        ifRight = { Result.success() },
-    )
+    override suspend fun doWork(): Result {
+        TangemLogger.i("Pending cards backup delivery started, attempt $runAttemptCount")
+
+        return sendPendingWalletCardsBackupUseCase().fold(
+            ifLeft = { error ->
+                TangemLogger.e("Pending cards backup reports deferred, attempt $runAttemptCount: $error")
+                Result.retry()
+            },
+            ifRight = {
+                TangemLogger.i("Pending cards backup reports delivered")
+                Result.success()
+            },
+        )
+    }
 }
