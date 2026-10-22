@@ -7,13 +7,16 @@ import androidx.annotation.RawRes
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.RawResourceDataSource
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.plus
 import javax.inject.Inject
 
 @OptIn(UnstableApi::class)
 internal class DefaultLoopingVideoControllerFactory @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : LoopingVideoController.Factory {
 
     override fun create(
@@ -23,7 +26,8 @@ internal class DefaultLoopingVideoControllerFactory @Inject constructor(
         diagnosticsSubject: String,
         onFailed: (error: Throwable, hasRenderedFrame: Boolean) -> Unit,
     ): LoopingVideoController = LoopingVideoController(
-        scope = scope,
+        // The player only takes calls on the main thread.
+        scope = scope + dispatchers.mainImmediate,
         frameSize = frameSize,
         diagnosticsSubject = diagnosticsSubject,
         onFailed = onFailed,

@@ -286,6 +286,25 @@ internal class LoopingVideoControllerTest {
                 assertThat(controller.isFirstFrameShown()).isFalse()
                 assertThat(failures).containsExactly(ReportedFailure(PLAYBACK_ERROR, hasRenderedFrame = true))
             }
+
+        @Test
+        fun `GIVEN the player already failed WHEN the watchdog gives up too THEN the failure is reported once`() =
+            runTest {
+                // Arrange
+                val controller = createControllerWithFrameShown()
+                controller.setRunning(isRunning = true)
+                every { player.outputFrameCount } returns 28L
+                playerListener.onPlayingChanged(isPlaying = true)
+                playerListener.onError(PLAYBACK_ERROR)
+
+                // Act
+                advanceTimeBy(STALL_DETECTED_AFTER_MS * 4)
+                runCurrent()
+
+                // Assert
+                assertThat(failures).containsExactly(ReportedFailure(PLAYBACK_ERROR, hasRenderedFrame = true))
+                verify(exactly = 1) { player.setRunning(isRunning = false) }
+            }
     }
 
     @Nested
