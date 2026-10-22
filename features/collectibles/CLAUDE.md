@@ -214,29 +214,30 @@ The reward card's "Sell back" sells the won card for the backend's instant buyba
 - **Availability is polled in the model.** On `OpenPackStep.Opened` (before the throw, so it runs alongside
   the video) the model starts a `SingleTaskScheduler` + `PeriodicTask` that calls
   `GetCollectibleBuybackOfferUseCase` (one request) at once and then every 5 s. It is state-driven like the
-  expected-value polling in `CollectiblesMachineDetailsModel`: it runs only while the offer is unknown
-  (`BuybackState.Checking`) and the screen is resumed (`lifecycle.subscribe(onResume, onPause)` in the
-  component). `buybackAvailable = false` means "not yet", so there is no deadline. Availability comes from
-  `/buyback/available` alone, for every machine. While it is unknown the Sell back button spins; a disabled
-  "Buyback unavailable" is only for `Unavailable`.
+  expected-value polling in `CollectiblesMachineDetailsModel`: it runs while there is no offer
+  (`BuybackState.Unavailable`, the initial state) and the screen is resumed
+  (`lifecycle.subscribe(onResume, onPause)` in the component), with no deadline. The button starts as a
+  disabled "Buyback unavailable" and stays so on `buybackAvailable = false` or a failed check; an offer turns
+  it on and stops the polling. Whether "not available" can ever change is still open with Collector Crypt.
+  Availability comes from `/buyback/available` alone, for every machine.
 - **The sale is `BuybackCollectibleUseCase`**: `buyback-data` with `fromAddress = owner` (it holds the card)
   and `toAddress = vault` (`getVaultAddress`, so the payout shows in the collectibles balance) →
   `GachaVaultRepository.sendWithOwnerSignature` (the backend's base64 transaction signed as is with the owner
   key) → `buyback-tx-sent` → 5 polls of `/buyback/status` every 2 s. It is `suspend` and returns
   `Either<BuybackError, Unit>`: `confirmed` → right; `expired` or no `confirmed` in 10 s → `NotConfirmed`. There
   are no intermediate steps, the button only spins; the snackbar's amount comes from the offer.
-- **Only success leaves the screen** (snackbar + `router.pop()`). `NotAllowed` (the backend refuses
-  `buyback-data`) makes the button unavailable with a snackbar; `Cancelled` / `CardRefused` re-enable it
-  silently; `Unexpected` re-enables it with "Something went wrong". A message over the card's 930 B
-  (`GachaVaultError.TransactionTooLarge`) counts as `Unexpected`.
-- **`NotConfirmed` does not re-offer at once.** The sale may still land, so after "Something went wrong" the
-  button goes back to `Checking` (spinner) and the same `/buyback/available` polling decides again. Whether the
-  gacha guards against a second buyback of the same NFT is still open with Collector Crypt.
+- **Only success leaves the screen** (snackbar + `router.pop()`). `Cancelled` / `CardRefused` re-enable the
+  button silently; `Unexpected` re-enables it with `unexpected_error_description` ("…contact support"). Any
+  `buyback-data` failure is `Unexpected`, whatever its code: per the analysts' diagram the button stays
+  available. A message over the card's 930 B (`GachaVaultError.TransactionTooLarge`) counts as `Unexpected` too.
+- **`NotConfirmed` does not re-offer at once.** The sale may still land, so the button goes back to
+  `Unavailable` with the same snackbar and the `/buyback/available` polling decides again. Whether the gacha
+  guards against a second buyback of the same NFT is still open with Collector Crypt.
 - While the sale runs back, close and "Keep card" are ignored (`isBuybackRunning()`): leaving would cancel
   `modelScope` and the tx hash might never reach the backend. "Keep card" is disabled only then
   (`RevealUM.isKeepCardEnabled`), not while the offer is being checked.
 
-`BuybackState` (`Checking` / `Available` / `Unavailable` / `InProgress`) is the model's own;
+`BuybackState` (`Unavailable` / `Available` / `InProgress`) is the model's own;
 `CollectiblesSellBackButtonConverter` turns it into `SellBackButtonUM` (text, `isEnabled`, `isLoading`), which lives
 in `RevealUM`, not in `RewardCardUM`, because it changes while the card is on screen.
 
@@ -381,9 +382,6 @@ updated, and `skipToMs` must land on a keyframe.
 codec failure, or system animations off (`ANIMATOR_DURATION_SCALE == 0`, which also mutes the skip sound)
 — every path falls back to the short version and ends on the card.
 
-**Buyback refusals are not mapped yet.** `CollectibleException.BuybackRefused` waits for the backend's own error
-codes (a TODO in `CollectiblesErrorResolver`); until then a refused `buyback-data` is `Unexpected`.
-
 **Statuses are DTO enums.** `CollectibleTxResponse.CollectibleTxStatusDTO` (purchase) and
 `BuybackStatusResponse.BuybackStatusDTO` name the wire values with `@SerialName`; an unknown one is coerced to
 `UNKNOWN` by `NetworkJsonFactory` (`coerceInputValues`), and the converters map enum to enum with a `when`.
@@ -395,9 +393,8 @@ the transaction and would break the backend's blockhash and other signatures.
 **Trust `/buyback/status`, not the send.** Blink, the first Solana provider, sends with `skipPreflight = true`,
 so a transaction that fails on chain can still look sent.
 
-`Expired` / `Refunded` failures and the buyback refusal snackbar show hardcoded English (the refusal text
-waits for the analysts). The disabled Sell back button and the success snackbar are localized:
-`collectibles_open_pack_buyback_unavailable` and `collectibles_open_pack_sell_back_success`.
+`Expired` / `Refunded` failures show hardcoded English. The buyback copy is localized:
+`collectibles_open_pack_buyback_unavailable` (the disabled button) and `collectibles_open_pack_sell_back_success`.
 
 **A few strings are still literals.** Most copy is in `core/res` (`collectibles_*`), but some
 `stringReference("…")` literals remain (menu, add funds, status, the snackbars above).
