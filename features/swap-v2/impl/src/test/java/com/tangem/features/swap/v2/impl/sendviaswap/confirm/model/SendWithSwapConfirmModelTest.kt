@@ -58,6 +58,7 @@ import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsUpdateListener
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsUpdateTrigger
 import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
+import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.SendWithSwapConfirmComponent
 import com.tangem.features.swap.v2.impl.sendviaswap.entity.SendWithSwapUM
 import com.tangem.test.core.ProvideTestModels
@@ -273,6 +274,15 @@ internal class SendWithSwapConfirmModelTest {
 
             // Assert
             verify { callback.onProviderHidden("changehero") }
+            verify {
+                analyticsEventHandler.send(
+                    SendWithSwapAnalyticEvents.SwapProviderHidden(
+                        providerName = "ChangeHero",
+                        errorCode = 2264,
+                        source = CommonSendAnalyticEvents.CommonSendSource.SendWithSwap,
+                    ),
+                )
+            }
             verify {
                 swapAlertFactory.getGenericErrorState(
                     expressError = rejectedError,
