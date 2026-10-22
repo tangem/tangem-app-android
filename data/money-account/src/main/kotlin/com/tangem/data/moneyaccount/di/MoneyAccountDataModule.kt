@@ -5,14 +5,14 @@ import androidx.datastore.dataStoreFile
 import com.tangem.core.local.datastore.DeleteObsoleteFileMigration
 import com.tangem.data.moneyaccount.converter.MoneyAccountStatusValueDMConverter
 import com.tangem.data.moneyaccount.currency.DefaultMoneyAccountCurrencyFactory
-import com.tangem.data.moneyaccount.currency.MoneyAccountNonPortfolioCurrencies
+import com.tangem.data.moneyaccount.currency.MoneyAccountCurrenciesProvider
 import com.tangem.data.moneyaccount.flow.DefaultMoneyAccountStatusFetcher
 import com.tangem.data.moneyaccount.flow.DefaultMoneyAccountStatusProducer
 import com.tangem.data.moneyaccount.repository.DefaultMoneyAccountActivationRepository
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
-import com.tangem.domain.account.status.supplier.NonPortfolioAccountCurrencies
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
 import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
@@ -80,7 +80,7 @@ internal interface MoneyAccountDataModule {
 
     @Binds
     @Singleton
-    fun bindNonPortfolioAccountCurrencies(impl: MoneyAccountNonPortfolioCurrencies): NonPortfolioAccountCurrencies
+    fun bindNonPortfolioCurrenciesProvider(impl: MoneyAccountCurrenciesProvider): NonPortfolioCurrenciesProvider
 
     companion object {
 
