@@ -54,7 +54,7 @@ class StakingBalanceConverter(
             amount = item.amount,
             rawCurrencyId = item.tokenDTO.coinGeckoId,
             // tron-specific. operates validatorAddresses instead of validatorAddress
-            validatorAddress = item.validatorAddress ?: item.validatorAddresses?.get(0),
+            validatorAddress = item.validatorAddress ?: item.validatorAddresses?.firstOrNull(),
             date = item.date?.toString()?.let { Instant.parse(it) },
             pendingActions = PendingActionConverter
                 .convertList(item.pendingActions)
