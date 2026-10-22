@@ -35,7 +35,7 @@ internal class DefaultWalletCardsBackupDeliverySchedulerTest {
         isOnlineFlow.value = false
         mockkStatic(WorkManager::class)
         every { WorkManager.getInstance(any()) } returns workManager
-        every { networkConnectionManager.isOnlineFlow } returns isOnlineFlow
+        every { networkConnectionManager.isOnline } returns isOnlineFlow
         every {
             workManager.enqueueUniqueWork(any<String>(), ExistingWorkPolicy.REPLACE, capture(enqueuedRequests))
         } returns mockk()
