@@ -99,6 +99,7 @@ import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.stories.ShouldShowStoriesInteractor
 import com.tangem.domain.stories.models.StoryContentIds
+import com.tangem.domain.swap.SwapProviderHidingPolicy
 import com.tangem.domain.swap.models.PredefinedPercentAmount
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.swap.usecase.CalculateAmountUseCase
@@ -1848,8 +1849,14 @@ internal class SwapModel @Inject constructor(
                             messageString = "onSwapClick: swap transaction error: $swapTransactionState",
                             shouldSanitize = false,
                         )
-                        startLoadingQuotesFromLastState()
-                        showTransactionErrorAlert(swapTransactionState)
+                        if (swapFeatureToggles.isHideRejectedCexProviderEnabled) {
+                            hideProviderIfRejected(provider = provider, error = swapTransactionState)
+                            startLoadingQuotesFromLastState()
+                            showTransactionErrorAlert(error = swapTransactionState, providerName = provider.name)
+                        } else {
+                            startLoadingQuotesFromLastState()
+                            showTransactionErrorAlert(swapTransactionState)
+                        }
                     }
                     is SwapTransactionState.TangemPayWithdrawalData -> {
                         processTangemPayWithdrawal(
@@ -2513,13 +2520,26 @@ internal class SwapModel @Inject constructor(
 
     private fun showTransactionErrorAlert(
         error: SwapTransactionState.Error,
+        providerName: String? = null,
         onSupportClick: (String) -> Unit = ::onFailedTxEmailClick,
     ) {
         val errorAlert = SwapTransactionErrorStateConverter(
+            providerName = providerName,
             onDismiss = {},
             onSupportClick = onSupportClick,
         ).convert(error)
         errorAlert?.let { messageSender.send(it) }
+    }
+
+    /** The provider stays hidden until [SwapProcessDataState.selectedPairProviders] is rebuilt for another pair */
+    private fun hideProviderIfRejected(provider: SwapProvider, error: SwapTransactionState.Error) {
+        val errorCode = (error as? SwapTransactionState.Error.ExpressError)?.error?.code ?: return
+        if (!SwapProviderHidingPolicy.shouldHide(providerId = provider.providerId, errorCode = errorCode)) return
+
+        TangemLogger.i("Provider ${provider.providerId} is hidden after swap error $errorCode")
+        dataState = dataState.copy(
+            selectedPairProviders = dataState.selectedPairProviders.filterNot { it.providerId == provider.providerId },
+        )
     }
 
     private fun onTangemPaySupportClick(txId: String) {
