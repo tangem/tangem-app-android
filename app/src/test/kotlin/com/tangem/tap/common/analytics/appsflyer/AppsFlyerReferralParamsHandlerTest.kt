@@ -194,6 +194,22 @@ class AppsFlyerReferralParamsHandlerTest {
                     shouldStore = false,
                 ),
                 HandleParamsModel(
+                    params = conversionData(deepLinkValue = "referral", refcode = "NULL", campaign = SUCCESS_CAMPAIGN),
+                    shouldStore = false,
+                ),
+                HandleParamsModel(
+                    params = conversionData(deepLinkValue = "referral", refcode = " ", campaign = SUCCESS_CAMPAIGN),
+                    shouldStore = false,
+                ),
+                HandleParamsModel(
+                    params = conversionData(
+                        deepLinkValue = "referral",
+                        refcode = " $SUCCESS_REFCODE ",
+                        campaign = " $SUCCESS_CAMPAIGN ",
+                    ),
+                    shouldStore = true,
+                ),
+                HandleParamsModel(
                     params = conversionData(deepLinkValue = "some_other_deep_link_value"),
                     shouldStore = false,
                 ),
@@ -258,6 +274,8 @@ class AppsFlyerReferralParamsHandlerTest {
                 CampaignModel(rawCampaign = "", expectedCampaign = null),
                 CampaignModel(rawCampaign = " ", expectedCampaign = null),
                 CampaignModel(rawCampaign = "null", expectedCampaign = null),
+                CampaignModel(rawCampaign = "NULL", expectedCampaign = null),
+                CampaignModel(rawCampaign = " $SUCCESS_CAMPAIGN ", expectedCampaign = SUCCESS_CAMPAIGN),
             )
         }
     }
