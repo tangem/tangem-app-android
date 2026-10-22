@@ -124,6 +124,10 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1690_QR_SCAN_DEEPLINKS_ENABLED",
+        "version": "6.6"
+    },
+    {
         "name": "TWI_1876_KYC_PRESCREENING_CEX_ENABLED",
         "version": "undefined"
     }
