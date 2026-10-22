@@ -1231,6 +1231,10 @@
   <string name="joint_account_invite_members_creator">Creator</string>
   <string name="joint_account_invite_members_everyone_joined">Everyone has joined</string>
   <string name="joint_account_invite_members_invite">Invite</string>
+  <plurals name="joint_account_invite_members_invite_count">
+    <item quantity="one">Invite %d member</item>
+    <item quantity="other">Invite %d members</item>
+  </plurals>
   <string name="joint_account_invite_members_invite_expired">Invite expired</string>
   <plurals name="joint_account_invite_members_invite_more">
     <item quantity="one">Invite %d more member</item>
