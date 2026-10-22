@@ -102,10 +102,12 @@ dependencies {
     kapt(deps.hilt.kapt)
     
     testImplementation(projects.common.test)
+    testImplementation(projects.core.remote)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
     testImplementation(deps.arrow.core)
     testImplementation(deps.kotlin.coroutines)
     api(deps.kotlin.coroutines)
+    api(projects.domain.common)
     api(projects.domain.quotes)
 }
