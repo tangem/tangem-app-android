@@ -25,9 +25,11 @@ import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.quote.PriceChange
 import com.tangem.feature.wallet.impl.R
 import com.tangem.utils.StringsSigns
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
 
+@RemoveWithToggle("AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED")
 internal class WalletTokenAccountItemConverter(
     private val appCurrency: AppCurrency,
     private val expandedAccounts: Set<AccountId>,

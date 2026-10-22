@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
@@ -28,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.lerp
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.common.ui.tokens.NonContentItemContent
@@ -43,12 +45,15 @@ import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.header.TangemHeaderRow
-import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
 import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRow
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.row.token.internal.TokenRowTitle
+import com.tangem.core.ui.ds2.accountrow.Section
+import com.tangem.core.ui.ds2.accountrow.Shimmer
+import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow as TangemTokenRowV2
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.MainScreenTestTags
@@ -106,12 +111,26 @@ internal fun LazyListScope.tokensListItems2(
     jointAccountComponent: JointAccountMainBlockComponent,
     modifier: Modifier = Modifier,
     isBalanceHidden: Boolean,
+    isRedesignedAccountRowsEnabled: Boolean = false,
 ) {
     when (walletTokensListUM) {
         is WalletTokensListUM.Loading,
-        is WalletTokensListUM.Content,
         WalletTokensListUM.Locked,
-        -> {
+        -> if (isRedesignedAccountRowsEnabled) {
+            accountShimmerItems(count = walletTokensListUM.tokenList.size, modifier = modifier)
+        } else {
+            walletTokensListUM.tokenList.fastForEachIndexed { index, listItem ->
+                if (listItem is TokensListItemUM2.Portfolio) {
+                    portfolioItem(
+                        listItem = listItem,
+                        index = index,
+                        isBalanceHidden = isBalanceHidden,
+                        modifier = modifier,
+                    )
+                }
+            }
+        }
+        is WalletTokensListUM.Content -> {
             walletTokensListUM.tokenList.fastForEachIndexed { index, listItem ->
                 when (listItem) {
                     is TokensListItemUM2.GroupTitle,
@@ -136,6 +155,15 @@ internal fun LazyListScope.tokensListItems2(
                         isBalanceHidden = isBalanceHidden,
                         modifier = modifier,
                     )
+                    is TokensListItemUM2.AccountV2 -> accountItemV2(
+                        listItem = listItem,
+                        index = index,
+                        isBalanceHidden = isBalanceHidden,
+                        modifier = modifier,
+                    )
+                    is TokensListItemUM2.SectionV2,
+                    is TokensListItemUM2.TokenV2,
+                    -> Unit
                 }
             }
         }
@@ -154,8 +182,8 @@ private fun LazyListScope.tokenItem(
     modifier: Modifier = Modifier,
 ) {
     item(
-        key = listItem.tokenRowUM.id,
-        contentType = listItem.tokenRowUM::class.java,
+        key = listItem.id,
+        contentType = listItem::class.java,
     ) {
         val itemModifier = modifier
             .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
@@ -170,22 +198,26 @@ private fun LazyListScope.tokenItem(
             )
 
         var position by remember { mutableStateOf(Offset.Zero) }
-        when (val tokenRowUM = listItem.tokenRowUM) {
-            is TangemTokenRowUM -> TangemTokenRow(
-                tokenRowUM = tokenRowUM,
-                isBalanceHidden = isBalanceHidden,
-                modifier = itemModifier
-                    .onGloballyPositioned { position = it.positionOnScreen() }
-                    .combinedClickable(
-                        enabled = tokenRowUM.onItemClick != null || tokenRowUM.onItemLongClick != null,
-                        onClick = tokenRowUM.onItemClick ?: {},
-                        onLongClick = { tokenRowUM.onItemLongClick?.invoke(position, tokenRowUM) },
-                    ),
-            )
-            is TangemHeaderRowUM -> TangemHeaderRow(
-                headerRowUM = tokenRowUM,
+        when (listItem) {
+            is TokensListItemUM2.Token -> {
+                val tokenRowUM = listItem.tokenRowUM
+                TangemTokenRow(
+                    tokenRowUM = tokenRowUM,
+                    isBalanceHidden = isBalanceHidden,
+                    modifier = itemModifier
+                        .onGloballyPositioned { position = it.positionOnScreen() }
+                        .combinedClickable(
+                            enabled = tokenRowUM.onItemClick != null || tokenRowUM.onItemLongClick != null,
+                            onClick = tokenRowUM.onItemClick ?: {},
+                            onLongClick = { tokenRowUM.onItemLongClick?.invoke(position, tokenRowUM) },
+                        ),
+                )
+            }
+            is TokensListItemUM2.GroupTitle -> TangemHeaderRow(
+                headerRowUM = listItem.tokenRowUM,
                 modifier = itemModifier,
             )
+            else -> Unit
         }
     }
 }
@@ -238,7 +270,7 @@ private fun LazyListScope.portfolioItem(
     } else {
         itemsIndexed(
             items = listItem.tokenList,
-            key = { _, item -> item.tokenRowUM.id },
+            key = { _, item -> item.id },
             contentType = { _, item -> item::class.java },
             itemContent = { tokenIndex, item ->
                 SlideInItemVisibility(
@@ -261,27 +293,31 @@ private fun LazyListScope.portfolioItem(
                         .semantics { lazyListItemPosition = tokenIndex + 1 }
 
                     var position by remember { mutableStateOf(Offset.Zero) }
-                    when (val tokenRowUM = item.tokenRowUM) {
-                        is TangemTokenRowUM -> TangemTokenRow(
-                            tokenRowUM = tokenRowUM,
-                            isBalanceHidden = isBalanceHidden,
-                            modifier = itemModifier
-                                .onGloballyPositioned {
-                                    position = it.positionInWindow()
-                                }
-                                .combinedClickable(
-                                    enabled = tokenRowUM.onItemClick != null || tokenRowUM.onItemLongClick != null,
-                                    onClick = tokenRowUM.onItemClick ?: {},
-                                    onLongClick = {
-                                        tokenRowUM.onItemLongClick?.invoke(position, tokenRowUM)
-                                    },
-                                ),
-                        )
-                        is TangemHeaderRowUM -> TangemHeaderRow(
-                            headerRowUM = tokenRowUM,
+                    when (item) {
+                        is TokensListItemUM2.Token -> {
+                            val tokenRowUM = item.tokenRowUM
+                            TangemTokenRow(
+                                tokenRowUM = tokenRowUM,
+                                isBalanceHidden = isBalanceHidden,
+                                modifier = itemModifier
+                                    .onGloballyPositioned {
+                                        position = it.positionInWindow()
+                                    }
+                                    .combinedClickable(
+                                        enabled = tokenRowUM.onItemClick != null || tokenRowUM.onItemLongClick != null,
+                                        onClick = tokenRowUM.onItemClick ?: {},
+                                        onLongClick = {
+                                            tokenRowUM.onItemLongClick?.invoke(position, tokenRowUM)
+                                        },
+                                    ),
+                            )
+                        }
+                        is TokensListItemUM2.GroupTitle -> TangemHeaderRow(
+                            headerRowUM = item.tokenRowUM,
                             isBalanceHidden = isBalanceHidden,
                             modifier = itemModifier,
                         )
+                        else -> Unit
                     }
                 }
             },
@@ -341,6 +377,175 @@ private fun LazyListScope.accountItem(
             )
         }
     }
+}
+
+private fun LazyListScope.accountShimmerItems(count: Int, modifier: Modifier) {
+    repeat(count) { index ->
+        item(key = "account_shimmer_$index", contentType = TangemAccountRow.State.Shimmer::class.java) {
+            TangemAccountRow.Shimmer(
+                modifier = modifier
+                    .padding(top = if (index != 0) 8.dp else 12.dp)
+                    .testTag(MainScreenTestTags.ACCOUNT_LIST_ITEM),
+            )
+        }
+    }
+}
+
+@Suppress("LongMethod", "MagicNumber")
+private fun LazyListScope.accountItemV2(
+    listItem: TokensListItemUM2.AccountV2,
+    index: Int,
+    isBalanceHidden: Boolean,
+    modifier: Modifier,
+) {
+    val lastIndex = if (listItem.tokenList.isEmpty()) 1 else listItem.tokenList.size
+
+    item(key = listItem.id, contentType = TokensListItemUM2.AccountV2::class.java) {
+        val effectiveLastIndex by animateIntAsState(
+            targetValue = if (listItem.isExpanded) lastIndex else 0,
+            animationSpec = if (listItem.isExpanded) {
+                snap()
+            } else {
+                snap(delayMillis = minOf(50 * maxOf(listItem.tokenList.lastIndex, 0), 250) + 150)
+            },
+            label = "lastIndex",
+        )
+
+        AccountRowV2(
+            item = listItem,
+            isBalanceHidden = isBalanceHidden,
+            modifier = modifier
+                .padding(top = if (index != 0) 8.dp else 12.dp)
+                .testTag(MainScreenTestTags.ACCOUNT_LIST_ITEM)
+                .semantics { lazyListItemPosition = index }
+                .roundedShapeItemDecoration(
+                    currentIndex = 0,
+                    radius = 24.dp,
+                    addDefaultPadding = false,
+                    lastIndex = effectiveLastIndex,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
+                    groupKey = listItem.id,
+                ),
+        )
+    }
+
+    if (listItem.tokenList.isEmpty()) {
+        nonContentAccountItem(
+            groupKey = listItem.id,
+            isExpanded = listItem.isExpanded,
+            onEmptyClick = listItem.onEmptyClick,
+            radius = 24.dp,
+            modifier = modifier,
+        )
+        return
+    }
+
+    itemsIndexed(
+        items = listItem.tokenList,
+        key = { _, item -> item.id },
+        contentType = { _, item -> item::class.java },
+        itemContent = { tokenIndex, item ->
+            SlideInItemVisibility(
+                currentIndex = tokenIndex + 1,
+                lastIndex = lastIndex,
+                modifier = modifier
+                    .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
+                    .roundedShapeItemDecoration(
+                        radius = 24.dp,
+                        currentIndex = tokenIndex + 1,
+                        addDefaultPadding = false,
+                        lastIndex = lastIndex,
+                        backgroundColor = TangemTheme.colors3.bg.secondary,
+                        groupKey = listItem.id,
+                    ),
+                visible = listItem.isExpanded,
+            ) {
+                val itemModifier = Modifier
+                    .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+                    .semantics { lazyListItemPosition = tokenIndex + 1 }
+                when (item) {
+                    is TokensListItemUM2.TokenV2 -> TokenRowV2(
+                        item = item,
+                        isBalanceHidden = isBalanceHidden,
+                        modifier = itemModifier,
+                    )
+                    is TokensListItemUM2.SectionV2 -> TangemAccountRow.Section(
+                        title = item.title,
+                        modifier = itemModifier,
+                    )
+                    else -> Unit
+                }
+            }
+        },
+    )
+}
+
+@Composable
+private fun AccountRowV2(item: TokensListItemUM2.AccountV2, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
+    val state = item.state
+    val collapseContentDescription = stringResourceSafe(id = R.string.common_hide)
+    if (state is TangemAccountRow.State.Content) {
+        TangemAccountRow(
+            avatar = item.avatar,
+            title = state.title,
+            modifier = modifier,
+            label = state.label,
+            description = state.description,
+            balance = state.balance,
+            priceChange = state.priceChange,
+            showUpdateWarning = state.shouldShowUpdateWarning,
+            isBalanceHidden = isBalanceHidden,
+            isBalanceFlickering = state.isBalanceFlickering,
+            showCompactBalance = item.shouldShowCompactBalance,
+            isExpanded = item.isExpanded,
+            collapseContentDescription = collapseContentDescription,
+            onClick = state.onClick,
+            onLongClick = state.onLongClick,
+            isExpandable = true,
+            shape = RectangleShape,
+        )
+    } else {
+        TangemAccountRow(
+            avatar = item.avatar,
+            state = state,
+            modifier = modifier,
+            isExpanded = item.isExpanded,
+            isBalanceHidden = isBalanceHidden,
+            collapseContentDescription = collapseContentDescription,
+            isExpandable = true,
+            shape = RectangleShape,
+        )
+    }
+}
+
+@Composable
+private fun TokenRowV2(item: TokensListItemUM2.TokenV2, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
+    var position by remember { mutableStateOf(Offset.Zero) }
+    val onLongClick = item.onLongClick
+    val state = remember(item.state, onLongClick) {
+        if (onLongClick == null) {
+            item.state
+        } else {
+            item.state.withLongClick { onLongClick(position, item.state) }
+        }
+    }
+    item.onPromoShown?.let { onPromoShown ->
+        LaunchedEffect(item.id) { onPromoShown() }
+    }
+    TangemTokenRowV2(
+        state = state,
+        isBalanceHidden = isBalanceHidden,
+        modifier = modifier.onGloballyPositioned { position = it.positionInWindow() },
+    )
+}
+
+private fun TangemTokenRowV2.State.withLongClick(onLongClick: () -> Unit): TangemTokenRowV2.State = when (this) {
+    is TangemTokenRowV2.State.Content -> copy(onLongClick = onLongClick)
+    is TangemTokenRowV2.State.Unreachable -> copy(onLongClick = onLongClick)
+    is TangemTokenRowV2.State.NoAddress -> copy(onLongClick = onLongClick)
+    is TangemTokenRowV2.State.Organize,
+    is TangemTokenRowV2.State.Shimmer,
+    -> this
 }
 
 private fun LazyListScope.contentItems(
@@ -528,9 +733,25 @@ private fun LazyListScope.nonContentItem2(onEmptyClick: () -> Unit, modifier: Mo
 }
 
 private fun LazyListScope.nonContentAccountItem(listItem: TokensListItemUM2.Portfolio, modifier: Modifier = Modifier) {
+    nonContentAccountItem(
+        groupKey = listItem.id,
+        isExpanded = listItem.isExpanded,
+        onEmptyClick = listItem.onEmptyClick,
+        radius = if (listItem.isExpanded) 24.dp else 20.dp,
+        modifier = modifier,
+    )
+}
+
+private fun LazyListScope.nonContentAccountItem(
+    groupKey: String,
+    isExpanded: Boolean,
+    onEmptyClick: () -> Unit,
+    radius: Dp,
+    modifier: Modifier = Modifier,
+) {
     item(
-        key = "$NON_CONTENT_TOKENS_LIST_KEY account-${listItem.tokenRowUM.id}",
-        contentType = "$NON_CONTENT_TOKENS_LIST_KEY account-${listItem.tokenRowUM.id}",
+        key = "$NON_CONTENT_TOKENS_LIST_KEY account-$groupKey",
+        contentType = "$NON_CONTENT_TOKENS_LIST_KEY account-$groupKey",
     ) {
         SlideInItemVisibility(
             currentIndex = 1,
@@ -538,19 +759,19 @@ private fun LazyListScope.nonContentAccountItem(listItem: TokensListItemUM2.Port
             modifier = modifier
                 .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
                 .roundedShapeItemDecoration(
-                    radius = if (listItem.isExpanded) 24.dp else 20.dp,
+                    radius = radius,
                     addDefaultPadding = false,
                     currentIndex = 1,
                     lastIndex = 1,
                     backgroundColor = TangemTheme.colors3.bg.secondary,
-                    groupKey = listItem.tokenRowUM.id,
+                    groupKey = groupKey,
                 ),
-            visible = listItem.isExpanded,
+            visible = isExpanded,
         ) {
             NonContentItemContentV2(
                 modifier = Modifier.padding(vertical = 36.dp),
                 textColor = TangemTheme.colors3.text.secondary,
-                onClick = listItem.onEmptyClick,
+                onClick = onEmptyClick,
             )
         }
     }
