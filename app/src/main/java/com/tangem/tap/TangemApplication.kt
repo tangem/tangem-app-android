@@ -204,9 +204,8 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         )
     }
 
-    // SDK clients are created together with their handlers, so the set is resolved eagerly at startup
     private fun initAnalyticsHandlers() {
-        entryPoint.getAnalyticsHandlers()
+        entryPoint.getAnalyticsHandlersInitializer().initialize()
     }
 
     private fun initOpenTelemetry() {
