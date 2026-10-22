@@ -1,4 +1,4 @@
-package com.tangem.features.jointaccount.main.confirmaddress.ui
+package com.tangem.features.jointaccount.confirmaddress.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -19,11 +19,11 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.fade.TangemFade
+import com.tangem.core.ui.ds2.footer.TangemFooter
+import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resourceReference
@@ -31,31 +31,39 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.*
-import com.tangem.features.jointaccount.main.confirmaddress.ui.state.JointAccountConfirmAddressUM
+import com.tangem.features.jointaccount.confirmaddress.ui.state.JointAccountConfirmAddressUM
 import com.tangem.core.ui.R as CoreUiR
 
 @Composable
 internal fun JointAccountConfirmAddressScreen(state: JointAccountConfirmAddressUM, modifier: Modifier = Modifier) {
-    val density = LocalDensity.current
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(color = TangemTheme.colors3.bg.primary),
-    ) {
-        var topBarHeightPx by remember { mutableIntStateOf(0) }
-        var footerHeightPx by remember { mutableIntStateOf(0) }
-        val topBarHeight = with(density) { topBarHeightPx.toDp() }
-        val footerHeight = with(density) { footerHeightPx.toDp() }
-        val bottomNavHeight = with(density) { WindowInsets.navigationBars.getBottom(this).toDp() }
+    var footerHeightPx by remember { mutableIntStateOf(0) }
+
+    TangemTopBarScaffold(
+        modifier = modifier,
+        containerColor = TangemTheme.colors3.bg.primary,
+        topBar = {
+            TangemTopNavigation(startButton = { TangemButton.Back(onClick = state.onBackClick) })
+        },
+        overlay = {
+            Footer(
+                state = state,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .onSizeChanged { size -> footerHeightPx = size.height },
+            )
+        },
+    ) { contentPadding ->
+        val footerHeight = with(LocalDensity.current) { footerHeightPx.toDp() }
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .hazeSourceTangem()
-                .background(color = TangemTheme.colors3.bg.primary)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
-                .padding(top = topBarHeight + 12.dp, bottom = footerHeight + 12.dp + bottomNavHeight),
+                .padding(
+                    top = contentPadding.calculateTopPadding() + 12.dp,
+                    bottom = maxOf(contentPadding.calculateBottomPadding(), footerHeight) + 12.dp,
+                ),
         ) {
             Text(
                 modifier = Modifier.padding(horizontal = 8.dp),
@@ -85,22 +93,6 @@ internal fun JointAccountConfirmAddressScreen(state: JointAccountConfirmAddressU
                 subtitleRes = CoreUiR.string.joint_account_confirm_address_everyone_subtitle,
             )
         }
-
-        Footer(
-            state = state,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .onSizeChanged { footerHeightPx = it.height },
-        )
-
-        TangemTopNavigation(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .onSizeChanged { topBarHeightPx = it.height },
-            startButton = { TangemButton.Back(onClick = state.onBackClick) },
-        )
     }
 }
 
@@ -177,17 +169,9 @@ private fun InfoItem(icon: ImageVector, titleRes: Int, subtitleRes: Int, modifie
 
 @Composable
 private fun Footer(state: JointAccountConfirmAddressUM, modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxWidth()) {
-        TangemFade(
-            position = TangemFade.Position.Bottom,
-            modifier = Modifier.matchParentSize(),
-        )
-
+    TangemFooter(modifier = modifier) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             TangemButton(

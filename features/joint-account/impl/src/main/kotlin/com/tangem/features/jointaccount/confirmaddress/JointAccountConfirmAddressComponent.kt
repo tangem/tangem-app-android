@@ -1,4 +1,4 @@
-package com.tangem.features.jointaccount.main.confirmaddress
+package com.tangem.features.jointaccount.confirmaddress
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -10,8 +10,8 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.jointaccount.main.confirmaddress.model.JointAccountConfirmAddressModel
-import com.tangem.features.jointaccount.main.confirmaddress.ui.JointAccountConfirmAddressScreen
+import com.tangem.features.jointaccount.confirmaddress.model.JointAccountConfirmAddressModel
+import com.tangem.features.jointaccount.confirmaddress.ui.JointAccountConfirmAddressScreen
 
 internal class JointAccountConfirmAddressComponent(
     appComponentContext: AppComponentContext,

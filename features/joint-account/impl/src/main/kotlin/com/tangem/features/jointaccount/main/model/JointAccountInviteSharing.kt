@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.mapNotNull
 import javax.inject.Inject
 import com.tangem.core.ui.R as CoreUiR
 
-/** Shares a slot's invite message and records the invite once the user picks where to send it */
 @ModelScoped
 internal class JointAccountInviteSharing @Inject constructor(
     private val shareManager: ShareManager,
@@ -27,7 +26,6 @@ internal class JointAccountInviteSharing @Inject constructor(
     private val markJointAccountInviteSharedUseCase: MarkJointAccountInviteSharedUseCase,
 ) {
 
-    /** The slot's own invite: a link issued for one slot cannot be redeemed for another */
     fun message(inviteId: String, accountName: TextReference): TextReference = resourceReference(
         id = CoreUiR.string.joint_account_invite_member_message,
         formatArgs = wrappedList(accountName, JointAccountInviteLinkBuilder.build(inviteId = inviteId)),
@@ -38,8 +36,8 @@ internal class JointAccountInviteSharing @Inject constructor(
     }
 
     /**
-     * Records the invites of [account] whose link was sent, not when the share sheet merely opens. Keyed to the
-     * account id: the account updates on every poll, and restarting on each would cancel a write or drop a pick
+     * Records an invite once its link is sent, not when the share sheet merely opens. Keyed to the account id: the
+     * account updates on every poll, and restarting on each would cancel a write or drop a pick
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     fun recordShared(userWalletId: UserWalletId, account: Flow<JointAccount?>): Flow<Unit> = account
