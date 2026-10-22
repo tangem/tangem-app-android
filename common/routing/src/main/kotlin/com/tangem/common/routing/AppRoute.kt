@@ -642,6 +642,11 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
+    data class TangemPayVerified(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/tangem_pay_verified")
+
+    @Serializable
     data class Kyc(val userWalletId: UserWalletId) : AppRoute(path = "/kyc")
 
     @Serializable

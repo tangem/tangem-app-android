@@ -88,7 +88,7 @@ class DefaultHotWalletAccessCodeAttemptsRepository @Inject constructor(
         val count = prefs[storePreferencesKeys.getHotWalletUnlockAttemptsKey(id.attemptIdKey())] ?: 0
         val boot = prefs[storePreferencesKeys.getHotWalletUnlockBootKey(id.attemptIdKey())] ?: 0
         val deadline = prefs[storePreferencesKeys.getHotWalletUnlockDeadlineKey(id.attemptIdKey())] ?: 0L
-        return toState(id, count, deadline, boot)
+        return toState(id = id, count = count, deadlineElapsed = deadline, bootStored = boot)
     }
 
     private fun remainingSeconds(deadline: Long, bootStored: Int): Int {

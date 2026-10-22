@@ -989,6 +989,7 @@ internal class TokenDetailsModel @Inject constructor(
         analyticsEventsHandler.send(
             TokenScreenAnalyticsEvent.ButtonExplore(
                 token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
                 source = TokenScreenAnalyticsEvent.ButtonExplore.ExploreActionSource.Token,
             ),
         )
