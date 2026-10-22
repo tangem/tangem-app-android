@@ -20,6 +20,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
 import com.tangem.domain.express.models.ExpressOperationType
+import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.account.derivationIndex
@@ -28,6 +29,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
+import com.tangem.domain.swap.SwapProviderHidingPolicy
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
@@ -48,6 +50,7 @@ import com.tangem.features.send.api.subcomponents.notifications.SendNotification
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateTrigger
+import com.tangem.features.swap.v2.api.SwapV2FeatureToggles
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceTrigger
@@ -73,6 +76,7 @@ import com.tangem.lib.crypto.BlockchainFeeUtils.patchTransactionFeeForSwap
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
+import com.tangem.utils.logging.TangemLogger
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -104,6 +108,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val swapAlertFactory: SwapAlertFactory,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appScope: AppCoroutineScope,
+    private val swapV2FeatureToggles: SwapV2FeatureToggles,
     swapTransactionSenderFactory: SwapTransactionSender.Factory,
     paramsContainer: ParamsContainer,
 ) : Model(), FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
@@ -188,6 +193,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
 
     fun onAmountResult(amountUM: SwapAmountUM) {
         uiState.update { it.copy(amountUM = amountUM) }
+        // The block changes on its own, so the parent copy is kept current for navigation re-pushes
+        params.callback.onAmountResult(amountUM)
         updateConfirmNotifications()
     }
 
@@ -342,6 +349,10 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 confirmData = confirmData,
                 isAmountSubtractAvailable = isAmountSubtractAvailable,
                 onExpressError = { expressError ->
+                    val isHideRejectedProviderEnabled = swapV2FeatureToggles.isHideRejectedCexProviderEnabled
+                    if (isHideRejectedProviderEnabled) {
+                        hideProviderIfRejected(provider = provider, errorCode = expressError.code)
+                    }
                     uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(false))
                     val fromCurrency = confirmData.fromCryptoCurrencyStatus?.currency
                     val toCurrency = confirmData.toCryptoCurrencyStatus?.currency
@@ -356,6 +367,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     }
                     swapAlertFactory.getGenericErrorState(
                         expressError = expressError,
+                        providerName = provider.name.takeIf { isHideRejectedProviderEnabled },
                         onFailedTxEmailClick = {
                             modelScope.launch {
                                 swapAlertFactory.onFailedTxEmailClick(
@@ -406,6 +418,13 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 expressOperationType = ExpressOperationType.SEND_WITH_SWAP,
             )
         }
+    }
+
+    private fun hideProviderIfRejected(provider: ExpressProvider, errorCode: Int) {
+        if (!SwapProviderHidingPolicy.shouldHide(providerId = provider.providerId, errorCode = errorCode)) return
+
+        TangemLogger.i("Provider ${provider.providerId} is hidden after swap error $errorCode")
+        params.callback.onProviderHidden(provider.providerId)
     }
 
     private fun updateAmountSubtractAvailability() {
