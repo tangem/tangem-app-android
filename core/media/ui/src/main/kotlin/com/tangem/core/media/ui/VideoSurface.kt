@@ -27,7 +27,8 @@ fun VideoSurface(
 ) {
     val frameSize = state.frameSize
     Box(modifier = modifier) {
-        key(state.key) {
+        // A controller swapped in gets a surface only from a new factory call.
+        key(state.onAvailable, state.key) {
             AndroidView(
                 modifier = Modifier.coverSize(aspectRatio = frameSize.aspectRatio),
                 factory = { context ->
