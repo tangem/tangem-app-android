@@ -500,5 +500,5 @@ class SwapTransferInteractorImpl @Inject constructor(
     }
 
     private fun Account.isEligibleWithAccountsMode(): Boolean =
-        this is Account.Prediction || this is Account.Collectibles
+        this is Account.Prediction || this is Account.Collectibles || this is Account.Money
 }

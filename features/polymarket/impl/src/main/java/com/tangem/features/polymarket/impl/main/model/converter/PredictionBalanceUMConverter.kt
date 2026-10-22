@@ -16,6 +16,7 @@ import com.tangem.domain.polymarket.model.PredictionPositionsValue
 import com.tangem.domain.polymarket.model.PredictionTotalBalance
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
 import com.tangem.features.polymarket.impl.common.funding.RequisitesState
+import com.tangem.features.polymarket.impl.common.region.PredictionRegionStatus
 import com.tangem.features.polymarket.impl.main.model.PredictionBalanceMode
 import com.tangem.features.polymarket.impl.main.ui.state.PredictionBalanceUM
 import com.tangem.utils.converter.Converter
@@ -50,16 +51,23 @@ internal class PredictionBalanceUMConverter(
             addFunds = actionButton(
                 text = resourceReference(id = R.string.common_add_funds),
                 icon = Icons.ic_arrow_down_24,
-                isEnabled = value.isTradingAllowed && value.requisites.allowsAddFunds(active),
+                isEnabled = when (value.regionStatus) {
+                    PredictionRegionStatus.UNKNOWN -> false
+                    PredictionRegionStatus.ALLOWED -> value.requisites.allowsAddFunds(active)
+                    PredictionRegionStatus.RESTRICTED -> true
+                },
                 isLoading = isLoading,
-                isDimmed = value.requisites is RequisitesState.Failed,
+                isDimmed = value.requisites is RequisitesState.Failed ||
+                    value.regionStatus == PredictionRegionStatus.RESTRICTED,
                 onClick = onAddFundsClick,
             ),
             withdraw = actionButton(
                 text = resourceReference(id = R.string.prediction_main_withdraw),
                 icon = Icons.ic_arrow_up_24,
-                isEnabled = active != null && active.balance > BigDecimal.ZERO,
+                isEnabled = active != null && active.balance > BigDecimal.ZERO &&
+                    value.requisites !is RequisitesState.Loading,
                 isLoading = isLoading,
+                isDimmed = value.requisites is RequisitesState.Failed,
                 onClick = onWithdrawClick,
             ),
         )
@@ -95,7 +103,7 @@ internal class PredictionBalanceUMConverter(
         val status: PredictionAccountStatusValue,
         val positions: PredictionPositionsValue,
         val requisites: RequisitesState,
-        val isTradingAllowed: Boolean,
+        val regionStatus: PredictionRegionStatus,
         val mode: PredictionBalanceMode,
     )
 }
