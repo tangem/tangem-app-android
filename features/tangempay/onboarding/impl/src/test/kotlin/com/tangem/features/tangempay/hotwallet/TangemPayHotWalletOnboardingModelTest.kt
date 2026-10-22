@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
@@ -11,6 +12,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.TangemPayFeatureToggles
@@ -41,6 +43,7 @@ internal class TangemPayHotWalletOnboardingModelTest {
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk(relaxed = true)
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     private val testUserWalletId = UserWalletId("1234567890ABCDEF")
     private val testUserWallet: UserWallet.Hot = mockk(relaxed = true) {
@@ -200,6 +203,48 @@ internal class TangemPayHotWalletOnboardingModelTest {
         }
     }
 
+    @Nested
+    inner class Analytics {
+
+        @Test
+        fun `GIVEN bundle screen WHEN model created THEN screen opened sent`() = runTest {
+            // Act
+            val model = createModel(testScope = this)
+
+            // Assert
+            verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.ShortForHwActivationScreenOpened()) }
+            verify(exactly = 1) { analytics.send(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN bundle screen WHEN terms clicked THEN view terms sent`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+
+            // Act
+            model.uiState.value.onTermsClick()
+
+            // Assert
+            verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.ViewTermsClicked()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN bundle screen WHEN legal links clicked THEN no event sent`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+
+            // Act
+            model.uiState.value.onTermsOfServiceClick()
+            model.uiState.value.onPrivacyPolicyClick()
+
+            // Assert
+            verify(exactly = 1) { analytics.send(any()) }
+            model.onDestroy()
+        }
+    }
+
     private fun createModel(testScope: TestScope): TangemPayHotWalletOnboardingModel {
         return TangemPayHotWalletOnboardingModel(
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
@@ -215,6 +260,7 @@ internal class TangemPayHotWalletOnboardingModelTest {
                 isHotWalletCreationSupported = isHotWalletCreationSupported,
                 tangemPayFeatureToggles = tangemPayFeatureToggles,
             ),
+            analytics = analytics,
             tangemPayFeatureToggles = tangemPayFeatureToggles,
         )
     }
