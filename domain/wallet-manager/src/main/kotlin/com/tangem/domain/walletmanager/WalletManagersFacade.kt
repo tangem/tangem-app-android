@@ -299,6 +299,15 @@ interface WalletManagersFacade {
     suspend fun isSwapTargetAllowed(userWalletId: UserWalletId, network: Network, targetAddress: String): Boolean
 
     /**
+     * Whether a contract is deployed at [address] in [network] — what tells a contract apart from a plain
+     * wallet, since only a contract can run the call data a transaction carries.
+     *
+     * `null` when the question could not be answered: [network] is not EVM, or the node did not reply. A
+     * caller must not read that as "no contract".
+     */
+    suspend fun hasContractCode(userWalletId: UserWalletId, network: Network, address: String): Boolean?
+
+    /**
      * Get requirements for asset(currency)
      * @return null if there's no requirement, otherwise [AssetRequirementsCondition].
      */
