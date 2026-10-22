@@ -284,6 +284,8 @@ interface WalletManagersFacade {
 
     suspend fun isSwapSpenderAllowed(userWalletId: UserWalletId, network: Network, spenderAddress: String): Boolean
 
+    suspend fun isSwapTargetAllowed(userWalletId: UserWalletId, network: Network, targetAddress: String): Boolean
+
     /**
      * Get requirements for asset(currency)
      * @return null if there's no requirement, otherwise [AssetRequirementsCondition].
