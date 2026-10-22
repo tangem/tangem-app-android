@@ -18,6 +18,7 @@ import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.account.Account
@@ -46,6 +47,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadT
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateTrigger
+import com.tangem.features.swap.v2.api.SwapV2FeatureToggles
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceTrigger
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
@@ -109,9 +111,11 @@ internal class SendWithSwapConfirmModelTest {
     private val swapAmountUpdateTrigger: SwapAmountUpdateTrigger = mockk(relaxed = true)
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger = mockk(relaxed = true)
     private val swapAlertFactory: SwapAlertFactory = mockk(relaxed = true)
+    private val swapV2FeatureToggles: SwapV2FeatureToggles = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val swapTransactionSender: SwapTransactionSender = mockk(relaxed = true)
     private val swapTransactionSenderFactory: SwapTransactionSender.Factory = mockk {
-        every { create(any()) } returns mockk(relaxed = true)
+        every { create(any()) } returns swapTransactionSender
     }
 
     private val userWallet: UserWallet = mockk(relaxed = true) {
@@ -160,7 +164,9 @@ internal class SendWithSwapConfirmModelTest {
             swapAmountUpdateTrigger,
             feeSelectorReloadTrigger,
             swapAlertFactory,
+            swapV2FeatureToggles,
             analyticsEventHandler,
+            swapTransactionSender,
         )
         stubInitCollaborators()
     }
@@ -210,21 +216,24 @@ internal class SendWithSwapConfirmModelTest {
     inner class BlockResults {
 
         @Test
-        fun `GIVEN model created WHEN onAmountResult THEN amount merged into state`() = runTest {
-            // Arrange
-            val model = createModel(testScope = this)
-            advanceUntilIdle()
-            val stateBefore = model.uiState.value
-            val amountUM = contentAmountUM(enteredFromAmount = BigDecimal("3"))
+        fun `GIVEN model created WHEN onAmountResult THEN amount merged into state and forwarded to parent`() =
+            runTest {
+                // Arrange
+                val callback: SendWithSwapConfirmComponent.ModelCallback = mockk(relaxed = true)
+                val model = createModel(testScope = this, callback = callback)
+                advanceUntilIdle()
+                val stateBefore = model.uiState.value
+                val amountUM = contentAmountUM(enteredFromAmount = BigDecimal("3"))
 
-            // Act
-            model.onAmountResult(amountUM)
-            advanceUntilIdle()
+                // Act
+                model.onAmountResult(amountUM)
+                advanceUntilIdle()
 
-            // Assert
-            assertThat(model.uiState.value).isEqualTo(stateBefore.copy(amountUM = amountUM))
-            model.onDestroy()
-        }
+                // Assert
+                assertThat(model.uiState.value).isEqualTo(stateBefore.copy(amountUM = amountUM))
+                verify { callback.onAmountResult(amountUM) }
+                model.onDestroy()
+            }
 
         @Test
         fun `GIVEN model created WHEN onDestinationResult THEN destination merged into state`() = runTest {
@@ -242,6 +251,96 @@ internal class SendWithSwapConfirmModelTest {
             assertThat(model.uiState.value).isEqualTo(stateBefore.copy(destinationUM = destinationUM))
             model.onDestroy()
         }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SendTransaction {
+
+        private val changeHero = expressProvider(providerId = "changehero", name = "ChangeHero")
+        private val rejectedError = ExpressError.DataError(code = 2264, description = null)
+
+        @Test
+        fun `GIVEN hiding enabled and provider rejected WHEN send THEN provider hidden and named in alert`() = runTest {
+            // Arrange
+            val callback: SendWithSwapConfirmComponent.ModelCallback = mockk(relaxed = true)
+            every { swapV2FeatureToggles.isHideRejectedCexProviderEnabled } returns true
+            val model = createModelFailingWith(testScope = this, error = rejectedError, callback = callback)
+
+            // Act
+            model.primaryButtonUM(contentConfirmUM()).onClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify { callback.onProviderHidden("changehero") }
+            verify {
+                swapAlertFactory.getGenericErrorState(
+                    expressError = rejectedError,
+                    onFailedTxEmailClick = any(),
+                    popBack = any(),
+                    providerName = "ChangeHero",
+                )
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN hiding disabled and provider rejected WHEN send THEN provider kept and not named in alert`() =
+            runTest {
+                // Arrange
+                val callback: SendWithSwapConfirmComponent.ModelCallback = mockk(relaxed = true)
+                every { swapV2FeatureToggles.isHideRejectedCexProviderEnabled } returns false
+                val model = createModelFailingWith(testScope = this, error = rejectedError, callback = callback)
+
+                // Act
+                model.primaryButtonUM(contentConfirmUM()).onClick()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 0) { callback.onProviderHidden(any()) }
+                verify {
+                    swapAlertFactory.getGenericErrorState(
+                        expressError = rejectedError,
+                        onFailedTxEmailClick = any(),
+                        popBack = any(),
+                        providerName = null,
+                    )
+                }
+                model.onDestroy()
+            }
+
+        private fun createModelFailingWith(
+            testScope: TestScope,
+            error: ExpressError,
+            callback: SendWithSwapConfirmComponent.ModelCallback,
+        ): SendWithSwapConfirmModel {
+            every { backupErrorWarningSender.forAddress(any(), any(), any()) } answers {
+                thirdArg<() -> Unit>().invoke()
+            }
+            coEvery {
+                swapTransactionSender.sendTransaction(any(), any(), any(), any(), any(), any(), any())
+            } coAnswers {
+                arg<(ExpressError) -> Unit>(3).invoke(error)
+            }
+            val sendWithSwapUM = defaultSendWithSwapUM.copy(
+                amountUM = contentAmountUM(
+                    selectedQuote = contentQuote(
+                        fromAmount = ENTERED_FROM_AMOUNT,
+                        toAmount = BigDecimal.ONE,
+                        provider = changeHero,
+                    ),
+                ),
+            )
+            return createModel(testScope = testScope, sendWithSwapUM = sendWithSwapUM, callback = callback)
+        }
+
+        private fun contentConfirmUM() = ConfirmUM.Content(
+            isTransactionInProcess = false,
+            isShowTapHelp = false,
+            sendingFooter = TextReference.EMPTY,
+            notifications = persistentListOf(),
+            tosUM = null,
+        )
     }
 
     @Nested
@@ -533,6 +632,7 @@ internal class SendWithSwapConfirmModelTest {
             primaryFeePaidCurrencyStatusFlow = MutableStateFlow(primaryCurrencyStatus),
             accountFlow = MutableStateFlow<Account?>(null),
             isAccountModeFlow = MutableStateFlow(false),
+            hiddenProviderIdsFlow = MutableStateFlow(emptySet()),
             callback = callback,
             onCloseFlow = {},
         )
@@ -558,6 +658,7 @@ internal class SendWithSwapConfirmModelTest {
             swapAlertFactory = swapAlertFactory,
             analyticsEventHandler = analyticsEventHandler,
             appScope = TestAppCoroutineScope(testScope),
+            swapV2FeatureToggles = swapV2FeatureToggles,
             swapTransactionSenderFactory = swapTransactionSenderFactory,
             paramsContainer = MutableParamsContainer(value = params),
         )
