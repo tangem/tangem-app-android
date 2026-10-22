@@ -15,10 +15,12 @@ import kotlinx.coroutines.launch
  *
  * @property isMotionEnabled `false` if animations were off system-wide at creation: nothing loads or plays
  */
+@Suppress("LongParameterList")
 class OneShotVideoController internal constructor(
     private val scope: CoroutineScope,
     private val cache: RemoteClipCache,
     private val diagnosticsSubject: String,
+    private val stallTimeoutMs: Long,
     val isMotionEnabled: Boolean,
     private val onCueReached: (CueReason) -> Unit,
     createPlayer: (OneShotVideoPlayer.Listener) -> OneShotVideoPlayer,
@@ -111,13 +113,13 @@ class OneShotVideoController internal constructor(
     private suspend fun awaitStall() {
         var lastCount = player.presentedFrameCount
         var stalledMs = 0L
-        while (stalledMs < STALL_TIMEOUT_MS) {
+        while (stalledMs < stallTimeoutMs) {
             delay(CHECK_INTERVAL_MS)
             val count = player.presentedFrameCount
             stalledMs = if (count == lastCount) stalledMs + CHECK_INTERVAL_MS else 0L
             lastCount = count
         }
-        TangemLogger.e("$diagnosticsSubject showed no new frame for ${STALL_TIMEOUT_MS}ms at ${player.positionMs}ms")
+        TangemLogger.e("$diagnosticsSubject showed no new frame for ${stallTimeoutMs}ms at ${player.positionMs}ms")
         reachCue(CueReason.Stalled)
     }
 
@@ -160,7 +162,7 @@ class OneShotVideoController internal constructor(
 
         Failed,
 
-        /** No new frame for 3 s while the screen is in front. */
+        /** No new frame for the stall timeout while the screen is in front. */
         Stalled,
 
         /** [start] came before the clip was ready. */
@@ -178,18 +180,19 @@ class OneShotVideoController internal constructor(
 
         /**
          * @param diagnosticsSubject what the log entries are about, e.g. "Pack reveal video"
+         * @param stallTimeoutMs     no new frame for this long ends a started clip as [CueReason.Stalled]
          * @param onCueReached       once, on the main thread, only after [start]
          */
         fun create(
             scope: CoroutineScope,
             cache: RemoteClipCache,
             diagnosticsSubject: String,
+            stallTimeoutMs: Long,
             onCueReached: (CueReason) -> Unit,
         ): OneShotVideoController
     }
 
     private companion object {
         const val CHECK_INTERVAL_MS = 250L
-        const val STALL_TIMEOUT_MS = 3_000L
     }
 }

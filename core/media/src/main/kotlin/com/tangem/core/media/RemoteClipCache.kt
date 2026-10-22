@@ -1,10 +1,13 @@
 package com.tangem.core.media
 
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 
 /** Where a remote clip is downloaded in full before it plays, so playback never buffers. */
+@OptIn(UnstableApi::class)
 interface RemoteClipCache {
 
     val dataSourceFactory: DataSource.Factory

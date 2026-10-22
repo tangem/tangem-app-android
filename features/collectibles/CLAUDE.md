@@ -377,9 +377,10 @@ ignored, and stays ignored until the card is shown (`Stage.Reward`) — the comp
 the cue from `setVideoFrameMetadataListener`, comparing each frame the decoder actually *presented* against
 `cardRevealMs`, and hands it to the main thread. Do not add a `currentPosition` poll for the card reveal: it
 advances on the timeline and would fire while a stalled picture was still frozen. The backstops are the end of
-the video, a playback error and a stall: three seconds without a new frame while the screen is in front give way
-to the card with the skip sound. A paused video in the background never counts as a stall. The reveal video
-carries its sound muxed in; `SoundClip` only plays the short skip/fallback sound.
+the video, a playback error and a stall: two seconds (`PackOpeningConst.VIDEO_STALL_TIMEOUT_MS`) without a new
+frame while the screen is in front give way to the card with the skip sound. A paused video in the background never
+counts as a stall. The reveal video carries its sound muxed in; `SoundClip` only plays the short skip/fallback sound,
+and pauses with the video in the background.
 
 **Card reveal and skip timings are not in the API.** The backend sends URLs only; `PackRevealAsset`
 defaults to `cardRevealMs = 7_000` / `skipToMs = 6_100` for the current render. A re-rendered video needs those
