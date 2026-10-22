@@ -45,15 +45,3 @@ fun List<StatusSource>.getResultStatusSource(): StatusSource {
         else -> StatusSource.ACTUAL
     }
 }
-
-/**
- * Whether the "outdated data" banner stays visible after a status update.
- *
- * A refresh resets [StatusSource.ONLY_CACHE] to [StatusSource.CACHE] before the request, so [StatusSource.CACHE]
- * keeps the previous value ([wasHeld]) and only [StatusSource.ACTUAL] releases it.
- */
-fun isOutdatedDataHeld(isOutdated: Boolean, source: StatusSource?, wasHeld: Boolean): Boolean = when {
-    isOutdated -> true
-    source == StatusSource.ACTUAL -> false
-    else -> wasHeld
-}

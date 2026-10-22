@@ -1,7 +1,6 @@
 package com.tangem.feature.tokendetails.domain
 
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.isOutdatedDataHeld
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 
 internal class CurrencyWarningsStabilizer {
@@ -13,11 +12,11 @@ internal class CurrencyWarningsStabilizer {
     fun stabilize(warnings: Set<CryptoCurrencyWarning>, totalSource: StatusSource): Set<CryptoCurrencyWarning>? {
         val outdatedDataWarning = CryptoCurrencyWarning.UsedOutdatedDataWarning
 
-        isOutdatedDataWarningHeld = isOutdatedDataHeld(
-            isOutdated = outdatedDataWarning in warnings,
-            source = totalSource,
-            wasHeld = isOutdatedDataWarningHeld,
-        )
+        isOutdatedDataWarningHeld = when {
+            outdatedDataWarning in warnings -> true
+            totalSource == StatusSource.ACTUAL -> false
+            else -> isOutdatedDataWarningHeld
+        }
 
         val stabilized = if (isOutdatedDataWarningHeld) warnings + outdatedDataWarning else warnings
 
