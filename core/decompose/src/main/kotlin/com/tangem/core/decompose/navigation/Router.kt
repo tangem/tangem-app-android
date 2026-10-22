@@ -7,9 +7,9 @@ import kotlin.reflect.KClass
  * It provides methods for navigating through the application by stack.
  *
  * An operation called without its own `onComplete` gets [NoCompletion], and the router reports to
- * [defaultCompletionHandler] when a push, a replace or [navigate] fails, or any operation throws. A pop that has
- * nothing to pop is not a failure. Pass [NoCompletion] through when delegating an operation, so the router that runs
- * it still recognizes it.
+ * [defaultCompletionHandler] when a push, a replace or [navigate] fails. A pop that has nothing to pop is not a
+ * failure. The root router also catches and reports a throwing operation; a nested stack still throws. Pass
+ * [NoCompletion] through when delegating an operation, so the router that runs it still recognizes it.
  */
 interface Router {
 
