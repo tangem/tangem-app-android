@@ -12,7 +12,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.account.status.supplier.NonPortfolioAccountCurrencies
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
@@ -108,7 +108,7 @@ internal abstract class SendModelTestBase {
     protected val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk(relaxed = true)
     protected val getFeeForTokenUseCase: GetFeeForTokenUseCase = mockk(relaxed = true)
     protected val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase = mockk(relaxed = true)
-    protected val nonPortfolioAccountCurrencies: NonPortfolioAccountCurrencies = mockk(relaxed = true)
+    protected val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider = mockk(relaxed = true)
     protected val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk(relaxed = true)
     protected val sendAmountUpdateTrigger: SendAmountUpdateTrigger = mockk(relaxed = true)
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
@@ -160,7 +160,7 @@ internal abstract class SendModelTestBase {
         every { listenToQrScanningUseCase(SourceType.SEND) } returns emptyFlow<String>().right()
         every { getBalanceHidingSettingsUseCase() } returns emptyFlow()
         every { getAccountCurrencyStatusUseCase(testUserWalletId, testCryptoCurrency) } returns emptyFlow()
-        every { nonPortfolioAccountCurrencies.observe(testUserWalletId, testCryptoCurrency) } returns emptyFlow()
+        every { nonPortfolioCurrenciesProvider.observe(testUserWalletId, testCryptoCurrency) } returns emptyFlow()
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns testCryptoCurrencyStatus.right()
         // no-fee overload (disambiguated by memo: String at position 2); 6 matchers cover defaulted nonce
@@ -205,7 +205,7 @@ internal abstract class SendModelTestBase {
             getFeeUseCase = getFeeUseCase,
             getFeeForTokenUseCase = getFeeForTokenUseCase,
             getAccountCurrencyStatusUseCase = getAccountCurrencyStatusUseCase,
-            nonPortfolioAccountCurrencies = nonPortfolioAccountCurrencies,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
             isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
             sendAmountUpdateTrigger = sendAmountUpdateTrigger,
             analyticsEventHandler = analyticsEventHandler,

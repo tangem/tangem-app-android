@@ -3,7 +3,7 @@ package com.tangem.tap.di.domain
 import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
-import com.tangem.domain.account.status.supplier.NonPortfolioAccountCurrencies
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -375,14 +375,14 @@ internal object TransactionDomainModule {
     fun provideGetFeeForGaslessUseCase(
         getFeeUseCase: GetFeeUseCase,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
-        nonPortfolioAccountCurrencies: NonPortfolioAccountCurrencies,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
         currencyChecksRepository: CurrencyChecksRepository,
         evmGaslessFeeResolver: EvmGaslessFeeResolver,
         tronGaslessFeeResolver: TronGaslessFeeResolver,
     ): GetFeeForGaslessUseCase {
         return GetFeeForGaslessUseCase(
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
-            nonPortfolioAccountCurrencies = nonPortfolioAccountCurrencies,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
             currencyChecksRepository = currencyChecksRepository,
             getFeeUseCase = getFeeUseCase,
             evmGaslessFeeResolver = evmGaslessFeeResolver,
