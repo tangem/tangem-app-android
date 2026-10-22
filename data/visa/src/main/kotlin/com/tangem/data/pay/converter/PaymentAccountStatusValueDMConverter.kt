@@ -80,6 +80,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             )
             // Transient statuses are not persisted
             is PaymentAccountStatusValue.Loading,
+            is PaymentAccountStatusValue.Verified,
             is PaymentAccountStatusValue.AwaitingPlanSelection,
             is PaymentAccountStatusValue.Inactive,
             is PaymentAccountStatusValue.Error.ExposedDevice,
@@ -137,6 +138,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValueDM.KycRequired -> PaymentAccountStatusValue.KycRequired(
                 source = StatusSource.CACHE,
                 customerId = value.customerId,
+                customerResidency = null,
             )
             is PaymentAccountStatusValueDM.UnderReview -> PaymentAccountStatusValue.UnderReview(
                 source = StatusSource.CACHE,

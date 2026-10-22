@@ -10,7 +10,6 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
@@ -29,6 +28,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionTopUpMinimumUseCase
@@ -89,7 +89,6 @@ import kotlinx.coroutines.flow.emptyFlow
 internal abstract class SwapModelTestBase {
 
     protected val router: Router = mockk(relaxed = true)
-    protected val appRouter: AppRouter = mockk(relaxed = true)
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     protected val analyticsErrorEventHandler: AnalyticsErrorHandler = mockk(relaxed = true)
     protected val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk(relaxed = true)
@@ -145,6 +144,9 @@ internal abstract class SwapModelTestBase {
     }
     protected val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher = mockk {
         coEvery { this@mockk(any()) } returns Unit.right()
+    }
+    protected val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk {
+        coEvery { this@mockk(any<MoneyAccountStatusFetcher.Params>()) } returns Unit.right()
     }
     protected val backupErrorWarningSender: BackupErrorWarningSender = mockk {
         every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
@@ -249,7 +251,6 @@ internal abstract class SwapModelTestBase {
         getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
         chooseTokenBridgeFactory = chooseTokenBridgeFactory,
         router = router,
-        appRouter = appRouter,
         dispatchers = dispatchers,
         analyticsEventHandler = analyticsEventHandler,
         analyticsErrorEventHandler = analyticsErrorEventHandler,
@@ -301,6 +302,7 @@ internal abstract class SwapModelTestBase {
         getPredictionDepositCurrencyStatusesUseCase = getPredictionDepositCurrencyStatusesUseCase,
         backupErrorWarningSender = backupErrorWarningSender,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
+        moneyAccountStatusFetcher = moneyAccountStatusFetcher,
     )
 
     // region builders

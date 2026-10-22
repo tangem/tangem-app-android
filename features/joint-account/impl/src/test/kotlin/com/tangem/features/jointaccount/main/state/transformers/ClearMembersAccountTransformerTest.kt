@@ -23,7 +23,7 @@ internal class ClearMembersAccountTransformerTest {
                     color = CryptoPortfolioIcon.Color.Azure,
                 ),
                 name = stringReference("Family"),
-                progress = stringReference("1 of 3 members joined"),
+                membersCount = stringReference("3 members"),
                 approvals = stringReference("Any 2 of 3"),
                 onApprovalsInfoClick = {},
             ),
@@ -37,7 +37,7 @@ internal class ClearMembersAccountTransformerTest {
                     name = stringReference("Ivan"),
                     isYou = true,
                     isCreator = true,
-                    status = stringReference("Joined"),
+                    status = JointAccountMembersUM.MemberStatusUM.Joined,
                     onInfoClick = {},
                 ),
             ),
@@ -45,18 +45,15 @@ internal class ClearMembersAccountTransformerTest {
                 JointAccountMembersUM.MemberUM.FreeSlot(
                     id = "slot_0",
                     title = stringReference(""),
-                    status = stringReference(""),
+                    status = JointAccountMembersUM.SlotStatusUM.NotInvited,
                     action = JointAccountMembersUM.SlotActionUM.Invite(onClick = {}),
                 ),
             ),
             membersLabel = stringReference("Members"),
-            waitingLabel = stringReference("Waiting to join"),
             footer = JointAccountMembersUM.FooterUM(
                 hint = null,
-                button = JointAccountMembersUM.VerifyButtonUM(
+                button = JointAccountMembersUM.ConfirmButtonUM(
                     isEnabled = true,
-                    isLoading = false,
-                    walletIconRes = null,
                     onClick = {},
                 ),
             ),
@@ -72,7 +69,6 @@ internal class ClearMembersAccountTransformerTest {
         assertThat(actual.joined).isEmpty()
         assertThat(actual.freeSlots).isEmpty()
         assertThat(actual.membersLabel).isNull()
-        assertThat(actual.waitingLabel).isNull()
         assertThat(actual.footer).isNull()
     }
 }

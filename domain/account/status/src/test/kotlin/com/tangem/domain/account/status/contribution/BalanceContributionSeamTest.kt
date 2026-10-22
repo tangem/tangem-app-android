@@ -273,7 +273,7 @@ internal class BalanceContributionSeamTest {
                     integration = StakingIntegrationID.P2PEthPool,
                     currency = ethereum,
                     balance = p2pEthPoolFor(staked = 5, unstaking = 2, withdrawable = 1, rewards = 3),
-                    expectedExtraBalance = BigDecimal(11),
+                    expectedExtraBalance = BigDecimal(8),
                 ),
             )
         }

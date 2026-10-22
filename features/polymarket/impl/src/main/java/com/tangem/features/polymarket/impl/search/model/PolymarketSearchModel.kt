@@ -4,9 +4,12 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.polymarket.model.PolymarketSearchBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketSearchConfig
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
+import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
+import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.search.PolymarketSearchComponent
@@ -41,6 +44,8 @@ internal class PolymarketSearchModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val messageSender: UiMessageSender,
+    private val regionAccess: PredictionRegionAccess,
     searchPolymarketEventsUseCase: SearchPolymarketEventsUseCase,
 ) : Model() {
 
@@ -123,6 +128,7 @@ internal class PolymarketSearchModel @Inject constructor(
                     isQueryActive = uiState.value.query.trim().length >= MIN_QUERY_LENGTH,
                     eventUMConverter = eventUMConverter,
                     onReloadClick = ::reloadCurrentQuery,
+                    onNextPageRetryClick = ::onLoadMore,
                 )
                 uiState.update(transformer::transform)
             }
@@ -149,6 +155,8 @@ internal class PolymarketSearchModel @Inject constructor(
     }
 
     private fun onOutcomeClick(eventId: String, marketId: String, assetId: String) {
+        if (regionAccess.isRestricted) return messageSender.send(regionRestrictionsMessage())
+
         router.push(
             PolymarketRoute.PlacePrediction(
                 eventId = eventId,

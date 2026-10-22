@@ -31,6 +31,10 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
   `UNDETERMINED` refuses with a snackbar. A run failure leaves the screen idle; the button is the only retry.
 - Region-restricted users (`READ_ONLY`) still reach Main, browse and withdraw. `READ_ONLY` explains itself
   as a region restriction — reuse it for another cause and the UI lies.
+- After the gate the region lives in the process-wide `PredictionRegionAccess`, refreshed by Main on open and
+  on pull-to-refresh. While it is restricted, Main shows the banner, Add funds is dimmed, and every order
+  entry (feed, search, event, Buy more, Close) shows the restrictions modal instead of opening. A failed check
+  keeps the last answer and counts as allowed only when there is none; the amount step still checks on its own.
 - Main returns here (`replaceAll(Onboarding)`) the moment the stored credentials are gone, even from under a
   child: nothing above Main can sign without them. So the order summary answers an `Unauthorized`
   placement with no dialog and leaves the gate to explain it.
@@ -44,6 +48,8 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 - **Add funds** needs a confirmed deposit address; without one, report an unknown error rather than offer
   an address that may be wrong. The buy amount step offers the same sheet, shut until the region check
   answers, and shows the account-status balance only once `ACTUAL`.
+- **Withdraw** waits on the same funding requisites as Add funds (QA, [REDACTED_TASK_KEY]): disabled while they load,
+  dimmed and answering with Add funds' error when they failed. Unlike Add funds it ignores the region.
 - **Awaiting-funds banner** opens on a completed top-up swap or a sent order, never on Receive.
 - Pull-to-refresh refreshes region, positions preview, account status and positions value, then the
   requisites. Feed pages are not re-requested — they are kept per visited category and refreshed by

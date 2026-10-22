@@ -3,16 +3,15 @@ package com.tangem.tap
 import androidx.hilt.work.HiltWorkerFactory
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.remote.config.managers.ApiConfigsManager
-import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
+import com.tangem.tap.common.analytics.AnalyticsHandlersInitializer
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
 import com.tangem.tap.common.log.TangemLoggingInitializer
@@ -24,7 +23,7 @@ import dagger.hilt.components.SingletonComponent
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 @Suppress("TooManyFunctions")
-interface ApplicationEntryPoint {
+internal interface ApplicationEntryPoint {
 
     fun getFeatureTogglesManager(): FeatureTogglesManager
 
@@ -48,8 +47,6 @@ interface ApplicationEntryPoint {
 
     fun getDeviceRegistrar(): DeviceRegistrar
 
-    fun getAuthFeatureToggles(): AuthFeatureToggles
-
     fun getWalletRegistrationLauncher(): WalletRegistrationLauncher
 
     fun getUserWalletsListRepository(): UserWalletsListRepository
@@ -58,5 +55,7 @@ interface ApplicationEntryPoint {
 
     fun getAnalyticsEventHandler(): AnalyticsEventHandler
 
-    fun getAnalyticsHandlers(): Set<@JvmSuppressWildcards AnalyticsHandler>
+    fun getAnalyticsHandlersInitializer(): AnalyticsHandlersInitializer
+
+    fun getForegroundActivityObserver(): ForegroundActivityObserver
 }
