@@ -10,6 +10,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
@@ -74,6 +75,7 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
                 val cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId)
                 val balanceDeferred = async { getMoneyAccountBalanceUseCase.invoke(userWalletId, cryptoCurrency) }
                 val customerInfoDeferred = async { onboardingRepository.getCustomerInfo(userWalletId) }
+                val channelsDeferred = async { onboardingRepository.fetchCustomerEligibility(userWalletId) }
 
                 val customerInfo = customerInfoDeferred.await().getOrElse { error ->
                     return@either when (error) {
@@ -82,6 +84,7 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
                     }
                 }
                 val balance = balanceDeferred.await().getOrNull()
+                val channels = channelsDeferred.await().getOrNull()
                 val instance = customerInfo.moneyAccountProductInstance
                 when {
                     instance == null && customerInfo.state == CustomerInfo.State.FORMER -> {
@@ -112,6 +115,7 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
                             cryptoCurrency = cryptoCurrency,
                             balance = balance,
                             customerId = customerInfo.customerId,
+                            isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
                         )
                     }
                     else -> onboardingStatus(userWalletId = userWalletId, customerInfo = customerInfo).bind()
