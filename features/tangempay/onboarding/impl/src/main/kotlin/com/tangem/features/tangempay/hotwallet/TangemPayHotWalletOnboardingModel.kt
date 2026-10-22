@@ -1,10 +1,12 @@
 package com.tangem.features.tangempay.hotwallet
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
@@ -22,6 +24,7 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
     private val router: Router,
     private val urlOpener: UrlOpener,
     private val onboardingStarter: TangemPayOnboardingStarter,
+    private val analytics: AnalyticsEventHandler,
     tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
@@ -37,7 +40,12 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
             ),
         )
 
+    init {
+        analytics.send(TangemPayAnalyticsEvents.ShortForHwActivationScreenOpened())
+    }
+
     private fun onTermsClick() {
+        analytics.send(TangemPayAnalyticsEvents.ViewTermsClicked())
         urlOpener.openUrl(TangemPayConstants.termsAndLimitsLink())
     }
 
