@@ -287,6 +287,7 @@
   </plurals>
   <string name="collectibles_account_collection_empty">No cards</string>
   <string name="collectibles_account_collection_row_subtitle">My collection</string>
+  <string name="collectibles_account_reconnect_subtitle">Reconnect Packs account</string>
   <string name="collectibles_account_withdraw">Withdrawal</string>
   <string name="collectibles_confirm_order_approve_button">Approve</string>
   <string name="collectibles_confirm_order_confirming_transaction_button">Confirming transaction...</string>
@@ -327,6 +328,9 @@
   <string name="collectibles_main_pack_buyback_badge">Buyback %s</string>
   <string name="collectibles_main_packs_empty">There are no packs here yet</string>
   <string name="collectibles_main_packs_load_error">Failed to load packs. Tap to reload</string>
+  <string name="collectibles_main_relink_button">Relink account</string>
+  <string name="collectibles_main_relink_description">Make this phone primary for Packs account</string>
+  <string name="collectibles_main_relink_title">Relink account</string>
   <string name="collectibles_main_search_empty">No results. Try to change your wording\nor explore from the list</string>
   <string name="collectibles_main_search_load_error">Failed to load cards list.</string>
   <string name="collectibles_main_title">Packs account</string>
@@ -800,6 +804,7 @@
   <string name="express_error_provider_amount_roundup">Error %1$s. The selected provider cannot process the specified transaction. Please round the value up to %2$s or change it</string>
   <string name="express_error_swap_pair_unavailable">Selected provider is unavailable at the moment. Please try again later. (Code: %s)</string>
   <string name="express_error_swap_unavailable">Swaps are unavailable at the moment. Please try again later. (Code: %s)</string>
+  <string name="express_error_transaction_cannot_be_created">The transaction cannot be created with %1$s. Please choose another provider. (Code: %2$s)</string>
   <string name="express_estimated_amount">Estimated amount</string>
   <string name="express_exchange_by">Exchange by %s</string>
   <string name="express_exchange_notification_failed_text">Visit the provider\'s website to get a refund</string>
@@ -1199,6 +1204,8 @@
   <string name="joint_account_activation_title">You\'re activating a shared account</string>
   <string name="joint_account_coming_soon_description">This action isn\'t supported for joint accounts yet. We\'re working on it</string>
   <string name="joint_account_coming_soon_title">Coming soon to joint accounts</string>
+  <string name="joint_account_compromised_message">The account address on your device doesn\'t match the one from our servers.</string>
+  <string name="joint_account_compromised_title">Can\'t verify this account</string>
   <string name="joint_account_confirm_account_subtitle">Before using your Joint Account, make sure every member sees exactly the same address.</string>
   <string name="joint_account_confirm_account_title">Confirm the account</string>
   <string name="joint_account_confirm_address_compare_subtitle">Contact all members outside Tangem by phone, messenger, or in person. Check that everyone sees the exact same address.</string>
@@ -1231,6 +1238,10 @@
   <string name="joint_account_invite_members_creator">Creator</string>
   <string name="joint_account_invite_members_everyone_joined">Everyone has joined</string>
   <string name="joint_account_invite_members_invite">Invite</string>
+  <plurals name="joint_account_invite_members_invite_count">
+    <item quantity="one">Invite %d member</item>
+    <item quantity="other">Invite %d members</item>
+  </plurals>
   <string name="joint_account_invite_members_invite_expired">Invite expired</string>
   <plurals name="joint_account_invite_members_invite_more">
     <item quantity="one">Invite %d more member</item>

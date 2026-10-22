@@ -1220,6 +1220,46 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
+    fun `GIVEN a failed prefetch WHEN the add funds error is dismissed THEN requisites are requested again`() =
+        runTest {
+            // Arrange
+            coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Network.left()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            val message = slot<EventMessage>()
+            every { messageSender.send(capture(message)) } returns Unit
+            model.uiState.value.balance.addFunds.onClick()
+
+            // Act
+            (message.captured as DialogMessage).onDismissRequest()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a failed prefetch WHEN the withdraw error is dismissed THEN requisites are requested again`() =
+        runTest {
+            // Arrange
+            coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Network.left()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            val message = slot<EventMessage>()
+            every { messageSender.send(capture(message)) } returns Unit
+            model.uiState.value.balance.withdraw.onClick()
+
+            // Act
+            (message.captured as DialogMessage).onDismissRequest()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN a successful prefetch WHEN pulled to refresh THEN requisites are requested again`() = runTest {
         // Arrange
         val model = createModel(testScope = this)

@@ -88,7 +88,7 @@ internal class GetFeeForTokenUseCaseTronTest {
     @Test
     fun `GIVEN a supported Tron token WHEN invoke THEN the compensation quote is returned`() = runTest {
         // Arrange
-        coEvery { isTronGaslessSupportedUseCase(userWalletId, usdt.network, usdt) } returns true
+        coEvery { isTronGaslessSupportedUseCase(usdt.network, usdt) } returns true
         coEvery { getTronGaslessFeeUseCase(userWalletId, transferTransaction, usdt) } returns tronGaslessFee.right()
 
         // Act
@@ -101,7 +101,7 @@ internal class GetFeeForTokenUseCaseTronTest {
     @Test
     fun `GIVEN the quote fails WHEN invoke THEN the error is surfaced`() = runTest {
         // Arrange — the token was picked explicitly, so there is no fee to fall back to.
-        coEvery { isTronGaslessSupportedUseCase(userWalletId, usdt.network, usdt) } returns true
+        coEvery { isTronGaslessSupportedUseCase(usdt.network, usdt) } returns true
         coEvery { getTronGaslessFeeUseCase(userWalletId, transferTransaction, usdt) } returns
             GetFeeError.GaslessError.NotEnoughFunds.left()
 
@@ -115,7 +115,7 @@ internal class GetFeeForTokenUseCaseTronTest {
     @Test
     fun `GIVEN an unsupported Tron token WHEN invoke THEN the gasless service rejects the network`() = runTest {
         // Arrange
-        coEvery { isTronGaslessSupportedUseCase(userWalletId, usdt.network, usdt) } returns false
+        coEvery { isTronGaslessSupportedUseCase(usdt.network, usdt) } returns false
         every { currencyChecksRepository.isNetworkSupportedForGaslessTx(usdt.network) } returns false
 
         // Act

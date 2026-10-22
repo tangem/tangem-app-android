@@ -186,15 +186,15 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
                     return@launch
                 }
 
-            val targetAddress =
-                result.data.signedActivationData.dataToSign.request.activationOrderInfo.customerWalletAddress
+            val request = resultData.signedActivationData.dataToSign.request
+            val targetAddress = request.activationOrderInfo.customerWalletAddress
 
             modelScope.launch {
                 onDone.emit(
                     ActivationReadyEvent(
                         customerWalletDataToSignRequest = VisaCustomerWalletDataToSignRequest(
-                            orderId = result.data.signedActivationData.dataToSign.request.activationOrderInfo.orderId,
-                            cardWalletAddress = result.data.signedActivationData.dataToSign.request.cardWalletAddress,
+                            orderId = request.activationOrderInfo.orderId,
+                            cardWalletAddress = request.cardWalletAddress,
                             customerWalletAddress = targetAddress,
                         ),
                         newScanResponse = params.scanResponse.copy(

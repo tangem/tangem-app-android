@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
  *
 [REDACTED_AUTHOR]
  */
-abstract class SingleAccountStatusListSupplier(
+open class SingleAccountStatusListSupplier(
     override val factory: SingleAccountStatusListProducer.Factory,
     override val keyCreator: (SingleAccountStatusListProducer.Params) -> String,
 ) : FlowCachingSupplier<SingleAccountStatusListProducer, SingleAccountStatusListProducer.Params, AccountStatusList>() {

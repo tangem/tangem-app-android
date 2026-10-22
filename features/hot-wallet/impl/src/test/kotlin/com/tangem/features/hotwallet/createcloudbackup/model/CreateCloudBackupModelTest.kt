@@ -108,7 +108,7 @@ internal class CreateCloudBackupModelTest {
         coEvery { cloudBackupRepository.getAccountInfo(any()) } returns ACCOUNT.right()
 
         // Mirrors the accessor: unlocking prompts the user and caches the result, which is then held
-        coEvery { getHotWalletContextualUnlockUseCase(hotWalletId) } answers { heldUnlock.right() }
+        every { getHotWalletContextualUnlockUseCase(hotWalletId) } answers { heldUnlock.right() }
         coEvery { unlockHotWalletContextualUseCase(hotWalletId) } answers {
             heldUnlock = unlockHotWallet
             unlockHotWallet.right()

@@ -66,7 +66,6 @@ dependencies {
     api(projects.domain.staking)
     api(projects.domain.walletManager)
     api(projects.domain.wallets)
-    api(projects.domain.txhistory)
     implementation(projects.domain.card)
     // endregion
 
@@ -82,7 +81,9 @@ dependencies {
 
     // region Tests
     testImplementation(projects.common.test)
+    testImplementation(projects.domain.wallets.models)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
+    testImplementation(tangemDeps.hot.core)
     // endregion
 }

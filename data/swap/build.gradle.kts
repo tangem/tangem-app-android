@@ -38,7 +38,6 @@ dependencies {
     // endregion
 
     // region Core
-    api(projects.core.configToggles)
     implementation(projects.store.datasource)
     implementation(projects.grow.datasource)
     api(projects.core.utils)
@@ -57,6 +56,7 @@ dependencies {
     api(projects.domain.swap)
     implementation(projects.domain.core)
     implementation(projects.domain.tokens)
+    implementation(projects.domain.walletManager)
     runtimeOnly(projects.domain.staking)
     runtimeOnly(projects.domain.wallets)
     // endregion

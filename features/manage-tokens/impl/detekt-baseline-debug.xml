@@ -1,8 +1,5 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
   <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>NamedArguments:ChangedCurrenciesManager.kt$ChangedCurrenciesManager$updateChangedItems(currency, network, currenciesToAdd, currenciesToRemove)</ID>
-    <ID>NamedArguments:ChangedCurrenciesManager.kt$ChangedCurrenciesManager$updateChangedItems(currency, network, currenciesToRemove, currenciesToAdd)</ID>
-  </CurrentIssues>
+  <CurrentIssues/>
 </SmellBaseline>

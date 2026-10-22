@@ -26,6 +26,7 @@ import com.tangem.domain.swap.ExchangeIntentRepository
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.SwapTransactionRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -56,6 +57,7 @@ internal object SwapDataModule {
         dataSignatureVerifier: DataSignatureVerifier,
         singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
         singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
+        walletManagersFacade: WalletManagersFacade,
         @NetworkMoshi moshi: Moshi,
     ): SwapRepositoryV2 {
         return DefaultSwapRepositoryV2(
@@ -67,6 +69,7 @@ internal object SwapDataModule {
             moshi = moshi,
             singleQuoteStatusSupplier = singleQuoteStatusSupplier,
             singleQuoteStatusFetcher = singleQuoteStatusFetcher,
+            walletManagersFacade = walletManagersFacade,
         )
     }
 

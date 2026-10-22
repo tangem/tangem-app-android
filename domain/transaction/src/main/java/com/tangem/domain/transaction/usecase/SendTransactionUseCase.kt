@@ -134,8 +134,12 @@ class SendTransactionUseCase(
         userWallet: UserWallet,
         network: Network,
     ): Either<SendTransactionError, String> {
-        return invoke(listOf(txData), userWallet, network, TransactionSender.MultipleTransactionSendMode.DEFAULT)
-            .map { it.first() }
+        return invoke(
+            txsData = listOf(txData),
+            userWallet = userWallet,
+            network = network,
+            sendMode = TransactionSender.MultipleTransactionSendMode.DEFAULT,
+        ).map { it.first() }
     }
 
     private fun processSentTransactionsHashes(
