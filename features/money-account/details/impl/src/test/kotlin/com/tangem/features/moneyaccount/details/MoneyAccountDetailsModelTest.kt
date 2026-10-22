@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -265,6 +266,25 @@ internal class MoneyAccountDetailsModelTest {
     }
 
     @ParameterizedTest
+    @MethodSource("provideSendClickModels")
+    fun `GIVEN account WHEN send clicked THEN send opens for the account token only with a balance`(
+        model: SendClickModel,
+    ) = runTest {
+        // Arrange
+        val pushedRoutes = mutableListOf<Route>()
+        every { router.push(capture(pushedRoutes), any()) } returns Unit
+        val detailsModel = createModel(activeAccount(balance = model.balance))
+        advanceUntilIdle()
+
+        // Act
+        detailsModel.uiState.value.onSendClick()
+
+        // Assert
+        assertThat(pushedRoutes).containsExactlyElementsIn(listOfNotNull(model.expectedRoute))
+        detailsModel.onDestroy()
+    }
+
+    @ParameterizedTest
     @MethodSource("provideNonAccountStatuses")
     fun `GIVEN account shown WHEN its status stops being an account THEN screen stays open`(
         status: MoneyAccountStatusValue,
@@ -337,6 +357,16 @@ internal class MoneyAccountDetailsModelTest {
         val openSheet: (MoneyAccountDetailsModel) -> Unit,
         val expectedSheet: MoneyAccountDetailsNavigation,
     )
+
+    private fun provideSendClickModels() = listOf(
+        SendClickModel(
+            balance = balance(),
+            expectedRoute = AppRoute.Send(userWalletId = userWalletId, currency = token),
+        ),
+        SendClickModel(balance = null, expectedRoute = null),
+    )
+
+    data class SendClickModel(val balance: MoneyAccountStatusValue.Balance?, val expectedRoute: AppRoute.Send?)
 
     private fun provideNonAccountStatuses() = listOf(
         MoneyAccountStatusValue.Error.Unavailable,
