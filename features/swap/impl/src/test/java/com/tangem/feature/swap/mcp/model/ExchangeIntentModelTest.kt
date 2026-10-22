@@ -265,10 +265,10 @@ internal class ExchangeIntentModelTest {
         }
 
     @Test
-    fun `GIVEN server error WHEN model created THEN can't reach sheet offers to try again`() = runTest {
+    fun `GIVEN no connection WHEN model created THEN can't reach sheet offers to try again`() = runTest {
         // Arrange
         coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
-            ExchangeIntentError.ServerError(INTENT_ID, httpCode = 503).left()
+            ExchangeIntentError.Unreachable(INTENT_ID).left()
 
         // Act
         val model = createModel(testScope = this)
@@ -283,10 +283,10 @@ internal class ExchangeIntentModelTest {
     }
 
     @Test
-    fun `GIVEN server error WHEN try again and the intent is read THEN the offer replaces the status`() = runTest {
+    fun `GIVEN no connection WHEN try again and the intent is read THEN the offer replaces the status`() = runTest {
         // Arrange
         coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returnsMany listOf(
-            ExchangeIntentError.ServerError(INTENT_ID, httpCode = 503).left(),
+            ExchangeIntentError.Unreachable(INTENT_ID).left(),
             intent.right(),
         )
         val model = createModel(testScope = this)
@@ -303,15 +303,15 @@ internal class ExchangeIntentModelTest {
     }
 
     @Test
-    fun `GIVEN server error WHEN try again is tapped while reading THEN the sheet stays and reading is not repeated`() =
+    fun `GIVEN no connection WHEN try again is tapped while reading THEN the sheet stays and reading is not repeated`() =
         runTest {
             // Arrange
             val response = CompletableDeferred<Either<Throwable, ExchangeIntent>>()
-            val serverError: Either<Throwable, ExchangeIntent> =
-                ExchangeIntentError.ServerError(INTENT_ID, httpCode = 503).left()
+            val unreachable: Either<Throwable, ExchangeIntent> =
+                ExchangeIntentError.Unreachable(INTENT_ID).left()
             var calls = 0
             coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } coAnswers {
-                if (calls++ == 0) serverError else response.await()
+                if (calls++ == 0) unreachable else response.await()
             }
             val model = createModel(testScope = this)
             advanceUntilIdle()
@@ -332,10 +332,10 @@ internal class ExchangeIntentModelTest {
         }
 
     @Test
-    fun `GIVEN server error WHEN try again and it fails again THEN the can't reach sheet is shown again`() = runTest {
+    fun `GIVEN no connection WHEN try again and it fails again THEN the can't reach sheet is shown again`() = runTest {
         // Arrange
         coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
-            ExchangeIntentError.ServerError(INTENT_ID, httpCode = 500).left()
+            ExchangeIntentError.Unreachable(INTENT_ID).left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
