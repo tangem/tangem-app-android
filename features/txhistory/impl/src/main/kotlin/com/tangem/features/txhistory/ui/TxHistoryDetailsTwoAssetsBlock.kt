@@ -32,8 +32,6 @@ import com.tangem.core.ui.R
 import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.account.AccountIconSize
-import com.tangem.core.ui.components.atoms.text.EllipsisText
-import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.domain.models.account.CryptoPortfolioIcon.Color as IconColor
 import com.tangem.domain.models.account.CryptoPortfolioIcon.Icon
 import com.tangem.core.ui.components.account.PaymentAccountIcon
@@ -168,11 +166,12 @@ private fun TwoAssetsSideLabel(label: TextReference, owner: AssetOwnerUM?, modif
             }
             is AssetOwnerUM.Address -> {
                 AssetOwnerIcon(owner = owner)
-                EllipsisText(
+                Text(
                     text = owner.rawAddress,
                     style = TangemTheme.typography3.caption.medium,
                     color = TangemTheme.colors3.text.secondary,
-                    ellipsis = TextEllipsis.Middle,
+                    maxLines = 1,
+                    overflow = TextOverflow.MiddleEllipsis,
                     modifier = Modifier.weight(weight = 1f, fill = false),
                 )
             }
