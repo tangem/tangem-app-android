@@ -106,5 +106,9 @@
     {
         "name": "TWI_1732_MARKETING_UID_BINDING_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_18834_YIELD_MODULE_V3_ENABLED",
+        "version": "undefined"
     }
 ]
