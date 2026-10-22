@@ -177,7 +177,6 @@ class OneShotVideoController internal constructor(
     interface Factory {
 
         /**
-         * @param scope              a main-thread scope
          * @param diagnosticsSubject what the log entries are about, e.g. "Pack reveal video"
          * @param onCueReached       once, on the main thread, only after [start]
          */
