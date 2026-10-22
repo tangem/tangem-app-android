@@ -132,6 +132,11 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
     val accountClosedBannerMessage: KNode =
         bannerMessage(CoreResR.string.tangempay_account_deactivated_message_subtitle)
 
+    val waitlistJoinedMessage: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_waitlist_joined_message))
+        useUnmergedTree = true
+    }
+
     val bankTransferRequestSentMessage: KNode = child {
         hasText(getResourceString(CoreResR.string.tangempay_bank_transfer_request_sent))
         useUnmergedTree = true
