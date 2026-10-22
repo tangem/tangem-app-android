@@ -218,7 +218,8 @@ The reward card's "Sell back" sells the won card for the backend's instant buyba
   (`BuybackState.Unavailable`, the initial state) and the screen is resumed
   (`lifecycle.subscribe(onResume, onPause)` in the component), with no deadline. The button starts as a
   disabled "Buyback unavailable" and stays so on `buybackAvailable = false` or a failed check; an offer turns
-  it on and stops the polling. Whether "not available" can ever change is still open with Collector Crypt.
+  it on and stops the polling for good (`isBuybackOfferPollingAllowed`), so a later `Unavailable` does not
+  restart it. Whether "not available" can ever change is still open with Collector Crypt.
   Availability comes from `/buyback/available` alone, for every machine.
 - **The sale is `BuybackCollectibleUseCase`**: `buyback-data` with `fromAddress = owner` (it holds the card)
   and `toAddress = vault` (`getVaultAddress`, so the payout shows in the collectibles balance) →
@@ -230,9 +231,12 @@ The reward card's "Sell back" sells the won card for the backend's instant buyba
   button silently; `Unexpected` re-enables it with `unexpected_error_description` ("…contact support"). Any
   `buyback-data` failure is `Unexpected`, whatever its code: per the analysts' diagram the button stays
   available. A message over the card's 930 B (`GachaVaultError.TransactionTooLarge`) counts as `Unexpected` too.
-- **`NotConfirmed` does not re-offer at once.** The sale may still land, so the button goes back to
-  `Unavailable` with the same snackbar and the `/buyback/available` polling decides again. Whether the gacha
-  guards against a second buyback of the same NFT is still open with Collector Crypt.
+- **`NotConfirmed` does not re-offer at once.** The sale may still land, so after "Something went wrong" the
+  button keeps spinning while one `/buyback/available` request decides (`recheckBuybackOffer`): an offer makes it
+  `Available`, anything else `Unavailable`; the polling stays off, as an offer already came.
+  A retry is safe: while the first sale is live, a second `buyback-data` for the same NFT returns the very same
+  transaction, which the network rejects as already processed. The fee payer is Collector Crypt's wallet, never
+  the owner.
 - While the sale runs back, close and "Keep card" are ignored (`isBuybackRunning()`): leaving would cancel
   `modelScope` and the tx hash might never reach the backend. "Keep card" is disabled only then
   (`RevealUM.isKeepCardEnabled`), not while the offer is being checked.
