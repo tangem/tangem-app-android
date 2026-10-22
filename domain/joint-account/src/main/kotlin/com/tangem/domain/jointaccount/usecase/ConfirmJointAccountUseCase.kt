@@ -9,9 +9,9 @@ import arrow.core.raise.ensureNotNull
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
-import com.tangem.domain.jointaccount.model.JointAccountActivationError
-import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
 import com.tangem.domain.jointaccount.model.JointAccountConfig
+import com.tangem.domain.jointaccount.model.JointAccountConfirmationError
+import com.tangem.domain.jointaccount.model.JointAccountConfirmationPayload
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
@@ -25,7 +25,7 @@ import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.utils.logging.TangemLogger
 
-class ActivateJointAccountUseCase(
+class ConfirmJointAccountUseCase(
     private val repository: JointAccountRepository,
     private val signer: JointAccountSigner,
     private val fetcher: SingleJointAccountListFetcher,
@@ -33,24 +33,24 @@ class ActivateJointAccountUseCase(
     private val safeAddressCalculator: SafeAddressCalculator,
 ) {
 
-    suspend operator fun invoke(account: Account.Joint): Either<JointAccountActivationError, Unit> = either {
+    suspend operator fun invoke(account: Account.Joint): Either<JointAccountConfirmationError, JointAccount> = either {
         val userWalletId = account.accountId.userWalletId
 
         val jointAccount = ensureNotNull(supplier.find(accountId = account.accountId)) {
             refused(
-                error = JointAccountActivationError.AccountNotFound,
+                error = JointAccountConfirmationError.AccountNotFound,
                 reason = "none of the wallet's joint accounts is the tapped one",
             )
         }
         ensure(jointAccount.status == JointAccount.Status.CONFIRMING) {
             refused(
-                error = JointAccountActivationError.NotReadyForActivation,
+                error = JointAccountConfirmationError.NotReadyForConfirmation,
                 reason = "the account is ${jointAccount.status}, not ${JointAccount.Status.CONFIRMING}",
             )
         }
         ensure(jointAccount.members.size == jointAccount.membersCount) {
             refused(
-                error = JointAccountActivationError.NotReadyForActivation,
+                error = JointAccountConfirmationError.NotReadyForConfirmation,
                 reason = "${jointAccount.members.size} of ${jointAccount.membersCount} members have joined",
             )
         }
@@ -75,51 +75,51 @@ class ActivateJointAccountUseCase(
                 userWalletId = userWalletId,
                 input = JointAccountSignInput(derivationIndex = derivationIndex) { payload },
             )
-            .mapLeft(::toActivationError)
+            .mapLeft(::toConfirmationError)
             .bind()
 
-        // The owner address is known only after the tap, so the creator check is post-sign: the backend would
-        // reject a non-creator signature with 403 anyway, this only fails fast with a domain error instead
-        val creatorAddress = jointAccount.members
-            .firstOrNull { it.role == JointAccount.Role.CREATOR }
-            ?.address
-        ensure(signResult.ownerAddress.equals(creatorAddress, ignoreCase = true)) {
+        // The owner address is known only after the tap, so the membership check is post-sign: the backend would
+        // reject a stranger's signature with 403 anyway, this only fails fast with a domain error instead
+        val isMember = jointAccount.members.any { it.address.equals(signResult.ownerAddress, ignoreCase = true) }
+        ensure(isMember) {
             refused(
-                error = JointAccountActivationError.NotCreator,
-                reason = "the tapped wallet's owner key is not the creator's",
+                error = JointAccountConfirmationError.NotMember,
+                reason = "the tapped wallet's owner key belongs to none of the members",
             )
         }
 
-        repository
-            .activate(userWalletId = userWalletId, payload = payload, signature = signResult.signature)
+        val confirmed = repository
+            .confirm(userWalletId = userWalletId, payload = payload, signature = signResult.signature)
             .mapLeft { cause ->
                 refused(
                     error = JointAccountFlowError.Failed(cause = cause),
-                    reason = "the activation call failed",
+                    reason = "the confirmation call failed",
                     cause = cause,
                 )
             }
             .bind()
 
-        // The account is active on the backend, so a failed refresh must not fail the activation: the list
+        // The signature is recorded on the backend, so a failed refresh must not fail the confirmation: the list
         // catches up on the next fetch, and reporting an error here would push the user into a pointless retry
         fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).getOrElse {}
+
+        confirmed
     }
 
     /**
      * The address the composition resolves to, recomputed by the app — the backend's value alone is never
      * trusted. Which Safe singleton the backend deploys is undecided (alignment №21), so the address is
      * computed under every supported singleton and the backend's value picks the matching one; no match means
-     * the composition does not resolve to the announced address, and activation is blocked.
+     * the composition does not resolve to the announced address, and confirmation is blocked.
      *
-     * Once confirmed, the backend's own spelling is what gets signed: the activation config is compared with the
-     * stored one character by character, and a checksummed copy of a lowercase address would not match it.
+     * Once confirmed, the backend's lower-case spelling is what gets signed: the payload is compared with the
+     * stored account byte by byte, and a checksummed address would not match it.
      */
-    private fun Raise<JointAccountActivationError>.confirmedSafeAddress(jointAccount: JointAccount): String {
+    private fun Raise<JointAccountConfirmationError>.confirmedSafeAddress(jointAccount: JointAccount): String {
         val backendAddress = jointAccount.safeAddress
         ensureNotNull(backendAddress) {
             refused(
-                error = JointAccountActivationError.NotReadyForActivation,
+                error = JointAccountConfirmationError.NotReadyForConfirmation,
                 reason = "the backend has not returned the Safe address yet",
             )
         }
@@ -148,7 +148,7 @@ class ActivateJointAccountUseCase(
 
         ensure(isConfirmed) {
             refused(
-                error = JointAccountActivationError.AddressMismatch,
+                error = JointAccountConfirmationError.AddressMismatch,
                 reason = "the announced Safe address $backendAddress is none of ${computed.joinToString()}, " +
                     "computed from ${owners.size} owners and threshold ${jointAccount.threshold}",
                 // Both addresses are the whole diagnostic, and the sanitizer replaces any hex run of 8 or more
@@ -157,14 +157,14 @@ class ActivateJointAccountUseCase(
             )
         }
 
-        return backendAddress
+        return backendAddress.lowercase()
     }
 
-    private fun Raise<JointAccountActivationError>.createPayload(
+    private fun Raise<JointAccountConfirmationError>.createPayload(
         account: Account.Joint,
         jointAccount: JointAccount,
         safeAddress: String,
-    ): JointAccountActivationPayload {
+    ): JointAccountConfirmationPayload {
         val name = when (val accountName = account.accountName) {
             is AccountName.Custom -> accountName.value
             is AccountName.DefaultMain -> raise(
@@ -177,45 +177,41 @@ class ActivateJointAccountUseCase(
             )
         }
 
-        return JointAccountActivationPayload(
-            walletId = account.accountId.userWalletId.stringValue,
-            cryptoAccountId = jointAccount.cryptoAccountId,
-            config = JointAccountActivationPayload.ConfirmedConfig(
-                base = JointAccountConfig(
-                    name = name,
-                    icon = account.icon.value.name,
-                    iconColor = account.icon.color.name,
-                    membersCount = jointAccount.membersCount,
-                    threshold = jointAccount.threshold,
-                ),
-                safeAddress = safeAddress,
+        return JointAccountConfirmationPayload(
+            config = JointAccountConfig(
+                name = name,
+                icon = account.icon.value.name,
+                iconColor = account.icon.color.name,
+                membersCount = jointAccount.membersCount,
+                threshold = jointAccount.threshold,
             ),
+            safeAddress = safeAddress,
         )
     }
 
-    private fun toActivationError(cause: Throwable): JointAccountActivationError = when (cause) {
+    private fun toConfirmationError(cause: Throwable): JointAccountConfirmationError = when (cause) {
         // Dismissing the card session is not a failure and has nothing to diagnose later
         is TangemSdkError.UserCancelled -> JointAccountFlowError.UserCancelled
         else -> refused(
             error = JointAccountFlowError.Failed(cause = cause),
-            reason = "signing the activation payload failed",
+            reason = "signing the confirmation payload failed",
             cause = cause,
         )
     }
 
     /**
      * Every refusal reaches the user as the same generic dialog, so the true reason survives only here. The
-     * level is `e` deliberately: only `e` and `i` reach the exported log file, and a refused activation is
+     * level is `e` deliberately: only `e` and `i` reach the exported log file, and a refused confirmation is
      * exactly what a support request arrives with.
      */
-    private fun <E : JointAccountActivationError> refused(
+    private fun <E : JointAccountConfirmationError> refused(
         error: E,
         reason: String,
         cause: Throwable? = null,
         shouldSanitize: Boolean = true,
     ): E {
         TangemLogger.e(
-            messageString = "Joint account activation refused: $reason",
+            messageString = "Joint account confirmation refused: $reason",
             throwable = cause,
             shouldSanitize = shouldSanitize,
         )
