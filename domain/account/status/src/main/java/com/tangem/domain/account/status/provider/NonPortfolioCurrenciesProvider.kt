@@ -1,4 +1,4 @@
-package com.tangem.domain.account.status.supplier
+package com.tangem.domain.account.status.provider
 
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -7,7 +7,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
-interface NonPortfolioAccountCurrencies {
+interface NonPortfolioCurrenciesProvider {
 
     fun observe(userWalletId: UserWalletId, currency: CryptoCurrency): Flow<Pair<Account, CryptoCurrencyStatus>>
 
