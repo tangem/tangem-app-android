@@ -11,6 +11,7 @@ import com.tangem.common.CardFilter
 import com.tangem.common.authentication.AuthenticationManager
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.Config
+import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
@@ -25,9 +26,11 @@ import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.core.remote.config.managers.MutableApiConfigsManager
 import com.tangem.datasource.remote.interceptors.AddHeadersInterceptor
 import com.tangem.operations.attestation.api.TangemApiServiceSettings
+import com.tangem.operations.backup.BackupRepo
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceProvider
 import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.sdk.AndroidStringLocator
 import com.tangem.sdk.DefaultSessionViewDelegate
 import com.tangem.sdk.extensions.*
 import com.tangem.sdk.nfc.AndroidNfcAvailabilityProvider
@@ -233,10 +236,12 @@ internal class DefaultCardSdkProvider @Inject constructor(
         val authenticationManager: AuthenticationManager,
     ) {
 
+        // Built on the SDK's secure storage: BackupService.init would create a second one over the same files
         val backupService: BackupService by lazy {
-            BackupService.init(
+            BackupService(
                 sdk = sdk,
-                activity = activity,
+                repo = BackupRepo(storage = sdk.secureStorage, jsonConverter = MoshiJsonConverter.INSTANCE),
+                stringsLocator = AndroidStringLocator(activity),
                 primaryCardRunnableDecorator = { primaryCard, finalization ->
                     tangemSdkManager.get().withBackupColdWalletRegistration(primaryCard, finalization)
                 },
