@@ -39,6 +39,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -82,6 +83,10 @@ internal class JointAccountMembersModel @Inject constructor(
         get() = stateController.uiState
 
     val bottomSheetNavigation: SlotNavigation<JointAccountMembersSheetConfig> = SlotNavigation()
+
+    /** Fires when a member joined or confirmed between two updates while the screen is resumed; silent on the first render */
+    val memberStatusChanges: Flow<Unit>
+        field = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     private val isResumed = MutableStateFlow(false)
 
@@ -146,7 +151,14 @@ internal class JointAccountMembersModel @Inject constructor(
                     )
                 }
             }
-            .onEach { resolved -> stateController.update(resolved.toTransformer()) }
+            .onEach { resolved ->
+                val previous = uiState.value.memberStatuses()
+                stateController.update(resolved.toTransformer())
+                val next = uiState.value.memberStatuses()
+
+                val isChanged = previous.isNotEmpty() && next.isNotEmpty() && previous != next
+                if (isChanged && isResumed.value) memberStatusChanges.tryEmit(Unit)
+            }
             .launchIn(modelScope)
     }
 
@@ -163,6 +175,9 @@ internal class JointAccountMembersModel @Inject constructor(
             accountIcon = icon,
         )
     }
+
+    private fun JointAccountMembersUM.memberStatuses(): List<Pair<String, JointAccountMembersUM.MemberStatusUM>> =
+        joined.map { member -> member.id to member.status }
 
     /**
      * The account's `/accounts` record as this wallet sees it. Starts with `null` so the screen renders before the
