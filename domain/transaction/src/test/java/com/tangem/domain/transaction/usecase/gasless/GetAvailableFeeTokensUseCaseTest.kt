@@ -3,6 +3,7 @@ package com.tangem.domain.transaction.usecase.gasless
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
@@ -163,6 +164,59 @@ internal class GetAvailableFeeTokensUseCaseTest {
             coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns
                 personal.copy(accountStatuses = personal.accountStatuses + joint, totalJointAccounts = 1)
         }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class NonPortfolioAccountNetwork {
+
+        private val accountPath = Network.DerivationPath.Custom(value = "m/44'/60'/999998'/0/0")
+        private val accountNetwork = network.copy(
+            id = network.id.copy(derivationPath = accountPath),
+            derivationPath = accountPath,
+        )
+        private val accountCoin = nativeCoin.copy(network = accountNetwork)
+        private val accountUsdc = usdc.copy(network = accountNetwork)
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(
+                singleAccountStatusListSupplier,
+                nonPortfolioCurrenciesProvider,
+                gaslessTransactionRepository,
+                currencyChecksRepository,
+            )
+
+            coEvery { currencyChecksRepository.isNetworkSupportedForGaslessTx(any()) } returns true
+            coEvery { gaslessTransactionRepository.getSupportedTokens(network = any()) } returns setOf(usdc)
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN network of a non-portfolio account WHEN invoke THEN only its token is offered`(
+            coinBalance: BigDecimal,
+        ) = runTest {
+            // Arrange
+            givenAccountStatusList(nativeBalance = NATIVE_FEE, tokenBalance = BigDecimal("20"))
+            coEvery { nonPortfolioCurrenciesProvider.getStatuses(userWalletId, accountNetwork) } returns listOf(
+                accountCoin.status(balance = coinBalance),
+                accountUsdc.status(balance = BigDecimal("25")),
+            )
+
+            // Act
+            val actual = createUseCase().invoke(
+                userWallet = userWallet,
+                network = accountNetwork,
+                sentCurrencyStatus = accountUsdc.status(),
+                nativeFeeAmount = NATIVE_FEE,
+            )
+
+            // Assert
+            assertThat(actual.offeredCurrencies()).containsExactly(accountUsdc)
+            assertThat(actual.notEnoughForFeeIds()).isEmpty()
+        }
+
+        private fun provideTestModels(): List<BigDecimal> = listOf(BigDecimal.ZERO, NATIVE_FEE)
     }
 
     @Nested
@@ -428,6 +482,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
     // region Fixtures
 
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider = mockk()
     private val gaslessTransactionRepository: GaslessTransactionRepository = mockk()
     private val tronGaslessTransactionRepository: TronGaslessTransactionRepository = mockk()
     private val currencyChecksRepository: CurrencyChecksRepository = mockk()
@@ -436,6 +491,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
 
     private fun createUseCase() = GetAvailableFeeTokensUseCase(
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
         gaslessTransactionRepository = gaslessTransactionRepository,
         currencyChecksRepository = currencyChecksRepository,
         isTronGaslessSupportedUseCase = IsTronGaslessSupportedUseCase(
