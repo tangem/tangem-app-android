@@ -18,10 +18,10 @@ internal class AndroidNetworkConnectionManager @Inject constructor(
     @ApplicationContext private val applicationContext: Context,
 ) : NetworkConnectionManager {
 
-    override val isOnline: Boolean
+    override val isOnlineSync: Boolean
         get() = isNetworkAvailable()
 
-    override val isOnlineFlow: Flow<Boolean> = callbackFlow {
+    override val isOnline: Flow<Boolean> = callbackFlow {
         val connectivityManager = connectivityManager()
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {

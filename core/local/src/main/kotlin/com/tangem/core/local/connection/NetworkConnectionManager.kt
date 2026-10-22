@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 interface NetworkConnectionManager {
 
     /** Connection status */
-    val isOnline: Boolean
+    val isOnlineSync: Boolean
 
-    val isOnlineFlow: Flow<Boolean>
+    val isOnline: Flow<Boolean>
 }
