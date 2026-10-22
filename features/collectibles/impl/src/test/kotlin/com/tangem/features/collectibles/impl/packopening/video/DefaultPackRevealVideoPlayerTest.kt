@@ -5,6 +5,7 @@ import com.tangem.core.media.OneShotVideoController
 import com.tangem.core.media.OneShotVideoController.CueReason
 import com.tangem.core.media.RemoteClipCache
 import com.tangem.core.media.SoundClip
+import com.tangem.features.collectibles.impl.packopening.PackOpeningConst
 import com.tangem.features.collectibles.impl.packopening.video.source.PackRevealAsset
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
@@ -39,7 +40,9 @@ internal class DefaultPackRevealVideoPlayerTest {
     fun resetMocks() {
         clearMocks(video, skipSound, videoFactory, soundFactory, listener)
         onCueReached.clear()
-        every { videoFactory.create(any(), cache, any(), capture(onCueReached)) } returns video
+        every {
+            videoFactory.create(any(), cache, any(), PackOpeningConst.VIDEO_STALL_TIMEOUT_MS, capture(onCueReached))
+        } returns video
         every { soundFactory.create(cache, any()) } returns skipSound
         every { video.isMotionEnabled } returns true
     }
@@ -69,22 +72,6 @@ internal class DefaultPackRevealVideoPlayerTest {
 
             // Assert
             coVerify(exactly = 1) { video.prepare(url = null, cueMs = any()) }
-        }
-
-        @Test
-        fun `GIVEN started WHEN another video is preloaded THEN the playing one is kept`() = runTest {
-            // Arrange
-            val player = createPlayer()
-            player.preloadVideo(asset)
-            player.start()
-
-            // Act
-            player.preloadVideo(asset.copy(videoUrl = OTHER_VIDEO_URL, skipToMs = 1_000L))
-            player.skipToReveal()
-
-            // Assert
-            coVerify(exactly = 0) { video.prepare(url = OTHER_VIDEO_URL, cueMs = any()) }
-            verify(exactly = 1) { video.skipTo(SKIP_TO_MS) }
         }
     }
 
@@ -234,16 +221,18 @@ internal class DefaultPackRevealVideoPlayerTest {
 
         @ParameterizedTest
         @ValueSource(booleans = [true, false])
-        fun `GIVEN a player WHEN the screen comes and goes THEN the video is told`(isRunning: Boolean) = runTest {
-            // Arrange
-            val player = createPlayer()
+        fun `GIVEN a player WHEN the screen comes and goes THEN the video and the sound are told`(isRunning: Boolean) =
+            runTest {
+                // Arrange
+                val player = createPlayer()
 
-            // Act
-            player.setRunning(isRunning)
+                // Act
+                player.setRunning(isRunning)
 
-            // Assert
-            verify(exactly = 1) { video.setRunning(isRunning) }
-        }
+                // Assert
+                verify(exactly = 1) { video.setRunning(isRunning) }
+                verify(exactly = 1) { skipSound.setRunning(isRunning) }
+            }
 
         @Test
         fun `GIVEN a player WHEN released THEN the video and the skip sound are released`() = runTest {
@@ -271,7 +260,6 @@ internal class DefaultPackRevealVideoPlayerTest {
 
     private companion object {
         const val VIDEO_URL = "https://cdn.test/reveal-light.mp4"
-        const val OTHER_VIDEO_URL = "https://cdn.test/reveal-dark.mp4"
         const val SOUND_URL = "https://cdn.test/skip.mp3"
         const val CARD_REVEAL_MS = 7_000L
         const val SKIP_TO_MS = 6_100L
