@@ -26,7 +26,6 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.isOutdatedDataHeld
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.pay.repository.OnboardingRepository
@@ -47,7 +46,6 @@ import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 /**
@@ -107,13 +105,31 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     ) { isSkipped, hasSocialBackup -> isSkipped && !hasSocialBackup }
         .distinctUntilChanged()
 
-    private fun accountStatusListWithPromoFlow(userWallet: UserWallet): Flow<Pair<AccountStatusList, Boolean>> {
+    private fun accountStateFlow(userWallet: UserWallet): Flow<AccountState> {
         val params = SingleAccountStatusListProducer.Params(userWallet.walletId)
 
         return combine(
             accountDependencies.singleAccountStatusListSupplier(params),
             onboardingRepository.isMainOnboardingBannerHidden(userWallet.walletId).distinctUntilChanged(),
             ::Pair,
+        )
+            .runningFold(initial = null, operation = ::reduceAccountState)
+            .filterNotNull()
+    }
+
+    private fun reduceAccountState(
+        previous: AccountState?,
+        update: Pair<AccountStatusList, Boolean>,
+    ): AccountState {
+        val (accountList, isTangemPayPromoHidden) = update
+
+        return AccountState(
+            accountList = accountList,
+            isOutdatedDataShown = nextOutdatedDataShown(
+                totalFiatBalance = accountList.totalFiatBalance,
+                wasShown = previous?.isOutdatedDataShown == true,
+            ),
+            isTangemPayPromoHidden = isTangemPayPromoHidden,
         )
     }
 
@@ -129,20 +145,12 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             flowOf(false to null)
         }
 
-    fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<WalletNotificationsSnapshot> = flow {
-        emitAll(createSnapshots(userWallet, clickIntents, isOutdatedDataShown = AtomicBoolean(false)))
-    }
-
     @Suppress("LongMethod")
-    private fun createSnapshots(
-        userWallet: UserWallet,
-        clickIntents: WalletClickIntents,
-        isOutdatedDataShown: AtomicBoolean,
-    ): Flow<WalletNotificationsSnapshot> {
+    fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<WalletNotificationsSnapshot> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
         return combine7(
-            flow1 = accountStatusListWithPromoFlow(userWallet),
+            flow1 = accountStateFlow(userWallet),
             flow2 = isNeedToBackupUseCase(userWallet.walletId).distinctUntilChanged(),
             flow3 = isAccessCodeSkipHonouredFlow(userWallet),
             flow4 = assetsDiscoveryProgressFlow(userWallet),
@@ -158,13 +166,11 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                 activationState,
                 upgradeBannerPrefs,
             ->
-            val (accountList, isTangemPayPromoHidden) = accountState
+            val (accountList, shouldShowOutdatedData, isTangemPayPromoHidden) = accountState
             val (activationWallet, isWalletBackedUp) = activationState
             val (shouldShowUpgradeBanner, upgradeBannerClosureTimestamp) = upgradeBannerPrefs
 
             val totalFiatBalance = accountList.totalFiatBalance
-            val shouldShowOutdatedData = nextOutdatedDataShown(totalFiatBalance, wasShown = isOutdatedDataShown.get())
-            isOutdatedDataShown.set(shouldShowOutdatedData)
             val flattenCurrencies = accountList.flattenCurrencies()
             val jointAccounts = accountList.accountStatuses.mapNotNull { it.account as? Account.Joint }
 
@@ -275,7 +281,11 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
         val source = (totalFiatBalance as? TotalFiatBalance.Loaded)?.source
 
-        return isOutdatedDataHeld(isOutdated = source == StatusSource.ONLY_CACHE, source = source, wasHeld = wasShown)
+        return when (source) {
+            StatusSource.ONLY_CACHE -> true
+            StatusSource.ACTUAL -> false
+            else -> wasShown
+        }
     }
 
     private fun MutableList<WalletNotificationUM>.addUsedOutdatedDataNotification(isShown: Boolean) {
@@ -574,6 +584,12 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             .distinctUntilChanged()
             .firstOrNull() == true
     }
+
+    private data class AccountState(
+        val accountList: AccountStatusList,
+        val isOutdatedDataShown: Boolean,
+        val isTangemPayPromoHidden: Boolean,
+    )
 
     private companion object {
         const val MAX_REMAINING_SIGNATURES_COUNT = 10
