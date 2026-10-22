@@ -14,6 +14,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
+import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.core.analytics.models.OtelIncludedEvent
@@ -25,9 +26,12 @@ import com.tangem.domain.swap.models.PredefinedPercentAmount
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.FeeBucket
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import java.math.BigDecimal
 
 private const val SWAP_CATEGORY = "Swap"
+private const val NO_RESPONSE_ERROR_CODE = -1
+private const val UNKNOWN_ERROR_CODE = "Unknown"
 private const val SLIPPAGE = "Slippage"
 private const val PROMO_CATEGORY = "Promo"
 
@@ -213,6 +217,16 @@ sealed class SwapEvents(
     class ProviderChosen(val provider: SwapProvider) : SwapEvents(
         event = "Provider Chosen",
         params = mapOf("Provider" to provider.name),
+    )
+
+    /** [errorCode] is `-1` when the request got no response */
+    class ProviderHidden(val provider: SwapProvider, val errorCode: Int) : SwapEvents(
+        event = "Provider Hidden",
+        params = mapOf(
+            PROVIDER to provider.name,
+            ERROR_CODE to if (errorCode == NO_RESPONSE_ERROR_CODE) UNKNOWN_ERROR_CODE else errorCode.toString(),
+            SOURCE to CommonSendAnalyticEvents.CommonSendSource.Swap.analyticsName,
+        ),
     )
 
     class ButtonStatus(val token: String) : SwapEvents(

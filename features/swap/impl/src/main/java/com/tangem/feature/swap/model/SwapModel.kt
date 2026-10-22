@@ -2537,6 +2537,7 @@ internal class SwapModel @Inject constructor(
         if (!SwapProviderHidingPolicy.shouldHide(providerId = provider.providerId, errorCode = errorCode)) return
 
         TangemLogger.i("Provider ${provider.providerId} is hidden after swap error $errorCode")
+        analyticsEventHandler.send(SwapEvents.ProviderHidden(provider = provider, errorCode = errorCode))
         dataState = dataState.copy(
             selectedPairProviders = dataState.selectedPairProviders.filterNot { it.providerId == provider.providerId },
         )
