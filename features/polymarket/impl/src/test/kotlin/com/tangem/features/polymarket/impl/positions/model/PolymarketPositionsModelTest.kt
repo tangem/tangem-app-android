@@ -348,6 +348,7 @@ internal class PolymarketPositionsModelTest {
             router = router,
             dispatchers = TestingCoroutineDispatcherProvider(dispatcher, dispatcher, dispatcher, dispatcher, dispatcher),
             loader = loader,
+            urlOpener = mockk(relaxed = true),
         ).also { model = it }
     }
 
