@@ -25,6 +25,7 @@ import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.domain.wallets.models.PromoCodeActivation
 import com.tangem.domain.wallets.models.PromoPayout
+import com.tangem.domain.wallets.models.ReferralParamValidator
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
 import com.tangem.domain.wallets.usecase.ActivatePromoCodeUseCase
 import com.tangem.domain.wallets.usecase.BindRefcodeWithWalletUseCase
@@ -64,8 +65,8 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
 
     private val logger = TangemLogger.withTag(LOG_TAG)
 
-    private val refcode: String? = queryParams[DeeplinkConst.REF_KEY]
-    private val campaign: String? = queryParams[DeeplinkConst.CAMPAIGN_KEY]
+    private val refcode: String? = ReferralParamValidator.sanitize(queryParams[DeeplinkConst.REF_KEY])
+    private val campaign: String? = ReferralParamValidator.sanitize(queryParams[DeeplinkConst.CAMPAIGN_KEY])
     private val promoCode: String = queryParams[PROMO_CODE_KEY].orEmpty()
 
     private val linkNetworkId: String? = queryParams[PAYMENT_NETWORK_KEY]?.takeIf { it.isNotBlank() }
@@ -294,17 +295,17 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
 
     @Suppress("NullableToStringCall")
     private fun saveAndBindRefcode() {
+        if (refcode == null) return
+
         scope.launch(dispatchers.default) {
-            TangemLogger.i("saveAndBindRefcode: refcode = $refcode, campaign = $campaign")
+            logger.i("saveAndBindRefcode: refcode = $refcode, campaign = $campaign")
 
-            if (!refcode.isNullOrBlank()) {
-                val conversionData = AppsFlyerConversionData(refcode = refcode, campaign = campaign)
+            val conversionData = AppsFlyerConversionData(refcode = refcode, campaign = campaign)
 
-                appsFlyerRepository.storeIfAbsent(value = conversionData)
+            appsFlyerRepository.storeIfAbsent(value = conversionData)
 
-                bindRefcodeWithWalletUseCase(conversionData)
-                    .onLeft { TangemLogger.e("Failed to bind refcode with wallets: $it") }
-            }
+            bindRefcodeWithWalletUseCase(conversionData)
+                .onLeft { logger.e("Failed to bind refcode with wallets: $it") }
         }
     }
 
