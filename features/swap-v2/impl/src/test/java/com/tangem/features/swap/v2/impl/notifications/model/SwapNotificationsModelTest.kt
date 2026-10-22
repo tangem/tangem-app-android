@@ -79,6 +79,20 @@ internal class SwapNotificationsModelTest {
     }
 
     @Test
+    fun `GIVEN empty quote WHEN model created THEN unsupported pair notification shown and error reported`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this, quote = SwapQuoteUM.Empty)
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).containsExactly(SwapNotificationUM.Warning.UnsupportedPair)
+        coVerify { updateTrigger.callbackHasError(true) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN purchasable quote WHEN model created THEN no notifications and no error reported`() = runTest {
         // Arrange
         val model = createModel(testScope = this, quote = contentQuote(isRestricted = false))
