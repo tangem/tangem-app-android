@@ -17,7 +17,6 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
-import com.tangem.domain.models.tokenlist.TokenList.GroupedByNetwork.NetworkGroup
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -147,7 +146,7 @@ internal class TokenListStateConverter(
     private fun getOrganizeTokensButtonState(tokenList: TokenList): WalletOrganizeTokensButtonConfig? {
         val currenciesSize = when (tokenList) {
             TokenList.Empty -> return null
-            is TokenList.GroupedByNetwork -> tokenList.groups.flatMap(NetworkGroup::currencies).size
+            is TokenList.GroupedByNetwork -> tokenList.groups.sumOf { it.currencies.size }
             is TokenList.Ungrouped -> tokenList.currencies.size
         }
         return if (currenciesSize > 1 && !isSingleCurrencyWalletWithToken()) {

@@ -5,8 +5,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
-@Suppress("UnnecessaryAbstractClass")
-abstract class PaymentAccountStatusSupplier(
+open class PaymentAccountStatusSupplier(
     override val factory: PaymentAccountStatusProducer.Factory,
     override val keyCreator: (PaymentAccountStatusProducer.Params) -> String,
 ) : FlowCachingSupplier<PaymentAccountStatusProducer, PaymentAccountStatusProducer.Params, AccountStatus.Payment>() {

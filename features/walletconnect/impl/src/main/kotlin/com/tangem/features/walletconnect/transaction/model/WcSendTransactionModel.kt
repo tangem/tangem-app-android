@@ -169,7 +169,12 @@ internal class WcSendTransactionModel @Inject constructor(
                                     useCase.sign()
                                 }
                             }
-                            buildUiState(securityCheck, useCase, signState, isApprovalMethod)
+                            buildUiState(
+                                securityCheck = securityCheck,
+                                useCase = useCase,
+                                signState = signState,
+                                isApproval = isApprovalMethod,
+                            )
                             if (feeReloadState.value) {
                                 triggerFeeReload()
                             }

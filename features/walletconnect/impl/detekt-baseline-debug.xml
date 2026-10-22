@@ -3,12 +3,6 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>CanBeNonNullable:WcNavigationUtils.kt$feeSelectorComponentFactory: FeeSelectorComponent.Factory? = null</ID>
-    <ID>MaxChainedCallsOnSameLine:WcConnectedAppInfoModel.kt$WcConnectedAppInfoModel$session.sdkModel.appMetaData.icons.firstOrNull().orEmpty()</ID>
-    <ID>MaxChainedCallsOnSameLine:WcTransactionAppInfoContentUMConverter.kt$WcTransactionAppInfoContentUMConverter$value.session.sdkModel.appMetaData.icons.firstOrNull().orEmpty()</ID>
-    <ID>NamedArguments:WcAddEthereumChainModalBottomSheetContent.kt$WcAddEthereumChainModalBottomSheetContent(state, {}, {}, {})</ID>
-    <ID>NamedArguments:WcAlertsFactory.kt$WcAlertsFactory$createMaliciousDAppAlert(alertType.description, alertType.onClick, alertType.iconType, alertType.iconBgType)</ID>
-    <ID>NamedArguments:WcSendTransactionModel.kt$WcSendTransactionModel$buildUiState(securityCheck, useCase, signState, isApprovalMethod)</ID>
-    <ID>UnnecessaryAbstractClass:WcCommonTransactionComponentDelegate.kt$WcCommonTransactionComponentDelegate$WcCommonTransactionComponentDelegate</ID>
     <ID>UnsafeCallOnNullableType:WcAddNetworkComponent.kt$WcAddNetworkComponent$content!!</ID>
     <ID>UnsafeCallOnNullableType:WcSignTransactionComponent.kt$WcSignTransactionComponent$content!!</ID>
     <ID>UnsafeCallOnNullableType:WcTransactionRequestInfoComponent.kt$WcTransactionRequestInfoComponent$content!!</ID>

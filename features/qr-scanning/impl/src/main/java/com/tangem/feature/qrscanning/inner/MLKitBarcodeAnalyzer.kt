@@ -22,23 +22,18 @@ class MLKitBarcodeAnalyzer(private val onScanned: (String) -> Unit) : ImageAnaly
         }
     }
 
-    fun analyze(image: InputImage, onClose: (() -> Unit)? = null) {
+    fun analyze(image: InputImage, onClose: () -> Unit = {}) {
         if (!isScanning) {
             isScanning = true
             scanner.process(image)
                 .addOnSuccessListener { codes ->
-                    codes.firstOrNull().let { barcode ->
-                        val rawValue = barcode?.rawValue
-                        rawValue?.let {
-                            onScanned.invoke(it)
-                        }
-                    }
+                    codes.firstOrNull()?.rawValue?.let(onScanned)
                     isScanning = false
-                    onClose?.invoke()
+                    onClose()
                 }
                 .addOnFailureListener {
                     isScanning = false
-                    onClose?.invoke()
+                    onClose()
                 }
         }
     }
