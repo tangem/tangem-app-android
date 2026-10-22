@@ -11,6 +11,7 @@ import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.TangemPayCustomerInfoStore
 import com.tangem.data.pay.util.BankCredentialsConverter
 import com.tangem.data.pay.util.CustomerInfoConverter
+import com.tangem.data.pay.util.CustomerSummaryConverter
 import com.tangem.data.pay.util.AccountFeeConverter
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.DeeplinkValidityRequest
@@ -37,6 +38,7 @@ import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerOrderRequest
+import com.tangem.domain.pay.model.CustomerSummary
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
@@ -136,6 +138,15 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 }
                 getCustomerInfo(userWalletId = userWalletId, response = result).right()
             }
+    }
+
+    override suspend fun getCustomerSummary(userWalletId: UserWalletId): Either<VisaApiError, CustomerSummary> {
+        return requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.getCustomerSummary(authHeader = authHeader)
+        }.flatMap { response ->
+            val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
+            CustomerSummaryConverter.convert(result).right()
+        }
     }
 
     override suspend fun getBankCredentials(
