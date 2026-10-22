@@ -7,6 +7,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressProviderType
+import com.tangem.domain.swap.SwapProviderHidingPolicy
 import com.tangem.features.swap.v2.impl.R
 
 internal object SwapUtils {
@@ -19,7 +20,13 @@ internal object SwapUtils {
         // ExpressProviderType.DEX, // TODO disable until implemented in Send with Swap
     )
 
-    fun getExpressErrorMessage(expressError: ExpressError): TextReference {
+    fun getExpressErrorMessage(expressError: ExpressError, providerName: String? = null): TextReference {
+        if (providerName != null && expressError.code == SwapProviderHidingPolicy.PROVIDER_REJECTED_ERROR_CODE) {
+            return resourceReference(
+                id = R.string.express_error_transaction_cannot_be_created,
+                formatArgs = wrappedList(providerName, expressError.code),
+            )
+        }
         return when (expressError) {
             is ExpressError.InternalError -> resourceReference(
                 id = R.string.express_error_swap_unavailable,
