@@ -114,6 +114,28 @@ internal class PolymarketEventDetailsModelTest {
         // Assert
         coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
         assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
+        assertThat((model.uiState.value as PolymarketEventDetailsUM.Content).categoryLabel).isNull()
+    }
+
+    @Test
+    fun `GIVEN a source category WHEN event details refresh THEN its label remains in the header`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+            createEvent(title = "Original title").right(),
+            createEvent(title = "Updated title").right(),
+        )
+        val model = createModel(testScope = this, categoryLabel = "Sport")
+        advanceUntilIdle()
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        val content = model.uiState.value as PolymarketEventDetailsUM.Content
+        assertThat(content.categoryLabel).isEqualTo(stringReference("Sport"))
+        assertThat(content.title).isEqualTo(stringReference("Updated title"))
+        model.onPause()
     }
 
     @Test
@@ -492,12 +514,14 @@ internal class PolymarketEventDetailsModelTest {
     private fun createModel(
         testScope: TestScope,
         regionAccess: PredictionRegionAccess = createPredictionRegionAccess(),
+        categoryLabel: String? = null,
     ): PolymarketEventDetailsModel {
         return PolymarketEventDetailsModel(
             paramsContainer = MutableParamsContainer(
                 value = PolymarketEventDetailsComponent.Params(
                     eventId = "event-1",
                     userWalletId = UserWalletId("011"),
+                    categoryLabel = categoryLabel,
                 ),
             ),
             router = router,

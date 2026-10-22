@@ -402,7 +402,11 @@ internal class PolymarketMainModel @Inject constructor(
 
     private fun onEventClick(eventId: String) {
         router.push(
-            PolymarketRoute.EventDetails(eventId = eventId, userWalletId = params.userWalletId),
+            PolymarketRoute.EventDetails(
+                eventId = eventId,
+                userWalletId = params.userWalletId,
+                categoryLabel = categories.firstOrNull { it.id == selectedCategoryId }?.label,
+            ),
         )
     }
 

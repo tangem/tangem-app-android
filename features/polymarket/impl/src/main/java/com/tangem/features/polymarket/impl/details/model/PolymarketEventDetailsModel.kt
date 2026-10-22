@@ -147,6 +147,7 @@ internal class PolymarketEventDetailsModel @Inject constructor(
     private fun contentTransformer(event: PolymarketEvent): PolymarketEventDetailsContentTransformer {
         return PolymarketEventDetailsContentTransformer(
             event = event,
+            categoryLabel = params.categoryLabel,
             isClosedMarketsExpanded = isClosedMarketsExpanded,
             isDescriptionExpanded = isDescriptionExpanded,
             onShareClick = ::onShareClick,
