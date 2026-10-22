@@ -44,6 +44,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
+import com.tangem.domain.transaction.usecase.ReportSendIntentHashUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -123,6 +124,7 @@ internal class SendConfirmModel @Inject constructor(
     private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
     private val jointSendDelegate: JointSendDelegate,
     private val recordTokenTransferFromSendUseCase: RecordTokenTransferFromSendUseCase,
+    private val reportSendIntentHashUseCase: ReportSendIntentHashUseCase,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
     private val appScope: AppCoroutineScope,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
@@ -589,6 +591,7 @@ internal class SendConfirmModel @Inject constructor(
             },
             ifRight = { txHash ->
                 updateTransactionStatus(txData, txHash)
+                reportIntentHashIfNeeded(txHash = txHash.ifEmpty { txData.hash.orEmpty() })
                 addTokenToWalletIfNeeded()
                 sendBalanceUpdater.scheduleUpdates()
                 modelScope.launch(dispatchers.default) {
@@ -609,6 +612,19 @@ internal class SendConfirmModel @Inject constructor(
                 params.onSendTransaction()
             },
         )
+    }
+
+    private fun reportIntentHashIfNeeded(txHash: String) {
+        val intentId = params.intentId ?: return
+        if (txHash.isEmpty()) {
+            TangemLogger.e("No transaction hash to report for send intent $intentId")
+            return
+        }
+
+        appScope.launch {
+            reportSendIntentHashUseCase(intentId = intentId, txHash = txHash)
+                .onLeft { TangemLogger.e("Gave up reporting the hash of send intent $intentId", it) }
+        }
     }
 
     private fun isFeeInSmartGasToken(): Boolean =

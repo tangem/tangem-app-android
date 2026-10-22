@@ -64,6 +64,7 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.decompose)
     implementation(deps.haze)
+    implementation(deps.jodatime)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization.core)

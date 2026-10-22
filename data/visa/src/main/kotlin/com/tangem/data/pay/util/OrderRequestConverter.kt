@@ -47,6 +47,21 @@ internal object OrderRequestConverter : Converter<OrderRequestConverter.Input, E
                 customerWalletAddress = address,
                 chainId = request.chainId,
             )
+            is CustomerOrderRequest.Onboarding -> OrderRequest.Onboarding(
+                customerWalletAddress = address,
+                tariffPlanTransition = request.tariffPlanTransition?.let { transition ->
+                    OrderRequest.OnboardingTariffPlanTransition(
+                        targetTariffPlanId = transition.targetTariffPlanId,
+                        tariffPlanTransitionType = transition.transitionType.name,
+                    )
+                },
+                accountIssueBanking = request.depositCredentials?.let { credentials ->
+                    OrderRequest.OnboardingAccountIssueBanking(
+                        depositAddress = credentials.address,
+                        signature = credentials.signature,
+                    )
+                },
+            )
         }
         OrderRequest(data = data)
     }
