@@ -2,6 +2,7 @@ package com.tangem.features.jointaccount.common.displayname.state.transformers
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.R
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.jointaccount.common.displayname.ui.state.JointAccountDisplayNameUM
 import com.tangem.test.core.ProvideTestModels
@@ -47,7 +48,7 @@ internal class UpdateButtonLoadingTransformerTest {
         return JointAccountDisplayNameUM(
             name = "Ivan Zolo",
             buttonText = buttonText,
-            buttonIconRes = R.drawable.ic_tangem_24,
+            buttonIcon = TangemIconUM.Icon(iconRes = R.drawable.ic_tangem_24),
             isButtonEnabled = true,
             isButtonLoading = isButtonLoading,
             onNameChange = onNameChange,
