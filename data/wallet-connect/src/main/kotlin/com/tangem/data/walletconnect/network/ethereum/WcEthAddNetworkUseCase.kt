@@ -26,10 +26,12 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
+@Suppress("LongParameterList")
 internal class WcEthAddNetworkUseCase @AssistedInject constructor(
     private val respondService: WcRespondService,
     private val wcSdk: WcSdk,
     private val networksConverter: WcNetworksConverter,
+    private val chainChangedEmitter: WcEthChainChangedEmitter,
     addSwitchCommonDelegateFactory: WcEthAddSwitchCommonDelegate.Factory,
     @Assisted val context: WcMethodUseCaseContext,
     @Assisted override val method: WcEthMethod.AddEthereumChain,
@@ -89,8 +91,15 @@ internal class WcEthAddNetworkUseCase @AssistedInject constructor(
             sessionTopic = context.session.sdkModel.topic,
             namespaces = sdkNewNamespaces,
         )
-        sdkUpdateSession(sessionUpdate) // ignore result for now
-        return respondService.respond(rawSdkRequest, "")
+        val isSessionUpdated = sdkUpdateSession(sessionUpdate).isRight()
+        val respondResult = respondService.respond(rawSdkRequest, response = null)
+
+        // Only a session that really carries the network can carry the event; without the update there is
+        // nothing to wait for, and waiting would hold the sheet open for the whole timeout for nothing.
+        if (isSessionUpdated) {
+            chainChangedEmitter.emit(topic = context.session.sdkModel.topic, chainId = networkToAddCAIP2)
+        }
+        return respondResult
     }
 
     private suspend fun sdkUpdateSession(sessionUpdate: Wallet.Params.SessionUpdate) =
