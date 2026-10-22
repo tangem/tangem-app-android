@@ -9,6 +9,8 @@ sealed interface PolymarketSigningError : PolymarketError {
     /** The wallet has no secp256k1 key. */
     data object MissingWallet : PolymarketSigningError
 
+    data object DerivationUnsupported : PolymarketSigningError
+
     data object UserCancelled : PolymarketSigningError
 
     data object CardError : PolymarketSigningError

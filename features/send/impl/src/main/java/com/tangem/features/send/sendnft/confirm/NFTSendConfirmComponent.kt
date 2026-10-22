@@ -149,7 +149,7 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
             },
             backIconRes = R.drawable.ic_back_24,
             backgroundColor = TangemTheme.colors.background.tertiary,
-            modifier = Modifier.height(TangemTheme.dimens.size56),
+            modifier = Modifier.height(56.dp),
         )
     }
 
@@ -207,6 +207,8 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
         val onSendTransaction: () -> Unit,
+        /** Closes the whole flow, not just the current step. */
+        val onCloseFlow: () -> Unit,
     )
 
     interface ModelCallback {

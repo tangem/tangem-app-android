@@ -29,13 +29,20 @@ internal object SwapProviderResolver {
     /**
      * Picks the best provider among [states].
      *
-     * Region-restricted quotes are left out of the ranking (see [preferAvailable]). When at least one
-     * DEX/DEX_BRIDGE provider is present, the best-rated DEX provider wins; otherwise the overall
-     * best-rated provider is returned (the best CEX when no DEX is available). "Best rated" = lowest
-     * from/to fiat ratio (most output per unit of input). Returns null when [states] is empty.
+     * Region-restricted quotes are left out of the ranking (see [preferAvailable]). With
+     * [isOverallBestPriceEnabled] the overall best-rated provider wins regardless of its type.
+     * Otherwise, when at least one DEX/DEX_BRIDGE provider is present, the best-rated DEX provider wins,
+     * falling back to the overall best-rated provider (the best CEX when no DEX is available).
+     * "Best rated" = lowest from/to fiat ratio (most output per unit of input). Returns null when
+     * [states] is empty.
      */
-    fun findBest(states: Map<SwapProvider, SwapState.QuotesLoadedState>): SwapProvider? {
+    fun findBest(
+        states: Map<SwapProvider, SwapState.QuotesLoadedState>,
+        isOverallBestPriceEnabled: Boolean,
+    ): SwapProvider? {
         val availableStates = preferAvailable(states)
+        if (isOverallBestPriceEnabled) return findBestRated(availableStates)
+
         val dexStates = availableStates.filterKeys { it.type.isDex() }
         return if (dexStates.isNotEmpty()) {
             findBestRated(dexStates)

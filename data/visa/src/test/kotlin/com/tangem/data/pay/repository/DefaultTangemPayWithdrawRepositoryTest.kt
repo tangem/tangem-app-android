@@ -1,7 +1,9 @@
 package com.tangem.data.pay.repository
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.google.common.truth.Truth.assertThat
 import com.tangem.common.extensions.toHexString
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.data.common.quote.QuotesFetcher
@@ -44,8 +46,10 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import org.web3j.crypto.StructuredDataEncoder
 import java.math.BigDecimal
+import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class DefaultTangemPayWithdrawRepositoryTest {
@@ -191,48 +195,127 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
     }
 
     @Test
-    fun `GIVEN no txHash on every attempt WHEN withdrawWithSwap THEN polling deletes order after max attempts`() =
+    fun `GIVEN no txHash on initial check WHEN withdrawWithSwap THEN order is stored with its creation time`() =
         runTest {
+            // Arrange
             coEvery { orderRepository.getOrderData(any(), any()) } returns orderWithoutHash.right()
 
-            val result = createRepository().withdrawWithSwap()
-            advanceUntilIdle()
+            // Act
+            createRepository().withdrawWithSwap()
 
-            Assertions.assertEquals(WithdrawalResult.Success.right(), result)
-            // 1 initial check + MAX_POLLING_ATTEMPTS (6) polling attempts.
-            coVerify(exactly = 7) { orderRepository.getOrderData(userWalletId, ORDER_ID) }
-            coVerify { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) }
-            coVerify(exactly = 0) { swapRepository.exchangeSent(any(), any(), any(), any(), any(), any(), any()) }
+            // Assert
+            coVerify { tangemPayStorage.storeWithdrawOrder(userWalletId, storedOrder(txHash = null)) }
         }
 
     @Test
-    fun `GIVEN getOrderData throws while polling WHEN withdrawWithSwap THEN polling deletes order`() = runTest {
-        coEvery {
-            orderRepository.getOrderData(any(), any())
-        } returns orderWithoutHash.right() andThenThrows RuntimeException("boom")
+    fun `GIVEN no txHash WHEN withdrawWithSwap THEN order is polled every 3s for 30s and every 5s after that`() =
+        runTest {
+            // Arrange
+            val requestTimes = mutableListOf<Long>()
+            coEvery { orderRepository.getOrderData(any(), any()) } answers {
+                requestTimes += testScheduler.currentTime
+                orderWithoutHash.right()
+            }
 
+            // Act
+            createRepository().withdrawWithSwap()
+            advanceUntilIdle()
+
+            // Assert
+            val fastPhaseTimes = (0L..30_000L step 3_000L).toList()
+            val slowPhaseTimes = (35_000L..POLLING_WINDOW_MILLIS step 5_000L).toList()
+            assertThat(requestTimes).containsExactlyElementsIn(fastPhaseTimes + slowPhaseTimes).inOrder()
+        }
+
+    @Test
+    fun `GIVEN no txHash within five minutes WHEN withdrawWithSwap THEN order is deleted at five minutes`() = runTest {
+        // Arrange
+        var deletedAt: Long? = null
+        coEvery { orderRepository.getOrderData(any(), any()) } returns orderWithoutHash.right()
+        coEvery { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) } answers {
+            deletedAt = testScheduler.currentTime
+        }
+
+        // Act
         val result = createRepository().withdrawWithSwap()
         advanceUntilIdle()
 
-        Assertions.assertEquals(WithdrawalResult.Success.right(), result)
-        coVerify { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) }
+        // Assert
+        assertThat(result).isEqualTo(WithdrawalResult.Success.right())
+        assertThat(deletedAt).isEqualTo(POLLING_WINDOW_MILLIS)
         coVerify(exactly = 0) { swapRepository.exchangeSent(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     @Test
-    fun `GIVEN txHash appears on the last attempt WHEN withdrawWithSwap THEN polling finalizes the withdrawal`() =
-        runTest {
-            // index 0 = initial check, 1..5 = polling attempts 1-5, 6 = polling attempt 6 (last) returns the hash.
-            coEvery { orderRepository.getOrderData(any(), any()) } returnsMany
-                List(size = 6) { orderWithoutHash.right() } + listOf(orderWithHash.right())
+    fun `GIVEN order requests fail WHEN withdrawWithSwap THEN order is kept until txHash arrives`() = runTest {
+        // Arrange
+        val failedRequest: Either<VisaApiError, OrderData> = VisaApiError.WithdrawError.left()
+        coEvery { orderRepository.getOrderData(any(), any()) } returnsMany
+            List(size = 20) { failedRequest } + listOf(orderWithHash.right())
 
-            val result = createRepository().withdrawWithSwap()
-            advanceUntilIdle()
+        // Act
+        createRepository().withdrawWithSwap()
+        advanceUntilIdle()
 
-            Assertions.assertEquals(WithdrawalResult.Success.right(), result)
-            assertExchangeSent()
-            coVerify { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) }
-        }
+        // Assert
+        assertExchangeSent()
+        coVerify(exactly = 1) { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) }
+    }
+
+    @Test
+    fun `GIVEN polling throws WHEN withdrawWithSwap THEN order is kept for the next attempt`() = runTest {
+        // Arrange
+        coEvery {
+            orderRepository.getOrderData(any(), any())
+        } returns orderWithoutHash.right() andThenThrows RuntimeException("boom")
+
+        // Act
+        val result = createRepository().withdrawWithSwap()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(result).isEqualTo(WithdrawalResult.Success.right())
+        coVerify(exactly = 2) { orderRepository.getOrderData(userWalletId, ORDER_ID) }
+        coVerify(exactly = 0) { tangemPayStorage.deleteWithdrawOrder(any(), any()) }
+        coVerify(exactly = 0) { swapRepository.exchangeSent(any(), any(), any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN polling threw WHEN poll again THEN polling restarts for the kept order`() = runTest {
+        // Arrange
+        val repository = createRepository()
+        coEvery { tangemPayStorage.getWithdrawOrders(userWalletId) } returns listOf(storedOrder(txHash = null))
+        coEvery {
+            orderRepository.getOrderData(any(), any())
+        } returns orderWithoutHash.right() andThenThrows RuntimeException("boom") andThen orderWithHash.right()
+        repository.withdrawWithSwap()
+        advanceUntilIdle()
+
+        // Act
+        repository.pollWithdrawOrdersIfNeeds(userWallet)
+        advanceUntilIdle()
+
+        // Assert
+        assertExchangeSent()
+        coVerify(exactly = 1) { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) }
+    }
+
+    @Test
+    fun `GIVEN txHash appears at five minutes WHEN withdrawWithSwap THEN polling finalizes the withdrawal`() = runTest {
+        // Arrange
+        coEvery { orderRepository.getOrderData(any(), any()) } returnsMany
+            List(size = POLLS_IN_WINDOW) { orderWithoutHash.right() } + listOf(orderWithHash.right())
+
+        // Act
+        val result = createRepository().withdrawWithSwap()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(result).isEqualTo(WithdrawalResult.Success.right())
+        coVerify(exactly = POLLS_IN_WINDOW + 1) { orderRepository.getOrderData(userWalletId, ORDER_ID) }
+        assertExchangeSent()
+        coVerify(exactly = 1) { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) }
+    }
 
     // endregion
 
@@ -346,31 +429,74 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
     // region pollWithdrawOrdersIfNeeds
 
     @Test
-    fun `GIVEN stored hash is null and order hash appears on third attempt WHEN poll THEN finalize the withdrawal`() =
-        runTest {
-            coEvery { tangemPayStorage.getWithdrawOrders(userWalletId) } returns listOf(storedOrder(txHash = null))
-            // index 0 = initial fetch, 1..2 = polling attempts 1-2, 3 = polling attempt 3 returns the hash.
-            coEvery { orderRepository.getOrderData(any(), any()) } returnsMany
-                List(size = 3) { orderWithoutHash.right() } + listOf(orderWithHash.right())
-
-            createRepository().pollWithdrawOrdersIfNeeds(userWallet)
-            advanceUntilIdle()
-
-            coVerify(exactly = 4) { orderRepository.getOrderData(userWalletId, ORDER_ID) }
-            assertExchangeSent()
-            coVerify { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) }
+    fun `GIVEN order created two minutes ago WHEN poll THEN polling resumes every 5s until five minutes`() = runTest {
+        // Arrange
+        val requestTimes = mutableListOf<Long>()
+        coEvery { tangemPayStorage.getWithdrawOrders(userWalletId) } returns listOf(
+            storedOrder(txHash = null, createdAtMillis = START_MILLIS - 2.minutes.inWholeMilliseconds),
+        )
+        coEvery { orderRepository.getOrderData(any(), any()) } answers {
+            requestTimes += testScheduler.currentTime
+            orderWithoutHash.right()
         }
 
-    @Test
-    fun `GIVEN stored hash is null and order already has hash WHEN poll THEN finalize without polling`() = runTest {
-        coEvery { tangemPayStorage.getWithdrawOrders(userWalletId) } returns listOf(storedOrder(txHash = null))
-        coEvery { orderRepository.getOrderData(userWalletId, ORDER_ID) } returns orderWithHash.right()
-
+        // Act
         createRepository().pollWithdrawOrdersIfNeeds(userWallet)
         advanceUntilIdle()
 
+        // Assert
+        assertThat(requestTimes).containsExactlyElementsIn((5_000L..180_000L step 5_000L).toList()).inOrder()
+        coVerify { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) }
+    }
+
+    @Test
+    fun `GIVEN expired order with txHash WHEN poll THEN a single request finalizes the withdrawal`() = runTest {
+        // Arrange
+        coEvery { tangemPayStorage.getWithdrawOrders(userWalletId) } returns listOf(expiredStoredOrder())
+        coEvery { orderRepository.getOrderData(userWalletId, ORDER_ID) } returns orderWithHash.right()
+
+        // Act
+        createRepository().pollWithdrawOrdersIfNeeds(userWallet)
+        advanceUntilIdle()
+
+        // Assert
         coVerify(exactly = 1) { orderRepository.getOrderData(userWalletId, ORDER_ID) }
         assertExchangeSent()
+        coVerify { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideFinalResponsesWithoutHash")
+    fun `GIVEN expired order without txHash WHEN poll THEN order is deleted after a single request`(
+        response: Either<VisaApiError, OrderData>,
+    ) = runTest {
+        // Arrange
+        coEvery { tangemPayStorage.getWithdrawOrders(userWalletId) } returns listOf(expiredStoredOrder())
+        coEvery { orderRepository.getOrderData(userWalletId, ORDER_ID) } returns response
+
+        // Act
+        createRepository().pollWithdrawOrdersIfNeeds(userWallet)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { orderRepository.getOrderData(userWalletId, ORDER_ID) }
+        coVerify { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) }
+        coVerify(exactly = 0) { swapRepository.exchangeSent(any(), any(), any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN order stored without creation time WHEN poll THEN it is treated as expired`() = runTest {
+        // Arrange
+        coEvery { tangemPayStorage.getWithdrawOrders(userWalletId) } returns
+            listOf(storedOrder(txHash = null, createdAtMillis = 0L))
+        coEvery { orderRepository.getOrderData(userWalletId, ORDER_ID) } returns orderWithoutHash.right()
+
+        // Act
+        createRepository().pollWithdrawOrdersIfNeeds(userWallet)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { orderRepository.getOrderData(userWalletId, ORDER_ID) }
         coVerify { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) }
     }
 
@@ -397,8 +523,7 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
         createRepository().pollWithdrawOrdersIfNeeds(userWallet)
         advanceUntilIdle()
 
-        // 2 initial fetches (one per order) + a single deduplicated polling job of 6 attempts = 8.
-        coVerify(exactly = 8) { orderRepository.getOrderData(userWalletId, ORDER_ID) }
+        coVerify(exactly = POLLS_IN_WINDOW) { orderRepository.getOrderData(userWalletId, ORDER_ID) }
         coVerify { tangemPayStorage.deleteWithdrawOrder(userWalletId, ORDER_ID) }
     }
 
@@ -418,10 +543,16 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
         }
     }
 
-    private fun storedOrder(txHash: String?) = TangemPayWithdrawState(
+    private fun storedOrder(txHash: String?, createdAtMillis: Long = START_MILLIS) = TangemPayWithdrawState(
         orderId = ORDER_ID,
         exchangeData = exchangeData,
         txHash = txHash,
+        createdAtMillis = createdAtMillis,
+    )
+
+    private fun expiredStoredOrder() = storedOrder(
+        txHash = null,
+        createdAtMillis = START_MILLIS - 6.minutes.inWholeMilliseconds,
     )
 
     @Test
@@ -584,9 +715,13 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
         orderRepository = orderRepository,
         withdrawSourceResolver = WithdrawSourceResolver(paymentAccountStatusSupplier),
         withdrawPollingScope = TestAppCoroutineScope(this),
+        currentTimeMillis = { START_MILLIS + testScheduler.currentTime },
     )
 
     companion object {
+        private const val START_MILLIS = 1_700_000_000_000L
+        private const val POLLING_WINDOW_MILLIS = 300_000L
+        private const val POLLS_IN_WINDOW = 64
         private const val CURRENCY_ID = "ethereum"
         private const val ORDER_ID = "order-1"
         private const val TX_HASH = "0xTxHash"
@@ -606,6 +741,12 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
             withdrawData(asset = OTHER_ADDRESS),
             withdrawData().copy(hash = "0xdeadbeef"),
             withdrawData().copy(structuredData = null),
+        )
+
+        @JvmStatic
+        fun provideFinalResponsesWithoutHash(): List<Either<VisaApiError, OrderData>> = listOf(
+            VisaApiError.WithdrawError.left(),
+            OrderData(customerId = "customer", status = OrderStatus.PROCESSING, withdrawTxHash = null).right(),
         )
 
         private fun withdrawData(

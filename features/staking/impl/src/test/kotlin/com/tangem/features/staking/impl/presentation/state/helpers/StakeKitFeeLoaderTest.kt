@@ -164,7 +164,7 @@ internal class StakeKitFeeLoaderTest {
             every { confirmationState } returns confirmation
             every { amountState } returns amount
             every { validatorState } returns validator
-            every { this@mockk.actionType } returns StakingActionCommonType.Enter(skipEnterAmount = false)
+            every { this@mockk.actionType } returns StakingActionCommonType.Enter(shouldSkipEnterAmount = false)
         }
         every { stateController.value } returns state
     }

@@ -7,6 +7,7 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.recover
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toMapKey
 import com.tangem.core.error.ext.tangemError
@@ -18,6 +19,7 @@ import com.tangem.domain.visa.datasource.TangemPayRemoteDataSource
 import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.error.VisaCardScanError
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.visa.model.TangemPayInitialData
 import com.tangem.domain.visa.model.MoneyAccountActivationData
 import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.hot.sdk.TangemHotSdk
@@ -33,32 +35,27 @@ internal class TangemPayHotSdkManager @Inject constructor(
     private val tangemPayAuthRemoteDataSource: TangemPayRemoteDataSource,
 ) {
 
-    suspend fun produceInitialCredentials(hotWallet: UserWallet.Hot): Either<Throwable, TangemPayInitialCredentials> =
+    suspend fun produceInitialData(hotWallet: UserWallet.Hot): Either<Throwable, TangemPayInitialData> =
         withUnlockedHotWallet(hotWallet) { unlockHotWallet ->
-            authorize(
+            val initialCredentials = authorize(
                 hotWallet = hotWallet,
                 unlockHotWallet = unlockHotWallet,
                 extendedPublicKey = getExtendedPublicKey(unlockHotWallet = unlockHotWallet),
+            )
+            val (seedKey, moneyAccountKey) = deriveMoneyAccountKey(unlockHotWallet = unlockHotWallet)
+
+            TangemPayInitialData(
+                initialCredentials = initialCredentials,
+                moneyAccountDerivedKeys = moneyAccountDerivedKeys(
+                    seedKey = seedKey,
+                    extendedPublicKey = moneyAccountKey,
+                ),
             )
         }
 
     suspend fun produceMoneyAccountData(hotWallet: UserWallet.Hot): Either<Throwable, MoneyAccountActivationData> =
         withUnlockedHotWallet(hotWallet) { unlockHotWallet ->
-            val response = tangemHotSdk.derivePublicKey(
-                unlockHotWallet = unlockHotWallet,
-                request = DeriveWalletRequest(
-                    requests = listOf(
-                        DeriveWalletRequest.Request(
-                            curve = VisaUtilities.curve,
-                            paths = listOf(VisaUtilities.moneyAccountDerivationPath),
-                        ),
-                    ),
-                ),
-            )
-            val curveResponse = response.responses.firstOrNull { it.curve == VisaUtilities.curve }
-                ?: raise(VisaActivationError.MissingWallet.tangemError)
-            val extendedPublicKey = curveResponse.publicKeys[VisaUtilities.moneyAccountDerivationPath]
-                ?: raise(VisaActivationError.MissingWallet.tangemError)
+            val (seedKey, extendedPublicKey) = deriveMoneyAccountKey(unlockHotWallet = unlockHotWallet)
 
             val customerWalletKey = getExtendedPublicKey(unlockHotWallet = unlockHotWallet)
             val initialCredentials = authorize(
@@ -78,11 +75,7 @@ internal class TangemPayHotSdkManager @Inject constructor(
             MoneyAccountActivationData(
                 address = address,
                 signature = signature,
-                derivedKeys = mapOf(
-                    curveResponse.seedKey.publicKey.toMapKey() to ExtendedPublicKeysMap(
-                        mapOf(VisaUtilities.moneyAccountDerivationPath to extendedPublicKey),
-                    ),
-                ),
+                derivedKeys = moneyAccountDerivedKeys(seedKey = seedKey, extendedPublicKey = extendedPublicKey),
                 initialCredentials = initialCredentials,
             )
         }
@@ -132,6 +125,37 @@ internal class TangemPayHotSdkManager @Inject constructor(
         return TangemPayInitialCredentials(
             customerWalletAddress = address,
             authTokens = authTokens,
+        )
+    }
+
+    private suspend fun Raise<Throwable>.deriveMoneyAccountKey(
+        unlockHotWallet: UnlockHotWallet,
+    ): Pair<ByteArrayKey, ExtendedPublicKey> {
+        val response = tangemHotSdk.derivePublicKey(
+            unlockHotWallet = unlockHotWallet,
+            request = DeriveWalletRequest(
+                requests = listOf(
+                    DeriveWalletRequest.Request(
+                        curve = VisaUtilities.curve,
+                        paths = listOf(VisaUtilities.moneyAccountDerivationPath),
+                    ),
+                ),
+            ),
+        )
+        val curveResponse = response.responses.firstOrNull { it.curve == VisaUtilities.curve }
+            ?: raise(VisaActivationError.MissingWallet.tangemError)
+        val extendedPublicKey = curveResponse.publicKeys[VisaUtilities.moneyAccountDerivationPath]
+            ?: raise(VisaActivationError.MissingWallet.tangemError)
+
+        return curveResponse.seedKey.publicKey.toMapKey() to extendedPublicKey
+    }
+
+    private fun moneyAccountDerivedKeys(
+        seedKey: ByteArrayKey,
+        extendedPublicKey: ExtendedPublicKey,
+    ): Map<ByteArrayKey, ExtendedPublicKeysMap> {
+        return mapOf(
+            seedKey to ExtendedPublicKeysMap(mapOf(VisaUtilities.moneyAccountDerivationPath to extendedPublicKey)),
         )
     }
 

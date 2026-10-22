@@ -3,12 +3,14 @@ package com.tangem.store.datasource.jointaccount.models
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.tangem.core.remote.moshi.SkipMalformedElementsAdapterFactory
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 
 internal class JointOperationDtoTest {
 
     private val moshi = Moshi.Builder()
+        .add(SkipMalformedElementsAdapterFactory)
         .addLast(KotlinJsonAdapterFactory())
         .build()
 

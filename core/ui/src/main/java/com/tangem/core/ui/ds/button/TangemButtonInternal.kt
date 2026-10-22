@@ -98,7 +98,7 @@ internal fun TangemButtonInternal(
                     size = size,
                 )
                 if (isStartIcon && (text != null || descriptionText != null)) {
-                    SpacerW(TangemTheme.dimens2.x1)
+                    SpacerW(4.dp)
                 }
 
                 ButtonContent(
@@ -110,7 +110,7 @@ internal fun TangemButtonInternal(
 
                 val isEndIcon = tangemIconUM != null && iconPosition == TangemButtonIconPosition.End
                 if (isEndIcon && (text != null || descriptionText != null)) {
-                    SpacerW(TangemTheme.dimens2.x1)
+                    SpacerW(4.dp)
                 }
                 TangemButtonIcon(
                     tangemIconUM = tangemIconUM,
@@ -254,40 +254,40 @@ enum class TangemButtonSize {
     @ReadOnlyComposable
     @Composable
     internal fun toHeightDp() = when (this) {
-        X7 -> TangemTheme.dimens2.x7
-        X8 -> TangemTheme.dimens2.x8
-        X9 -> TangemTheme.dimens2.x9
-        X10 -> TangemTheme.dimens2.x10
-        X12 -> TangemTheme.dimens2.x12
-        X15 -> TangemTheme.dimens2.x15
+        X7 -> 28.dp
+        X8 -> 32.dp
+        X9 -> 36.dp
+        X10 -> 40.dp
+        X12 -> 48.dp
+        X15 -> 60.dp
     }
 
     @ReadOnlyComposable
     @Composable
     internal fun toPaddingDp() = when (this) {
         X7 -> PaddingValues(
-            horizontal = TangemTheme.dimens2.x2,
-            vertical = TangemTheme.dimens2.x0_5,
+            horizontal = 8.dp,
+            vertical = 2.dp,
         )
         X8 -> PaddingValues(
-            horizontal = TangemTheme.dimens2.x3,
-            vertical = TangemTheme.dimens2.x1_5,
+            horizontal = 12.dp,
+            vertical = 6.dp,
         )
         X9 -> PaddingValues(
-            horizontal = TangemTheme.dimens2.x3,
-            vertical = TangemTheme.dimens2.x2,
+            horizontal = 12.dp,
+            vertical = 8.dp,
         )
         X10 -> PaddingValues(
-            horizontal = TangemTheme.dimens2.x3,
-            vertical = TangemTheme.dimens2.x2_5,
+            horizontal = 12.dp,
+            vertical = 10.dp,
         )
         X12 -> PaddingValues(
-            horizontal = TangemTheme.dimens2.x6,
-            vertical = TangemTheme.dimens2.x2_5,
+            horizontal = 24.dp,
+            vertical = 10.dp,
         )
         X15 -> PaddingValues(
-            horizontal = TangemTheme.dimens2.x6,
-            vertical = TangemTheme.dimens2.x4,
+            horizontal = 24.dp,
+            vertical = 16.dp,
         )
     }
 
@@ -298,10 +298,10 @@ enum class TangemButtonSize {
         X8,
         X9,
         X10,
-        -> TangemTheme.dimens2.x5
+        -> 20.dp
         X12,
         X15,
-        -> TangemTheme.dimens2.x7
+        -> 28.dp
     }
 
     @ReadOnlyComposable

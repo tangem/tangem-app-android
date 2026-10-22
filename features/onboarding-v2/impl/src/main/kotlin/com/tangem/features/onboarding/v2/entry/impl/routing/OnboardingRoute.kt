@@ -23,7 +23,7 @@ sealed class OnboardingRoute : Route {
     data class MultiWallet(
         val titleProvider: TitleProvider,
         val scanResponse: ScanResponse,
-        val withSeedPhraseFlow: Boolean,
+        val isSeedPhraseFlow: Boolean,
         val mode: OnboardingMultiWalletComponent.Mode,
         val onDone: (UserWallet.Cold) -> Unit,
         val onForceExit: () -> Unit,

@@ -64,13 +64,13 @@ internal class TangemPayTxHistoryListManager(
 
     private fun updateState(batchListState: BatchListState<Int, List<TangemPayTxHistoryItem>>) {
         state.update { state ->
-            val clearUiBatches =
+            val shouldClearUiBatches =
                 state.status is PaginationStatus.InitialLoading && batchListState.status is PaginationStatus.Paginating
             state.copy(
                 status = batchListState.status,
                 uiBatches = uiManager.createOrUpdateUiBatches(
                     newCurrencyBatches = batchListState.data,
-                    clearUiBatches = clearUiBatches,
+                    clearUiBatches = shouldClearUiBatches,
                 ),
                 isEmpty = batchListState.status is PaginationStatus.EndOfPagination && batchListState.data.isEmpty(),
             )

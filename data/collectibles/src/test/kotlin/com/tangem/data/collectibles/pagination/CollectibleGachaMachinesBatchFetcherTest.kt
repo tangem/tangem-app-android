@@ -24,7 +24,7 @@ internal class CollectibleGachaMachinesBatchFetcherTest {
 
         // Assert
         assertThat(result).isInstanceOf(BatchFetchResult.Success::class.java)
-        assertThat((result as BatchFetchResult.Success).last).isFalse()
+        assertThat((result as BatchFetchResult.Success).isLast).isFalse()
     }
 
     @Test
@@ -36,7 +36,7 @@ internal class CollectibleGachaMachinesBatchFetcherTest {
         val result = fetcher.fetchFirst(config)
 
         // Assert
-        assertThat((result as BatchFetchResult.Success).last).isTrue()
+        assertThat((result as BatchFetchResult.Success).isLast).isTrue()
     }
 
     @Test
@@ -48,7 +48,7 @@ internal class CollectibleGachaMachinesBatchFetcherTest {
         val result = fetcher.fetchFirst(config)
 
         // Assert
-        assertThat((result as BatchFetchResult.Success).last).isTrue()
+        assertThat((result as BatchFetchResult.Success).isLast).isTrue()
     }
 
     @Test
@@ -91,8 +91,8 @@ internal class CollectibleGachaMachinesBatchFetcherTest {
         }
         val first = BatchFetchResult.Success(
             data = CollectibleGachaMachinesBatch(collectibleGachaMachines = emptyList(), requestCursor = null),
-            empty = false,
-            last = false,
+            isEmpty = false,
+            isLast = false,
         )
         fetcher.fetchFirst(config)
 
@@ -131,7 +131,7 @@ internal class CollectibleGachaMachinesBatchFetcherTest {
 
         // Assert
         val success = result as BatchFetchResult.Success<CollectibleGachaMachinesBatch>
-        assertThat(success.empty).isTrue()
+        assertThat(success.isEmpty).isTrue()
         assertThat(success.data.collectibleGachaMachines).isEmpty()
     }
 
