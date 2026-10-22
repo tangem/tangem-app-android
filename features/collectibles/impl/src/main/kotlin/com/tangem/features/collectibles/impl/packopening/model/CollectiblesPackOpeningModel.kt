@@ -101,7 +101,7 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
     private var machine: CollectibleGachaMachine? = null
     private var vaultBalance: CollectiblesVaultBalance? = null
 
-    private val buyback = MutableStateFlow<BuybackState>(BuybackState.Checking)
+    private val buyback = MutableStateFlow<BuybackState>(BuybackState.Unavailable)
     private val buybackOfferPolling = SingleTaskScheduler<CollectibleBuybackOffer?>()
 
     private val isComponentResumed = MutableStateFlow(false)
@@ -125,7 +125,7 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
             card = null,
             onKeepCardClick = ::onKeepCardClick,
             onSellBackClick = ::onSellBackClick,
-            sellBack = CollectiblesSellBackButtonConverter.convert(BuybackState.Checking),
+            sellBack = CollectiblesSellBackButtonConverter.convert(BuybackState.Unavailable),
             onPackAnimationFinished = ::onPackAnimationFinished,
             onRevealTap = ::onRevealTap,
             onSurfaceAttached = player::attachSurface,
@@ -373,11 +373,11 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
         router.pop()
     }
 
-    // TODO waiting for the analyst: the polling is probably not needed, a single availability check may be enough
-    // Driven by state: polls only while the offer is unknown and the screen is in front
+    // TODO waiting for Collector Crypt: whether "not available" can turn into "available", or one check is enough
+    // Driven by state: polls only while there is no offer and the screen is in front
     private fun observeBuybackOfferPolling(pack: OpenedCollectiblePack) {
-        combine(buyback.map { it is BuybackState.Checking }, isComponentResumed) { isChecking, isResumed ->
-            isChecking && isResumed
+        combine(buyback.map { it is BuybackState.Unavailable }, isComponentResumed) { isUnavailable, isResumed ->
+            isUnavailable && isResumed
         }
             .distinctUntilChanged()
             .onEach { shouldPoll ->
@@ -396,7 +396,7 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
                         .fold(ifLeft = { Result.failure(it.cause) }, ifRight = { Result.success(it) })
                 },
                 onSuccess = { offer ->
-                    if (offer != null && buyback.value is BuybackState.Checking) {
+                    if (offer != null && buyback.value is BuybackState.Unavailable) {
                         buyback.value = BuybackState.Available(offer)
                     }
                 },
@@ -431,25 +431,18 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
 
     private fun onBuybackFailed(error: BuybackError, offer: CollectibleBuybackOffer) {
         when (error) {
-            BuybackError.NotAllowed -> {
-                buyback.value = BuybackState.Unavailable
-                // TODO([REDACTED_TASK_KEY]): wait answer from analytics should we use common_something_went_wrong
-                // or some custom message
-                showSnackbar(stringReference("Buyback unavailable"))
-            }
             // The NFC sheet has already shown the card's refusal, and a cancel needs no answer
             BuybackError.Cancelled, BuybackError.CardRefused -> {
                 buyback.value = BuybackState.Available(offer)
             }
             BuybackError.Unexpected -> {
                 buyback.value = BuybackState.Available(offer)
-                showSnackbar(resourceReference(R.string.common_something_went_wrong))
+                showSnackbar(resourceReference(R.string.unexpected_error_description))
             }
-            // TODO waiting for Collector Crypt: is there protection against a repeated buyback of the same NFT
             // The sale may still land, so the offer is asked for again instead of being offered at once
             BuybackError.NotConfirmed -> {
-                buyback.value = BuybackState.Checking
-                showSnackbar(resourceReference(R.string.common_something_went_wrong))
+                buyback.value = BuybackState.Unavailable
+                showSnackbar(resourceReference(R.string.unexpected_error_description))
             }
         }
     }
