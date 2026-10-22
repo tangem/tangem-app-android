@@ -241,11 +241,13 @@ private fun ContentState(
         marketCards(markets = state.activeMarkets)
 
         if (state.closedMarkets.isNotEmpty()) {
-            item(key = KEY_CLOSED_CHIP) {
-                ClosedMarketsChip(
-                    count = state.closedMarkets.size,
-                    onClick = state.onClosedMarketsClick,
-                )
+            if (state.activeMarkets.isNotEmpty()) {
+                item(key = KEY_CLOSED_CHIP) {
+                    ClosedMarketsChip(
+                        count = state.closedMarkets.size,
+                        onClick = state.onClosedMarketsClick,
+                    )
+                }
             }
 
             if (state.isClosedMarketsExpanded) {
