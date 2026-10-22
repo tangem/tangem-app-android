@@ -66,8 +66,8 @@ internal class DefaultSendIntentRepository(
     private fun convertReadError(intentId: String, cause: ApiResponseError): Throwable {
         val error = convertError(intentId = intentId, cause = cause)
 
-        return if (error is ApiResponseError.HttpException && error.isServerError()) {
-            SendIntentError.ServerError(intentId = intentId, httpCode = error.code.numericCode)
+        return if (error is ApiResponseError.NetworkException || error is ApiResponseError.TimeoutException) {
+            SendIntentError.Unreachable(intentId)
         } else {
             error
         }
