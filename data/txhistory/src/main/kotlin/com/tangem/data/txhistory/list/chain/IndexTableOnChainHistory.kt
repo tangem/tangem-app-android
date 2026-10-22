@@ -3,7 +3,6 @@ package com.tangem.data.txhistory.list.chain
 import com.tangem.data.txhistory.list.mergeTxHistoryInfos
 import com.tangem.domain.txhistory.list.HistoryTxListManager.HistoryEnvironment
 import com.tangem.domain.txhistory.list.HistoryTxListManager.HistoryState
-import com.tangem.domain.txhistory.repository.ExpressHistoryPage
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -14,7 +13,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
@@ -49,21 +47,22 @@ internal class IndexTableOnChainHistory @AssistedInject constructor(
                     pageLimit,
                 )
             }
-            .map { page -> buildState(page) }
-            .collect { send(it) }
-    }
-
-    private fun buildState(page: ExpressHistoryPage): HistoryState {
-        val merged = mergeTxHistoryInfos(
-            onChain = emptyList(),
-            express = page.items,
-            currency = env.currency,
-        )
-        return if (merged.isEmpty()) {
-            HistoryState.Empty
-        } else {
-            HistoryState.Content(merged, isLoadingMore = false, hasMore = page.hasMore)
-        }
+            .collect { page ->
+                val merged = mergeTxHistoryInfos(
+                    onChain = emptyList(),
+                    express = page.items,
+                    currency = env.currency,
+                )
+                when {
+                    // The index counts every operation it ever recorded, the timeline shows fewer (an expired deal
+                    // is no row of the user's history). A window filled with nothing but those says the window is
+                    // too narrow, not that there is no history — widening it reaches the deals behind them, where
+                    // reporting Empty would strand the screen on "history unavailable" with no way to page on.
+                    merged.isEmpty() && page.hasMore -> limit.update { it + PAGE_SIZE }
+                    merged.isEmpty() -> send(HistoryState.Empty)
+                    else -> send(HistoryState.Content(merged, isLoadingMore = false, hasMore = page.hasMore))
+                }
+            }
     }
 
     private companion object {
