@@ -94,7 +94,7 @@ internal class GetFeeForGaslessUseCaseTronTest {
 
     private val useCase = GetFeeForGaslessUseCase(
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
-        nonPortfolioAccountCurrencies = mockk(),
+        nonPortfolioCurrenciesProvider = mockk(),
         currencyChecksRepository = currencyChecksRepository,
         getFeeUseCase = getFeeUseCase,
         evmGaslessFeeResolver = evmGaslessFeeResolver,
