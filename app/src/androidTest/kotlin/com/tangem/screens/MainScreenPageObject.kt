@@ -90,6 +90,12 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
+    fun walletNameText(name: String): KNode = child {
+        hasTestTag(MainScreenTestTags.CARD_TITLE)
+        hasText(name)
+        useUnmergedTree = true
+    }
+
     val walletImage: KNode = child {
         hasTestTag(MainScreenTestTags.CARD_IMAGE)
         useUnmergedTree = true
@@ -196,6 +202,12 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     }
 
     fun isTokenOnScreenPage(tokenName: String): Boolean = onScreenTokenRow(tokenName) != null
+
+    fun hasTokenRowsOnScreenPage(): Boolean = onScreenPageChild(
+        withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM) and
+            hasAnyDescendant(withTestTag(TokenElementsTestTags.TOKEN_TITLE)) and
+            hasAnyDescendant(withTestTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT))
+    ) != null
 
     fun onScreenTokenCryptoAmount(tokenName: String): String? =
         onScreenTokenRow(tokenName)?.fetchSemanticsNode()?.firstTextForTestTag(TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT)
@@ -341,6 +353,17 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     val getTangemPayBannerLearnMoreButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasAnyDescendant(withText(getResourceString(CoreResR.string.common_learn_more)))
+        useUnmergedTree = true
+    }
+
+    val getTangemPayBannerLaterButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.common_later)))
+        hasAnyAncestor(
+            withTestTag(NotificationTestTags.CONTAINER) and androidx.compose.ui.test.hasAnyDescendant(
+                withText(getResourceString(CoreResR.string.tangempay_onboarding_banner_title))
+            )
+        )
         useUnmergedTree = true
     }
 

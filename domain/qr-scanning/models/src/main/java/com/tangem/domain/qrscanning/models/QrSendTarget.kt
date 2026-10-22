@@ -50,5 +50,7 @@ sealed class QrSendTarget {
 
     data class McpAuthorization(val userCode: String) : QrSendTarget()
 
+    data class DeepLink(val uri: String) : QrSendTarget()
+
     data class Error(val error: ClassifiedQrContent.Error) : QrSendTarget()
 }
