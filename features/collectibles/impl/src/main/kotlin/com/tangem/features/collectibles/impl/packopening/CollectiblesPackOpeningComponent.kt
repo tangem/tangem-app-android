@@ -9,6 +9,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.essenty.backhandler.BackCallback
+import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -29,6 +30,7 @@ internal class CollectiblesPackOpeningComponent @AssistedInject constructor(
     @Assisted params: Params,
 ) : ComposableContentComponent, AppComponentContext by context {
 
+    // No state keeper: DefaultRoutingComponent does not restore the stack after process death, so it is never read
     private val model: CollectiblesPackOpeningModel = getOrCreateModel(params = params)
 
     private val bottomSheetSlot = childSlot(
@@ -42,6 +44,7 @@ internal class CollectiblesPackOpeningComponent @AssistedInject constructor(
     init {
         // Takes the system back too, which would otherwise close the screen mid-purchase past the hidden back button
         backHandler.register(BackCallback { model.uiState.value.onBackClick() })
+        lifecycle.subscribe(onResume = model::onResume, onPause = model::onPause)
     }
 
     @Composable

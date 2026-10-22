@@ -50,6 +50,7 @@ internal class TangemPayMainBlockConverter(
                     tangemPayClickIntents.onKycRequiredClicked(
                         userWalletId = value.account.userWalletId,
                         customerId = statusValue.customerId,
+                        customerResidency = statusValue.customerResidency,
                     )
                 },
             )

@@ -14,7 +14,7 @@ internal data class TangemPayTxHistoryDetailsUM(
     val title: TextReference,
     val subtitle: TextReference,
     val iconState: TangemIconUM,
-    val transactionTitle: TextReference,
+    val transactionTitle: TextReference?,
     val detail: TransactionDetailUM?,
     val cashbackDetail: CashbackDetailUM?,
     val transactionCategory: TextReference,

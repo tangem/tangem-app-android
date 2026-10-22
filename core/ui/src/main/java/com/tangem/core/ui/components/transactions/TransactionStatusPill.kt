@@ -59,6 +59,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cross_16
+import com.tangem.core.ui.res.generated.icons.ic_success_16
 
 private const val IDENTICON_INLINE_ID = "pill_identicon"
 private const val PROVIDER_INLINE_ID = "pill_provider"
@@ -84,16 +85,17 @@ internal fun TransactionStatusPill(
 
 @Composable
 private fun Pill(state: TransactionItemUM.Pill, isBalanceHidden: Boolean) {
+    val tone = state.tone()
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(percent = 50))
-            .background(state.status.backgroundColor())
+            .background(tone.backgroundColor())
             .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        LeadingIcon(kind = state.kind, status = state.status)
-        PillText(state = state, isBalanceHidden = isBalanceHidden)
+        LeadingIcon(kind = state.kind, status = state.status, tone = tone)
+        PillText(state = state, tone = tone, isBalanceHidden = isBalanceHidden)
     }
 }
 
@@ -110,8 +112,13 @@ private fun Pill(state: TransactionItemUM.Pill, isBalanceHidden: Boolean) {
  * out the number alone.
  */
 @Composable
-private fun PillText(state: TransactionItemUM.Pill, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
-    val spans = state.status.pillSpans()
+private fun PillText(
+    state: TransactionItemUM.Pill,
+    tone: PillTone,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val spans = tone.pillSpans()
     val isFailed = state.status is Status.Failed
     val label = state.label.resolveReference()
     val amount = state.amount?.orMaskWithStars(isBalanceHidden)?.resolveReference()
@@ -232,7 +239,7 @@ private fun PillBody(
 }
 
 @Composable
-private fun LeadingIcon(kind: PillKind, status: Status) {
+private fun LeadingIcon(kind: PillKind, status: Status, tone: PillTone) {
     if (status is Status.Unconfirmed) {
         CircularProgressIndicator(
             strokeWidth = 1.5.dp,
@@ -246,6 +253,7 @@ private fun LeadingIcon(kind: PillKind, status: Status) {
         is Status.Confirmed -> when (kind) {
             PillKind.STAKING -> ImageVector.vectorResource(R.drawable.ic_transaction_history_staking_24)
             PillKind.YIELD_MODE -> ImageVector.vectorResource(R.drawable.ic_yield_mode_16)
+            PillKind.INCENTIVE_CLAIM -> Icons.ic_success_16
             PillKind.YIELD_SUPPLY, PillKind.APPROVE -> null
         }
         is Status.Unconfirmed, is Status.PendingSignature -> null
@@ -253,33 +261,44 @@ private fun LeadingIcon(kind: PillKind, status: Status) {
     Icon(
         imageVector = icon,
         contentDescription = null,
-        tint = status.iconTint(),
+        tint = tone.iconTint(),
         modifier = Modifier.size(16.dp),
     )
 }
 
-@Composable
-@ReadOnlyComposable
-private fun Status.backgroundColor(): Color = when (this) {
-    is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.bg.transparent.secondary
-    is Status.Unconfirmed -> TangemTheme.colors3.bg.status.infoSubtle
-    is Status.Failed -> TangemTheme.colors3.bg.status.errorSubtle
+private enum class PillTone { SETTLED, SUCCESS, PENDING, FAILED }
+
+private fun TransactionItemUM.Pill.tone(): PillTone = when (status) {
+    is Status.Confirmed, is Status.PendingSignature -> if (isSuccess) PillTone.SUCCESS else PillTone.SETTLED
+    is Status.Unconfirmed -> PillTone.PENDING
+    is Status.Failed -> PillTone.FAILED
 }
 
 @Composable
 @ReadOnlyComposable
-private fun Status.labelColor(): Color = when (this) {
-    is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.text.secondary
-    is Status.Unconfirmed -> TangemTheme.colors3.text.status.info
-    is Status.Failed -> TangemTheme.colors3.text.status.error
+private fun PillTone.backgroundColor(): Color = when (this) {
+    PillTone.SETTLED -> TangemTheme.colors3.bg.transparent.secondary
+    PillTone.SUCCESS -> TangemTheme.colors3.bg.status.successSubtle
+    PillTone.PENDING -> TangemTheme.colors3.bg.status.infoSubtle
+    PillTone.FAILED -> TangemTheme.colors3.bg.status.errorSubtle
 }
 
 @Composable
 @ReadOnlyComposable
-private fun Status.valueColor(): Color = when (this) {
-    is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.text.primary
-    is Status.Unconfirmed -> TangemTheme.colors3.text.status.info
-    is Status.Failed -> TangemTheme.colors3.text.status.error
+private fun PillTone.labelColor(): Color = when (this) {
+    PillTone.SETTLED -> TangemTheme.colors3.text.secondary
+    PillTone.SUCCESS -> TangemTheme.colors3.text.status.success
+    PillTone.PENDING -> TangemTheme.colors3.text.status.info
+    PillTone.FAILED -> TangemTheme.colors3.text.status.error
+}
+
+@Composable
+@ReadOnlyComposable
+private fun PillTone.valueColor(): Color = when (this) {
+    PillTone.SETTLED -> TangemTheme.colors3.text.primary
+    PillTone.SUCCESS -> TangemTheme.colors3.text.status.success
+    PillTone.PENDING -> TangemTheme.colors3.text.status.info
+    PillTone.FAILED -> TangemTheme.colors3.text.status.error
 }
 
 private data class PillSpans(
@@ -296,7 +315,7 @@ private data class PillSpans(
  */
 @Composable
 @ReadOnlyComposable
-private fun Status.pillSpans(): PillSpans = PillSpans(
+private fun PillTone.pillSpans(): PillSpans = PillSpans(
     label = SpanStyle(color = labelColor()),
     value = SpanStyle(color = valueColor()),
     addressLabel = SpanStyle(color = TangemTheme.colors3.text.secondary),
@@ -306,10 +325,11 @@ private fun Status.pillSpans(): PillSpans = PillSpans(
 /** The leading icon always carries the label color of its state, so the pill reads as one piece. */
 @Composable
 @ReadOnlyComposable
-private fun Status.iconTint(): Color = when (this) {
-    is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.icon.secondary
-    is Status.Unconfirmed -> TangemTheme.colors3.icon.status.info
-    is Status.Failed -> TangemTheme.colors3.icon.status.error
+private fun PillTone.iconTint(): Color = when (this) {
+    PillTone.SETTLED -> TangemTheme.colors3.icon.secondary
+    PillTone.SUCCESS -> TangemTheme.colors3.icon.status.success
+    PillTone.PENDING -> TangemTheme.colors3.icon.status.info
+    PillTone.FAILED -> TangemTheme.colors3.icon.status.error
 }
 
 @Composable
@@ -335,6 +355,7 @@ private fun previewPill(
     amount: String? = null,
     currencySymbol: String? = null,
     subtitle: PillSubtitle? = null,
+    isSuccess: Boolean = false,
 ): TransactionItemUM.Pill = TransactionItemUM.Pill(
     txHash = txHash,
     kind = kind,
@@ -345,6 +366,7 @@ private fun previewPill(
     subtitle = subtitle,
     timestamp = 0L,
     onClick = {},
+    isSuccess = isSuccess,
 )
 
 @Composable
@@ -401,6 +423,15 @@ private fun Preview_TransactionStatusPill_YieldMode() {
                 previewPill("yof-c", PillKind.YIELD_MODE, Status.Confirmed, "Yield mode disabled"),
                 previewPill("yof-u", PillKind.YIELD_MODE, Status.Unconfirmed, "Disabling Yield mode"),
                 previewPill("yof-f", PillKind.YIELD_MODE, Status.Failed, "Disabling Yield mode failed"),
+                previewPill(
+                    "inc-c",
+                    PillKind.INCENTIVE_CLAIM,
+                    Status.Confirmed,
+                    "Incentive rewards claimed",
+                    isSuccess = true,
+                ),
+                previewPill("inc-u", PillKind.INCENTIVE_CLAIM, Status.Unconfirmed, "Claiming incentive rewards"),
+                previewPill("inc-f", PillKind.INCENTIVE_CLAIM, Status.Failed, "Claiming of incentive rewards failed"),
             ),
         )
     }

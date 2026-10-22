@@ -155,6 +155,9 @@ internal class SdkTransactionTypeConverter(
                 )
             }
             "supplyTopUp" -> TxInfo.TransactionType.YieldSupply.Topup
+            "claimMerklRewardsOwner",
+            "claimMerklRewards",
+            -> TxInfo.TransactionType.IncentiveClaim
             "gaslessTransaction" -> getTypeForGaslessMethod(destination, source, methodName)
             "execTransaction",
             "aggregate3",

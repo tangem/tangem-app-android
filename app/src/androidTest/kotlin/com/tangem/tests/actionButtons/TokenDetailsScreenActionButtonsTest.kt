@@ -33,6 +33,7 @@ import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Ignore
 import org.junit.Test
+import com.tangem.screens.onOperationIsUnavailableDialog
 
 @HiltAndroidTest
 class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
@@ -188,7 +189,6 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
 
     @AllureId("4461")
     @DisplayName("Action buttons (token details screen): 'Swap' shows an unavailability alert on Express error")
-    @Ignore("[REDACTED_JIRA]")
     @Test
     fun swapUnavailableOnExpressErrorTest() {
         val tokenTitle = "Polygon"

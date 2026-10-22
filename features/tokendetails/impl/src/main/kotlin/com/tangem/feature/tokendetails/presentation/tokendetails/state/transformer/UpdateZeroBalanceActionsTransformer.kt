@@ -1,6 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
 import com.tangem.common.ui.tokens.rendersActionAsEnabled
+import com.tangem.common.ui.tokens.rendersSwapAsEnabled
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.isLoading
@@ -24,7 +25,10 @@ internal class UpdateZeroBalanceActionsTransformer(
         return prevState.copy(
             zeroBalanceActionsUM = ZeroBalanceActionsUM.Content(
                 buy = buyAction?.toRow(onClick = clickIntents::onBuyClick),
-                swap = swapAction?.toRow(onClick = clickIntents::onAddFundsSwapClick),
+                swap = swapAction?.toRow(
+                    onClick = clickIntents::onAddFundsSwapClick,
+                    rendersAsEnabled = ScenarioUnavailabilityReason::rendersSwapAsEnabled,
+                ),
                 receive = receiveAction?.toRow(
                     onClick = clickIntents::onReceiveClick,
                     onLongClick = { clickIntents.onCopyAddress() },
@@ -36,11 +40,13 @@ internal class UpdateZeroBalanceActionsTransformer(
     private fun TokenActionsState.ActionState.toRow(
         onClick: (ScenarioUnavailabilityReason) -> Unit,
         onLongClick: (() -> Unit)? = null,
+        rendersAsEnabled: (ScenarioUnavailabilityReason) -> Boolean =
+            ScenarioUnavailabilityReason::rendersActionAsEnabled,
     ): ZeroBalanceActionsUM.Row {
         val reason = unavailabilityReason
         return ZeroBalanceActionsUM.Row(
             isLoading = reason.isLoading,
-            isEnabled = reason.rendersActionAsEnabled(),
+            isEnabled = rendersAsEnabled(reason),
             onClick = { onClick(reason) },
             onLongClick = onLongClick,
         )

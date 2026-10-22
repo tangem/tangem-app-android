@@ -114,31 +114,33 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
 
             var marketingConsent: MarketingConsent? = null
             var minStageDisplay: Job? = null
-            val result = socialLoginUseCase.signIn(
-                provider = provider,
-                onStageChanged = { stage ->
-                    val progress = stage.toProgressUM()
-                    // a Creating / Restoring screen that only flashes reads as a glitch
-                    if (progress is SocialLoginProgressUM.Stage && minStageDisplay == null) {
-                        minStageDisplay = launch { delay(STAGE_MIN_DISPLAY) }
-                    }
-                    host.onProgress(progress)
-                },
-                requestBackupRetry = ::askBackupRetry,
-                requestConsent = {
-                    host.onProgress(null)
-                    consentPrompt(
-                        provider = provider,
-                        onConsent = host::onConsent,
-                        onConfirmed = { marketingConsent = it },
-                    ).await()
-                },
-            )
 
-            // Only after the result is processed: a failure signs the provider out, and a tap accepted
-            // before that finishes lets the next attempt read the account it is still clearing. The
-            // progress stays up until then too, or the screen would sit locked with nothing on it.
+            // Released only after the result is processed: a failure signs the provider out, and a tap accepted
+            // before that finishes lets the next attempt read the account it is still clearing. The progress
+            // stays up until then too, or the screen would sit locked with nothing on it. The sign-in itself is
+            // inside the try, so a throw out of it cannot leave the screen locked either.
             try {
+                val result = socialLoginUseCase.signIn(
+                    provider = provider,
+                    onStageChanged = { stage ->
+                        val progress = stage.toProgressUM()
+                        // a Creating / Restoring screen that only flashes reads as a glitch
+                        if (progress is SocialLoginProgressUM.Stage && minStageDisplay == null) {
+                            minStageDisplay = launch { delay(STAGE_MIN_DISPLAY) }
+                        }
+                        host.onProgress(progress)
+                    },
+                    requestBackupRetry = ::askBackupRetry,
+                    requestConsent = {
+                        host.onProgress(null)
+                        consentPrompt(
+                            provider = provider,
+                            onConsent = host::onConsent,
+                            onConfirmed = { marketingConsent = it },
+                        ).await()
+                    },
+                )
+
                 result.fold(
                     ifLeft = { error -> onFailure(provider, error, attemptId) },
                     ifRight = { outcome ->
@@ -273,7 +275,6 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
             SocialLoginAnalyticsEvents.MarketingEmailsConsent(
                 isGiven = consent.isGiven,
                 consentText = consent.consentText,
-                userWalletId = userWallet.walletId,
             ),
         )
     }
@@ -339,7 +340,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
             SocialLoginError.WalletAlreadySaved -> uiMessageSender.send(
                 DialogMessage(message = resourceReference(CoreResR.string.user_wallet_list_error_wallet_already_saved)),
             )
-            else -> uiMessageSender.send(SnackbarMessage(error.toMessage(provider)))
+            else -> uiMessageSender.send(SnackbarMessage(error.toMessage()))
         }
     }
 
@@ -369,18 +370,11 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         )
     }
 
-    private fun SocialLoginError.toMessage(provider: SocialLoginProvider): TextReference = when (this) {
+    // the spec (alternative flows of scenario 1) gives a linked account, a missing account and an unavailable
+    // provider no wording of their own: they read as any other failed sign-in
+    private fun SocialLoginError.toMessage(): TextReference = when (this) {
         SocialLoginError.NetworkError -> resourceReference(CoreResR.string.hw_cloud_backup_error_network)
         is SocialLoginError.BackupWriteFailed -> resourceReference(CoreResR.string.social_login_error_backup_not_saved)
-        SocialLoginError.BindingConflict -> providerReference(
-            CoreResR.string.social_login_error_account_linked,
-            provider,
-        )
-        SocialLoginError.NoProviderAccount -> providerReference(CoreResR.string.social_login_error_no_account, provider)
-        SocialLoginError.ProviderUnavailable -> providerReference(
-            CoreResR.string.social_login_error_unavailable,
-            provider,
-        )
         else -> resourceReference(CoreResR.string.social_login_error_generic)
     }
 
@@ -397,9 +391,6 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         SocialLoginError.CloudUnavailable -> "No access to the cloud storage"
         SocialLoginError.NetworkError -> "No internet connection"
         is SocialLoginError.BackupWriteFailed -> "Couldn't save backup"
-        SocialLoginError.BindingConflict -> "Account is already linked to another wallet"
-        SocialLoginError.NoProviderAccount -> "No account on the device"
-        SocialLoginError.ProviderUnavailable -> "Sign-in is not available on this device"
         SocialLoginError.WalletAlreadySaved -> "This wallet has already been saved"
         else -> "Something went wrong"
     }

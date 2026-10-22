@@ -116,7 +116,7 @@ internal class WalletBackupModel @Inject constructor(
                     ifRight = { userWallet ->
                         updateBackupStatuses(userWallet)
                         if (userWallet is UserWallet.Hot) {
-                            isManuallyBackedUp = userWallet.backedUp
+                            isManuallyBackedUp = userWallet.isBackedUp
                             sendScreenOpenedEventIfReady()
                         }
                     },
@@ -172,8 +172,8 @@ internal class WalletBackupModel @Inject constructor(
 
     private fun WalletBackupUM.updateBackupStatusesHotWallet(userWallet: UserWallet.Hot): WalletBackupUM {
         val updated = copy(
-            recoveryPhraseOption = if (userWallet.backedUp) doneLabel() else noBackupLabel(),
-            isBackedUp = userWallet.backedUp,
+            recoveryPhraseOption = if (userWallet.isBackedUp) doneLabel() else noBackupLabel(),
+            isBackedUp = userWallet.isBackedUp,
         )
 
         return if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {

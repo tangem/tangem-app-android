@@ -75,7 +75,7 @@ internal fun NFTDetailsBlocksGroup(
                                 value = stringReference(item1.value),
                                 titleEllipsis = item1.titleTextEllipsis,
                                 valueEllipsis = item1.valueTextEllipsis,
-                                showInfoButton = item1.showInfoButton,
+                                showInfoButton = item1.shouldShowInfoButton,
                                 onBlockClick = item1.onBlockClick,
                                 onValueClick = item1.onValueClick,
                             )
@@ -94,7 +94,7 @@ internal fun NFTDetailsBlocksGroup(
                                     value = stringReference(item2.value),
                                     titleEllipsis = item2.titleTextEllipsis,
                                     valueEllipsis = item2.valueTextEllipsis,
-                                    showInfoButton = item2.showInfoButton,
+                                    showInfoButton = item2.shouldShowInfoButton,
                                     onBlockClick = item2.onBlockClick,
                                     onValueClick = item2.onValueClick,
                                 )
@@ -270,27 +270,27 @@ private class NFTAssetBlocksProvider : CollectionPreviewParameterProvider<Immuta
             NFTAssetUM.BlockItem(
                 title = stringReference("Tier"),
                 value = "Infinite",
-                showInfoButton = true,
+                shouldShowInfoButton = true,
             ),
             NFTAssetUM.BlockItem(
                 title = stringReference("Phygital Toy"),
                 value = "None",
-                showInfoButton = true,
+                shouldShowInfoButton = true,
             ),
             NFTAssetUM.BlockItem(
                 title = stringReference("Class"),
                 value = "CYBER",
-                showInfoButton = true,
+                shouldShowInfoButton = true,
             ),
             NFTAssetUM.BlockItem(
                 title = stringReference("Accessory"),
                 value = "No accessory",
-                showInfoButton = true,
+                shouldShowInfoButton = true,
             ),
             NFTAssetUM.BlockItem(
                 title = stringReference("Sneakers"),
                 value = "Boots",
-                showInfoButton = true,
+                shouldShowInfoButton = true,
             ),
         ),
     ),

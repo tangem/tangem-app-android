@@ -37,8 +37,8 @@ internal class ImportSeedPhraseUiStateBuilder(
             passPhrase = TextFieldValue(""),
             wordsErrorText = null,
             invalidWords = persistentListOf(),
-            importWalletEnabled = false,
-            importWalletProgress = false,
+            isImportWalletEnabled = false,
+            isImportWalletInProgress = false,
             suggestionsList = persistentListOf(),
             wordsChange = { wordsField ->
                 launchInterceptWords(wordsField = wordsField)
@@ -54,7 +54,7 @@ internal class ImportSeedPhraseUiStateBuilder(
             onPassphraseInfoClick = onPassphraseInfoClick,
             importWalletClick = ::onCreateWallet,
             onSuggestionClick = { word -> addSuggestedWord(word) },
-            readyToImport = false,
+            isReadyToImport = false,
         )
     }
 
@@ -121,7 +121,7 @@ internal class ImportSeedPhraseUiStateBuilder(
 
         updateUiState { state ->
             state.copy(
-                importWalletEnabled = false,
+                isImportWalletEnabled = false,
                 wordsErrorText = null,
             )
         }
@@ -136,7 +136,7 @@ internal class ImportSeedPhraseUiStateBuilder(
                 state.copy(
                     invalidWords = invalidWords.toImmutableList(),
                     wordsErrorText = resourceReference(R.string.onboarding_seed_mnemonic_wrong_words),
-                    importWalletEnabled = false,
+                    isImportWalletEnabled = false,
                 )
             }
             return
@@ -149,7 +149,7 @@ internal class ImportSeedPhraseUiStateBuilder(
                 state.copy(
                     invalidWords = emptyList<String>().toImmutableList(),
                     wordsErrorText = null,
-                    importWalletEnabled = true,
+                    isImportWalletEnabled = true,
                 )
             }
             readyToImport(true)
@@ -160,13 +160,13 @@ internal class ImportSeedPhraseUiStateBuilder(
                 updateUiState { state ->
                     state.copy(
                         wordsErrorText = resourceReference(R.string.onboarding_seed_mnemonic_invalid_checksum),
-                        importWalletEnabled = false,
+                        isImportWalletEnabled = false,
                     )
                 }
             } else {
                 updateUiState { state ->
                     state.copy(
-                        importWalletEnabled = false,
+                        isImportWalletEnabled = false,
                         wordsErrorText = null,
                     )
                 }

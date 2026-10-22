@@ -31,7 +31,7 @@ internal class AddTokenUiBuilder @Inject constructor(
         return AddTokenUM.Network(
             icon = selectedNetwork.cryptoCurrency.network.iconResId,
             name = stringReference(selectedNetwork.cryptoCurrency.network.name),
-            editable = selectedNetwork.isAvailableMoreNetwork,
+            isEditable = selectedNetwork.isAvailableMoreNetwork,
             onClick = { params.callbacks.onChangeNetworkClick() },
         )
     }
@@ -81,7 +81,7 @@ internal class AddTokenUiBuilder @Inject constructor(
             .any { selectedNetwork.selectedNetwork.networkId == it.networkId }
         val button = AddTokenUM.Button(
             isEnabled = isAvailableNetwork,
-            showProgress = false,
+            shouldShowProgress = false,
             isTangemIconVisible = isTangemIconVisible,
             text = resourceReference(R.string.common_confirm),
             onConfirmClick = onConfirmClick,
@@ -110,7 +110,7 @@ internal class AddTokenUiBuilder @Inject constructor(
     companion object {
 
         fun AddTokenUM.toggleProgress(showProgress: Boolean) = this.copy(
-            button = this.button.copy(showProgress = showProgress),
+            button = this.button.copy(shouldShowProgress = showProgress),
         )
     }
 }

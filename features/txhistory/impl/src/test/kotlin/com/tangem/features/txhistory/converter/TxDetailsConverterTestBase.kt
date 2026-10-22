@@ -86,6 +86,7 @@ internal open class TxDetailsConverterTestBase {
         isBalanceHidden: Boolean = false,
         networkTokens: Set<CryptoCurrency.Token> = emptySet(),
         fiatConversion: FiatConversion = FiatConversion.NONE,
+        currency: CryptoCurrency = this.currency,
     ) = OnChainTxToDetailsUMConverter(
         currency = currency,
         onCopyAddress = copiedAddresses::add,
@@ -109,7 +110,6 @@ internal open class TxDetailsConverterTestBase {
     ) = ExpressTxToDetailsUMConverter(
         currency = currency,
         onGoToProvider = openedUrls::add,
-        onCopyAddress = copiedAddresses::add,
         lookup = lookup,
         menu = menu,
         isBalanceHidden = isBalanceHidden,
@@ -169,7 +169,7 @@ internal open class TxDetailsConverterTestBase {
         status = Yield.Validator.ValidatorStatus.ACTIVE,
         name = name,
         website = website,
-        preferred = true,
+        isPreferred = true,
         isStrategicPartner = false,
     )
 

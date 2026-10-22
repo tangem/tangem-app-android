@@ -196,6 +196,11 @@ internal class DefaultSocialRecoveryClient(
                         is ApiResponse.Error -> raise(response.cause.toDomainError())
                     }
                 }
+
+                // the binding went through the plain registration endpoint, so without the marker the
+                // registration that follows the wallet's save would post it again
+                walletRegistrar.markRegistered(walletId)
+                    .onLeft { TangemLogger.e("Failed to mark the socially bound wallet as registered: $it") }
             }
         }
     }
@@ -204,9 +209,7 @@ internal class DefaultSocialRecoveryClient(
         withContext(dispatchers.io) {
             walletRegistrar.register(walletId = walletId, signer = signer).mapLeft { error ->
                 when (error) {
-                    WalletRegistrationError.Disabled,
-                    WalletRegistrationError.NoActiveSession,
-                    -> SocialRecoveryError.NoActiveSession
+                    WalletRegistrationError.NoActiveSession -> SocialRecoveryError.NoActiveSession
                     is WalletRegistrationError.Api -> SocialRecoveryError.Api(error.cause)
                     WalletRegistrationError.DeviceKeyUnavailable -> SocialRecoveryError.DeviceKeyUnavailable
                     is WalletRegistrationError.SigningFailed -> SocialRecoveryError.SigningFailed(error.cause)
@@ -228,11 +231,13 @@ internal class DefaultSocialRecoveryClient(
                 ifRight = { Either.Right(Unit) },
                 ifLeft = { error ->
                     when (error) {
-                        // a binding registered while auth was on outlives the toggle being turned off, and
-                        // reporting success here would let the caller drop the flag and the cloud file
-                        // while the identity stays bound to this wallet on the server
-                        WalletRegistrationError.Disabled -> Either.Left(SocialRecoveryError.NoActiveSession)
-                        is WalletRegistrationError.Api -> Either.Left(SocialRecoveryError.Api(error.cause))
+                        is WalletRegistrationError.Api -> Either.Left(
+                            if (error.cause is AuthError.NotFound) {
+                                SocialRecoveryError.WalletNotRegistered
+                            } else {
+                                SocialRecoveryError.Api(error.cause)
+                            },
+                        )
                         WalletRegistrationError.DeviceKeyUnavailable ->
                             Either.Left(SocialRecoveryError.DeviceKeyUnavailable)
                         WalletRegistrationError.NoActiveSession -> Either.Left(SocialRecoveryError.NoActiveSession)

@@ -285,36 +285,64 @@ class TangemColors3 internal constructor(
         @Stable
         class Accent internal constructor(
             blue: Color,
+            blueSubtle: Color,
             violet: Color,
+            violetSubtle: Color,
             red: Color,
+            redSubtle: Color,
             orange: Color,
+            orangeSubtle: Color,
             yellow: Color,
+            yellowSubtle: Color,
             green: Color,
+            greenSubtle: Color,
             neutral: Color,
+            neutralSubtle: Color,
         ) {
             var blue by mutableStateOf(blue)
                 private set
+            var blueSubtle by mutableStateOf(blueSubtle)
+                private set
             var violet by mutableStateOf(violet)
+                private set
+            var violetSubtle by mutableStateOf(violetSubtle)
                 private set
             var red by mutableStateOf(red)
                 private set
+            var redSubtle by mutableStateOf(redSubtle)
+                private set
             var orange by mutableStateOf(orange)
+                private set
+            var orangeSubtle by mutableStateOf(orangeSubtle)
                 private set
             var yellow by mutableStateOf(yellow)
                 private set
+            var yellowSubtle by mutableStateOf(yellowSubtle)
+                private set
             var green by mutableStateOf(green)
                 private set
+            var greenSubtle by mutableStateOf(greenSubtle)
+                private set
             var neutral by mutableStateOf(neutral)
+                private set
+            var neutralSubtle by mutableStateOf(neutralSubtle)
                 private set
 
             fun update(other: Accent) {
                 blue = other.blue
+                blueSubtle = other.blueSubtle
                 violet = other.violet
+                violetSubtle = other.violetSubtle
                 red = other.red
+                redSubtle = other.redSubtle
                 orange = other.orange
+                orangeSubtle = other.orangeSubtle
                 yellow = other.yellow
+                yellowSubtle = other.yellowSubtle
                 green = other.green
+                greenSubtle = other.greenSubtle
                 neutral = other.neutral
+                neutralSubtle = other.neutralSubtle
             }
         }
 
@@ -531,36 +559,64 @@ class TangemColors3 internal constructor(
         @Stable
         class Accent internal constructor(
             blue: Color,
+            blueSubtle: Color,
             violet: Color,
+            violetSubtle: Color,
             red: Color,
+            redSubtle: Color,
             orange: Color,
+            orangeSubtle: Color,
             yellow: Color,
+            yellowSubtle: Color,
             green: Color,
+            greenSubtle: Color,
             neutral: Color,
+            neutralSubtle: Color,
         ) {
             var blue by mutableStateOf(blue)
                 private set
+            var blueSubtle by mutableStateOf(blueSubtle)
+                private set
             var violet by mutableStateOf(violet)
+                private set
+            var violetSubtle by mutableStateOf(violetSubtle)
                 private set
             var red by mutableStateOf(red)
                 private set
+            var redSubtle by mutableStateOf(redSubtle)
+                private set
             var orange by mutableStateOf(orange)
+                private set
+            var orangeSubtle by mutableStateOf(orangeSubtle)
                 private set
             var yellow by mutableStateOf(yellow)
                 private set
+            var yellowSubtle by mutableStateOf(yellowSubtle)
+                private set
             var green by mutableStateOf(green)
                 private set
+            var greenSubtle by mutableStateOf(greenSubtle)
+                private set
             var neutral by mutableStateOf(neutral)
+                private set
+            var neutralSubtle by mutableStateOf(neutralSubtle)
                 private set
 
             fun update(other: Accent) {
                 blue = other.blue
+                blueSubtle = other.blueSubtle
                 violet = other.violet
+                violetSubtle = other.violetSubtle
                 red = other.red
+                redSubtle = other.redSubtle
                 orange = other.orange
+                orangeSubtle = other.orangeSubtle
                 yellow = other.yellow
+                yellowSubtle = other.yellowSubtle
                 green = other.green
+                greenSubtle = other.greenSubtle
                 neutral = other.neutral
+                neutralSubtle = other.neutralSubtle
             }
         }
 
