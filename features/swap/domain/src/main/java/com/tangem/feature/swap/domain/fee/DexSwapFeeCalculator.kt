@@ -268,7 +268,7 @@ class DexSwapFeeCalculator(
             is CryptoCurrency.Token -> selected
             is CryptoCurrency.Coin -> raise(GetFeeError.GaslessError.NetworkIsNotSupported)
             null -> soldToken.takeIf {
-                isTronGaslessSupportedUseCase(fromSwapCurrencyStatus.userWalletId, soldToken.network, soldToken)
+                isTronGaslessSupportedUseCase(soldToken.network, soldToken)
             } ?: raise(GetFeeError.GaslessError.NoSupportedTokensFound)
         }
         val swap = transaction.toTronGaslessSwapOrNull(soldToken = soldToken)
