@@ -143,6 +143,8 @@ internal class SwapInteractorImpl @Inject constructor(
 
     private val yieldSwapAllowedRouters = newSetFromMap(ConcurrentHashMap<String, Boolean>())
 
+    private val yieldSwapAllowedTargets = newSetFromMap(ConcurrentHashMap<String, Boolean>())
+
     /**
      * Whether [network] can run the integrated approve+swap flow, which batches both transactions
      * through `sendMultiple` — something TRON accepts only for compiled transaction data.
@@ -160,16 +162,63 @@ internal class SwapInteractorImpl @Inject constructor(
     private suspend fun isYieldSwapRouterAllowed(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         routerAddress: String,
+    ): Boolean = isAllowedByYieldSwapRegistry(
+        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+        address = routerAddress,
+        allowedCache = yieldSwapAllowedRouters,
+        check = walletManagersFacade::isSwapSpenderAllowed,
+    )
+
+    private suspend fun isYieldSwapTargetAllowed(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        targetAddress: String,
+    ): Boolean = isAllowedByYieldSwapRegistry(
+        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+        address = targetAddress,
+        allowedCache = yieldSwapAllowedTargets,
+        check = walletManagersFacade::isSwapTargetAllowed,
+    )
+
+    private suspend fun isAllowedByYieldSwapRegistry(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        address: String,
+        allowedCache: MutableSet<String>,
+        check: suspend (UserWalletId, Network, String) -> Boolean,
     ): Boolean {
         val network = fromSwapCurrencyStatus.currency.network
-        val key = "${network.rawId}:${routerAddress.lowercase()}"
-        if (yieldSwapAllowedRouters.contains(key)) return true
-        val isAllowed = walletManagersFacade.isSwapSpenderAllowed(
-            userWalletId = fromSwapCurrencyStatus.userWalletId,
-            network = network,
-            spenderAddress = routerAddress,
-        )
-        if (isAllowed) yieldSwapAllowedRouters.add(key)
+        val key = "${network.rawId}:${address.lowercase()}"
+        if (allowedCache.contains(key)) return true
+        val isAllowed = check(fromSwapCurrencyStatus.userWalletId, network, address)
+        if (isAllowed) allowedCache.add(key)
+        return isAllowed
+    }
+
+    /**
+     * Whether the yield module can execute the provider's payload. Its `swap()` reverts unless the swap execution
+     * registry allows both the call target and the spender, so such a payload is skipped. A transfer runs through the
+     * module's `send()` instead and needs neither. Mirrors iOS `CommonSendYieldModuleHelper`.
+     */
+    private suspend fun isYieldSwapPayloadAllowed(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        swapData: SwapDataModel,
+        providerId: String,
+    ): Boolean {
+        if (!swapFeatureToggles.isYieldDexTransferEnabled) return true
+        if (fromSwapCurrencyStatus.currency !is CryptoCurrency.Token) return true
+        if (!fromSwapCurrencyStatus.isYieldSwapActive) return true
+        if (resolveSendInsteadOfYieldSwap(fromSwapCurrencyStatus, swapData) != null) return true
+        val dexTransaction = swapData.transaction as? ExpressTransactionModel.DEX ?: return true
+
+        val spender = dexTransaction.allowanceContract
+        val isAllowed = spender != null &&
+            isYieldSwapRouterAllowed(fromSwapCurrencyStatus, spender) &&
+            isYieldSwapTargetAllowed(fromSwapCurrencyStatus, dexTransaction.txTo)
+        if (!isAllowed) {
+            TangemLogger.i(
+                "Yield swap via $providerId skipped: spender $spender or target ${dexTransaction.txTo} " +
+                    "is not allowed by the swap execution registry",
+            )
+        }
         return isAllowed
     }
 
@@ -459,7 +508,11 @@ internal class SwapInteractorImpl @Inject constructor(
 
         val dexRouterSpenderAddress = maybeQuote.getOrNull()?.allowanceContract
 
-        if (isYieldSwap && dexRouterSpenderAddress != null &&
+        // With transfer detection the registry is checked against the exchange-data payload instead
+        // (isYieldSwapPayloadAllowed): a provider's quote and data are routed independently, so the
+        // quote's router does not tell which contract the module will actually call.
+        val isQuoteRouterGated = isYieldSwap && !swapFeatureToggles.isYieldDexTransferEnabled
+        if (isQuoteRouterGated && dexRouterSpenderAddress != null &&
             !isYieldSwapRouterAllowed(fromSwapCurrencyStatus, dexRouterSpenderAddress)
         ) {
             return null
@@ -2252,6 +2305,13 @@ internal class SwapInteractorImpl @Inject constructor(
         }.fold(
             ifRight = { swapData ->
                 if (!isYieldPayloadConsistent(fromSwapCurrencyStatus, swapData)) {
+                    TangemLogger.i(
+                        "Yield swap via ${provider.providerId} skipped: call data disagrees with its destination " +
+                            (swapData.transaction as? ExpressTransactionModel.DEX)?.txTo,
+                    )
+                    return@fold null
+                }
+                if (!isYieldSwapPayloadAllowed(fromSwapCurrencyStatus, swapData, provider.providerId)) {
                     return@fold null
                 }
 
