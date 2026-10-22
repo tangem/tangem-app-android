@@ -1,6 +1,5 @@
 package com.tangem.features.tangempay.verified
 
-import arrow.core.getOrElse
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.decompose.di.ModelScoped
@@ -12,11 +11,9 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
-import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.pay.TangemPayProduct
-import com.tangem.domain.moneyaccount.model.MoneyAccountActivationError
-import com.tangem.domain.moneyaccount.usecase.ActivateMoneyAccountUseCase
-import com.tangem.domain.pay.usecase.CreateOnboardingOrderUseCase
+import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
+import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayProductsAvailabilityUseCase
 import com.tangem.features.tangempay.components.TangemPayVerifiedComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -35,8 +32,7 @@ internal class TangemPayVerifiedModel @Inject constructor(
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
     private val getTangemPayProductsAvailabilityUseCase: GetTangemPayProductsAvailabilityUseCase,
-    private val activateMoneyAccountUseCase: ActivateMoneyAccountUseCase,
-    private val createOnboardingOrderUseCase: CreateOnboardingOrderUseCase,
+    private val startTangemPayOnboardingUseCase: StartTangemPayOnboardingUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayVerifiedComponent.Params>()
@@ -90,38 +86,26 @@ internal class TangemPayVerifiedModel @Inject constructor(
     }
 
     private fun onChoosePlanClick() {
-        stackNavigation.pushNew(TangemPayVerifiedRoute.SelectPlan)
-    }
-
-    fun onPlanSelected(transition: TangemPayTariffPlanTransition) {
-        createOnboardingOrder(tariffPlanTransition = transition)
+        stackNavigation.pushNew(
+            TangemPayVerifiedRoute.SelectPlan(availableProducts = availableProducts),
+        )
     }
 
     private fun onOpenMoneyAccountClick() {
-        createOnboardingOrder(tariffPlanTransition = null)
-    }
-
-    private fun createOnboardingOrder(tariffPlanTransition: TangemPayTariffPlanTransition?) {
         if (createOrderJobHolder.isActive) return
 
         modelScope.launch {
-            val depositCredentials = if (TangemPayProduct.BANKING_ACCOUNT in availableProducts) {
-                activateMoneyAccountUseCase(params.userWalletId).getOrElse { error ->
-                    if (error !is MoneyAccountActivationError.UserCancelled) showErrorDialog()
-                    return@launch
-                }
-            } else {
-                null
-            }
-
-            createOnboardingOrderUseCase(
+            startTangemPayOnboardingUseCase(
                 userWalletId = params.userWalletId,
-                tariffPlanTransition = tariffPlanTransition,
-                depositCredentials = depositCredentials,
-            ).fold(
-                ifLeft = { showErrorDialog() },
-                ifRight = { router.pop() },
-            )
+                tariffPlanTransition = null,
+                availableProducts = availableProducts,
+            ).onLeft { error ->
+                if (error !is StartTangemPayOnboardingError.UserCancelled) {
+                    showErrorDialog()
+                }
+            }.onRight {
+                // TODO v_rodiononov: #[REDACTED_TASK_KEY] Tangem Pay Onboarding Success Screen
+            }
         }.saveIn(createOrderJobHolder)
     }
 
@@ -135,7 +119,7 @@ internal class TangemPayVerifiedModel @Inject constructor(
     }
 
     private fun onNotifyClick() {
-        // TODO v_rodionov: #[REDACTED_TASK_KEY]
+        // TODO v_rodiononov: #[REDACTED_TASK_KEY] Remove Notify Button
     }
 
     private fun onCloseClick() {
