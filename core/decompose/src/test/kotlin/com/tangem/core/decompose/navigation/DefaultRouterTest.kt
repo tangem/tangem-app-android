@@ -293,15 +293,41 @@ internal class DefaultRouterTest {
     }
 
     @Test
-    fun `GIVEN no completion callback WHEN navigation fails THEN failure handler is told what failed`() {
+    fun `GIVEN no completion callback WHEN push fails THEN failure handler is told what failed`() {
+        // Arrange
+        stack = listOf(RouteA, RouteB)
+
+        // Act
+        router.push(RouteB)
+
+        // Assert
+        verify(exactly = 1) { navigationFailureHandler.onNavigationFailed("Unable to push RouteB") }
+    }
+
+    @Test
+    fun `GIVEN no completion callback WHEN pop has nothing to pop THEN failure handler is not used`() {
         // Arrange
         stack = listOf(RouteA)
 
         // Act
         router.pop()
+        router.popTo(RouteC)
+        router.popToMatching(RouteC::class, predicate = { true })
 
         // Assert
-        verify(exactly = 1) { navigationFailureHandler.onNavigationFailed("Unable to pop route") }
+        verify(exactly = 0) { navigationFailureHandler.onNavigationFailed(any()) }
+    }
+
+    @Test
+    fun `GIVEN no completion callback WHEN pop throws THEN failure handler is told`() {
+        // Arrange
+        every { navigation.navigate(any(), any()) } throws IllegalStateException("Broken stack")
+
+        // Act
+        router.pop()
+
+        // Assert
+        verify(exactly = 1) { navigationFailureHandler.onNavigationFailed(match { it.startsWith("Navigation failed") }) }
     }
 
     @Test
