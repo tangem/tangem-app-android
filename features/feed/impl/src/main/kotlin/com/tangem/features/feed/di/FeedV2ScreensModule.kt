@@ -3,6 +3,7 @@ package com.tangem.features.feed.di
 import com.tangem.features.feed.components.v2.FeedForYouScreenFactory
 import com.tangem.features.feed.components.v2.FeedMarketsTokenDetailsScreenFactory
 import com.tangem.features.feed.components.v2.FeedNewsDetailsScreenFactory
+import com.tangem.features.feed.components.v2.FeedTokenSummaryScreenFactory
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenFactory
 import dagger.Binds
@@ -31,4 +32,9 @@ internal interface FeedV2ScreensModule {
     @IntoMap
     @ClassKey(FeedRoute.NewsDetails::class)
     fun bindNewsDetailsScreenFactory(impl: FeedNewsDetailsScreenFactory): FeedScreenFactory
+
+    @Binds
+    @IntoMap
+    @ClassKey(FeedRoute.TokenSummary::class)
+    fun bindTokenSummaryScreenFactory(impl: FeedTokenSummaryScreenFactory): FeedScreenFactory
 }

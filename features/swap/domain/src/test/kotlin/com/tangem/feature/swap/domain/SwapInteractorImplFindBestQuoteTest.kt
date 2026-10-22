@@ -1095,6 +1095,89 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
     }
 
     @Nested
+    inner class ScaledSourceAmount {
+
+        private val cexProvider = buildSwapProvider(ExchangeProviderType.CEX)
+        private val fromStatus = buildSwapCurrencyStatus(
+            networkRawId = solanaNetwork,
+            contractAddress = "SPACEXmint",
+            isCoin = false,
+            amount = BigDecimal("1"),
+            decimals = 6,
+        )
+        private val toStatus = buildSwapCurrencyStatus(networkRawId = solanaNetwork)
+
+        @Test
+        fun `GIVEN scaled source token WHEN findBestQuote THEN on-chain amount is requested`() = runTest {
+            // Arrange
+            val fromAmountSlot = slot<String>()
+            coEvery {
+                walletManagersFacade.getScaledUiAmountMultiplier(fromStatus.userWalletId, fromStatus.currency)
+            } returns BigDecimal("5").right()
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(),
+                    fromContractAddress = any(),
+                    fromNetwork = any(),
+                    toContractAddress = any(),
+                    toNetwork = any(),
+                    fromAmount = capture(fromAmountSlot),
+                    fromDecimals = any(),
+                    toDecimals = any(),
+                    providerId = cexProvider.providerId,
+                    rateType = any(),
+                )
+            } returns buildQuoteModel().right()
+
+            // Act
+            sut.findBestQuote(
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+                providers = listOf(cexProvider),
+                amountToSwap = "0.003",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Assert
+            assertThat(fromAmountSlot.captured).isEqualTo("600")
+        }
+
+        @Test
+        fun `GIVEN unresolvable multiplier WHEN findBestQuote THEN quote is not requested`() = runTest {
+            // Arrange
+            coEvery {
+                walletManagersFacade.getScaledUiAmountMultiplier(fromStatus.userWalletId, fromStatus.currency)
+            } returns IllegalStateException("providers disagree").left()
+
+            // Act
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+                providers = listOf(cexProvider),
+                amountToSwap = "0.003",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Assert
+            assertThat(result).containsKey(cexProvider)
+            coVerify(exactly = 0) {
+                repository.findBestQuote(
+                    userWallet = any(),
+                    fromContractAddress = any(),
+                    fromNetwork = any(),
+                    toContractAddress = any(),
+                    toNetwork = any(),
+                    fromAmount = any(),
+                    fromDecimals = any(),
+                    toDecimals = any(),
+                    providerId = any(),
+                    rateType = any(),
+                )
+            }
+        }
+    }
+
+    @Nested
     inner class MixedProviderDispatch {
 
         @Test
