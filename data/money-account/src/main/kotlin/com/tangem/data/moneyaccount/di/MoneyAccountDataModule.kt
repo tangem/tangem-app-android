@@ -41,6 +41,8 @@ import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountStatusUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountSuitableWalletsUseCase
 import com.tangem.domain.moneyaccount.usecase.RestoreMoneyAccountOrderUseCase
+import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
+import com.tangem.domain.pay.usecase.CreateOnboardingOrderUseCase
 import com.tangem.domain.moneyaccount.usecase.TrackMoneyAccountOrderUseCase
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -129,6 +131,18 @@ internal interface MoneyAccountDataModule {
             repository: MoneyAccountActivationRepository,
         ): ActivateMoneyAccountUseCase {
             return ActivateMoneyAccountUseCase(repository = repository)
+        }
+
+        @Provides
+        @Singleton
+        fun provideStartTangemPayOnboardingUseCase(
+            activateMoneyAccountUseCase: ActivateMoneyAccountUseCase,
+            createOnboardingOrderUseCase: CreateOnboardingOrderUseCase,
+        ): StartTangemPayOnboardingUseCase {
+            return StartTangemPayOnboardingUseCase(
+                activateMoneyAccountUseCase = activateMoneyAccountUseCase,
+                createOnboardingOrderUseCase = createOnboardingOrderUseCase,
+            )
         }
 
         @Provides
