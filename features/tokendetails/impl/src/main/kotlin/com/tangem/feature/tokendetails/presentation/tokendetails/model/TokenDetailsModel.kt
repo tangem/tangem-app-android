@@ -448,9 +448,11 @@ internal class TokenDetailsModel @Inject constructor(
         }
     }
 
-    private fun applyLocalNotificationsChange(newState: TokenDetailsState) {
-        warningsStabilizer.invalidate()
-        uiState.value = newState
+    private fun applyLocalNotificationsChange(buildState: () -> TokenDetailsState) {
+        modelScope.launch(dispatchers.mainImmediate) {
+            warningsStabilizer.invalidate()
+            uiState.value = buildState()
+        }
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
@@ -1098,7 +1100,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onCloseRentInfoNotification() {
-        applyLocalNotificationsChange(stateFactory.getStateWithRemovedRentNotification())
+        applyLocalNotificationsChange { stateFactory.getStateWithRemovedRentNotification() }
     }
 
     override fun onCopyAddress(): TextReference? {
@@ -1154,9 +1156,9 @@ internal class TokenDetailsModel @Inject constructor(
                     }
                 },
                 ifRight = {
-                    applyLocalNotificationsChange(
-                        stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification(),
-                    )
+                    applyLocalNotificationsChange {
+                        stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification()
+                    }
                 },
             )
         }
@@ -1200,7 +1202,7 @@ internal class TokenDetailsModel @Inject constructor(
                     }
                 },
                 ifRight = {
-                    applyLocalNotificationsChange(stateFactory.getStateWithRemovedRequiredTrustlineNotification())
+                    applyLocalNotificationsChange { stateFactory.getStateWithRemovedRequiredTrustlineNotification() }
                 },
             )
         }
@@ -1229,9 +1231,9 @@ internal class TokenDetailsModel @Inject constructor(
                     TangemLogger.e("Error: $e")
                 },
                 ifRight = {
-                    applyLocalNotificationsChange(
-                        stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification(),
-                    )
+                    applyLocalNotificationsChange {
+                        stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification()
+                    }
                 },
             )
         }
@@ -1267,7 +1269,7 @@ internal class TokenDetailsModel @Inject constructor(
                     }
                 },
                 ifRight = {
-                    applyLocalNotificationsChange(stateFactory.getStateWithRemovedHederaAssociateNotification())
+                    applyLocalNotificationsChange { stateFactory.getStateWithRemovedHederaAssociateNotification() }
                 },
             )
         }
