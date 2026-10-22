@@ -1,7 +1,7 @@
 package com.tangem.store.datasource.jointaccount
 
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.store.datasource.jointaccount.models.ActivateJointAccountRequest
+import com.tangem.store.datasource.jointaccount.models.ConfirmJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.CreateJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.GetJointAccountsResponse
@@ -17,7 +17,7 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 /**
- * Joint accounts API: creation, retrieval, joining, activation.
+ * Joint accounts API: creation, retrieval, joining, confirmation.
  *
  * Contract: OpenAPI spec v1.2.
  *
@@ -87,18 +87,19 @@ interface JointAccountApi {
     ): ApiResponse<JointAccountDto>
 
     /**
-     * Confirms the composition and activates the account. Idempotent: activating an already `active` account is a
-     * success, so a lost response is retried automatically rather than shown as an error.
+     * Records this wallet's confirmation of the composition; the account turns `active` with the last member's
+     * signature. Idempotent: a repeated confirmation is the same success, so a lost response is retried
+     * automatically.
      *
-     * Errors: 400 — `payload.walletId` not equal to the path, a malformed signature, or one that does not recover
-     * to this wallet's own participant address; 403 — this wallet's slot is not the creator's; 404 — this wallet
-     * has no such joint account; 409 — the account is still `pending`, or `config` differs from what the account
+     * Errors: 400 — a malformed signature, one that does not recover to this wallet's slot, or `safeAddress`
+     * not in lower case; 403 — this wallet is not a member; 404 — no account holds this Safe address, a
+     * `pending` account included; 409 — the account is cancelled, or `payload` differs from what the account
      * holds.
      */
-    @POST("api/v1/wallets/{walletId}/joint-accounts/activate")
-    suspend fun activateJointAccount(
+    @POST("api/v1/wallets/{walletId}/joint-accounts/confirm")
+    suspend fun confirmJointAccount(
         @Path("walletId") walletId: String,
-        @Body body: ActivateJointAccountRequest,
+        @Body body: ConfirmJointAccountRequest,
     ): ApiResponse<JointAccountDto>
 
     @POST("api/v1/wallets/{walletId}/joint-accounts/operations")
