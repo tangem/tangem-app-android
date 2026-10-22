@@ -40,14 +40,14 @@ interface SocialBackupRepository {
     suspend fun readBackup(recoveryKey: RecoveryKey): Either<SocialLoginError, RestoredSocialBackup>
 
     /**
-     * A file belonging to another wallet is left alone and an already absent file is a success — either
-     * way [walletId] ends up without a backup, which is what the caller asked for.
+     * Deletes the backup files of [walletId] and tells whether it deleted any. A file belonging to another
+     * wallet is left alone, and an already absent file is not an error: the caller decides whether it matters.
      *
      * Never shows an account picker — it runs as a side effect of the upgrade to a card, not on a user
      * request. Without a grant that can be refreshed silently it fails with
      * [SocialLoginError.CloudUnavailable].
      */
-    suspend fun deleteBackup(walletId: UserWalletId): Either<SocialLoginError, Unit>
+    suspend fun deleteBackup(walletId: UserWalletId): Either<SocialLoginError, Boolean>
 
     /**
      * Set only once both the cloud file and the backend binding are in place. An unreadable state reads

@@ -83,6 +83,7 @@ internal fun PolymarketHistoryScreen(state: PolymarketHistoryUM, modifier: Modif
                 }
             }
         }
+        PolymarketActivityDetailsSheet(state = state.details, onDismiss = state.onDismissDetails)
     }
 }
 
@@ -124,7 +125,12 @@ private fun HistoryTopBar(state: PolymarketHistoryUM) {
             fadeEnabled = false,
             endButton = {
                 val content = state.content
-                if (content is Content.Data) PolymarketHistoryMenu(onDownloadClick = content.onDownloadCsvClick)
+                if (content is Content.Data) {
+                    PolymarketHistoryMenu(
+                        onDownloadClick = content.onDownloadCsvClick,
+                        isExporting = state.isExporting,
+                    )
+                }
             },
         )
         if (state.tabs.isNotEmpty()) {

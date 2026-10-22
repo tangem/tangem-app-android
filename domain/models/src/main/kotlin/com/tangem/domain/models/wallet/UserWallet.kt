@@ -5,6 +5,7 @@ import com.tangem.domain.models.MobileWallet
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.hot.sdk.model.HotWalletId
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -60,7 +61,7 @@ sealed interface UserWallet {
         override val walletId: UserWalletId,
         val hotWalletId: HotWalletId,
         val wallets: List<MobileWallet>?,
-        val backedUp: Boolean,
+        @SerialName("backedUp") val isBackedUp: Boolean,
         val isSocialBackupCompleted: Boolean = false,
     ) : UserWallet {
 

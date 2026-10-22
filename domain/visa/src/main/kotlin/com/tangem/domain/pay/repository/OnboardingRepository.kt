@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.tangem.core.error.UniversalError
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.pay.TangemPayEligibilityType
+import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
@@ -86,4 +87,10 @@ interface OnboardingRepository {
     suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit>
 
     suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean
+
+    suspend fun storeCustomerResidency(userWalletId: UserWalletId, residency: TangemPayCustomerResidency)
+
+    suspend fun getCustomerResidency(userWalletId: UserWalletId): TangemPayCustomerResidency?
+
+    suspend fun clearCustomerResidency(userWalletId: UserWalletId)
 }

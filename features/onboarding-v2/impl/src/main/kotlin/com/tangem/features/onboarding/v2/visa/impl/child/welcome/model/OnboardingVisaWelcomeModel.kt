@@ -140,6 +140,6 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
     }
 
     private fun loading(state: Boolean) {
-        _uiState.update { it.copy(continueButtonLoading = state) }
+        _uiState.update { it.copy(isContinueButtonLoading = state) }
     }
 }

@@ -1,8 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>BooleanPropertyNaming:WelcomeModel.kt$WelcomeModel$private var routedOut = false</ID>
-    <ID>BooleanPropertyNaming:WelcomeUM.kt$WelcomeUM.SelectWallet$val showUnlockWithBiometricButton: Boolean = false</ID>
-  </CurrentIssues>
-</SmellBaseline>

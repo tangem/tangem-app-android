@@ -1,5 +1,6 @@
 package com.tangem.features.welcome.impl.model
 
+import com.tangem.common.core.TangemError
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.handle
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
@@ -16,9 +17,11 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.card.models.ScanConfig
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.common.wallets.error.UnlockWalletError
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.*
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.HotWalletRestrictionManager
@@ -93,7 +96,7 @@ internal class WelcomeModel @Inject constructor(
     )
     private val walletsFetcherJobHolder = JobHolder()
     private val wallets = MutableStateFlow<ImmutableList<UserWalletItemUM>>(persistentListOf())
-    private var routedOut = false
+    private var isRoutedOut = false
     private val isWalletCreationRestrictionEnabled: StateFlow<Boolean> =
         hotWalletRestrictionManager.isCreationEnabled()
 
@@ -125,7 +128,7 @@ internal class WelcomeModel @Inject constructor(
             if (canUnlockWithBiometrics()) {
                 userWalletsListRepository.unlockAllWallets()
                     .onRight {
-                        routedOut = true
+                        isRoutedOut = true
                         router.replaceAll(AppRoute.Wallet)
                     }
                     .onLeft { error ->
@@ -154,11 +157,11 @@ internal class WelcomeModel @Inject constructor(
 
     private fun setSelectWalletState() {
         modelScope.launch {
-            if (routedOut || uiState.value is WelcomeUM.SelectWallet) return@launch
+            if (isRoutedOut || uiState.value is WelcomeUM.SelectWallet) return@launch
 
             uiState.value = WelcomeUM.SelectWallet(
                 wallets = walletsFetcher.userWallets.first(),
-                showUnlockWithBiometricButton = canUnlockWithBiometrics(),
+                shouldShowUnlockWithBiometricButton = canUnlockWithBiometrics(),
                 addWalletClick = ::addWalletClick,
                 onUnlockWithBiometricClick = {
                     analyticsEventHandler.send(SignIn.ButtonUnlockAllWithBiometric())
@@ -198,56 +201,64 @@ internal class WelcomeModel @Inject constructor(
     private fun scanCard() {
         modelScope.launch {
             scanCardProcessor.scan(
-                analyticsSource = AnalyticsParam.ScreensSources.SignIn,
-                shouldCheckIsAlreadyActivated = true,
-                onWalletNotCreated = {},
-                onSuccess = { scanResponse ->
-                    val userWallet =
-                        coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build() ?: return@scan
-                    saveWalletUseCase.invoke(
-                        userWallet = userWallet,
-                        analyticsSource = AnalyticsParam.ScreensSources.SignIn,
-                    ).onLeft { error ->
-                        if (error is SaveWalletError.WalletAlreadySaved) {
-                            userWalletsListRepository.unlock(
-                                userWalletId = userWallet.walletId,
-                                unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(
-                                    scanResponse = scanResponse,
-                                    source = AnalyticsParam.ScreensSources.SignIn,
-                                ),
-                            ).onRight {
-                                userWalletsListRepository.select(userWallet.walletId)
-                                router.replaceAll(AppRoute.Wallet)
-                            }
-                        }
-                    }
-                        .onRight {
-                            val route = if (onboardingV2FeatureToggles.isAddressSyncEnabled) {
-                                AppRoute.Onboarding(
-                                    scanResponse = scanResponse,
-                                    mode = AppRoute.Onboarding.Mode.AddressSync(
-                                        userWalletId = userWallet.walletId,
-                                        isWalletStarted = false,
-                                    ),
-                                )
-                            } else {
-                                AppRoute.Wallet
-                            }
-                            router.replaceAll(route)
-                        }
-                },
-                onCancel = {},
-                onFailure = { tangemError ->
-                    if (!tangemError.silent) {
-                        val message = tangemError.messageResId
-                            ?.let(::resourceReference)
-                            ?: stringReference(tangemError.customMessage)
-
-                        messageSender.send(SnackbarMessage(message))
-                    }
-                },
+                config = ScanConfig(
+                    analyticsSource = AnalyticsParam.ScreensSources.SignIn,
+                    callback = createScanCallback(),
+                ),
             )
         }
+    }
+
+    private fun createScanCallback(): ScanConfig.Callback = object : ScanConfig.Callback {
+        override suspend fun onFailure(error: TangemError) {
+            if (!error.silent) {
+                val message = error.messageResId
+                    ?.let(::resourceReference)
+                    ?: stringReference(error.customMessage)
+
+                messageSender.send(SnackbarMessage(message))
+            }
+        }
+
+        override suspend fun onSuccess(scanResponse: ScanResponse) {
+            saveScannedWallet(scanResponse)
+        }
+    }
+
+    private suspend fun saveScannedWallet(scanResponse: ScanResponse) {
+        val userWallet = coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build() ?: return
+
+        saveWalletUseCase.invoke(
+            userWallet = userWallet,
+            analyticsSource = AnalyticsParam.ScreensSources.SignIn,
+        ).onLeft { error ->
+            if (error is SaveWalletError.WalletAlreadySaved) {
+                userWalletsListRepository.unlock(
+                    userWalletId = userWallet.walletId,
+                    unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(
+                        scanResponse = scanResponse,
+                        source = AnalyticsParam.ScreensSources.SignIn,
+                    ),
+                ).onRight {
+                    userWalletsListRepository.select(userWallet.walletId)
+                    router.replaceAll(AppRoute.Wallet)
+                }
+            }
+        }
+            .onRight {
+                val route = if (onboardingV2FeatureToggles.isAddressSyncEnabled) {
+                    AppRoute.Onboarding(
+                        scanResponse = scanResponse,
+                        mode = AppRoute.Onboarding.Mode.AddressSync(
+                            userWalletId = userWallet.walletId,
+                            isWalletStarted = false,
+                        ),
+                    )
+                } else {
+                    AppRoute.Wallet
+                }
+                router.replaceAll(route)
+            }
     }
 
     private suspend fun onlyOneHotWalletWithAccessCode(): Boolean {
@@ -281,7 +292,7 @@ internal class WelcomeModel @Inject constructor(
     private suspend fun nonBiometricUnlockWallet(userWalletId: UserWalletId) {
         nonBiometricUnlockWalletUseCase(userWalletId, AnalyticsParam.ScreensSources.SignIn)
             .onRight {
-                routedOut = true
+                isRoutedOut = true
                 userWalletsListRepository.select(userWalletId)
                 router.replaceAll(AppRoute.Wallet)
             }

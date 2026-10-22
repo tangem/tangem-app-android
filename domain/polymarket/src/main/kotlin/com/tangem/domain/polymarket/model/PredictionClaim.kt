@@ -1,16 +1,28 @@
 package com.tangem.domain.polymarket.model
 
+import arrow.core.NonEmptyList
+
 /**
- * A claim batch as the card signed it. The single [call] is the contract's invariant made a type: the wire
- * format is an array only because the signature covers an array, and `POST /positions/redeem` rejects a
- * batch that does not hold exactly one redeem call.
+ * The contract calls that redeem a position, as the backend served them and in the order to sign them: one
+ * on a collateral adapter for a V1 market, one per held outcome on the Router for a V2 market.
+ *
+ * @property version the market's protocol as the backend states it; `null` when it did not say
+ */
+data class PredictionRedeemCalls(
+    val version: PolymarketMarketVersion?,
+    val calls: NonEmptyList<PolymarketApprovalCall>,
+)
+
+/**
+ * A claim batch as the card signed it. [calls] are the backend's [PredictionRedeemCalls.calls] verbatim and
+ * in order: the signature covers the array, and `POST /positions/redeem` accepts only calls it served itself.
  */
 data class PredictionClaimBatch(
     val ownerAddress: String,
     val depositWalletAddress: String,
     val nonce: String,
     val deadline: String,
-    val call: PolymarketApprovalCall,
+    val calls: NonEmptyList<PolymarketApprovalCall>,
     val signature: String,
 )
 

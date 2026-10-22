@@ -25,12 +25,14 @@ internal class SetContentTransformerTest {
     @Test
     fun `GIVEN preview WHEN transform THEN it is mapped into Content`() {
         // Arrange
+        val onRequiredApprovalsClick = {}
         val onCreatorInfoClick = {}
         val onContinueClick = {}
         val onCloseClick = {}
         val transformer = createTransformer(
             wallets = listOf(firstWallet),
             selectedWallet = firstWallet,
+            onRequiredApprovalsClick = onRequiredApprovalsClick,
             onCreatorInfoClick = onCreatorInfoClick,
             onContinueClick = onContinueClick,
             onCloseClick = onCloseClick,
@@ -52,6 +54,7 @@ internal class SetContentTransformerTest {
             creatorAddress = OWNER_ADDRESS,
             wallet = null,
             confirmation = null,
+            onRequiredApprovalsClick = onRequiredApprovalsClick,
             onCreatorInfoClick = onCreatorInfoClick,
             onContinueClick = onContinueClick,
             onCloseClick = onCloseClick,
@@ -113,6 +116,7 @@ internal class SetContentTransformerTest {
         preview: JointAccountInvitePreview = preview(),
         wallets: List<UserWallet>,
         selectedWallet: UserWallet?,
+        onRequiredApprovalsClick: () -> Unit = {},
         onCreatorInfoClick: () -> Unit = {},
         onContinueClick: () -> Unit = {},
         onCloseClick: () -> Unit = {},
@@ -120,6 +124,7 @@ internal class SetContentTransformerTest {
         preview = preview,
         wallets = wallets,
         selectedWallet = selectedWallet,
+        onRequiredApprovalsClick = onRequiredApprovalsClick,
         onCreatorInfoClick = onCreatorInfoClick,
         onContinueClick = onContinueClick,
         onWalletRowClick = {},

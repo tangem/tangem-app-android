@@ -91,7 +91,7 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
             if (status !is PaginationStatus.Paginating) return@launch
 
             val lastResult = status.lastResult
-            val canLoadMore = lastResult !is BatchFetchResult.Success || !lastResult.last
+            val canLoadMore = lastResult !is BatchFetchResult.Success || !lastResult.isLast
             if (canLoadMore) actionsFlow.emit(BatchAction.LoadMore())
         }
     }

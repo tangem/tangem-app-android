@@ -436,7 +436,11 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 if (moneyAccountOrder != null) {
                     PaymentAccountStatusValue.NotCreated
                 } else {
-                    PaymentAccountStatusValue.KycRequired(source = StatusSource.ACTUAL, customerId = customerId)
+                    PaymentAccountStatusValue.KycRequired(
+                        source = StatusSource.ACTUAL,
+                        customerId = customerId,
+                        customerResidency = onboardingRepository.getCustomerResidency(userWalletId),
+                    )
                 }
             }
             kycStatus != KycStatus.APPROVED -> PaymentAccountStatusValue.UnderReview(

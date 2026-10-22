@@ -16,7 +16,7 @@ import com.tangem.domain.models.MobileWallet
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.derivation.POLYMARKET_OWNER_DERIVATION_PATH
-import com.tangem.domain.polymarket.model.PolymarketDerivationError
+import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.test.core.ProvideTestModels
@@ -169,7 +169,7 @@ internal class DefaultPolymarketEoaDeriverTest {
         val result = deriver.deriveOwnerEoa(userWalletId)
 
         // Assert
-        assertThat(result).isEqualTo(PolymarketDerivationError.DerivationUnsupported.left())
+        assertThat(result).isEqualTo(PolymarketSigningError.DerivationUnsupported.left())
     }
 
     @Test
@@ -181,7 +181,7 @@ internal class DefaultPolymarketEoaDeriverTest {
         val result = deriver.deriveOwnerEoa(userWalletId)
 
         // Assert
-        assertThat(result).isEqualTo(PolymarketDerivationError.MissingWallet.left())
+        assertThat(result).isEqualTo(PolymarketSigningError.MissingWallet.left())
     }
 
     @Test
@@ -196,7 +196,7 @@ internal class DefaultPolymarketEoaDeriverTest {
         val result = deriver.deriveOwnerEoa(userWalletId)
 
         // Assert
-        assertThat(result).isEqualTo(PolymarketDerivationError.Unknown.left())
+        assertThat(result).isEqualTo(PolymarketSigningError.Unknown.left())
     }
 
     @Test
@@ -209,7 +209,7 @@ internal class DefaultPolymarketEoaDeriverTest {
         val result = deriver.deriveOwnerEoa(userWalletId)
 
         // Assert
-        assertThat(result).isEqualTo(PolymarketDerivationError.Unknown.left())
+        assertThat(result).isEqualTo(PolymarketSigningError.Unknown.left())
     }
 
     @ParameterizedTest
@@ -292,12 +292,12 @@ internal class DefaultPolymarketEoaDeriverTest {
         }
     }
 
-    internal data class DerivationFailureModel(val throwable: Throwable, val expected: PolymarketDerivationError)
+    internal data class DerivationFailureModel(val throwable: Throwable, val expected: PolymarketSigningError)
 
     private fun provideTestModels() = listOf(
-        DerivationFailureModel(TangemSdkError.UserCancelled(), PolymarketDerivationError.UserCancelled),
-        DerivationFailureModel(TangemSdkError.WalletNotFound(), PolymarketDerivationError.MissingWallet),
-        DerivationFailureModel(TangemSdkError.MissingPreflightRead(), PolymarketDerivationError.CardError),
-        DerivationFailureModel(IllegalStateException("boom"), PolymarketDerivationError.Unknown),
+        DerivationFailureModel(TangemSdkError.UserCancelled(), PolymarketSigningError.UserCancelled),
+        DerivationFailureModel(TangemSdkError.WalletNotFound(), PolymarketSigningError.MissingWallet),
+        DerivationFailureModel(TangemSdkError.MissingPreflightRead(), PolymarketSigningError.CardError),
+        DerivationFailureModel(IllegalStateException("boom"), PolymarketSigningError.Unknown),
     )
 }

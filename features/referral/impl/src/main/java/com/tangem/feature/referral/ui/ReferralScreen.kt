@@ -283,7 +283,7 @@ private fun formatAwardConditionsString(quantity: String, network: String, addre
     val annotatedString = buildAnnotatedString {
         pattern.findAll(rawString).forEach { matchResult ->
             val index = matchResult.range.first
-            val matchedValue = matchResult.groups[1]?.value ?: ""
+            val matchedValue = matchResult.groups[1]?.value.orEmpty()
 
             // appends unformatted part
             append(rawString.substring(startIndex, index))

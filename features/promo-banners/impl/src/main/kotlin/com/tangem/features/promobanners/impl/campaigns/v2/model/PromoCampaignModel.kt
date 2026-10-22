@@ -48,12 +48,14 @@ import com.tangem.features.promobanners.impl.campaigns.v2.converters.PromoCampai
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoCampaignStatusUM
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoCampaignUM
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoSelectedAccountUM
+import com.tangem.features.promobanners.impl.repository.PromoBannersRepository
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import java.util.Locale
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -69,6 +71,7 @@ internal class PromoCampaignModel @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     private val registerPromoCampaignUseCase: RegisterPromoCampaignUseCase,
     private val getPromoCampaignsUseCase: GetPromoCampaignsUseCase,
+    private val promoBannersRepository: PromoBannersRepository,
     private val userWalletsFetcherFactory: UserWalletsFetcher.Factory,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
@@ -154,8 +157,12 @@ internal class PromoCampaignModel @Inject constructor(
                         "Error registering for campaign ${params.campaign.id}: $error",
                         (error as? PromoRegistrationError.Generic)?.cause,
                     )
+                    if (error == PromoRegistrationError.CampaignNotFound) refreshPromotions(wallets)
                 }
-                .onRight { refreshCampaigns(enrollments, wallets) }
+                .onRight {
+                    val enrolledWalletIds = enrollments.map(PromoEnrollment::userWalletId).toSet()
+                    refreshCampaigns(wallets.filter { wallet -> wallet.walletId in enrolledWalletIds })
+                }
             setEnrolling(isEnrolling = false)
 
             val outcome = PromoRegistrationOutcome.resolve(params.userWalletId, enrollments, result)
@@ -176,19 +183,24 @@ internal class PromoCampaignModel @Inject constructor(
      * The campaigns cache still says "not enrolled" after registering. Awaited before the outcome is shown, because
      * leaving the sheet cancels [modelScope] and a background refresh would never reach the cache.
      */
-    private suspend fun refreshCampaigns(enrollments: List<PromoEnrollment>, wallets: List<UserWallet>) {
-        val enrolledWalletIds = enrollments.map(PromoEnrollment::userWalletId).toSet()
-
+    private suspend fun refreshCampaigns(wallets: List<UserWallet>) {
         coroutineScope {
-            wallets.filter { it.walletId in enrolledWalletIds }
-                .map { wallet ->
-                    async {
-                        getPromoCampaignsUseCase(wallet, forceRefresh = true).onLeft { error ->
-                            TangemLogger.e("Failed to refresh promo campaigns after registration", error)
-                        }
+            wallets.map { wallet ->
+                async {
+                    getPromoCampaignsUseCase.invokeSync(wallet, forceRefresh = true).onLeft { error ->
+                        TangemLogger.e("Failed to refresh promo campaigns after registration", error)
                     }
                 }
-                .awaitAll()
+            }.awaitAll()
+        }
+    }
+
+    private suspend fun refreshPromotions(wallets: List<UserWallet>) {
+        val walletIds = wallets.map { it.walletId.stringValue }.toSet()
+
+        coroutineScope {
+            launch { refreshCampaigns(wallets) }
+            launch { promoBannersRepository.refreshBanners(walletIds, Locale.getDefault().language) }
         }
     }
 

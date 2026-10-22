@@ -6,7 +6,7 @@ internal data class SeedPhraseState(
     val generatedWords12: Mnemonic?,
     val generatedWords24: Mnemonic?,
     val generatedWordsType: GeneratedWordsType,
-    val readyToImport: Boolean,
+    val isReadyToImport: Boolean,
 )
 
 internal enum class GeneratedWordsType(val length: Int) {

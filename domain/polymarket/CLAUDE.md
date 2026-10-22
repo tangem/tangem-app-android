@@ -22,14 +22,17 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
    the seed (Hot); background refreshes and screen opens use only the `stored` / `withoutPrompting`
    variants. Their `null` means "not derived on this device", never "no account" — a wallet onboarded on
    another phone answers `null` too.
-2. **One signing session per onboarding run.** ClobAuth and the approvals batch are signed together and the
-   user is never asked twice; a failure is retryable and the caller starts a new run.
+2. **One tap per onboarding run.** Deriving a missing owner key, the status and nonce reads and the signature
+   share one card session (Cold) or one unlock (Hot) — `PolymarketSigningSession`. The key is stored as soon as
+   it is derived, so a run that fails later still costs one tap on retry. The signed set depends on the state:
+   ClobAuth only without stored credentials, the approvals batch only while approvals are owed; a future
+   relayer batch (session keys) is one more `PolymarketTypedPayload` in the same list.
 3. **Approvals are only really checked on a fresh wallet.** The BFF reads on-chain allowances before it
    validates our batch, so an already-approved deposit wallet answers `READY_TO_TRADE` to *any* batch.
    Test approvals changes on a brand-new wallet.
-4. **The 13-call approvals batch is not pinned by the backend.** It is validated as a set of
-   `{target, selector, spender}` and grew from 6 to 13 without notice (August 2026); the next change breaks
-   the app with a BFF `400` until a release ships.
+4. **The 17-call approvals batch is not pinned by the backend.** It is validated as a set of
+   `{target, selector, spender}` and grew from 6 to 13 without notice (August 2026), then to 17 with the V2
+   exchange (October 2026); the next change breaks the app with a BFF `400` until a release ships.
 5. **Collateral ≠ top-up token.** `COLLATERAL` is pUSD — what orders spend and the CLOB balance reports.
    Deposits are USDC; the bridge converts. The default is native USDC on Polygon (`USDC_TOKEN_ADDRESS`); the
    swap top-up also takes every `PolymarketDepositAsset.CATALOG` row the bridge lists with the same contract,
@@ -49,7 +52,7 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
    cached value. Never show `Loading` when the store already holds a value.
 8. **A ready backend status is not enough to trade.** L2 credentials live only on this device. Reinstall,
    new phone or a re-added wallet → `READY_TO_TRADE` with nothing to sign with → `PolymarketEntry.Reconnect`:
-   the same onboarding run signs both digests, uses only ClobAuth to re-derive credentials, deploys and
+   the same onboarding run signs only ClobAuth (a nonce read ahead is discarded), re-derives the credentials, deploys and
    approves nothing. A CLOB `401` on balance or order drops only the credentials, never
    `PolymarketOnboardedStore`, so the gate offers Reconnect, not a full onboarding. Reading, clearing and
    re-deriving one wallet's credentials share one non-reentrant `PolymarketCredentialsLock`, so a late `401`
@@ -58,6 +61,13 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
    `(deposit wallet, nonce)`, so resending the same batch returns the same receipt. The record is cleared
    on a terminal receipt or on a rejection of the submit itself (`RelayerRejected`, `InvalidRequest` — the
    relayer recorded nothing), never on an ambiguous error. A double withdrawal is worse than a stuck record.
+10. **The local confirmation is a fallback, not the answer.** The backend can demote a ready wallet to
+    `DEPLOYED` — the V2 approvals set did it to every wallet — so the entry gate re-reads `GET /wallet` whenever
+    the addresses are stored, and `DEPLOYED` sends the user back to the approvals step: one signing session, no
+    deploy, stored credentials kept, and the run is not a new account (no welcome story). The record answers alone only without stored addresses or when the read
+    fails transiently or takes over five seconds; a mismatching deposit wallet or a rejected request fails the
+    entry like any other. `DEPLOYED` never clears the record, `NOT_CREATED` does (as the account status refresh
+    already does) — the Prediction account in the account list hangs on it.
 
 ## Onboarding
 
@@ -66,16 +76,27 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 - Credentials: derive-api-key first, create only on "no key yet".
 - `PolymarketOnboardedStore` mirrors backend reads: `READY_TO_TRADE` records the wallet, `NOT_CREATED`
   withdraws it, any other status leaves it alone. Without stored addresses nothing is asked: the record
-  alone answers `Reconnect`, its absence `Undetermined`.
+  alone answers `Onboarded` with credentials, `Reconnect` without, its absence `Undetermined`.
 
 ## Signing and orders
 
 - Relayer batches (approvals, withdrawal, claim) carry `deadline = now + 600 s`. Known gap: the tracker's
   `resend` of a persisted withdrawal skips the expiry check that `confirm` does.
-- Orders use `signatureType = 3` (deposit wallet) wrapped in ERC-7739; the exchange `verifyingContract`
-  is chosen by `isNegRisk`. The signed order is re-validated against the draft, the deposit wallet, the
-  market and the quote age (60 s) before it is sent.
+- Orders use `signatureType = 3` (deposit wallet) wrapped in ERC-7739. The exchange and its domain version
+  come from the quote, but only as `PolymarketExchangeDomain.of(quote.version, isNegRisk)` allows: V1 →
+  CTF or neg-risk CTF exchange, domain `"2"`; V2 → ExchangeV3, domain `"3"`; unknown → never signed. Any
+  other `exchange` / `signingDomainVersion` is refused while the draft is built — before the card is asked —
+  and the draft carries the table's constants, never the quoted strings. The signed order is re-validated
+  against the draft, the domain, the deposit wallet, the market and the quote age (60 s) before it is sent,
+  and the repository checks the signature tail against the domain once more.
 - SELL: `makerAmount = shares`, `takerAmount = collateral`; BUY the reverse.
+- A claim signs only redeem calls the BFF served, and only after `PredictionRedeemCallValidator` accepted
+  them against the position: one adapter `redeemPositions` call on the root collection of the condition for
+  V1 (the only redeem function either adapter exposes; at most one index set per outcome, nothing after
+  them), one Router `redeem` per held outcome naming the position's asset id for V2, `value` zero
+  everywhere, addresses compared ignoring case.
+  The position's `version` decides which rules apply; a position that arrived without one is re-read, and
+  one still without it, or `UNKNOWN`, is never signed. A refusal reaches the user as the generic claim error.
 
 ## Funds
 
@@ -84,6 +105,10 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 - **Balance**: `syncBalanceAllowance` must precede `getBalanceAllowance` — the CLOB serves a cached figure it
   recomputes only when asked, so a wallet funded after onboarding would report zero forever. The sync is
   best-effort.
+  A SELL refreshes the cache of the shares it spends (`CONDITIONAL` for a V1 market, `CONDITIONAL-V2` for V2,
+  with the token id) right before the order, inside the credentials lock; a failure there is logged and the order
+  is sent anyway, and its `401` drops nothing — only the order's own `401` does.
+
 - **Funding window** (5 s polling instead of 30 s, up to 90 s like iOS) opens only on a send this app made; an
   external transfer's timing is unknown.
 - **Positions value** is kept apart from the account status: it needs only the deposit-wallet address

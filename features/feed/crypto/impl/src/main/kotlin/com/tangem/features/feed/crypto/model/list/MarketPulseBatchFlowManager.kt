@@ -238,7 +238,7 @@ internal class MarketPulseBatchFlowManager(
                             interval = interval.toBatchRequestInterval(),
                             currency = currentAppCurrency().code,
                         ),
-                        async = true,
+                        isAsync = true,
                         operationId = batchesKeysToLoad.toString() + interval.toString(),
                     ),
                 )
@@ -265,7 +265,7 @@ internal class MarketPulseBatchFlowManager(
                     updateRequest = TokenMarketUpdateRequest.UpdateQuotes(
                         currencyId = currentAppCurrency().code,
                     ),
-                    async = true,
+                    isAsync = true,
                     operationId = "update quotes",
                 ),
             )

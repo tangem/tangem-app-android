@@ -6,6 +6,8 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.grow.datasource.yield.models.YieldMarketsResponse
+import com.tangem.grow.datasource.yield.models.incentives.YieldAprHistoryPointDto
+import com.tangem.grow.datasource.yield.models.incentives.YieldAprHistoryResponse
 import com.tangem.grow.datasource.yield.models.incentives.YieldIncentivesResponse
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -31,7 +33,8 @@ internal class YieldIncentivesDtoTest {
             {"tokens":[{"tokenAddress":"0xabc","tokenSymbol":"USDC","tokenName":"USD Coin","apy":4,
             "supplyCap":"1000","isActive":true,"decimals":6,"chainId":1,"chain":"ethereum",
             "maxFeeNative":"0.01","maxFeeUSD":"30","isForEarn":true,
-            "hasActiveCampaign":true,"rewardsApr":1.5,"totalApyEst":5.5}],
+            "hasActiveCampaign":true,"grossRewardsApy":1.5,"netRewardsApy":1.275,"grossTotalApyEst":5.5,
+            "netTotalApyEst":5.275}],
             "lastUpdatedAt":"2026-09-20T10:30:00.000Z"}
         """.trimIndent()
 
@@ -43,8 +46,8 @@ internal class YieldIncentivesDtoTest {
         assertThat(token.tokenAddress).isEqualTo("0xabc")
         assertThat(token.apy).isEqualTo(BigDecimal("4"))
         assertThat(token.hasActiveCampaign).isTrue()
-        assertThat(token.rewardsApr).isEqualTo(BigDecimal("1.5"))
-        assertThat(token.totalApyEst).isEqualTo(BigDecimal("5.5"))
+        assertThat(token.grossRewardsApy).isEqualTo(BigDecimal("1.5"))
+        assertThat(token.grossTotalApyEst).isEqualTo(BigDecimal("5.5"))
     }
 
     @Test
@@ -106,6 +109,31 @@ internal class YieldIncentivesDtoTest {
         // Assert
         assertThat(parsed.marketDtos.single().tokenAddress).isEqualTo("0xabc")
         assertThat(parsed.marketDtos.single().hasActiveCampaign).isNull()
+    }
+
+    @Test
+    fun `GIVEN apr history json WHEN parsed THEN gross rate fields survive`() {
+        // Arrange
+        val adapter = moshi.adapter(YieldAprHistoryResponse::class.java)
+        val json = """
+            {"chainId":143,"tokenAddress":"0xabc","points":[{"date":"2026-10-13","baseApy":4.03,
+            "grossRewardsApy":6.36,"netRewardsApy":5.4,"grossTotalApyEst":10.39,"netTotalApyEst":9.43,
+            "carriedForward":false}]}
+        """.trimIndent()
+
+        // Act
+        val point = adapter.fromJson(json)!!.points!!.single()
+
+        // Assert
+        assertThat(point).isEqualTo(
+            YieldAprHistoryPointDto(
+                date = "2026-10-13",
+                baseApy = BigDecimal("4.03"),
+                grossRewardsApy = BigDecimal("6.36"),
+                grossTotalApyEst = BigDecimal("10.39"),
+                isCarriedForward = false,
+            ),
+        )
     }
 
     private class BigDecimalAdapter {

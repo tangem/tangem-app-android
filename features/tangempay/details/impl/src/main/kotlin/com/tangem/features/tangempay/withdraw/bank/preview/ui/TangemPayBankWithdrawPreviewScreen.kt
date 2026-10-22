@@ -75,7 +75,7 @@ internal fun TangemPayBankWithdrawPreviewScreen(state: TangemPayBankWithdrawPrev
 @Composable
 private fun FailedScreen(state: TangemPayBankWithdrawPreviewUM.Failed, modifier: Modifier = Modifier) {
     TangemStatusScreen(
-        modifier = modifier,
+        modifier = modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_ERROR_SCREEN),
         variant = TangemStatusScreen.Variant.Warning,
         title = state.title,
         description = resourceReference(R.string.common_try_again_later),
@@ -177,6 +177,7 @@ private fun SummaryScreen(state: TangemPayBankWithdrawPreviewUM.Summary, modifie
 private fun AmountCard(amount: TangemPayBankWithdrawPreviewUM.AmountCardUM) {
     Column(
         modifier = Modifier
+            .testTag(TangemPayTestTags.BANK_WITHDRAW_PREVIEW_AMOUNT_CARD)
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(TangemTheme.colors3.bg.secondary)
@@ -228,6 +229,7 @@ private fun DetailCard(card: TangemPayBankWithdrawPreviewUM.RecipientCardUM) {
     val rows = card.rows
     Column(
         modifier = Modifier
+            .testTag(TangemPayTestTags.BANK_WITHDRAW_PREVIEW_RECIPIENT_CARD)
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(TangemTheme.colors3.bg.secondary)

@@ -6,6 +6,7 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchListState
 import com.tangem.features.polymarket.impl.common.funding.RequisitesState
+import com.tangem.features.polymarket.impl.common.region.PredictionRegionStatus
 import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.features.polymarket.impl.main.model.PredictionBalanceMode
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
@@ -109,7 +110,7 @@ internal class PolymarketFeedContentTransformerTest {
             FooterModel(status = PaginationStatus.NextBatchLoading, expected = PolymarketFeedFooterUM.Loading::class),
             FooterModel(
                 status = PaginationStatus.Paginating(
-                    lastResult = BatchFetchResult.Success(data = batchOf(createEvent()), empty = false, last = false),
+                    lastResult = BatchFetchResult.Success(data = batchOf(createEvent()), isEmpty = false, isLast = false),
                 ),
                 expected = PolymarketFeedFooterUM.None::class,
             ),
@@ -118,6 +119,30 @@ internal class PolymarketFeedContentTransformerTest {
                 expected = PolymarketFeedFooterUM.Error::class,
             ),
             FooterModel(status = PaginationStatus.EndOfPagination, expected = PolymarketFeedFooterUM.None::class),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class EmptyFeed {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun transformEmptyFeed(model: EmptyFeedModel) {
+            // Act
+            val actual = transform(PolymarketEventsBatchListState(data = emptyList(), status = model.status))
+
+            // Assert
+            assertThat(actual.content).isEqualTo(PolymarketMainUM.ContentUM.Empty)
+        }
+
+        private fun provideTestModels(): List<EmptyFeedModel> = listOf(
+            EmptyFeedModel(status = PaginationStatus.EndOfPagination),
+            EmptyFeedModel(
+                status = PaginationStatus.Paginating(
+                    lastResult = BatchFetchResult.Success(data = batchOf(), isEmpty = true, isLast = false),
+                ),
+            ),
         )
     }
 
@@ -190,6 +215,8 @@ internal class PolymarketFeedContentTransformerTest {
 
     internal data class InitialLoadingModel(val status: PaginationStatus<PolymarketEventsBatch>)
 
+    internal data class EmptyFeedModel(val status: PaginationStatus<PolymarketEventsBatch>)
+
     internal data class FooterModel(
         val status: PaginationStatus<PolymarketEventsBatch>,
         val expected: KClass<out PolymarketFeedFooterUM>,
@@ -218,12 +245,12 @@ internal class PolymarketFeedContentTransformerTest {
                         status = PredictionAccountStatusValue.Loading,
                         positions = PredictionPositionsValue.Unknown,
                         requisites = RequisitesState.Loading,
-                        isTradingAllowed = false,
+                        regionStatus = PredictionRegionStatus.UNKNOWN,
                         mode = PredictionBalanceMode.AVAILABLE,
                     ),
                 ),
             categories = persistentListOf(
-                PolymarketCategoryTabUM(id = 1, label = "Politics", isSelected = true, onClick = {}),
+                PolymarketCategoryTabUM(id = 1, label = "Politics", icon = null, isSelected = true, onClick = {}),
             ),
             content = PolymarketMainUM.ContentUM.Loading,
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),

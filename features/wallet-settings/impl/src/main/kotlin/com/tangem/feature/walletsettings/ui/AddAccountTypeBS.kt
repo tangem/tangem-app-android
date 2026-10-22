@@ -44,6 +44,7 @@ internal fun AddAccountTypeBS(
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
+        showDragIndicator = false,
         title = {
             TangemModal.TopNavigation(
                 title = resourceReference(R.string.account_form_title_create),

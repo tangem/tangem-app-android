@@ -677,6 +677,40 @@ internal class SdkTransactionTypeConverterTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IncentiveClaim {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun convert(model: IncentiveClaimModel) {
+            // Arrange
+            val converter = createConverter(currency = model.currency)
+            val item = item(
+                destination = singleContract(YIELD_MODULE_CONTRACT),
+                methodId = model.methodId,
+                amount = model.amount,
+            )
+
+            // Act
+            val actual = converter.convert(item)
+
+            // Assert
+            assertThat(actual).isEqualTo(TxInfo.TransactionType.IncentiveClaim)
+        }
+
+        private fun provideTestModels(): List<IncentiveClaimModel> {
+            val coin = currencyFactory.createCoin(Blockchain.Ethereum)
+            val token = currencyFactory.createToken(Blockchain.Ethereum, contractAddress = USDT_CONTRACT)
+            return listOf(CLAIM_OWNER_METHOD_ID, CLAIM_PROCESSOR_METHOD_ID).flatMap { methodId ->
+                listOf(
+                    IncentiveClaimModel(methodId = methodId, currency = coin, amount = BigDecimal.ZERO),
+                    IncentiveClaimModel(methodId = methodId, currency = token, amount = BigDecimal("0.0042")),
+                )
+            }
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Joint {
 
         private val jointNetwork: Network = currencyFactory.ethereum.network.let { network ->
@@ -933,6 +967,8 @@ internal class SdkTransactionTypeConverterTest {
             DEPLOY_METHOD_ID to SmartContractMethod(info = null, source = null, name = "deployYieldModule"),
             INIT_METHOD_ID to SmartContractMethod(info = null, source = null, name = "initYieldToken"),
             REACTIVATE_METHOD_ID to SmartContractMethod(info = null, source = null, name = "reactivateToken"),
+            CLAIM_OWNER_METHOD_ID to SmartContractMethod(info = null, source = null, name = "claimMerklRewardsOwner"),
+            CLAIM_PROCESSOR_METHOD_ID to SmartContractMethod(info = null, source = null, name = "claimMerklRewards"),
         ),
         yieldSupplyAddresses = emptySet(),
         gaslessFeeAddresses = gaslessFeeAddresses,
@@ -979,6 +1015,12 @@ internal class SdkTransactionTypeConverterTest {
 
     private fun singleContract(address: String) = TransactionHistoryItem.DestinationType.Single(
         addressType = TransactionHistoryItem.AddressType.Contract(address),
+    )
+
+    internal data class IncentiveClaimModel(
+        val methodId: String,
+        val currency: CryptoCurrency,
+        val amount: BigDecimal,
     )
 
     internal data class YieldModuleCallModel(
@@ -1126,6 +1168,8 @@ internal class SdkTransactionTypeConverterTest {
         const val DEPLOY_METHOD_ID = "0xcbeda14c"
         const val INIT_METHOD_ID = "0xebd4b81c"
         const val REACTIVATE_METHOD_ID = "0xc478e956"
+        const val CLAIM_OWNER_METHOD_ID = "0xb4701e3e"
+        const val CLAIM_PROCESSOR_METHOD_ID = "0xbebc896c"
         const val YIELD_MODULE_CONTRACT = "0x4444444444444444444444444444444444444444"
 
         /** An ABI word, in hex characters: 32 bytes. */

@@ -322,6 +322,105 @@ internal class SendConfirmModelTest : SendModelTestBase() {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ReportSendIntent {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN send opened for an intent WHEN send succeeds THEN its hash is reported for the intent`(
+            model: ReportIntentModel,
+        ) = runTest {
+            // Arrange
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            coEvery { sendTransactionUseCase(any(), any(), any()) } returns REGULAR_TX_HASH.right()
+            coEvery { createAndSendGaslessTransactionUseCase(any(), any(), any()) } returns GASLESS_TX_HASH.right()
+            val state = if (model.isGaslessFee) gaslessFeeState() else normalFeeState()
+            createSendConfirmModel(this, intentConfirmParams(state, intentId = INTENT_ID))
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                reportSendIntentHashUseCase(intentId = INTENT_ID, txHash = model.expectedTxHash)
+            }
+        }
+
+        @Test
+        fun `GIVEN send opened without an intent WHEN send succeeds THEN nothing is reported`() = runTest {
+            // Arrange
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            createSendConfirmModel(this, intentConfirmParams(normalFeeState(), intentId = null))
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { reportSendIntentHashUseCase(any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN send opened for an intent WHEN send fails THEN nothing is reported`() = runTest {
+            // Arrange
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            coEvery { sendTransactionUseCase(any(), any(), any()) } returns
+                mockk<SendTransactionError>(relaxed = true).left()
+            createSendConfirmModel(this, intentConfirmParams(normalFeeState(), intentId = INTENT_ID))
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { reportSendIntentHashUseCase(any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN reporting fails WHEN send succeeds THEN the send still completes`() = runTest {
+            // Arrange
+            val onSendTransaction = mockk<() -> Unit>(relaxed = true)
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            coEvery { reportSendIntentHashUseCase(any(), any()) } returns IllegalStateException("boom").left()
+            val params = defaultSendConfirmParams(
+                state = normalFeeState(),
+                cryptoCurrencyStatus = loadedFeeStatus,
+                feeCryptoCurrencyStatus = loadedFeeStatus,
+            ).copy(intentId = INTENT_ID, onSendTransaction = onSendTransaction)
+            createSendConfirmModel(this, MutableParamsContainer(params))
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { onSendTransaction.invoke() }
+        }
+
+        private fun intentConfirmParams(state: SendUM, intentId: String?) = MutableParamsContainer(
+            defaultSendConfirmParams(
+                state = state,
+                cryptoCurrencyStatus = loadedFeeStatus,
+                feeCryptoCurrencyStatus = loadedFeeStatus,
+            ).copy(intentId = intentId),
+        )
+
+        private fun provideTestModels() = listOf(
+            ReportIntentModel(isGaslessFee = false, expectedTxHash = REGULAR_TX_HASH),
+            ReportIntentModel(isGaslessFee = true, expectedTxHash = GASLESS_TX_HASH),
+        )
+    }
+
+    @Nested
     inner class TronGaslessMaxSend {
 
         @Test
@@ -555,6 +654,26 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         }
 
         @Test
+        fun `GIVEN a sent operation WHEN the success button is clicked THEN the whole flow is closed`() = runTest {
+            // Arrange
+            val onCloseFlow: () -> Unit = mockk(relaxed = true)
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
+            coEvery { jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any()) } returns Unit.right()
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = {}, onCloseFlow = onCloseFlow))
+            advanceUntilIdle()
+            sut.onSendClick()
+            advanceUntilIdle()
+            val successUM = sut.uiState.value.confirmUM as ConfirmUM.Success
+
+            // Act
+            sut.primaryButtonUM(successUM).onClick()
+
+            // Assert
+            verify(exactly = 1) { onCloseFlow() }
+        }
+
+        @Test
         fun `GIVEN the whole balance entered WHEN onSendClick THEN the operation sends the balance minus the fee`() =
             runTest {
                 // Arrange — the Safe pays the fee from the same balance, so the entered maximum has to shrink by it
@@ -655,6 +774,27 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // Assert
             verify(exactly = 1) { sendConfirmAlertFactory.getJointNetworkStateMovedState() }
         }
+
+        @Test
+        fun `GIVEN blockaid flags the operation WHEN onSendClick THEN the dangerous transaction alert is shown`() =
+            runTest {
+                // Arrange
+                val onSendTransaction: () -> Unit = mockk(relaxed = true)
+                coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+                coEvery {
+                    jointSendDelegate.createOperation(jointAccount, any(), any(), any(), any())
+                } returns JointOperationCreateError.Malicious.left()
+                val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = onSendTransaction))
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { sendConfirmAlertFactory.getJointMaliciousState() }
+                verify(exactly = 0) { onSendTransaction() }
+            }
 
         @Test
         fun `GIVEN the composition mismatches WHEN onSendClick THEN the sending blocked alert is shown`() = runTest {
@@ -854,6 +994,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         /** Confirm starts empty so the model builds the real Content with the signatures itself */
         private fun jointConfirmParams(
             onSendTransaction: () -> Unit,
+            onCloseFlow: () -> Unit = {},
             enteredAmount: BigDecimal = BigDecimal.ONE,
             transactionFeeExtended: TransactionFeeExtended? = null,
             feeCryptoCurrencyStatus: CryptoCurrencyStatus = loadedFeeStatus,
@@ -871,6 +1012,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             ).copy(
                 accountFlow = MutableStateFlow(jointAccount),
                 onSendTransaction = onSendTransaction,
+                onCloseFlow = onCloseFlow,
             ),
         )
     }
@@ -1009,10 +1151,15 @@ internal class SendConfirmModelTest : SendModelTestBase() {
 
     data class DispatchModel(val isGaslessFee: Boolean)
 
+    data class ReportIntentModel(val isGaslessFee: Boolean, val expectedTxHash: String)
+
     private companion object {
         val TRON_BALANCE: BigDecimal = BigDecimal("24.929183")
         val TRON_GASLESS_FEE: BigDecimal = BigDecimal("2.51")
         const val DESTINATION_ADDRESS = "destinationAddr"
+        const val INTENT_ID = "intent-1"
+        const val REGULAR_TX_HASH = "0xregular"
+        const val GASLESS_TX_HASH = "0xgasless"
     }
 
     // endregion
