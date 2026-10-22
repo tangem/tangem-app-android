@@ -1,6 +1,6 @@
 package com.tangem.features.jointaccount.supportednetworks.ui.state
 
-import androidx.annotation.DrawableRes
+import com.tangem.core.ui.ds.image.TangemIconUM
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class JointSupportedNetworksUM(
@@ -13,6 +13,6 @@ internal data class JointSupportedNetworksUM(
         val id: String,
         val name: String,
         val symbol: String,
-        @field:DrawableRes val iconResId: Int,
+        val icon: TangemIconUM,
     )
 }

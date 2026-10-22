@@ -20,21 +20,15 @@ import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 
 /**
- * Maps a [JointAccount] (plus the invites this device holds) to [JointAccountMembersUM]. Everything on the screen
- * follows [JointAccount.status], whether this wallet is the creator and whether it has confirmed the account
- * (see [MembersScreenPhase]); there is no separate "mode" per entry point.
- *
- * The wallet recognises itself among the members by [Input.ownAddress], derived from the keys on the device: the
- * backend marks nobody as "you".
+ * Everything on the screen follows the [MembersScreenPhase]; there is no separate mode per entry point. The wallet
+ * recognises itself among the members by [Input.ownAddress]: the backend marks nobody as "you".
  */
 internal class JointAccountToMembersUMConverter(
     private val callbacks: Callbacks,
 ) : Converter<JointAccountToMembersUMConverter.Input, JointAccountMembersUM> {
-
     /**
-     * @property invites    the invites this device holds; only the creating device ever receives them
-     * @property ownAddress this wallet's owner address in the account, null while its key is not derived yet
-     * @property nowMillis  the moment an invite's expiry is judged against
+     * @property invites    only the creating device ever receives them
+     * @property ownAddress `null` while the wallet's key is not derived yet
      */
     data class Input(
         val account: JointAccount,
