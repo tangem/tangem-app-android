@@ -678,6 +678,7 @@ internal class PolymarketPositionDetailsModelTest {
             getEvent = getEvent,
             messageSender = messageSender,
             regionAccess = regionAccess,
+            urlOpener = mockk(relaxed = true),
         ).also(models::add)
     }
 

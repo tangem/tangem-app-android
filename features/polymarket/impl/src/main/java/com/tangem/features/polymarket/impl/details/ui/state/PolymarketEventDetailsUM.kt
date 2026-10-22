@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.details.ui.state
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.features.polymarket.impl.common.PolymarketResolutionSourceUM
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -52,6 +53,8 @@ internal sealed interface PolymarketEventDetailsUM {
         val onShareClick: () -> Unit,
         val onClosedMarketsClick: () -> Unit,
         val onReadMoreClick: () -> Unit,
+        val resolutionSource: PolymarketResolutionSourceUM? = null,
+        val onResolutionSourceClick: (String) -> Unit = {},
     ) : PolymarketEventDetailsUM
 }
 

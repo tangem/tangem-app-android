@@ -16,6 +16,7 @@ import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import com.tangem.features.polymarket.impl.common.outcomeAccent
 import com.tangem.features.polymarket.impl.common.toBubbleVariant
+import com.tangem.features.polymarket.impl.common.toResolutionSourceUM
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM.Content
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM.Notice
@@ -69,6 +70,7 @@ internal class PolymarketPositionDetailsConverter :
             information = PolymarketPositionDetailsUM.Information(
                 invested = stringReference(position.initialValue.formatPolymarketMoney()),
                 status = resourceReference(statusLabel(position)),
+                resolutionSource = position.resolutionSource.toResolutionSourceUM(),
                 endDate = position.endDate?.let {
                     stringReference(it.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)))
                 },
