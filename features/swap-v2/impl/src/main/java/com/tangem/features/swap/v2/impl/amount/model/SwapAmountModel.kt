@@ -139,6 +139,7 @@ internal class SwapAmountModel @Inject constructor(
         subscribeOnAmountReduceByTriggerUpdates()
         subscribeOnAmountIgnoreReduceTriggerUpdates()
         subscribeOnReloadQuotesTriggerUpdates()
+        subscribeOnHiddenProvidersUpdates()
         subscribeOnBalanceHiddenUpdates()
     }
 
@@ -536,6 +537,31 @@ internal class SwapAmountModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    private fun subscribeOnHiddenProvidersUpdates() {
+        params.hiddenProviderIdsFlow
+            .drop(1)
+            .onEach { hiddenProviderIds ->
+                uiState.transformerUpdate(
+                    SwapAmountHideProvidersTransformer(
+                        providerIds = hiddenProviderIds,
+                        secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
+                        secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
+                        isNeedApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
+                        isBalanceHidden = params.isBalanceHidingFlow.value,
+                        primaryFiatRateUSD = primaryFiatRateUSD,
+                        secondaryFiatRateUSD = secondaryFiatRateUSD,
+                    ),
+                )
+                val state = uiState.value as? SwapAmountUM.Content ?: return@onEach
+                val shouldSwitch = shouldSwitchToFloat(state)
+                if (shouldSwitch) {
+                    uiState.transformerUpdate(SwapAmountSwitchToFloatTransformer(params.isBalanceHidingFlow.value))
+                }
+                startLoadingQuotesTask(isSilentReload = !shouldSwitch)
+            }
+            .launchIn(modelScope)
+    }
+
     private fun subscribeOnAutoupdateEnabling() {
         autoUpdateSubscriberJob = swapAmountUpdateListener.autoUpdateTriggerFlow
             .distinctUntilChanged()
@@ -868,6 +894,19 @@ internal class SwapAmountModel @Inject constructor(
                 isBalanceHidden = params.isBalanceHidingFlow.value,
             ),
         )
+    }
+
+    private fun shouldSwitchToFloat(state: SwapAmountUM.Content): Boolean {
+        if (state.selectedAmountType != SwapAmountType.To) return false
+        val toCurrency = state.swapDirection.withSwapDirection(
+            onDirect = { state.secondaryCryptoCurrencyStatus?.currency },
+            onReverse = { state.primaryCryptoCurrencyStatus.currency },
+        ) ?: return false
+
+        val providers = state.swapCurrencies.getGroupWithDirection(state.swapDirection).available
+            .filter { swapCurrencyStatus -> swapCurrencyStatus.currencyStatus.currency.id == toCurrency.id }
+            .flatMap(SwapCryptoCurrency::providers)
+        return providers.isNotEmpty() && providers.getSwapRateMode() == SwapRateMode.FLOAT_ONLY
     }
 
     private fun startLoadingQuotesTask(isSilentReload: Boolean) {
