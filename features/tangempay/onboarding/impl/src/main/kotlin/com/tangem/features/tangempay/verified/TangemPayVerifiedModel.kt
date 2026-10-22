@@ -87,7 +87,7 @@ internal class TangemPayVerifiedModel @Inject constructor(
 
     private fun onChoosePlanClick() {
         stackNavigation.pushNew(
-            TangemPayVerifiedRoute.SelectPlan(availableProducts = availableProducts)
+            TangemPayVerifiedRoute.SelectPlan(availableProducts = availableProducts),
         )
     }
 
