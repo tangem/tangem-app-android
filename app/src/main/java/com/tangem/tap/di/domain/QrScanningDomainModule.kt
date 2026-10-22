@@ -8,6 +8,7 @@ import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.qrscanning.QrDeepLinkMatcher
 import com.tangem.domain.qrscanning.repository.QrScanningEventsRepository
 import com.tangem.domain.qrscanning.usecases.EmitQrScannedEventUseCase
+import com.tangem.domain.qrscanning.usecases.ExtractQrRecipientAddressUseCase
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.qrscanning.usecases.ResolveQrSendTargetsUseCase
@@ -39,6 +40,14 @@ internal object QrScanningDomainModule {
     @Singleton
     fun provideParseQrCodeUseCase(repository: QrScanningEventsRepository): ParseQrCodeUseCase {
         return ParseQrCodeUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideExtractQrRecipientAddressUseCase(
+        repository: QrScanningEventsRepository,
+    ): ExtractQrRecipientAddressUseCase {
+        return ExtractQrRecipientAddressUseCase(repository)
     }
 
     @Provides

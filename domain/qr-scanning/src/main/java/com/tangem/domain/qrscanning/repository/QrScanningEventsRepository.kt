@@ -16,4 +16,11 @@ interface QrScanningEventsRepository {
     fun parseQrCode(qrCode: String, cryptoCurrency: CryptoCurrency): QrResult
 
     fun classify(qrCode: String, userCurrencies: List<CryptoCurrency>): ClassifiedQrContent
+
+    /**
+     * Extracts the recipient address from a scanned QR code without knowing its currency.
+     * Returns an empty string when the payment URI calls a contract function other than `transfer`, or a
+     * `transfer` lacks the `address` parameter, so a call target is never mistaken for the recipient.
+     */
+    fun extractRecipientAddress(qrCode: String): String
 }
