@@ -25,6 +25,7 @@ import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvid
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.math.BigDecimal
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 @ModelScoped
@@ -35,7 +36,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
 ) {
 
     private val balanceWasSentMap = mutableMapOf<String, Boolean>()
-    private val sentBalanceLoaded = mutableMapOf<UserWalletId, BalanceLoadedPayload>()
+    private val sentBalanceLoaded = ConcurrentHashMap<UserWalletId, BalanceLoadedPayload>()
     private val yieldPromoShownMap = mutableMapOf<String, Boolean>()
     private val mutex = Mutex()
     private val loadingTraces = mutableMapOf<UserWalletId, Trace>()
@@ -102,7 +103,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
 
     // Balance updates (cache → actual, networks finishing, quote refreshes) must not re-send the event:
     // only a change of what the event reports does
-    private suspend fun sendBalanceLoadedEventIfNeeded(
+    private fun sendBalanceLoadedEventIfNeeded(
         userWalletId: UserWalletId,
         fiatBalance: TotalFiatBalance,
         currenciesStatuses: List<CryptoCurrencyStatus>,
@@ -110,8 +111,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
         val balanceState = createCardBalanceState(fiatBalance, currenciesStatuses) ?: return
         val payload = BalanceLoadedPayload(balance = balanceState, tokensCount = currenciesStatuses.size)
 
-        val isChanged = mutex.withLock { sentBalanceLoaded.put(userWalletId, payload) != payload }
-        if (!isChanged) return
+        if (sentBalanceLoaded.put(userWalletId, payload) == payload) return
 
         analyticsEventHandler.send(
             Basic.BalanceLoaded(balance = payload.balance, tokensCount = payload.tokensCount),
