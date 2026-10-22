@@ -9,12 +9,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
+import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.feed.components.v2.model.FeedForYouModel
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
@@ -27,7 +27,7 @@ import dagger.assisted.AssistedInject
 /**
  * [FeedRoute.ForYou] screen of the v2 feed: the existing For You content topped with the DS3
  * [TangemTopNavigation] instead of the legacy sheet-header title. The legacy callbacks are
- * satisfied with router pushes — no lambdas cross the route.
+ * handled by [FeedForYouModel] — no lambdas cross the route.
  */
 @Stable
 internal class FeedForYouComponent @AssistedInject constructor(
@@ -36,9 +36,11 @@ internal class FeedForYouComponent @AssistedInject constructor(
     forYouComponentFactory: ForYouComponent.Factory,
 ) : FeedScreenComponent, AppComponentContext by context {
 
+    private val model: FeedForYouModel = getOrCreateModel()
+
     private val legacyComponent = forYouComponentFactory.create(
         context = context.child(key = "legacy"),
-        params = ForYouComponent.Params(callbacks = routerCallbacks()),
+        params = ForYouComponent.Params(callbacks = model),
     )
 
     @Composable
@@ -67,23 +69,6 @@ internal class FeedForYouComponent @AssistedInject constructor(
             contentPadding = contentPadding,
             modifier = modifier,
         )
-    }
-
-    private fun routerCallbacks(): ForYouComponent.ForYouModelCallbacks {
-        return object : ForYouComponent.ForYouModelCallbacks {
-
-            override fun onTokenClick(userWalletId: UserWalletId, currency: CryptoCurrency) {
-                router.push(
-                    route = FeedRoute.TokenSummary(
-                        token = FeedRoute.TokenSummary.Token.Portfolio(cryptoCurrency = currency),
-                    ),
-                )
-            }
-
-            override fun onAllEarnTokensClick() {
-                router.push(route = FeedRoute.Earn())
-            }
-        }
     }
 
     @AssistedFactory
