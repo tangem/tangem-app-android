@@ -98,66 +98,59 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
      * Safe to interrupt: the flow resumes a partly finished creation on the next attempt rather than
      * creating a second wallet.
      */
-    fun start(
-        scope: CoroutineScope,
-        provider: SocialLoginProvider,
-        source: AnalyticsParam.ScreensSources,
-        host: Host,
-    ) {
-        scope.launch { signIn(provider, source, host) }
+    fun start(scope: CoroutineScope, provider: SocialLoginProvider, host: Host) {
+        scope.launch { signIn(provider, host) }
     }
 
-    suspend fun signIn(provider: SocialLoginProvider, source: AnalyticsParam.ScreensSources, host: Host) =
-        coroutineScope {
-            val attemptId = UUID.randomUUID().toString()
-            TangemLogger.i("Social login attempt $attemptId started")
+    suspend fun signIn(provider: SocialLoginProvider, host: Host) = coroutineScope {
+        val attemptId = UUID.randomUUID().toString()
+        TangemLogger.i("Social login attempt $attemptId started")
 
-            var marketingConsent: MarketingConsent? = null
-            var minStageDisplay: Job? = null
+        var marketingConsent: MarketingConsent? = null
+        var minStageDisplay: Job? = null
 
-            // Released only after the result is processed: a failure signs the provider out, and a tap accepted
-            // before that finishes lets the next attempt read the account it is still clearing. The progress
-            // stays up until then too, or the screen would sit locked with nothing on it. The sign-in itself is
-            // inside the try, so a throw out of it cannot leave the screen locked either.
-            try {
-                val result = socialLoginUseCase.signIn(
-                    provider = provider,
-                    onStageChanged = { stage ->
-                        val progress = stage.toProgressUM()
-                        // a Creating / Restoring screen that only flashes reads as a glitch
-                        if (progress is SocialLoginProgressUM.Stage && minStageDisplay == null) {
-                            minStageDisplay = launch { delay(STAGE_MIN_DISPLAY) }
-                        }
-                        host.onProgress(progress)
-                    },
-                    requestBackupRetry = ::askBackupRetry,
-                    requestConsent = {
-                        host.onProgress(null)
-                        consentPrompt(
-                            provider = provider,
-                            onConsent = host::onConsent,
-                            onConfirmed = { marketingConsent = it },
-                        ).await()
-                    },
-                )
+        // Released only after the result is processed: a failure signs the provider out, and a tap accepted
+        // before that finishes lets the next attempt read the account it is still clearing. The progress
+        // stays up until then too, or the screen would sit locked with nothing on it. The sign-in itself is
+        // inside the try, so a throw out of it cannot leave the screen locked either.
+        try {
+            val result = socialLoginUseCase.signIn(
+                provider = provider,
+                onStageChanged = { stage ->
+                    val progress = stage.toProgressUM()
+                    // a Creating / Restoring screen that only flashes reads as a glitch
+                    if (progress is SocialLoginProgressUM.Stage && minStageDisplay == null) {
+                        minStageDisplay = launch { delay(STAGE_MIN_DISPLAY) }
+                    }
+                    host.onProgress(progress)
+                },
+                requestBackupRetry = ::askBackupRetry,
+                requestConsent = {
+                    host.onProgress(null)
+                    consentPrompt(
+                        provider = provider,
+                        onConsent = host::onConsent,
+                        onConfirmed = { marketingConsent = it },
+                    ).await()
+                },
+            )
 
-                result.fold(
-                    ifLeft = { error -> onFailure(provider, error, attemptId) },
-                    ifRight = { outcome ->
-                        onSuccess(
-                            outcome = outcome,
-                            source = source,
-                            marketingConsent = marketingConsent,
-                            minStageDisplay = minStageDisplay,
-                        )
-                    },
-                )
-            } finally {
-                minStageDisplay?.cancel()
-                host.onProgress(null)
-                host.onFinished()
-            }
+            result.fold(
+                ifLeft = { error -> onFailure(provider, error, attemptId) },
+                ifRight = { outcome ->
+                    onSuccess(
+                        outcome = outcome,
+                        marketingConsent = marketingConsent,
+                        minStageDisplay = minStageDisplay,
+                    )
+                },
+            )
+        } finally {
+            minStageDisplay?.cancel()
+            host.onProgress(null)
+            host.onFinished()
         }
+    }
 
     interface Host {
 
@@ -213,16 +206,15 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
 
     private suspend fun onSuccess(
         outcome: SocialLoginOutcome,
-        source: AnalyticsParam.ScreensSources,
         marketingConsent: MarketingConsent?,
         minStageDisplay: Job?,
     ) {
         // Before the selection: the wallet is saved either way, and a retry would come back as a restore.
         val creationType = when (outcome) {
-            is SocialLoginOutcome.WalletCreated -> AnalyticsParam.WalletCreationType.NewSocialLogin
-            is SocialLoginOutcome.WalletRestored -> AnalyticsParam.WalletCreationType.SocialLoginImport
+            is SocialLoginOutcome.WalletCreated -> AnalyticsParam.WalletCreationType.NewSeed
+            is SocialLoginOutcome.WalletRestored -> AnalyticsParam.WalletCreationType.SeedImport
         }
-        sendWalletCreated(source, creationType)
+        sendWalletCreated(creationType)
 
         // Leaving the previous wallet selected would open its portfolio, as if the sign-in went elsewhere.
         val userWallet = userWalletsListRepository.select(outcome.userWalletId).getOrElse { error ->
@@ -252,14 +244,10 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         router.replaceAll(AppRoute.Wallet)
     }
 
-    private suspend fun sendWalletCreated(
-        source: AnalyticsParam.ScreensSources,
-        creationType: AnalyticsParam.WalletCreationType,
-    ) {
-        analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Finished(source = source))
+    private suspend fun sendWalletCreated(creationType: AnalyticsParam.WalletCreationType) {
         analyticsEventHandler.send(
             OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
-                source = source,
+                source = AnalyticsParam.ScreensSources.SocialLogin,
                 creationType = creationType,
                 seedPhraseLength = SEED_PHRASE_LENGTH,
                 passPhraseState = AnalyticsParam.EmptyFull.Empty,
