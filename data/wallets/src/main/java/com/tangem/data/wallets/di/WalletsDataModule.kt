@@ -169,6 +169,7 @@ internal interface WalletsDataBindsModule {
     ): HotWalletAccessCodeAttemptsRepository
 
     @Binds
+    @Singleton
     fun bindWalletCardsBackupDeliveryScheduler(
         impl: DefaultWalletCardsBackupDeliveryScheduler,
     ): WalletCardsBackupDeliveryScheduler
