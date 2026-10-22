@@ -250,6 +250,8 @@ object TangemPayTestTags {
     const val BANK_WITHDRAW_SUCCESS_SCREEN = "TANGEM_PAY_BANK_WITHDRAW_SUCCESS_SCREEN"
 
     const val RESIDENCY_ROW = "TANGEM_PAY_RESIDENCY_ROW"
+    const val RESIDENCY_SEARCH = "TANGEM_PAY_RESIDENCY_SEARCH"
+    const val RESIDENCY_EMPTY = "TANGEM_PAY_RESIDENCY_EMPTY"
 
     fun dailyLimitPresetChip(rawValue: String): String = "TANGEM_PAY_DAILY_LIMIT_PRESET_$rawValue"
 
