@@ -1,7 +1,6 @@
 package com.tangem.features.jointaccount.supportednetworks.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,12 +11,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.core.ui.ds.image.TangemIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.modal.TangemModal
@@ -111,9 +111,8 @@ private fun NetworkRow(item: NetworkItemUM, modifier: Modifier = Modifier) {
         verticalAlignment = TangemRowVerticalAlignment.Center,
         contentLead = TangemRowContentLead.Start,
         startSlot = {
-            Image(
-                painter = painterResource(id = item.iconResId),
-                contentDescription = null,
+            TangemIcon(
+                tangemIconUM = item.icon,
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape),
@@ -148,19 +147,19 @@ private fun JointSupportedNetworksContentPreview() {
                             id = "ethereum",
                             name = "Ethereum",
                             symbol = "ETH",
-                            iconResId = CoreUiR.drawable.img_eth_22,
+                            icon = TangemIconUM.Image(imageRes = CoreUiR.drawable.img_eth_22),
                         ),
                         NetworkItemUM(
                             id = "polygon-pos",
                             name = "Polygon PoS",
                             symbol = "POL",
-                            iconResId = CoreUiR.drawable.img_polygon_22,
+                            icon = TangemIconUM.Image(imageRes = CoreUiR.drawable.img_polygon_22),
                         ),
                         NetworkItemUM(
                             id = "binance-smart-chain",
                             name = "BNB Smart Chain",
                             symbol = "BNB",
-                            iconResId = CoreUiR.drawable.img_bsc_22,
+                            icon = TangemIconUM.Image(imageRes = CoreUiR.drawable.img_bsc_22),
                         ),
                     ),
                     onDismiss = {},

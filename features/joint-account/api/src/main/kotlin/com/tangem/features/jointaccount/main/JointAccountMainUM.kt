@@ -6,35 +6,18 @@ import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.TextReference
 
-/**
- * UI model for the joint-account row shown in the wallet account list.
- *
- * Full UI parity with a crypto-account row (icon, title, subtitle, fiat balance and price change),
- * but built on the new design system (DS3: `TangemRow`, `colors3` / `typography3`). Joint-specific
- * differences are limited to the subtitle text and the extra content below the row (invite banner).
- */
+/** The joint-account row of the wallet account list */
 @Immutable
 sealed interface JointAccountMainUM {
 
-    /** Nothing to render (e.g. joint accounts unavailable for this wallet). */
     data object Empty : JointAccountMainUM
 
-    /** First-time fetch: shimmer placeholder row. */
     data object Loading : JointAccountMainUM
 
     /**
-     * Not yet activated — waiting for members to join or for the creator to activate. Renders as a normal
-     * account row with a progress subtitle (e.g. "1 of 5 members", "Waiting for activation") and a zero
-     * balance; no token list. The creator additionally sees the next-step [banner].
+     * Not activated yet: a normal row with a progress subtitle and a zero balance, no token list.
      *
-     * @property title       account name shown as the row title.
-     * @property subtitle    member-collection progress, e.g. "1 of 5 members".
-     * @property icon        account icon (creator-chosen crypto-portfolio icon + color).
-     * @property balance     total fiat balance (zero before activation).
-     * @property priceChange price-change indicator under the balance; `null` hides it.
-     * @property banner      the creator's next step under the row — invite more members while slots are free,
-     * activate once the account is confirmed ready; `null` for a member and while there is nothing to do.
-     * @property onClick     tap on the row → members screen.
+     * @property banner the next step under the row; `null` while there is nothing for this device to do
      */
     data class WaitingMembers(
         val title: TextReference,
@@ -46,24 +29,13 @@ sealed interface JointAccountMainUM {
         val onClick: () -> Unit,
     ) : JointAccountMainUM
 
-    /** The call-to-action strip under a [WaitingMembers] row */
     data class BannerUM(
         val text: TextReference,
         val icon: ImageVector,
         val onClick: () -> Unit,
     )
 
-    /**
-     * Blocked — the composition does not verify: the row stays with a dimmed balance, it cannot be expanded, and a
-     * tap shows an alert instead of opening anything.
-     *
-     * @property title       account name.
-     * @property subtitle    token and member counts.
-     * @property icon        account icon.
-     * @property balance     total fiat balance of the account.
-     * @property priceChange price-change indicator under the balance; `null` hides it.
-     * @property onClick     tap on the row.
-     */
+    /** The composition does not verify: a dimmed, non-expandable row whose tap shows an alert */
     data class Blocked(
         val title: TextReference,
         val subtitle: TextReference,
@@ -73,6 +45,6 @@ sealed interface JointAccountMainUM {
         val onClick: () -> Unit,
     ) : JointAccountMainUM
 
-    /** Transient backend error (unavailable / not synced): disabled, non-interactive row. */
+    /** Transient backend error: a disabled, non-interactive row */
     data object TemporaryUnavailable : JointAccountMainUM
 }
