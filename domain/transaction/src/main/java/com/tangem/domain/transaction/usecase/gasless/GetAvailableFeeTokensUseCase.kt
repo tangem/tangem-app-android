@@ -3,6 +3,7 @@ package com.tangem.domain.transaction.usecase.gasless
 import arrow.core.Either
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -19,6 +20,7 @@ import java.math.BigDecimal
 
 class GetAvailableFeeTokensUseCase(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
@@ -57,11 +59,18 @@ class GetAvailableFeeTokensUseCase(
                         accountStatusList.flattenPersonalCurrencies()
                     }
 
-                    val nativeCurrencyStatus = if (isJointNetwork) {
-                        userCurrenciesStatuses.firstOrNull { it.currency is CryptoCurrency.Coin }
-                    } else {
-                        accountStatusList.getCoinStatus(network).getOrNull()
-                    } ?: raiseIllegalStateError("No native currency found: ${network.id}")
+                    val feeCurrencies = resolveNetworkFeeCurrencies(
+                        nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
+                        userWalletId = userWallet.walletId,
+                        network = network,
+                        portfolioCoinStatus = if (isJointNetwork) {
+                            userCurrenciesStatuses.firstOrNull { it.currency is CryptoCurrency.Coin }
+                        } else {
+                            accountStatusList.getCoinStatus(network).getOrNull()
+                        },
+                    )
+                    val nativeCurrencyStatus = feeCurrencies.nativeCurrencyStatus
+                    val nonPortfolioStatuses = feeCurrencies.nonPortfolioStatuses
 
                     // Tron gasless is a parallel path: its supported fee tokens come from the Tron
                     // gasless backend, not the EVM gasless service. Its fee is a backend compensation
@@ -86,6 +95,10 @@ class GetAvailableFeeTokensUseCase(
 
                     if (!currencyChecksRepository.isNetworkSupportedForGaslessTx(network)) {
                         return@either AvailableFeeTokens(tokens = listOf(nativeCurrencyStatus))
+                    }
+
+                    if (nonPortfolioStatuses.isNotEmpty()) {
+                        return@either AvailableFeeTokens(tokens = getGaslessTokens(network, nonPortfolioStatuses))
                     }
 
                     buildFeeTokens(
