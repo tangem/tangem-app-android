@@ -6,7 +6,6 @@ import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -16,6 +15,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -77,6 +77,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -88,6 +89,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 import java.util.Currency
 import com.tangem.core.ui.R as CoreUiR
@@ -112,6 +114,9 @@ internal class TangemPayDetailsModelTest {
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository = mockk(relaxed = true)
     private val findActiveBankOfframpOrderUseCase: FindActiveBankOfframpOrderUseCase = mockk()
+    private val cashbackBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk {
+        every { isBalanceHidden() } returns flowOf(false)
+    }
     private val cashbackControllerFactory = object : TangemPayCashbackController.Factory {
         override fun create(scope: CoroutineScope, accountStatus: StateFlow<AccountStatus.Payment>) =
             TangemPayCashbackController(
@@ -121,6 +126,7 @@ internal class TangemPayDetailsModelTest {
                 getCashbackSummaryUseCase = getCashbackSummaryUseCase,
                 getCashbackDeactivationDismissedUseCase = getCashbackDeactivationDismissedUseCase,
                 setCashbackDeactivationDismissedUseCase = setCashbackDeactivationDismissedUseCase,
+                getBalanceHidingSettingsUseCase = cashbackBalanceHidingSettingsUseCase,
                 analytics = analytics,
                 router = router,
             )
@@ -243,10 +249,13 @@ internal class TangemPayDetailsModelTest {
             }
 
         @Test
-        fun `GIVEN cached alt_block summary WHEN status re-emitted THEN one cashback item under current plan`() =
+        fun `GIVEN cached zero alt_block summary WHEN status re-emitted THEN one cashback item under current plan`() =
             runTest {
                 // Arrange
-                cachedSummary.value = enabledCashbackSummary(displayMode = CashbackDisplayMode.ALT_BLOCK)
+                cachedSummary.value = enabledCashbackSummary(
+                    displayMode = CashbackDisplayMode.ALT_BLOCK,
+                    confirmedAmount = BigDecimal.ZERO,
+                )
                 val statusFlow = MutableStateFlow(paymentStatus(loadedStatus(planState = tariffPlanState())))
                 val model = createModel(testScope = this, planState = tariffPlanState(), statusFlow = statusFlow)
                 advanceUntilIdle()
@@ -262,6 +271,30 @@ internal class TangemPayDetailsModelTest {
                 assertThat(menuTitleIds(model)).containsExactly(
                     R.string.tangempay_current_plan_title,
                     R.string.tangempay_cashback_menu_item_title,
+                    R.string.tangempay_pay_support,
+                ).inOrder()
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN cached non-zero alt_block summary WHEN status re-emitted THEN widget shown without cashback item`() =
+            runTest {
+                // Arrange
+                cachedSummary.value = enabledCashbackSummary(displayMode = CashbackDisplayMode.ALT_BLOCK)
+                val statusFlow = MutableStateFlow(paymentStatus(loadedStatus(planState = tariffPlanState())))
+                val model = createModel(testScope = this, planState = tariffPlanState(), statusFlow = statusFlow)
+                advanceUntilIdle()
+
+                // Act
+                statusFlow.value = paymentStatus(
+                    loadedStatus(availableForWithdrawal = BigDecimal.TEN, planState = tariffPlanState()),
+                )
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value.cashbackBlockState).isInstanceOf(CashbackBlockUM.Widget::class.java)
+                assertThat(menuTitleIds(model)).containsExactly(
+                    R.string.tangempay_current_plan_title,
                     R.string.tangempay_pay_support,
                 ).inOrder()
                 model.onDestroy()
@@ -296,6 +329,25 @@ internal class TangemPayDetailsModelTest {
 
     internal data class NotLoadedStatusModel(val name: String, val status: PaymentAccountStatusValue) {
         override fun toString(): String = name
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN balance hiding setting WHEN status re-emits THEN balance visibility follows the setting`(
+        isBalanceHidden: Boolean,
+    ) = runTest {
+        // Arrange
+        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
+        val model = createModel(testScope = this, statusFlow = statusFlow, isBalanceHidden = isBalanceHidden)
+        advanceUntilIdle()
+
+        // Act
+        statusFlow.value = paymentStatus(loadedStatus(availableForWithdrawal = BigDecimal.TEN))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.isBalanceHidden).isEqualTo(isBalanceHidden)
+        model.onDestroy()
     }
 
     @ParameterizedTest
@@ -353,6 +405,22 @@ internal class TangemPayDetailsModelTest {
         }
 
     @Test
+    fun `GIVEN banking details error sheet WHEN retry loads credentials THEN product instance credentials returned`() =
+        runTest {
+            // Arrange
+            coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns BANK_CREDENTIALS.right()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            val actual = model.loadBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(BANK_CREDENTIALS.right())
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN loaded status WHEN banking details error shown THEN details error event sent`() = runTest {
         // GIVEN
         val model = createModel(testScope = this)
@@ -400,7 +468,7 @@ internal class TangemPayDetailsModelTest {
         advanceUntilIdle()
 
         // THEN
-        verify(exactly = 1) { router.replaceAll(routes = selectPlanRoutes(awaitingPlanSelection), onComplete = any()) }
+        verify(exactly = 1) { router.replaceAll(routes = selectPlanRoutes(), onComplete = any()) }
         model.onDestroy()
     }
 
@@ -446,7 +514,7 @@ internal class TangemPayDetailsModelTest {
 
             // THEN
             verify(exactly = 1) {
-                router.replaceAll(routes = selectPlanRoutes(awaitingPlanSelection), onComplete = any())
+                router.replaceAll(routes = selectPlanRoutes(), onComplete = any())
             }
             model.onDestroy()
         }
@@ -597,11 +665,8 @@ internal class TangemPayDetailsModelTest {
         ),
     )
 
-    private fun selectPlanRoutes(status: PaymentAccountStatusValue.AwaitingPlanSelection) = arrayOf(
-        TangemPayAccountDetailsInnerRoute.SelectPlan(
-            tariffPlan = status.tariffPlan,
-            source = TangemPaySelectPlanSource.TIERS_ONBOARDING,
-        ),
+    private fun selectPlanRoutes() = arrayOf(
+        TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.TIERS_ONBOARDING),
     )
 
     @Test
@@ -642,26 +707,8 @@ internal class TangemPayDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN bank offramp disabled WHEN withdraw clicked THEN swap is pushed without hub`() = runTest {
+    fun `GIVEN bank offramp available WHEN withdraw clicked THEN hub screen pushed and swap not pushed`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isBankOfframpEnabled } returns false
-        val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
-        advanceUntilIdle()
-
-        // Act
-        model.onClickWithdraw()
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 1) { router.push(match<AppRoute.Swap> { it.accountFlow == AccountFlow.Withdraw }) }
-        verify(exactly = 0) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN bank offramp enabled WHEN withdraw clicked THEN hub screen pushed and swap not pushed`() = runTest {
-        // Arrange
-        every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
         val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
         advanceUntilIdle()
 
@@ -679,7 +726,6 @@ internal class TangemPayDetailsModelTest {
     @Test
     fun `GIVEN bank offramp channel missing WHEN withdraw clicked THEN swap pushed instead of the hub`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
         val model = createModel(
             testScope = this,
             availableForWithdrawal = BigDecimal.TEN,
@@ -701,7 +747,6 @@ internal class TangemPayDetailsModelTest {
     fun `GIVEN bank offramp channel not known yet WHEN withdraw clicked THEN swap pushed instead of the hub`() =
         runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
             val model = createModel(
                 testScope = this,
                 availableForWithdrawal = BigDecimal.TEN,
@@ -723,7 +768,6 @@ internal class TangemPayDetailsModelTest {
     fun `GIVEN an active bank offramp order WHEN withdraw clicked THEN in progress error shown and nothing pushed`() =
         runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
             coEvery { findActiveBankOfframpOrderUseCase(any()) } returns bankOfframpOrder().right()
             val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
             advanceUntilIdle()
@@ -742,7 +786,6 @@ internal class TangemPayDetailsModelTest {
     fun `GIVEN the active order lookup fails WHEN withdraw clicked THEN hub pushed without in progress error`() =
         runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
             coEvery { findActiveBankOfframpOrderUseCase(any()) } returns VisaApiError.Unspecified.left()
             val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
             advanceUntilIdle()
@@ -758,12 +801,15 @@ internal class TangemPayDetailsModelTest {
         }
 
     @Test
-    fun `GIVEN active withdrawal and bank offramp disabled WHEN withdraw clicked THEN in progress error shown and nothing pushed`() =
+    fun `GIVEN active withdrawal and bank offramp channel missing WHEN withdraw clicked THEN in progress error shown and nothing pushed`() =
         runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isBankOfframpEnabled } returns false
             coEvery { tangemPayWithdrawRepository.hasWithdrawOrder(any()) } returns true
-            val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
+            val model = createModel(
+                testScope = this,
+                availableForWithdrawal = BigDecimal.TEN,
+                isBankOfframpAvailable = false,
+            )
             advanceUntilIdle()
 
             // Act
@@ -780,8 +826,10 @@ internal class TangemPayDetailsModelTest {
     fun `GIVEN no deposit address WHEN withdraw clicked THEN service unavailable sheet shown and nothing pushed`() =
         runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isBankOfframpEnabled } returns false
-            val model = createModel(testScope = this, statusValue = loadedStatus(statusNetworks = emptyList()))
+            val model = createModel(
+                testScope = this,
+                statusValue = loadedStatus(statusNetworks = emptyList(), isBankOfframpAvailable = false),
+            )
             advanceUntilIdle()
 
             // Act
@@ -871,7 +919,6 @@ internal class TangemPayDetailsModelTest {
     fun `GIVEN the offers request fails WHEN add card clicked THEN a message is shown and nothing is opened`() =
         runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
             coEvery { getCustomerOffers.cardIssueOffers(any()) } returns VisaApiError.ServerUnavailable.left()
             val model = createModel(testScope = this)
             advanceUntilIdle()
@@ -889,7 +936,6 @@ internal class TangemPayDetailsModelTest {
     @Test
     fun `GIVEN no offers WHEN add card clicked THEN a message is shown and nothing is opened`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
         coEvery { getCustomerOffers.cardIssueOffers(any()) } returns
             CardIssueOffers(virtual = null, plastic = null).right()
         val model = createModel(testScope = this)
@@ -908,7 +954,6 @@ internal class TangemPayDetailsModelTest {
     @Test
     fun `GIVEN only a virtual offer WHEN add card clicked THEN the order screen is opened`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
         coEvery { getCustomerOffers.cardIssueOffers(any()) } returns
             CardIssueOffers(virtual = virtualOffer(), plastic = null).right()
         val model = createModel(testScope = this)
@@ -927,7 +972,6 @@ internal class TangemPayDetailsModelTest {
     @Test
     fun `GIVEN only a plastic offer WHEN add card clicked THEN the order screen is opened`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
         coEvery { getCustomerOffers.cardIssueOffers(any()) } returns
             CardIssueOffers(virtual = null, plastic = plasticOffer()).right()
         val model = createModel(testScope = this)
@@ -974,6 +1018,7 @@ internal class TangemPayDetailsModelTest {
         initialRoute: TangemPayDetailsInitialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
         statusEmissions: Int = 1,
         statusFlow: Flow<AccountStatus.Payment>? = null,
+        isBalanceHidden: Boolean = false,
     ): TangemPayDetailsModel {
         val initialStatus = paymentStatus(
             value = statusValue ?: loadedStatus(
@@ -999,7 +1044,7 @@ internal class TangemPayDetailsModelTest {
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             analytics = analytics,
             router = router,
-            getBalanceHidingSettingsUseCase = mockk(relaxed = true),
+            getBalanceHidingSettingsUseCase = mockk { every { isBalanceHidden() } returns flowOf(isBalanceHidden) },
             uiMessageSender = uiMessageSender,
             txHistoryUpdateListener = mockk(relaxed = true),
             tangemPayWithdrawRepository = tangemPayWithdrawRepository,
@@ -1035,10 +1080,11 @@ internal class TangemPayDetailsModelTest {
 
     private fun enabledCashbackSummary(
         displayMode: CashbackDisplayMode = CashbackDisplayMode.FULL,
+        confirmedAmount: BigDecimal = BigDecimal("2.70"),
     ) = CashbackSummary.Enabled(
         displayMode = displayMode,
         cashback = TangemPayCashback(
-            confirmedAmount = BigDecimal("2.70"),
+            confirmedAmount = confirmedAmount,
             totalEarnedAmount = BigDecimal("2.70"),
             currency = "USD",
             payoutCurrency = "USDC",
@@ -1270,7 +1316,6 @@ internal class TangemPayDetailsModelTest {
             model: DeepLinkRouteModel,
         ) = runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
             val payModel = createModel(
                 testScope = this,
                 initialRoute = model.initialRoute,
@@ -1352,10 +1397,7 @@ internal class TangemPayDetailsModelTest {
                 // Assert
                 assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VaBankingDetailsError>())
                     .containsExactly(
-                        TangemPayDetailsNavigation.VaBankingDetailsError(
-                            userWalletId = userWalletId,
-                            productInstanceId = PRODUCT_INSTANCE_ID,
-                        ),
+                        TangemPayDetailsNavigation.VaBankingDetailsError(productInstanceId = PRODUCT_INSTANCE_ID),
                     )
                 payModel.onDestroy()
             }
@@ -1430,10 +1472,7 @@ internal class TangemPayDetailsModelTest {
                 // Assert
                 assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VaBankingDetailsError>())
                     .containsExactly(
-                        TangemPayDetailsNavigation.VaBankingDetailsError(
-                            userWalletId = userWalletId,
-                            productInstanceId = PRODUCT_INSTANCE_ID,
-                        ),
+                        TangemPayDetailsNavigation.VaBankingDetailsError(productInstanceId = PRODUCT_INSTANCE_ID),
                     )
                 verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
                 payModel.onDestroy()
@@ -1507,10 +1546,7 @@ internal class TangemPayDetailsModelTest {
             // Assert
             assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VaBankingDetailsError>())
                 .containsExactly(
-                    TangemPayDetailsNavigation.VaBankingDetailsError(
-                        userWalletId = userWalletId,
-                        productInstanceId = PRODUCT_INSTANCE_ID,
-                    ),
+                    TangemPayDetailsNavigation.VaBankingDetailsError(productInstanceId = PRODUCT_INSTANCE_ID),
                 )
             verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaDetailsErrorShowed>()) }
             payModel.onDestroy()
@@ -1563,7 +1599,6 @@ internal class TangemPayDetailsModelTest {
             DeepLinkRouteModel(
                 initialRoute = TangemPayDetailsInitialRoute.CHANGE_PLAN,
                 expectedRoute = TangemPayAccountDetailsInnerRoute.SelectPlan(
-                    tariffPlan = DEEPLINK_PLAN_STATE.tariff,
                     source = TangemPaySelectPlanSource.CHANGE_PLAN,
                 ),
             ),

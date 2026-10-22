@@ -22,27 +22,33 @@ internal class DefaultStakingFeatureTogglesTest {
     }
 
     @Test
-    fun `P2PEthPool integration is always enabled`() {
+    fun `GIVEN P2PEthPool id WHEN isIntegrationEnabled THEN true without reading toggles`() {
+        // Act & Assert
         assertThat(toggles.isIntegrationEnabled(StakingIntegrationID.P2PEthPool)).isTrue()
 
+        // Assert
         verify(exactly = 0) { featureTogglesManager.isFeatureEnabled(any()) }
     }
 
     @Test
-    fun `existing StakeKit Coin integrations are always enabled`() {
+    fun `GIVEN every StakeKit Coin id WHEN isIntegrationEnabled THEN true without reading toggles`() {
+        // Act & Assert
         StakingIntegrationID.StakeKit.Coin.entries.forEach { coin ->
             assertThat(toggles.isIntegrationEnabled(coin)).isTrue()
         }
 
+        // Assert
         verify(exactly = 0) { featureTogglesManager.isFeatureEnabled(any()) }
     }
 
     @Test
-    fun `existing StakeKit EthereumToken integrations are always enabled`() {
+    fun `GIVEN every StakeKit EthereumToken id WHEN isIntegrationEnabled THEN true without reading toggles`() {
+        // Act & Assert
         StakingIntegrationID.StakeKit.EthereumToken.entries.forEach { token ->
             assertThat(toggles.isIntegrationEnabled(token)).isTrue()
         }
 
+        // Assert
         verify(exactly = 0) { featureTogglesManager.isFeatureEnabled(any()) }
     }
 }

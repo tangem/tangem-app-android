@@ -77,4 +77,16 @@ interface GachaVaultRepository {
         feeAmount: Long,
         memo: String,
     ): Either<CollectiblesAccountError, String>
+
+    /**
+     * Signs a transaction the backend built with the owner key and broadcasts it as is: only the owner's signature
+     * slot is filled, the blockhash and the other signers' slots stay untouched.
+     *
+     * @param transaction base64 wire bytes
+     * @return the transaction signature
+     */
+    suspend fun sendWithOwnerSignature(
+        userWallet: UserWallet,
+        transaction: String,
+    ): Either<CollectiblesAccountError, String>
 }

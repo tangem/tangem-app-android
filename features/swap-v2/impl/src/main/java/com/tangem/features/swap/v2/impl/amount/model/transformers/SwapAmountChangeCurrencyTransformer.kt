@@ -15,7 +15,7 @@ internal class SwapAmountChangeCurrencyTransformer(
                 copy(
                     amountField = AmountCurrencyTransformer(
                         cryptoCurrencyStatus = primaryStatus,
-                        value = isFiatSelected,
+                        isFiatValue = isFiatSelected,
                     ).transform(prevState.primaryAmount.amountField),
                 )
             },
@@ -23,7 +23,7 @@ internal class SwapAmountChangeCurrencyTransformer(
                 copy(
                     amountField = AmountCurrencyTransformer(
                         cryptoCurrencyStatus = secondaryStatus,
-                        value = isFiatSelected,
+                        isFiatValue = isFiatSelected,
                     ).transform(prevState.secondaryAmount.amountField),
                 )
             },

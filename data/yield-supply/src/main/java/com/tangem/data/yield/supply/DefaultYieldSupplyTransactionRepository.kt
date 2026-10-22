@@ -2,6 +2,7 @@ package com.tangem.data.yield.supply
 
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
+import com.tangem.blockchain.blockchains.ethereum.network.EthereumTransactionReceipt
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
 import com.tangem.blockchain.blockchains.tron.TronTransactionExtras
 import com.tangem.blockchain.common.*
@@ -20,6 +21,7 @@ import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyEnterOutcome
+import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.orZero
@@ -59,14 +61,14 @@ internal class DefaultYieldSupplyTransactionRepository(
             cryptoCurrency = cryptoCurrency,
         ) ?: error("Calculated yield contract address is null")
 
-        val maxNetworkFee = maxNetworkFee.convertToSdkAmount(cryptoCurrencyStatus)
+        val sdkMaxNetworkFee = maxNetworkFee.convertToSdkAmount(cryptoCurrencyStatus)
 
         return buildEnterTransactions(
             walletManager = walletManager,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             existingYieldAddress = existingYieldContractAddress,
             calculatedYieldContractAddress = calculatedYieldContractAddress,
-            maxNetworkFee = maxNetworkFee,
+            maxNetworkFee = sdkMaxNetworkFee,
         )
     }
 
@@ -157,15 +159,15 @@ internal class DefaultYieldSupplyTransactionRepository(
 
         val amount = getEnterAmount(cryptoCurrency, yieldSupplyStatus)
 
-        val emptyContractAddress = existingYieldAddress == null || existingYieldAddress == EthereumUtils.ZERO_ADDRESS
-        val activeYieldContractAddress = if (emptyContractAddress) {
+        val isContractAddressEmpty = existingYieldAddress == null || existingYieldAddress == EthereumUtils.ZERO_ADDRESS
+        val activeYieldContractAddress = if (isContractAddressEmpty) {
             calculatedYieldContractAddress
         } else {
             existingYieldAddress
         }
 
         when {
-            yieldSupplyStatus == null || emptyContractAddress -> {
+            yieldSupplyStatus == null || isContractAddressEmpty -> {
                 enterTransactions.add(
                     createDeployTransaction(
                         walletManager = walletManager,
@@ -299,34 +301,65 @@ internal class DefaultYieldSupplyTransactionRepository(
         YieldSupplyContractCallDataProviderFactory.wrapWithUpgradeIfNeeded(versionStatus, withdrawCallData)
     }
 
+    override suspend fun getTransactionOutcome(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency.Token,
+        transactionHash: String,
+    ): YieldSupplyTransactionOutcome? = withContext(dispatchers.io) {
+        runSuspendCatching {
+            val mined = findReceipt(userWalletId, cryptoCurrency, transactionHash) ?: return@runSuspendCatching null
+
+            if (mined.receipt.isSuccess) {
+                YieldSupplyTransactionOutcome.Confirmed
+            } else {
+                YieldSupplyTransactionOutcome.Reverted
+            }
+        }.logErrorUnlessCancellation().getOrNull()
+    }
+
     override suspend fun getEnterTransactionOutcome(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency.Token,
         transactionHash: String,
     ): YieldSupplyEnterOutcome? = withContext(dispatchers.io) {
         runSuspendCatching {
-            val walletManager = walletManagersFacade.getOrCreateWalletManager(
-                userWalletId = userWalletId,
-                blockchain = cryptoCurrency.network.toBlockchain(),
-                derivationPath = cryptoCurrency.network.derivationPath.value,
-            ) ?: error("Wallet manager not found")
-
-            val receiptProvider = walletManager as? TransactionReceiptProvider
-                ?: error("Wallet manager does not provide transaction receipts")
-
-            val result = when (val receiptResult = receiptProvider.getTransactionReceipt(transactionHash)) {
-                is Failure -> return@runSuspendCatching null
-                is Success -> receiptResult.data
-            } ?: return@runSuspendCatching null
+            val mined = findReceipt(userWalletId, cryptoCurrency, transactionHash) ?: return@runSuspendCatching null
 
             when {
-                result.isSuccess -> YieldSupplyEnterOutcome.Deposited
+                mined.receipt.isSuccess -> YieldSupplyEnterOutcome.Deposited
                 // A revert is only a real failure while the funds are still on the owner address.
-                hasFundsInProtocol(walletManager, cryptoCurrency) -> YieldSupplyEnterOutcome.DepositedByRelayer
+                hasFundsInProtocol(mined.walletManager, cryptoCurrency) -> YieldSupplyEnterOutcome.DepositedByRelayer
                 else -> YieldSupplyEnterOutcome.Failed
             }
         }.logErrorUnlessCancellation().getOrNull()
     }
+
+    private suspend fun findReceipt(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency.Token,
+        transactionHash: String,
+    ): MinedTransaction? {
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = cryptoCurrency.network.toBlockchain(),
+            derivationPath = cryptoCurrency.network.derivationPath.value,
+        ) ?: error("Wallet manager not found")
+
+        val receiptProvider = walletManager as? TransactionReceiptProvider
+            ?: error("Wallet manager does not provide transaction receipts")
+
+        val receipt = when (val receiptResult = receiptProvider.getTransactionReceipt(transactionHash)) {
+            is Failure -> return null
+            is Success -> receiptResult.data
+        } ?: return null
+
+        return MinedTransaction(walletManager = walletManager, receipt = receipt)
+    }
+
+    private data class MinedTransaction(
+        val walletManager: WalletManager,
+        val receipt: EthereumTransactionReceipt,
+    )
 
     private suspend fun hasFundsInProtocol(walletManager: WalletManager, cryptoCurrency: CryptoCurrency.Token) =
         getYieldTokenStatus(walletManager, cryptoCurrency)?.effectiveProtocolBalance.orZero() > BigDecimal.ZERO
@@ -534,9 +567,9 @@ internal class DefaultYieldSupplyTransactionRepository(
                 contractAddress = cryptoCurrency.contractAddress,
                 decimals = cryptoCurrency.decimals,
             ),
-            isActive = yieldSupplyStatus?.isActive ?: false,
-            isInitialized = yieldSupplyStatus?.isInitialized ?: false,
-            isAllowedToSpend = yieldSupplyStatus?.isAllowedToSpend ?: false,
+            isActive = yieldSupplyStatus?.isActive == true,
+            isInitialized = yieldSupplyStatus?.isInitialized == true,
+            isAllowedToSpend = yieldSupplyStatus?.isAllowedToSpend == true,
         ),
     )
 }

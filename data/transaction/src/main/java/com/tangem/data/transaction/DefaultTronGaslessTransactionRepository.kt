@@ -4,13 +4,18 @@ import com.squareup.moshi.JsonAdapter
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.grow.datasource.gasless.TronGaslessApi
 import com.tangem.grow.datasource.gasless.models.GaslessErrorResponse
+import com.tangem.grow.datasource.gasless.models.tron.TronApproveRequest
 import com.tangem.grow.datasource.gasless.models.tron.TronEstimateRequestBody
+import com.tangem.grow.datasource.gasless.models.tron.TronEstimateResponse
 import com.tangem.grow.datasource.gasless.models.tron.TronSubmitRequestBody
+import com.tangem.grow.datasource.gasless.models.tron.TronSwapRequest
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.GaslessServiceException
+import com.tangem.domain.transaction.models.tron.TronGaslessApproveEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.domain.transaction.models.tron.TronGaslessSubmitResult
+import com.tangem.domain.transaction.models.tron.TronGaslessSwapEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessToken
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.sync.Mutex
@@ -58,21 +63,66 @@ internal class DefaultTronGaslessTransactionRepository(
         ).getOrThrowGaslessError(errorAdapter)
         if (!response.isSuccess) throw GaslessServiceException(httpCode = null, message = GASLESS_UNSUCCESSFUL)
 
-        val res = response.result
-        TronGaslessQuote(
-            quoteId = res.quoteId,
-            quotedAmountRaw = params.amount,
-            quotedToAddress = params.toAddress,
-            feeRecipient = res.feeRecipient,
-            compensationToken = res.compensationToken,
-            compensationAmountRaw = BigInteger(res.compensationAmountRaw),
-            compensationAmountDecimal = BigDecimal(res.compensationAmount),
-            energy = res.estimate.energy,
-            bandwidth = res.estimate.bandwidth,
-            trxCost = BigDecimal(res.estimate.trxCost),
-            expiresAtEpochMs = Instant.parse(res.expiresAt).toEpochMilli(),
-        )
+        response.result.toQuote(quotedAmountRaw = params.amount, quotedToAddress = params.toAddress)
     }
+
+    override suspend fun estimateSwap(params: TronGaslessSwapEstimateParams): TronGaslessQuote =
+        withContext(dispatchers.io) {
+            val swap = params.swap
+            val response = api.estimate(
+                userWalletId = params.userWalletId.stringValue,
+                body = TronEstimateRequestBody(
+                    fromAddress = swap.fromAddress,
+                    toAddress = null,
+                    tokenContract = swap.tokenContract,
+                    amount = swap.amount.toString(),
+                    feeTokenContract = params.feeTokenContract,
+                    swap = TronSwapRequest(
+                        contractAddress = swap.routerAddress,
+                        data = swap.callDataHex,
+                        spender = swap.spenderAddress,
+                    ),
+                ),
+            ).getOrThrowGaslessError(errorAdapter)
+            if (!response.isSuccess) throw GaslessServiceException(httpCode = null, message = GASLESS_UNSUCCESSFUL)
+
+            response.result.toQuote(quotedAmountRaw = swap.amount, quotedToAddress = swap.routerAddress)
+                .copy(quotedSwap = swap)
+        }
+
+    override suspend fun estimateApprove(params: TronGaslessApproveEstimateParams): TronGaslessQuote =
+        withContext(dispatchers.io) {
+            val approve = params.approve
+            val response = api.estimate(
+                userWalletId = params.userWalletId.stringValue,
+                body = TronEstimateRequestBody(
+                    fromAddress = approve.fromAddress,
+                    toAddress = null,
+                    tokenContract = approve.tokenContract,
+                    amount = approve.amount.toString(),
+                    feeTokenContract = params.feeTokenContract,
+                    approve = TronApproveRequest(spender = approve.spenderAddress),
+                ),
+            ).getOrThrowGaslessError(errorAdapter)
+            if (!response.isSuccess) throw GaslessServiceException(httpCode = null, message = GASLESS_UNSUCCESSFUL)
+
+            response.result.toQuote(quotedAmountRaw = approve.amount, quotedToAddress = approve.tokenContract)
+                .copy(quotedApprove = approve)
+        }
+
+    private fun TronEstimateResponse.toQuote(quotedAmountRaw: BigInteger, quotedToAddress: String) = TronGaslessQuote(
+        quoteId = quoteId,
+        quotedAmountRaw = quotedAmountRaw,
+        quotedToAddress = quotedToAddress,
+        feeRecipient = feeRecipient,
+        compensationToken = compensationToken,
+        compensationAmountRaw = BigInteger(compensationAmountRaw),
+        compensationAmountDecimal = BigDecimal(compensationAmount),
+        energy = estimate.energy,
+        bandwidth = estimate.bandwidth,
+        trxCost = BigDecimal(estimate.trxCost),
+        expiresAtEpochMs = Instant.parse(expiresAt).toEpochMilli(),
+    )
 
     override suspend fun submit(
         userWalletId: UserWalletId,

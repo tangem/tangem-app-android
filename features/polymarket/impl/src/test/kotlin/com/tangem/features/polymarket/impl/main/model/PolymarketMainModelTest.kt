@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.message.ModalMessage
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketCategory
@@ -17,6 +18,8 @@ import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
+import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
@@ -207,7 +210,7 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN categories fail WHEN model created THEN the feed runs unfiltered without tabs`() = runTest {
+    fun `GIVEN categories fail WHEN model created THEN the reload prompt is shown and no feed is requested`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
 
@@ -218,10 +221,41 @@ internal class PolymarketMainModelTest {
         // Assert
         assertThat(model.uiState.value.categories).isEmpty()
         assertThat(model.uiState.value.isCategoriesLoading).isFalse()
-        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
-        assertThat(dispatchedActions).containsExactly(
-            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = null)),
-        )
+        assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+        assertThat(dispatchedActions).isEmpty()
+        verify(exactly = 0) { getEventsBatchFlowUseCase(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN no categories served WHEN model created THEN the reload prompt is shown and no feed is requested`() =
+        runTest {
+            // Arrange
+            coEvery { getCategoriesUseCase() } returns emptyList<PolymarketCategory>().right()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.categories).isEmpty()
+            assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+            assertThat(dispatchedActions).isEmpty()
+            verify(exactly = 0) { getEventsBatchFlowUseCase(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN an empty category WHEN its feed ends without events THEN the empty prompt is shown`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        batchState.value = BatchListState(data = emptyList(), status = PaginationStatus.EndOfPagination)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Empty)
     }
 
     @Test
@@ -333,7 +367,7 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN categories were lost too WHEN reload tapped THEN they are requested again`() = runTest {
+    fun `GIVEN categories failed WHEN reload tapped THEN they are requested again and the first one's feed`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returnsMany listOf(
             DataError.NetworkError.NoInternetConnection.left(),
@@ -341,18 +375,18 @@ internal class PolymarketMainModelTest {
         )
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        batchState.value = BatchListState(
-            data = emptyList(),
-            status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
-        )
-        advanceUntilIdle()
 
         // Act
         (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.categories.map { it.id }).containsExactly(1, 2).inOrder()
+        assertThat(model.uiState.value.categories.map { it.id to it.isSelected })
+            .containsExactly(1 to true, 2 to false)
+            .inOrder()
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 1)),
+        )
     }
 
     @Test
@@ -360,11 +394,6 @@ internal class PolymarketMainModelTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
         val model = createModel(testScope = this)
-        advanceUntilIdle()
-        batchState.value = BatchListState(
-            data = emptyList(),
-            status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
-        )
         advanceUntilIdle()
         val categoriesReady = CompletableDeferred<Unit>()
         coEvery { getCategoriesUseCase() } coAnswers {
@@ -472,26 +501,20 @@ internal class PolymarketMainModelTest {
         }
 
     @Test
-    fun `GIVEN the categories keep failing WHEN reload tapped THEN the feed is requested again anyway`() = runTest {
+    fun `GIVEN the categories keep failing WHEN reload tapped THEN the prompt stays and no feed is requested`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        batchState.value = BatchListState(
-            data = emptyList(),
-            status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
-        )
-        advanceUntilIdle()
-        dispatchedActions.clear()
 
         // Act
         (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
         advanceUntilIdle()
 
         // Assert
-        assertThat(dispatchedActions).containsExactly(
-            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = null)),
-        )
+        assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+        assertThat(dispatchedActions).isEmpty()
+        coVerify(exactly = 2) { getCategoriesUseCase() }
     }
 
     @Test
@@ -703,7 +726,7 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN a blocked region WHEN the screen opens THEN add funds is disabled`() = runTest {
+    fun `GIVEN a blocked region WHEN the screen opens THEN the banner is shown AND add funds is dimmed`() = runTest {
         // Arrange
         coEvery { checkGeoblock() } returns true.right()
         statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
@@ -713,8 +736,46 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.balance.addFunds.isEnabled).isFalse()
+        assertThat(model.uiState.value.isRegionRestricted).isTrue()
+        assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
+        assertThat(model.uiState.value.balance.addFunds.isDimmed).isTrue()
         coVerify(exactly = 1) { checkGeoblock() }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a blocked region WHEN add funds clicked THEN the restriction is explained AND nothing opens`() = runTest {
+        // Arrange
+        coEvery { checkGeoblock() } returns true.right()
+        statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
+        val model = createModel(testScope = this)
+        val slot = FakeSlotHost(model.fundingSheetNavigation)
+        advanceUntilIdle()
+        val message = slot<EventMessage>()
+        every { messageSender.send(capture(message)) } returns Unit
+
+        // Act
+        model.uiState.value.balance.addFunds.onClick()
+
+        // Assert
+        assertThat(slot.configuration).isNull()
+        assertThat((message.captured as ModalMessage).messageModalUM.content)
+            .isEqualTo(regionRestrictionsMessage().messageModalUM.content)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN an allowed region WHEN the screen opens THEN no restriction banner is shown`() = runTest {
+        // Arrange
+        statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.isRegionRestricted).isFalse()
+        model.onDestroy()
     }
 
     @Test
@@ -745,7 +806,8 @@ internal class PolymarketMainModelTest {
             advanceUntilIdle()
 
             // Assert
-            assertThat(model.uiState.value.balance.addFunds.isEnabled).isFalse()
+            assertThat(model.uiState.value.isRegionRestricted).isTrue()
+            assertThat(model.uiState.value.balance.addFunds.isDimmed).isTrue()
             assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
             coVerify(exactly = 1) {
                 accountStatusFetcher(PredictionAccountStatusFetcher.Params(userWalletId = USER_WALLET_ID))
@@ -1058,6 +1120,35 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
+    fun `GIVEN a blocked region WHEN outcome clicked THEN the restriction is explained AND no order opens`() = runTest {
+        // Arrange
+        coEvery { checkGeoblock() } returns true.right()
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        batchState.value = BatchListState(
+            data = listOf(Batch(key = 0, data = batchOf(createEvent()))),
+            status = PaginationStatus.Paginating(lastResult = successResult(last = true)),
+        )
+        advanceUntilIdle()
+        val message = slot<EventMessage>()
+        every { messageSender.send(capture(message)) } returns Unit
+
+        // Act
+        (model.uiState.value.content as PolymarketMainUM.ContentUM.Content)
+            .events.single()
+            .rows.single()
+            .outcomes.single()
+            .onClick()
+
+        // Assert
+        verify(exactly = 0) { router.push(any<PolymarketRoute.PlacePrediction>(), any()) }
+        assertThat((message.captured as ModalMessage).messageModalUM.content)
+            .isEqualTo(regionRestrictionsMessage().messageModalUM.content)
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN a failed prefetch WHEN add funds clicked THEN nothing opens and the error alert is shown`() = runTest {
         // Arrange
         coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Network.left()
@@ -1315,6 +1406,27 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
+    fun `GIVEN the default target has no minimum WHEN add funds clicked THEN the error alert is shown`() = runTest {
+        // Arrange
+        coEvery { refreshRequisites(USER_WALLET_ID) } returns REQUISITES_WITHOUT_MINIMUM.right()
+        val model = createModel(testScope = this)
+        val slot = FakeSlotHost(model.fundingSheetNavigation)
+        advanceUntilIdle()
+        val message = slot<EventMessage>()
+        every { messageSender.send(capture(message)) } returns Unit
+
+        // Act
+        model.uiState.value.balance.addFunds.onClick()
+
+        // Assert
+        assertThat(model.uiState.value.balance.addFunds.isDimmed).isTrue()
+        assertThat(slot.configuration).isNull()
+        assertThat((message.captured as DialogMessage).message)
+            .isEqualTo(resourceReference(R.string.prediction_add_funds_error_description))
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN requisites without a default target WHEN the screen resumes THEN they are retried`() = runTest {
         // Arrange
         coEvery { refreshRequisites(USER_WALLET_ID) } returns REQUISITES_WITHOUT_DEFAULT.right()
@@ -1558,7 +1670,10 @@ internal class PolymarketMainModelTest {
             getPolymarketCategoriesUseCase = getCategoriesUseCase,
             predictionAccountStatusSupplier = predictionAccountStatusSupplier,
             refreshPredictionDepositRequisitesInteractor = refreshRequisites,
-            checkPolymarketGeoblockUseCase = checkGeoblock,
+            regionAccess = PredictionRegionAccess(
+                checkPolymarketGeoblockUseCase = checkGeoblock,
+                dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
+            ),
             predictionAccountStatusFetcher = accountStatusFetcher,
             predictionPositionsValueSupplier = positionsValueSupplier,
             predictionPositionsValueFetcher = positionsValueFetcher,
@@ -1584,13 +1699,13 @@ internal class PolymarketMainModelTest {
 
     private fun successResult(last: Boolean) = BatchFetchResult.Success(
         data = batchOf(createEvent()),
-        empty = false,
-        last = last,
+        isEmpty = false,
+        isLast = last,
     )
 
     private fun categories(): List<PolymarketCategory> = listOf(
-        PolymarketCategory(id = 1, label = "Trending", iconUrl = null),
-        PolymarketCategory(id = 2, label = "Sport", iconUrl = null),
+        PolymarketCategory(id = 1, label = "Trending", icon = null),
+        PolymarketCategory(id = 2, label = "Sport", icon = null),
     )
 
     private fun createEvent(id: String = "event-1"): PolymarketEvent = createPolymarketEvent(
@@ -1656,10 +1771,16 @@ internal class PolymarketMainModelTest {
         val REQUISITES_WITHOUT_DEFAULT =
             requisites(symbol = "pUSD", tokenAddress = PolymarketContracts.COLLATERAL)
 
+        val REQUISITES_WITHOUT_MINIMUM = requisites(
+            symbol = "USDC",
+            tokenAddress = PolymarketContracts.USDC_TOKEN_ADDRESS,
+            minCheckoutUsd = null,
+        )
+
         private fun requisites(
             symbol: String,
             tokenAddress: String,
-            minCheckoutUsd: BigDecimal = BigDecimal.ONE,
+            minCheckoutUsd: BigDecimal? = BigDecimal.ONE,
         ) = PolymarketDepositRequisites(
             networks = listOf(
                 PolymarketDepositNetwork(

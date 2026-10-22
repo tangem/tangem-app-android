@@ -50,7 +50,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
     private val HotWalletPasswordRequester.AttemptRequest.attemptId
         get() = HotWalletAccessCodeAttemptsRepository.AttemptId(
             hotWalletId = hotWalletId,
-            auth = authMode,
+            isAuth = isAuthMode,
         )
 
     val uiState: StateFlow<HotAccessCodeRequestUM>
@@ -70,7 +70,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
             state.copy(
                 isShown = true,
                 accessCode = "",
-                useBiometricVisible = attemptRequest.isBiometryButtonVisible(),
+                isUseBiometricVisible = attemptRequest.isBiometryButtonVisible(),
                 onAccessCodeChange = ::onAccessCodeChange,
             )
         }
@@ -94,7 +94,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
                 state.copy(
                     accessCodeColor = PinTextColor.WrongCode,
                     onAccessCodeChange = {},
-                    useBiometricVisible = attemptRequest.isBiometryButtonVisible(),
+                    isUseBiometricVisible = attemptRequest.isBiometryButtonVisible(),
                 )
             }
         }
@@ -142,7 +142,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
             uiState.update { state ->
                 state.copy(
                     onAccessCodeChange = {},
-                    useBiometricVisible = false,
+                    isUseBiometricVisible = false,
                 )
             }
 
