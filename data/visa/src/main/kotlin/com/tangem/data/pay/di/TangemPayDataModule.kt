@@ -557,6 +557,18 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideResolvePaymentAccountStatusFromSummaryUseCase(
+            onboardingRepository: OnboardingRepository,
+        ): ResolvePaymentAccountStatusFromSummaryUseCase {
+            return ResolvePaymentAccountStatusFromSummaryUseCase(onboardingRepository = onboardingRepository)
+        }
+
+        @Provides
+        fun provideResolveMoneyAccountStatusFromSummaryUseCase(): ResolveMoneyAccountStatusFromSummaryUseCase {
+            return ResolveMoneyAccountStatusFromSummaryUseCase()
+        }
+
+        @Provides
         fun provideGetAccountFeesUseCase(onboardingRepository: OnboardingRepository): GetAccountFeesUseCase {
             return GetAccountFeesUseCase(onboardingRepository = onboardingRepository)
         }

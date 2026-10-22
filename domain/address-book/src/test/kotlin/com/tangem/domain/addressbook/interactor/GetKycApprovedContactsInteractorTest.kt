@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class GetVerifiedContactsInteractorTest {
+class GetKycApprovedContactsInteractorTest {
 
     private val getContacts: GetContactsUseCase = mockk()
     private val contactSignatureVerifier: ContactSignatureVerifier = mockk()

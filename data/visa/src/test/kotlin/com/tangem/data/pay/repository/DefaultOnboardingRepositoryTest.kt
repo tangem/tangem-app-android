@@ -7,11 +7,9 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.TangemPayStorage
-import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
-import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.CustomerSummary
 import com.tangem.domain.pay.model.OrderType
@@ -448,23 +446,23 @@ internal class DefaultOnboardingRepositoryTest {
                 ApiResponse.Success(CustomerSummaryResponse(result = customerSummaryResult()))
             val expected = CustomerSummary(
                 customerId = "customer",
-                customerStatus = CustomerInfo.State.ACTIVE,
+                customerStatus = CustomerSummary.CustomerStatus.ACTIVE,
                 isHidden = false,
-                kycStatus = KycStatus.APPROVED,
+                kycStatus = CustomerSummary.KycStatus.APPROVED,
                 paymentAccount = CustomerSummary.PaymentAccount(
                     id = "payment-account",
-                    activation = CustomerSummary.Activation(
-                        status = CustomerSummary.Activation.Status.COMPLETED,
+                    activation = CustomerSummary.PaymentAccount.Activation(
+                        status = CustomerSummary.PaymentAccount.Activation.Status.COMPLETED,
                         step = null,
                         failureReason = null,
                     ),
                     cards = CustomerSummary.Cards(active = 1, frozen = 0, pending = 0),
                 ),
-                bankingAccount = CustomerSummary.BankingAccount(
+                moneyAccount = CustomerSummary.MoneyAccount(
                     id = null,
-                    activation = CustomerSummary.Activation(
-                        status = CustomerSummary.Activation.Status.PROCESSING,
-                        step = CustomerSummary.Activation.Step.AWAITING_KYC,
+                    activation = CustomerSummary.MoneyAccount.Activation(
+                        status = CustomerSummary.MoneyAccount.Activation.Status.PROCESSING,
+                        step = CustomerSummary.MoneyAccount.Activation.Step.AWAITING_KYC,
                         failureReason = null,
                     ),
                 ),
