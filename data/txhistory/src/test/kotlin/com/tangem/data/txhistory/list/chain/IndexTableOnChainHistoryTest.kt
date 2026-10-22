@@ -73,6 +73,42 @@ internal class IndexTableOnChainHistoryTest {
     }
 
     @Test
+    fun `GIVEN a window of filtered-out ops WHEN loading THEN it widens instead of reporting Empty`() = runTest {
+        // Arrange: the index counted this window's operations, the timeline keeps none of them (expired deals are
+        // filtered out of the express query), while older deals sit behind them.
+        every { repository.getIndexedExpressHistory(any(), any(), PAGE_SIZE) } returns
+            flowOf(ExpressHistoryPage(items = emptyList(), hasMore = true))
+        every { repository.getIndexedExpressHistory(any(), any(), PAGE_SIZE * 2) } returns
+            flowOf(ExpressHistoryPage(items = listOf(createSwap()), hasMore = false))
+
+        // Act
+        val states = getEmittedValues(createSut().history())
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(states).doesNotContain(HistoryState.Empty)
+        assertThat(states.last()).isEqualTo(
+            HistoryState.Content(items = listOf(createSwap()), isLoadingMore = false, hasMore = false),
+        )
+    }
+
+    @Test
+    fun `GIVEN every indexed op filtered out WHEN the index ends THEN Empty`() = runTest {
+        // Arrange: nothing is left behind the filtered-out operations, so the widening stops at the end of the index.
+        every { repository.getIndexedExpressHistory(any(), any(), PAGE_SIZE) } returns
+            flowOf(ExpressHistoryPage(items = emptyList(), hasMore = true))
+        every { repository.getIndexedExpressHistory(any(), any(), PAGE_SIZE * 2) } returns
+            flowOf(ExpressHistoryPage(items = emptyList(), hasMore = false))
+
+        // Act
+        val states = getEmittedValues(createSut().history())
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(states.last()).isEqualTo(HistoryState.Empty)
+    }
+
+    @Test
     fun `GIVEN loaded page WHEN loadMore THEN window grows by page size`() = runTest {
         every { repository.getIndexedExpressHistory(any(), any(), any()) } returns
             flowOf(ExpressHistoryPage(items = listOf(createSwap()), hasMore = true))
