@@ -22,6 +22,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerW
@@ -96,12 +97,12 @@ private fun TopBar(
         navigationIcon = {
             IconButton(
                 modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing8)
-                    .size(TangemTheme.dimens.size32),
+                    .padding(start = 8.dp)
+                    .size(32.dp),
                 onClick = state.onBackClick,
             ) {
                 Icon(
-                    modifier = Modifier.size(TangemTheme.dimens.size24),
+                    modifier = Modifier.size(24.dp),
                     painter = painterResource(id = R.drawable.ic_back_24),
                     contentDescription = null,
                 )
@@ -126,7 +127,7 @@ private fun TopBar(
                 is AppCurrencySelectorState.Content -> {
                     IconButton(
                         modifier = Modifier
-                            .size(TangemTheme.dimens.size32)
+                            .size(32.dp)
                             .testTag(AppCurrencySelectorScreenTestTags.TOP_BAR_ACTION_BUTTON),
                         onClick = state.onTopBarActionClick,
                     ) {
@@ -140,7 +141,7 @@ private fun TopBar(
                         }
 
                         Icon(
-                            modifier = Modifier.size(TangemTheme.dimens.size24),
+                            modifier = Modifier.size(24.dp),
                             painter = painterResource(id = iconResId),
                             tint = iconTint,
                             contentDescription = null,
@@ -149,7 +150,7 @@ private fun TopBar(
                 }
                 is AppCurrencySelectorState.Loading -> Unit
             }
-            SpacerW(width = TangemTheme.dimens.spacing8)
+            SpacerW(width = 8.dp)
         },
     )
 }
@@ -190,21 +191,21 @@ private fun LoadingList(modifier: Modifier = Modifier) {
             Row(
                 modifier = Modifier
                     .padding(
-                        start = TangemTheme.dimens.spacing16,
-                        end = TangemTheme.dimens.spacing24,
+                        start = 16.dp,
+                        end = 24.dp,
                     )
-                    .height(TangemTheme.dimens.size56)
+                    .height(56.dp)
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(
-                    space = TangemTheme.dimens.spacing16,
+                    space = 16.dp,
                     alignment = Alignment.Start,
                 ),
             ) {
-                CircleShimmer(modifier = Modifier.size(TangemTheme.dimens.size24))
+                CircleShimmer(modifier = Modifier.size(24.dp))
                 RectangleShimmer(
                     modifier = Modifier
-                        .height(TangemTheme.dimens.size24)
+                        .height(24.dp)
                         .fillMaxWidth(),
                 )
             }
@@ -258,18 +259,18 @@ private fun CurrencyItem(name: String, isSelected: Boolean, onClick: () -> Unit,
                 onClick = onClick,
             )
             .padding(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing24,
+                start = 16.dp,
+                end = 24.dp,
             )
-            .heightIn(min = TangemTheme.dimens.size56),
+            .heightIn(min = 56.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(
-            space = TangemTheme.dimens.spacing16,
+            space = 16.dp,
             alignment = Alignment.Start,
         ),
     ) {
         RadioButton(
-            modifier = Modifier.size(TangemTheme.dimens.size24),
+            modifier = Modifier.size(24.dp),
             selected = isSelected,
             onClick = onClick,
             interactionSource = interactionSource,

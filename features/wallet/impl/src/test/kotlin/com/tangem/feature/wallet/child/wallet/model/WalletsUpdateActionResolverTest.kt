@@ -128,7 +128,7 @@ internal class WalletsUpdateActionResolverTest {
             every { id } returns hotUserWalletId
             every { title } returns HOT_WALLET_NAME
             every { additionalInfo } returns WalletAdditionalInfo(
-                hideable = true,
+                isHideable = true,
                 content = WalletAdditionalInfo.Content.Text(text = mockk()),
                 isHotBackedUp = isHotBackedUp,
             )

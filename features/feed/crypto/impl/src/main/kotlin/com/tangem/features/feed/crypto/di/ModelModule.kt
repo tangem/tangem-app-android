@@ -4,7 +4,6 @@ import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.feed.crypto.categories.model.MarketCategorySelectorModel
 import com.tangem.features.feed.crypto.model.CryptoFeedTabModel
-import com.tangem.features.feed.crypto.model.search.CryptoFeedEmptySearchModel
 import com.tangem.features.feed.crypto.model.search.CryptoFeedSearchTabModel
 import dagger.Binds
 import dagger.Module
@@ -25,11 +24,6 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(CryptoFeedSearchTabModel::class)
     fun bindCryptoFeedSearchTabModel(model: CryptoFeedSearchTabModel): Model
-
-    @Binds
-    @IntoMap
-    @ClassKey(CryptoFeedEmptySearchModel::class)
-    fun bindCryptoFeedEmptySearchModel(model: CryptoFeedEmptySearchModel): Model
 
     @Binds
     @IntoMap

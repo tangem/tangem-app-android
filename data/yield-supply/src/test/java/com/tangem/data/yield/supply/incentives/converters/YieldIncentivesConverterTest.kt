@@ -46,7 +46,7 @@ internal class YieldIncentivesConverterTest {
                 usdValue = BigDecimal("1.50"),
                 estimatedNetValueUsd = BigDecimal("1.42"),
                 estimatedServiceFeeUsd = BigDecimal("0.08"),
-                serviceFeeRateBps = 500,
+                serviceFeeRate = BigDecimal("0.05"),
                 finalDestination = YieldRewardDestination.Owner,
             ),
         )
@@ -91,7 +91,7 @@ internal class YieldIncentivesConverterTest {
                 usdValue = BigDecimal.ZERO,
                 estimatedNetValueUsd = BigDecimal.ZERO,
                 estimatedServiceFeeUsd = BigDecimal.ZERO,
-                serviceFeeRateBps = 0,
+                serviceFeeRate = BigDecimal.ZERO,
                 finalDestination = YieldRewardDestination.Module,
             ),
         )

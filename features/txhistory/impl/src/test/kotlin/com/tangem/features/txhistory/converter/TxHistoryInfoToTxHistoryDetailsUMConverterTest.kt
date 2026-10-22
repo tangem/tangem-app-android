@@ -197,26 +197,21 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
     }
 
     @Test
-    fun `GIVEN menu WHEN convert express swap THEN shared rows follow the payout Copy address`() {
+    fun `GIVEN menu WHEN convert express swap THEN the shared rows carry no Copy address`() {
         // Arrange — the menu is built once and handed to both sub-converters.
         val converter = dispatcher(onCopyTxId = {})
 
         // Act
         val menu = converter.convert(expressSwap(status = ExpressExchangeStatus.Exchanging)).header.menu
 
-        // Assert
-        assertThat(menu).hasSize(2)
-        assertThat(menu[0].icon).isEqualTo(Icons.ic_copy_24)
-        assertThat(menu[0].title).isEqualTo(resourceReference(R.string.common_copy_address))
-        assertThat(menu[1].title).isEqualTo(resourceReference(R.string.common_transaction_id))
-
-        menu[0].clickDirect()
-        assertThat(copiedAddresses).containsExactly(PAYOUT_ADDRESS)
+        // Assert — a swap names a payout address of the deal, not a recipient the user picked, so it is not copyable.
+        assertThat(menu).hasSize(1)
+        assertThat(menu[0].title).isEqualTo(resourceReference(R.string.common_transaction_id))
     }
 
     @Test
-    fun `GIVEN swap payout into an own account WHEN convert THEN Copy address is still offered`() {
-        // Arrange — the leg reads as the user's own account, but the row copies its address all the same.
+    fun `GIVEN swap payout into an own account WHEN convert THEN no Copy address row`() {
+        // Arrange — the leg reads as the user's own account; a swap offers no address copy either way.
         val converter = dispatcher(
             lookup = lookupOf(bitcoin.network.id.rawId to mapOf(PAYOUT_ADDRESS to ownAccount)),
         )
@@ -225,23 +220,16 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         val menu = converter.convert(expressSwap(status = ExpressExchangeStatus.Exchanging)).header.menu
 
         // Assert
-        assertThat(menu).hasSize(1)
-
-        menu[0].clickDirect()
-        assertThat(copiedAddresses).containsExactly(PAYOUT_ADDRESS)
+        assertThat(menu).isEmpty()
     }
 
     @Test
-    fun `GIVEN onramp WHEN convert THEN Copy address copies the payout address`() {
+    fun `GIVEN onramp WHEN convert THEN no Copy address row`() {
         // Act
         val menu = dispatcher().convert(expressOnramp(status = ExpressOnrampStatus.Finished)).header.menu
 
-        // Assert
-        assertThat(menu).hasSize(1)
-        assertThat(menu[0].title).isEqualTo(resourceReference(R.string.common_copy_address))
-
-        menu[0].clickDirect()
-        assertThat(copiedAddresses).containsExactly(PAYOUT_ADDRESS)
+        // Assert — the payout address of a top-up is the provider's business, not an address the user copies.
+        assertThat(menu).isEmpty()
     }
 
     // endregion

@@ -236,7 +236,7 @@ internal class RwaBatchFlowManager(
                             interval = interval.toBatchRequestInterval(),
                             currency = appCurrency.value.code,
                         ),
-                        async = true,
+                        isAsync = true,
                         operationId = batchesKeysToLoad.toString() + interval.toString(),
                     ),
                 )
@@ -263,7 +263,7 @@ internal class RwaBatchFlowManager(
                     updateRequest = TokenMarketUpdateRequest.UpdateQuotes(
                         currencyId = appCurrency.value.code,
                     ),
-                    async = true,
+                    isAsync = true,
                     operationId = "update quotes",
                 ),
             )

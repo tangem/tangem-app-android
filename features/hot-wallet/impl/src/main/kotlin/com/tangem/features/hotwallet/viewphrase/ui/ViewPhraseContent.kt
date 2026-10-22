@@ -59,7 +59,7 @@ internal fun ViewPhraseContent(state: ViewPhraseUM, modifier: Modifier = Modifie
 private fun TitleBlock(state: ViewPhraseUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .padding(horizontal = TangemTheme.dimens.size36)
+            .padding(horizontal = 36.dp)
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -91,10 +91,10 @@ private fun Preview() {
         ViewPhraseContent(
             state = ViewPhraseUM(
                 onBackClick = {},
-                words = List(12) {
+                words = List(12) { index ->
                     EnumeratedTwoColumnGridItem(
-                        index = it + 1,
-                        mnemonic = "word${it + 1}",
+                        index = index + 1,
+                        mnemonic = "word${index + 1}",
                     )
                 }.toImmutableList(),
             ),

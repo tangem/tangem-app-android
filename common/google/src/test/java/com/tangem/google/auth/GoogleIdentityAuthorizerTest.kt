@@ -151,6 +151,18 @@ internal class GoogleIdentityAuthorizerTest {
     }
 
     @Test
+    fun `GIVEN Play services cancels the task WHEN authorize THEN Unknown instead of a cancellation`() = runTest {
+        // Arrange
+        stubAuthorize(canceledTask())
+
+        // Act
+        val actual = authorizer.authorize(scopes, interactive = false)
+
+        // Assert
+        assertThat(actual.leftOrNull()).isInstanceOf(GoogleAuthError.Unknown::class.java)
+    }
+
+    @Test
     fun `GIVEN IOException WHEN authorize THEN NetworkError`() = runTest {
         // Arrange
         stubAuthorize(failureTask(IOException()))
@@ -321,6 +333,17 @@ internal class GoogleIdentityAuthorizerTest {
         }
         every { task.addOnFailureListener(any<OnFailureListener>()) } returns task
         every { task.addOnCanceledListener(any<OnCanceledListener>()) } returns task
+        return task
+    }
+
+    private fun canceledTask(): Task<AuthorizationResult> {
+        val task = mockk<Task<AuthorizationResult>>()
+        every { task.addOnSuccessListener(any<OnSuccessListener<AuthorizationResult>>()) } returns task
+        every { task.addOnFailureListener(any<OnFailureListener>()) } returns task
+        every { task.addOnCanceledListener(any<OnCanceledListener>()) } answers {
+            firstArg<OnCanceledListener>().onCanceled()
+            task
+        }
         return task
     }
 

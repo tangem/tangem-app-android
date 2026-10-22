@@ -2,7 +2,6 @@ package com.tangem.features.introduction.impl.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 
 internal sealed class SocialLoginAnalyticsEvents(
@@ -27,14 +26,12 @@ internal sealed class SocialLoginAnalyticsEvents(
     class MarketingEmailsConsent(
         isGiven: Boolean,
         consentText: String,
-        userWalletId: UserWalletId,
     ) : SocialLoginAnalyticsEvents(
         event = "Consent - Marketing Emails",
         params = mapOf(
             "Consent Type" to "Offers & Updates by email",
             "Consent Given" to if (isGiven) "Yes" else "No",
             "Consent Text" to consentText,
-            "walletId" to userWalletId.stringValue,
         ),
     )
 

@@ -1,5 +1,6 @@
 package com.tangem.domain.account.status.producer
 
+import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
@@ -40,6 +41,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -53,6 +55,11 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SingleAccountStatusListProducerJointAccountsTest {
+
+    private val jointAccountCompositionVerifier: JointAccountCompositionVerifier = mockk {
+        coEvery { isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any()) } returns true
+        coEvery { ownerAddress(userWalletId = any(), ownerKeyIndex = any()) } returns null
+    }
 
     private val userWallet: UserWallet = MockUserWalletFactory.create()
     private val walletId = userWallet.walletId
@@ -83,6 +90,44 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
             assertThat(currencyStatus.value.amount).isEqualTo(BigDecimal.TEN)
             assertThat(status.tokenList.totalFiatBalance).isEqualTo(
                 TotalFiatBalance.Loaded(amount = BigDecimal.TEN, source = StatusSource.ACTUAL),
+            )
+        }
+
+    @BeforeEach
+    fun resetVerifier() {
+        coEvery {
+            jointAccountCompositionVerifier.isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any())
+        } returns true
+    }
+
+    @Test
+    fun `GIVEN an account that does not verify WHEN produced THEN compromised and out of the tokens and the total`() =
+        runTest {
+            // Arrange
+            coEvery {
+                jointAccountCompositionVerifier.isVerified(
+                    userWalletId = any(),
+                    ownerKeyIndex = any(),
+                    jointAccount = any(),
+                )
+            } returns false
+            val producer = createProducer(jointAccounts = flowOf(listOf(jointRecord(JointAccount.Status.ACTIVE))))
+
+            // Act
+            val list = getEmittedValues(producer.produce()).last()
+
+            // Assert
+            val status = list.jointStatus()
+            assertThat(status.value).isEqualTo(
+                JointAccountStatusValue.Error.Compromised(
+                    totalMembers = 3,
+                    tokensCount = 1,
+                    fiatBalance = TotalFiatBalance.Loaded(amount = BigDecimal.TEN, source = StatusSource.ACTUAL),
+                ),
+            )
+            assertThat(status.tokenList).isEqualTo(TokenList.Empty)
+            assertThat(list.totalFiatBalance).isEqualTo(
+                TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
             )
         }
 
@@ -157,6 +202,7 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
             singleAccountListSupplier = mockk<SingleAccountListSupplier> {
                 every { this@mockk.invoke(walletId) } returns flowOf(accountList())
             },
+            jointAccountCompositionVerifier = jointAccountCompositionVerifier,
             singleJointAccountListSupplier = mockk<SingleJointAccountListSupplier> {
                 every { this@mockk.invoke(userWalletId = walletId) } returns jointAccounts
             },
