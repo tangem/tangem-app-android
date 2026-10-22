@@ -13,7 +13,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.res.TangemTheme
@@ -67,9 +66,6 @@ internal class TesterActivity : ComposeActivity() {
     lateinit var appFinisher: AppFinisher
 
     @Inject
-    lateinit var appRouter: AppRouter
-
-    @Inject
     lateinit var surveySparrowLauncher: SurveySparrowLauncher
 
     @Composable
@@ -98,7 +94,7 @@ internal class TesterActivity : ComposeActivity() {
             composable(route = TesterScreen.MENU.name) {
                 TesterMenuScreen(
                     state = TesterMenuUM(
-                        onBackClick = { appRouter.pop { finish() } },
+                        onBackClick = ::finish,
                         buttons = persistentSetOf(
                             ButtonUM.FEATURE_TOGGLES,
                             ButtonUM.EXCLUDED_BLOCKCHAINS,
