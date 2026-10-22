@@ -1,6 +1,10 @@
 package com.tangem.features.jointaccount.main.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -103,13 +107,20 @@ private fun MembersFooter(state: JointAccountMembersUM.FooterUM, modifier: Modif
 
 @Composable
 private fun FooterHint(hint: TextReference, modifier: Modifier = Modifier) {
-    Text(
+    AnimatedContent(
+        targetState = hint.resolveReference(),
+        transitionSpec = { fadeIn().togetherWith(fadeOut()) },
+        label = "footerHint",
         modifier = modifier.fillMaxWidth(),
-        text = hint.resolveReference(),
-        color = TangemTheme.colors3.text.secondary,
-        style = TangemTheme.typography3.caption.medium,
-        textAlign = TextAlign.Center,
-    )
+    ) { text ->
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = text,
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.caption.medium,
+            textAlign = TextAlign.Center,
+        )
+    }
 }
 
 @Composable
@@ -168,19 +179,18 @@ private fun MembersContent(state: JointAccountMembersUM, contentPadding: Padding
         items(items = state.joined, key = { it.id }) { member ->
             JoinedMemberRow(
                 member = member,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                modifier = Modifier
+                    .animateItem()
+                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
             )
-        }
-
-        val waitingLabel = state.waitingLabel
-        if (waitingLabel != null) {
-            item(key = "waiting_label") { SectionLabel(text = waitingLabel) }
         }
 
         items(items = state.freeSlots, key = { it.id }) { slot ->
             FreeSlotRow(
                 slot = slot,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                modifier = Modifier
+                    .animateItem()
+                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
             )
         }
     }
@@ -189,11 +199,17 @@ private fun MembersContent(state: JointAccountMembersUM, contentPadding: Padding
 @Composable
 private fun MembersHeader(header: JointAccountMembersUM.HeaderUM, modifier: Modifier = Modifier) {
     Column(modifier = modifier.padding(horizontal = 24.dp, vertical = 12.dp)) {
-        Text(
-            text = header.title.resolveReference(),
-            style = TangemTheme.typography3.heading.medium,
-            color = TangemTheme.colors3.text.primary,
-        )
+        AnimatedContent(
+            targetState = header.title.resolveReference(),
+            transitionSpec = { fadeIn().togetherWith(fadeOut()) },
+            label = "membersTitle",
+        ) { title ->
+            Text(
+                text = title,
+                style = TangemTheme.typography3.heading.medium,
+                color = TangemTheme.colors3.text.primary,
+            )
+        }
         val subtitle = header.subtitle
         if (subtitle != null) {
             SpacerH(8.dp)
@@ -306,11 +322,17 @@ private fun memberRole(member: MemberUM.Joined): TextReference {
 
 @Composable
 private fun MemberStatusBadge(status: MemberStatusUM) {
-    TangemBadge(
-        text = status.text,
-        status = status.badgeStatus,
-        size = TangemBadge.Size.X6,
-    )
+    AnimatedContent(
+        targetState = status,
+        transitionSpec = { fadeIn().togetherWith(fadeOut()) },
+        label = "memberStatus",
+    ) { target ->
+        TangemBadge(
+            text = target.text,
+            status = target.badgeStatus,
+            size = TangemBadge.Size.X6,
+        )
+    }
 }
 
 @Composable
@@ -333,6 +355,10 @@ private fun FreeSlotStatus(status: SlotStatusUM) {
     when (status) {
         is SlotStatusUM.NotInvited -> TangemRowText(
             text = resourceReference(CoreUiR.string.joint_account_invite_members_not_invited),
+            role = TangemRowTextRole.Subtitle,
+        )
+        is SlotStatusUM.WaitingToJoin -> TangemRowText(
+            text = resourceReference(CoreUiR.string.joint_account_invite_members_waiting_to_join),
             role = TangemRowTextRole.Subtitle,
         )
         is SlotStatusUM.Invited -> TangemRowText(text = status.label, role = TangemRowTextRole.Subtitle)
@@ -528,7 +554,6 @@ private fun previewState(
         joined = joined,
         freeSlots = freeSlots,
         membersLabel = if (joined.isNotEmpty()) stringReference("Members") else null,
-        waitingLabel = if (freeSlots.isNotEmpty()) stringReference("Waiting to join") else null,
         footer = if (completed) {
             null
         } else {
@@ -566,7 +591,7 @@ private fun previewSlots(slots: List<PreviewSlot>, joinedCount: Int, canInvite: 
             id = "slot_$index",
             title = stringReference("Member ${joinedCount + index}"),
             status = when (slot) {
-                PreviewSlot.NotInvited -> SlotStatusUM.NotInvited
+                PreviewSlot.NotInvited -> if (canInvite) SlotStatusUM.NotInvited else SlotStatusUM.WaitingToJoin
                 PreviewSlot.Invited -> SlotStatusUM.Invited(label = stringReference("Until tomorrow, 13:15"))
                 PreviewSlot.Expired -> SlotStatusUM.Expired
                 PreviewSlot.Loading -> SlotStatusUM.Invited(label = stringReference("Invited"))

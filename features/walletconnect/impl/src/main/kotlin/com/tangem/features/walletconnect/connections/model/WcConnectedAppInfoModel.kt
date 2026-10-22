@@ -67,7 +67,8 @@ internal class WcConnectedAppInfoModel @Inject constructor(
                 uiState.update { state ->
                     WcConnectedAppInfoUM(
                         appName = session.sdkModel.appMetaData.name,
-                        appIcon = session.sdkModel.appMetaData.icons.firstOrNull().orEmpty(),
+                        appIcon = session.sdkModel.appMetaData.icons
+                            .firstOrNull().orEmpty(),
                         isVerified = session.securityStatus == CheckDAppResult.SAFE,
                         verifiedDAppState = extractVerifiedState(session),
                         appSubtitle = WcAppSubtitleConverter.convert(session.sdkModel.appMetaData),

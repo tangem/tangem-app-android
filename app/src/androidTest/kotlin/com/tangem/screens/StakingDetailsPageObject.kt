@@ -116,6 +116,18 @@ class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         useUnmergedTree = true
     }
 
+    fun rewardsClaimAmount(amount: String): KNode = child {
+        addSemanticsMatcher(cryptoAmountMatcher(amount))
+        hasAnyAncestor(withTestTag(StakingDetailsScreenTestTags.REWARDS_BLOCK))
+        useUnmergedTree = true
+    }
+
+    fun activeStakingAmount(amount: String): KNode = child {
+        addSemanticsMatcher(cryptoAmountMatcher(amount))
+        hasAnyAncestor(stakedRowMatcher)
+        useUnmergedTree = true
+    }
+
     val activeStakingPendingIcon: KNode = child {
         hasTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_PENDING_ICON)
         useUnmergedTree = true
@@ -173,6 +185,17 @@ class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         useUnmergedTree = true
     }
 
+    val stakedEntry: KNode = child {
+        addSemanticsMatcher(stakedRowMatcher)
+        useUnmergedTree = true
+    }
+
+    fun unstakingEntryAmount(amount: String): KNode = child {
+        addSemanticsMatcher(cryptoAmountMatcher(amount))
+        hasAnyAncestor(unstakingRowMatcher)
+        useUnmergedTree = true
+    }
+
     val unstakingEntryDate: KNode = child {
         hasTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_SUBTITLE)
         hasText(getResourceString(R.string.common_today))
@@ -192,6 +215,16 @@ class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
     }
 
 }
+
+private val unstakingTitleMatcher: SemanticsMatcher =
+    withTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_TITLE) and
+        withText(getResourceString(StakingImplR.string.staking_unstaking))
+
+private val unstakingRowMatcher: SemanticsMatcher =
+    withTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_BLOCK) and hasAnyDescendant(unstakingTitleMatcher)
+
+private val stakedRowMatcher: SemanticsMatcher =
+    withTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_BLOCK) and hasAnyDescendant(unstakingTitleMatcher).not()
 
 private val pendingIconMatcher: SemanticsMatcher = withTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_PENDING_ICON)
 

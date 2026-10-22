@@ -117,7 +117,7 @@ internal class GetFeeForGaslessUseCaseTronTest {
         )
         mockkObject(CryptoCurrencyStatusOperations)
         coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns accountStatusList
-        coEvery { isTronGaslessSupportedUseCase(userWalletId, network, usdt) } returns true
+        coEvery { isTronGaslessSupportedUseCase(network, usdt) } returns true
         coEvery { getTronGaslessFeeUseCase(userWalletId, transferTransaction, usdt) } returns tronGaslessFee.right()
         coEvery { getFeeUseCase.invoke(userWallet, network, transferTransaction) } returns nativeFee.right()
         givenBalances(sentToken = BigDecimal("50"), native = BigDecimal.TEN)
@@ -227,7 +227,7 @@ internal class GetFeeForGaslessUseCaseTronTest {
     @Test
     fun `GIVEN an unsupported token WHEN invoke THEN native fee without a quote`() = runTest {
         // Arrange
-        coEvery { isTronGaslessSupportedUseCase(userWalletId, network, usdt) } returns false
+        coEvery { isTronGaslessSupportedUseCase(network, usdt) } returns false
 
         // Act
         val actual = invoke(transferTransaction)

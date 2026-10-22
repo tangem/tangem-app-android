@@ -1,8 +1,5 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
   <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>MaxChainedCallsOnSameLine:GetOnrampOffersUseCase.kt$GetOnrampOffersUseCase$offer.quote.paymentMethod.type.getProcessingSpeed().speed</ID>
-    <ID>NamedArguments:GetOnrampOffersUseCase.kt$GetOnrampOffersUseCase$determineAdvantages( recentOffer, bestRateOffer, fastestOffer, isSingleOffer, )</ID>
-  </CurrentIssues>
+  <CurrentIssues/>
 </SmellBaseline>

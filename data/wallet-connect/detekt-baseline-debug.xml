@@ -8,7 +8,5 @@
     <ID>NullCheckOnMutableProperty:WcEthSignTransactionUseCase.kt$WcEthSignTransactionUseCase$if (dAppFee != null) return dAppFee</ID>
     <ID>SuspendFunSwallowedCancellation:DefaultWcPairService.kt$DefaultWcPairService$runCatching</ID>
     <ID>SuspendFunSwallowedCancellation:DefaultWcPairUseCase.kt$DefaultWcPairUseCase$runCatching</ID>
-    <ID>UseAnyOrNoneInsteadOfFind:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$find { it.sdkModel.topic == dto.topic }</ID>
-    <ID>UselessCallOnNotNull:DefaultWcRequestUseCaseFactory.kt$DefaultWcRequestUseCaseFactory$error.code().orEmpty()</ID>
   </CurrentIssues>
 </SmellBaseline>

@@ -39,7 +39,8 @@ internal class Wallet1ChooseOptionModel @Inject constructor(
         analyticsHandler.send(OnboardingEvent.Backup.ScreenOpened())
     }
 
-    val canSkipBackup = params.multiWalletState.value.currentScanResponse.card.canSkipBackup
+    val canSkipBackup = params.multiWalletState.value.currentScanResponse
+        .card.canSkipBackup
 
     fun onSkipClick() {
         if (isSkipClicked) return

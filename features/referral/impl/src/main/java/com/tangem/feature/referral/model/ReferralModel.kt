@@ -78,7 +78,7 @@ internal class ReferralModel @Inject constructor(
         )
     }
 
-    private var referralData: MutableStateFlow<ReferralData?> = MutableStateFlow(null)
+    private val referralData: MutableStateFlow<ReferralData?> = MutableStateFlow(null)
     private val lastReferralData get() = referralData.value
 
     var uiState: ReferralStateHolder by mutableStateOf(createInitiallyUiState())

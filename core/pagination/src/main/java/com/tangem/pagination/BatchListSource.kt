@@ -36,8 +36,12 @@ fun <TKey, TData, TRequestParams : Any> BatchListSource(
     context: BatchingContext<TKey, TRequestParams, Nothing>,
     generateNewKey: suspend (List<TKey>) -> TKey,
     batchFetcher: BatchFetcher<TRequestParams, TData>,
-): BatchListSource<TKey, TData, Nothing> =
-    DefaultBatchListSource(fetchDispatcher, context, generateNewKey, batchFetcher, null)
+): BatchListSource<TKey, TData, Nothing> = DefaultBatchListSource(
+    fetchDispatcher = fetchDispatcher,
+    context = context,
+    generateNewKey = generateNewKey,
+    batchFetcher = batchFetcher,
+)
 
 /**
  * Creates a new [BatchListSource] with the provided configuration.
@@ -57,8 +61,13 @@ fun <TKey, TData, TRequestParams : Any, TUpdate> BatchListSource(
     generateNewKey: suspend (List<TKey>) -> TKey,
     batchFetcher: BatchFetcher<TRequestParams, TData>,
     updateFetcher: BatchUpdateFetcher<TKey, TData, TUpdate>,
-): BatchListSource<TKey, TData, TUpdate> =
-    DefaultBatchListSource(fetchDispatcher, context, generateNewKey, batchFetcher, updateFetcher)
+): BatchListSource<TKey, TData, TUpdate> = DefaultBatchListSource(
+    fetchDispatcher = fetchDispatcher,
+    context = context,
+    generateNewKey = generateNewKey,
+    batchFetcher = batchFetcher,
+    updateFetcher = updateFetcher,
+)
 
 @Suppress("LargeClass")
 private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>(
@@ -375,9 +384,8 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
 
         with(updateFetcher) {
             runCatching {
-                updateContext.fetchUpdateAsync(batchesToUpdate, action.updateRequest).also {
-                    currentCoroutineContext().ensureActive()
-                }
+                updateContext.fetchUpdateAsync(batchesToUpdate, action.updateRequest)
+                currentCoroutineContext().ensureActive()
             }.getOrElse {
                 updateResults.emit(action.updateRequest to BatchUpdateResult.Error(it))
             }

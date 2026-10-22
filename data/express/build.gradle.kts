@@ -45,7 +45,6 @@ dependencies {
     api(projects.domain.common)
     api(projects.domain.express)
     api(projects.domain.express.models)
-    api(projects.domain.txhistory)
     implementation(projects.domain.core)
     implementation(projects.domain.models)
     // endregion
