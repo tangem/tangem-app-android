@@ -13,7 +13,6 @@ import com.tangem.domain.models.pay.TangemPayProduct
 internal class TangemPayVerifiedUMFactory(
     private val onChoosePlanClick: () -> Unit,
     private val onOpenMoneyAccountClick: () -> Unit,
-    private val onNotifyClick: () -> Unit,
     private val onCloseClick: () -> Unit,
 ) {
 
@@ -56,19 +55,6 @@ internal class TangemPayVerifiedUMFactory(
                     else -> onCloseClick
                 },
             ),
-            secondaryButton = when {
-                !isMoneyAccountAvailable && isVisaCardAvailable -> TangemPayVerifiedUM.ButtonUM(
-                    text = resourceReference(R.string.tangempay_verified_notify_money_account),
-                    iconEnd = null,
-                    onClick = onNotifyClick,
-                )
-                isMoneyAccountAvailable && !isVisaCardAvailable -> TangemPayVerifiedUM.ButtonUM(
-                    text = resourceReference(R.string.tangempay_verified_notify_payment_account),
-                    iconEnd = null,
-                    onClick = onNotifyClick,
-                )
-                else -> null
-            },
             onCloseClick = onCloseClick,
         )
     }
