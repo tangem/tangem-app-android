@@ -121,7 +121,7 @@ class DefaultWalletAddressServiceRepository(
                 }
             }
             else -> { // invalid URI
-                throw ParsedQrCodeErrors.InvalidUriError
+                throw ParsedQrCodeErrors.InvalidUriError()
             }
         }
 

@@ -72,7 +72,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
                     messageString = "Provider $providerType is not supported in Send With Swap",
                     shouldSanitize = false,
                 )
-                onExpressError(ExpressError.UnknownError)
+                onExpressError(ExpressError.UnknownError())
             }
         }
     }
@@ -162,7 +162,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         val swapTransaction = if (swapData.transaction is SwapDataTransactionModel.CEX) {
             swapData.transaction
         } else {
-            onExpressError(ExpressError.UnknownError)
+            onExpressError(ExpressError.UnknownError())
             return
         }
 
@@ -180,7 +180,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         }
 
         if (txData.extras == null && swapTransaction.txExtraId != null) {
-            onExpressError(ExpressError.UnknownError)
+            onExpressError(ExpressError.UnknownError())
             return
         }
 

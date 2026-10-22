@@ -113,7 +113,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
                     }
                     .right()
             },
-            onError = { DataError.NetworkError.NoInternetConnection.left() },
+            onError = { DataError.NetworkError.NoInternetConnection().left() },
         )
     }
 
@@ -387,14 +387,14 @@ internal class DefaultPolymarketRepository @Inject constructor(
                     .also(builderCodeCache::set)
                     .right()
             },
-            onError = { DataError.NetworkError.NoInternetConnection.left() },
+            onError = { DataError.NetworkError.NoInternetConnection().left() },
         )
     }
 
     override suspend fun checkGeoblock(): Either<DataError, Boolean> = withContext(dispatchers.io) {
         safeApiCall(
             call = { geoApi.getGeoblock().bind().blocked.right() },
-            onError = { DataError.NetworkError.NoInternetConnection.left() },
+            onError = { DataError.NetworkError.NoInternetConnection().left() },
         )
     }
 
@@ -404,9 +404,9 @@ internal class DefaultPolymarketRepository @Inject constructor(
                 call = {
                     relayerApi.getNonce(address = ownerAddress, type = WALLET_NONCE_TYPE).bind().nonce
                         .toBigIntegerOrNull()?.right()
-                        ?: DataError.NetworkError.NoInternetConnection.left()
+                        ?: DataError.NetworkError.NoInternetConnection().left()
                 },
-                onError = { DataError.NetworkError.NoInternetConnection.left() },
+                onError = { DataError.NetworkError.NoInternetConnection().left() },
             )
         }
 

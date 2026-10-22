@@ -145,7 +145,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 toSwapCurrencyStatus = any(),
                 filterProviderTypes = any()
             )
-        } returns Either.Left(ExpressError.UnknownError)
+        } returns Either.Left(ExpressError.UnknownError())
         coEvery {
             getMinimumTransactionAmountSyncUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
         } returns Either.Right(null)
