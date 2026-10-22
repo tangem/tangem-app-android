@@ -10,6 +10,7 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.swipeVertical
 import com.tangem.core.ui.test.MainScreenTestTags
+import com.tangem.screens.MainScreenPageObject
 import com.tangem.screens.onAddAndManageBottomSheet
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onOrganizeTokensScreen
@@ -99,22 +100,35 @@ fun BaseTestCase.closeFinishWalletActivationSheetIfShown() {
     }
 }
 
-// The expanded state of an account is persisted, so a click can collapse it instead; retry until the token shows.
 fun BaseTestCase.revealTokenInAccountOnMain(tokenName: String, accountName: String) {
+    revealAccountContentOnMain(accountName, "token '$tokenName'") { isTokenOnScreenPage(tokenName) }
+}
+
+fun BaseTestCase.revealAccountTokensOnMain(accountName: String) {
+    revealAccountContentOnMain(accountName, "its tokens") { hasTokenRowsOnScreenPage() }
+}
+
+// The expanded state of an account is persisted, so a click can collapse it instead; retry until the content shows.
+private fun BaseTestCase.revealAccountContentOnMain(
+    accountName: String,
+    content: String,
+    isRevealed: MainScreenPageObject.() -> Boolean,
+) {
+    fun isContentShown(): Boolean {
+        var isShown = false
+        onMainScreen { isShown = isRevealed() }
+        return isShown
+    }
     step("Collapse header") {
         onMainScreen { collapseOnScreenPageHeader() }
     }
-    step("Expand account '$accountName' and reveal token '$tokenName'") {
+    step("Expand account '$accountName' and reveal $content") {
         repeat(ACCOUNT_EXPAND_ATTEMPTS) {
-            if (isTokenOnScreenPage(tokenName)) return@step
+            if (isContentShown()) return@step
             runCatching { onMainScreen { clickOnScreenAccountSection(accountName) } }
-            runCatching {
-                composeTestRule.waitUntil(ACCOUNT_EXPAND_TIMEOUT_MILLIS) { isTokenOnScreenPage(tokenName) }
-            }
+            runCatching { composeTestRule.waitUntil(ACCOUNT_EXPAND_TIMEOUT_MILLIS) { isContentShown() } }
         }
-        if (!isTokenOnScreenPage(tokenName)) {
-            throw AssertionError("Token '$tokenName' is not displayed in account '$accountName'")
-        }
+        if (!isContentShown()) throw AssertionError("Account '$accountName' does not show $content")
     }
 }
 
@@ -151,12 +165,6 @@ fun BaseTestCase.refreshMainUntilTokenBalance(
             }.isSuccess
         }
     }
-}
-
-private fun BaseTestCase.isTokenOnScreenPage(tokenName: String): Boolean {
-    var isOnScreen = false
-    onMainScreen { isOnScreen = isTokenOnScreenPage(tokenName) }
-    return isOnScreen
 }
 
 private fun BaseTestCase.readDisplayedTokenBalanceOrNull(tokenName: String): BigDecimal? {
