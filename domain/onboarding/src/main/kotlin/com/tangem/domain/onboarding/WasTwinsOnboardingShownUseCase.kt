@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.onboarding.repository.OnboardingRepository
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -28,6 +29,7 @@ class WasTwinsOnboardingShownUseCase(
 
     /** Get twins onboarding state synchronously or default value if exception will be thrown */
     suspend fun invokeSync(): Boolean {
-        return runCatching { onboardingRepository.wasTwinsOnboardingShownSync() }.getOrDefault(defaultValue = false)
+        return runSuspendCatching { onboardingRepository.wasTwinsOnboardingShownSync() }
+            .getOrDefault(defaultValue = false)
     }
 }
