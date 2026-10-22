@@ -4,6 +4,7 @@ import com.appsflyer.deeplink.DeepLink
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.AppsFlyerDeeplinkTarget
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
+import com.tangem.domain.wallets.models.ReferralParamValidator
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.extensions.uriValidate
 import com.tangem.utils.logging.TangemLogger
