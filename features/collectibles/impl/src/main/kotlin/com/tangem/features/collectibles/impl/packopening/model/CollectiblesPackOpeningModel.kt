@@ -431,7 +431,6 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
 
     private fun onBuybackFailed(error: BuybackError, offer: CollectibleBuybackOffer) {
         when (error) {
-            // The NFC sheet has already shown the card's refusal, and a cancel needs no answer
             BuybackError.Cancelled, BuybackError.CardRefused -> {
                 buyback.value = BuybackState.Available(offer)
             }
@@ -439,10 +438,9 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
                 buyback.value = BuybackState.Available(offer)
                 showSnackbar(resourceReference(R.string.unexpected_error_description))
             }
-            // The sale may still land, so the offer is asked for again instead of being offered at once
             BuybackError.NotConfirmed -> {
                 buyback.value = BuybackState.Unavailable
-                showSnackbar(resourceReference(R.string.unexpected_error_description))
+                showSnackbar(resourceReference(R.string.common_something_went_wrong))
             }
         }
     }
