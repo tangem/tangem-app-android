@@ -41,6 +41,7 @@ dependencies {
     api(projects.domain.balanceHiding)
     api(projects.domain.feedback)
     api(projects.domain.models)
+    api(projects.domain.moneyAccount)
     api(projects.domain.visa)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.feedback.models)

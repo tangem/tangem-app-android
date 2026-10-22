@@ -8,14 +8,20 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
-import com.tangem.domain.models.account.mainImageUrl
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
+import com.tangem.domain.models.account.mainImageUrl
+import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
+import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
 import com.tangem.domain.pay.usecase.GetCurrentTariffUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanTransitionsUseCase
 import com.tangem.domain.pay.usecase.SubmitTariffTransitionUseCase
@@ -36,7 +42,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @Stable
 @ModelScoped
 internal class TangemPaySelectPlanModel @Inject constructor(
@@ -46,6 +52,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     private val getTransitions: GetTangemPayTariffPlanTransitionsUseCase,
     private val getCurrentTariffUseCase: GetCurrentTariffUseCase,
     private val submitTariffTransitionUseCase: SubmitTariffTransitionUseCase,
+    private val startTangemPayOnboardingUseCase: StartTangemPayOnboardingUseCase,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
     private val urlOpener: UrlOpener,
@@ -105,9 +112,8 @@ internal class TangemPaySelectPlanModel @Inject constructor(
                 isConfirm = true
                 state.update { buildState() }
             }
-            is TangemPaySelectPlanComponent.Mode.PickPlan -> {
-                router.pop()
-                mode.onPlanSelected(transition)
+            is TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder -> {
+                createOnboardingOrder(transition = transition, availableProducts = mode.availableProducts)
             }
         }
     }
@@ -176,6 +182,31 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         }
     }
 
+    private fun createOnboardingOrder(
+        transition: TangemPayTariffPlanTransition,
+        availableProducts: Set<TangemPayProduct>,
+    ) {
+        if (isProcessing) return
+
+        isProcessing = true
+        state.update { buildState() }
+        modelScope.launch {
+            startTangemPayOnboardingUseCase(
+                userWalletId = params.userWalletId,
+                tariffPlanTransition = transition,
+                availableProducts = availableProducts,
+            ).onLeft { error ->
+                isProcessing = false
+                state.update { buildState() }
+                if (error !is StartTangemPayOnboardingError.UserCancelled) {
+                    uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
+                }
+            }.onRight {
+                // TODO v_rodiononov: #[REDACTED_TASK_KEY] Tangem Pay Onboarding Success Screen
+            }
+        }
+    }
+
     private fun buildState(showPlanCompare: Boolean = false): TangemPaySelectPlanUM = TangemPaySelectPlanUM(
         topBarTitle = resourceReference(
             if (isConfirm) {
@@ -196,9 +227,17 @@ internal class TangemPaySelectPlanModel @Inject constructor(
 
     private fun buildSelectContent() = TangemPaySelectPlanUM.Content.Select(
         isProcessing = isProcessing,
+        selectButtonIconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24)
+            .takeIf { isMoneyAccountActivationRequired() },
         onComparePlansClick = ::onComparePlansClick,
         onSelectClick = ::onSelectClick,
     )
+
+    private fun isMoneyAccountActivationRequired(): Boolean {
+        val mode = params.mode
+        return mode is TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder &&
+            TangemPayProduct.BANKING_ACCOUNT in mode.availableProducts
+    }
 
     private fun buildCompare(): TangemPaySelectPlanUM.ComparePlans {
         val plans = listOfNotNull(tariffPlan?.plan) + allowedTransitionsForCompare.map { it.plan }
