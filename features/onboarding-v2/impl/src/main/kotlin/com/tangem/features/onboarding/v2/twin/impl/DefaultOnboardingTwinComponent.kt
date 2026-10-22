@@ -58,7 +58,7 @@ internal class DefaultOnboardingTwinComponent @AssistedInject constructor(
     data class TwinInnerNavigationState(
         override val stackSize: Int,
     ) : InnerNavigationState {
-        override val stackMaxSize: Int? = 5
+        override val stackMaxSize: Int = 5
     }
 
     @AssistedFactory

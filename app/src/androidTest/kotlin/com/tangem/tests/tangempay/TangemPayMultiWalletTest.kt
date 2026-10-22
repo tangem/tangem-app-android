@@ -2,6 +2,7 @@ package com.tangem.tests.tangempay
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.getQuantityString
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
@@ -15,6 +16,8 @@ import com.tangem.scenarios.openTangemPayFromTileWithSubtitle
 import com.tangem.scenarios.returnToMainFromTangemPay
 import com.tangem.scenarios.switchToNextWallet
 import com.tangem.scenarios.switchToPreviousWallet
+import com.tangem.screens.onMainScreen
+import com.tangem.screens.tangempay.onTangemPayMainScreen
 import com.tangem.tap.domain.sdk.mocks.content.WalletMockContent
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
@@ -78,6 +81,35 @@ class TangemPayMultiWalletTest : BaseTestCase() {
                     transaction = walletBTransaction,
                     otherWalletTransaction = walletATransaction,
                 )
+            }
+        }
+    }
+
+    @AllureId("9688")
+    @DisplayName("Tangem Pay: adding a wallet keeps the wallet with the Payment account")
+    @Test
+    fun addingWalletKeepsWalletWithPaymentAccountTest() {
+        val hotWalletCustomerOnlyState = "HotWalletCustomerOnly"
+        val hotWalletName = "Wallet"
+        val cardWalletName = "Wallet 2"
+
+        setupHooks().run {
+            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$hotWalletCustomerOnlyState'") {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, hotWalletCustomerOnlyState)
+            }
+            step("Open Main screen with the Tangem Pay tile of the hot wallet") { openMainScreenWithTangemPayTile() }
+            step("Add card wallet") { addNewCardWallet(WalletMockContent) }
+            step("Assert '$cardWalletName' wallet is displayed") {
+                flakySafely { onMainScreen { walletNameText(cardWalletName).assertIsDisplayed() } }
+            }
+            step("Switch to '$hotWalletName' wallet") { switchToPreviousWallet() }
+            step("Assert '$hotWalletName' wallet is displayed") {
+                flakySafely { onMainScreen { walletNameText(hotWalletName).assertIsDisplayed() } }
+            }
+            step("Assert Tangem Pay tile is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTangemPayMainScreen { mainScreenTile.assertIsDisplayed() }
+                }
             }
         }
     }

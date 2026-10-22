@@ -64,8 +64,10 @@ internal class PredictionBalanceUMConverter(
             withdraw = actionButton(
                 text = resourceReference(id = R.string.prediction_main_withdraw),
                 icon = Icons.ic_arrow_up_24,
-                isEnabled = active != null && active.balance > BigDecimal.ZERO,
+                isEnabled = active != null && active.balance > BigDecimal.ZERO &&
+                    value.requisites !is RequisitesState.Loading,
                 isLoading = isLoading,
+                isDimmed = value.requisites is RequisitesState.Failed,
                 onClick = onWithdrawClick,
             ),
         )

@@ -7,5 +7,9 @@ package com.tangem.core.navigation.deeplink
  */
 interface DeeplinkLauncher {
 
-    fun launch(link: String)
+    /**
+     * @param shouldReportFailure whether a [link] that can't be opened is sent to analytics. A link supplied by the
+     * backend (a banner) that fails is a bug worth reporting; arbitrary user input (a scanned QR code) is not.
+     */
+    fun launch(link: String, shouldReportFailure: Boolean = true)
 }

@@ -105,7 +105,7 @@ internal fun TangemPayOnboardingLayout(
 }
 
 @Composable
-private fun TermsButton(onClick: () -> Unit) {
+internal fun TermsButton(onClick: () -> Unit) {
     TangemButton(
         variant = TangemButton.Variant.Ghost,
         size = TangemButton.Size.X9,
@@ -145,7 +145,7 @@ private fun OnboardingContent(scrollState: ScrollState, contentPadding: PaddingV
 }
 
 @Composable
-private fun OnboardingBenefits() {
+internal fun OnboardingBenefits() {
     Column(
         modifier = Modifier.padding(all = 24.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),

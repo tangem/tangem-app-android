@@ -15,9 +15,7 @@ import javax.inject.Inject
 class InputManager @Inject constructor() {
 
     val query: Flow<String>
-        get() = _query
-
-    private val _query = MutableStateFlow(value = "")
+        field = MutableStateFlow(value = "")
 
     private val jobHolder = JobHolder()
 
@@ -25,9 +23,9 @@ class InputManager @Inject constructor() {
         coroutineScope {
             if (value.isEmpty()) {
                 jobHolder.cancel()
-                _query.value = value
+                query.value = value
             } else {
-                withDebounce(jobHolder) { _query.value = value }
+                withDebounce(jobHolder) { query.value = value }
             }
         }
     }

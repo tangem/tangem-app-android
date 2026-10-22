@@ -129,7 +129,7 @@ internal class SwapInteractorImplApprovalFeeCoverageTest : SwapInteractorImplTes
     fun `GIVEN Tron gasless relays the token WHEN findBestQuote with no TRX THEN approval stays offered`() = runTest {
         // Arrange — the approval is paid in the token through the gasless service, not in TRX
         every { swapFeatureToggles.isTronGaslessDexSwapEnabled } returns true
-        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
         stubNativeFeeCoinBalance(balance = BigDecimal.ZERO)
         stubApproveFeeEstimation(feeValue = BigDecimal("13"))
         val provider = stubTronDexQuote()
@@ -147,7 +147,7 @@ internal class SwapInteractorImplApprovalFeeCoverageTest : SwapInteractorImplTes
     fun `GIVEN Tron gasless does not relay the token WHEN findBestQuote with no TRX THEN InsufficientFee`() = runTest {
         // Arrange
         every { swapFeatureToggles.isTronGaslessDexSwapEnabled } returns true
-        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns false
+        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns false
         stubNativeFeeCoinBalance(balance = BigDecimal.ZERO)
         stubApproveFeeEstimation(feeValue = BigDecimal("13"))
         val provider = stubTronDexQuote()

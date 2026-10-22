@@ -9,7 +9,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.StakingOption
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.grow.datasource.stakekit.StakeKitApi
 import com.tangem.grow.datasource.stakekit.models.response.model.NetworkTypeDTO
@@ -36,14 +35,12 @@ internal class DefaultStakeKitRepositoryAvailabilityTest {
     private val stakeKitApi: StakeKitApi = mockk()
     private val stakingYieldsStore: StakingYieldsStore = mockk()
     private val stakingValidatorDao: StakingValidatorDao = mockk()
-    private val txHistoryFeatureToggle: TxHistoryFeatureToggles = mockk()
     private val walletManagersFacade: WalletManagersFacade = mockk()
 
     private val repository = DefaultStakeKitRepository(
         stakeKitApi = stakeKitApi,
         stakingYieldsStore = stakingYieldsStore,
         stakingValidatorDao = stakingValidatorDao,
-        txHistoryFeatureToggle = txHistoryFeatureToggle,
         dispatchers = TestingCoroutineDispatcherProvider(),
         walletManagersFacade = walletManagersFacade,
         moshi = StakeKitRepositoryFixtures.moshi,
@@ -51,7 +48,7 @@ internal class DefaultStakeKitRepositoryAvailabilityTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(stakeKitApi, stakingYieldsStore, stakingValidatorDao, txHistoryFeatureToggle, walletManagersFacade)
+        clearMocks(stakeKitApi, stakingYieldsStore, stakingValidatorDao, walletManagersFacade)
     }
 
     private fun cosmosDto() = yieldDTO(

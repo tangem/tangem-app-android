@@ -65,7 +65,6 @@ internal class StateBuilder(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
     private val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork,
-    private val isChooseTokenPulseEnabled: Boolean,
     private val isCustomSlippageEnabled: Boolean = false,
     private val predictionTopUpLimitsProvider: Provider<PredictionTopUpLimits?> = Provider { null },
 ) {
@@ -440,7 +439,6 @@ internal class StateBuilder(
             ),
             amountField = placeholderAmountField(value = if (isFromCard) "0" else "0".appendApproximateSign()),
             amountEquivalent = emptyAmountState.zeroAmountEquivalent,
-            isPulseAnimationEnabled = isChooseTokenPulseEnabled,
         )
 
     fun createSwapNotSupportedState(
@@ -857,7 +855,6 @@ internal class StateBuilder(
             type = type,
             amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
             amountField = null,
-            isPulseAnimationEnabled = isChooseTokenPulseEnabled,
         )
         return uiStateHolder.copy(
             receiveCardData = receiveCardData,

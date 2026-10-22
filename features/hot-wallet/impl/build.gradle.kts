@@ -48,7 +48,6 @@ dependencies {
     runtimeOnly(projects.common.ui)
 
     /** Tangem libraries */
-    api(projects.core.configToggles)
     api(tangemDeps.hot.core)
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.card.android) {

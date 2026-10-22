@@ -312,8 +312,6 @@ include(":features:address-book:impl")
 include(":features:onboarding-v2:api")
 include(":features:onboarding-v2:impl")
 
-include(":features:home:api")
-include(":features:home:impl")
 include(":features:introduction:api")
 include(":features:introduction:impl")
 

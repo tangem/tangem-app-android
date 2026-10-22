@@ -1,6 +1,7 @@
 package com.tangem.domain.pay.model
 
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
+import com.tangem.domain.visa.model.MoneyAccountDepositCredentials
 
 sealed interface CustomerOrderRequest {
 
@@ -28,4 +29,9 @@ sealed interface CustomerOrderRequest {
     ) : CustomerOrderRequest
 
     data class SmartContractIssue(val chainId: Int) : CustomerOrderRequest
+
+    data class Onboarding(
+        val tariffPlanTransition: TariffPlanTransition?,
+        val depositCredentials: MoneyAccountDepositCredentials?,
+    ) : CustomerOrderRequest
 }

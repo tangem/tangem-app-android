@@ -1,12 +1,11 @@
 package com.tangem.data.swap
 
+import arrow.core.getOrElse
 import arrow.core.some
 import arrow.core.toOption
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.swap.converter.SwapDataConverter
@@ -25,6 +24,7 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.*
 import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.grow.datasource.express.TangemExpressApi
@@ -56,18 +56,13 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
-    private val featureTogglesManager: FeatureTogglesManager,
+    private val walletManagersFacade: WalletManagersFacade,
     @NetworkMoshi moshi: Moshi,
 ) : SwapRepositoryV2 {
 
     private val swapDataConverter = SwapDataConverter()
     private val tokenInfoConverter = TokenInfoConverter()
     private val txDetailsMoshiAdapter = moshi.adapter(TxDetails::class.java)
-
-    private val isExpressCategoriesGeoBlockingEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED,
-        )
 
     override suspend fun getPairs(
         primarySwapCurrencyStatus: SwapCurrencyStatus,
@@ -258,9 +253,11 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         provider: ExpressProvider,
         rateType: ExpressRateType,
     ): SwapQuoteModel = withContext(coroutineDispatcher.io) {
+        val sourceAmountScale = getSourceAmountScale(userWallet, fromCryptoCurrency)
         val response = tangemExpressApi.getExchangeQuote(
             fromAmount = if (amountType == SwapAmountType.From) {
-                amount.toStringWithRightOffset(fromCryptoCurrency.decimals)
+                sourceAmountScale.toOnChain(amount, fromCryptoCurrency.decimals)
+                    .toStringWithRightOffset(fromCryptoCurrency.decimals)
             } else {
                 null
             },
@@ -282,7 +279,9 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         ).getOrThrow()
 
         val toTokenAmount = requireNotNull(response.toAmount.toBigDecimalOrNull()?.movePointLeft(response.toDecimals))
-        val fromTokenAmount = response.fromAmount.toBigDecimalOrNull()?.movePointLeft(response.fromDecimals)
+        val fromTokenAmount = response.fromAmount.toBigDecimalOrNull()
+            ?.movePointLeft(response.fromDecimals)
+            ?.let(sourceAmountScale::toDisplayed)
 
         return@withContext SwapQuoteModel(
             provider = provider,
@@ -290,7 +289,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             fromTokenAmount = fromTokenAmount,
             allowanceContract = response.allowanceContract,
             quoteId = response.quoteId,
-            isRestricted = response.isRestricted && isExpressCategoriesGeoBlockingEnabled,
+            isRestricted = response.isRestricted,
         )
     }
 
@@ -309,6 +308,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     ): SwapDataModel = withContext(coroutineDispatcher.io) {
         val requestId = UUID.randomUUID().toString()
         val (fromCurrency, fromStatus) = fromCryptoCurrencyStatus
+        val sourceAmountScale = getSourceAmountScale(userWallet, fromCurrency)
 
         val refundData = when (expressProvider.type) {
             ExpressProviderType.CEX,
@@ -331,7 +331,8 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             fromDecimals = fromCurrency.decimals,
             toDecimals = toCryptoCurrency.decimals,
             fromAmount = if (amountType == SwapAmountType.From) {
-                amount.toStringWithRightOffset(fromCurrency.decimals)
+                sourceAmountScale.toOnChain(amount, fromCurrency.decimals)
+                    .toStringWithRightOffset(fromCurrency.decimals)
             } else {
                 null
             },
@@ -361,12 +362,13 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             if (!toAddress.equals(txDetails.payoutAddress, ignoreCase = true)) {
                 throw ExpressError.InvalidPayoutAddressError()
             }
-            swapDataConverter.convert(
+            val swapData = swapDataConverter.convert(
                 ExchangeDataResponseWithTxDetails(
                     dataResponse = response,
                     txDetails = txDetails,
                 ),
             )
+            swapData.copy(transaction = swapData.transaction.withDisplayedFromAmount(sourceAmountScale))
         } else {
             throw ExpressError.InvalidSignatureError()
         }
@@ -516,6 +518,23 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             is CryptoCurrency.Token -> this.contractAddress
             is CryptoCurrency.Coin -> "0"
         }
+    }
+
+    private fun SwapDataTransactionModel.withDisplayedFromAmount(
+        scale: SwapSourceAmountScale,
+    ): SwapDataTransactionModel = when (this) {
+        is SwapDataTransactionModel.DEX -> copy(fromAmount = scale.toDisplayed(fromAmount))
+        is SwapDataTransactionModel.CEX -> copy(fromAmount = scale.toDisplayed(fromAmount))
+    }
+
+    /** Express takes and returns the source amount in on-chain units, see [SwapSourceAmountScale]. */
+    private suspend fun getSourceAmountScale(userWallet: UserWallet, currency: CryptoCurrency): SwapSourceAmountScale {
+        val multiplier = walletManagersFacade.getScaledUiAmountMultiplier(
+            userWalletId = userWallet.walletId,
+            currency = currency,
+        ).getOrElse { error -> throw error }
+
+        return SwapSourceAmountScale(multiplier)
     }
 
     private fun BigDecimal.toStringWithRightOffset(decimals: Int): String {

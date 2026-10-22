@@ -17,7 +17,6 @@ import com.tangem.domain.staking.model.ethpool.P2PEthPoolNetwork
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolUnsignedTx
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
 import com.tangem.grow.datasource.ethpool.models.request.P2PEthPoolBroadcastRequest
 import com.tangem.grow.datasource.ethpool.models.request.P2PEthPoolTransactionRequest
@@ -54,7 +53,6 @@ internal class DefaultP2PEthPoolRepositoryTransactionsTest {
     private val featureToggles: StakingFeatureToggles = mockk(relaxed = true)
     private val regionBlockedStore: P2PEthPoolRegionBlockedStore = mockk(relaxed = true)
     private val vaultDao: P2PEthPoolVaultDao = mockk(relaxed = true)
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles = mockk(relaxed = true)
 
     private val repository = DefaultP2PEthPoolRepository(
         p2pEthPoolApi = api,
@@ -64,7 +62,6 @@ internal class DefaultP2PEthPoolRepositoryTransactionsTest {
         tangemTechApi = tangemTechApi,
         dispatchers = TestingCoroutineDispatcherProvider(),
         stakingFeatureToggles = featureToggles,
-        txHistoryFeatureToggle = txHistoryFeatureToggles,
         p2pEthPoolRegionBlockedStore = regionBlockedStore,
     )
 
@@ -283,23 +280,6 @@ internal class DefaultP2PEthPoolRepositoryTransactionsTest {
                 // Assert
                 assertThat(actual).isEqualTo(StakingError.UnknownError(cause).left())
             }
-
-        // Pins current behaviour: requireNotNull throws past either {} instead of returning Left
-        @Test
-        fun `GIVEN success with null result WHEN create deposit transaction THEN throws illegal argument`() = runTest {
-            // Arrange
-            stub(
-                TxEndpoint.DEPOSIT,
-                ApiResponse.Success(P2PEthPoolResponse<P2PEthPoolTransactionResponse>(error = null, result = null)),
-            )
-
-            // Act
-            val error = runCatching { call(TxEndpoint.DEPOSIT) }.exceptionOrNull()
-
-            // Assert
-            assertThat(error).isInstanceOf(IllegalArgumentException::class.java)
-            assertThat(error).hasMessageThat().isEqualTo("Result is null in successful response")
-        }
     }
 
     @Nested
@@ -366,22 +346,6 @@ internal class DefaultP2PEthPoolRepositoryTransactionsTest {
 
             // Assert
             assertThat(actual).isEqualTo(StakingError.UnknownError(cause).left())
-        }
-
-        // Pins current behaviour: requireNotNull throws past either {} instead of returning Left
-        @Test
-        fun `GIVEN success with null result WHEN broadcastTransaction THEN throws illegal argument`() = runTest {
-            // Arrange
-            coEvery { api.broadcastTransaction(any(), any()) } returns
-                ApiResponse.Success(P2PEthPoolResponse<P2PEthPoolBroadcastResponse>(error = null, result = null))
-
-            // Act
-            val error = runCatching { repository.broadcastTransaction(P2PEthPoolNetwork.MAINNET, "0xsigned") }
-                .exceptionOrNull()
-
-            // Assert
-            assertThat(error).isInstanceOf(IllegalArgumentException::class.java)
-            assertThat(error).hasMessageThat().isEqualTo("Result is null in successful response")
         }
     }
 

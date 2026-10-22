@@ -90,6 +90,12 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
+    fun walletNameText(name: String): KNode = child {
+        hasTestTag(MainScreenTestTags.CARD_TITLE)
+        hasText(name)
+        useUnmergedTree = true
+    }
+
     val walletImage: KNode = child {
         hasTestTag(MainScreenTestTags.CARD_IMAGE)
         useUnmergedTree = true
@@ -196,6 +202,12 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     }
 
     fun isTokenOnScreenPage(tokenName: String): Boolean = onScreenTokenRow(tokenName) != null
+
+    fun hasTokenRowsOnScreenPage(): Boolean = onScreenPageChild(
+        withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM) and
+            hasAnyDescendant(withTestTag(TokenElementsTestTags.TOKEN_TITLE)) and
+            hasAnyDescendant(withTestTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT))
+    ) != null
 
     fun onScreenTokenCryptoAmount(tokenName: String): String? =
         onScreenTokenRow(tokenName)?.fetchSemanticsNode()?.firstTextForTestTag(TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT)
@@ -341,6 +353,17 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     val getTangemPayBannerLearnMoreButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasAnyDescendant(withText(getResourceString(CoreResR.string.common_learn_more)))
+        useUnmergedTree = true
+    }
+
+    val getTangemPayBannerLaterButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.common_later)))
+        hasAnyAncestor(
+            withTestTag(NotificationTestTags.CONTAINER) and androidx.compose.ui.test.hasAnyDescendant(
+                withText(getResourceString(CoreResR.string.tangempay_onboarding_banner_title))
+            )
+        )
         useUnmergedTree = true
     }
 
@@ -628,15 +651,11 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     }
 
     /**
-     * Tap target that raises the markets sheet. The legacy sheet exposes its grabber; the DS3
-     * shtorka (TWI_1608) drags instead of clicking, so it tags its search bar, which raises the
-     * sheet with the keyboard up. Both builds ship until the toggle is retired — match either.
+     * Tap target that raises the markets sheet. The shtorka drags instead of clicking, so it tags its
+     * search bar, which raises the sheet with the keyboard up.
      */
     val marketsSheetDragHandle: KNode = child {
-        addSemanticsMatcher(
-            withTestTag(MainScreenTestTags.MARKETS_SHEET_DRAG_HANDLE) or
-                withTestTag(MainScreenTestTags.MARKETS_SHEET_EXPAND_AREA),
-        )
+        hasTestTag(MainScreenTestTags.MARKETS_SHEET_EXPAND_AREA)
         useUnmergedTree = true
     }
 

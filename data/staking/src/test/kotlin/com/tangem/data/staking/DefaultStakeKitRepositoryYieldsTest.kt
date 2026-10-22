@@ -15,7 +15,6 @@ import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.grow.datasource.stakekit.StakeKitApi
 import com.tangem.grow.datasource.stakekit.models.response.EnabledYieldsResponse
@@ -50,14 +49,12 @@ internal class DefaultStakeKitRepositoryYieldsTest {
     private val stakeKitApi: StakeKitApi = mockk()
     private val stakingYieldsStore: StakingYieldsStore = mockk()
     private val stakingValidatorDao: StakingValidatorDao = mockk()
-    private val txHistoryFeatureToggle: TxHistoryFeatureToggles = mockk()
     private val walletManagersFacade: WalletManagersFacade = mockk()
 
     private val repository = DefaultStakeKitRepository(
         stakeKitApi = stakeKitApi,
         stakingYieldsStore = stakingYieldsStore,
         stakingValidatorDao = stakingValidatorDao,
-        txHistoryFeatureToggle = txHistoryFeatureToggle,
         dispatchers = TestingCoroutineDispatcherProvider(),
         walletManagersFacade = walletManagersFacade,
         moshi = StakeKitRepositoryFixtures.moshi,
@@ -65,7 +62,8 @@ internal class DefaultStakeKitRepositoryYieldsTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(stakeKitApi, stakingYieldsStore, stakingValidatorDao, txHistoryFeatureToggle, walletManagersFacade)
+        clearMocks(stakeKitApi, stakingYieldsStore, stakingValidatorDao, walletManagersFacade)
+        coEvery { stakingValidatorDao.upsert(any()) } just Runs
     }
 
     private fun stubAllNetworks(response: ApiResponse<EnabledYieldsResponse>) {
@@ -130,7 +128,6 @@ internal class DefaultStakeKitRepositoryYieldsTest {
             // Arrange
             stubAllNetworks(ApiResponse.Success(enabledYields()))
             stubStore()
-            every { txHistoryFeatureToggle.isNewTxHistoryEnabled } returns false
 
             // Act
             repository.fetchYields()
@@ -147,7 +144,6 @@ internal class DefaultStakeKitRepositoryYieldsTest {
                 // Arrange
                 stubAllNetworks(ApiResponse.Success(enabledYields()))
                 stubStore()
-                every { txHistoryFeatureToggle.isNewTxHistoryEnabled } returns false
 
                 // Act
                 repository.fetchYields()
@@ -179,7 +175,6 @@ internal class DefaultStakeKitRepositoryYieldsTest {
             stubNetwork("ton", ApiResponse.Success(enabledYields(tonDto)))
             stubNetwork("solana", ApiResponse.Success(enabledYields(solanaDto)))
             stubStore()
-            every { txHistoryFeatureToggle.isNewTxHistoryEnabled } returns false
 
             // Act
             repository.fetchYields()
@@ -196,7 +191,6 @@ internal class DefaultStakeKitRepositoryYieldsTest {
             stubNetwork("solana", ApiResponse.Success(enabledYields(solanaDto)))
             stubNetwork("tron", apiError(ApiResponseError.NetworkException()))
             stubStore()
-            every { txHistoryFeatureToggle.isNewTxHistoryEnabled } returns false
 
             // Act
             repository.fetchYields()
@@ -222,7 +216,6 @@ internal class DefaultStakeKitRepositoryYieldsTest {
                     ),
                 )
                 stubStore()
-                every { txHistoryFeatureToggle.isNewTxHistoryEnabled } returns false
 
                 // Act
                 repository.fetchYields()
@@ -232,7 +225,7 @@ internal class DefaultStakeKitRepositoryYieldsTest {
             }
 
         @Test
-        fun `GIVEN new tx history enabled WHEN fetchYields THEN validators upserted and addressless dropped`() =
+        fun `GIVEN yields with validators WHEN fetchYields THEN validators upserted and addressless dropped`() =
             runTest {
                 // Arrange
                 stubAllNetworks(ApiResponse.Success(enabledYields()))
@@ -258,8 +251,6 @@ internal class DefaultStakeKitRepositoryYieldsTest {
                     ),
                 )
                 stubStore()
-                coEvery { stakingValidatorDao.upsert(any()) } just Runs
-                every { txHistoryFeatureToggle.isNewTxHistoryEnabled } returns true
 
                 // Act
                 repository.fetchYields()
@@ -269,21 +260,6 @@ internal class DefaultStakeKitRepositoryYieldsTest {
                     stakingValidatorDao.upsert(listOf(validatorEntity("v1", commission = 0.1), validatorEntity("v2")))
                 }
             }
-
-        @Test
-        fun `GIVEN new tx history disabled WHEN fetchYields THEN validator dao untouched`() = runTest {
-            // Arrange
-            stubAllNetworks(ApiResponse.Success(enabledYields()))
-            stubNetwork("solana", ApiResponse.Success(enabledYields(yieldDTO())))
-            stubStore()
-            every { txHistoryFeatureToggle.isNewTxHistoryEnabled } returns false
-
-            // Act
-            repository.fetchYields()
-
-            // Assert
-            coVerify(exactly = 0) { stakingValidatorDao.upsert(any()) }
-        }
 
         private fun provideTestModels() = listOf(
             CoinRequestModel("ton"),

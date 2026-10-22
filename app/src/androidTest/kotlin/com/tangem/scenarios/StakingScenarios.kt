@@ -9,7 +9,9 @@ import androidx.compose.ui.test.performTouchInput
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
+import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
+import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.screens.onStakingConfirmScreen
 import com.tangem.screens.onStakingDetailsScreen
@@ -259,14 +261,14 @@ fun BaseTestCase.confirmStakingActionByHolding() {
     unstakeButton.performTouchInput { up() }
 }
 
-fun BaseTestCase.checkUnstakeScreen() {
+fun BaseTestCase.checkUnstakeScreen(isAmountEditable: Boolean = false) {
     step("Assert 'Unstake' screen title is displayed") {
         onStakingConfirmScreen { title.assertIsDisplayed() }
     }
-    step("Assert 'Amount' block is displayed and not editable") {
+    step("Assert 'Amount' block is displayed and ${if (isAmountEditable) "editable" else "not editable"}") {
         onStakingConfirmScreen {
             amountBlock.assertIsDisplayed()
-            amountBlock.assertIsNotEnabled()
+            if (isAmountEditable) amountBlock.assertIsEnabled() else amountBlock.assertIsNotEnabled()
         }
     }
     step("Assert 'Network Fee' block is displayed and not clickable") {
@@ -418,5 +420,63 @@ fun BaseTestCase.checkStakingDetailsAfterInitialStake() {
     }
     step("Assert 'Rewards' block shows no accrued rewards yet") {
         awaitSuccess { onStakingDetailsScreen { rewardsBlockText.assertIsDisplayed() } }
+    }
+}
+
+fun BaseTestCase.reopenStakingDetails() {
+    runCatching {
+        onSendScreen { closeButton.performClick() }
+        awaitSuccess {
+            onTokenDetailsScreen {
+                if (!stakingBlock.isDisplayedSafely()) availableStakingBlock.assertIsDisplayed()
+            }
+        }
+        onTokenDetailsScreen {
+            if (stakingBlock.isDisplayedSafely()) stakingBlock.clickWithAssertion() else availableStakingBlock.clickWithAssertion()
+        }
+    }
+}
+
+fun BaseTestCase.enterUnstakeAmount(amount: String) {
+    step("Assert amount input text field is displayed") {
+        awaitSuccess { onSendScreen { amountInputTextField.assertIsDisplayed() } }
+    }
+    step("Type '$amount' in input text field") {
+        onSendScreen {
+            amountInputTextField.performClick()
+            amountInputTextField.performTextReplacement(amount)
+        }
+    }
+    step("Assert input text field has value: '$amount'") {
+        onSendScreen { amountInputTextField.assertTextContains(value = amount, substring = true) }
+    }
+    step("Assert 'Next' button is enabled") {
+        awaitSuccess { onSendScreen { nextButton.assertIsEnabled() } }
+    }
+}
+
+fun BaseTestCase.readTotalAndAvailableBalance(): Pair<String, String> {
+    var total = ""
+    var available = ""
+    step("Read 'Total' balance") {
+        onTokenDetailsScreen { totalBalanceSwitcher.performClick() }
+        awaitSuccess { onTokenDetailsScreen { total = fiatBalance.extractText() } }
+    }
+    step("Read 'Available' balance") {
+        onTokenDetailsScreen { availableBalanceSwitcher.performClick() }
+        awaitSuccess { onTokenDetailsScreen { available = fiatBalance.extractText() } }
+    }
+    return total to available
+}
+
+fun BaseTestCase.selectMaxUnstakeAmount() {
+    step("Assert amount input text field is displayed") {
+        awaitSuccess { onSendScreen { amountInputTextField.assertIsDisplayed() } }
+    }
+    step("Click on 'Max' button") {
+        onSendScreen { maxButton.performClick() }
+    }
+    step("Assert 'Next' button is enabled") {
+        awaitSuccess { onSendScreen { nextButton.assertIsEnabled() } }
     }
 }

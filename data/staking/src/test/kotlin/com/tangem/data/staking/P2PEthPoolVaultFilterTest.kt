@@ -16,7 +16,6 @@ import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolNetwork
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.every
@@ -38,7 +37,6 @@ internal class P2PEthPoolVaultFilterTest {
     }
     private val regionBlockedStore = mockk<P2PEthPoolRegionBlockedStore>(relaxed = true)
     private val vaultDao = mockk<P2PEthPoolVaultDao>(relaxed = true)
-    private val txHistoryFeatureToggles = mockk<TxHistoryFeatureToggles>(relaxed = true)
     private val repository = DefaultP2PEthPoolRepository(
         p2pEthPoolApi = api,
         p2pEthPoolVaultsStore = store,
@@ -47,7 +45,6 @@ internal class P2PEthPoolVaultFilterTest {
         tangemTechApi = tangemTechApi,
         dispatchers = TestingCoroutineDispatcherProvider(),
         stakingFeatureToggles = featureToggles,
-        txHistoryFeatureToggle = txHistoryFeatureToggles,
         p2pEthPoolRegionBlockedStore = regionBlockedStore,
     )
 

@@ -2,17 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>MaxChainedCallsOnSameLine:HasSingleWalletSignedHashesUseCase.kt$HasSingleWalletSignedHashesUseCase$userWallet.scanResponse.card.wallets.firstOrNull()?.totalSignedHashes</ID>
-    <ID>NamedArguments:TangemSnapFlingBehavior.kt$HighVelocityApproachAnimation$animateDecay(offset, animationState, decayAnimationSpec, onAnimationStep)</ID>
-    <ID>NamedArguments:TangemSnapFlingBehavior.kt$TangemSnapFlingBehavior$animateSnap( closestOffset, closestOffset, animationState, snapAnimationSpec, ) { delta -&gt; remainingScrollOffset -= delta onRemainingScrollOffsetUpdate(remainingScrollOffset) }</ID>
-    <ID>NamedArguments:TangemSnapFlingBehavior.kt$TangemSnapFlingBehavior$animateSnap( remainingOffset, remainingOffset, animationState.copy(value = 0f), snapAnimationSpec, ) { delta -&gt; remainingScrollOffset -= delta onAnimationStep(remainingScrollOffset) }</ID>
-    <ID>NamedArguments:TangemSnapFlingBehavior.kt$TangemSnapFlingBehavior$approach( initialTargetOffset, initialVelocity, animation, snapLayoutInfoProvider, density, onAnimationStep, )</ID>
-    <ID>NamedArguments:TangemSnapFlingBehavior.kt$approachAnimation( this, initialTargetOffset, initialVelocity, onAnimationStep, )</ID>
-    <ID>PropertyUsedBeforeDeclaration:BaseWalletClickIntents.kt$BaseWalletClickIntents$_modelScope</ID>
-    <ID>PropertyUsedBeforeDeclaration:BaseWalletClickIntents.kt$BaseWalletClickIntents$_router</ID>
-    <ID>PropertyUsedBeforeDeclaration:WalletStateController.kt$WalletStateController$mutableUiState</ID>
     <ID>SuspendFunSwallowedCancellation:WalletModel.kt$WalletModel$runCatching</ID>
-    <ID>UseSumOfInsteadOfFlatMapSize:TokenListStateConverter.kt$TokenListStateConverter$flatMap(NetworkGroup::currencies)</ID>
-    <ID>VarCouldBeVal:TangemSnapFlingBehavior.kt$TangemSnapFlingBehavior$private var motionScaleDuration = DefaultScrollMotionDurationScale</ID>
   </CurrentIssues>
 </SmellBaseline>
