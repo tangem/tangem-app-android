@@ -3,12 +3,5 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>CastNullableToNonNullableType:TestPushMarketTokenSearchBottomSheetTransformer.kt$TestPushMarketTokenSearchBottomSheetTransformer$as</ID>
-    <ID>ExplicitCollectionElementAccessMethod:TestPushAddKeyDataTransformer.kt$TestPushAddKeyDataTransformer$mutableData.set(index = index, updated)</ID>
-    <ID>ExplicitCollectionElementAccessMethod:TestPushAddValueDataTransformer.kt$TestPushAddValueDataTransformer$mutableData.set(index = index, updated)</ID>
-    <ID>MaxChainedCallsOnSameLine:BlockchainProvidersScreen.kt$ProvidersDnDTarget$event.toAndroidDragEvent().clipData.getItemAt(0).text.toString().toInt()</ID>
-    <ID>PropertyUsedBeforeDeclaration:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel$_state</ID>
-    <ID>PropertyUsedBeforeDeclaration:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel$searchQuery</ID>
-    <ID>PropertyUsedBeforeDeclaration:EnvironmentsTogglesViewModel.kt$EnvironmentsTogglesViewModel$_uiState</ID>
-    <ID>PropertyUsedBeforeDeclaration:TesterActionsViewModel.kt$TesterActionsViewModel$initialState</ID>
   </CurrentIssues>
 </SmellBaseline>

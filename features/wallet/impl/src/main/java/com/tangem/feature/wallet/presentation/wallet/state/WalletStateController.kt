@@ -25,17 +25,16 @@ import javax.inject.Singleton
 @Singleton
 internal class WalletStateController @Inject constructor() {
 
-    val uiState: StateFlow<WalletScreenState> get() = mutableUiState
+    val uiState: StateFlow<WalletScreenState>
+        field = MutableStateFlow(value = getInitialState())
 
     val value: WalletScreenState get() = uiState.value
 
     val isInitialized: Boolean
         get() = value.selectedWalletIndex != NOT_INITIALIZED_WALLET_INDEX
 
-    private val mutableUiState: MutableStateFlow<WalletScreenState> = MutableStateFlow(value = getInitialState())
-
     fun update(function: (WalletScreenState) -> WalletScreenState) {
-        mutableUiState.update(function = function)
+        uiState.update(function = function)
     }
 
     fun update(transformer: WalletScreenStateTransformer) {
@@ -47,11 +46,11 @@ internal class WalletStateController @Inject constructor() {
         }
 
         TangemLogger.d("Applying: ${transformer::class.simpleName}$maybeWalletId")
-        mutableUiState.update(function = transformer::transform)
+        uiState.update(function = transformer::transform)
     }
 
     fun clear() {
-        mutableUiState.update { getInitialState() }
+        uiState.update { getInitialState() }
     }
 
     fun getWalletState(userWalletId: UserWalletId): WalletState? {

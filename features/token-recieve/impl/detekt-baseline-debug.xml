@@ -2,8 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>MaxChainedCallsOnSameLine:DefaultTokenReceiveComponent.kt$DefaultTokenReceiveComponent$model.params.config.cryptoCurrency.network.name</ID>
-    <ID>PropertyUsedBeforeDeclaration:TokenReceiveModel.kt$TokenReceiveModel$params</ID>
     <ID>PropertyUsedBeforeDeclaration:TokenReceiveModel.kt$TokenReceiveModel$state</ID>
   </CurrentIssues>
 </SmellBaseline>

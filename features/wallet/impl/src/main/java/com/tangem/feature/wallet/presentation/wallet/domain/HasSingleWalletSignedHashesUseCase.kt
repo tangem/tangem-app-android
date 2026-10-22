@@ -32,7 +32,8 @@ class HasSingleWalletSignedHashesUseCase @Inject constructor(
                     walletManagersFacade.validateSignatureCount(
                         userWalletId = userWallet.walletId,
                         network = network,
-                        signedHashes = userWallet.scanResponse.card.wallets.firstOrNull()?.totalSignedHashes ?: 0,
+                        signedHashes = userWallet.scanResponse.card.wallets
+                            .firstOrNull()?.totalSignedHashes ?: 0,
                     )
                         .fold(
                             ifLeft = { true },

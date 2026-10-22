@@ -15,7 +15,7 @@ class PeriodicTask<T>(
     private val initialDelay: Long = 0L,
 ) {
 
-    private var isActive: AtomicBoolean = AtomicBoolean(false)
+    private val isActive: AtomicBoolean = AtomicBoolean(false)
 
     suspend fun runTaskWithDelay() {
         isActive.set(true)
