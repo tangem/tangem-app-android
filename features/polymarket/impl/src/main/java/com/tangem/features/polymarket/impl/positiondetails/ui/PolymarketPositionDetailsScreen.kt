@@ -43,6 +43,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.polymarket.impl.common.ui.PolymarketResolutionSourceRow
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardFrame
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadingState
@@ -180,10 +181,17 @@ private fun PositionInformation(state: PolymarketPositionDetailsUM.Information) 
         PositionInfoRow(
             title = resourceReference(R.string.prediction_positions_status),
             value = state.status,
-            divider = state.endDate != null,
+            divider = state.endDate != null || state.resolutionSource != null,
         )
         state.endDate?.let {
-            PositionInfoRow(resourceReference(R.string.prediction_details_resolution_date), it, divider = false)
+            PositionInfoRow(
+                title = resourceReference(R.string.prediction_details_resolution_date),
+                value = it,
+                divider = state.resolutionSource != null,
+            )
+        }
+        state.resolutionSource?.let {
+            PolymarketResolutionSourceRow(state = it, onOpenUrl = state.onResolutionSourceClick)
         }
     }
 }

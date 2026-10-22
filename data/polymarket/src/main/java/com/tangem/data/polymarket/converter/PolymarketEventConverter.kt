@@ -30,6 +30,7 @@ internal object PolymarketEventConverter : Converter<PolymarketEventDto, Polymar
             title = value.title,
             description = value.description,
             rulesUrl = value.polymarketRulesUrl,
+            resolutionSource = value.resolutionSource,
             iconUrl = value.icon,
             imageUrl = value.image,
             status = convertStatus(status = value.status),
