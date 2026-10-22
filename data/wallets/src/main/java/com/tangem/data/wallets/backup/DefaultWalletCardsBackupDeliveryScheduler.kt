@@ -37,7 +37,7 @@ internal class DefaultWalletCardsBackupDeliveryScheduler @Inject constructor(
         if (isObservingConnection.getAndSet(true)) return
 
         appScope.launch {
-            networkConnectionManager.isOnlineFlow
+            networkConnectionManager.isOnline
                 .filter { isOnline -> isOnline }
                 .collect {
                     enqueue(requiredNetworkType = NetworkType.NOT_REQUIRED)
