@@ -5,9 +5,9 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.entity.CollectiblesStartRoute
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.domain.models.TokenReceiveConfig
@@ -36,7 +36,7 @@ import javax.inject.Inject
 @ModelScoped
 @Suppress("TooManyFunctions")
 internal class DefaultWalletRouter @Inject constructor(
-    private val router: AppRouter,
+    private val router: Router,
     private val urlOpener: UrlOpener,
 ) : InnerWalletRouter {
 
