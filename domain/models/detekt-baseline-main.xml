@@ -1,9 +1,5 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
   <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>CastNullableToNonNullableType:DerivationPathAdapterWithMigration.kt$DerivationPathAdapterWithMigration$as</ID>
-    <ID>UnsafeCallOnNullableType:MobileWalletAsStringSerializer.kt$MobileWalletAsStringSerializer$moshi.adapter(MobileWallet::class.java).fromJson(decoder.decodeString())!!</ID>
-    <ID>UnsafeCallOnNullableType:ScanResponseAsStringSerializer.kt$ScanResponseAsStringSerializer$moshi.adapter(ScanResponse::class.java).fromJson(decoder.decodeString())!!</ID>
-  </CurrentIssues>
+  <CurrentIssues/>
 </SmellBaseline>
