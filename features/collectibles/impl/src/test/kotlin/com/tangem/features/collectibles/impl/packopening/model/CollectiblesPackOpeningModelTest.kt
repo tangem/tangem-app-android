@@ -1215,7 +1215,7 @@ internal class CollectiblesPackOpeningModelTest {
         )
 
         @Test
-        fun `GIVEN the sale is not confirmed WHEN sell back tapped THEN the offer is checked again`() = runTest {
+        fun `GIVEN the sale is not confirmed WHEN no offer comes back THEN it is not asked again`() = runTest {
             // Arrange
             coEvery { getBuybackOfferUseCase(any(), any()) } returnsMany listOf(OFFER.right(), null.right())
             coEvery { buybackCollectibleUseCase(any(), any()) } returns BuybackError.NotConfirmed.left()
@@ -1224,32 +1224,31 @@ internal class CollectiblesPackOpeningModelTest {
             // Act
             model.reveal().onSellBackClick()
             runCurrent()
+            advanceTimeBy(BUYBACK_POLLING_DELAY_MS * 3)
 
             // Assert
             assertThat(model.reveal().sellBack).isEqualTo(UNAVAILABLE_BUTTON)
             assertThat(model.reveal().isKeepCardEnabled).isTrue()
             verify(exactly = 1) {
-                messageSender.send(SnackbarMessage(message = resourceReference(R.string.unexpected_error_description)))
+                messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_something_went_wrong)))
             }
             coVerify(exactly = 2) { getBuybackOfferUseCase(any(), any()) }
-            model.onDestroy()
         }
 
         @Test
         fun `GIVEN the sale is not confirmed WHEN the offer comes back THEN sell back is available again`() = runTest {
             // Arrange
-            coEvery { getBuybackOfferUseCase(any(), any()) } returnsMany
-                listOf(OFFER.right(), null.right(), OFFER.right())
+            coEvery { getBuybackOfferUseCase(any(), any()) } returns OFFER.right()
             coEvery { buybackCollectibleUseCase(any(), any()) } returns BuybackError.NotConfirmed.left()
             val model = openPack()
+
+            // Act
             model.reveal().onSellBackClick()
             runCurrent()
 
-            // Act
-            advanceTimeBy(BUYBACK_POLLING_DELAY_MS + 1)
-
             // Assert
             assertThat(model.reveal().sellBack).isEqualTo(AVAILABLE_BUTTON)
+            coVerify(exactly = 2) { getBuybackOfferUseCase(any(), any()) }
         }
 
         @Test
