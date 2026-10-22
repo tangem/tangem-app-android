@@ -424,6 +424,13 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         if (!SwapProviderHidingPolicy.shouldHide(providerId = provider.providerId, errorCode = errorCode)) return
 
         TangemLogger.i("Provider ${provider.providerId} is hidden after swap error $errorCode")
+        analyticsEventHandler.send(
+            SendWithSwapAnalyticEvents.SwapProviderHidden(
+                providerName = provider.name,
+                errorCode = errorCode,
+                source = params.analyticsSendSource,
+            ),
+        )
         params.callback.onProviderHidden(provider.providerId)
     }
 
