@@ -177,10 +177,10 @@ internal class SendModelTest : SendModelTestBase() {
                     currency = mockk<CryptoCurrency.Coin>(relaxed = true),
                     value = mockk(relaxed = true),
                 )
-                every { nonPortfolioAccountCurrencies.observe(testUserWalletId, testCryptoCurrency) } returns
+                every { nonPortfolioCurrenciesProvider.observe(testUserWalletId, testCryptoCurrency) } returns
                     flowOf(account to testCryptoCurrencyStatus)
                 coEvery {
-                    nonPortfolioAccountCurrencies.getStatuses(testUserWalletId, testCryptoCurrency.network)
+                    nonPortfolioCurrenciesProvider.getStatuses(testUserWalletId, testCryptoCurrency.network)
                 } returns listOf(accountTokenStatus, accountCoinStatus)
 
                 // Act

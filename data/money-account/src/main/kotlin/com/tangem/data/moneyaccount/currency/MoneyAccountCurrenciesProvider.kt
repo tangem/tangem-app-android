@@ -1,6 +1,6 @@
 package com.tangem.data.moneyaccount.currency
 
-import com.tangem.domain.account.status.supplier.NonPortfolioAccountCurrencies
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -21,14 +21,14 @@ import kotlinx.coroutines.flow.firstOrNull
 import java.math.BigDecimal
 import javax.inject.Inject
 
-internal class MoneyAccountNonPortfolioCurrencies @Inject constructor(
+internal class MoneyAccountCurrenciesProvider @Inject constructor(
     private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
     private val getMoneyAccountCryptoCurrencyStatusUseCase: GetMoneyAccountCryptoCurrencyStatusUseCase,
     private val currenciesRepository: CurrenciesRepository,
     private val walletManagersFacade: WalletManagersFacade,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
-) : NonPortfolioAccountCurrencies {
+) : NonPortfolioCurrenciesProvider {
 
     override fun observe(
         userWalletId: UserWalletId,

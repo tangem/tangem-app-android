@@ -35,7 +35,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
-internal class MoneyAccountNonPortfolioCurrenciesTest {
+internal class MoneyAccountCurrenciesProviderTest {
 
     private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier = mockk()
     private val getMoneyAccountCryptoCurrencyStatusUseCase: GetMoneyAccountCryptoCurrencyStatusUseCase = mockk()
@@ -44,7 +44,7 @@ internal class MoneyAccountNonPortfolioCurrenciesTest {
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier = mockk()
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher = mockk()
 
-    private val sut = MoneyAccountNonPortfolioCurrencies(
+    private val sut = MoneyAccountCurrenciesProvider(
         moneyAccountStatusSupplier = moneyAccountStatusSupplier,
         getMoneyAccountCryptoCurrencyStatusUseCase = getMoneyAccountCryptoCurrencyStatusUseCase,
         currenciesRepository = currenciesRepository,

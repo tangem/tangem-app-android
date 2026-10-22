@@ -180,7 +180,7 @@ internal class SendModelNavigationTest {
             defaultFeeLoader = mockk(relaxed = true),
             tronGaslessSentAmountQuoter = mockk(relaxed = true),
             getAccountCurrencyStatusUseCase = mockk(relaxed = true),
-            nonPortfolioAccountCurrencies = mockk(relaxed = true),
+            nonPortfolioCurrenciesProvider = mockk(relaxed = true),
             isAccountsModeEnabledUseCase = mockk(relaxed = true),
             sendAmountUpdateTrigger = mockk(relaxed = true),
             analyticsEventHandler = analyticsEventHandler,

@@ -11,7 +11,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.account.models.AccountStatusList
-import com.tangem.domain.account.status.supplier.NonPortfolioAccountCurrencies
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -41,7 +41,7 @@ import java.math.BigDecimal
 internal class GetFeeForGaslessUseCaseDispatchTest {
 
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk(relaxed = true)
-    private val nonPortfolioAccountCurrencies: NonPortfolioAccountCurrencies = mockk()
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider = mockk()
     private val currencyChecksRepository: CurrencyChecksRepository = mockk()
     private val getFeeUseCase: GetFeeUseCase = mockk()
     private val evmGaslessFeeResolver: EvmGaslessFeeResolver = mockk()
@@ -83,7 +83,7 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
 
     private val sut = GetFeeForGaslessUseCase(
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
-        nonPortfolioAccountCurrencies = nonPortfolioAccountCurrencies,
+        nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
         currencyChecksRepository = currencyChecksRepository,
         getFeeUseCase = getFeeUseCase,
         evmGaslessFeeResolver = evmGaslessFeeResolver,
@@ -93,7 +93,7 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
     @BeforeEach
     fun setUp() {
         clearMocks(
-            nonPortfolioAccountCurrencies,
+            nonPortfolioCurrenciesProvider,
             currencyChecksRepository,
             getFeeUseCase,
             evmGaslessFeeResolver,
@@ -184,7 +184,7 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
         )
         every { currencyChecksRepository.isNetworkSupportedForGaslessTx(accountNetwork) } returns true
         coEvery {
-            nonPortfolioAccountCurrencies.getStatuses(userWalletId, accountNetwork)
+            nonPortfolioCurrenciesProvider.getStatuses(userWalletId, accountNetwork)
         } returns listOf(accountCoinStatus)
         coEvery {
             evmGaslessFeeResolver.resolveWithAutoFeeToken(
@@ -207,7 +207,7 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
     @Test
     fun `GIVEN a network without a coin anywhere WHEN invoke THEN data error`() = runTest {
         // Arrange
-        coEvery { nonPortfolioAccountCurrencies.getStatuses(userWalletId, accountNetwork) } returns emptyList()
+        coEvery { nonPortfolioCurrenciesProvider.getStatuses(userWalletId, accountNetwork) } returns emptyList()
 
         // Act
         val actual = sut(userWallet = userWallet, network = accountNetwork, transactionData = transactionData)
