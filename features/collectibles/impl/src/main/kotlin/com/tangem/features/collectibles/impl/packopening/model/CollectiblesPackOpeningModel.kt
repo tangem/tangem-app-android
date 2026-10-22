@@ -103,6 +103,7 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
 
     private val buyback = MutableStateFlow<BuybackState>(BuybackState.Unavailable)
     private val buybackOfferPolling = SingleTaskScheduler<CollectibleBuybackOffer?>()
+    private val isBuybackOfferPollingAllowed = MutableStateFlow(true)
 
     private val isComponentResumed = MutableStateFlow(false)
     private val isDarkTheme = MutableStateFlow<Boolean?>(null)
@@ -376,8 +377,12 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
     // TODO waiting for Collector Crypt: whether "not available" can turn into "available", or one check is enough
     // Driven by state: polls only while there is no offer and the screen is in front
     private fun observeBuybackOfferPolling(pack: OpenedCollectiblePack) {
-        combine(buyback.map { it is BuybackState.Unavailable }, isComponentResumed) { isUnavailable, isResumed ->
-            isUnavailable && isResumed
+        combine(
+            flow = buyback.map { it is BuybackState.Unavailable },
+            flow2 = isComponentResumed,
+            flow3 = isBuybackOfferPollingAllowed,
+        ) { isUnavailable, isResumed, isAllowed ->
+            isUnavailable && isResumed && isAllowed
         }
             .distinctUntilChanged()
             .onEach { shouldPoll ->
@@ -397,6 +402,7 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
                 },
                 onSuccess = { offer ->
                     if (offer != null && buyback.value is BuybackState.Unavailable) {
+                        isBuybackOfferPollingAllowed.value = false
                         buyback.value = BuybackState.Available(offer)
                     }
                 },
@@ -412,10 +418,10 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
         buyback.value = BuybackState.InProgress(offer)
         modelScope.launch {
             val userWallet = userWalletsListRepository.getSyncOrNull(params.userWalletId)
-                ?: return@launch onBuybackFailed(BuybackError.Unexpected, offer)
+                ?: return@launch onBuybackFailed(BuybackError.Unexpected, offer, pack)
 
             buybackCollectibleUseCase(userWallet, pack.nftAddress).fold(
-                ifLeft = { error -> onBuybackFailed(error, offer) },
+                ifLeft = { error -> onBuybackFailed(error, offer, pack) },
                 ifRight = {
                     showSnackbar(
                         resourceReference(
@@ -429,7 +435,7 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
         }
     }
 
-    private fun onBuybackFailed(error: BuybackError, offer: CollectibleBuybackOffer) {
+    private fun onBuybackFailed(error: BuybackError, offer: CollectibleBuybackOffer, pack: OpenedCollectiblePack) {
         when (error) {
             BuybackError.Cancelled, BuybackError.CardRefused -> {
                 buyback.value = BuybackState.Available(offer)
@@ -438,11 +444,20 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
                 buyback.value = BuybackState.Available(offer)
                 showSnackbar(resourceReference(R.string.unexpected_error_description))
             }
+            // The sale may have landed, so the offer is asked for once more instead of being polled
             BuybackError.NotConfirmed -> {
-                buyback.value = BuybackState.Unavailable
                 showSnackbar(resourceReference(R.string.common_something_went_wrong))
+                recheckBuybackOffer(pack)
             }
         }
+    }
+
+    private fun recheckBuybackOffer(pack: OpenedCollectiblePack) = modelScope.launch {
+        val offer = getBuybackOfferUseCase(userWalletId = params.userWalletId, nftAddress = pack.nftAddress)
+            .onLeft { error -> TangemLogger.e("Unable to recheck the buyback offer", error.cause) }
+            .getOrNull()
+
+        buyback.value = if (offer == null) BuybackState.Unavailable else BuybackState.Available(offer)
     }
 
     private fun onBackClick() {
