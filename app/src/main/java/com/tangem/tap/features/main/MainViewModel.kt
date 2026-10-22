@@ -9,13 +9,13 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.TechAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.core.ui.R
 import com.tangem.core.ui.coil.ImagePreloader
-import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.core.ui.message.bottomSheetMessage
-import com.tangem.core.remote.config.managers.ApiConfigsManager
+import com.tangem.core.ui.message.modal.closeBs
+import com.tangem.core.ui.message.modalMessage
 import com.tangem.domain.appcurrency.FetchAppCurrenciesUseCase
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -45,10 +45,10 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
 @HiltViewModel
@@ -193,7 +193,7 @@ internal class MainViewModel @Inject constructor(
                 if (!settings.isUpdateFromToast) {
                     listenToFlipsUseCase.changeUpdateEnabled(false)
 
-                    val message = bottomSheetMessage {
+                    val message = modalMessage {
                         infoBlock {
                             title = resourceReference(R.string.balance_hidden_title)
                             body = resourceReference(R.string.balance_hidden_description)

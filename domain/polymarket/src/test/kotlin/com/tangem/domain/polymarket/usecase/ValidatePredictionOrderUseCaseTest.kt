@@ -1,6 +1,8 @@
 package com.tangem.domain.polymarket.usecase
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PredictionOrder
 import com.tangem.domain.polymarket.model.PredictionOrderDraft
 import com.tangem.domain.polymarket.model.PredictionOrderSide
@@ -22,6 +24,22 @@ internal class ValidatePredictionOrderUseCaseTest {
     fun `GIVEN an order built from its own quote WHEN validated THEN it passes`() {
         // Act
         val actual = validate(Input())
+
+        // Assert
+        assertThat(actual.isRight()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN an order for a V2 market signed for ExchangeV3 WHEN validated THEN it passes`() {
+        // Arrange
+        val input = Input(
+            draft = draft(domain = PolymarketExchangeDomain.EXCHANGE_V3),
+            signedDomain = PolymarketExchangeDomain.EXCHANGE_V3,
+            marketVersion = PolymarketMarketVersion.V2,
+        )
+
+        // Act
+        val actual = validate(input)
 
         // Assert
         assertThat(actual.isRight()).isTrue()
@@ -188,10 +206,15 @@ internal class ValidatePredictionOrderUseCaseTest {
     }
 
     private fun validate(input: Input) = useCase(
-        signedOrder = PredictionSignedOrder(order = input.order, signature = input.signature),
+        signedOrder = PredictionSignedOrder(
+            order = input.order,
+            signature = input.signature,
+            domain = input.signedDomain,
+        ),
         draft = input.draft,
         depositWalletAddress = input.depositWalletAddress,
         marketTokenId = input.marketTokenId,
+        marketVersion = input.marketVersion,
         isNegRisk = input.isNegRisk,
         quoteReceivedAtMillis = input.quoteReceivedAtMillis,
         nowMillis = input.nowMillis,
@@ -243,8 +266,10 @@ internal class ValidatePredictionOrderUseCaseTest {
         val draft: PredictionOrderDraft = draft(),
         val order: PredictionOrder = order(),
         val signature: String = WRAPPED_SIGNATURE,
+        val signedDomain: PolymarketExchangeDomain = PolymarketExchangeDomain.CTF,
         val depositWalletAddress: String = DEPOSIT_WALLET,
         val marketTokenId: String = TOKEN_ID,
+        val marketVersion: PolymarketMarketVersion = PolymarketMarketVersion.V1,
         val isNegRisk: Boolean = false,
         val quoteReceivedAtMillis: Long = NOW_MILLIS - 5_000,
         val nowMillis: Long = NOW_MILLIS,
@@ -254,13 +279,34 @@ internal class ValidatePredictionOrderUseCaseTest {
     private fun provideTestModels() = listOf(
         ValidationModel(
             input = Input(marketTokenId = "42"),
-            expected = PredictionOrderValidationError.MarketMismatch(expectedTokenId = "42", isNegRiskExpected = false),
+            expected = PredictionOrderValidationError.MarketMismatch(
+                expectedTokenId = "42",
+                expectedDomain = PolymarketExchangeDomain.CTF,
+            ),
         ),
         ValidationModel(
             input = Input(isNegRisk = true),
             expected = PredictionOrderValidationError.MarketMismatch(
                 expectedTokenId = TOKEN_ID,
-                isNegRiskExpected = true,
+                expectedDomain = PolymarketExchangeDomain.NEG_RISK_CTF,
+            ),
+        ),
+        ValidationModel(
+            input = Input(marketVersion = PolymarketMarketVersion.V2),
+            expected = PredictionOrderValidationError.MarketMismatch(
+                expectedTokenId = TOKEN_ID,
+                expectedDomain = PolymarketExchangeDomain.EXCHANGE_V3,
+            ),
+        ),
+        ValidationModel(
+            input = Input(marketVersion = PolymarketMarketVersion.UNKNOWN),
+            expected = PredictionOrderValidationError.MarketMismatch(expectedTokenId = TOKEN_ID, expectedDomain = null),
+        ),
+        ValidationModel(
+            input = Input(signedDomain = PolymarketExchangeDomain.NEG_RISK_CTF),
+            expected = PredictionOrderValidationError.MarketMismatch(
+                expectedTokenId = TOKEN_ID,
+                expectedDomain = PolymarketExchangeDomain.CTF,
             ),
         ),
         ValidationModel(
@@ -284,7 +330,7 @@ internal class ValidatePredictionOrderUseCaseTest {
             input = Input(order = order(tokenId = BigInteger("42"))),
             expected = PredictionOrderValidationError.MarketMismatch(
                 expectedTokenId = TOKEN_ID,
-                isNegRiskExpected = false,
+                expectedDomain = PolymarketExchangeDomain.CTF,
             ),
         ),
         ValidationModel(
@@ -389,9 +435,10 @@ internal class ValidatePredictionOrderUseCaseTest {
             takerAmountQuantum: BigInteger = BigInteger.ONE,
             worstCasePrice: BigDecimal = WORST_CASE_PRICE,
             builderCode: String = BUILDER_CODE,
+            domain: PolymarketExchangeDomain = PolymarketExchangeDomain.CTF,
         ) = PredictionOrderDraft(
             tokenId = TOKEN_ID,
-            isNegRisk = false,
+            domain = domain,
             side = side,
             makerAmount = makerAmount,
             takerAmount = takerAmount,

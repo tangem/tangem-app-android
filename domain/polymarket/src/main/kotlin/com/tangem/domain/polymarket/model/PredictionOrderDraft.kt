@@ -5,7 +5,7 @@ import java.math.BigInteger
 
 data class PredictionOrderDraft(
     val tokenId: String,
-    val isNegRisk: Boolean,
+    val domain: PolymarketExchangeDomain,
     val side: PredictionOrderSide,
     val makerAmount: BigInteger,
     val takerAmount: BigInteger,
@@ -24,4 +24,12 @@ sealed interface PredictionOrderDraftError : PolymarketError {
     ) : PredictionOrderDraftError
 
     data class AmountNotRepresentable(val value: BigDecimal) : PredictionOrderDraftError
+
+    data object UnknownMarketVersion : PredictionOrderDraftError
+
+    data class ExchangeMismatch(
+        val expected: PolymarketExchangeDomain,
+        val quotedExchange: String?,
+        val quotedDomainVersion: String?,
+    ) : PredictionOrderDraftError
 }

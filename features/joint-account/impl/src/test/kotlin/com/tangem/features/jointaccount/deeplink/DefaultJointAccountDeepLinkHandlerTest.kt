@@ -1,5 +1,6 @@
 package com.tangem.features.jointaccount.deeplink
 
+import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import arrow.core.Either
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
@@ -49,6 +50,9 @@ class DefaultJointAccountDeepLinkHandlerTest {
     private val analyticsEventHandler: AnalyticsEventHandler = mockk()
     private val walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger = mockk()
     private val jointAccountFeatureToggles: JointAccountFeatureToggles = mockk()
+    private val jointAccountCompromisedAlert: JointAccountCompromisedAlert = mockk {
+        coEvery { showIfCompromised(userWalletId = any(), accountId = any()) } returns false
+    }
 
     private val userWalletId = UserWalletId("011")
 
@@ -92,6 +96,33 @@ class DefaultJointAccountDeepLinkHandlerTest {
             )
         }
         verify { walletDeepLinkActionTrigger.selectWallet(userWalletId) }
+    }
+
+    @Test
+    fun `GIVEN compromised account WHEN handle deeplink THEN alert and pop to Wallet without opening it`() = runTest {
+        // Arrange
+        val jointAccount = MockAccounts.createJointAccount(userWalletId = userWalletId)
+        mockUserWallet(userWalletId)
+        every { appRouter.popTo(any<AppRoute>(), any()) } just Runs
+        every { singleAccountSupplier.filterJointAccount(jointAccount.accountId) } returns flowOf(jointAccount)
+        coEvery {
+            jointAccountCompromisedAlert.showIfCompromised(userWalletId, jointAccount.accountId.value)
+        } returns true
+
+        // Act
+        createHandler(
+            scope = this,
+            queryParams = mapOf(
+                WALLET_ID_KEY to "011",
+                ACCOUNT_ID_KEY to jointAccount.accountId.value,
+                ENTRY_KEY to DeepLinkRoute.JointAccount.ENTRY_MEMBERS,
+            ),
+        )
+        advanceUntilIdle()
+
+        // Assert
+        verify { appRouter.popTo(AppRoute.Wallet, any()) }
+        verify(exactly = 0) { appRouter.push(any(), any()) }
     }
 
     @Test
@@ -365,6 +396,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
             analyticsEventHandler = analyticsEventHandler,
             walletDeepLinkActionTrigger = walletDeepLinkActionTrigger,
             jointAccountFeatureToggles = jointAccountFeatureToggles,
+            jointAccountCompromisedAlert = jointAccountCompromisedAlert,
         )
     }
 }
