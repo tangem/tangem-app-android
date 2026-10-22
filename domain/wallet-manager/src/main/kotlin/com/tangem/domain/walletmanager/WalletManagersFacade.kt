@@ -23,7 +23,6 @@ import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.RentData
 import com.tangem.domain.walletmanager.model.TokenInfo
-import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
 import java.util.EnumSet
@@ -290,9 +289,6 @@ interface WalletManagersFacade {
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
     ): Either<Throwable, BigDecimal?>
-
-    @RemoveWithToggle("TWI_1783_TRON_GASLESS_ACCOUNT_ACTIVATION_ENABLED")
-    suspend fun isTronAccountActivated(userWalletId: UserWalletId, network: Network): Boolean
 
     suspend fun isSwapSpenderAllowed(userWalletId: UserWalletId, network: Network, spenderAddress: String): Boolean
 

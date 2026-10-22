@@ -35,6 +35,7 @@ internal object CollectiblesModelFactory {
         expectedValue = BigDecimal("54.578583779326468"),
         imageUrl = "s3 url",
         categoryId = categoryId,
+        revealAssets = null,
     )
 
     fun createCategories(

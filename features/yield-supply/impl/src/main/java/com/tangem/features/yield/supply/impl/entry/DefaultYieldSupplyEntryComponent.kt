@@ -106,9 +106,8 @@ internal class DefaultYieldSupplyEntryComponent @AssistedInject constructor(
     }
 
     private fun onChildBack() {
-        if (childStack.value.backStack.isEmpty() ||
-            childStack.value.backStack.last().configuration is YieldSupplyEntryRoute.Empty
-        ) {
+        val backStack = childStack.value.backStack.map { it.configuration }
+        if (backStack.isFlowRootOnBack()) {
             router.pop()
         } else {
             stackNavigation.pop()
@@ -123,3 +122,7 @@ internal class DefaultYieldSupplyEntryComponent @AssistedInject constructor(
         ): DefaultYieldSupplyEntryComponent
     }
 }
+
+/** `true` when going back from the active screen leaves the yield entry flow instead of stepping within it. */
+internal fun List<YieldSupplyEntryRoute>.isFlowRootOnBack(): Boolean =
+    isEmpty() || last() is YieldSupplyEntryRoute.Empty

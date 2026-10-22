@@ -35,7 +35,7 @@ import com.tangem.features.hotwallet.setupfinished.entity.MobileWalletSetupFinis
 internal fun MobileWalletSetupFinishedContent(state: MobileWalletSetupFinishedUM, modifier: Modifier = Modifier) {
     val composition by rememberLottieComposition(spec = LottieCompositionSpec.RawRes(R.raw.anim_confetti))
     val progress by animateLottieCompositionAsState(composition)
-    var showConfetti by remember { mutableStateOf(false) }
+    var shouldShowConfetti by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -85,7 +85,7 @@ internal fun MobileWalletSetupFinishedContent(state: MobileWalletSetupFinishedUM
         )
     }
 
-    if (showConfetti) {
+    if (shouldShowConfetti) {
         FullScreen(notTouchable = true) {
             LottieAnimation(
                 composition = composition,
@@ -95,12 +95,12 @@ internal fun MobileWalletSetupFinishedContent(state: MobileWalletSetupFinishedUM
     }
 
     LaunchedEffect(Unit) {
-        showConfetti = true
+        shouldShowConfetti = true
     }
 
     LaunchedEffect(progress == 1f) {
         if (progress == 1f) {
-            showConfetti = false
+            shouldShowConfetti = false
         }
     }
 }

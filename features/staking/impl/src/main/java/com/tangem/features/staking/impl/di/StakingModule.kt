@@ -10,12 +10,10 @@ import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.model.StakingModel
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
-import kotlinx.datetime.Clock
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -28,13 +26,6 @@ internal interface StakingModule {
     @IntoMap
     @ClassKey(StakingModel::class)
     fun bindModel(model: StakingModel): Model
-
-    companion object {
-
-        @Provides
-        @StakingClock
-        fun provideClock(): Clock = Clock.System
-    }
 }
 
 @Module

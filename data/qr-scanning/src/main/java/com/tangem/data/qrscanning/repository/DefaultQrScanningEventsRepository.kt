@@ -76,6 +76,47 @@ internal class DefaultQrScanningEventsRepository(
         return qrContentClassifierParser.parse(qrCode, userCurrencies)
     }
 
+    override fun extractRecipientAddress(qrCode: String): String {
+        val trimmed = qrCode.trim()
+        val scheme = trimmed.substringBefore(QrSentUriParser.PARAM_DELIMITER)
+            .substringBefore(SCHEME_DELIMITER, missingDelimiterValue = "")
+            .takeIf(URI_SCHEME_REGEX::matches)
+        val withoutScheme = if (scheme != null) trimmed.substringAfter(SCHEME_DELIMITER) else trimmed
+        val isEthereumScheme = scheme.equals(EIP681_SCHEME, ignoreCase = true)
+        val target = withoutScheme.removePrefix(EIP681_PAY_PREFIX)
+
+        return if (isEthereumScheme || target.startsWith(EVM_ADDRESS_PREFIX, ignoreCase = true)) {
+            extractEip681Recipient(target, isEthereumScheme)
+        } else {
+            extractPlainRecipient(withoutScheme)
+        }
+    }
+
+    private fun extractEip681Recipient(target: String, isEthereumScheme: Boolean): String {
+        val parsed = paymentUriParser.parse(target) ?: return ""
+        val recipientParam = parsed.remainingParams[QrSentUriParser.PARAM_ADDRESS]
+
+        return when (parsed.functionName) {
+            null -> if (isEthereumScheme) recipientParam ?: parsed.address else parsed.address
+            QrSentUriParser.FUNCTION_TRANSFER -> recipientParam.orEmpty()
+            else -> ""
+        }
+    }
+
+    /**
+     * Non-EVM addresses may contain '/' (Base64 TON), so only the query and the chain id are cut off.
+     * For hierarchical URIs such as `ton://transfer/<address>` the address is the path after the authority.
+     */
+    private fun extractPlainRecipient(withoutScheme: String): String {
+        val withoutQueryAndChain = withoutScheme
+            .substringBefore(QrSentUriParser.PARAM_DELIMITER)
+            .substringBefore(QrSentUriParser.CHAIN_DELIMITER)
+        if (!withoutQueryAndChain.startsWith(AUTHORITY_PREFIX)) return withoutQueryAndChain
+
+        val afterAuthorityPrefix = withoutQueryAndChain.removePrefix(AUTHORITY_PREFIX)
+        return afterAuthorityPrefix.substringAfter(QrSentUriParser.FUNCTION_DELIMITER, afterAuthorityPrefix)
+    }
+
     private fun stripSchema(raw: String, currency: CryptoCurrency): String {
         val qrSchemas = currency.network.toBlockchain().getShareScheme()
 
@@ -87,5 +128,14 @@ internal class DefaultQrScanningEventsRepository(
             }
 
         return raw
+    }
+
+    private companion object {
+        const val SCHEME_DELIMITER = ':'
+        const val EIP681_SCHEME = "ethereum"
+        const val EIP681_PAY_PREFIX = "pay-"
+        const val EVM_ADDRESS_PREFIX = "0x"
+        const val AUTHORITY_PREFIX = "//"
+        val URI_SCHEME_REGEX = Regex("[A-Za-z][A-Za-z0-9+.-]*")
     }
 }

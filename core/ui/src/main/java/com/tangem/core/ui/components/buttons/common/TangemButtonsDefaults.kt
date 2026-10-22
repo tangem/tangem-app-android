@@ -6,6 +6,7 @@ import androidx.compose.material3.ButtonElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 
 object TangemButtonsDefaults {
@@ -13,8 +14,8 @@ object TangemButtonsDefaults {
     val elevation: ButtonElevation
         @Composable
         get() = ButtonDefaults.buttonElevation(
-            defaultElevation = TangemTheme.dimens.elevation0,
-            pressedElevation = TangemTheme.dimens.elevation0,
+            defaultElevation = 0.dp,
+            pressedElevation = 0.dp,
         )
 
     val primaryButtonColors: ButtonColors

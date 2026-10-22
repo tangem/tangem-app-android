@@ -178,7 +178,7 @@ internal class DefaultTangemPayStorageTest {
     }
 
     @Test
-    fun `GIVEN withdraw orders stored by the previous app version WHEN getWithdrawOrders THEN they are read back`() =
+    fun `GIVEN withdraw orders stored by the previous app version WHEN getWithdrawOrders THEN created at is zero`() =
         runTest {
             // Arrange
             prefs.editData { preferences ->
@@ -191,7 +191,7 @@ internal class DefaultTangemPayStorageTest {
             val actual = storage.getWithdrawOrders(WALLET)
 
             // Assert
-            assertThat(actual).containsExactly(WITHDRAW_ORDER)
+            assertThat(actual).containsExactly(WITHDRAW_ORDER.copy(createdAtMillis = 0L))
         }
 
     @Test
@@ -251,6 +251,7 @@ internal class DefaultTangemPayStorageTest {
                 payInExtraId = null,
             ),
             txHash = null,
+            createdAtMillis = 1_700_000_000_000L,
         )
     }
 }

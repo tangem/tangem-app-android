@@ -27,6 +27,7 @@ import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
+import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainParams
 import com.tangem.features.polymarket.impl.main.model.PolymarketPositionsPreviewLoader
@@ -158,7 +159,10 @@ internal class PolymarketMainComponentTest {
         getPolymarketCategoriesUseCase = getPolymarketCategoriesUseCase,
         predictionAccountStatusSupplier = predictionAccountStatusSupplier,
         refreshPredictionDepositRequisitesInteractor = refreshRequisites,
-        checkPolymarketGeoblockUseCase = checkGeoblock,
+        regionAccess = PredictionRegionAccess(
+            checkPolymarketGeoblockUseCase = checkGeoblock,
+            dispatchers = TestingCoroutineDispatcherProvider(),
+        ),
         predictionAccountStatusFetcher = mockk(relaxed = true),
         predictionPositionsValueSupplier = mockk {
             every { this@mockk.invoke(any<UserWalletId>()) } returns flowOf(PredictionPositionsValue.Unknown)
