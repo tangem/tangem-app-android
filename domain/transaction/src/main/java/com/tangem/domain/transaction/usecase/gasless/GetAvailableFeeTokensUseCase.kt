@@ -74,7 +74,6 @@ class GetAvailableFeeTokensUseCase(
                                 add(nativeCurrencyStatus)
                                 addAll(
                                     getTronGaslessTokens(
-                                        userWallet = userWallet,
                                         network = network,
                                         sentCurrencyStatus = sentCurrencyStatus,
                                         userCurrenciesStatuses = userCurrenciesStatuses,
@@ -149,7 +148,6 @@ class GetAvailableFeeTokensUseCase(
      * which tells the user what to do, whereas dropping the token silently leaves only TRX they do not have.
      */
     private suspend fun getTronGaslessTokens(
-        userWallet: UserWallet,
         network: Network,
         sentCurrencyStatus: CryptoCurrencyStatus,
         userCurrenciesStatuses: List<CryptoCurrencyStatus>,
@@ -157,11 +155,7 @@ class GetAvailableFeeTokensUseCase(
         val sentCurrency = sentCurrencyStatus.currency
         if (sentCurrency.network.id != network.id) return emptyList()
 
-        val isSupported = isTronGaslessSupportedUseCase(
-            userWalletId = userWallet.walletId,
-            network = network,
-            currency = sentCurrency,
-        )
+        val isSupported = isTronGaslessSupportedUseCase(network = network, currency = sentCurrency)
         if (!isSupported) return emptyList()
 
         // The caller's status is a screen-entry snapshot, so prefer the account list — but fall back to

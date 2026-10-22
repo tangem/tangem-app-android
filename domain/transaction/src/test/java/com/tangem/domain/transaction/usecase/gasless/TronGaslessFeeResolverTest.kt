@@ -52,7 +52,7 @@ internal class TronGaslessFeeResolverTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(getTronGaslessFeeUseCase, isTronGaslessSupportedUseCase)
-        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
         coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns gaslessFee(GASLESS_FEE).right()
     }
 
@@ -73,7 +73,7 @@ internal class TronGaslessFeeResolverTest {
             model: NotApplicableModel,
         ) = runTest {
             // Arrange
-            coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns model.isSupported
+            coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns model.isSupported
 
             // Act
             val actual = resolve(
@@ -292,7 +292,7 @@ internal class TronGaslessFeeResolverTest {
                 resolve(transactionData = transactionData)
 
                 // Assert
-                coVerify(exactly = 1) { isTronGaslessSupportedUseCase(userWalletId, network, usdt) }
+                coVerify(exactly = 1) { isTronGaslessSupportedUseCase(network, usdt) }
                 coVerify(exactly = 1) {
                     getTronGaslessFeeUseCase(
                         userWalletId = userWalletId,
@@ -440,7 +440,7 @@ internal class TronGaslessFeeResolverTest {
             model: SelectedNotApplicableModel,
         ) = runTest {
             // Arrange
-            coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns model.isSupported
+            coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns model.isSupported
 
             // Act
             val actual = resolver.resolveWithSelectedFeeToken(
@@ -472,7 +472,7 @@ internal class TronGaslessFeeResolverTest {
 
             // Assert
             assertThat(actual).isEqualTo(quoteResult)
-            coVerify(exactly = 1) { isTronGaslessSupportedUseCase(userWalletId, usdt.network, usdt) }
+            coVerify(exactly = 1) { isTronGaslessSupportedUseCase(usdt.network, usdt) }
         }
 
         private fun provideTestModels() = listOf(
