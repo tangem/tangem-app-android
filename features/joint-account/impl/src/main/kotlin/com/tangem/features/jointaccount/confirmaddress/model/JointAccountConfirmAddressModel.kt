@@ -1,4 +1,4 @@
-package com.tangem.features.jointaccount.main.confirmaddress.model
+package com.tangem.features.jointaccount.confirmaddress.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
@@ -25,25 +25,25 @@ import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
-import com.tangem.features.jointaccount.main.confirmaddress.JointAccountConfirmAddressComponent
-import com.tangem.features.jointaccount.main.confirmaddress.ui.state.JointAccountConfirmAddressUM
+import com.tangem.features.jointaccount.confirmaddress.JointAccountConfirmAddressComponent
+import com.tangem.features.jointaccount.confirmaddress.ui.state.JointAccountConfirmAddressUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
-import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 import com.tangem.core.ui.R as CoreUiR
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -98,19 +98,19 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
         isResumed.value = false
     }
 
-    private fun subscribePolling() {
-        isResumed
-            .flatMapLatest { resumed ->
-                if (resumed) pollingCoordinator.poll(walletId = params.userWalletId) else emptyFlow()
-            }
-            .launchIn(modelScope)
-    }
-
     private fun observeAddress() {
         jointAccountListSupplier(userWalletId = params.userWalletId)
             .map { accounts -> accounts.firstOrNull { it.cryptoAccountId == params.cryptoAccountId }?.safeAddress }
             .distinctUntilChanged()
             .onEach { address -> uiState.update { it.copy(address = address) } }
+            .launchIn(modelScope)
+    }
+
+    private fun subscribePolling() {
+        isResumed
+            .flatMapLatest { resumed ->
+                if (resumed) pollingCoordinator.poll(walletId = params.userWalletId) else emptyFlow()
+            }
             .launchIn(modelScope)
     }
 
@@ -130,8 +130,8 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
 
     private fun onConfirmClick() {
         if (uiState.value.isConfirming) return
-        uiState.update { it.copy(isConfirming = true) }
 
+        uiState.update { it.copy(isConfirming = true) }
         modelScope.launch {
             try {
                 confirm()

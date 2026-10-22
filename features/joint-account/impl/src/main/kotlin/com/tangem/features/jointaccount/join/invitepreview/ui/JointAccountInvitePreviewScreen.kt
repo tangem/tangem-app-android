@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -232,17 +233,20 @@ private fun InviteInfo(state: JointAccountInvitePreviewUM.Content, modifier: Mod
 @Composable
 private fun titleText(accountName: String): AnnotatedString {
     val text = stringResourceSafe(R.string.joint_account_join_title, accountName)
+    val highlightColor = TangemTheme.colors3.text.primary
 
-    return buildAnnotatedString {
-        append(text)
+    return remember(text, accountName, highlightColor) {
+        buildAnnotatedString {
+            append(text)
 
-        val start = text.indexOf(accountName)
-        if (start >= 0 && accountName.isNotEmpty()) {
-            addStyle(
-                style = SpanStyle(color = TangemTheme.colors3.text.primary),
-                start = start,
-                end = start + accountName.length,
-            )
+            val start = text.indexOf(accountName)
+            if (start >= 0 && accountName.isNotEmpty()) {
+                addStyle(
+                    style = SpanStyle(color = highlightColor),
+                    start = start,
+                    end = start + accountName.length,
+                )
+            }
         }
     }
 }
@@ -255,17 +259,20 @@ private fun explanationText(state: JointAccountInvitePreviewUM.Content): Annotat
         state.totalMembers.toString(),
     )
     val text = stringResourceSafe(R.string.joint_account_join_subtitle, highlightedPart)
+    val highlightColor = TangemTheme.colors3.text.primary
 
-    return buildAnnotatedString {
-        append(text)
+    return remember(text, highlightedPart, highlightColor) {
+        buildAnnotatedString {
+            append(text)
 
-        val start = text.indexOf(highlightedPart)
-        if (start >= 0 && highlightedPart.isNotEmpty()) {
-            addStyle(
-                style = SpanStyle(color = TangemTheme.colors3.text.primary),
-                start = start,
-                end = start + highlightedPart.length,
-            )
+            val start = text.indexOf(highlightedPart)
+            if (start >= 0 && highlightedPart.isNotEmpty()) {
+                addStyle(
+                    style = SpanStyle(color = highlightColor),
+                    start = start,
+                    end = start + highlightedPart.length,
+                )
+            }
         }
     }
 }
@@ -452,7 +459,6 @@ private fun createPreviewState(wallet: JointAccountInvitePreviewUM.Content.Walle
         creatorName = "Igor Sinyak",
         creatorAddress = "0xBef7B368aac4e6752A9cE0xBef7B36A9cE",
         wallet = wallet,
-        confirmation = null,
         onRequiredApprovalsClick = {},
         onCreatorInfoClick = {},
         onContinueClick = {},

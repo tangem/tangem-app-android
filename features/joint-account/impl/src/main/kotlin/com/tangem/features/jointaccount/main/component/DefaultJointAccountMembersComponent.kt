@@ -16,7 +16,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
-import com.tangem.features.jointaccount.main.confirmaddress.JointAccountConfirmAddressComponent
+import com.tangem.features.jointaccount.confirmaddress.JointAccountConfirmAddressComponent
 import com.tangem.features.jointaccount.main.model.JointAccountMembersListParams
 import com.tangem.features.jointaccount.main.navigation.JointAccountMembersRoute
 import dagger.assisted.Assisted

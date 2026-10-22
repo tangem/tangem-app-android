@@ -1,4 +1,4 @@
-package com.tangem.features.jointaccount.main.confirmaddress.model
+package com.tangem.features.jointaccount.confirmaddress.model
 
 import arrow.core.left
 import arrow.core.right
@@ -26,7 +26,7 @@ import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.jointaccount.main.confirmaddress.JointAccountConfirmAddressComponent
+import com.tangem.features.jointaccount.confirmaddress.JointAccountConfirmAddressComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
