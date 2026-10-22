@@ -78,7 +78,7 @@ internal class PredictionBalanceUMConverterTest {
     }
 
     @Test
-    fun `GIVEN a positive balance and failed deposit requisites WHEN converting THEN withdraw stays enabled`() {
+    fun `GIVEN a positive balance and failed deposit requisites WHEN converting THEN withdraw is dimmed but tappable`() {
         // Arrange
         val status = active(balance = "12.5")
 
@@ -95,6 +95,49 @@ internal class PredictionBalanceUMConverterTest {
 
         // Assert
         assertThat(actual.withdraw.isEnabled).isTrue()
+        assertThat(actual.withdraw.isDimmed).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a positive balance and requisites still loading WHEN converting THEN withdraw is disabled`() {
+        // Arrange
+        val status = active(balance = "12.5")
+
+        // Act
+        val actual = converter.convert(
+            PredictionBalanceUMConverter.Input(
+                status = status,
+                positions = PredictionPositionsValue.Unknown,
+                requisites = RequisitesState.Loading,
+                regionStatus = PredictionRegionStatus.ALLOWED,
+                mode = PredictionBalanceMode.AVAILABLE,
+            ),
+        )
+
+        // Assert
+        assertThat(actual.withdraw.isEnabled).isFalse()
+        assertThat(actual.withdraw.isDimmed).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a restricted region and ready requisites WHEN converting THEN withdraw is enabled and not dimmed`() {
+        // Arrange
+        val status = active(balance = "12.5")
+
+        // Act
+        val actual = converter.convert(
+            PredictionBalanceUMConverter.Input(
+                status = status,
+                positions = PredictionPositionsValue.Unknown,
+                requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
+                regionStatus = PredictionRegionStatus.RESTRICTED,
+                mode = PredictionBalanceMode.AVAILABLE,
+            ),
+        )
+
+        // Assert
+        assertThat(actual.withdraw.isEnabled).isTrue()
+        assertThat(actual.withdraw.isDimmed).isFalse()
     }
 
     @Test
