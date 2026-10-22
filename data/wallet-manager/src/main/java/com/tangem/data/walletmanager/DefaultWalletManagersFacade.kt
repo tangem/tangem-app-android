@@ -585,6 +585,16 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         walletManager.isSwapSpenderAllowed(spenderAddress)
     }
 
+    override suspend fun isSwapTargetAllowed(
+        userWalletId: UserWalletId,
+        network: Network,
+        targetAddress: String,
+    ): Boolean = withContext(dispatchers.io) {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+            ?: return@withContext false
+        walletManager.isSwapTargetAllowed(targetAddress)
+    }
+
     override suspend fun getDynamicAddressesReceiveAddress(userWalletId: UserWalletId, network: Network): String? {
         val dynamicAddressesManager = getEnabledDynamicAddressesManagerOrNull(userWalletId, network) ?: return null
         return dynamicAddressesManager.findFirstUnusedReceiveAddress()?.address
