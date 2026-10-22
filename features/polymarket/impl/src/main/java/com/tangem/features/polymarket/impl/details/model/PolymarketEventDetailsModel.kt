@@ -14,6 +14,8 @@ import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.features.polymarket.impl.R
 import com.tangem.features.polymarket.impl.common.PolymarketUrlBuilder
+import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
+import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
 import com.tangem.features.polymarket.impl.details.model.transformer.PolymarketEventDetailsContentTransformer
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
@@ -39,6 +41,7 @@ import kotlin.time.Duration.Companion.seconds
  * a snackbar once, until a refresh succeeds again.
  */
 @ModelScoped
+@Suppress("LongParameterList")
 internal class PolymarketEventDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
@@ -46,6 +49,7 @@ internal class PolymarketEventDetailsModel @Inject constructor(
     private val getPolymarketEventUseCase: GetPolymarketEventUseCase,
     private val shareManager: ShareManager,
     private val messageSender: UiMessageSender,
+    private val regionAccess: PredictionRegionAccess,
 ) : Model() {
 
     private val params = paramsContainer.require<PolymarketEventDetailsComponent.Params>()
@@ -84,7 +88,7 @@ internal class PolymarketEventDetailsModel @Inject constructor(
         pollJob.cancel()
         modelScope.launch {
             uiState.value = PolymarketEventDetailsUM.Loading
-            val result = withContext(dispatchers.default) { getPolymarketEventUseCase(eventId = params.eventId) }
+            val result = withContext(dispatchers.default) { fetchEventWithSilentRetry() }
             result.fold(
                 ifLeft = { uiState.value = PolymarketEventDetailsUM.Error(onRetryClick = ::load) },
                 ifRight = { loaded ->
@@ -156,6 +160,8 @@ internal class PolymarketEventDetailsModel @Inject constructor(
     }
 
     private fun onOutcomeClick(marketId: String, assetId: String) {
+        if (regionAccess.isRestricted) return messageSender.send(regionRestrictionsMessage())
+
         router.push(
             PolymarketRoute.PlacePrediction(
                 userWalletId = params.userWalletId,

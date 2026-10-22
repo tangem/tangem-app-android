@@ -2,6 +2,7 @@ package com.tangem.features.collectibles.impl.packopening.ui.preview
 
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.collectibles.models.CollectibleRarity
 import com.tangem.domain.collectibles.models.OpenedCollectiblePack
@@ -53,6 +54,11 @@ internal object CollectiblesPackOpeningPreviewData {
             card = CollectiblesRewardCardConverter.convert(pack = pack),
             onKeepCardClick = {},
             onSellBackClick = {},
+            sellBack = CollectiblesPackOpeningUM.SellBackButtonUM(
+                textRef = resourceReference(R.string.collectibles_open_pack_sell_back_button, wrappedList("$55.80")),
+                isEnabled = true,
+                isLoading = false,
+            ),
         ),
         onApproveClick = {},
         isNavigationVisible = true,

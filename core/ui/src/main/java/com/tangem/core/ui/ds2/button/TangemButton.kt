@@ -2,6 +2,7 @@ package com.tangem.core.ui.ds2.button
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
@@ -30,6 +30,8 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.conditional
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -37,14 +39,15 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 /**
  * Design-system v2 button supporting an optional leading icon, label, and trailing icon.
  *
- * Version: 1.2.1
+ * Version: 1.2.2
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=0-1)
  *
  * Behavior notes:
  * - When [isLoading] is `true` — or when no icon and no [text] are supplied — the content fades out
  *   and a centered [com.tangem.core.ui.ds2.loader.TangemLoader] is shown in the variant's icon
- *   color. Clicks are still routed to [onClick] unless [isEnabled] is `false`.
+ *   color. With a [loadingText] the loader is shown inline after that message instead, and the
+ *   button resizes to fit it. Clicks are still routed to [onClick] unless [isEnabled] is `false`.
  * - When [text] is `null`, the button renders in icon-only mode (square footprint driven by
  *   [size]); otherwise its width grows from [TangemButton.Size]'s `minWidth` and the label
  *   truncates with an ellipsis when it can't fit. Pass `Modifier.fillMaxWidth()` (or any width
@@ -53,8 +56,9 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  *   shrinks horizontally so the layout animates smoothly.
  * - Icon tints are always driven by [variant] (and swapped for the disabled tint when [isEnabled]
  *   is `false`); any tint set on the supplied [TangemIconUM.Icon] is ignored.
- * - The focus ring is drawn whenever the button is focused, including when [isEnabled] is `false`,
- *   so disabled buttons remain reachable via keyboard / accessibility focus.
+ * - Variants with a disabled alpha fade the whole button as one layer, so the label never picks up
+ *   the faded fill. The focus ring is drawn outside that layer, at full opacity, whenever the button
+ *   is focused — disabled buttons remain clearly highlighted for keyboard / accessibility focus.
  *
  * @param variant Visual style. See [TangemButton.Variant].
  * @param size Token-driven size preset controlling height, padding, and icon size.
@@ -68,6 +72,8 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * @param iconStart Optional leading icon.
  * @param iconEnd Optional trailing icon.
  * @param text Optional label. `null` switches the button to icon-only mode.
+ * @param loadingText Optional message shown next to the loader while [isLoading] is `true`. Also
+ *   announced by TalkBack in the loading state unless [contentDescription] is supplied.
  * @param contentDescription Accessibility label announced by TalkBack. Should be supplied for
  *   icon-only buttons (e.g. `"Transfers"`), for the loading state to describe the action in
  *   progress (e.g. `"Processing payment"`), and for disabled buttons to explain why they can't be
@@ -88,48 +94,51 @@ fun TangemButton(
     iconStart: TangemIconUM? = null,
     iconEnd: TangemIconUM? = null,
     text: TextReference? = null,
+    loadingText: TextReference? = null,
     contentDescription: String? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     onClick: () -> Unit,
 ) {
-    val isIconOnly = text == null
+    val isLoaderInline = isLoading && loadingText != null
+    val isIconOnly = text == null && !isLoaderInline
     val shouldShowLoader = isLoading || iconStart == null && iconEnd == null && text == null
     val colorTokens = variant.tokens()
     val sizeTokens = size.tokens()
     val isFocused by interactionSource.collectIsFocusedAsState()
 
-    // Disabled state fades the content + background + default border by `disabledAlpha`, but the
-    // focus ring stays at full opacity so disabled-but-focused buttons remain clearly highlighted.
     val hasEnabledAppearance = isEnabled && !isDimmed
-    val contentAlpha = if (hasEnabledAppearance) 1f else colorTokens.disabledAlpha
-    val backgroundColor = (
+    val disabledAlpha = if (hasEnabledAppearance) 1f else colorTokens.disabledAlpha
+    val backgroundColor =
         if (hasEnabledAppearance) colorTokens.backgroundColor else colorTokens.disabledBackgroundColor
-        )
-        .scaleAlpha(contentAlpha)
+    val accessibilityLabel = contentDescription ?: resolveLoadingLabel(shouldShowLoader, loadingText, text)
 
     TangemSurface(
         modifier = modifier
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 if (!isEnabled) disabled()
-                contentDescription?.let { this.contentDescription = it }
-            },
+                accessibilityLabel?.let { this.contentDescription = it }
+            }
+            .conditional(isFocused) {
+                border(width = 2.dp, color = colorTokens.focusRingColor, shape = CircleShape)
+            }
+            .alpha(disabledAlpha),
         onClick = onClick,
         enabled = isEnabled,
         color = backgroundColor,
-        border = resolveBorder(isFocused = isFocused, colorTokens = colorTokens, contentAlpha = contentAlpha),
+        border = colorTokens.defaultBorderColor?.let { BorderStroke(width = 1.dp, color = it) },
         shape = CircleShape,
         interactionSource = interactionSource,
         isMaterial = variant == TangemButton.Variant.Material,
     ) {
         TangemButtonInternal(
-            modifier = Modifier.alpha(contentAlpha),
             isIconOnly = isIconOnly,
             isEnabled = hasEnabledAppearance,
             isLoading = shouldShowLoader,
+            isLoaderInline = isLoaderInline,
             iconStart = iconStart,
             iconEnd = iconEnd,
-            text = text,
+            text = if (isLoaderInline) loadingText else text,
             colorTokens = colorTokens,
             sizeTokens = sizeTokens,
         )
@@ -137,25 +146,13 @@ fun TangemButton(
 }
 
 @Composable
-private fun resolveBorder(isFocused: Boolean, colorTokens: ColorTokens, contentAlpha: Float): BorderStroke? = when {
-    isFocused -> BorderStroke(
-        width = 2.dp,
-        // Focus ring is intentionally NOT scaled by contentAlpha — see TangemButton above.
-        color = colorTokens.focusRingColor,
-    )
-    colorTokens.defaultBorderColor != null -> BorderStroke(
-        width = 1.dp,
-        color = colorTokens.defaultBorderColor.scaleAlpha(contentAlpha),
-    )
-    else -> null
+private fun resolveLoadingLabel(isLoading: Boolean, loadingText: TextReference?, text: TextReference?): String? {
+    return if (isLoading) (loadingText ?: text)?.resolveReference() else null
 }
-
-/** Multiplies the existing alpha channel by [factor]. */
-private fun Color.scaleAlpha(factor: Float): Color = if (factor == 1f) this else copy(alpha = alpha * factor)
 
 object TangemButton {
 
-    val version = DsVersion(major = 1, minor = 2, patch = 1)
+    val version = DsVersion(major = 1, minor = 2, patch = 2)
 
     /**
      * Visual style of the button.
@@ -251,6 +248,13 @@ private fun PreviewVariantRow(variant: TangemButton.Variant) {
         TangemButton(variant = variant, text = stringReference("Label"), onClick = {})
         TangemButton(variant = variant, text = stringReference("Icons"), iconStart = info, iconEnd = info, onClick = {})
         TangemButton(variant = variant, text = stringReference("Loading"), isLoading = true, onClick = {})
+        TangemButton(
+            variant = variant,
+            text = stringReference("Label"),
+            loadingText = stringReference("Loading"),
+            isLoading = true,
+            onClick = {},
+        )
         TangemButton(variant = variant, text = stringReference("Disabled"), isEnabled = false, onClick = {})
         TangemButton(variant = variant, iconStart = info, onClick = {})
     }

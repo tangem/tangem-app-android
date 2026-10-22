@@ -25,8 +25,8 @@ internal fun BigDecimal?.formatApyText(): String =
 internal fun String?.formatApy(): TextReference = this?.toBigDecimalOrNull().formatApy()
 
 /** [formatApy] without the percent sign, for the strings that carry their own. */
-internal fun String?.formatApyValue(): TextReference = stringReference(
-    this?.toBigDecimalOrNull()
-        ?.movePointLeft(PERCENT_SCALE)
-        .format { percent(canBeLower = true, withPercentSign = false) },
+internal fun BigDecimal?.formatApyValue(): TextReference = stringReference(
+    this?.movePointLeft(PERCENT_SCALE).format { percent(canBeLower = true, withPercentSign = false) },
 )
+
+internal fun String?.formatApyValue(): TextReference = this?.toBigDecimalOrNull().formatApyValue()

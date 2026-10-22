@@ -14,6 +14,7 @@ import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.domain.addressbook.usecase.CheckAddressDuplicateUseCase
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.qrscanning.usecases.ExtractQrRecipientAddressUseCase
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.features.addressbook.addaddress.DefaultAddAddressComponent
 import com.tangem.features.addressbook.addaddress.state.AddAddressStateController
@@ -43,6 +44,7 @@ internal class AddAddressModel @Inject constructor(
     private val supportedNetworksMatcher: SupportedNetworksMatcher,
     private val memoValidator: AddressMemoValidator,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
+    private val extractQrRecipientAddressUseCase: ExtractQrRecipientAddressUseCase,
     private val clipboardManager: ClipboardManager,
     private val stateController: AddAddressStateController,
     private val selectNetworksResultHolder: SelectNetworksResultHolder,
@@ -230,18 +232,9 @@ internal class AddAddressModel @Inject constructor(
     private fun subscribeToQrScanResult() {
         listenToQrScanningUseCase(SourceType.ADDRESS_BOOK)
             .getOrElse { emptyFlow() }
-            .onEach { onAddressChange(value = normalizeScannedAddress(it)) }
+            .onEach { onAddressChange(value = extractQrRecipientAddressUseCase(it)) }
             .flowOn(dispatchers.default)
             .launchIn(modelScope)
-    }
-
-    /**
-     * Extracts the bare address from a scanned payment URI like `ethereum:0xADDR@1?amount=1.5`: drops the query
-     * (`?…`), the chain suffix (`@…`) and the scheme (`scheme:`). A plain address is returned unchanged.
-     */
-    private fun normalizeScannedAddress(raw: String): String {
-        val withoutQueryAndChain = raw.trim().substringBefore('?').substringBefore('@')
-        return withoutQueryAndChain.substringAfter(':', missingDelimiterValue = withoutQueryAndChain)
     }
 
     private fun onNetworkClick() {

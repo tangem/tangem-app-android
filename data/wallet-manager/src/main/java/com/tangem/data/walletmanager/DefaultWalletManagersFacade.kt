@@ -6,7 +6,6 @@ import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.right
 import com.tangem.blockchain.blockchains.solana.RentProvider
-import com.tangem.blockchain.blockchains.tron.TronAccountActivationProvider
 import com.tangem.blockchain.blockchains.tron.gasless.TronGaslessTransactionSigner
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
@@ -49,7 +48,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryStateError
@@ -60,7 +58,6 @@ import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.domain.walletmanager.model.TokenInfo
 import com.tangem.domain.walletmanager.utils.SdkPageConverter
 import com.tangem.domain.wallets.extension.hasDerivation
-import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.Lazy
@@ -82,7 +79,6 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val jointAccountSafeAddressResolver: Lazy<JointAccountSafeAddressResolver>,
     private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     private val jointRefundReceiverProvider: JointRefundReceiverProvider,
     blockchainSDKFactory: BlockchainSDKFactory,
 ) : WalletManagersFacade {
@@ -302,7 +298,6 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     jointRefundReceiver = jointRefundReceiver(currency.network),
                     currency = currency,
                     currencyAddresses = getAddresses(userWalletId, currency.network),
-                    txHistoryFeatureToggles = txHistoryFeatureToggles,
                     getCachedTokenInfoUseCase = getCachedTokenInfoUseCase,
                     networkTokens = getCachedTokenInfoUseCase(
                         userWalletId = userWalletId,
@@ -560,20 +555,6 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             is Result.Failure -> null
         }
     }
-
-    @RemoveWithToggle("TWI_1783_TRON_GASLESS_ACCOUNT_ACTIVATION_ENABLED")
-    override suspend fun isTronAccountActivated(userWalletId: UserWalletId, network: Network): Boolean =
-        withContext(dispatchers.io) {
-            val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-                ?: return@withContext false
-
-            if (walletManager !is TronAccountActivationProvider) return@withContext false
-
-            when (val result = walletManager.isAccountActivated()) {
-                is Result.Success -> result.data
-                is Result.Failure -> false
-            }
-        }
 
     override suspend fun isSwapSpenderAllowed(
         userWalletId: UserWalletId,

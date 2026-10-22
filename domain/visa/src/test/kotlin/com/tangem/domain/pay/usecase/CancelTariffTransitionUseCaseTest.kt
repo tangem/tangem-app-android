@@ -3,7 +3,6 @@ package com.tangem.domain.pay.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
@@ -48,7 +47,7 @@ internal class CancelTariffTransitionUseCaseTest {
     fun `GIVEN current tariff is null WHEN invoke THEN returns Right and skips transition`() = runTest {
         // GIVEN
         coEvery { cancelTangemPayOrderUseCase(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
-        coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns null
+        coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns null.right()
 
         // WHEN
         val result = useCase(USER_WALLET_ID, ORDER_ID)
@@ -60,10 +59,10 @@ internal class CancelTariffTransitionUseCaseTest {
     }
 
     @Test
-    fun `GIVEN source is not actual WHEN invoke THEN returns Right and skips transition`() = runTest {
+    fun `GIVEN current tariff request fails WHEN invoke THEN returns Right and skips transition`() = runTest {
         // GIVEN
         coEvery { cancelTangemPayOrderUseCase(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
-        coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns (StatusSource.CACHE to DEFAULT_BASIC_TARIFF)
+        coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns VisaApiError.Unspecified.left()
 
         // WHEN
         val result = useCase(USER_WALLET_ID, ORDER_ID)
@@ -78,7 +77,7 @@ internal class CancelTariffTransitionUseCaseTest {
     fun `GIVEN tariff is not default WHEN invoke THEN returns Right and skips transition`() = runTest {
         // GIVEN
         coEvery { cancelTangemPayOrderUseCase(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
-        coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns (StatusSource.ACTUAL to CUSTOMER_PLUS_TARIFF)
+        coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns CUSTOMER_PLUS_TARIFF.right()
 
         // WHEN
         val result = useCase(USER_WALLET_ID, ORDER_ID)
@@ -90,10 +89,10 @@ internal class CancelTariffTransitionUseCaseTest {
     }
 
     @Test
-    fun `GIVEN actual default tariff AND getTransitions fails WHEN invoke THEN returns Left`() = runTest {
+    fun `GIVEN default tariff AND getTransitions fails WHEN invoke THEN returns Left`() = runTest {
         // GIVEN
         coEvery { cancelTangemPayOrderUseCase(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
-        coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns (StatusSource.ACTUAL to DEFAULT_BASIC_TARIFF)
+        coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns DEFAULT_BASIC_TARIFF.right()
         coEvery { getTariffTransitionUseCase(USER_WALLET_ID) } returns VisaApiError.Unspecified.left()
 
         // WHEN
@@ -105,11 +104,11 @@ internal class CancelTariffTransitionUseCaseTest {
     }
 
     @Test
-    fun `GIVEN actual default tariff AND basic transition exists WHEN invoke THEN submits basic transition`() =
+    fun `GIVEN default tariff AND basic transition exists WHEN invoke THEN submits basic transition`() =
         runTest {
             // GIVEN
             coEvery { cancelTangemPayOrderUseCase(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
-            coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns (StatusSource.ACTUAL to DEFAULT_BASIC_TARIFF)
+            coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns DEFAULT_BASIC_TARIFF.right()
             coEvery { getTariffTransitionUseCase(USER_WALLET_ID) } returns
                 listOf(PLUS_TRANSITION, BASIC_TRANSITION).right()
             coEvery { submitTariffTransitionUseCase(USER_WALLET_ID, BASIC_TRANSITION) } returns Unit.right()
@@ -123,11 +122,11 @@ internal class CancelTariffTransitionUseCaseTest {
         }
 
     @Test
-    fun `GIVEN actual default tariff AND no basic transition WHEN invoke THEN returns Right without submit`() =
+    fun `GIVEN default tariff AND no basic transition WHEN invoke THEN returns Right without submit`() =
         runTest {
             // GIVEN
             coEvery { cancelTangemPayOrderUseCase(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
-            coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns (StatusSource.ACTUAL to DEFAULT_BASIC_TARIFF)
+            coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns DEFAULT_BASIC_TARIFF.right()
             coEvery { getTariffTransitionUseCase(USER_WALLET_ID) } returns listOf(PLUS_TRANSITION).right()
 
             // WHEN
@@ -139,10 +138,10 @@ internal class CancelTariffTransitionUseCaseTest {
         }
 
     @Test
-    fun `GIVEN actual default tariff AND submit fails WHEN invoke THEN returns Left`() = runTest {
+    fun `GIVEN default tariff AND submit fails WHEN invoke THEN returns Left`() = runTest {
         // GIVEN
         coEvery { cancelTangemPayOrderUseCase(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
-        coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns (StatusSource.ACTUAL to DEFAULT_BASIC_TARIFF)
+        coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns DEFAULT_BASIC_TARIFF.right()
         coEvery { getTariffTransitionUseCase(USER_WALLET_ID) } returns listOf(BASIC_TRANSITION).right()
         coEvery { submitTariffTransitionUseCase(USER_WALLET_ID, BASIC_TRANSITION) } returns
             VisaApiError.Unspecified.left()

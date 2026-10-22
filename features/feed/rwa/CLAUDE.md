@@ -25,9 +25,8 @@ RWA-specific bindings are listed here.
   tab participates in search; see the contract KDoc in `FeedTabContributor`.
 - `app/build.gradle.kts` carries the Hilt aggregation line (`projects.features.feed.rwa.impl`).
 
-**Two toggles are required to see the tab.** `isNewShtorkaEnabled` (TWI-1608) selects the v2 feed over
-the legacy one in `WalletScreen.kt`; `isRwaAndCategoriesEnabled` (TWI-1477) makes the contributor
-available. Both are `"version": "undefined"` in `feature_toggles_config.json` — dev builds only.
+**The tab is behind a toggle.** `isRwaAndCategoriesEnabled` (TWI-1477) makes the contributor available.
+It is `"version": "undefined"` in `feature_toggles_config.json` — dev builds only.
 
 ```bash
 ./gradlew :features:feed:rwa:impl:compileDebugKotlin
@@ -248,9 +247,11 @@ blocked one only when every category is blocked (`RwaDefaultCategory`), never on
 what the Category selector's **Reset** restores: reset goes back to the scope the region opens on, not to
 the scope the screen was opened with.
 
-`UserCountryResolver` waits up to 3s for the start-up geo fetch — the synchronous read is an in-memory
-flow rebuilt every process, so every launch races it — and falls back to the device region rather than
-asking without a country.
+`UserCountryResolver` waits for the start-up country as long as the geo request takes (its HTTP timeouts),
+with no timer of its own: the country is published once per process and never re-read, so an early stand-in
+would stick for the whole session. This relies on `DefaultSettingsRepository.fetchUserCountryCode()`
+publishing on every path (geo → cache → device region, a failed cache read included); a path that returns
+without publishing leaves the tab loading.
 
 **The categories endpoint is deliberately uncached.** Every `getCoinCategories` call goes to the
 network — no `CacheRegistry` entry, no in-memory store, no persisted snapshot. The response carries the

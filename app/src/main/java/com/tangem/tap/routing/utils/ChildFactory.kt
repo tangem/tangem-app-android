@@ -18,10 +18,8 @@ import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
-import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
 import com.tangem.features.introduction.IntroductionComponent
-import com.tangem.features.introduction.IntroductionFeatureToggles
 import com.tangem.features.jointaccount.creation.JointAccountCreationComponent
 import com.tangem.features.jointaccount.join.JointAccountJoinComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
@@ -49,6 +47,7 @@ import com.tangem.features.tangempay.components.TangemPayDetailsContainerCompone
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
 import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
+import com.tangem.features.tangempay.components.TangemPayVerifiedComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
@@ -64,7 +63,6 @@ import com.tangem.tap.features.details.ui.cardsettings.coderecovery.api.AccessCo
 import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
-import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent as RedesignedWalletConnectComponent
@@ -89,9 +87,7 @@ internal class ChildFactory @Inject constructor(
     private val storiesComponentFactory: StoriesComponent.Factory,
     private val stakingComponentFactory: StakingComponent.Factory,
     private val swapComponentFactory: SwapComponent.Factory,
-    private val homeComponentFactory: HomeComponent.Factory,
     private val introductionComponentFactory: IntroductionComponent.Factory,
-    private val introductionFeatureToggles: IntroductionFeatureToggles,
     private val tokenDetailsComponentFactory: TokenDetailsComponent.Factory,
     private val qrScanningComponentFactory: QrScanningComponent.Factory,
     private val accessCodeRecoveryComponentFactory: AccessCodeRecoveryComponent.Factory,
@@ -138,6 +134,7 @@ internal class ChildFactory @Inject constructor(
     private val jointAccountMembersComponentFactory: JointAccountMembersComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
     private val tangemPayEligibilityComponentFactory: TangemPayEligibilityComponent.Factory,
+    private val tangemPayVerifiedComponentFactory: TangemPayVerifiedComponent.Factory,
     private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val polymarketComponentFactory: PolymarketComponent.Factory,
@@ -388,23 +385,14 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.Home -> {
-                if (introductionFeatureToggles.isIntroductionRedesignEnabled) {
-                    createComponentChild(
-                        context = context,
-                        params = IntroductionComponent.Params(
-                            launchMode = route.launchMode,
-                            entryReason = route.entryReason,
-                        ),
-                        componentFactory = introductionComponentFactory,
-                    )
-                } else {
-                    @RemoveWithToggle("TWI_1747_INTRODUCTION_REDESIGN_ENABLED")
-                    createComponentChild(
-                        context = context,
-                        params = HomeComponent.Params(route.launchMode),
-                        componentFactory = homeComponentFactory,
-                    )
-                }
+                createComponentChild(
+                    context = context,
+                    params = IntroductionComponent.Params(
+                        launchMode = route.launchMode,
+                        entryReason = route.entryReason,
+                    ),
+                    componentFactory = introductionComponentFactory,
+                )
             }
             is AppRoute.WalletConnectSessions -> {
                 createComponentChild(
@@ -847,6 +835,13 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                     ),
                     componentFactory = tangemPayEligibilityComponentFactory,
+                )
+            }
+            is AppRoute.TangemPayVerified -> {
+                createComponentChild(
+                    context = context,
+                    params = TangemPayVerifiedComponent.Params(userWalletId = route.userWalletId),
+                    componentFactory = tangemPayVerifiedComponentFactory,
                 )
             }
             is AppRoute.Survey -> {

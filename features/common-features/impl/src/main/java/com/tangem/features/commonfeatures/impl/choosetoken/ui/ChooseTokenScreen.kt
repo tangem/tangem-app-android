@@ -31,6 +31,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.lerp
 import androidx.compose.ui.text.style.TextAlign
@@ -349,6 +350,7 @@ private fun WalletTabItem(state: WalletTabUM, modifier: Modifier = Modifier) {
             .clip(RoundedCornerShape(percent = 50))
             .background(backgroundColor)
             .clickable(onClick = state.onClick)
+            .semantics { selected = isSelected }
             .testTag(BuyTokenScreenTestTags.WALLET_TAB)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.Center,
