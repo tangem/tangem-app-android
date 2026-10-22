@@ -1,4 +1,4 @@
-package com.tangem.features.jointaccount.main.confirmaddress.ui.state
+package com.tangem.features.jointaccount.confirmaddress.ui.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.ds.image.TangemIconUM
