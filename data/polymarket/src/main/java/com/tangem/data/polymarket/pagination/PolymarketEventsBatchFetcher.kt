@@ -82,11 +82,12 @@ internal class PolymarketEventsBatchFetcher(
                 // A failed request is the pagination's to report, so the batch turns into a retryable error.
                 .getOrElse { throwable -> return BatchFetchResult.Error(throwable) }
 
-            val hasMore = page.hasNext && page.cursor != null
+            val responseCursor = page.cursor?.takeIf(String::isNotBlank)
+            val hasMore = page.hasNext && responseCursor != null
             val isFollowed = page.events.isEmpty() && hasMore && emptyPagesFollowed < MAX_EMPTY_PAGES_FOLLOWED
 
             if (!isFollowed) {
-                nextCursor = page.cursor
+                nextCursor = responseCursor
                 return BatchFetchResult.Success(
                     data = PolymarketEventsBatch(events = page.events, requestCursor = requestCursor),
                     isEmpty = page.events.isEmpty(),
@@ -95,7 +96,7 @@ internal class PolymarketEventsBatchFetcher(
             }
 
             emptyPagesFollowed++
-            requestCursor = page.cursor
+            requestCursor = responseCursor
         }
     }
 
