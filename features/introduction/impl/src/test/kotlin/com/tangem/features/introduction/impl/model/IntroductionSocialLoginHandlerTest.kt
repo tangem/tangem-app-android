@@ -115,7 +115,7 @@ internal class IntroductionSocialLoginHandlerTest {
         } returns SocialLoginOutcome.WalletCreated(WALLET_ID).right()
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         coVerify(exactly = 1) { userWalletsListRepository.select(WALLET_ID) }
@@ -135,7 +135,7 @@ internal class IntroductionSocialLoginHandlerTest {
         every { uiMessageSender.send(capture(message)) } just Runs
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         assertThat(message.captured).isEqualTo(
@@ -169,7 +169,7 @@ internal class IntroductionSocialLoginHandlerTest {
         coEvery { userWalletsListRepository.select(WALLET_ID) } returns SELECT_ERROR.left()
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         verify { router wasNot Called }
@@ -182,7 +182,7 @@ internal class IntroductionSocialLoginHandlerTest {
         coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns SocialLoginError.ConsentDeclined.left()
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         coVerify(exactly = 1) { socialLoginUseCase.signOut(PROVIDER) }
@@ -200,7 +200,7 @@ internal class IntroductionSocialLoginHandlerTest {
         host.onFinishedCallback = { order += "finished" }
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         assertThat(order).containsExactly("signOut", "finished").inOrder()
@@ -212,7 +212,7 @@ internal class IntroductionSocialLoginHandlerTest {
         coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } throws IllegalStateException()
 
         // Act
-        val thrown = runCatching { handler.signIn(PROVIDER, SOURCE, host) }.exceptionOrNull()
+        val thrown = runCatching { handler.signIn(PROVIDER, host) }.exceptionOrNull()
 
         // Assert
         assertThat(thrown).isInstanceOf(IllegalStateException::class.java)
@@ -227,7 +227,7 @@ internal class IntroductionSocialLoginHandlerTest {
         coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns model.error.left()
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         if (model.isSupportDialog) {
@@ -249,7 +249,7 @@ internal class IntroductionSocialLoginHandlerTest {
         coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns error.left()
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         val message = slot<SnackbarMessage>()
@@ -274,9 +274,9 @@ internal class IntroductionSocialLoginHandlerTest {
         every { router.push(capture(routes), any()) } just Runs
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
         dialogs.last().firstAction.onClick()
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
         dialogs.last().firstAction.onClick()
 
         // Assert
@@ -296,8 +296,8 @@ internal class IntroductionSocialLoginHandlerTest {
         val routes = mutableListOf<AppRoute>()
         every { uiMessageSender.send(capture(dialogs)) } just Runs
         every { router.push(capture(routes), any()) } just Runs
-        handler.signIn(PROVIDER, SOURCE, host)
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
+        handler.signIn(PROVIDER, host)
 
         // Act
         dialogs[1].firstAction.onClick()
@@ -315,7 +315,7 @@ internal class IntroductionSocialLoginHandlerTest {
         coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns SocialLoginError.NetworkError.left()
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         verify(exactly = 1) { analyticsEventHandler.send(ofType<SocialLoginAnalyticsEvents.ErrorShown>()) }
@@ -327,28 +327,52 @@ internal class IntroductionSocialLoginHandlerTest {
         coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns SocialLoginError.ConsentDeclined.left()
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         verify(exactly = 0) { analyticsEventHandler.send(ofType<SocialLoginAnalyticsEvents.ErrorShown>()) }
     }
 
-    @Test
-    fun `GIVEN a wallet created WHEN signIn THEN its creation is reported as a social login one`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideWalletCreatedModels")
+    fun `GIVEN a social login outcome WHEN signIn THEN the wallet creation is reported with the social login source`(
+        model: WalletCreatedModel,
+    ) = runTest {
         // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns
-            SocialLoginOutcome.WalletCreated(WALLET_ID).right()
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns model.outcome.right()
         val events = mutableListOf<AnalyticsEvent>()
         every { analyticsEventHandler.send(capture(events)) } just Runs
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         val created = events.filterIsInstance<OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully>()
-        assertThat(created.single().params["Creation Type"]).isEqualTo("New Social Login")
-        assertThat(created.single().params[AnalyticsParam.SOURCE]).isEqualTo(SOURCE.value)
+        assertThat(created.single().params["Creation Type"]).isEqualTo(model.creationType)
+        assertThat(created.single().params[AnalyticsParam.SOURCE]).isEqualTo("Social Login")
     }
+
+    @ParameterizedTest
+    @MethodSource("provideWalletCreatedModels")
+    fun `GIVEN a social login outcome WHEN signIn THEN onboarding finished is not reported`(
+        model: WalletCreatedModel,
+    ) = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns model.outcome.right()
+
+        // Act
+        handler.signIn(PROVIDER, host)
+
+        // Assert
+        verify(exactly = 0) { analyticsEventHandler.send(ofType<OnboardingAnalyticsEvent.Onboarding.Finished>()) }
+    }
+
+    data class WalletCreatedModel(val outcome: SocialLoginOutcome, val creationType: String)
+
+    private fun provideWalletCreatedModels() = listOf(
+        WalletCreatedModel(outcome = SocialLoginOutcome.WalletCreated(WALLET_ID), creationType = "New Seed"),
+        WalletCreatedModel(outcome = SocialLoginOutcome.WalletRestored(WALLET_ID), creationType = "Seed Import"),
+    )
 
     @Test
     fun `GIVEN the selection fails WHEN a wallet is created THEN its creation is still reported`() = runTest {
@@ -358,28 +382,12 @@ internal class IntroductionSocialLoginHandlerTest {
         coEvery { userWalletsListRepository.select(WALLET_ID) } returns SELECT_ERROR.left()
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         verify(exactly = 1) {
             analyticsEventHandler.send(ofType<OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully>())
         }
-    }
-
-    @Test
-    fun `GIVEN a wallet restored WHEN signIn THEN it is reported as a social login import`() = runTest {
-        // Arrange
-        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns
-            SocialLoginOutcome.WalletRestored(WALLET_ID).right()
-        val events = mutableListOf<AnalyticsEvent>()
-        every { analyticsEventHandler.send(capture(events)) } just Runs
-
-        // Act
-        handler.signIn(PROVIDER, SOURCE, host)
-
-        // Assert
-        val created = events.filterIsInstance<OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully>()
-        assertThat(created.single().params["Creation Type"]).isEqualTo("Social Login Import")
     }
 
     @Test
@@ -400,7 +408,7 @@ internal class IntroductionSocialLoginHandlerTest {
         }
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         assertThat(answer).isTrue()
@@ -415,7 +423,7 @@ internal class IntroductionSocialLoginHandlerTest {
         coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns error.left()
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         verify(exactly = 0) { uiMessageSender.send(any()) }
@@ -431,7 +439,7 @@ internal class IntroductionSocialLoginHandlerTest {
         every { uiMessageSender.send(capture(message)) } just Runs
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         assertThat(message.captured.message)
@@ -472,7 +480,7 @@ internal class IntroductionSocialLoginHandlerTest {
         coEvery { socialLoginUseCase.signOut(PROVIDER) } answers { progressDuringSignOut = host.progress.last() }
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         assertThat(progressDuringSignOut).isNotNull()
@@ -491,7 +499,7 @@ internal class IntroductionSocialLoginHandlerTest {
         }
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         assertThat(host.progress).hasSize(4)
@@ -510,7 +518,7 @@ internal class IntroductionSocialLoginHandlerTest {
         stubStageThenResult(stage = model.stage, workDurationMs = 0, result = model.outcome.right())
 
         // Act
-        launch { handler.signIn(PROVIDER, SOURCE, host) }
+        launch { handler.signIn(PROVIDER, host) }
         advanceTimeBy(STAGE_MIN_DISPLAY_MS - 1)
         runCurrent()
         val isLeftEarly = host.progress.last() == null
@@ -546,7 +554,7 @@ internal class IntroductionSocialLoginHandlerTest {
         )
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         assertThat(currentTime).isEqualTo(STAGE_MIN_DISPLAY_MS + 500)
@@ -563,7 +571,7 @@ internal class IntroductionSocialLoginHandlerTest {
         )
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         assertThat(currentTime).isEqualTo(0)
@@ -580,7 +588,7 @@ internal class IntroductionSocialLoginHandlerTest {
                 workDurationMs = 0,
                 result = SocialLoginOutcome.WalletCreated(WALLET_ID).right(),
             )
-            val attempt = launch { handler.signIn(PROVIDER, SOURCE, host) }
+            val attempt = launch { handler.signIn(PROVIDER, host) }
             runCurrent()
 
             // Act
@@ -621,7 +629,7 @@ internal class IntroductionSocialLoginHandlerTest {
         }
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         assertThat(host.consent).isNull()
@@ -646,7 +654,7 @@ internal class IntroductionSocialLoginHandlerTest {
         }
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         assertThat(host.progress).containsExactly(host.progress[0], null, null).inOrder()
@@ -667,7 +675,7 @@ internal class IntroductionSocialLoginHandlerTest {
         every { analyticsEventHandler.send(capture(events)) } just Runs
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         val consent = events.filterIsInstance<SocialLoginAnalyticsEvents.MarketingEmailsConsent>().single()
@@ -691,7 +699,7 @@ internal class IntroductionSocialLoginHandlerTest {
             )
 
             // Act
-            handler.signIn(PROVIDER, SOURCE, host)
+            handler.signIn(PROVIDER, host)
 
             // Assert
             verifyOrder {
@@ -719,7 +727,7 @@ internal class IntroductionSocialLoginHandlerTest {
             }
 
             // Act
-            handler.signIn(PROVIDER, SOURCE, host)
+            handler.signIn(PROVIDER, host)
 
             // Assert
             verify(exactly = 1) {
@@ -739,7 +747,7 @@ internal class IntroductionSocialLoginHandlerTest {
         }
 
         // Act
-        handler.signIn(PROVIDER, SOURCE, host)
+        handler.signIn(PROVIDER, host)
 
         // Assert
         verify(exactly = 0) {
@@ -855,7 +863,6 @@ internal class IntroductionSocialLoginHandlerTest {
         val WALLET_ID = UserWalletId(stringValue = "011")
         val SELECT_ERROR = SelectWalletError.UnableToSelectUserWallet
         const val CONSENT_TEXT = "Teilen Sie meine E-Mail mit Tangem"
-        val SOURCE = AnalyticsParam.ScreensSources.ImportWallet
         const val STAGE_MIN_DISPLAY_MS = 3_000L
     }
 }

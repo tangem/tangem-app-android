@@ -1084,7 +1084,7 @@ internal class IntroductionModelTest {
             requireNotNull(options.socialLogin).onClick()
 
             // Assert
-            verify(exactly = 1) { socialLoginHandler.start(any(), SocialLoginProvider.Google, any(), any()) }
+            verify(exactly = 1) { socialLoginHandler.start(any(), SocialLoginProvider.Google, any()) }
             coVerify(exactly = 0) { cardScanner.scanAndOpenWallet(any(), any(), any()) }
         }
 
@@ -1584,7 +1584,7 @@ internal class IntroductionModelTest {
 
         private fun IntroductionModel.startSocialLoginFromHaveWallet(): IntroductionSocialLoginHandler.Host {
             val host = slot<IntroductionSocialLoginHandler.Host>()
-            every { socialLoginHandler.start(any(), any(), any(), capture(host)) } just runs
+            every { socialLoginHandler.start(any(), any(), capture(host)) } just runs
             requireNotNull(openHaveWallet().socialLogin).onClick()
             return host.captured
         }
