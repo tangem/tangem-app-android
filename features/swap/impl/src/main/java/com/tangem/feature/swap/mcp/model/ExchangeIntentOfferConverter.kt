@@ -4,17 +4,10 @@ import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.format.bigdecimal.anyDecimals
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.ExchangeIntent
-import com.tangem.domain.swap.models.SwapAmountType
-import com.tangem.feature.swap.mcp.ExchangeIntentAmountConverter
 import com.tangem.utils.converter.Converter
-import java.math.BigDecimal
-import java.math.RoundingMode
 import javax.inject.Inject
 
 /**
@@ -23,8 +16,8 @@ import javax.inject.Inject
  * Returns `null` when the intent amount is not a positive number.
  */
 internal class ExchangeIntentOfferConverter @Inject constructor(
-    private val amountConverter: ExchangeIntentAmountConverter,
-) : Converter<ExchangeIntentOfferConverter.Input, ExchangeIntentUM?> {
+    private val swapTextConverter: ExchangeIntentSwapTextConverter,
+) : Converter<ExchangeIntentOfferConverter.Input, ExchangeIntentUM.Offer?> {
 
     data class Input(
         val intent: ExchangeIntent,
@@ -34,11 +27,13 @@ internal class ExchangeIntentOfferConverter @Inject constructor(
         val onProceed: () -> Unit,
     )
 
-    override fun convert(value: Input): ExchangeIntentUM? {
-        val swap = value.toSwapText() ?: return null
+    override fun convert(value: Input): ExchangeIntentUM.Offer? {
+        val swap = swapTextConverter.convert(
+            ExchangeIntentSwapTextConverter.Input(intent = value.intent, from = value.from, to = value.to),
+        ) ?: return null
         val agentIdentity = value.agent.origin ?: value.agent.name ?: Texts.UNKNOWN_AGENT_NAME
 
-        return ExchangeIntentUM(
+        return ExchangeIntentUM.Offer(
             fromToken = value.from.toTokenIcon(),
             toToken = value.to.toTokenIcon(),
             title = Texts.offerTitle(agentIdentity = agentIdentity, swap = swap),
@@ -59,42 +54,6 @@ internal class ExchangeIntentOfferConverter @Inject constructor(
         ),
     )
 
-    /** The fixed side rounds spend up and receive down; sub-display-unit values show a less-than bound. */
-    private fun Input.toSwapText(): SwapText? {
-        val amount = amountConverter.convert(intent)?.takeIf { it.signum() > 0 } ?: return null
-        val fixedCurrency = if (intent.amountType == SwapAmountType.From) from else to
-        val roundingMode = when (intent.amountType) {
-            SwapAmountType.From -> RoundingMode.UP
-            SwapAmountType.To -> RoundingMode.DOWN
-        }
-        val fixedAmount = amount.toOfferAmount(currency = fixedCurrency, roundingMode = roundingMode)
-
-        return when (intent.amountType) {
-            SwapAmountType.From -> SwapText(from = fixedAmount, to = to.symbol)
-            SwapAmountType.To -> SwapText(from = from.symbol, to = fixedAmount)
-        }
-    }
-
-    private fun BigDecimal.toOfferAmount(currency: CryptoCurrency, roundingMode: RoundingMode): String {
-        val maxDecimals = currency.displayDecimals.coerceAtMost(MAX_DECIMALS)
-
-        return format {
-            crypto(currency, ignoreSymbolPosition = true).anyDecimals(
-                maxDecimals = maxDecimals,
-                minDecimals = maxDecimals.coerceAtMost(MIN_DECIMALS),
-                roundingMode = roundingMode,
-                canBeLower = true,
-            )
-        }
-    }
-
-    private data class SwapText(val from: String, val to: String)
-
-    private companion object {
-        const val MAX_DECIMALS = 8
-        const val MIN_DECIMALS = 2
-    }
-
     // TODO: [REDACTED_TASK_KEY] Replace English placeholders with Lokalise-backed resources.
     private object Texts {
         const val UNKNOWN_AGENT_NAME = "Unknown"
@@ -105,7 +64,7 @@ internal class ExchangeIntentOfferConverter @Inject constructor(
         )
         val PROCEED = stringReference("Proceed")
 
-        fun offerTitle(agentIdentity: String, swap: SwapText): TextReference =
+        fun offerTitle(agentIdentity: String, swap: ExchangeIntentSwapTextConverter.SwapText): TextReference =
             stringReference("$agentIdentity Agent wants to swap ${swap.from} to ${swap.to}")
     }
 }
