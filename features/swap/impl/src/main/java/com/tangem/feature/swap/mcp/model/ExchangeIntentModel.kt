@@ -92,7 +92,7 @@ internal class ExchangeIntentModel @Inject constructor(
                 return showCantReach(
                     reason = "the intent cannot be read",
                     error = error,
-                    canRetry = error is ExchangeIntentError.ServerError,
+                    canRetry = error is ExchangeIntentError.Unreachable,
                 )
             }
         if (intent.isHandled) return showProcessed(walletId = walletId, intent = intent)
