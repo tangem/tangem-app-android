@@ -95,7 +95,31 @@ internal class DefaultSendIntentRepositoryTest {
     }
 
     @Test
-    fun `GIVEN service fails with 5xx WHEN getSendIntent THEN server error with that code is reported`() = runTest {
+    fun `GIVEN no connection WHEN getSendIntent THEN unreachable is reported`() = runTest {
+        // Arrange
+        stubError(ApiResponseError.NetworkException())
+
+        // Act
+        val actual = repository.getSendIntent(INTENT_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(Either.Left(SendIntentError.Unreachable(INTENT_ID)))
+    }
+
+    @Test
+    fun `GIVEN timeout WHEN getSendIntent THEN unreachable is reported`() = runTest {
+        // Arrange
+        stubError(ApiResponseError.TimeoutException())
+
+        // Act
+        val actual = repository.getSendIntent(INTENT_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(Either.Left(SendIntentError.Unreachable(INTENT_ID)))
+    }
+
+    @Test
+    fun `GIVEN service fails with 5xx WHEN getSendIntent THEN the failure is returned as is`() = runTest {
         // Arrange
         val failure = ApiResponseError.HttpException(
             code = ApiResponseError.HttpException.Code.SERVICE_UNAVAILABLE,
@@ -108,7 +132,7 @@ internal class DefaultSendIntentRepositoryTest {
         val actual = repository.getSendIntent(INTENT_ID)
 
         // Assert
-        assertThat(actual).isEqualTo(Either.Left(SendIntentError.ServerError(INTENT_ID, httpCode = 503)))
+        assertThat(actual).isEqualTo(Either.Left(failure))
     }
 
     @Test
@@ -128,19 +152,6 @@ internal class DefaultSendIntentRepositoryTest {
             // Assert
             assertThat(actual).isEqualTo(Either.Left(failure))
         }
-
-    @Test
-    fun `GIVEN no network WHEN getSendIntent THEN the raw failure is returned`() = runTest {
-        // Arrange
-        val failure = ApiResponseError.NetworkException()
-        stubError(failure)
-
-        // Act
-        val actual = repository.getSendIntent(INTENT_ID)
-
-        // Assert
-        assertThat(actual).isEqualTo(Either.Left(failure))
-    }
 
     @Test
     fun `GIVEN service accepts the hash WHEN completeSendIntent THEN it succeeds`() = runTest {
