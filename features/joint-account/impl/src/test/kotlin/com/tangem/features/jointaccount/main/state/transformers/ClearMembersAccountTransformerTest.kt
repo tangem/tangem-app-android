@@ -50,7 +50,6 @@ internal class ClearMembersAccountTransformerTest {
                 ),
             ),
             membersLabel = stringReference("Members"),
-            waitingLabel = stringReference("Waiting to join"),
             footer = JointAccountMembersUM.FooterUM(
                 hint = null,
                 button = JointAccountMembersUM.ConfirmButtonUM(
@@ -70,7 +69,6 @@ internal class ClearMembersAccountTransformerTest {
         assertThat(actual.joined).isEmpty()
         assertThat(actual.freeSlots).isEmpty()
         assertThat(actual.membersLabel).isNull()
-        assertThat(actual.waitingLabel).isNull()
         assertThat(actual.footer).isNull()
     }
 }

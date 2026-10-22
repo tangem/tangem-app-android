@@ -172,7 +172,7 @@
   },
   "screenOwners": {
     "Initial": "app",
-    "Home": "features:home",
+    "Home": "features:introduction",
     "Welcome": "features:welcome",
     "Disclaimer": "features:disclaimer",
     "Wallet": "features:wallet",
