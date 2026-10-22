@@ -4,8 +4,9 @@ import android.content.Context
 import androidx.room.Room
 import com.tangem.store.datasource.txhistory.db.TxHistoryDatabase
 import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
-import com.tangem.store.datasource.txhistory.db.dao.ExpressSyncStateDao
 import com.tangem.store.datasource.txhistory.db.dao.HistoryIndexDao
+import com.tangem.store.datasource.txhistory.db.dao.HistorySyncStateDao
+import com.tangem.store.datasource.txhistory.db.dao.JointOperationDao
 import com.tangem.store.datasource.txhistory.db.dao.P2PEthPoolVaultDao
 import com.tangem.store.datasource.txhistory.db.dao.StakingValidatorDao
 import com.tangem.store.datasource.txhistory.db.dao.TokenInfoDao
@@ -40,7 +41,7 @@ internal interface TxHistoryModule {
         fun provideExpressHistoryDao(database: TxHistoryDatabase): ExpressHistoryDao = database.expressHistoryDao()
 
         @Provides
-        fun provideSyncStateDao(database: TxHistoryDatabase): ExpressSyncStateDao = database.syncStateDao()
+        fun provideSyncStateDao(database: TxHistoryDatabase): HistorySyncStateDao = database.syncStateDao()
 
         @Provides
         fun provideTokenInfoDao(database: TxHistoryDatabase): TokenInfoDao = database.tokenInfoDao()
@@ -54,5 +55,8 @@ internal interface TxHistoryModule {
 
         @Provides
         fun provideP2PEthPoolVaultDao(database: TxHistoryDatabase): P2PEthPoolVaultDao = database.p2pEthPoolVaultDao()
+
+        @Provides
+        fun provideJointOperationDao(database: TxHistoryDatabase): JointOperationDao = database.jointOperationDao()
     }
 }
