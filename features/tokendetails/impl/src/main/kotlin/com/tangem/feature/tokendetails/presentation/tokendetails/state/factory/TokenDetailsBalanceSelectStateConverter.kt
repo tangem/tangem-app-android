@@ -29,7 +29,12 @@ internal class TokenDetailsBalanceSelectStateConverter(
             }
 
             val stakingCryptoAmount = cryptoCurrencyStatus.getExtraBalanceOrNull()
-            val stakingFiatAmount = stakingCryptoAmount?.let { cryptoCurrencyStatus.value.fiatRate?.multiply(it) }
+            val fiatRate = cryptoCurrencyStatus.value.fiatRate
+            val stakingFiatAmount = if (stakingCryptoAmount != null && fiatRate != null) {
+                fiatRate.multiply(stakingCryptoAmount)
+            } else {
+                null
+            }
             copy(
                 tokenBalanceBlockState = if (tokenBalanceBlockState is TokenDetailsBalanceBlockState.Content) {
                     tokenBalanceBlockState.copy(

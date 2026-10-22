@@ -49,7 +49,12 @@ class AddCryptoPortfolioUseCase(
 
         val accountList = getAccountList(userWalletId = userWalletId)
 
-        val newAccount = createAccount(userWalletId, accountName, icon, derivationIndex)
+        val newAccount = createAccount(
+            userWalletId = userWalletId,
+            accountName = accountName,
+            icon = icon,
+            derivationIndex = derivationIndex,
+        )
 
         val updatedAccounts = withError({ Error.AccountListRequirementsNotMet(it) }) {
             checkDefaultName(accountList, accountName)

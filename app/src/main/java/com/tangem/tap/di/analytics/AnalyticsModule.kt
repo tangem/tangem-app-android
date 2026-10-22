@@ -5,12 +5,9 @@ import com.tangem.core.analytics.AppInstanceIdProvider
 import com.tangem.core.analytics.api.AnalyticsUserIdHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
 import com.tangem.core.analytics.utils.TrackingContextProxy
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.tap.common.analytics.ABTestsTrackingContextObserver
 import com.tangem.tap.common.analytics.DefaultTrackingContextProxy
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAppInstanceIdProvider
-import com.tangem.tap.common.analytics.handlers.opentelemetry.DefaultOtelFeatureToggles
-import com.tangem.tap.common.analytics.handlers.opentelemetry.OtelFeatureToggles
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import dagger.Module
 import dagger.Provides
@@ -45,9 +42,4 @@ internal object AnalyticsModule {
     @Provides
     @Singleton
     fun provideAppInstanceIdProvider(): AppInstanceIdProvider = FirebaseAppInstanceIdProvider()
-
-    @Provides
-    @Singleton
-    fun provideOtelFeatureToggles(featureTogglesManager: FeatureTogglesManager): OtelFeatureToggles =
-        DefaultOtelFeatureToggles(featureTogglesManager)
 }
