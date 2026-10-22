@@ -3,12 +3,15 @@ package com.tangem.core.media
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.plus
 import javax.inject.Inject
 
 internal class DefaultOneShotVideoControllerFactory @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : OneShotVideoController.Factory {
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -19,7 +22,8 @@ internal class DefaultOneShotVideoControllerFactory @Inject constructor(
         diagnosticsSubject: String,
         onCueReached: (OneShotVideoController.CueReason) -> Unit,
     ): OneShotVideoController = OneShotVideoController(
-        scope = scope,
+        // The player only takes calls on the main thread.
+        scope = scope + dispatchers.mainImmediate,
         cache = cache,
         diagnosticsSubject = diagnosticsSubject,
         isMotionEnabled = context.isSystemAnimationsEnabled(),
