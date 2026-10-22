@@ -6,9 +6,10 @@ import kotlin.reflect.KClass
  * Interface for a router in the application.
  * It provides methods for navigating through the application by stack.
  *
- * An operation called without its own `onComplete` gets [NoCompletion], and the router reports its failure to
- * [defaultCompletionHandler]. Pass [NoCompletion] through when delegating an operation, so the router that runs it
- * still recognizes it.
+ * An operation called without its own `onComplete` gets [NoCompletion], and the router reports to
+ * [defaultCompletionHandler] when a push, a replace or [navigate] fails, or any operation throws. A pop that has
+ * nothing to pop is not a failure. Pass [NoCompletion] through when delegating an operation, so the router that runs
+ * it still recognizes it.
  */
 interface Router {
 
