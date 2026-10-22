@@ -34,7 +34,7 @@ internal class DefaultSingleStakingBalanceFetcherTest {
     }
 
     @Test
-    fun `fetch staking balance successfully`() = runTest {
+    fun `GIVEN multi fetcher returns Right WHEN invoke THEN delegates with single id set and returns Right`() = runTest {
         // Arrange
         val params = SingleStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingId = tonId)
 
@@ -57,7 +57,7 @@ internal class DefaultSingleStakingBalanceFetcherTest {
     }
 
     @Test
-    fun `fetch staking balance failure`() = runTest {
+    fun `GIVEN multi fetcher returns Left WHEN invoke THEN returns the same Left`() = runTest {
         // Arrange
         val params = SingleStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingId = tonId)
 

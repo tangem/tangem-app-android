@@ -62,7 +62,7 @@ class TronGaslessFeeResolver(
         ) ?: return null
         val sentToken = sentStatus.currency as CryptoCurrency.Token
         // Not cached: the supported-token check reports a transport failure as "unsupported"
-        if (!isTronGaslessSupportedUseCase(userWalletId, network, sentToken)) return null
+        if (!isTronGaslessSupportedUseCase(network, sentToken)) return null
 
         val nativeFeeResult = loadNativeFee()
         nativeFeeResult.onRight { nativeFee ->
@@ -110,7 +110,7 @@ class TronGaslessFeeResolver(
     ): Either<GetFeeError, TransactionFeeExtended>? {
         if (feeToken !is CryptoCurrency.Token) return null
         if (transactionData.tronGaslessFeeTokenContractOrNull() == null) return null
-        if (!isTronGaslessSupportedUseCase(userWalletId, feeToken.network, feeToken)) return null
+        if (!isTronGaslessSupportedUseCase(feeToken.network, feeToken)) return null
 
         return getTronGaslessFeeUseCase(
             userWalletId = userWalletId,

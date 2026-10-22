@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.features.tangempay.TangemPayConstants
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -21,11 +22,13 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
     private val router: Router,
     private val urlOpener: UrlOpener,
     private val onboardingStarter: TangemPayOnboardingStarter,
+    tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     val uiState: StateFlow<TangemPayHotWalletOnboardingUM>
         field = MutableStateFlow(
             TangemPayHotWalletOnboardingUM(
+                isPayBundleIntroductionEnabled = tangemPayFeatureToggles.isPayBundleIntroductionEnabled,
                 isLoading = false,
                 onGetCardClick = ::onGetCardClick,
                 onTermsClick = ::onTermsClick,
@@ -47,6 +50,8 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
     }
 
     private fun onGetCardClick() {
+        // A loading TangemButton still takes taps
+        if (uiState.value.isLoading) return
         TangemLogger.i("[TangemPay][HWO]onGetCardClick")
         setLoading(isLoading = true)
 

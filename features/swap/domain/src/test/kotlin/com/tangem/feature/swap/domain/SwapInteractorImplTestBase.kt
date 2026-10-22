@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain
 
+import arrow.core.right
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
@@ -47,10 +48,12 @@ import com.tangem.feature.swap.domain.models.ui.AmountFormatter
 import com.tangem.feature.swap.domain.models.ui.SwapFee
 import com.tangem.features.swap.SwapFeatureToggles
 import io.mockk.clearAllMocks
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
 
 /**
@@ -138,6 +141,11 @@ internal open class SwapInteractorImplTestBase {
             createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
             isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
         )
+    }
+
+    @BeforeEach
+    fun stubUnscaledSourceAmounts() {
+        coEvery { walletManagersFacade.getScaledUiAmountMultiplier(any(), any()) } returns null.right()
     }
 
     /**

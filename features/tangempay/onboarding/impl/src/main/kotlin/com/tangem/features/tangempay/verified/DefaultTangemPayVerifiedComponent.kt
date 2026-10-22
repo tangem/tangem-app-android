@@ -32,14 +32,6 @@ internal class DefaultTangemPayVerifiedComponent @AssistedInject constructor(
 
     private val innerRouter = InnerRouter(stackNavigation = model.stackNavigation)
 
-    private val childStack = childStack(
-        key = "tangemPayVerifiedStack",
-        source = model.stackNavigation,
-        serializer = TangemPayVerifiedRoute.serializer(),
-        initialConfiguration = TangemPayVerifiedRoute.Verified,
-        childFactory = ::child,
-    )
-
     private val verifiedContent = ComposableContentComponent { modifier ->
         val state by model.uiState.collectAsStateWithLifecycle()
         TangemThemeRedesign {
@@ -50,6 +42,14 @@ internal class DefaultTangemPayVerifiedComponent @AssistedInject constructor(
             )
         }
     }
+
+    private val childStack = childStack(
+        key = "tangemPayVerifiedStack",
+        source = model.stackNavigation,
+        serializer = TangemPayVerifiedRoute.serializer(),
+        initialConfiguration = TangemPayVerifiedRoute.Verified,
+        childFactory = ::child,
+    )
 
     @Composable
     override fun Content(modifier: Modifier) {
