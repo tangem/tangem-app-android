@@ -30,6 +30,8 @@ object TangemPayPushPayloadToTxHistoryItemConverter {
     private const val KEY_POSTED_AT = "posted_at"
     private const val KEY_TRANSACTION_HASH = "transaction_hash"
 
+    private val usdCurrency: Currency = Currency.getInstance("USD")
+
     @Suppress("ComplexCondition")
     fun convertSpend(payload: Map<String, String>): TangemPayTxHistoryItem.Spend? {
         val id = payload[KEY_ID]?.ifEmpty { null } ?: return null
@@ -45,10 +47,10 @@ object TangemPayPushPayloadToTxHistoryItemConverter {
             id = id,
             jsonRepresentation = payload.toString(),
             date = authorizedAt.withZone(DateTimeZone.getDefault()),
-            amount = amount.negativeForRefund(isRefund),
+            amount = amount.negativeIf(isRefund),
             currency = currency,
             authorizedAmount = payload[KEY_AUTHORIZED_AMOUNT]?.toBigDecimalOrNull().orZero(),
-            localAmount = payload[KEY_LOCAL_AMOUNT]?.toBigDecimalOrNull()?.negativeForRefund(isRefund),
+            localAmount = payload[KEY_LOCAL_AMOUNT]?.toBigDecimalOrNull()?.negativeIf(isRefund),
             localCurrency = payload[KEY_LOCAL_CURRENCY]?.let(::parseCurrency),
             enrichedMerchantName = payload[KEY_ENRICHED_MERCHANT_NAME],
             merchantName = merchantName,
@@ -67,26 +69,30 @@ object TangemPayPushPayloadToTxHistoryItemConverter {
         val amount = payload[KEY_AMOUNT]?.toBigDecimalOrNull() ?: return null
         val transactionHash = payload[KEY_TRANSACTION_HASH]?.ifEmpty { null } ?: return null
         val postedAt = payload[KEY_POSTED_AT]?.let(::parseDateTime) ?: return null
-        val currency = payload[KEY_CURRENCY]?.let(::parseCurrency) ?: return null
-        val isCashback = payload[KEY_TYPE]?.let(TangemPayPushNotificationType::fromValue) ==
-            TangemPayPushNotificationType.CASHBACK_TOPUP
+        val type = payload[KEY_TYPE]
+            ?.let(TangemPayPushNotificationType::fromValue)
+            ?.toCollateralType()
+            ?: return null
 
         return TangemPayTxHistoryItem.Collateral(
             id = id,
             jsonRepresentation = payload.toString(),
             date = postedAt.withZone(DateTimeZone.getDefault()),
-            currency = currency,
-            amount = amount,
+            currency = usdCurrency,
+            amount = amount.negativeIf(type == TangemPayTxHistoryItem.Type.Withdrawal),
             transactionHash = transactionHash,
-            type = when {
-                isCashback -> TangemPayTxHistoryItem.Type.Cashback
-                amount >= BigDecimal.ZERO -> TangemPayTxHistoryItem.Type.Deposit
-                else -> TangemPayTxHistoryItem.Type.Withdrawal
-            },
+            type = type,
         )
     }
 
-    private fun BigDecimal.negativeForRefund(isRefund: Boolean): BigDecimal = if (isRefund) abs().negate() else this
+    private fun TangemPayPushNotificationType.toCollateralType(): TangemPayTxHistoryItem.Type? = when (this) {
+        TangemPayPushNotificationType.COLLATERAL_DEPOSIT -> TangemPayTxHistoryItem.Type.Deposit
+        TangemPayPushNotificationType.COLLATERAL_WITHDRAW -> TangemPayTxHistoryItem.Type.Withdrawal
+        TangemPayPushNotificationType.CASHBACK_TOPUP -> TangemPayTxHistoryItem.Type.Cashback
+        else -> null
+    }
+
+    private fun BigDecimal.negativeIf(condition: Boolean): BigDecimal = if (condition) abs().negate() else this
 
     private fun parseCurrency(code: String): Currency? = runCatching {
         return Currency.getInstance(code.uppercase())
