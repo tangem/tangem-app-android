@@ -230,7 +230,8 @@ private fun EmptyContent(contentPadding: PaddingValues, modifier: Modifier = Mod
             .fillMaxSize()
             .padding(contentPadding)
             .imePadding()
-            .padding(horizontal = 48.dp),
+            .padding(horizontal = 48.dp)
+            .testTag(TangemPayTestTags.RESIDENCY_EMPTY),
         verticalArrangement = Arrangement.spacedBy(space = 12.dp, alignment = Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
