@@ -15,6 +15,7 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -28,22 +29,19 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class YieldSupplyActiveModelGoToTokenTest : YieldSupplyActiveModelTestBase() {
 
+    private val predicateSlot = slot<(AppRoute.CurrencyDetails) -> Boolean>()
+
     @BeforeEach
     fun setUp() {
-        clearMocks(appRouter)
+        clearMocks(router)
+        predicateSlot.clear()
         coEvery { getYieldBoostStatusUseCase(any(), any()) } returns YieldBoostStatus.NotStarted.right()
     }
 
     @Test
     fun `GIVEN the token screen in the stack WHEN go to token is tapped THEN it pops back to that screen`() = runTest {
         // Arrange
-        val tokenRoute = AppRoute.CurrencyDetails(
-            userWalletId = userWalletId,
-            currency = token,
-            navigationAction = mockk<NavigationAction>(),
-            shouldShowMarketBlock = false,
-        )
-        every { appRouter.stack } returns listOf(AppRoute.Wallet, tokenRoute, AppRoute.Wallet)
+        stubPopToTokenScreen(isFound = true)
         val model = createModel(dispatchers = createTestingCoroutineDispatcherProvider())
         advanceUntilIdle()
         model.onClaimSubmitted(submittedResult())
@@ -52,21 +50,59 @@ internal class YieldSupplyActiveModelGoToTokenTest : YieldSupplyActiveModelTestB
         model.onGoToTokenClick()
 
         // Assert
-        verify(exactly = 1) { appRouter.popTo(route = tokenRoute, onComplete = any()) }
-        verify(exactly = 0) { appRouter.replaceCurrent(route = any(), onComplete = any()) }
+        verify(exactly = 1) { router.popToMatching(AppRoute.CurrencyDetails::class, any(), any()) }
+        verify(exactly = 0) { router.replaceCurrent(route = any(), onComplete = any()) }
         assertThat(model.claimResultFlow.value).isNull()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no screen of this token WHEN go to token is tapped THEN Yield Mode is replaced with it`() = runTest {
+        // Arrange
+        stubPopToTokenScreen(isFound = false)
+        val expectedRoute = AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = token)
+        val model = createModel(dispatchers = createTestingCoroutineDispatcherProvider())
+        advanceUntilIdle()
+
+        // Act
+        model.onGoToTokenClick()
+
+        // Assert
+        verify(exactly = 1) { router.replaceCurrent(route = expectedRoute, onComplete = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN this token screen with other flags WHEN go to token is tapped THEN it is matched`() = runTest {
+        // Arrange
+        stubPopToTokenScreen(isFound = true)
+        val tokenRoute = AppRoute.CurrencyDetails(
+            userWalletId = userWalletId,
+            currency = token,
+            navigationAction = mockk<NavigationAction>(),
+            shouldShowMarketBlock = false,
+        )
+        val model = createModel(dispatchers = createTestingCoroutineDispatcherProvider())
+        advanceUntilIdle()
+
+        // Act
+        model.onGoToTokenClick()
+
+        // Assert
+        assertThat(predicateSlot.captured(tokenRoute)).isTrue()
 
         model.onDestroy()
     }
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN no screen of this token WHEN go to token is tapped THEN Yield Mode is replaced with it`(
+    fun `GIVEN no screen of this token WHEN go to token is tapped THEN other token screens are not matched`(
         model: NoTokenScreenModel,
     ) = runTest {
         // Arrange
-        every { appRouter.stack } returns model.stack
-        val expectedRoute = AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = token)
+        stubPopToTokenScreen(isFound = false)
         val activeModel = createModel(dispatchers = createTestingCoroutineDispatcherProvider())
         advanceUntilIdle()
 
@@ -74,28 +110,29 @@ internal class YieldSupplyActiveModelGoToTokenTest : YieldSupplyActiveModelTestB
         activeModel.onGoToTokenClick()
 
         // Assert
-        verify(exactly = 1) { appRouter.replaceCurrent(route = expectedRoute, onComplete = any()) }
-        verify(exactly = 0) { appRouter.popTo(route = any<AppRoute>(), onComplete = any()) }
+        assertThat(predicateSlot.captured(model.route)).isFalse()
 
         activeModel.onDestroy()
     }
 
-    internal data class NoTokenScreenModel(val reason: String, val stack: List<AppRoute>) {
+    private fun stubPopToTokenScreen(isFound: Boolean) {
+        every {
+            router.popToMatching(AppRoute.CurrencyDetails::class, capture(predicateSlot), any())
+        } answers { thirdArg<(Boolean) -> Unit>()(isFound) }
+    }
+
+    internal data class NoTokenScreenModel(val reason: String, val route: AppRoute.CurrencyDetails) {
         override fun toString(): String = reason
     }
 
     private fun provideTestModels() = listOf(
-        NoTokenScreenModel(reason = "opened from the main screen", stack = listOf(AppRoute.Wallet)),
         NoTokenScreenModel(
             reason = "another token screen is beneath",
-            stack = listOf(AppRoute.Wallet, AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = otherToken)),
+            route = AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = otherToken),
         ),
         NoTokenScreenModel(
             reason = "the same token of another wallet is beneath",
-            stack = listOf(
-                AppRoute.Wallet,
-                AppRoute.CurrencyDetails(userWalletId = UserWalletId(stringValue = "FEDCBA9876543210"), currency = token),
-            ),
+            route = AppRoute.CurrencyDetails(userWalletId = UserWalletId(stringValue = "FEDCBA9876543210"), currency = token),
         ),
     )
 

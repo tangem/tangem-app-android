@@ -111,6 +111,7 @@ internal class PromoCampaignsAnalyticsEventTest {
             assertThat(event.event).isEqualTo("Promotion Screen Opened")
             assertThat(event.params).containsExactly(
                 "Screen", "whale-swap-cashback",
+                "Campaign", "whale-swap-cashback",
                 "Match Mode", model.expectedMatchMode,
                 "Payout", model.expectedPayout,
             )

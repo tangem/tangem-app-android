@@ -18,6 +18,7 @@ dependencies {
     /** Project - Features */
     implementation(projects.features.commonFeatures.api)
     implementation(projects.features.pushNotifications.api)
+    implementation(projects.features.send.api)
     implementation(projects.features.swap.api)
 
     /** Project - Common */

@@ -23,4 +23,11 @@ interface SendIntentRepository {
      * transaction are a [SendIntentError]; anything else is the raw failure of the call.
      */
     suspend fun completeSendIntent(intentId: String, txHash: String): Either<Throwable, Unit>
+
+    /**
+     * Like [completeSendIntent], but tries again, with a pause, while the failure may pass: no network, a timeout,
+     * HTTP 5xx, 401, 408 or 429. Anything else, and the last failure once the attempts are used up, is returned as it
+     * is. The attempts live as long as the caller, so they do not survive the process.
+     */
+    suspend fun reportSendIntentHash(intentId: String, txHash: String): Either<Throwable, Unit>
 }

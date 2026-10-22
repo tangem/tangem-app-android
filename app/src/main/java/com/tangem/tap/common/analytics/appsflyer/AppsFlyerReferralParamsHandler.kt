@@ -4,8 +4,6 @@ import com.appsflyer.deeplink.DeepLink
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.AppsFlyerDeeplinkTarget
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
-import com.tangem.domain.wallets.models.ReferralParamValidator
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.extensions.uriValidate
 import com.tangem.utils.logging.TangemLogger
@@ -18,7 +16,6 @@ import javax.inject.Singleton
 class AppsFlyerReferralParamsHandler @Inject constructor(
     private val appsFlyerRepository: AppsFlyerRepository,
     private val coroutineScope: AppCoroutineScope,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) {
 
     private val isDeferredDeepLinkHandled = AtomicBoolean(false)
@@ -95,7 +92,10 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
                 storeNavigationDeeplink(target.deeplink.deepLinkValue)
                 true
             }
-            is AppsFlyerDeeplinkTarget.TangemPayCampaign -> storeCampaignDeeplink(target.key)
+            is AppsFlyerDeeplinkTarget.TangemPayCampaign -> {
+                storeNavigationDeeplink(target.key)
+                true
+            }
             is AppsFlyerDeeplinkTarget.Direct -> storeDirectDeeplink(target.uri, isDeferredDelivery)
             null -> false
         }
@@ -131,16 +131,6 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
         TangemLogger.i("Storing referral params: refcode=$validRefcode, campaign=$validCampaign")
 
         storeConversionData(refcode = validRefcode, campaign = validCampaign)
-    }
-
-    private fun storeCampaignDeeplink(campaignKey: String): Boolean {
-        if (!tangemPayFeatureToggles.isCustomCardsCobrandEnabled) {
-            TangemLogger.i("Custom cards co-brand is disabled, ignoring campaign deep link: $campaignKey")
-            return false
-        }
-
-        storeNavigationDeeplink(campaignKey)
-        return true
     }
 
     private fun storeNavigationDeeplink(deepLinkValue: String) {

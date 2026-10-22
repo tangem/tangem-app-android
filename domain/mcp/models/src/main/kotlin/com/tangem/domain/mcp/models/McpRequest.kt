@@ -23,6 +23,12 @@ sealed interface McpRequest {
 
                 enum class Type { EXCHANGE }
             }
+
+            @Serializable
+            data class Transaction(val type: Type) : Source {
+
+                enum class Type { SEND }
+            }
         }
     }
 }

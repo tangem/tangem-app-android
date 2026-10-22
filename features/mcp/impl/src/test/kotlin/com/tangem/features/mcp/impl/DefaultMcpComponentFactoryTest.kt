@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.mcp.models.McpRequest
 import com.tangem.features.mcp.impl.pair.McpPairComponent
+import com.tangem.features.send.api.mcp.SendIntentComponent
 import com.tangem.features.swap.mcp.ExchangeIntentComponent
 import io.mockk.every
 import io.mockk.mockk
@@ -14,11 +15,16 @@ internal class DefaultMcpComponentFactoryTest {
     private val context: AppComponentContext = mockk()
     private val pairComponent: McpPairComponent = mockk()
     private val intentComponent: ExchangeIntentComponent = mockk()
+    private val sendIntentComponent: SendIntentComponent = mockk()
 
     private val pairRequest = McpRequest.Pair(userCode = "WDJB-MJHT")
     private val intentRequest = McpRequest.Intent(
         id = "my_intent_id123",
         source = McpRequest.Intent.Source.Express(McpRequest.Intent.Source.Express.Type.EXCHANGE),
+    )
+    private val sendIntentRequest = McpRequest.Intent(
+        id = "my_send_intent_id456",
+        source = McpRequest.Intent.Source.Transaction(McpRequest.Intent.Source.Transaction.Type.SEND),
     )
 
     private val pairFactory: McpPairComponent.Factory = mockk {
@@ -27,10 +33,15 @@ internal class DefaultMcpComponentFactoryTest {
     private val intentFactory: ExchangeIntentComponent.Factory = mockk {
         every { create(context, ExchangeIntentComponent.Params(intentId = "my_intent_id123")) } returns intentComponent
     }
+    private val sendIntentFactory: SendIntentComponent.Factory = mockk {
+        every { create(context, SendIntentComponent.Params(intentId = "my_send_intent_id456")) } returns
+            sendIntentComponent
+    }
 
     private val factory = DefaultMcpComponentFactory(
         mcpPairComponentFactory = pairFactory,
         exchangeIntentComponentFactory = intentFactory,
+        sendIntentComponentFactory = sendIntentFactory,
     )
 
     @Test
@@ -49,5 +60,14 @@ internal class DefaultMcpComponentFactoryTest {
 
         // Assert
         assertThat(actual).isSameInstanceAs(intentComponent)
+    }
+
+    @Test
+    fun `GIVEN transaction send intent request WHEN create THEN send intent component is returned`() {
+        // Act
+        val actual = factory.create(context, sendIntentRequest)
+
+        // Assert
+        assertThat(actual).isSameInstanceAs(sendIntentComponent)
     }
 }

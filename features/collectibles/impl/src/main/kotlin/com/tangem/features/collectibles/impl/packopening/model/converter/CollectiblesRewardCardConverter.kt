@@ -8,13 +8,9 @@ import com.tangem.domain.collectibles.models.OpenedCollectiblePack
 import com.tangem.features.collectibles.impl.common.formatter.formatUsd
 import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardUM
 import com.tangem.utils.StringsSigns.NUMBER_SIGN
-import java.math.BigDecimal
 
 /** The won card as the reward shows it. */
 internal object CollectiblesRewardCardConverter {
-
-    // TODO([REDACTED_TASK_KEY]): the buy-back offer comes from its own backend call
-    private val SELL_BACK_VALUE = BigDecimal("55.80")
 
     fun convert(pack: OpenedCollectiblePack): RewardCardUM {
         return RewardCardUM(
@@ -23,7 +19,6 @@ internal object CollectiblesRewardCardConverter {
             title = listOfNotNull(pack.year, pack.set).joinToString(separator = " "),
             editionNumber = pack.serialNumber.toNumber(),
             marketValue = pack.insuredValue.formatUsd(),
-            sellBackValue = SELL_BACK_VALUE.formatUsd(),
             frontImageUrl = pack.imageFrontUrl,
             backImageUrl = pack.imageBackUrl,
         )

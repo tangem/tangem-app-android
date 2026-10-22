@@ -155,15 +155,14 @@ internal class DeepLinkFactory @Inject constructor(
      * AppsFlyer OneLink domain: those are app links the app itself captures, and the round-trip through
      * `ACTION_VIEW` is what lets the AppsFlyer SDK resolve them in
      * [MainActivity.onNewIntent][com.tangem.tap.MainActivity.onNewIntent].
-     *
-     * The host is matched against the already-parsed [Uri] rather than through
-     * [ExternalUrlValidator.isUriTrusted], which re-parses with `java.net.URI` and reports a malformed string to
-     * Crashlytics — one badly typed campaign URL would otherwise fan out into a report from every device.
      */
     private fun openWebLinkFromPush(deeplinkUri: Uri) {
         val url = deeplinkUri.toString()
         val host = deeplinkUri.host
+        // Tangem links never carry user info, while parsers disagree on where it ends: an unpatched Uri reads
+        // `https://evil.com\@tangem.com` as host tangem.com, a browser as evil.com
         val isTrustedWebLink = deeplinkUri.scheme == DeepLinkScheme.Https.scheme &&
+            deeplinkUri.userInfo == null &&
             (ExternalUrlValidator.isHostTrusted(host) || host?.lowercase() in APPSFLYER_ONELINK_HOSTS)
 
         if (isTrustedWebLink) {

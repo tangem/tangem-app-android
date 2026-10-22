@@ -24,9 +24,11 @@ internal class P2PEthPoolAccountsListResponseTest {
     )
 
     @Test
-    fun `decode batch payload with valid account and per-address error`() {
+    fun `GIVEN batch payload with valid account and per-address error WHEN fromJson THEN both entries decoded`() {
+        // Act
         val response = requireNotNull(adapter.fromJson(SAMPLE_JSON))
 
+        // Assert
         val list = requireNotNull(response.result).list
         assertThat(list).hasSize(2)
 

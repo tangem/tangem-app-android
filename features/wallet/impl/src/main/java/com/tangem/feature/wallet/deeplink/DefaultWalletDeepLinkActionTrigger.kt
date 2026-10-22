@@ -7,6 +7,8 @@ import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,11 +26,18 @@ internal class DefaultWalletDeepLinkActionTrigger @Inject constructor() :
     override val showTangemPayTransactionFlow: Flow<TangemPayTransactionDeepLinkData>
         get() = _showTangemPayTransactionFlow.receiveAsFlow()
 
+    override val isOpenedByLinkOrPush: StateFlow<Boolean>
+        field = MutableStateFlow(false)
+
     override fun selectWallet(userWalletId: UserWalletId) {
         _selectWalletFlow.trySend(userWalletId)
     }
 
     override fun showTangemPayTransaction(transaction: TangemPayTxHistoryItem, customerId: String) {
         _showTangemPayTransactionFlow.trySend(TangemPayTransactionDeepLinkData(transaction, customerId))
+    }
+
+    override fun onOpenedByLinkOrPush() {
+        isOpenedByLinkOrPush.value = true
     }
 }

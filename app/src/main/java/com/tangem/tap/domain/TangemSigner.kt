@@ -10,7 +10,6 @@ import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.run
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.models.scan.isRing
-import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.operations.sign.SignData
 import com.tangem.tap.domain.tasks.MultiSignHashTask
 import com.tangem.tap.domain.tasks.SignHashesTask
@@ -26,20 +25,15 @@ class TangemSigner(
     private val initialMessage: Message,
     private val twinKey: TwinKey?,
     private val walletRegistrationLauncher: WalletRegistrationLauncher,
-    private val authFeatureToggles: AuthFeatureToggles,
     private val signerCallback: (TangemSignerResponse) -> Unit,
     private val session: CardSession? = null,
 ) : TransactionSigner {
 
     // Cold registration piggybacks on the signing tap (best-effort — the launcher skips twin / Visa /
-    // walletless cards and no-ops when backend auth is disabled). It runs on the card session's own
-    // scope inside [RegisterColdWalletRunnable], so it's bound to the tap.
+    // walletless cards). It runs on the card session's own scope inside [RegisterColdWalletRunnable],
+    // so it's bound to the tap.
     private fun <T> withColdRegistration(task: CardSessionRunnable<T>): CardSessionRunnable<T> =
-        if (authFeatureToggles.isBackendAuthenticationEnabled) {
-            RegisterColdWalletRunnable(inner = task, launcher = walletRegistrationLauncher)
-        } else {
-            task
-        }
+        RegisterColdWalletRunnable(inner = task, launcher = walletRegistrationLauncher)
 
     override suspend fun sign(
         hashes: List<ByteArray>,

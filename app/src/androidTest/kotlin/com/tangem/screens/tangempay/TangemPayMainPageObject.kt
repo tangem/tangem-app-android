@@ -2,7 +2,10 @@ package com.tangem.screens.tangempay
 
 import androidx.annotation.StringRes
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.performSemanticsAction
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import com.tangem.core.ui.test.BaseButtonTestTags
@@ -11,10 +14,12 @@ import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.core.res.R as CoreResR
+import io.github.kakaocup.compose.intercept.operation.ComposeOperationType
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasProgressBarRangeInfo as withProgressBarRangeInfo
 import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
 
@@ -24,6 +29,11 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
     val mainScreenTile: KNode = child {
         hasTestTag(TangemPayTestTags.MAIN_SCREEN_TILE)
         useUnmergedTree = true
+    }
+
+    // After a new hot wallet's onboarding the tile on CI drops injected taps, while its OnClick action still fires.
+    fun clickMainScreenTileViaOnClickAction() {
+        mainScreenTile.delegate.perform(TileAction.ON_CLICK) { performSemanticsAction(SemanticsActions.OnClick) }
     }
 
     fun tileWithSubtitle(subtitle: String): KNode = child {
@@ -224,6 +234,13 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    val renewSessionProgress: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_sync_needed_button)))
+        hasAnyDescendant(withProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate))
+        useUnmergedTree = true
+    }
+
     // The chip container carries the tag, but the enabled-state semantics sit on the button next to its label.
     // That button is the DS2 one — it has no BASE_BUTTON tag, so it is addressed by its label sibling.
     val addFundsButtonControl: KNode = actionButtonControl(CoreResR.string.tangempay_card_details_add_funds)
@@ -356,3 +373,5 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
 
 internal fun BaseTestCase.onTangemPayMainScreen(function: TangemPayMainPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)
+
+private enum class TileAction : ComposeOperationType { ON_CLICK }

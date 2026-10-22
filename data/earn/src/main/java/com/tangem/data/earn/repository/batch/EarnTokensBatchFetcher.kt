@@ -24,6 +24,7 @@ internal class EarnTokensBatchFetcher(
     private val batchSize: Int,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val cryptoCurrencyFactory: CryptoCurrencyFactory,
+    private val apyType: String?,
 ) : BatchFetcher<EarnTokensListConfig, List<EarnTokenWithCurrency>> {
 
     private val state: MutableStateFlow<EarnTokensPaginationState?> = MutableStateFlow(null)
@@ -101,6 +102,7 @@ internal class EarnTokensBatchFetcher(
             limit = limit,
             type = params.type,
             networks = params.networks,
+            apyType = apyType,
         ).getOrThrow()
 
         val userWallet = userWalletsListRepository.selectedUserWallet.value

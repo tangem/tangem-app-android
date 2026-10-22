@@ -26,7 +26,6 @@ internal class JointAccountMembersStateController @Inject constructor() {
         joined = persistentListOf(),
         freeSlots = persistentListOf(),
         membersLabel = null,
-        waitingLabel = null,
         footer = null,
     )
 }

@@ -171,6 +171,49 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         }
     }
 
+    fun collapseOnScreenPageHeader() {
+        onScreenPage()?.performTouchInput {
+            swipeUp(startY = visibleSize.height * 0.6f, endY = visibleSize.height * 0.1f)
+        }
+    }
+
+    fun pullToRefreshOnScreenPage() {
+        checkNotNull(onScreenPage()) { "No wallet page is on screen" }.performTouchInput {
+            swipeDown(startY = 0f, endY = visibleSize.height.toFloat() * 6f, durationMillis = 800)
+        }
+    }
+
+    fun clickOnScreenAccountSection(accountName: String) {
+        val matcher = withTestTag(MainScreenTestTags.ACCOUNT_LIST_ITEM) and hasAnyDescendant(withText(accountName))
+        checkNotNull(onScreenPageChild(matcher)) { "Account '$accountName' is not on the on-screen wallet page" }
+            .performClick()
+    }
+
+    fun clickOnScreenTangemPayTile() {
+        checkNotNull(onScreenPageChild(withTestTag(TangemPayTestTags.MAIN_SCREEN_TILE))) {
+            "Tangem Pay tile is not on the on-screen wallet page"
+        }.performClick()
+    }
+
+    fun isTokenOnScreenPage(tokenName: String): Boolean = onScreenTokenRow(tokenName) != null
+
+    fun onScreenTokenCryptoAmount(tokenName: String): String? =
+        onScreenTokenRow(tokenName)?.fetchSemanticsNode()?.firstTextForTestTag(TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT)
+
+    // A row below the screen edge has zero clipped bounds, so its unclipped position decides the page.
+    private fun onScreenTokenRow(tokenName: String): SemanticsNodeInteraction? {
+        val page = onScreenPage()?.fetchSemanticsNode()?.boundsInRoot ?: return null
+        val matcher = withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM) and hasAnyDescendant(withText(tokenName))
+        val nodes = semanticsProvider.onAllNodes(matcher, useUnmergedTree = true)
+        repeat(times = nodes.fetchSemanticsNodes().size) { index ->
+            val centerX = runCatching {
+                nodes[index].fetchSemanticsNode().let { it.positionInRoot.x + it.size.width / 2f }
+            }.getOrNull()
+            if (centerX != null && centerX >= page.left && centerX < page.right) return nodes[index]
+        }
+        return null
+    }
+
     private fun swipeCurrentPage(toPrevious: Boolean) {
         onScreenPage()?.performTouchInput { if (toPrevious) swipeRight() else swipeLeft() }
     }
@@ -585,15 +628,11 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     }
 
     /**
-     * Tap target that raises the markets sheet. The legacy sheet exposes its grabber; the DS3
-     * shtorka (TWI_1608) drags instead of clicking, so it tags its search bar, which raises the
-     * sheet with the keyboard up. Both builds ship until the toggle is retired — match either.
+     * Tap target that raises the markets sheet. The shtorka drags instead of clicking, so it tags its
+     * search bar, which raises the sheet with the keyboard up.
      */
     val marketsSheetDragHandle: KNode = child {
-        addSemanticsMatcher(
-            withTestTag(MainScreenTestTags.MARKETS_SHEET_DRAG_HANDLE) or
-                withTestTag(MainScreenTestTags.MARKETS_SHEET_EXPAND_AREA),
-        )
+        hasTestTag(MainScreenTestTags.MARKETS_SHEET_EXPAND_AREA)
         useUnmergedTree = true
     }
 

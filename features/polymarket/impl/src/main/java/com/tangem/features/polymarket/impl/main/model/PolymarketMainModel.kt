@@ -29,6 +29,9 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.features.polymarket.impl.common.funding.PredictionFundingRequisites
 import com.tangem.features.polymarket.impl.common.funding.RequisitesState
+import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
+import com.tangem.features.polymarket.impl.common.region.PredictionRegionStatus
+import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveConfigFactory
@@ -48,7 +51,6 @@ import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionPositionsValueFetcher
 import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
 import com.tangem.domain.polymarket.model.PredictionPositionsValue
-import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -89,7 +91,7 @@ internal class PolymarketMainModel @Inject constructor(
     private val getPolymarketCategoriesUseCase: GetPolymarketCategoriesUseCase,
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
     private val refreshPredictionDepositRequisitesInteractor: RefreshPredictionDepositRequisitesInteractor,
-    private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
+    private val regionAccess: PredictionRegionAccess,
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
     private val predictionPositionsValueSupplier: PredictionPositionsValueSupplier,
     private val predictionPositionsValueFetcher: PredictionPositionsValueFetcher,
@@ -117,11 +119,6 @@ internal class PolymarketMainModel @Inject constructor(
         scope = modelScope,
     )
 
-    private val tradingAllowance = PredictionTradingAllowance(
-        checkPolymarketGeoblockUseCase = checkPolymarketGeoblockUseCase,
-        dispatchers = dispatchers,
-    )
-
     private val refreshJobHolder = JobHolder()
 
     val blocksRefresh = PolymarketMainBlocksRefresh()
@@ -136,7 +133,7 @@ internal class PolymarketMainModel @Inject constructor(
                         status = PredictionAccountStatusValue.Loading,
                         positions = PredictionPositionsValue.Unknown,
                         requisites = RequisitesState.Loading,
-                        isTradingAllowed = false,
+                        regionStatus = PredictionRegionStatus.UNKNOWN,
                         mode = PredictionBalanceMode.AVAILABLE,
                     ),
                 ),
@@ -160,9 +157,9 @@ internal class PolymarketMainModel @Inject constructor(
             flow = predictionAccountStatusSupplier(userWalletId = params.userWalletId),
             flow2 = predictionPositionsValueSupplier(userWalletId = params.userWalletId),
             flow3 = fundingRequisites.state,
-            flow4 = tradingAllowance.isAllowed,
+            flow4 = regionAccess.status,
             flow5 = balanceMode,
-            transform = { status, positions, requisites, isTradingAllowed, mode ->
+            transform = { status, positions, requisites, regionStatus, mode ->
                 activeStatus.value = status as? PredictionAccountStatusValue.Active
 
                 balanceConverter.convert(
@@ -170,7 +167,7 @@ internal class PolymarketMainModel @Inject constructor(
                         status = status,
                         positions = positions,
                         requisites = requisites,
-                        isTradingAllowed = isTradingAllowed,
+                        regionStatus = regionStatus,
                         mode = mode,
                     ),
                 )
@@ -178,6 +175,12 @@ internal class PolymarketMainModel @Inject constructor(
         )
             .onEach { balance -> uiState.update { it.copy(balance = balance) } }
             .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+
+        regionAccess.status
+            .onEach { status ->
+                uiState.update { it.copy(isRegionRestricted = status == PredictionRegionStatus.RESTRICTED) }
+            }
             .launchIn(modelScope)
 
         predictionFundingWindow.isOpen(userWalletId = params.userWalletId)
@@ -214,7 +217,7 @@ internal class PolymarketMainModel @Inject constructor(
     init {
         observeEvents()
         loadCategories()
-        modelScope.launch { tradingAllowance.refresh() }
+        modelScope.launch { regionAccess.refresh() }
     }
 
     fun onBackClick() {
@@ -411,7 +414,7 @@ internal class PolymarketMainModel @Inject constructor(
             runSuspendCatching {
                 coroutineScope {
                     listOf(
-                        async { tradingAllowance.refresh() },
+                        async { regionAccess.refresh() },
                         async { blocksRefresh.refreshAll() },
                         async {
                             predictionAccountStatusFetcher(
@@ -445,12 +448,18 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun onAddFundsClick() {
+        if (regionAccess.isRestricted) return messageSender.send(regionRestrictionsMessage())
+
+        whenRequisitesReady(::openAddFunds)
+    }
+
+    private fun whenRequisitesReady(action: () -> Unit) {
         when (fundingRequisites.state.value) {
             is RequisitesState.Loading -> Unit
             is RequisitesState.Failed -> messageSender.send(
                 DialogMessage(message = resourceReference(R.string.prediction_add_funds_error_description)),
             )
-            is RequisitesState.Ready -> openAddFunds()
+            is RequisitesState.Ready -> action()
         }
     }
 
@@ -461,6 +470,10 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun onWithdrawClick() {
+        whenRequisitesReady(::openWithdraw)
+    }
+
+    private fun openWithdraw() {
         val collateral = activeStatus.value?.cryptoCurrencyStatus?.currency ?: return reportUnconfirmedAddress()
         router.push(
             AppRoute.Swap(
@@ -510,6 +523,8 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun onOutcomeClick(eventId: String, marketId: String, assetId: String) {
+        if (regionAccess.isRestricted) return messageSender.send(regionRestrictionsMessage())
+
         router.push(
             PolymarketRoute.PlacePrediction(
                 eventId = eventId,

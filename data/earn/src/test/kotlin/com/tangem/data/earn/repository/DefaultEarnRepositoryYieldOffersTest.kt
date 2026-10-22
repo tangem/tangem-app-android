@@ -35,7 +35,9 @@ internal class DefaultEarnRepositoryYieldOffersTest {
 
     private val tangemTechApi: TangemTechApi = mockk()
 
-    private val repository = DefaultEarnRepository(
+    private val repository = createRepository(isMerklIncentivesEnabled = true)
+
+    private fun createRepository(isMerklIncentivesEnabled: Boolean) = DefaultEarnRepository(
         tangemTechApi = tangemTechApi,
         dispatchers = TestingCoroutineDispatcherProvider(),
         userWalletsListRepository = mockk<UserWalletsListRepository>(),
@@ -45,6 +47,7 @@ internal class DefaultEarnRepositoryYieldOffersTest {
         earnFilterStore = EarnFilterStore(),
         earnErrorResolver = DefaultEarnErrorResolver(),
         excludedBlockchains = ExcludedBlockchains(),
+        isMerklIncentivesEnabled = isMerklIncentivesEnabled,
     )
 
     @BeforeEach
@@ -127,9 +130,29 @@ internal class DefaultEarnRepositoryYieldOffersTest {
         assertThat(actual).isEqualTo(Either.Left(error))
     }
 
-    private fun stubYieldPage(response: ApiResponse<EarnListResponse>) {
+    @Test
+    fun `GIVEN merkl incentives disabled WHEN getYieldOffers THEN requests the base apy`() = runTest {
+        // Arrange
+        val repository = createRepository(isMerklIncentivesEnabled = false)
+        stubYieldPage(response(total = 0, items = emptyList()), apyType = null)
+
+        // Act
+        val actual = repository.getYieldOffers()
+
+        // Assert
+        assertEither(actual, Either.Right(EarnYieldOffers(total = 0, best = null)))
+    }
+
+    private fun stubYieldPage(response: ApiResponse<EarnListResponse>, apyType: String? = "gross") {
         coEvery {
-            tangemTechApi.getEarnTokens(isForEarn = false, page = "1", limit = 20, type = "yield", networks = null)
+            tangemTechApi.getEarnTokens(
+                isForEarn = false,
+                page = "1",
+                limit = 20,
+                type = "yield",
+                networks = null,
+                apyType = apyType,
+            )
         } returns response
     }
 

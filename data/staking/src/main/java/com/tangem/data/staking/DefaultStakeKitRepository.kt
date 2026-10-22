@@ -50,7 +50,6 @@ import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakeKitRepository
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -66,7 +65,6 @@ internal class DefaultStakeKitRepository(
     private val stakeKitApi: StakeKitApi,
     private val stakingYieldsStore: StakingYieldsStore,
     private val stakingValidatorDao: StakingValidatorDao,
-    private val txHistoryFeatureToggle: TxHistoryFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
     moshi: Moshi,
@@ -107,12 +105,10 @@ internal class DefaultStakeKitRepository(
             val shouldRewriteCache = yieldsResponses.all { it is ApiResponse.Success }
             stakingYieldsStore.store(yields, shouldRewriteCache)
 
-            if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
-                val validatorEntities = yields
-                    .flatMap { it.validators.orEmpty() }
-                    .mapNotNull(StakingValidatorEntityConverter::convert)
-                stakingValidatorDao.upsert(validatorEntities)
-            }
+            val validatorEntities = yields
+                .flatMap { it.validators.orEmpty() }
+                .mapNotNull(StakingValidatorEntityConverter::convert)
+            stakingValidatorDao.upsert(validatorEntities)
         }
     }
 
