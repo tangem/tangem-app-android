@@ -74,6 +74,14 @@ internal class SwapModelHideRejectedProviderTest : SwapModelTestBase() {
 
         // Assert
         assertThat(model.dataState.selectedPairProviders).containsExactly(changelly)
+        verify {
+            analyticsEventHandler.send(
+                match {
+                    it is SwapEvents.ProviderHidden &&
+                        it.params == mapOf("Provider" to changeHero.name, "Error Code" to "2264", "Source" to "Swap")
+                },
+            )
+        }
         model.onDestroy()
     }
 
