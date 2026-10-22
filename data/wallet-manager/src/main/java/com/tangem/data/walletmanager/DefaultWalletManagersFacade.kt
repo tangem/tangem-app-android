@@ -4,6 +4,7 @@ import com.tangem.domain.models.currency.isJoint
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
+import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.blockchains.tron.TronAccountActivationProvider
@@ -558,6 +559,24 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         when (val result = walletManager.signGaslessTransactions(transactionDataList, signer)) {
             is Result.Success -> result.data
             is Result.Failure -> null
+        }
+    }
+
+    override suspend fun getScaledUiAmountMultiplier(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): Either<Throwable, BigDecimal?> = withContext(dispatchers.io) {
+        val blockchain = currency.network.toBlockchain()
+        val isSolana = blockchain == Blockchain.Solana || blockchain == Blockchain.SolanaTestnet
+        if (currency !is CryptoCurrency.Token || !isSolana) return@withContext null.right()
+
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
+            ?: return@withContext IllegalStateException("No wallet manager for ${currency.network.rawId}").left()
+        if (walletManager !is ScaledUiAmountProvider) return@withContext null.right()
+
+        when (val result = walletManager.getScaledUiAmountMultiplier(sdkTokenConverter.convert(currency))) {
+            is Result.Success -> result.data.right()
+            is Result.Failure -> result.error.left()
         }
     }
 
