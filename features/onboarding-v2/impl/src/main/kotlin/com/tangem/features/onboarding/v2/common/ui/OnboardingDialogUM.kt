@@ -7,7 +7,7 @@ internal data class OnboardingDialogUM(
     val message: TextReference,
     val dismissButtonText: TextReference,
     val confirmButtonText: TextReference,
-    val dismissWarningColor: Boolean = false,
+    val isDismissWarningColor: Boolean = false,
     val onConfirmClick: () -> Unit,
     val onDismissButtonClick: () -> Unit,
     val onDismiss: () -> Unit,

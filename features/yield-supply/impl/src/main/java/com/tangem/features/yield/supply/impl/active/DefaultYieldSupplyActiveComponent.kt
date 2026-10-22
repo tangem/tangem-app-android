@@ -1,5 +1,6 @@
 package com.tangem.features.yield.supply.impl.active
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
@@ -11,7 +12,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -32,8 +32,10 @@ import com.tangem.features.yield.supply.impl.active.ui.YieldSupplyActiveContent
 import com.tangem.features.yield.supply.impl.active.ui.YieldSupplyActiveTitle
 import com.tangem.features.yield.supply.impl.apy.about.YieldSupplyAboutApyComponent
 import com.tangem.features.yield.supply.impl.chart.DefaultYieldSupplyChartComponent
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
 import com.tangem.features.yield.supply.impl.incentives.banner.DefaultYieldSupplyRewardsBannerComponent
 import com.tangem.features.yield.supply.impl.incentives.claim.YieldSupplyClaimComponent
+import com.tangem.features.yield.supply.impl.incentives.claim.result.ui.YieldSupplyClaimResultContent
 import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyApproveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import dagger.assisted.Assisted
@@ -43,7 +45,6 @@ import dagger.assisted.AssistedInject
 internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
     @Assisted private val appComponentContext: AppComponentContext,
     @Assisted private val params: YieldSupplyActiveComponent.Params,
-    private val appRouter: AppRouter,
     private val marketingBannerComponentFactory: MarketingBannerComponent.Factory,
 ) : YieldSupplyActiveComponent, AppComponentContext by appComponentContext {
 
@@ -53,6 +54,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
         appComponentContext = child("chartComponent"),
         params = DefaultYieldSupplyChartComponent.Params(
             cryptoCurrency = model.cryptoCurrencyStatusFlow.value.currency as CryptoCurrency.Token,
+            initialPeriod = YieldSupplyChartPeriod.ThreeMonths,
         ),
     )
 
@@ -90,6 +92,19 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
+        val claimResult by model.claimResultFlow.collectAsStateWithLifecycle()
+        val result = claimResult
+        if (result != null) {
+            BackHandler(onBack = model::onClaimResultDismiss)
+            YieldSupplyClaimResultContent(
+                state = result,
+                onGoToTokenClick = model::onGoToTokenClick,
+                onGoToYieldClick = model::onClaimResultDismiss,
+                modifier = modifier,
+            )
+            return
+        }
+
         val state by model.uiState.collectAsStateWithLifecycle()
         val isBalanceHidden by model.balanceHiddenFlow.collectAsStateWithLifecycle()
         val slotState by bottomSheetSlot.subscribeAsState()
@@ -100,7 +115,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
                 .fillMaxSize()
                 .systemBarsPadding(),
         ) {
-            YieldSupplyActiveTitle(onCloseClick = appRouter::pop)
+            YieldSupplyActiveTitle(onCloseClick = router::pop)
 
             Box(modifier = Modifier.weight(1f)) {
                 YieldSupplyActiveContent(
@@ -151,7 +166,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
             appComponentContext = factoryContext,
             params = YieldSupplyAboutApyComponent.Params(
                 baseApy = route.baseApy,
-                rewardsApr = route.rewardsApr,
+                rewardsApy = route.rewardsApy,
                 onDismiss = model::onUnguardedSheetDismiss,
             ),
         )
@@ -162,6 +177,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
                 cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
                 chainId = route.chainId,
                 userAddress = route.userAddress,
+                onSubmitted = model::onClaimSubmitted,
                 onDismiss = model::onUnguardedSheetDismiss,
             ),
         )

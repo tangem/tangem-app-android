@@ -334,7 +334,7 @@ internal class AddStakingNotificationsTransformer(
                         currencyName = name,
                         feeName = name,
                         feeSymbol = symbol,
-                        mergeFeeNetworkName = BlockchainUtils.isArbitrum(network.rawId),
+                        shouldMergeFeeNetworkName = BlockchainUtils.isArbitrum(network.rawId),
                         onClick = { onClick(this) },
                     )
                 }

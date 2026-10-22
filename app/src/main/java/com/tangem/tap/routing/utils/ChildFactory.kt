@@ -18,10 +18,8 @@ import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
-import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
 import com.tangem.features.introduction.IntroductionComponent
-import com.tangem.features.introduction.IntroductionFeatureToggles
 import com.tangem.features.jointaccount.creation.JointAccountCreationComponent
 import com.tangem.features.jointaccount.join.JointAccountJoinComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
@@ -51,7 +49,7 @@ import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComp
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
 import com.tangem.features.tokendetails.TokenDetailsComponent
-import com.tangem.features.moneyaccount.details.component.MoneyAccountMainComponent
+import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
 import com.tangem.features.moneyaccount.onboarding.component.MoneyAccountOnboardingComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
@@ -64,7 +62,6 @@ import com.tangem.tap.features.details.ui.cardsettings.coderecovery.api.AccessCo
 import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
-import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent as RedesignedWalletConnectComponent
@@ -89,9 +86,7 @@ internal class ChildFactory @Inject constructor(
     private val storiesComponentFactory: StoriesComponent.Factory,
     private val stakingComponentFactory: StakingComponent.Factory,
     private val swapComponentFactory: SwapComponent.Factory,
-    private val homeComponentFactory: HomeComponent.Factory,
     private val introductionComponentFactory: IntroductionComponent.Factory,
-    private val introductionFeatureToggles: IntroductionFeatureToggles,
     private val tokenDetailsComponentFactory: TokenDetailsComponent.Factory,
     private val qrScanningComponentFactory: QrScanningComponent.Factory,
     private val accessCodeRecoveryComponentFactory: AccessCodeRecoveryComponent.Factory,
@@ -132,7 +127,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
     private val tangemPayCampaignComponentFactory: TangemPayCampaignComponent.Factory,
     private val moneyAccountOnboardingComponentFactory: MoneyAccountOnboardingComponent.Factory,
-    private val moneyAccountMainComponentFactory: MoneyAccountMainComponent.Factory,
+    private val moneyAccountDetailsComponentFactory: MoneyAccountDetailsComponent.Factory,
     private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
     private val jointAccountJoinComponentFactory: JointAccountJoinComponent.Factory,
     private val jointAccountMembersComponentFactory: JointAccountMembersComponent.Factory,
@@ -382,28 +377,20 @@ internal class ChildFactory @Inject constructor(
                         tag = route.tag,
                         destinationAddress = route.destinationAddress,
                         entryType = route.entryType.toSendEntryType(),
+                        intentId = route.intentId,
                     ),
                     componentFactory = sendComponentFactoryV2,
                 )
             }
             is AppRoute.Home -> {
-                if (introductionFeatureToggles.isIntroductionRedesignEnabled) {
-                    createComponentChild(
-                        context = context,
-                        params = IntroductionComponent.Params(
-                            launchMode = route.launchMode,
-                            entryReason = route.entryReason,
-                        ),
-                        componentFactory = introductionComponentFactory,
-                    )
-                } else {
-                    @RemoveWithToggle("TWI_1747_INTRODUCTION_REDESIGN_ENABLED")
-                    createComponentChild(
-                        context = context,
-                        params = HomeComponent.Params(route.launchMode),
-                        componentFactory = homeComponentFactory,
-                    )
-                }
+                createComponentChild(
+                    context = context,
+                    params = IntroductionComponent.Params(
+                        launchMode = route.launchMode,
+                        entryReason = route.entryReason,
+                    ),
+                    componentFactory = introductionComponentFactory,
+                )
             }
             is AppRoute.WalletConnectSessions -> {
                 createComponentChild(
@@ -822,13 +809,13 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = moneyAccountOnboardingComponentFactory,
                 )
             }
-            is AppRoute.MoneyAccountMain -> {
+            is AppRoute.MoneyAccountDetails -> {
                 createComponentChild(
                     context = context,
-                    params = MoneyAccountMainComponent.Params(
+                    params = MoneyAccountDetailsComponent.Params(
                         userWalletId = route.userWalletId,
                     ),
-                    componentFactory = moneyAccountMainComponentFactory,
+                    componentFactory = moneyAccountDetailsComponentFactory,
                 )
             }
             is AppRoute.Kyc -> {

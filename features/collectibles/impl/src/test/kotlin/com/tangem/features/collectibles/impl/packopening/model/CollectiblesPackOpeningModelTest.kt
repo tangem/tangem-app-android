@@ -13,14 +13,21 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.EventMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
+import com.tangem.domain.collectibles.models.BuybackError
+import com.tangem.domain.collectibles.models.CollectibleBuybackOffer
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.CollectiblesError
 import com.tangem.domain.collectibles.models.OpenPackRequest
 import com.tangem.domain.collectibles.models.OpenPackStep
+import com.tangem.domain.collectibles.usecase.BuybackCollectibleUseCase
+import com.tangem.domain.collectibles.usecase.GetCollectibleBuybackOfferUseCase
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineUseCase
 import com.tangem.domain.collectibles.usecase.OpenCollectiblePackUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -35,6 +42,7 @@ import com.tangem.features.collectibles.impl.packopening.CollectiblesConfirmOrde
 import com.tangem.features.collectibles.impl.packopening.CollectiblesPackOpeningComponent
 import com.tangem.features.collectibles.impl.packopening.PackOpeningConst
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM
+import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.SellBackButtonUM
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.Stage
 import com.tangem.features.collectibles.impl.packopening.video.PackRevealVideoPlayer
 import com.tangem.features.collectibles.impl.packopening.video.PackRevealVideoPlayer.VideoLoadState
@@ -75,6 +83,8 @@ internal class CollectiblesPackOpeningModelTest {
     private val router: Router = mockk(relaxed = true)
     private val accountStatusSupplier: CollectiblesAccountStatusSupplier = mockk()
     private val openCollectiblePackUseCase: OpenCollectiblePackUseCase = mockk()
+    private val getBuybackOfferUseCase: GetCollectibleBuybackOfferUseCase = mockk()
+    private val buybackCollectibleUseCase: BuybackCollectibleUseCase = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val userWallet = MockUserWalletFactory.create().copy(walletId = USER_WALLET_ID)
@@ -94,6 +104,8 @@ internal class CollectiblesPackOpeningModelTest {
             router,
             accountStatusSupplier,
             openCollectiblePackUseCase,
+            getBuybackOfferUseCase,
+            buybackCollectibleUseCase,
             userWalletsListRepository,
             messageSender,
             player,
@@ -438,6 +450,57 @@ internal class CollectiblesPackOpeningModelTest {
         verify(exactly = 1) { openCollectiblePackUseCase(userWallet, OpenPackRequest.Reopen(TX_ID)) }
         verify(exactly = 0) { router.popTo(any<Route>(), any()) }
         assertThat(model.reveal().stage).isEqualTo(Stage.Launching)
+    }
+
+    @Test
+    fun `GIVEN a purchase that has not reported a step WHEN approve tapped twice THEN one purchase runs`() =
+        runTest {
+            // Arrange
+            every { openCollectiblePackUseCase(any(), any()) } returns flow { awaitCancellation() }
+            val model = startModel()
+
+            // Act
+            model.content().onApproveClick()
+            model.content().onApproveClick()
+            runCurrent()
+
+            // Assert
+            verify(exactly = 1) { openCollectiblePackUseCase(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN a failed purchase WHEN approve tapped again THEN it is retried`() = runTest {
+        // Arrange
+        every { openCollectiblePackUseCase(any(), any()) } returns flowOf(OpenPackStep.Failed.PurchaseFailed)
+        val model = startModel()
+        model.content().onApproveClick()
+        advanceUntilIdle()
+
+        // Act
+        model.content().onApproveClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 2) { openCollectiblePackUseCase(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN the wallet is gone WHEN approve tapped THEN the purchase fails and can be tapped again`() = runTest {
+        // Arrange
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(emptyList())
+        val model = startModel()
+        model.content().onApproveClick()
+        advanceUntilIdle()
+
+        // Act
+        model.content().onApproveClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 2) {
+            messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_something_went_wrong)))
+        }
+        verify(exactly = 0) { openCollectiblePackUseCase(any(), any()) }
     }
 
     @Test
@@ -969,6 +1032,271 @@ internal class CollectiblesPackOpeningModelTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SellBack {
+
+        @BeforeEach
+        fun setUpBuyback() {
+            coEvery { getBuybackOfferUseCase(USER_WALLET_ID, PACK.nftAddress) } returns OFFER.right()
+            videoLoadState.value = VideoLoadState.Failed
+        }
+
+        @Test
+        fun `GIVEN an offer WHEN the pack opens THEN sell back shows its amount`() = runTest {
+            // Act
+            val model = openPack()
+
+            // Assert
+            assertThat(model.reveal().sellBack).isEqualTo(AVAILABLE_BUTTON)
+            coVerify(exactly = 1) { getBuybackOfferUseCase(USER_WALLET_ID, PACK.nftAddress) }
+        }
+
+        @Test
+        fun `GIVEN no offer yet WHEN five seconds pass THEN it is asked again and shown`() = runTest {
+            // Arrange
+            coEvery { getBuybackOfferUseCase(any(), any()) } returnsMany listOf(null.right(), OFFER.right())
+            val model = openPack(isOfferSettled = false)
+            assertThat(model.reveal().sellBack).isEqualTo(CHECKING_BUTTON)
+
+            // Act
+            advanceTimeBy(BUYBACK_POLLING_DELAY_MS + 1)
+
+            // Assert
+            assertThat(model.reveal().sellBack).isEqualTo(AVAILABLE_BUTTON)
+            coVerify(exactly = 2) { getBuybackOfferUseCase(any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN a failed check WHEN five seconds pass THEN it is asked again`() = runTest {
+            // Arrange
+            coEvery { getBuybackOfferUseCase(any(), any()) } returnsMany listOf(
+                CollectiblesError.Api(IllegalStateException()).left(),
+                OFFER.right(),
+            )
+            val model = openPack(isOfferSettled = false)
+
+            // Act
+            advanceTimeBy(BUYBACK_POLLING_DELAY_MS + 1)
+
+            // Assert
+            assertThat(model.reveal().sellBack).isEqualTo(AVAILABLE_BUTTON)
+        }
+
+        @Test
+        fun `GIVEN the screen is paused WHEN the pack opens THEN nothing is asked until it resumes`() = runTest {
+            // Arrange
+            val model = openPack(isResumed = false)
+            coVerify(exactly = 0) { getBuybackOfferUseCase(any(), any()) }
+
+            // Act
+            model.onResume()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.reveal().sellBack).isEqualTo(AVAILABLE_BUTTON)
+        }
+
+        @Test
+        fun `GIVEN polling WHEN the screen pauses THEN no more requests are sent`() = runTest {
+            // Arrange
+            coEvery { getBuybackOfferUseCase(any(), any()) } returns null.right()
+            val model = openPack(isOfferSettled = false)
+
+            // Act
+            model.onPause()
+            advanceTimeBy(BUYBACK_POLLING_DELAY_MS * 3)
+
+            // Assert
+            coVerify(exactly = 1) { getBuybackOfferUseCase(any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN the sale completes WHEN sell back tapped THEN machine details opens with a snackbar`() = runTest {
+            // Arrange
+            coEvery { buybackCollectibleUseCase(userWallet, PACK.nftAddress) } returns Unit.right()
+            val model = openPack()
+
+            // Act
+            model.reveal().onSellBackClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                messageSender.send(
+                    SnackbarMessage(
+                        message = resourceReference(
+                            id = R.string.collectibles_open_pack_sell_back_success,
+                            formatArgs = wrappedList("$42.50"),
+                        ),
+                    ),
+                )
+                router.pop()
+            }
+        }
+
+        @Test
+        fun `GIVEN a sale in progress WHEN back, close or keep card tapped THEN the screen stays`() = runTest {
+            // Arrange
+            coEvery { buybackCollectibleUseCase(any(), any()) } coAnswers { awaitCancellation() }
+            val model = openPack()
+
+            // Act
+            model.reveal().onSellBackClick()
+            runCurrent()
+            model.uiState.value.onBackClick()
+            model.uiState.value.onCloseClick()
+            model.reveal().onKeepCardClick()
+
+            // Assert
+            assertThat(model.reveal().sellBack).isEqualTo(IN_PROGRESS_BUTTON)
+            assertThat(model.reveal().isKeepCardEnabled).isFalse()
+            verify(exactly = 0) {
+                router.pop()
+                router.popTo(any<Route>(), any())
+            }
+        }
+
+        @Test
+        fun `GIVEN a sale in progress WHEN sell back tapped again THEN no second sale starts`() = runTest {
+            // Arrange
+            coEvery { buybackCollectibleUseCase(any(), any()) } coAnswers { awaitCancellation() }
+            val model = openPack()
+
+            // Act
+            model.reveal().onSellBackClick()
+            runCurrent()
+            model.reveal().onSellBackClick()
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { buybackCollectibleUseCase(any(), any()) }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a failed sale WHEN sell back tapped THEN the user stays on the card`(model: FailedSaleModel) =
+            runTest {
+                // Arrange
+                coEvery { buybackCollectibleUseCase(any(), any()) } returns model.failure.left()
+                val packOpening = openPack()
+
+                // Act
+                packOpening.reveal().onSellBackClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(packOpening.reveal().sellBack).isEqualTo(model.button)
+                if (model.snackbar == null) {
+                    verify(exactly = 0) { messageSender.send(any()) }
+                } else {
+                    verify(exactly = 1) { messageSender.send(SnackbarMessage(message = model.snackbar)) }
+                }
+                verify(exactly = 0) { router.pop() }
+            }
+
+        private fun provideTestModels() = listOf(
+            FailedSaleModel(
+                failure = BuybackError.NotAllowed,
+                button = UNAVAILABLE_BUTTON,
+                snackbar = stringReference("Buyback unavailable"),
+            ),
+            FailedSaleModel(
+                failure = BuybackError.Cancelled,
+                button = AVAILABLE_BUTTON,
+                snackbar = null,
+            ),
+            FailedSaleModel(
+                failure = BuybackError.CardRefused,
+                button = AVAILABLE_BUTTON,
+                snackbar = null,
+            ),
+            FailedSaleModel(
+                failure = BuybackError.Unexpected,
+                button = AVAILABLE_BUTTON,
+                snackbar = resourceReference(R.string.common_something_went_wrong),
+            ),
+        )
+
+        @Test
+        fun `GIVEN the sale is not confirmed WHEN sell back tapped THEN the offer is checked again`() = runTest {
+            // Arrange
+            coEvery { getBuybackOfferUseCase(any(), any()) } returnsMany listOf(OFFER.right(), null.right())
+            coEvery { buybackCollectibleUseCase(any(), any()) } returns BuybackError.NotConfirmed.left()
+            val model = openPack()
+
+            // Act
+            model.reveal().onSellBackClick()
+            runCurrent()
+
+            // Assert
+            assertThat(model.reveal().sellBack).isEqualTo(CHECKING_BUTTON)
+            assertThat(model.reveal().isKeepCardEnabled).isTrue()
+            verify(exactly = 1) {
+                messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_something_went_wrong)))
+            }
+            coVerify(exactly = 2) { getBuybackOfferUseCase(any(), any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the sale is not confirmed WHEN the offer comes back THEN sell back is available again`() = runTest {
+            // Arrange
+            coEvery { getBuybackOfferUseCase(any(), any()) } returnsMany
+                listOf(OFFER.right(), null.right(), OFFER.right())
+            coEvery { buybackCollectibleUseCase(any(), any()) } returns BuybackError.NotConfirmed.left()
+            val model = openPack()
+            model.reveal().onSellBackClick()
+            runCurrent()
+
+            // Act
+            advanceTimeBy(BUYBACK_POLLING_DELAY_MS + 1)
+
+            // Assert
+            assertThat(model.reveal().sellBack).isEqualTo(AVAILABLE_BUTTON)
+        }
+
+        @Test
+        fun `GIVEN the offer is being checked WHEN keep card tapped THEN machine details opens`() = runTest {
+            // Arrange
+            coEvery { getBuybackOfferUseCase(any(), any()) } returns null.right()
+            val model = openPack(isOfferSettled = false)
+
+            // Act
+            model.reveal().onKeepCardClick()
+
+            // Assert
+            assertThat(model.reveal().isKeepCardEnabled).isTrue()
+            verify(exactly = 1) { router.pop() }
+            model.onDestroy()
+        }
+
+        /**
+         * Opens the pack and lands on the card. With the offer still unknown polling never goes idle, so the
+         * clock is moved only as far as the short reveal needs.
+         */
+        private fun TestScope.openPack(
+            isResumed: Boolean = true,
+            isOfferSettled: Boolean = true,
+        ): CollectiblesPackOpeningModel {
+            val model = startModel()
+            if (isResumed) model.onResume()
+
+            model.content().onApproveClick()
+            if (isOfferSettled) advanceUntilIdle() else runCurrent()
+            model.reveal().onPackAnimationFinished()
+            runCurrent()
+
+            return model
+        }
+    }
+
+    internal data class FailedSaleModel(
+        val failure: BuybackError,
+        val button: SellBackButtonUM,
+        val snackbar: TextReference?,
+    )
+
     internal data class ThemeVideoModel(val isDarkTheme: Boolean, val videoUrl: String)
 
     private fun stubCardImages(job: CompletableDeferred<ImageResult>) {
@@ -994,6 +1322,8 @@ internal class CollectiblesPackOpeningModelTest {
             getMachineUseCase = getMachineUseCase,
             accountStatusSupplier = accountStatusSupplier,
             openCollectiblePackUseCase = openCollectiblePackUseCase,
+            getBuybackOfferUseCase = getBuybackOfferUseCase,
+            buybackCollectibleUseCase = buybackCollectibleUseCase,
             userWalletsListRepository = userWalletsListRepository,
             messageSender = messageSender,
             router = router,
@@ -1031,6 +1361,27 @@ internal class CollectiblesPackOpeningModelTest {
         )
 
         val PACK = createOpenedPack(txId = TX_ID)
+
+        const val BUYBACK_POLLING_DELAY_MS = 5_000L
+        val AMOUNT = BigDecimal("42.50")
+        val OFFER = CollectibleBuybackOffer(amount = AMOUNT, expiresAt = null)
+
+        val AVAILABLE_BUTTON = SellBackButtonUM(
+            textRef = resourceReference(R.string.collectibles_open_pack_sell_back_button, wrappedList("$42.50")),
+            isEnabled = true,
+            isLoading = false,
+        )
+        val IN_PROGRESS_BUTTON = AVAILABLE_BUTTON.copy(isLoading = true)
+        val CHECKING_BUTTON = SellBackButtonUM(
+            textRef = resourceReference(R.string.collectibles_open_pack_buyback_unavailable),
+            isEnabled = true,
+            isLoading = true,
+        )
+        val UNAVAILABLE_BUTTON = SellBackButtonUM(
+            textRef = resourceReference(R.string.collectibles_open_pack_buyback_unavailable),
+            isEnabled = false,
+            isLoading = false,
+        )
     }
 }
 

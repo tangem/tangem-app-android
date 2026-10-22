@@ -2,15 +2,9 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>BooleanPropertyNaming:BigDecimalPercentFormat.kt$BigDecimalPercentFormat$val withPercentSign: Boolean = true</ID>
-    <ID>BooleanPropertyNaming:FullScreen.kt$FullScreenLayout$private val focusable: Boolean</ID>
-    <ID>BooleanPropertyNaming:TokenItemState.kt$TokenItemState.TitleState.Content$val earnApyIsActive: Boolean = false</ID>
     <ID>CastNullableToNonNullableType:DialogFullScreen.kt$as</ID>
     <ID>CastNullableToNonNullableType:FullScreen.kt$FullScreenLayout$as</ID>
     <ID>NestedScopeFunctions:Shadow.kt$apply { isDither = true isAntiAlias = true setShadowLayer( radiusPx, offset.x.toPx(), offset.y.toPx(), color.toArgb(), ) }</ID>
-    <ID>NoNameShadowing:SimpleTextField.kt$textStyle</ID>
-    <ID>NoNameShadowing:TangemTheme.kt$systemUiController</ID>
-    <ID>NoNameShadowing:TextAnimatedCounter.kt$char</ID>
     <ID>PropertyUsedBeforeDeclaration:InputManager.kt$InputManager$_query</ID>
   </CurrentIssues>
 </SmellBaseline>

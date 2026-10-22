@@ -1,7 +1,9 @@
 package com.tangem.domain.polymarket.interactor
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.raise.either
+import arrow.core.recover
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.model.PolymarketAddresses
@@ -13,7 +15,10 @@ import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
+import com.tangem.domain.polymarket.usecase.isRetryable
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Decides where a user lands when they open the feature: the feed, or the screen that owes onboarding.
@@ -25,9 +30,13 @@ import com.tangem.utils.logging.TangemLogger
  * stored locally, so a reinstall, a new device or a wallet onboarded elsewhere leaves the status ready with
  * nothing to sign with. Such a user still owes onboarding, which restores the credentials without deploying.
  *
- * A wallet the backend has already confirmed resolves from local state alone. [invoke] may open a card session
- * to derive the owner address; [withoutPrompting] stops short of that instead of paying for a session the user
- * never asked for.
+ * A wallet confirmed earlier is still checked against the backend whenever its addresses are stored: the backend
+ * can demote a ready wallet (a new approvals set), and only its status sends that user back to onboarding. The
+ * local confirmation answers alone only when the read fails transiently or outlasts five seconds,
+ * or the addresses are not stored; a
+ * mismatching deposit wallet or a rejected request fails the entry as it does for an unconfirmed wallet.
+ * [invoke] may open a card session to derive the owner address; [withoutPrompting] stops short of that instead of
+ * paying for a session the user never asked for.
  */
 class ResolvePolymarketEntryInteractor(
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
@@ -39,7 +48,7 @@ class ResolvePolymarketEntryInteractor(
 
     suspend operator fun invoke(userWalletId: UserWalletId): Either<PolymarketOnboardingError, PolymarketEntry> =
         either {
-            confirmedEntry(userWalletId)
+            confirmedEntry(userWalletId).bind()
                 ?: entryFor(addresses = deriveAddresses(userWalletId).bind()).bind()
         }
 
@@ -49,7 +58,7 @@ class ResolvePolymarketEntryInteractor(
      */
     suspend fun withoutPrompting(userWalletId: UserWalletId): Either<PolymarketOnboardingError, PolymarketEntry> =
         either {
-            confirmedEntry(userWalletId)?.let { return@either it }
+            confirmedEntry(userWalletId).bind()?.let { return@either it }
 
             val addresses = derivePolymarketAddressesUseCase.stored(userWalletId)
             if (addresses == null) {
@@ -74,13 +83,28 @@ class ResolvePolymarketEntryInteractor(
      * The entry of a wallet already confirmed ready, or `null` when it is not confirmed or has nothing to sign
      * with — either way the backend has to be asked.
      */
-    private suspend fun confirmedEntry(userWalletId: UserWalletId): PolymarketEntry? {
-        if (!polymarketOnboardedStore.isOnboardedSync(userWalletId)) return null
-        if (getPolymarketApiCredentialsUseCase(userWalletId) == null) return null
+    private suspend fun confirmedEntry(
+        userWalletId: UserWalletId,
+    ): Either<PolymarketOnboardingError, PolymarketEntry?> = either {
+        if (!polymarketOnboardedStore.isOnboardedSync(userWalletId)) return@either null
+        if (getPolymarketApiCredentialsUseCase(userWalletId) == null) return@either null
 
-        TangemLogger.i("Resolve: $userWalletId is confirmed onboarded")
+        val addresses = derivePolymarketAddressesUseCase.stored(userWalletId)
+        if (addresses == null) {
+            TangemLogger.i("Resolve: $userWalletId is confirmed onboarded, no stored addresses to recheck")
+            return@either PolymarketEntry.Onboarded
+        }
 
-        return PolymarketEntry.Onboarded
+        val recheck = withTimeoutOrNull(CONFIRMED_RECHECK_TIMEOUT) { entryFor(addresses) }
+            ?: PolymarketOnboardingError.Network.left()
+
+        recheck
+            .recover { error ->
+                if (!error.isRetryable()) raise(error)
+                TangemLogger.i("Resolve: $userWalletId is confirmed onboarded, recheck unavailable: $error")
+                PolymarketEntry.Onboarded
+            }
+            .bind()
     }
 
     private suspend fun entryFor(addresses: PolymarketAddresses): Either<PolymarketOnboardingError, PolymarketEntry> =
@@ -121,5 +145,9 @@ class ResolvePolymarketEntryInteractor(
         status != PolymarketWalletStatus.READY_TO_TRADE -> PolymarketEntry.Onboard(status = status)
         hasCredentials -> PolymarketEntry.Onboarded
         else -> PolymarketEntry.Reconnect
+    }
+
+    private companion object {
+        val CONFIRMED_RECHECK_TIMEOUT = 5.seconds
     }
 }
