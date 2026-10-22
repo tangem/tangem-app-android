@@ -9,12 +9,17 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.message.EventMessage
+import com.tangem.core.ui.message.ModalMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.features.polymarket.impl.R
+import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
+import com.tangem.features.polymarket.impl.common.region.createPredictionRegionAccess
+import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
@@ -22,7 +27,9 @@ import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
@@ -59,13 +66,66 @@ internal class PolymarketEventDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
+        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
         assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
     }
 
     @Test
-    fun `GIVEN load fails WHEN model created THEN error AND retry reloads to content`() = runTest {
+    fun `GIVEN initial load fails once WHEN two seconds pass THEN retry shows content without an error`() = runTest {
         // Arrange
         coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+            PolymarketEventError.Network.left(),
+            createEvent().right(),
+        )
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Act
+        advanceTimeBy(RETRY_DELAY_MILLIS - 1)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
+        assertThat(model.uiState.value).isEqualTo(PolymarketEventDetailsUM.Loading)
+
+        advanceTimeBy(1)
+        runCurrent()
+
+        coVerify(exactly = 2) { getEventUseCase(eventId = "event-1") }
+        assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
+        verify(exactly = 0) { messageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN initial load keeps failing WHEN silent retry fails THEN error is shown without further retries`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(eventId = "event-1") } returns PolymarketEventError.Network.left()
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Act
+        advanceTimeBy(RETRY_DELAY_MILLIS - 1)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
+        assertThat(model.uiState.value).isEqualTo(PolymarketEventDetailsUM.Loading)
+
+        advanceTimeBy(1)
+        runCurrent()
+
+        assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Error::class.java)
+        advanceUntilIdle()
+        coVerify(exactly = 2) { getEventUseCase(eventId = "event-1") }
+        verify(exactly = 0) { messageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN load and silent retry fail WHEN manual retry tapped THEN reload can retry silently to content`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+            PolymarketEventError.Network.left(),
+            PolymarketEventError.Network.left(),
             PolymarketEventError.Network.left(),
             createEvent().right(),
         )
@@ -75,10 +135,32 @@ internal class PolymarketEventDetailsModelTest {
         // Act
         val error = model.uiState.value as PolymarketEventDetailsUM.Error
         error.onRetryClick()
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 3) { getEventUseCase(eventId = "event-1") }
+        assertThat(model.uiState.value).isEqualTo(PolymarketEventDetailsUM.Loading)
+
+        advanceTimeBy(RETRY_DELAY_MILLIS)
+        runCurrent()
+
+        coVerify(exactly = 4) { getEventUseCase(eventId = "event-1") }
+        assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
+    }
+
+    @Test
+    fun `GIVEN initial retry is pending WHEN model destroyed THEN no second request is sent`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(eventId = "event-1") } returns PolymarketEventError.Network.left()
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Act
+        model.onDestroy()
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
+        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
     }
 
     @Test
@@ -135,6 +217,28 @@ internal class PolymarketEventDetailsModelTest {
                 onComplete = any(),
             )
         }
+    }
+
+    @Test
+    fun `GIVEN a blocked region WHEN outcome clicked THEN the restriction is explained AND no order opens`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(eventId = "event-1") } returns createEvent().right()
+        val model = createModel(testScope = this, regionAccess = createPredictionRegionAccess(isBlocked = true))
+        advanceUntilIdle()
+        val message = slot<EventMessage>()
+        every { messageSender.send(capture(message)) } returns Unit
+
+        // Act
+        (model.uiState.value as PolymarketEventDetailsUM.Content)
+            .activeMarkets.single()
+            .outcomes.single()
+            .onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { router.push(route = any<PolymarketRoute.PlacePrediction>(), onComplete = any()) }
+        assertThat((message.captured as ModalMessage).messageModalUM.content)
+            .isEqualTo(regionRestrictionsMessage().messageModalUM.content)
     }
 
     @Test
@@ -236,7 +340,7 @@ internal class PolymarketEventDetailsModelTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 2) { getEventUseCase(eventId = "event-1") }
         assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Error::class.java)
         model.onDestroy()
     }
@@ -339,7 +443,10 @@ internal class PolymarketEventDetailsModelTest {
         model.onDestroy()
     }
 
-    private fun createModel(testScope: TestScope): PolymarketEventDetailsModel {
+    private fun createModel(
+        testScope: TestScope,
+        regionAccess: PredictionRegionAccess = createPredictionRegionAccess(),
+    ): PolymarketEventDetailsModel {
         return PolymarketEventDetailsModel(
             paramsContainer = MutableParamsContainer(
                 value = PolymarketEventDetailsComponent.Params(
@@ -352,6 +459,7 @@ internal class PolymarketEventDetailsModelTest {
             getPolymarketEventUseCase = getEventUseCase,
             shareManager = shareManager,
             messageSender = messageSender,
+            regionAccess = regionAccess,
         ).also { model = it }
     }
 

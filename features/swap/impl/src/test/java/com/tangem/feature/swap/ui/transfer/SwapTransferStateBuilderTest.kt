@@ -53,6 +53,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
@@ -1021,23 +1022,28 @@ internal class SwapTransferStateBuilderTest {
             assertThat(result.swapButton.isEnabled).isFalse()
         }
 
-    @Test
-    fun `GIVEN a transfer to the prediction account WHEN the success state is built THEN the destination title is localized`() {
+    @ParameterizedTest
+    @MethodSource("provideTargetAccountTitles")
+    fun `GIVEN a transfer to a target-only account WHEN the success state is built THEN the destination title is localized`(
+        model: TargetAccountTitleModel,
+    ) {
         // Arrange
         val transferState = buildTransferState(fromAmount = BigDecimal.ONE, toAmount = BigDecimal.ONE, isAccountsMode = true)
         val dataState = SwapProcessDataState(
             fromSwapCurrencyStatus = fromCurrencyStatus,
-            toSwapCurrencyStatus = toCurrencyStatus.copy(account = Account.Prediction(toCurrencyStatus.userWalletId)),
+            toSwapCurrencyStatus = toCurrencyStatus.copy(account = model.account),
             amount = BigDecimal.ONE.toPlainString(),
             currentTransferState = transferState,
         )
 
         // Act
-        val result = sut.createTangemPayWithdrawalSuccessState(
+        val result = sut.createSuccessState(
             uiState = baseStateHolder(),
             dataState = dataState,
             fee = null,
-            onExploreClick = {},
+            txUrl = "",
+            timestamp = 0L,
+            onExplorerClick = {},
             onShareClick = {},
         )
 
@@ -1045,41 +1051,31 @@ internal class SwapTransferStateBuilderTest {
         assertThat(requireNotNull(result.successState).toTitle).isEqualTo(
             AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.swapping_to_account_title),
-                name = resourceReference(R.string.prediction_account_title),
-                icon = AccountIconUM.Prediction,
+                name = resourceReference(model.nameId),
+                icon = model.icon,
             ),
         )
     }
 
-    @Test
-    fun `GIVEN a transfer to the collectibles account WHEN the success state is built THEN the destination title is localized`() {
-        // Arrange
-        val transferState = buildTransferState(fromAmount = BigDecimal.ONE, toAmount = BigDecimal.ONE, isAccountsMode = true)
-        val dataState = SwapProcessDataState(
-            fromSwapCurrencyStatus = fromCurrencyStatus,
-            toSwapCurrencyStatus = toCurrencyStatus.copy(account = Account.Collectibles(toCurrencyStatus.userWalletId)),
-            amount = BigDecimal.ONE.toPlainString(),
-            currentTransferState = transferState,
-        )
+    private fun provideTargetAccountTitles() = listOf(
+        TargetAccountTitleModel(
+            account = Account.Prediction(toCurrencyStatus.userWalletId),
+            nameId = R.string.prediction_account_title,
+            icon = AccountIconUM.Prediction,
+        ),
+        TargetAccountTitleModel(
+            account = Account.Collectibles(toCurrencyStatus.userWalletId),
+            nameId = R.string.collectibles_main_title,
+            icon = AccountIconUM.Collectibles,
+        ),
+        TargetAccountTitleModel(
+            account = Account.Money(toCurrencyStatus.userWalletId),
+            nameId = R.string.money_account_main_name,
+            icon = AccountIconUM.Money,
+        ),
+    )
 
-        // Act
-        val result = sut.createTangemPayWithdrawalSuccessState(
-            uiState = baseStateHolder(),
-            dataState = dataState,
-            fee = null,
-            onExploreClick = {},
-            onShareClick = {},
-        )
-
-        // Assert
-        assertThat(requireNotNull(result.successState).toTitle).isEqualTo(
-            AccountTitleUM.Account(
-                prefixText = resourceReference(R.string.swapping_to_account_title),
-                name = resourceReference(R.string.collectibles_main_title),
-                icon = AccountIconUM.Collectibles,
-            ),
-        )
-    }
+    data class TargetAccountTitleModel(val account: Account, val nameId: Int, val icon: AccountIconUM)
 
     @Test
     fun `GIVEN transfer dataState WHEN createTangemPayWithdrawalSuccessState THEN feeless transfer success holder is built`() {

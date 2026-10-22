@@ -12,6 +12,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_chart_line_vertical_20
@@ -460,7 +461,7 @@ private fun TxInfo.signedAmount(currency: CryptoCurrency): String {
         status is TxInfo.TransactionStatus.Failed -> ""
         amount.isZero() -> ""
         else -> when (type.amountSign()) {
-            AmountSign.BY_DIRECTION -> if (isOutgoing) "${StringsSigns.MINUS} " else "${StringsSigns.PLUS} "
+            AmountSign.BY_DIRECTION -> if (isOutgoing) "${StringsSigns.DASH_SIGN} " else "${StringsSigns.PLUS} "
             AmountSign.ALWAYS_PLUS -> "${StringsSigns.PLUS} "
             AmountSign.NONE -> ""
         }
@@ -484,22 +485,28 @@ private fun TxInfo.headerIcon(currency: CryptoCurrency): TxIcon {
         is TransactionType.Staking.Unstake,
         is TransactionType.Staking.Restake,
         -> TxIcon.Vector(Icons.ic_stack_20)
-        is TransactionType.YieldSupply.Enter,
-        is TransactionType.YieldSupply.Exit,
-        -> TxIcon.Vector(Icons.ic_chart_line_vertical_20)
-        // A non-withdraw Send is a plain transfer — directional arrow. A withdraw stays a yield operation and
-        // keeps the yield lightning glyph (falls through to the YieldSupply branch below); it only drops the
-        // validator/counterparty.
-        is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {
-            TxIcon.Vector(Icons.ic_lightning_20)
-        } else {
-            TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
-        }
-        is TransactionType.YieldSupply -> TxIcon.Vector(Icons.ic_lightning_20)
+        is TransactionType.YieldSupply -> yieldSupplyIcon(type)
         is TransactionType.Operation -> TxIcon.Vector(Icons.ic_document_20)
         is TransactionType.Swap -> TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20)
         else -> TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
     }
+}
+
+private fun TxInfo.yieldSupplyIcon(type: TransactionType.YieldSupply): TxIcon = when (type) {
+    is TransactionType.YieldSupply.Enter,
+    is TransactionType.YieldSupply.Exit,
+    -> TxIcon.Vector(Icons.ic_chart_line_vertical_20)
+    is TransactionType.YieldSupply.DeployContract -> TxIcon.Vector(Icons.ic_document_20)
+    is TransactionType.YieldSupply.InitializeToken -> TxIcon.Res(R.drawable.ic_gear_24)
+    is TransactionType.YieldSupply.ReactivateToken -> TxIcon.Vector(Icons.ic_arrow_refresh_20)
+    // A non-withdraw Send is a plain transfer — directional arrow. A withdraw stays a yield operation and keeps the
+    // lightning glyph; it only drops the validator/counterparty.
+    is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {
+        TxIcon.Vector(Icons.ic_lightning_20)
+    } else {
+        TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
+    }
+    TransactionType.YieldSupply.Topup -> TxIcon.Vector(Icons.ic_lightning_20)
 }
 
 // endregion

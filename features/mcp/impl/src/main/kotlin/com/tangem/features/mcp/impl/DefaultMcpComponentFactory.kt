@@ -5,12 +5,14 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.mcp.models.McpRequest
 import com.tangem.features.mcp.api.McpComponentFactory
 import com.tangem.features.mcp.impl.pair.McpPairComponent
+import com.tangem.features.send.api.mcp.SendIntentComponent
 import com.tangem.features.swap.mcp.ExchangeIntentComponent
 import javax.inject.Inject
 
 internal class DefaultMcpComponentFactory @Inject constructor(
     private val mcpPairComponentFactory: McpPairComponent.Factory,
     private val exchangeIntentComponentFactory: ExchangeIntentComponent.Factory,
+    private val sendIntentComponentFactory: SendIntentComponent.Factory,
 ) : McpComponentFactory {
 
     override fun create(context: AppComponentContext, request: McpRequest): ComposableContentComponent {
@@ -26,6 +28,10 @@ internal class DefaultMcpComponentFactory @Inject constructor(
             is McpRequest.Intent.Source.Express -> when (source.type) {
                 McpRequest.Intent.Source.Express.Type.EXCHANGE -> exchangeIntentComponentFactory
                     .create(context = context, params = ExchangeIntentComponent.Params(intentId = request.id))
+            }
+            is McpRequest.Intent.Source.Transaction -> when (source.type) {
+                McpRequest.Intent.Source.Transaction.Type.SEND -> sendIntentComponentFactory
+                    .create(context = context, params = SendIntentComponent.Params(intentId = request.id))
             }
         }
 }

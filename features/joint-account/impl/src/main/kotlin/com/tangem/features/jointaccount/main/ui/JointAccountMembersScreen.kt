@@ -24,12 +24,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.account.AccountIconSize
-import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.footer.TangemFooter
+import com.tangem.core.ui.ds2.loader.TangemLoader
+import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
@@ -40,7 +42,11 @@ import com.tangem.core.ui.res.generated.icons.*
 import com.tangem.core.ui.test.accounts.JointAccountCreationTestTags
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
+import com.tangem.features.jointaccount.main.JointAccountMembersUM.MemberStatusUM
 import com.tangem.features.jointaccount.main.JointAccountMembersUM.MemberUM
+import com.tangem.features.jointaccount.main.JointAccountMembersUM.SlotActionUM
+import com.tangem.features.jointaccount.main.JointAccountMembersUM.SlotStatusUM
+import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.toImmutableList
 import com.tangem.core.ui.R as CoreUiR
 
@@ -72,31 +78,38 @@ internal fun JointAccountMembersScreen(state: JointAccountMembersUM, modifier: M
 @Composable
 private fun MembersFooter(state: JointAccountMembersUM.FooterUM, modifier: Modifier = Modifier) {
     val hint = state.hint
+    val button = state.button
+    if (button == null) {
+        TangemFooter(modifier = modifier) {
+            if (hint != null) FooterHint(hint = hint)
+        }
+        return
+    }
+
     TangemFooter(
         modifier = modifier,
-        extraTop = hint?.let {
-            {
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = it.resolveReference(),
-                    color = TangemTheme.colors3.text.secondary,
-                    style = TangemTheme.typography3.caption.medium,
-                    textAlign = TextAlign.Center,
-                )
-            }
-        },
+        extraTop = hint?.let { { FooterHint(hint = it) } },
     ) {
         TangemButton(
             modifier = Modifier.fillMaxWidth(),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
-            text = resourceReference(CoreUiR.string.joint_account_invite_members_verify_account),
-            iconEnd = state.button.walletIconRes?.let { TangemIconUM.Icon(iconRes = it) },
-            isEnabled = state.button.isEnabled,
-            isLoading = state.button.isLoading,
-            onClick = state.button.onClick,
+            text = resourceReference(CoreUiR.string.joint_account_confirm_shared_address),
+            isEnabled = button.isEnabled,
+            onClick = button.onClick,
         )
     }
+}
+
+@Composable
+private fun FooterHint(hint: TextReference, modifier: Modifier = Modifier) {
+    Text(
+        modifier = modifier.fillMaxWidth(),
+        text = hint.resolveReference(),
+        color = TangemTheme.colors3.text.secondary,
+        style = TangemTheme.typography3.caption.medium,
+        textAlign = TextAlign.Center,
+    )
 }
 
 @Composable
@@ -132,7 +145,7 @@ private fun MembersContent(state: JointAccountMembersUM, contentPadding: Padding
     ) {
         val header = state.header
         if (header != null) {
-            item(key = "header") { MembersHeader(title = header.title) }
+            item(key = "header") { MembersHeader(header = header) }
         } else {
             item(key = "top_spacer") { Spacer(Modifier.height(12.dp)) }
         }
@@ -159,11 +172,6 @@ private fun MembersContent(state: JointAccountMembersUM, contentPadding: Padding
             )
         }
 
-        val waitingLabel = state.waitingLabel
-        if (waitingLabel != null) {
-            item(key = "waiting_label") { SectionLabel(text = waitingLabel) }
-        }
-
         items(items = state.freeSlots, key = { it.id }) { slot ->
             FreeSlotRow(
                 slot = slot,
@@ -174,13 +182,23 @@ private fun MembersContent(state: JointAccountMembersUM, contentPadding: Padding
 }
 
 @Composable
-private fun MembersHeader(title: TextReference, modifier: Modifier = Modifier) {
-    Text(
-        text = title.resolveReference(),
-        style = TangemTheme.typography3.heading.medium,
-        color = TangemTheme.colors3.text.primary,
-        modifier = modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-    )
+private fun MembersHeader(header: JointAccountMembersUM.HeaderUM, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(horizontal = 24.dp, vertical = 12.dp)) {
+        Text(
+            text = header.title.resolveReference(),
+            style = TangemTheme.typography3.heading.medium,
+            color = TangemTheme.colors3.text.primary,
+        )
+        val subtitle = header.subtitle
+        if (subtitle != null) {
+            SpacerH(8.dp)
+            Text(
+                text = subtitle.resolveReference(),
+                style = TangemTheme.typography3.body.medium,
+                color = TangemTheme.colors3.text.secondary,
+            )
+        }
+    }
 }
 
 @Composable
@@ -192,7 +210,7 @@ private fun SummaryCard(state: JointAccountMembersUM.SummaryCardUM, modifier: Mo
             verticalAlignment = TangemRowVerticalAlignment.Center,
             startSlot = { AccountIcon(name = state.name, icon = state.icon, size = AccountIconSize.Default) },
             titleSlot = { TangemRowText(text = state.name, role = TangemRowTextRole.Title) },
-            subtitleSlot = { TangemRowText(text = state.progress, role = TangemRowTextRole.Subtitle) },
+            subtitleSlot = { TangemRowText(text = state.membersCount, role = TangemRowTextRole.Subtitle) },
         )
         TangemRow(
             verticalAlignment = TangemRowVerticalAlignment.Center,
@@ -258,32 +276,35 @@ private fun JoinedMemberRow(member: MemberUM.Joined, modifier: Modifier = Modifi
                 size = AccountIconSize.ContactDefault,
             )
         },
-        titleSlot = {
-            TangemRowText(
-                text = member.name,
-                role = TangemRowTextRole.Title,
-                modifier = Modifier.weight(weight = 1f, fill = false),
-            )
-            if (member.isYou) {
-                Spacer(Modifier.width(4.dp))
-                TangemBadge(
-                    text = resourceReference(CoreUiR.string.joint_account_members_role_you),
-                    size = TangemBadge.Size.X4,
-                )
-            }
-        },
-        subtitleSlot = { TangemRowText(text = member.status, role = TangemRowTextRole.Subtitle) },
-        endSlot = if (member.isCreator) {
-            {
-                TangemBadge(
-                    text = resourceReference(CoreUiR.string.joint_account_invite_members_creator),
-                    status = TangemBadge.Status.Info,
-                    size = TangemBadge.Size.X6,
-                )
-            }
+        titleSlot = { TangemRowText(text = member.name, role = TangemRowTextRole.Title) },
+        subtitleSlot = { TangemRowText(text = memberRole(member = member), role = TangemRowTextRole.Subtitle) },
+        endSlot = { MemberStatusBadge(status = member.status) },
+    )
+}
+
+@Composable
+private fun memberRole(member: MemberUM.Joined): TextReference {
+    val role = stringResourceSafe(
+        if (member.isCreator) {
+            CoreUiR.string.joint_account_invite_members_creator
         } else {
-            null
+            CoreUiR.string.joint_account_invite_members_member
         },
+    )
+    return if (member.isYou) {
+        val you = stringResourceSafe(CoreUiR.string.joint_account_members_role_you)
+        stringReference("$role ${StringsSigns.DOT} $you")
+    } else {
+        stringReference(role)
+    }
+}
+
+@Composable
+private fun MemberStatusBadge(status: MemberStatusUM) {
+    TangemBadge(
+        text = status.text,
+        status = status.badgeStatus,
+        size = TangemBadge.Size.X6,
     )
 }
 
@@ -295,24 +316,70 @@ private fun FreeSlotRow(slot: MemberUM.FreeSlot, modifier: Modifier = Modifier) 
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = { FreeSlotAvatar() },
         titleSlot = { TangemRowText(text = slot.title, role = TangemRowTextRole.Title) },
-        subtitleSlot = { TangemRowText(text = slot.status, role = TangemRowTextRole.Subtitle) },
+        subtitleSlot = { FreeSlotStatus(status = slot.status) },
         endSlot = slot.action?.let { action ->
-            { SlotActionButton(action = action) }
+            { SlotAction(action = action) }
         },
     )
 }
 
 @Composable
-private fun SlotActionButton(action: JointAccountMembersUM.SlotActionUM) {
-    val text = when (action) {
-        is JointAccountMembersUM.SlotActionUM.Invite -> CoreUiR.string.joint_account_invite_members_invite
-        is JointAccountMembersUM.SlotActionUM.Resend -> CoreUiR.string.joint_account_invite_members_resend
+private fun FreeSlotStatus(status: SlotStatusUM) {
+    when (status) {
+        is SlotStatusUM.NotInvited -> TangemRowText(
+            text = resourceReference(CoreUiR.string.joint_account_invite_members_not_invited),
+            role = TangemRowTextRole.Subtitle,
+        )
+        is SlotStatusUM.WaitingToJoin -> TangemRowText(
+            text = resourceReference(CoreUiR.string.joint_account_invite_members_waiting_to_join),
+            role = TangemRowTextRole.Subtitle,
+        )
+        is SlotStatusUM.Invited -> TangemRowText(text = status.label, role = TangemRowTextRole.Subtitle)
+        is SlotStatusUM.Expired -> Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResourceSafe(CoreUiR.string.joint_account_invite_members_invite_expired),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.status.warning,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(weight = 1f, fill = false),
+            )
+            Spacer(Modifier.width(4.dp))
+            Icon(
+                imageVector = Icons.ic_clock_16,
+                tint = TangemTheme.colors3.icon.status.warning,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+            )
+        }
     }
+}
+
+@Composable
+private fun SlotAction(action: SlotActionUM) {
+    when (action) {
+        is SlotActionUM.Invite -> SlotActionButton(
+            textRes = CoreUiR.string.joint_account_invite_members_invite,
+            onClick = action.onClick,
+        )
+        is SlotActionUM.ReInvite -> SlotActionButton(
+            textRes = CoreUiR.string.joint_account_invite_members_re_invite,
+            onClick = action.onClick,
+        )
+        is SlotActionUM.Loading -> TangemLoader(
+            size = TangemLoaderSize.X24,
+            color = TangemTheme.colors3.icon.secondary,
+        )
+    }
+}
+
+@Composable
+private fun SlotActionButton(textRes: Int, onClick: () -> Unit) {
     TangemButton(
         variant = TangemButton.Variant.Secondary,
         size = TangemButton.Size.X9,
-        text = resourceReference(text),
-        onClick = action.onClick,
+        text = resourceReference(textRes),
+        onClick = onClick,
     )
 }
 
@@ -370,76 +437,72 @@ private class JointAccountMembersPreviewProvider :
         collection = listOf(
             previewState(
                 title = "Invite members",
-                progress = "1 of 5 members joined",
                 joinedCount = 1,
-                canInvite = true,
+                slots = List(size = 4) { PreviewSlot.NotInvited },
+                hint = "Invite 4 more members",
             ),
             previewState(
                 title = "Invite members",
-                progress = "3 of 5 members joined",
-                joinedCount = 3,
-                canInvite = true,
-                isFirstSlotResend = true,
+                joinedCount = 2,
+                slots = listOf(PreviewSlot.Invited, PreviewSlot.Expired, PreviewSlot.Loading),
+                hint = "Awaiting for 3 members to join",
             ),
             previewState(
                 title = "Waiting for members",
-                progress = "2 of 5 members joined",
                 joinedCount = 2,
+                slots = List(size = 3) { PreviewSlot.NotInvited },
                 canInvite = false,
+                hint = "Awaiting for 3 members to join",
             ),
             previewState(
                 title = "Invite members",
-                progress = "5 of 5 members joined",
                 joinedCount = 5,
-                canInvite = false,
-                canActivate = true,
+                slots = emptyList(),
+                hint = "Everyone has joined",
+            ),
+            previewState(
+                title = "Confirm the account",
+                subtitle = "Before using your Joint Account, make sure every member sees exactly the same address.",
+                joinedCount = 5,
+                slots = emptyList(),
+                memberStatus = MemberStatusUM.NotConfirmed,
+                isButtonEnabled = true,
+            ),
+            previewState(
+                title = "Confirm the account",
+                subtitle = "Before using your Joint Account, make sure every member sees exactly the same address.",
+                joinedCount = 5,
+                slots = emptyList(),
+                memberStatus = MemberStatusUM.Confirmed,
+                hint = "4 members still need to confirm",
+                hasButton = false,
             ),
             previewState(
                 title = "Members",
-                progress = "5 of 5 members joined",
                 joinedCount = 5,
-                canInvite = false,
+                slots = emptyList(),
                 completed = true,
             ),
         ),
     )
 
+private enum class PreviewSlot { NotInvited, Invited, Expired, Loading }
+
 @Suppress("LongParameterList")
 private fun previewState(
     title: String,
-    progress: String,
     joinedCount: Int,
-    canInvite: Boolean,
-    isFirstSlotResend: Boolean = false,
-    canActivate: Boolean = false,
+    slots: List<PreviewSlot>,
+    subtitle: String? = null,
+    canInvite: Boolean = true,
+    memberStatus: MemberStatusUM = MemberStatusUM.Joined,
+    hint: String? = null,
+    isButtonEnabled: Boolean = false,
+    hasButton: Boolean = true,
     completed: Boolean = false,
 ): JointAccountMembersUM {
-    val joined = List(size = joinedCount) { index ->
-        MemberUM.Joined(
-            id = "member_$index",
-            avatar = JointAccountMembersUM.MemberAvatarUM(
-                monogram = "I",
-                color = CryptoPortfolioIcon.Color.entries[index % CryptoPortfolioIcon.Color.entries.size],
-            ),
-            name = stringReference(if (index == 0) "Ivan Zolo" else "Member $index"),
-            isYou = index == 0,
-            isCreator = index == 0,
-            status = stringReference("Joined"),
-            onInfoClick = {},
-        )
-    }
-    val freeSlots = List(size = (5 - joinedCount).coerceAtLeast(0)) { index ->
-        MemberUM.FreeSlot(
-            id = "slot_$index",
-            title = stringReference("Member ${joinedCount + index}"),
-            status = stringReference(if (isFirstSlotResend && index == 0) "Invited" else "Not invited"),
-            action = when {
-                !canInvite -> null
-                isFirstSlotResend && index == 0 -> JointAccountMembersUM.SlotActionUM.Resend(onClick = {})
-                else -> JointAccountMembersUM.SlotActionUM.Invite(onClick = {})
-            },
-        )
-    }
+    val joined = previewJoined(joinedCount = joinedCount, ownStatus = memberStatus)
+    val freeSlots = previewSlots(slots = slots, joinedCount = joinedCount, canInvite = canInvite)
     return JointAccountMembersUM(
         topBar = if (completed) {
             JointAccountMembersUM.TopBarUM.Titled(title = stringReference(title), onBackClick = {})
@@ -449,7 +512,7 @@ private fun previewState(
         header = if (completed) {
             null
         } else {
-            JointAccountMembersUM.HeaderUM(title = stringReference(title))
+            JointAccountMembersUM.HeaderUM(title = stringReference(title), subtitle = subtitle?.let(::stringReference))
         },
         summaryCard = JointAccountMembersUM.SummaryCardUM(
             icon = AccountIconUM.CryptoPortfolio(
@@ -457,27 +520,74 @@ private fun previewState(
                 color = CryptoPortfolioIcon.Color.CandyGrapeFizz,
             ),
             name = stringReference("Family savings"),
-            progress = stringReference(progress),
+            membersCount = stringReference("5 members"),
             approvals = stringReference("Any 2 of 5"),
             onApprovalsInfoClick = {},
         ),
-        joined = joined.toImmutableList(),
-        freeSlots = freeSlots.toImmutableList(),
+        joined = joined,
+        freeSlots = freeSlots,
         membersLabel = if (joined.isNotEmpty()) stringReference("Members") else null,
-        waitingLabel = if (freeSlots.isNotEmpty()) stringReference("Waiting to join") else null,
         footer = if (completed) {
             null
         } else {
-            JointAccountMembersUM.FooterUM(
-                hint = if (canActivate) null else stringReference("${freeSlots.size} members still need to join"),
-                button = JointAccountMembersUM.VerifyButtonUM(
-                    isEnabled = canActivate,
-                    isLoading = false,
-                    walletIconRes = CoreUiR.drawable.ic_tangem_24,
-                    onClick = {},
-                ),
+            previewFooter(
+                hint = hint,
+                hasButton = hasButton,
+                isEnabled = isButtonEnabled,
             )
         },
     )
 }
+
+private fun previewJoined(joinedCount: Int, ownStatus: MemberStatusUM) = List(size = joinedCount) { index ->
+    MemberUM.Joined(
+        id = "member_$index",
+        avatar = JointAccountMembersUM.MemberAvatarUM(
+            monogram = "I",
+            color = CryptoPortfolioIcon.Color.entries[index % CryptoPortfolioIcon.Color.entries.size],
+        ),
+        name = stringReference(if (index == 0) "Ivan Zolo" else "Member $index"),
+        isYou = index == 0,
+        isCreator = index == 0,
+        status = when {
+            ownStatus == MemberStatusUM.Joined -> MemberStatusUM.Joined
+            index == 0 -> ownStatus
+            else -> MemberStatusUM.NotConfirmed
+        },
+        onInfoClick = {},
+    )
+}.toImmutableList()
+
+private fun previewSlots(slots: List<PreviewSlot>, joinedCount: Int, canInvite: Boolean) = slots
+    .mapIndexed { index, slot ->
+        MemberUM.FreeSlot(
+            id = "slot_$index",
+            title = stringReference("Member ${joinedCount + index}"),
+            status = when (slot) {
+                PreviewSlot.NotInvited -> if (canInvite) SlotStatusUM.NotInvited else SlotStatusUM.WaitingToJoin
+                PreviewSlot.Invited -> SlotStatusUM.Invited(label = stringReference("Until tomorrow, 13:15"))
+                PreviewSlot.Expired -> SlotStatusUM.Expired
+                PreviewSlot.Loading -> SlotStatusUM.Invited(label = stringReference("Invited"))
+            },
+            action = when {
+                !canInvite -> null
+                slot == PreviewSlot.Loading -> SlotActionUM.Loading
+                slot == PreviewSlot.NotInvited -> SlotActionUM.Invite(onClick = {})
+                else -> SlotActionUM.ReInvite(onClick = {})
+            },
+        )
+    }
+    .toImmutableList()
+
+private fun previewFooter(hint: String?, hasButton: Boolean, isEnabled: Boolean) = JointAccountMembersUM.FooterUM(
+    hint = hint?.let(::stringReference),
+    button = if (hasButton) {
+        JointAccountMembersUM.ConfirmButtonUM(
+            isEnabled = isEnabled,
+            onClick = {},
+        )
+    } else {
+        null
+    },
+)
 // endregion

@@ -50,6 +50,7 @@ internal fun SwapStateHolder.withAccountFlowPresentation(
             iconState = CurrencyIconState.CollectiblesAccount(),
             accountBalance = accountBalance,
         )
+        is AccountFlow.MoneyTopUp -> titledState.withLockedReceiveCard()
         is AccountFlow.TopUp -> titledState.withAccountTopUpReceiveCard()
         is AccountFlow.Withdraw -> titledState
     }
@@ -61,6 +62,7 @@ private fun AccountFlow.titleId(): Int = when (this) {
     is AccountFlow.PredictionWithdraw -> R.string.prediction_main_withdraw
     is AccountFlow.PredictionTopUp -> R.string.common_add_funds
     is AccountFlow.CollectiblesTopUp -> R.string.common_add_funds
+    is AccountFlow.MoneyTopUp -> R.string.common_add_funds
 }
 
 private fun SwapStateHolder.withPredictionWithdrawCards(collateralBalance: BigDecimal?): SwapStateHolder = copy(

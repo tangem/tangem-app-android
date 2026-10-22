@@ -6,6 +6,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -30,6 +31,7 @@ sealed class PaymentAccountStatusValue {
             }
             is Error,
             is IssuingCard,
+            is Verified,
             is AwaitingPlanSelection,
             is Inactive,
             is Empty,
@@ -51,6 +53,7 @@ sealed class PaymentAccountStatusValue {
         return when (this) {
             is Error.CardIssueFailed -> copy(source = source)
             is IssuingCard -> copy(source = source)
+            is Verified -> copy(source = source)
             is Loaded -> copy(source = source, error = error ?: this.error)
             is KycRequired -> copy(source = source)
             is UnderReview -> copy(source = source)
@@ -88,11 +91,13 @@ sealed class PaymentAccountStatusValue {
      *
      * @property source The source of the status information.
      * @property customerId The unique identifier of the customer, or `null` if the backend has not provided it.
+     * @property customerResidency The country and region the customer picked on the residency step.
      */
     @Serializable
     data class KycRequired(
         @SerialName("source") override val source: StatusSource,
         @SerialName("customer_id") val customerId: String?,
+        @SerialName("customer_residency") val customerResidency: TangemPayCustomerResidency?,
     ) : PaymentAccountStatusValue()
 
     /**
@@ -116,6 +121,14 @@ sealed class PaymentAccountStatusValue {
      */
     @Serializable
     data class IssuingCard(override val source: StatusSource) : PaymentAccountStatusValue()
+
+    /**
+     * Represents a state where KYC is approved and the customer has not chosen a product yet.
+     *
+     * @property source The source of the status information.
+     */
+    @Serializable
+    data class Verified(@SerialName("source") override val source: StatusSource) : PaymentAccountStatusValue()
 
     /**
      * Represents a state where KYC is approved but no tariff plan has been selected yet
@@ -318,6 +331,7 @@ val PaymentAccountStatusValue.tariffPlan: TangemPayCustomerTariffPlan?
         is PaymentAccountStatusValue.Error.CardIssueFailed -> value.tariffPlan?.tariff
         is PaymentAccountStatusValue.Error,
         is PaymentAccountStatusValue.IssuingCard,
+        is PaymentAccountStatusValue.Verified,
         is PaymentAccountStatusValue.Empty,
         is PaymentAccountStatusValue.NotCreated,
         is PaymentAccountStatusValue.KycRequired,
@@ -347,6 +361,7 @@ val PaymentAccountStatusValue.isCreated: Boolean
         -> false
         is PaymentAccountStatusValue.Error,
         is PaymentAccountStatusValue.IssuingCard,
+        is PaymentAccountStatusValue.Verified,
         is PaymentAccountStatusValue.AwaitingPlanSelection,
         is PaymentAccountStatusValue.Inactive,
         is PaymentAccountStatusValue.Loaded,

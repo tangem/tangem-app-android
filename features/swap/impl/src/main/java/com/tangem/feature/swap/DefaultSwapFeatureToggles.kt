@@ -14,16 +14,6 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
             toggle = FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED,
         )
 
-    override val isChooseTokenPulseEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.AND_16357_CHOOSE_TOKEN_PULSE_ANIMATION,
-        )
-
-    override val isExpressCategoriesGeoBlockingEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED,
-        )
-
     override val isTronGaslessSwapEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.TWI_1803_TRON_GASLESS_SWAP_ENABLED,
@@ -37,5 +27,10 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
     override val isCustomSlippageEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.TWI_1674_SWAP_CUSTOM_SLIPPAGE_ENABLED,
+        )
+
+    override val isOverallBestPriceEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.TWI_1876_KYC_PRESCREENING_CEX_ENABLED,
         )
 }

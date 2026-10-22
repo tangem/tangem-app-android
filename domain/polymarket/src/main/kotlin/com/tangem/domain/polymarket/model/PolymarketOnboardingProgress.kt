@@ -3,10 +3,6 @@ package com.tangem.domain.polymarket.model
 /** Progress of an onboarding run: every value is a decision already taken, not a status to interpret. */
 sealed interface PolymarketOnboardingProgress {
 
-    /** Deriving the owner address; may require a card session. */
-    data object Deriving : PolymarketOnboardingProgress
-
-    /** Both onboarding payloads are being signed in one card session. */
     data object AwaitingSignature : PolymarketOnboardingProgress
 
     /** The backend is executing [status]. */

@@ -1,7 +1,6 @@
 package com.tangem.data.settings
 
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.models.GeoResponse
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.store.datasource.preferences.StorePreferencesKeys
@@ -9,9 +8,7 @@ import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
-import com.tangem.domain.settings.SettingsFeatureToggles
 import com.tangem.domain.settings.repositories.SettingsRepository
-import com.tangem.domain.settings.usercountry.models.GB_COUNTRY
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -20,7 +17,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
-import java.util.Locale
 
 @Suppress("TooManyFunctions")
 internal class DefaultSettingsRepository(
@@ -28,7 +24,6 @@ internal class DefaultSettingsRepository(
     private val storePreferencesKeys: StorePreferencesKeys,
     private val appLogsStore: AppLogsStore,
     private val tangemTechApi: TangemTechApi,
-    private val settingsFeatureToggles: SettingsFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SettingsRepository {
 
@@ -144,11 +139,6 @@ internal class DefaultSettingsRepository(
     override suspend fun fetchUserCountryCode() {
         TangemLogger.i("Start fetching user country code")
 
-        if (!settingsFeatureToggles.isGeoCountryCacheFallbackEnabled) {
-            fetchUserCountryCodeLegacy()
-            return
-        }
-
         withContext(dispatchers.io) {
             val geoCode = runSuspendCatching { tangemTechApi.getUserCountryCode() }
                 .getOrNull()
@@ -156,10 +146,7 @@ internal class DefaultSettingsRepository(
                 ?.takeIf(String::isNotBlank)
 
             val country = if (geoCode == null) {
-                appPreferencesStore.getSyncOrNull(key = storePreferencesKeys.geoUserCountryCodeKey)
-                    ?.takeIf(String::isNotBlank)
-                    ?.let(UserCountry::from)
-                    ?: UserCountry.fromDeviceLocale()
+                getCachedUserCountry() ?: UserCountry.fromDeviceLocale()
             } else {
                 UserCountry.from(code = geoCode)
             }
@@ -172,36 +159,23 @@ internal class DefaultSettingsRepository(
         }
     }
 
+    /** Consumers wait for a published country, so a failed read must fall through to the device region */
+    private suspend fun getCachedUserCountry(): UserCountry? {
+        return runSuspendCatching {
+            appPreferencesStore.getSyncOrNull(key = storePreferencesKeys.geoUserCountryCodeKey)
+        }
+            .onFailure { TangemLogger.e("Unable to read the cached user country code", it) }
+            .getOrNull()
+            ?.takeIf(String::isNotBlank)
+            ?.let(UserCountry::from)
+    }
+
     /** Caching must not discard an already resolved country, so a failed write is only reported */
     private suspend fun cacheUserCountryCode(country: UserCountry) {
         runSuspendCatching {
             appPreferencesStore.store(key = storePreferencesKeys.geoUserCountryCodeKey, value = country.code)
         }
             .onFailure { TangemLogger.e("Unable to cache the user country code", it) }
-    }
-
-    private suspend fun fetchUserCountryCodeLegacy() {
-        // for GB locale avoid request geo and use device default (FCA fixes)
-        if (Locale.getDefault().country == GB_COUNTRY.code) {
-            TangemLogger.i("User code country is $GB_COUNTRY")
-
-            userCountryFlow.value = GB_COUNTRY
-            return
-        }
-
-        withContext(dispatchers.io) {
-            val code = runSuspendCatching { tangemTechApi.getUserCountryCode() }
-                .fold(
-                    onSuccess = GeoResponse::code,
-                    onFailure = { Locale.getDefault().country },
-                )
-
-            val country = UserCountry.from(code = code)
-
-            TangemLogger.i("User code country is $country")
-
-            userCountryFlow.value = country
-        }
     }
 
     override suspend fun setGoogleServicesAvailability(value: Boolean) {

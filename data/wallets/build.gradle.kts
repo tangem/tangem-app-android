@@ -23,6 +23,7 @@ dependencies {
     api(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
     implementation(deps.androidx.datastore)
+    implementation(deps.androidx.workmanager)
     implementation(deps.arrow.core)
     // endregion
 
@@ -34,7 +35,9 @@ dependencies {
 
     // region DI
     implementation(deps.hilt.android)
+    implementation(deps.hilt.work)
     kapt(deps.hilt.kapt)
+    kapt(deps.hilt.compilerx)
     // endregion
 
     // region Core

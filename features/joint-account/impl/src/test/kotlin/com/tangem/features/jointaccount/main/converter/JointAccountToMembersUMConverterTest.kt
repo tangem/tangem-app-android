@@ -7,11 +7,14 @@ import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.jointaccount.model.JointAccount
+import com.tangem.domain.jointaccount.model.JointAccountInvite
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
+import com.tangem.features.jointaccount.main.state.transformers.click
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.mockk
@@ -20,6 +23,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.joda.time.DateTime
 import org.junit.jupiter.params.ParameterizedTest
 import com.tangem.core.ui.R as CoreUiR
 
@@ -34,7 +38,7 @@ internal class JointAccountToMembersUMConverterTest {
 
     private val onMemberInfoClick: (JointAccountMembersUM.MemberAvatarUM, TextReference, String) -> Unit = mockk(relaxed = true)
     private val onInviteClick: (String, TextReference) -> Unit = mockk(relaxed = true)
-    private val onActivateClick: (String) -> Unit = mockk(relaxed = true)
+    private val onConfirmAddressClick: (String) -> Unit = mockk(relaxed = true)
     private val onApprovalsInfoClick: (Int, Int) -> Unit = mockk(relaxed = true)
     private val onCloseClick: () -> Unit = mockk(relaxed = true)
 
@@ -42,7 +46,7 @@ internal class JointAccountToMembersUMConverterTest {
         callbacks = JointAccountToMembersUMConverter.Callbacks(
             onMemberInfoClick = onMemberInfoClick,
             onInviteClick = onInviteClick,
-            onActivateClick = onActivateClick,
+            onConfirmAddressClick = onConfirmAddressClick,
             onApprovalsInfoClick = onApprovalsInfoClick,
             onCloseClick = onCloseClick,
         ),
@@ -50,7 +54,7 @@ internal class JointAccountToMembersUMConverterTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(onMemberInfoClick, onInviteClick, onActivateClick, onApprovalsInfoClick, onCloseClick)
+        clearMocks(onMemberInfoClick, onInviteClick, onConfirmAddressClick, onApprovalsInfoClick, onCloseClick)
     }
 
     @Nested
@@ -113,7 +117,7 @@ internal class JointAccountToMembersUMConverterTest {
             assertThat(slots.map { it.action }.all { it is JointAccountMembersUM.SlotActionUM.Invite }).isTrue()
 
             // Act
-            slots.forEach { it.action!!.onClick() }
+            slots.forEach { it.action.click() }
 
             // Assert
             verify(exactly = 1) { onInviteClick(INVITE_A, ACCOUNT_NAME_REFERENCE) }
@@ -130,7 +134,7 @@ internal class JointAccountToMembersUMConverterTest {
 
             // Act
             val slot = converter.convert(input).freeSlots.single()
-            slot.action!!.onClick()
+            slot.action.click()
 
             // Assert
             verify(exactly = 1) { onInviteClick(INVITE_A, ACCOUNT_NAME_REFERENCE) }
@@ -147,7 +151,7 @@ internal class JointAccountToMembersUMConverterTest {
 
             // Act
             val slot = converter.convert(input).freeSlots.single()
-            slot.action!!.onClick()
+            slot.action.click()
 
             // Assert
             verify(exactly = 1) { onInviteClick(INVITE_A, ACCOUNT_NAME_REFERENCE) }
@@ -188,7 +192,7 @@ internal class JointAccountToMembersUMConverterTest {
     inner class ReadyToActivate {
 
         @Test
-        fun `GIVEN confirming account WHEN activation clicked THEN the callback gets this account's id`() {
+        fun `GIVEN confirming account WHEN confirm clicked THEN the callback gets this account's id`() {
             // Arrange
             val input = input(
                 account = pendingAccount(members = listOf(creator, member)).copy(status = JointAccount.Status.CONFIRMING),
@@ -199,7 +203,7 @@ internal class JointAccountToMembersUMConverterTest {
             converter.convert(input).footer?.button?.onClick?.invoke()
 
             // Assert
-            verify(exactly = 1) { onActivateClick(ACCOUNT_ID) }
+            verify(exactly = 1) { onConfirmAddressClick(ACCOUNT_ID) }
         }
 
         @Test
@@ -225,18 +229,20 @@ internal class JointAccountToMembersUMConverterTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN account status and role WHEN convert THEN footer matches`(model: FooterModel) {
+        fun `GIVEN account status, role and progress WHEN convert THEN footer matches`(model: FooterModel) {
             // Arrange
             val input = input(
-                account = pendingAccount(members = listOf(creator)).copy(status = model.status),
+                account = pendingAccount(members = model.members).copy(status = model.status),
                 invites = if (model.isCreator) listOf(INVITE_A, INVITE_B) else emptyList(),
+                sharedInvites = model.sharedInvites,
+                ownAddress = if (model.isCreator) creator.address else member.address,
             )
 
             // Act
             val footer = converter.convert(input).footer
 
             // Assert
-            val actual = footer?.let { FooterExpectation(hint = it.hint, isButtonEnabled = it.button.isEnabled) }
+            val actual = footer?.let { FooterExpectation(hint = it.hint, isButtonEnabled = it.button?.isEnabled) }
             assertThat(actual).isEqualTo(model.expected)
         }
 
@@ -244,31 +250,92 @@ internal class JointAccountToMembersUMConverterTest {
             FooterModel(
                 status = JointAccount.Status.PENDING,
                 isCreator = true,
-                expected = FooterExpectation(hint = STILL_NEED_TO_JOIN_TWO, isButtonEnabled = false),
+                expected = FooterExpectation(hint = INVITE_TWO, isButtonEnabled = false),
+            ),
+            FooterModel(
+                status = JointAccount.Status.PENDING,
+                isCreator = true,
+                sharedInvites = setOf(INVITE_A),
+                expected = FooterExpectation(hint = INVITE_MORE_ONE, isButtonEnabled = false),
+            ),
+            FooterModel(
+                status = JointAccount.Status.PENDING,
+                isCreator = true,
+                sharedInvites = setOf(INVITE_A, INVITE_B),
+                expected = FooterExpectation(hint = AWAITING_TWO, isButtonEnabled = false),
             ),
             FooterModel(
                 status = JointAccount.Status.PENDING,
                 isCreator = false,
-                expected = FooterExpectation(hint = STILL_NEED_TO_JOIN_TWO, isButtonEnabled = false),
+                expected = FooterExpectation(hint = AWAITING_TWO, isButtonEnabled = false),
+            ),
+            FooterModel(
+                status = JointAccount.Status.PENDING,
+                isCreator = true,
+                members = listOf(creator, member, member.copy(address = "0xthird")),
+                expected = FooterExpectation(hint = EVERYONE_JOINED, isButtonEnabled = false),
+            ),
+            FooterModel(
+                status = JointAccount.Status.PENDING,
+                isCreator = false,
+                members = listOf(creator, member, member.copy(address = "0xthird")),
+                expected = FooterExpectation(hint = EVERYONE_JOINED, isButtonEnabled = false),
             ),
             FooterModel(
                 status = JointAccount.Status.CONFIRMING,
                 isCreator = true,
+                members = listOf(creator, member, member.copy(address = "0xthird")),
                 expected = FooterExpectation(hint = null, isButtonEnabled = true),
             ),
             FooterModel(
                 status = JointAccount.Status.CONFIRMING,
                 isCreator = false,
+                members = listOf(creator, member, member.copy(address = "0xthird")),
                 expected = FooterExpectation(hint = null, isButtonEnabled = false),
+            ),
+            FooterModel(
+                status = JointAccount.Status.CONFIRMING,
+                isCreator = false,
+                members = listOf(creator, member.copy(isVerified = true), member.copy(address = "0xthird")),
+                expected = FooterExpectation(hint = STILL_NEED_TO_CONFIRM_TWO, isButtonEnabled = null),
+            ),
+            FooterModel(
+                status = JointAccount.Status.CONFIRMING,
+                isCreator = true,
+                members = listOf(creator.copy(isVerified = true), member.copy(isVerified = true), member.copy(address = "0xthird")),
+                expected = FooterExpectation(hint = STILL_NEED_TO_CONFIRM_ONE, isButtonEnabled = null),
             ),
             FooterModel(status = JointAccount.Status.ACTIVE, isCreator = true, expected = null),
             FooterModel(status = JointAccount.Status.ACTIVE, isCreator = false, expected = null),
         )
     }
 
-    data class FooterModel(val status: JointAccount.Status, val isCreator: Boolean, val expected: FooterExpectation?)
+    data class FooterModel(
+        val status: JointAccount.Status,
+        val isCreator: Boolean,
+        val members: List<JointAccount.Member> = listOf(creator),
+        val sharedInvites: Set<String> = emptySet(),
+        val expected: FooterExpectation?,
+    )
 
-    data class FooterExpectation(val hint: TextReference?, val isButtonEnabled: Boolean)
+    @Test
+    fun `GIVEN the invited member joined and one slot is still uninvited WHEN convert THEN footer keeps Invite more`() {
+        // Arrange
+        val input = input(
+            account = pendingAccount(members = listOf(creator, member.copy(inviteId = INVITE_B))),
+            invites = listOf(INVITE_A, INVITE_B),
+            sharedInvites = setOf(INVITE_B),
+            ownAddress = creator.address,
+        )
+
+        // Act
+        val hint = converter.convert(input).footer?.hint
+
+        // Assert
+        assertThat(hint).isEqualTo(INVITE_MORE_ONE)
+    }
+
+    data class FooterExpectation(val hint: TextReference?, val isButtonEnabled: Boolean?)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -371,9 +438,7 @@ internal class JointAccountToMembersUMConverterTest {
                 true to true,
                 false to false,
             ).inOrder()
-            assertThat(state.joined.map { it.status }.distinct()).containsExactly(
-                resourceReference(CoreUiR.string.joint_account_members_role_joined),
-            )
+            assertThat(state.joined.map { it.status }.distinct()).containsExactly(JointAccountMembersUM.MemberStatusUM.Joined)
             assertThat(state.header?.title).isEqualTo(resourceReference(CoreUiR.string.joint_account_invite_members_title))
             assertThat(state.topBar).isInstanceOf(JointAccountMembersUM.TopBarUM.Dismissible::class.java)
         }
@@ -410,9 +475,169 @@ internal class JointAccountToMembersUMConverterTest {
 
         // Assert
         assertThat(state.freeSlots.map { it.status }).containsExactly(
-            resourceReference(CoreUiR.string.joint_account_invite_members_not_invited),
-            resourceReference(CoreUiR.string.joint_account_invite_members_invited),
+            JointAccountMembersUM.SlotStatusUM.NotInvited,
+            JointAccountMembersUM.SlotStatusUM.Invited(resourceReference(CoreUiR.string.joint_account_invite_members_invited)),
         ).inOrder()
+        assertThat(state.freeSlots.map { it.action?.javaClass }).containsExactly(
+            JointAccountMembersUM.SlotActionUM.Invite::class.java,
+            JointAccountMembersUM.SlotActionUM.ReInvite::class.java,
+        ).inOrder()
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Confirming {
+
+        private val confirmingAccount = pendingAccount(
+            members = listOf(creator, member.copy(isVerified = true), member.copy(address = "0xthird")),
+        ).copy(status = JointAccount.Status.CONFIRMING)
+
+        @Test
+        fun `GIVEN confirming account WHEN convert THEN header is Confirm the account with the address subtitle`() {
+            // Arrange
+            val input = input(account = confirmingAccount, invites = emptyList())
+
+            // Act
+            val header = converter.convert(input).header
+
+            // Assert
+            assertThat(header).isEqualTo(
+                JointAccountMembersUM.HeaderUM(
+                    title = resourceReference(CoreUiR.string.joint_account_confirm_account_title),
+                    subtitle = resourceReference(CoreUiR.string.joint_account_confirm_account_subtitle),
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN confirming account WHEN convert THEN verified members are Confirmed and the rest Not confirmed`() {
+            // Arrange
+            val input = input(account = confirmingAccount, invites = emptyList())
+
+            // Act
+            val statuses = converter.convert(input).joined.map { it.status }
+
+            // Assert
+            assertThat(statuses).containsExactly(
+                JointAccountMembersUM.MemberStatusUM.NotConfirmed,
+                JointAccountMembersUM.MemberStatusUM.Confirmed,
+                JointAccountMembersUM.MemberStatusUM.NotConfirmed,
+            ).inOrder()
+        }
+
+        @Test
+        fun `GIVEN pending account WHEN convert THEN every joined member is Joined`() {
+            // Arrange
+            val input = input(
+                account = pendingAccount(members = listOf(creator, member.copy(isVerified = true))),
+                invites = listOf(INVITE_A),
+            )
+
+            // Act
+            val statuses = converter.convert(input).joined.map { it.status }.distinct()
+
+            // Assert
+            assertThat(statuses).containsExactly(JointAccountMembersUM.MemberStatusUM.Joined)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SlotExpiry {
+
+        private val now = DateTime(2026, 10, 20, 12, 0)
+
+        @Test
+        fun `GIVEN unshared invite WHEN convert THEN slot reads Not invited and offers Invite`() {
+            // Act
+            val slot = convertSlot(invite = JointAccountInvite(id = INVITE_A, expiresAtMillis = now.plusDays(3).millis))
+
+            // Assert
+            assertThat(slot.status).isEqualTo(JointAccountMembersUM.SlotStatusUM.NotInvited)
+            assertThat(slot.action).isInstanceOf(JointAccountMembersUM.SlotActionUM.Invite::class.java)
+        }
+
+        @Test
+        fun `GIVEN expired invite WHEN convert THEN slot reads Expired and offers Re-invite`() {
+            // Act
+            val slot = convertSlot(
+                invite = JointAccountInvite(id = INVITE_A, expiresAtMillis = now.minusMinutes(1).millis),
+                shared = false,
+            )
+
+            // Assert
+            assertThat(slot.status).isEqualTo(JointAccountMembersUM.SlotStatusUM.Expired)
+            assertThat(slot.action).isInstanceOf(JointAccountMembersUM.SlotActionUM.ReInvite::class.java)
+        }
+
+        @Test
+        fun `GIVEN invite expiring later today WHEN convert THEN label is Until today with the time`() {
+            // Arrange
+            val expiresAt = now.plusHours(1)
+
+            // Act
+            val slot = convertSlot(invite = JointAccountInvite(id = INVITE_A, expiresAtMillis = expiresAt.millis), shared = true)
+
+            // Assert
+            assertThat(slot.status).isEqualTo(
+                JointAccountMembersUM.SlotStatusUM.Invited(
+                    label = resourceReference(
+                        id = CoreUiR.string.joint_account_invite_members_until_today,
+                        formatArgs = wrappedList(DateTimeFormatters.timeFormatter.print(expiresAt)),
+                    ),
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN invite expiring tomorrow WHEN convert THEN label is Until tomorrow with the time`() {
+            // Arrange
+            val expiresAt = now.plusDays(1).withHourOfDay(9)
+
+            // Act
+            val slot = convertSlot(invite = JointAccountInvite(id = INVITE_A, expiresAtMillis = expiresAt.millis), shared = true)
+
+            // Assert
+            assertThat(slot.status).isEqualTo(
+                JointAccountMembersUM.SlotStatusUM.Invited(
+                    label = resourceReference(
+                        id = CoreUiR.string.joint_account_invite_members_until_tomorrow,
+                        formatArgs = wrappedList(DateTimeFormatters.timeFormatter.print(expiresAt)),
+                    ),
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN invite expiring on another day WHEN convert THEN label is Until with the full date`() {
+            // Arrange
+            val expiresAt = now.plusDays(3)
+
+            // Act
+            val slot = convertSlot(invite = JointAccountInvite(id = INVITE_A, expiresAtMillis = expiresAt.millis), shared = true)
+
+            // Assert
+            assertThat(slot.status).isEqualTo(
+                JointAccountMembersUM.SlotStatusUM.Invited(
+                    label = resourceReference(
+                        id = CoreUiR.string.joint_account_invite_members_until,
+                        formatArgs = wrappedList(FreeSlotUMFactory.dateTimeFormatter().print(expiresAt)),
+                    ),
+                ),
+            )
+        }
+
+        private fun convertSlot(invite: JointAccountInvite, shared: Boolean = false): JointAccountMembersUM.MemberUM.FreeSlot {
+            val input = JointAccountToMembersUMConverter.Input(
+                account = pendingAccount(members = listOf(creator)).copy(membersCount = 2),
+                invites = listOf(invite),
+                sharedInvites = if (shared) setOf(invite.id) else emptySet(),
+                ownAddress = creator.address,
+                accountName = ACCOUNT_NAME,
+                nowMillis = now.millis,
+            )
+            return converter.convert(input).freeSlots.single()
+        }
     }
 
     @Nested
@@ -452,7 +677,7 @@ internal class JointAccountToMembersUMConverterTest {
     inner class SectionLabels {
 
         @Test
-        fun `GIVEN joined members and free slots WHEN convert THEN both section labels shown`() {
+        fun `GIVEN joined members and free slots WHEN convert THEN one Members section for both`() {
             // Arrange
             val input = input(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
 
@@ -461,26 +686,25 @@ internal class JointAccountToMembersUMConverterTest {
 
             // Assert
             assertThat(state.membersLabel).isEqualTo(resourceReference(CoreUiR.string.joint_account_members_title))
-            assertThat(state.waitingLabel).isEqualTo(
-                resourceReference(CoreUiR.string.joint_account_invite_members_waiting_to_join),
-            )
+            assertThat(state.freeSlots).hasSize(2)
         }
 
         @Test
-        fun `GIVEN every slot filled WHEN convert THEN no waiting label`() {
+        fun `GIVEN a member, not the creator WHEN convert THEN free slots read Waiting to join without buttons`() {
             // Arrange
             val input = input(
-                account = pendingAccount(members = listOf(creator, member, member.copy(address = "0xB0B"))),
-                invites = listOf(INVITE_A),
+                account = pendingAccount(members = listOf(creator, member)),
+                invites = emptyList(),
+                ownAddress = member.address,
+                sharedInvites = setOf(INVITE_A),
             )
 
             // Act
-            val state = converter.convert(input)
+            val slots = converter.convert(input).freeSlots
 
             // Assert
-            assertThat(state.freeSlots).isEmpty()
-            assertThat(state.waitingLabel).isNull()
-            assertThat(state.membersLabel).isNotNull()
+            assertThat(slots.map { it.status }.distinct()).containsExactly(JointAccountMembersUM.SlotStatusUM.WaitingToJoin)
+            assertThat(slots.map { it.action }.distinct()).containsExactly(null)
         }
     }
 
@@ -490,7 +714,7 @@ internal class JointAccountToMembersUMConverterTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN account record WHEN convert THEN card shows its name, icon, progress and approval rule`(
+        fun `GIVEN account record WHEN convert THEN card shows its name, icon, size and approval rule`(
             status: JointAccount.Status,
         ) {
             // Arrange
@@ -503,9 +727,10 @@ internal class JointAccountToMembersUMConverterTest {
             val expected = JointAccountMembersUM.SummaryCardUM(
                 icon = AccountIconUM.CryptoPortfolio(value = ACCOUNT_ICON.value, color = ACCOUNT_ICON.color),
                 name = stringReference(ACCOUNT_NAME.value),
-                progress = resourceReference(
-                    id = CoreUiR.string.joint_account_invite_members_joined_progress,
-                    formatArgs = wrappedList(2, THREE_SLOTS),
+                membersCount = pluralReference(
+                    id = CoreUiR.plurals.joint_account_members_count,
+                    count = THREE_SLOTS,
+                    formatArgs = wrappedList(THREE_SLOTS),
                 ),
                 approvals = resourceReference(
                     id = CoreUiR.string.joint_account_invite_members_approvals_value,
@@ -570,7 +795,7 @@ internal class JointAccountToMembersUMConverterTest {
         accountIcon: CryptoPortfolioIcon? = null,
     ) = JointAccountToMembersUMConverter.Input(
         account = account,
-        invites = invites,
+        invites = invites.map { inviteId -> JointAccountInvite(id = inviteId) },
         sharedInvites = sharedInvites,
         ownAddress = ownAddress,
         accountName = accountName,
@@ -594,10 +819,31 @@ internal class JointAccountToMembersUMConverterTest {
         const val INVITE_A = "invite-a"
         const val INVITE_B = "invite-b"
 
-        val STILL_NEED_TO_JOIN_TWO = pluralReference(
-            id = CoreUiR.plurals.joint_account_invite_members_still_need_to_join,
+        val INVITE_TWO = pluralReference(
+            id = CoreUiR.plurals.joint_account_invite_members_invite_count,
             count = 2,
             formatArgs = wrappedList(2),
+        )
+        val INVITE_MORE_ONE = pluralReference(
+            id = CoreUiR.plurals.joint_account_invite_members_invite_more,
+            count = 1,
+            formatArgs = wrappedList(1),
+        )
+        val AWAITING_TWO = pluralReference(
+            id = CoreUiR.plurals.joint_account_invite_members_awaiting_to_join,
+            count = 2,
+            formatArgs = wrappedList(2),
+        )
+        val EVERYONE_JOINED = resourceReference(CoreUiR.string.joint_account_invite_members_everyone_joined)
+        val STILL_NEED_TO_CONFIRM_TWO = pluralReference(
+            id = CoreUiR.plurals.joint_account_members_still_need_to_confirm,
+            count = 2,
+            formatArgs = wrappedList(2),
+        )
+        val STILL_NEED_TO_CONFIRM_ONE = pluralReference(
+            id = CoreUiR.plurals.joint_account_members_still_need_to_confirm,
+            count = 1,
+            formatArgs = wrappedList(1),
         )
 
         val NO_OP: () -> Unit = {}

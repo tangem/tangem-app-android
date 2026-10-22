@@ -36,6 +36,7 @@ import com.tangem.features.moneyaccount.onboarding.ui.MoneyAccountOnboardingUM
 import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.withCacheBypass
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -142,7 +143,7 @@ internal class MoneyAccountOnboardingModel @Inject constructor(
     }
 
     private fun onTermsClick() {
-        urlOpener.openUrl(TERMS_OF_USE_URL)
+        urlOpener.openUrl(TERMS_OF_USE_URL.withCacheBypass())
     }
 
     private fun onGetStartedClick() {

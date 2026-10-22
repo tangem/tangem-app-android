@@ -3,8 +3,8 @@
 Gacha packs from Collector Crypt. Users land on an onboarding screen, optionally watch a stories
 explainer, then browse a paginated catalogue of packs ("gacha machines") filtered by category and
 search, open a pack's details — its odds, its metadata and the collectibles in its prize pool — and buy
-and open a pack: confirm order → pack throw → reveal video → reward card. The collection screen, the
-activity log, withdrawal and the card's "sell back" action are not built yet; the main screen's
+and open a pack: confirm order → pack throw → reveal video → reward card, then keep the card or sell it
+back. The collection screen, the activity log and withdrawal are not built yet; the main screen's
 balance is live, its collection widget is a stub.
 
 > This is **not** `features/nft` / `domain/nft`, which is the unrelated NFT-collection feature.
@@ -109,6 +109,7 @@ AppRoute.Collectibles(userWalletId, startRoute) → DefaultCollectiblesEntryComp
         confirm order → throw → video → card, all inside the one route
         slot: PackUnopened(txId) / LowInventory sheets
         "Enable Turbo" → router.pop(); "Explore packs" → router.popTo(Main(id))
+        "Keep card" / a completed "Sell back" → router.pop() to MachineDetails
 ```
 
 **The feature decides nothing about where it opens** — the caller does, and the route says so:
@@ -206,16 +207,50 @@ The UI beat is `CollectiblesPackOpeningUM.Stage` — `Order → Launching → Re
 reloads it. Remote URLs are downloaded in full into `PackRevealAssetCache` (a 256 MB LRU media3
 `SimpleCache` in `pack-reveal/`) before playback, so the reveal never buffers.
 
+### Sell back
+
+The reward card's "Sell back" sells the won card for the backend's instant buyback price.
+
+- **Availability is polled in the model.** On `OpenPackStep.Opened` (before the throw, so it runs alongside
+  the video) the model starts a `SingleTaskScheduler` + `PeriodicTask` that calls
+  `GetCollectibleBuybackOfferUseCase` (one request) at once and then every 5 s. It is state-driven like the
+  expected-value polling in `CollectiblesMachineDetailsModel`: it runs only while the offer is unknown
+  (`BuybackState.Checking`) and the screen is resumed (`lifecycle.subscribe(onResume, onPause)` in the
+  component). `buybackAvailable = false` means "not yet", so there is no deadline. Availability comes from
+  `/buyback/available` alone, for every machine. While it is unknown the Sell back button spins; a disabled
+  "Buyback unavailable" is only for `Unavailable`.
+- **The sale is `BuybackCollectibleUseCase`**: `buyback-data` with `fromAddress = owner` (it holds the card)
+  and `toAddress = vault` (`getVaultAddress`, so the payout shows in the collectibles balance) →
+  `GachaVaultRepository.sendWithOwnerSignature` (the backend's base64 transaction signed as is with the owner
+  key) → `buyback-tx-sent` → 5 polls of `/buyback/status` every 2 s. It is `suspend` and returns
+  `Either<BuybackError, Unit>`: `confirmed` → right; `expired` or no `confirmed` in 10 s → `NotConfirmed`. There
+  are no intermediate steps, the button only spins; the snackbar's amount comes from the offer.
+- **Only success leaves the screen** (snackbar + `router.pop()`). `NotAllowed` (the backend refuses
+  `buyback-data`) makes the button unavailable with a snackbar; `Cancelled` / `CardRefused` re-enable it
+  silently; `Unexpected` re-enables it with "Something went wrong". A message over the card's 930 B
+  (`GachaVaultError.TransactionTooLarge`) counts as `Unexpected`.
+- **`NotConfirmed` does not re-offer at once.** The sale may still land, so after "Something went wrong" the
+  button goes back to `Checking` (spinner) and the same `/buyback/available` polling decides again. Whether the
+  gacha guards against a second buyback of the same NFT is still open with Collector Crypt.
+- While the sale runs back, close and "Keep card" are ignored (`isBuybackRunning()`): leaving would cancel
+  `modelScope` and the tx hash might never reach the backend. "Keep card" is disabled only then
+  (`RevealUM.isKeepCardEnabled`), not while the offer is being checked.
+
+`BuybackState` (`Checking` / `Available` / `Unavailable` / `InProgress`) is the model's own;
+`CollectiblesSellBackButtonConverter` turns it into `SellBackButtonUM` (text, `isEnabled`, `isLoading`), which lives
+in `RevealUM`, not in `RewardCardUM`, because it changes while the card is on screen.
+
 ## Domain & data
 
 ```
 domain/collectibles/models/  — CollectibleGachaMachine (+ Odds/Stock/TierRanges/RevealAssets), categories,
                                CollectibleGachaMachineNft, CollectibleRarity, CollectibleTransaction
                                (purchase tx, tx state/status, OpenedCollectiblePack), OpenPackRequest/Step,
+                               CollectibleBuyback (offer, tx, status), BuybackError,
                                CollectibleGachaMachinesPage/Batch/ListConfig, CollectiblesError
 domain/collectibles/         — CollectiblesRepository, CollectiblesAccountRepository, GachaVaultRepository,
                                account status supplier/fetcher/producer, hot delegate, owner deriver,
-                               7 use cases, the Batch* typealiases
+                               9 use cases, the Batch* typealiases
 data/collectibles/           — DefaultCollectiblesRepository, batch fetchers, converters, CollectiblesMachineStore,
                                account store/producer/cleaner, gacha vault, hot delegate
 grow/datasource/collectibles — CollectiblesApi (Retrofit), CollectiblesAuthProvider, request/response DTOs
@@ -225,8 +260,8 @@ grow/datasource/collectibles — CollectiblesApi (Retrofit), CollectiblesAuthPro
 The catalogue/machine use cases return `Either<CollectiblesError, T>` via `runSuspendCatching`, except the
 two `Get…BatchFlowUseCase`s, which are non-suspend and return the flow directly.
 `CreateOrReactivateCollectiblesAccountUseCase` / `CloseCollectiblesVaultUseCase` return
-`Either<CollectiblesAccountError, Unit>`; `OpenCollectiblePackUseCase` returns `Flow<OpenPackStep>` and
-never throws.
+`Either<CollectiblesAccountError, Unit>`, `BuybackCollectibleUseCase` returns `Either<BuybackError, Unit>`;
+`OpenCollectiblePackUseCase` returns `Flow<OpenPackStep>` and never throws.
 
 Use cases are plain classes with an `@Inject` constructor — there is **no** `CollectiblesDomainModule`
 anywhere, so that annotation is the whole wiring. A use case without it cannot be injected.
@@ -236,7 +271,8 @@ anywhere, so that annotation is the whole wiring. A use case without it cannot b
 into its header map. The id is one UUID per process (`DefaultCollectiblesAuthProvider` is provided
 `@Singleton` in `GrowDatasourceModule`). Every endpoint is also annotated `@RequiresSessionAuth`
 (`libs/auth`). `user-id` is a per-method Retrofit `@Header` carrying `UserWalletId.stringValue` on
-`getMachineNfts`, `generatePurchaseTx`, `purchaseTxSent`, `getTxStatus` and `openPack`. Adding a header to
+`getMachineNfts`, `generatePurchaseTx`, `purchaseTxSent`, `getTxStatus`, `openPack` and the four
+`buyback/*` endpoints. Adding a header to
 the config requires updating `CollectiblesConfigTest`, which asserts the exact header set per environment.
 
 ## DI modules
@@ -345,8 +381,23 @@ updated, and `skipToMs` must land on a keyframe.
 codec failure, or system animations off (`ANIMATOR_DURATION_SCALE == 0`, which also mutes the skip sound)
 — every path falls back to the short version and ends on the card.
 
-**Sell back is a stub.** `onSellBackClick` is an empty `TODO([REDACTED_TASK_KEY])`; "Keep card" only returns to the
-machine details. `Expired` / `Refunded` failures show hardcoded English snackbars.
+**Buyback refusals are not mapped yet.** `CollectibleException.BuybackRefused` waits for the backend's own error
+codes (a TODO in `CollectiblesErrorResolver`); until then a refused `buyback-data` is `Unexpected`.
+
+**Statuses are DTO enums.** `CollectibleTxResponse.CollectibleTxStatusDTO` (purchase) and
+`BuybackStatusResponse.BuybackStatusDTO` name the wire values with `@SerialName`; an unknown one is coerced to
+`UNKNOWN` by `NetworkJsonFactory` (`coerceInputValues`), and the converters map enum to enum with a `when`.
+
+**A card signs at most 930 B of message.** `sendWithOwnerSignature` checks the size before the tap on a card
+wallet (`GachaVaultError.TransactionTooLarge`); `SendLargeSolanaTransactionUseCase` cannot help, it rebuilds
+the transaction and would break the backend's blockhash and other signatures.
+
+**Trust `/buyback/status`, not the send.** Blink, the first Solana provider, sends with `skipPreflight = true`,
+so a transaction that fails on chain can still look sent.
+
+`Expired` / `Refunded` failures and the buyback refusal snackbar show hardcoded English (the refusal text
+waits for the analysts). The disabled Sell back button and the success snackbar are localized:
+`collectibles_open_pack_buyback_unavailable` and `collectibles_open_pack_sell_back_success`.
 
 **A few strings are still literals.** Most copy is in `core/res` (`collectibles_*`), but some
 `stringReference("…")` literals remain (menu, add funds, status, the snackbars above).

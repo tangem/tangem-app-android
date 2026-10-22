@@ -226,7 +226,7 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
                 userWallet = userWallet,
                 recoveryKey = recoveryKey,
             ).getOrElse { error ->
-                releaseBinding(userWallet.walletId)
+                releaseBinding(userWallet)
                 return Either.Left(error)
             }
 
@@ -239,13 +239,13 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
 
                 TangemLogger.e("Failed to write the social backup: $error")
                 if (!requestBackupRetry()) {
-                    releaseBinding(userWallet.walletId)
+                    releaseBinding(userWallet)
                     return Either.Left(SocialLoginError.BackupAbandoned)
                 }
             }
         } catch (e: CancellationException) {
             // leaving the screen is giving up too, and the binding must not outlive the attempt
-            withContext(NonCancellable) { releaseBinding(userWallet.walletId) }
+            withContext(NonCancellable) { releaseBinding(userWallet) }
             throw e
         } finally {
             secret.wipe()
@@ -279,12 +279,14 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
     /**
      * Retried because a binding left behind cannot be released later: the wallet is about to leave the device,
      * and the identity would keep failing to restore with no file to restore from. Typically called right after
-     * a register that got no answer, so the network is likely to be flaky.
+     * a register that got no answer, so the network is likely to be flaky. The wallet goes in rather than its id:
+     * it is not listed yet, and the backend erases the binding of a registration whose answer was lost only
+     * after the wallet registers again, signed with its own key.
      */
-    private suspend fun releaseBinding(walletId: UserWalletId) {
+    private suspend fun releaseBinding(userWallet: UserWallet.Hot) {
         repeat(RELEASE_BINDING_ATTEMPTS) { attempt ->
             if (attempt > 0) delay(RELEASE_BINDING_RETRY_DELAY * attempt)
-            revokeSocialRecoveryUseCase(walletId)
+            revokeSocialRecoveryUseCase(userWallet)
                 .onRight { return }
                 .onLeft { TangemLogger.e("Failed to release the binding of a wallet left without a backup: $it") }
         }

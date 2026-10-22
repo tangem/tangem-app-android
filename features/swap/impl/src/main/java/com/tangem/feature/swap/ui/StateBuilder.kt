@@ -5,11 +5,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
-import com.tangem.common.ui.account.CryptoPortfolioIconConverter
-import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -69,8 +65,6 @@ internal class StateBuilder(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
     private val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork,
-    private val appRouter: AppRouter,
-    private val isChooseTokenPulseEnabled: Boolean,
     private val isCustomSlippageEnabled: Boolean = false,
     private val predictionTopUpLimitsProvider: Provider<PredictionTopUpLimits?> = Provider { null },
 ) {
@@ -445,7 +439,6 @@ internal class StateBuilder(
             ),
             amountField = placeholderAmountField(value = if (isFromCard) "0" else "0".appendApproximateSign()),
             amountEquivalent = emptyAmountState.zeroAmountEquivalent,
-            isPulseAnimationEnabled = isChooseTokenPulseEnabled,
         )
 
     fun createSwapNotSupportedState(
@@ -573,6 +566,7 @@ internal class StateBuilder(
         swapFee: SwapFee?,
         feeError: FeeSelectorUM.Error?,
         isHighNetworkFee: Boolean,
+        isFeeCurrencyInStack: Boolean,
         slippage: SwapSlippageState = SwapSlippageState.Default(),
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -586,7 +580,7 @@ internal class StateBuilder(
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             swapFee = swapFee,
             feeError = feeError?.error,
-            appRouter = appRouter,
+            isFeeCurrencyInStack = isFeeCurrencyInStack,
             isHighNetworkFee = isHighNetworkFee,
             lowSlippage = getLowSlippage(swapProvider, slippage.customOrNull),
         )
@@ -703,6 +697,7 @@ internal class StateBuilder(
         quoteModel: SwapState.QuotesLoadedState,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         feeError: GetFeeError,
+        isFeeCurrencyInStack: Boolean,
     ): SwapStateHolder {
         val fromSwapCurrencyStatus = quoteModel.fromTokenInfo.swapCurrencyStatus
         if (feeCryptoCurrencyStatus == null) return uiStateHolder
@@ -712,7 +707,7 @@ internal class StateBuilder(
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             swapFee = null,
             feeError = feeError,
-            appRouter = appRouter,
+            isFeeCurrencyInStack = isFeeCurrencyInStack,
         )
 
         return uiStateHolder.copy(
@@ -860,7 +855,6 @@ internal class StateBuilder(
             type = type,
             amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
             amountField = null,
-            isPulseAnimationEnabled = isChooseTokenPulseEnabled,
         )
         return uiStateHolder.copy(
             receiveCardData = receiveCardData,
@@ -1391,33 +1385,6 @@ internal class StateBuilder(
         return "$TILDE_SIGN $this"
     }
 
-    private fun getCardAccountTitle(account: Account?, isFromCard: Boolean): AccountTitleUM {
-        val (prefix, placeholder) = if (isFromCard) {
-            R.string.swapping_from_account_title to R.string.swapping_from_title_v2
-        } else {
-            R.string.swapping_to_account_title to R.string.swapping_to_title
-        }
-        return when {
-            account == null || !isAccountsModeProvider() -> AccountTitleUM.Text(resourceReference(placeholder))
-            account is Account.Prediction -> AccountTitleUM.Account.prediction(prefixText = resourceReference(prefix))
-            account is Account.Collectibles -> AccountTitleUM.Account.collectibles(
-                prefixText = resourceReference(prefix),
-            )
-            else -> AccountTitleUM.Account(
-                prefixText = resourceReference(prefix),
-                name = account.accountName.toUM().value,
-                icon = account.toIconUM(),
-            )
-        }
-    }
-
-    private fun Account.toIconUM(): AccountIconUM {
-        return when (this) {
-            is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(icon)
-            is Account.Payment -> AccountIconUM.Payment
-            is Account.Money -> AccountIconUM.Money
-            is Account.Prediction -> AccountIconUM.Prediction
-            is Account.Collectibles -> AccountIconUM.Collectibles
-        }
-    }
+    private fun getCardAccountTitle(account: Account?, isFromCard: Boolean): AccountTitleUM =
+        accountCardTitle(account = account, isAccountsMode = isAccountsModeProvider(), isFromCard = isFromCard)
 }
