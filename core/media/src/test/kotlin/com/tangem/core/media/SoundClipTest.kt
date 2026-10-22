@@ -131,6 +131,38 @@ internal class SoundClipTest {
     }
 
     @Test
+    fun `GIVEN a playing sound WHEN the screen goes and comes back THEN it pauses and carries on`() {
+        // Arrange
+        every { player.isPlaying } returns true
+        val clip = createClip()
+
+        // Act
+        clip.setRunning(false)
+        clip.setRunning(true)
+
+        // Assert
+        verifyOrder {
+            player.pause()
+            player.play()
+        }
+    }
+
+    @Test
+    fun `GIVEN a silent sound WHEN the screen goes and comes back THEN it does not start`() {
+        // Arrange
+        every { player.isPlaying } returns false
+        val clip = createClip()
+
+        // Act
+        clip.setRunning(false)
+        clip.setRunning(true)
+
+        // Assert
+        verify(exactly = 0) { player.pause() }
+        verify(exactly = 0) { player.play() }
+    }
+
+    @Test
     fun `GIVEN a sound WHEN released THEN its listener is removed before the player goes`() {
         // Arrange
         val clip = createClip()

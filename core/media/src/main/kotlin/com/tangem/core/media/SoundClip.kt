@@ -13,6 +13,7 @@ class SoundClip internal constructor(
 ) {
 
     private var isReady = false
+    private var isPausedInBackground = false
 
     private val playerListener = object : Player.Listener {
 
@@ -44,6 +45,17 @@ class SoundClip internal constructor(
 
         player.seekTo(0L)
         player.play()
+    }
+
+    /** Whether the screen is in front; a sound cut off by the background carries on from where it was. */
+    fun setRunning(isRunning: Boolean) {
+        if (isRunning) {
+            if (isPausedInBackground) player.play()
+            isPausedInBackground = false
+        } else if (player.isPlaying) {
+            player.pause()
+            isPausedInBackground = true
+        }
     }
 
     fun release() {

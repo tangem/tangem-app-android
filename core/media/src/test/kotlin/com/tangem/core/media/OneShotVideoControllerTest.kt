@@ -633,6 +633,7 @@ internal class OneShotVideoControllerTest {
         scope = backgroundScope,
         cache = cache,
         diagnosticsSubject = SUBJECT,
+        stallTimeoutMs = STALL_TIMEOUT_MS,
         isMotionEnabled = isMotionEnabled,
         onCueReached = { reason -> cues += reason },
         createPlayer = { listener ->

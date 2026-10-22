@@ -6,6 +6,7 @@ import com.tangem.core.media.OneShotVideoController.CueReason
 import com.tangem.core.media.RemoteClipCache
 import com.tangem.core.media.SoundClip
 import com.tangem.core.media.VideoLoadState
+import com.tangem.features.collectibles.impl.packopening.PackOpeningConst
 import com.tangem.features.collectibles.impl.packopening.video.source.PackRevealAsset
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
@@ -22,13 +23,13 @@ internal class DefaultPackRevealVideoPlayer(
         scope = scope,
         cache = cache,
         diagnosticsSubject = "Pack reveal video",
+        stallTimeoutMs = PackOpeningConst.VIDEO_STALL_TIMEOUT_MS,
         onCueReached = ::onCueReached,
     )
 
     private val skipSound = soundFactory.create(cache = cache, diagnosticsSubject = "Pack skip sound")
 
     private var videoAsset: PackRevealAsset? = null
-    private var isStarted = false
 
     override val videoLoadState: StateFlow<VideoLoadState>
         get() = video.loadState
@@ -48,14 +49,11 @@ internal class DefaultPackRevealVideoPlayer(
     }
 
     override suspend fun preloadVideo(asset: PackRevealAsset?) {
-        if (isStarted) return
-
         videoAsset = asset
         video.prepare(url = asset?.videoUrl, cueMs = asset?.cardRevealMs ?: 0L)
     }
 
     override fun start() {
-        isStarted = true
         video.start()
     }
 
@@ -73,6 +71,7 @@ internal class DefaultPackRevealVideoPlayer(
 
     override fun setRunning(isRunning: Boolean) {
         video.setRunning(isRunning)
+        skipSound.setRunning(isRunning)
     }
 
     override fun release() {

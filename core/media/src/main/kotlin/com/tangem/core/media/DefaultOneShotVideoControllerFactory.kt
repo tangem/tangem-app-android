@@ -20,12 +20,14 @@ internal class DefaultOneShotVideoControllerFactory @Inject constructor(
         scope: CoroutineScope,
         cache: RemoteClipCache,
         diagnosticsSubject: String,
+        stallTimeoutMs: Long,
         onCueReached: (OneShotVideoController.CueReason) -> Unit,
     ): OneShotVideoController = OneShotVideoController(
         // The player only takes calls on the main thread.
         scope = scope + dispatchers.mainImmediate,
         cache = cache,
         diagnosticsSubject = diagnosticsSubject,
+        stallTimeoutMs = stallTimeoutMs,
         isMotionEnabled = context.isSystemAnimationsEnabled(),
         onCueReached = onCueReached,
         createPlayer = { listener ->
