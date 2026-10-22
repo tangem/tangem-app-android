@@ -15,7 +15,6 @@ import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.EventMessage
 import com.tangem.core.ui.message.SnackbarMessage
@@ -1053,11 +1052,11 @@ internal class CollectiblesPackOpeningModelTest {
         }
 
         @Test
-        fun `GIVEN no offer yet WHEN five seconds pass THEN it is asked again and shown`() = runTest {
+        fun `GIVEN buyback not available WHEN five seconds pass THEN it is asked again and shown`() = runTest {
             // Arrange
             coEvery { getBuybackOfferUseCase(any(), any()) } returnsMany listOf(null.right(), OFFER.right())
             val model = openPack(isOfferSettled = false)
-            assertThat(model.reveal().sellBack).isEqualTo(CHECKING_BUTTON)
+            assertThat(model.reveal().sellBack).isEqualTo(UNAVAILABLE_BUTTON)
 
             // Act
             advanceTimeBy(BUYBACK_POLLING_DELAY_MS + 1)
@@ -1075,6 +1074,7 @@ internal class CollectiblesPackOpeningModelTest {
                 OFFER.right(),
             )
             val model = openPack(isOfferSettled = false)
+            assertThat(model.reveal().sellBack).isEqualTo(UNAVAILABLE_BUTTON)
 
             // Act
             advanceTimeBy(BUYBACK_POLLING_DELAY_MS + 1)
@@ -1183,7 +1183,7 @@ internal class CollectiblesPackOpeningModelTest {
 
                 // Act
                 packOpening.reveal().onSellBackClick()
-                advanceUntilIdle()
+                runCurrent()
 
                 // Assert
                 assertThat(packOpening.reveal().sellBack).isEqualTo(model.button)
@@ -1193,14 +1193,10 @@ internal class CollectiblesPackOpeningModelTest {
                     verify(exactly = 1) { messageSender.send(SnackbarMessage(message = model.snackbar)) }
                 }
                 verify(exactly = 0) { router.pop() }
+                packOpening.onDestroy()
             }
 
         private fun provideTestModels() = listOf(
-            FailedSaleModel(
-                failure = BuybackError.NotAllowed,
-                button = UNAVAILABLE_BUTTON,
-                snackbar = stringReference("Buyback unavailable"),
-            ),
             FailedSaleModel(
                 failure = BuybackError.Cancelled,
                 button = AVAILABLE_BUTTON,
@@ -1214,7 +1210,7 @@ internal class CollectiblesPackOpeningModelTest {
             FailedSaleModel(
                 failure = BuybackError.Unexpected,
                 button = AVAILABLE_BUTTON,
-                snackbar = resourceReference(R.string.common_something_went_wrong),
+                snackbar = resourceReference(R.string.unexpected_error_description),
             ),
         )
 
@@ -1230,10 +1226,10 @@ internal class CollectiblesPackOpeningModelTest {
             runCurrent()
 
             // Assert
-            assertThat(model.reveal().sellBack).isEqualTo(CHECKING_BUTTON)
+            assertThat(model.reveal().sellBack).isEqualTo(UNAVAILABLE_BUTTON)
             assertThat(model.reveal().isKeepCardEnabled).isTrue()
             verify(exactly = 1) {
-                messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_something_went_wrong)))
+                messageSender.send(SnackbarMessage(message = resourceReference(R.string.unexpected_error_description)))
             }
             coVerify(exactly = 2) { getBuybackOfferUseCase(any(), any()) }
             model.onDestroy()
@@ -1257,7 +1253,7 @@ internal class CollectiblesPackOpeningModelTest {
         }
 
         @Test
-        fun `GIVEN the offer is being checked WHEN keep card tapped THEN machine details opens`() = runTest {
+        fun `GIVEN no offer yet WHEN keep card tapped THEN machine details opens`() = runTest {
             // Arrange
             coEvery { getBuybackOfferUseCase(any(), any()) } returns null.right()
             val model = openPack(isOfferSettled = false)
@@ -1372,11 +1368,6 @@ internal class CollectiblesPackOpeningModelTest {
             isLoading = false,
         )
         val IN_PROGRESS_BUTTON = AVAILABLE_BUTTON.copy(isLoading = true)
-        val CHECKING_BUTTON = SellBackButtonUM(
-            textRef = resourceReference(R.string.collectibles_open_pack_buyback_unavailable),
-            isEnabled = true,
-            isLoading = true,
-        )
         val UNAVAILABLE_BUTTON = SellBackButtonUM(
             textRef = resourceReference(R.string.collectibles_open_pack_buyback_unavailable),
             isEnabled = false,
