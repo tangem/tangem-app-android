@@ -387,7 +387,9 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
         model.uiState.value.onTermsClick()
 
         // Assert
-        verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/docs/en/virtual-account-terms.pdf") }
+        verify(exactly = 1) {
+            urlOpener.openUrl(match { it.startsWith("https://tangem.com/docs/en/virtual-account-terms.pdf?t=") })
+        }
     }
 
     private fun TestScope.createModel() = TangemPayBankTransferOnrampOnboardingModel(

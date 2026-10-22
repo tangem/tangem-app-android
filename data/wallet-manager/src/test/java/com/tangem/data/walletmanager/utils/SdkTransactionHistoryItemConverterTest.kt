@@ -11,7 +11,6 @@ import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.test.core.ProvideTestModels
-import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -38,7 +37,6 @@ internal class SdkTransactionHistoryItemConverterTest {
         networkTokens = emptySet(),
         getCachedTokenInfoUseCase = mockk(relaxed = true),
         currencyAddresses = emptyList(),
-        txHistoryFeatureToggles = mockk(relaxed = true),
     )
 
     @ParameterizedTest
@@ -97,7 +95,6 @@ internal class SdkTransactionHistoryItemConverterTest {
             networkTokens = setOf(usdt),
             getCachedTokenInfoUseCase = mockk(relaxed = true),
             currencyAddresses = listOf(Address(SAFE_ADDRESS)),
-            txHistoryFeatureToggles = mockk(relaxed = true),
         )
         val item = TransactionHistoryItem(
             txHash = "0xhash",
@@ -158,7 +155,6 @@ internal class SdkTransactionHistoryItemConverterTest {
             networkTokens = setOf(usdc),
             getCachedTokenInfoUseCase = mockk(relaxed = true),
             currencyAddresses = listOf(Address(SAFE_ADDRESS)),
-            txHistoryFeatureToggles = mockk { every { isNewTxHistoryEnabled } returns true },
         )
 
         // Act
@@ -275,7 +271,6 @@ internal class SdkTransactionHistoryItemConverterTest {
             networkTokens = emptySet(),
             getCachedTokenInfoUseCase = mockk(relaxed = true),
             currencyAddresses = listOf(Address(SAFE_ADDRESS)),
-            txHistoryFeatureToggles = mockk { every { isNewTxHistoryEnabled } returns true },
         )
 
         // Act
@@ -296,7 +291,6 @@ internal class SdkTransactionHistoryItemConverterTest {
         networkTokens = emptySet(),
         getCachedTokenInfoUseCase = mockk(relaxed = true),
         currencyAddresses = listOf(Address(SAFE_ADDRESS)),
-        txHistoryFeatureToggles = mockk { every { isNewTxHistoryEnabled } returns true },
     )
 
     /** An internal CALL of the Safe as the SDK reports it: a plain transfer with no fee of its own */

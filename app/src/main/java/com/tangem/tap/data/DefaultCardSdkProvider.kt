@@ -11,9 +11,11 @@ import com.tangem.common.CardFilter
 import com.tangem.common.authentication.AuthenticationManager
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.Config
+import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.decompose.utils.ForegroundActivityProvider
 import com.tangem.crypto.bip39.Wordlist
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.data.card.sdk.CardSdkProvider
@@ -24,9 +26,11 @@ import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.core.remote.config.managers.MutableApiConfigsManager
 import com.tangem.datasource.remote.interceptors.AddHeadersInterceptor
 import com.tangem.operations.attestation.api.TangemApiServiceSettings
+import com.tangem.operations.backup.BackupRepo
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceProvider
 import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.sdk.AndroidStringLocator
 import com.tangem.sdk.DefaultSessionViewDelegate
 import com.tangem.sdk.extensions.*
 import com.tangem.sdk.nfc.AndroidNfcAvailabilityProvider
@@ -34,7 +38,6 @@ import com.tangem.sdk.nfc.NfcManager
 import com.tangem.sdk.storage.create
 import com.tangem.tap.domain.card.FirmwareFeatureToggles
 import com.tangem.tap.domain.walletregistration.withBackupColdWalletRegistration
-import com.tangem.tap.foregroundActivityObserver
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
@@ -56,6 +59,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
     private val apiConfigsManager: ApiConfigsManager,
     private val firmwareFeatureToggles: FirmwareFeatureToggles,
     private val tangemSdkManager: Lazy<TangemSdkManager>,
+    private val foregroundActivityProvider: ForegroundActivityProvider,
     appInfoProvider: AppInfoProvider,
     tangemApiKeyHeaderProvider: TangemApiKeyHeaderProvider,
 ) : CardSdkProvider, CardSdkOwner, BackupServiceProvider {
@@ -128,7 +132,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
         )
         Log.warning { warning }
 
-        val activity = foregroundActivityObserver.foregroundActivity
+        val activity = foregroundActivityProvider.foregroundActivity
 
         if (activity == null) {
             val error = "Tangem SDK holder is null and foreground activity is null"
@@ -232,10 +236,12 @@ internal class DefaultCardSdkProvider @Inject constructor(
         val authenticationManager: AuthenticationManager,
     ) {
 
+        // Built on the SDK's secure storage: BackupService.init would create a second one over the same files
         val backupService: BackupService by lazy {
-            BackupService.init(
+            BackupService(
                 sdk = sdk,
-                activity = activity,
+                repo = BackupRepo(storage = sdk.secureStorage, jsonConverter = MoshiJsonConverter.INSTANCE),
+                stringsLocator = AndroidStringLocator(activity),
                 primaryCardRunnableDecorator = { primaryCard, finalization ->
                     tangemSdkManager.get().withBackupColdWalletRegistration(primaryCard, finalization)
                 },

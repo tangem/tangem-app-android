@@ -64,6 +64,7 @@ class ResolveQrSendTargetsUseCase(
         return when (classified) {
             is ClassifiedQrContent.WalletConnect -> QrSendTarget.WalletConnect(classified.uri)
             is ClassifiedQrContent.McpAuthorization -> QrSendTarget.McpAuthorization(classified.userCode)
+            is ClassifiedQrContent.DeepLink -> QrSendTarget.DeepLink(classified.uri)
             is ClassifiedQrContent.Error -> QrSendTarget.Error(classified)
             is ClassifiedQrContent.PlainAddress -> resolveAddressTarget(
                 qrCode = qrCode,

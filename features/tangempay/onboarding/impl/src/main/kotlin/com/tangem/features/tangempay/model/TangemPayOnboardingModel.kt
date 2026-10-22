@@ -22,6 +22,7 @@ import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
@@ -50,6 +51,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val eligibilityManager: TangemPayEligibilityManager,
     private val onboardingStarter: TangemPayOnboardingStarter,
     private val featureToggles: TangemPayFeatureToggles,
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val uiMessageSender: UiMessageSender,
 ) : Model(), TangemPayWalletSelectorComponent.Listener {
@@ -78,6 +80,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
         },
         onExit = ::back,
         onWalletSelectorRequested = ::openWalletSelector,
+        shouldKeepBackStack = params is TangemPayOnboardingComponent.Params.FromBannerInSettings,
     )
 
     init {
@@ -103,7 +106,6 @@ internal class TangemPayOnboardingModel @Inject constructor(
                         callbacks = starterCallbacks,
                     )
                 }
-                // FromBanner* and mobile-onboard skip the backend validation that Params.Deeplink performs.
                 is TangemPayOnboardingComponent.Params.FromBannerInSettings,
                 is TangemPayOnboardingComponent.Params.FromBannerOnMain,
                 -> showOnboarding()
@@ -117,10 +119,12 @@ internal class TangemPayOnboardingModel @Inject constructor(
             TangemPayOnboardingScreenState.Content(
                 onBack = state.onBack,
                 onTermsClick = ::onTermsClick,
+                onTermsAndFeesClick = ::onTermsAndFeesClick,
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(
                     isLoading = false,
                     onClick = ::onGetCardClick,
                 ),
+                isUnifiedOnboarding = moneyAccountFeatureToggles.isMoneyAccountsEnabled,
             )
         }
     }
@@ -159,6 +163,10 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private fun onTermsClick() {
         analytics.send(TangemPayAnalyticsEvents.ViewTermsClicked())
         urlOpener.openUrl(TangemPayConstants.termsAndLimitsLink())
+    }
+
+    private fun onTermsAndFeesClick() {
+        urlOpener.openUrl(TangemPayConstants.tangemPayLink())
     }
 
     private fun onGetCardClick() {

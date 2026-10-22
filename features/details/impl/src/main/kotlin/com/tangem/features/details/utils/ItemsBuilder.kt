@@ -52,7 +52,7 @@ internal class ItemsBuilder @Inject constructor(
     }.toImmutableList()
 
     fun addTangemPayItem(items: ImmutableList<DetailsItemUM>, onClick: () -> Unit): ImmutableList<DetailsItemUM> {
-        return items.toMutableList().map { block ->
+        return removeTangemPayItem(items).map { block ->
             if (block.id == "shop" && block is DetailsItemUM.Basic) {
                 val newItems = block
                     .items
@@ -63,6 +63,10 @@ internal class ItemsBuilder @Inject constructor(
                 block
             }
         }.toImmutableList()
+    }
+
+    fun hasTangemPayItem(items: ImmutableList<DetailsItemUM>): Boolean = items.any { block ->
+        block is DetailsItemUM.Basic && block.items.any { it.id == TANGEM_PAY_ITEM_ID }
     }
 
     fun removeTangemPayItem(items: ImmutableList<DetailsItemUM>): ImmutableList<DetailsItemUM> {
@@ -76,7 +80,7 @@ internal class ItemsBuilder @Inject constructor(
     }
 
     fun addMoneyAccountItem(items: ImmutableList<DetailsItemUM>, onClick: () -> Unit): ImmutableList<DetailsItemUM> {
-        return items.map { block ->
+        return removeMoneyAccountItem(items).map { block ->
             if (block.id == "shop" && block is DetailsItemUM.Basic) {
                 val newItems = block
                     .items
