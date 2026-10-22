@@ -30,12 +30,22 @@ internal class WcEthNetwork(
     private val factories: Factories,
     private val networksConverter: WcNetworksConverter,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
+    private val chainRequestResolver: WcEthChainRequestResolver,
 ) : WcRequestToUseCaseConverter {
 
     override fun toWcMethodName(request: WcSdkSessionRequest): WcEthMethodName? {
         val methodKey = request.request.method
         val name = WcEthMethodName.entries.find { it.raw == methodKey } ?: return null
         return name
+    }
+
+    override suspend fun respondWithoutUi(request: WcSdkSessionRequest): Boolean {
+        val name = toWcMethodName(request) ?: return false
+        val resolution = chainRequestResolver.resolve(methodName = name, request = request) ?: return false
+        if (resolution == WcEthChainRequestResolver.Resolution.NeedsUserApproval) return false
+
+        chainRequestResolver.respond(request = request, resolution = resolution)
+        return true
     }
 
     @Suppress("CyclomaticComplexMethod")
