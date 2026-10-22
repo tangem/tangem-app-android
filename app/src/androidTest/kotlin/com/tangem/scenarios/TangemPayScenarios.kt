@@ -19,6 +19,7 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_ACCESS_CODE
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_SHORT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_WALLET_CREATION
@@ -27,6 +28,7 @@ import com.tangem.common.extensions.assertVisibility
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.isDisplayedSafely
+import com.tangem.common.extensions.parseNumericBalance
 import com.tangem.common.extensions.restartApp
 import com.tangem.common.utils.assertClipboardTextEquals
 import com.tangem.common.utils.clearClipboard
@@ -909,20 +911,23 @@ fun BaseTestCase.confirmTangemPayWithdrawByHolding(accessCode: String) {
             composeTestRule.onAllNodes(inProgressTitle, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
     }.getOrDefault(false)
 
+    // Raw Compose on purpose: a Kakao check here waits out Kaspresso's 10 s flaky-safety retry.
+    fun isHoldOutcomeShown(): Boolean =
+        runCatching { composeTestRule.onNode(withdrawErrorDialog).assertExists() }.isSuccess || isConfirmationStarted()
+
     composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
-        // Raw Compose on purpose: a Kakao check here waits out Kaspresso's 10 s flaky-safety retry.
-        if (runCatching { composeTestRule.onNode(withdrawErrorDialog).assertExists() }.isSuccess) {
-            return@waitUntil true
-        }
         // Checked before the hold: on the success screen the last button is 'Close'.
-        if (isConfirmationStarted()) return@waitUntil true
+        if (isHoldOutcomeShown()) return@waitUntil true
         // HoldToConfirm is always last — withdraw renders an extra BASE_BUTTON for notifications.
         runCatching {
             val buttons = composeTestRule.onAllNodes(swapScreenButton)
             val count = buttons.fetchSemanticsNodes().size
             if (count > 0) buttons[count - 1].performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
         }
-        isConfirmationStarted()
+        // A confirmed hold shows its outcome only after a network round-trip; holding again sooner submits twice.
+        runCatching {
+            composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_SHORT) { isHoldOutcomeShown() }
+        }.isSuccess
     }
     if (composeTestRule.onAllNodes(accessCodeInput).fetchSemanticsNodes().isNotEmpty()) {
         composeTestRule.onNode(accessCodeInput).performTextInput(accessCode)
@@ -1525,6 +1530,41 @@ fun BaseTestCase.awaitTangemPayStatusOfSelectedWallet(
         }
         check(expectedStatus.isInstance(status?.value)) { "Tangem Pay status is ${status?.value}" }
     }
+}
+
+fun BaseTestCase.awaitMainTotalBalanceIncludingTangemPay(): String {
+    revealAccountTokensOnMain(getResourceString(CoreUiR.string.account_main_account_title))
+    var totalBalance = ""
+    var lastMismatch: Throwable? = null
+    val isMatched = runCatching {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching { totalBalance = readMainTotalBalanceIncludingTangemPay() }
+                .onFailure { lastMismatch = it }
+                .isSuccess
+        }
+    }.isSuccess
+    if (!isMatched) throw AssertionError("Main total balance did not match", lastMismatch)
+    return totalBalance
+}
+
+private fun BaseTestCase.readMainTotalBalanceIncludingTangemPay(): String {
+    var total = ""
+    var paymentAccountBalance = ""
+    var tokenBalances: List<Pair<String, String>> = emptyList()
+    onMainScreen { total = totalBalanceText.extractText() }
+    onTangemPayMainScreen { paymentAccountBalance = tileBalance.extractText() }
+    onMainScreen { tokenBalances = getDisplayedTokenBalances() }
+    if (tokenBalances.none { (_, fiatAmount) -> fiatAmount.parseNumericBalance().signum() > 0 }) {
+        throw AssertionError("No token with a positive balance among $tokenBalances")
+    }
+    val expectedTotal = tokenBalances.sumOf { (_, fiatAmount) -> fiatAmount.parseNumericBalance() } +
+        paymentAccountBalance.parseNumericBalance()
+    if (total.parseNumericBalance().compareTo(expectedTotal) != 0) {
+        throw AssertionError(
+            "Total '$total' should equal tokens $tokenBalances plus Payment account '$paymentAccountBalance'",
+        )
+    }
+    return total
 }
 
 private const val BANK_TRANSFER_AVAILABILITY_ATTEMPTS = 3
