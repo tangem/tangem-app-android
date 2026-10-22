@@ -35,6 +35,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
 ) {
 
     private val balanceWasSentMap = mutableMapOf<String, Boolean>()
+    private val sentBalanceLoaded = mutableMapOf<UserWalletId, BalanceLoadedPayload>()
     private val yieldPromoShownMap = mutableMapOf<String, Boolean>()
     private val mutex = Mutex()
     private val loadingTraces = mutableMapOf<UserWalletId, Trace>()
@@ -58,7 +59,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
             stopLoadingTraceIfNeeded(userWallet.walletId, totalFiatBalance)
         }
 
-        sendBalanceLoadedEventIfNeeded(totalFiatBalance, flattenCurrencies)
+        sendBalanceLoadedEventIfNeeded(userWallet.walletId, totalFiatBalance, flattenCurrencies)
         sendToppedUpEventIfNeeded(userWallet, totalFiatBalance, flattenCurrencies)
         sendUnreachableNetworksEventIfNeeded(flattenCurrencies)
         sendTokenBalancesIfNeeded(flattenCurrencies)
@@ -99,18 +100,22 @@ internal class TokenListAnalyticsSender @Inject constructor(
         return balance is TotalFiatBalance.Failed || isLoaded
     }
 
-    private fun sendBalanceLoadedEventIfNeeded(
+    // Balance updates (cache → actual, networks finishing, quote refreshes) must not re-send the event:
+    // only a change of what the event reports does
+    private suspend fun sendBalanceLoadedEventIfNeeded(
+        userWalletId: UserWalletId,
         fiatBalance: TotalFiatBalance,
         currenciesStatuses: List<CryptoCurrencyStatus>,
     ) {
-        createCardBalanceState(fiatBalance, currenciesStatuses)?.let { balanceState ->
-            analyticsEventHandler.send(
-                Basic.BalanceLoaded(
-                    balance = balanceState,
-                    tokensCount = currenciesStatuses.size,
-                ),
-            )
-        }
+        val balanceState = createCardBalanceState(fiatBalance, currenciesStatuses) ?: return
+        val payload = BalanceLoadedPayload(balance = balanceState, tokensCount = currenciesStatuses.size)
+
+        val isChanged = mutex.withLock { sentBalanceLoaded.put(userWalletId, payload) != payload }
+        if (!isChanged) return
+
+        analyticsEventHandler.send(
+            Basic.BalanceLoaded(balance = payload.balance, tokensCount = payload.tokensCount),
+        )
     }
 
     private fun createCardBalanceState(
@@ -251,6 +256,8 @@ internal class TokenListAnalyticsSender @Inject constructor(
         )
         yieldPromoShownMap[key] = true
     }
+
+    private data class BalanceLoadedPayload(val balance: AnalyticsParam.CardBalanceState, val tokensCount: Int)
 
     companion object {
         const val BALANCE_LOADED_TRACE_NAME = "Total_balance_loaded"
