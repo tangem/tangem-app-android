@@ -19,7 +19,7 @@ import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
-import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
+import com.tangem.domain.jointaccount.usecase.ConfirmJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.CreateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
@@ -125,14 +125,14 @@ internal object JointAccountDomainModule {
 
     @Provides
     @Singleton
-    fun provideActivateJointAccountUseCase(
+    fun provideConfirmJointAccountUseCase(
         repository: JointAccountRepository,
         signer: JointAccountSigner,
         fetcher: SingleJointAccountListFetcher,
         supplier: SingleJointAccountListSupplier,
         safeAddressCalculator: SafeAddressCalculator,
-    ): ActivateJointAccountUseCase {
-        return ActivateJointAccountUseCase(
+    ): ConfirmJointAccountUseCase {
+        return ConfirmJointAccountUseCase(
             repository = repository,
             signer = signer,
             fetcher = fetcher,

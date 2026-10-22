@@ -613,7 +613,7 @@ internal class JointAccountMembersModelTest {
         runCurrent()
 
         // Act
-        accounts.value = listOf(confirming.copy(members = listOf(creator, member.copy(isVerified = true))))
+        accounts.value = listOf(confirming.copy(members = listOf(creator, member.copy(signature = "0xsigned"))))
         advanceUntilIdle()
 
         // Assert
