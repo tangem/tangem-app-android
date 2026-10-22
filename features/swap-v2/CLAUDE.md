@@ -109,9 +109,10 @@ In the linear flow Confirm is re-created fresh from `params.sendWithSwapUM`, so 
 - `updateEditedState(sendWithSwapUM)` — the edit-return re-push; copies ONLY the parent-owned fields
   (`amountUM`, `destinationUM`). Confirm-local `confirmUM`/`feeSelectorUM` must never be overwritten
   from the parent (a full replace kills `blockClickEnableFlow` — parent's `confirmUM` is `Empty`).
-- Publishes its state up to the parent only **after a successful send** (`callback.onResult(uiState.value)`).
-  Until then, confirm-local changes (fee selection, confirmUM) live only in this model — the parent's
-  copy is stale.
+- Forwards every amount-block result to the parent (`callback.onAmountResult`), so the parent's `amountUM`
+  stays current for the re-pushes on navigation. The whole state is published only **after a successful
+  send** (`callback.onResult(uiState.value)`); other confirm-local changes (fee selection, confirmUM) live
+  only in this model.
 - Sending: `SwapTransactionSender` (CEX only; DEX/DEX_BRIDGE/ONRAMP rejected). Success →
   `SendWithSwapConfirmSentStateTransformer` + `router.replaceAll(Success)`.
 

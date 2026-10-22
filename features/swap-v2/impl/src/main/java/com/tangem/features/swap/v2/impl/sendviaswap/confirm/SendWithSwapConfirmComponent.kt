@@ -39,6 +39,7 @@ import com.tangem.features.send.api.subcomponents.notifications.SendNotification
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
+import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.SwapUtils.SEND_WITH_SWAP_PROVIDER_TYPES
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
@@ -80,6 +81,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             analyticsSendSource = params.analyticsSendSource,
             accountFlow = params.accountFlow,
             isAccountModeFlow = params.isAccountModeFlow,
+            hiddenProviderIdsFlow = params.hiddenProviderIdsFlow,
             onCloseFlow = params.onCloseFlow,
         ),
         onResult = model::onAmountResult,
@@ -342,6 +344,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
         val primaryFeePaidCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>, // doesn't change if select gasless fee
         val accountFlow: StateFlow<Account?>,
         val isAccountModeFlow: StateFlow<Boolean>,
+        val hiddenProviderIdsFlow: StateFlow<Set<String>>,
         val callback: ModelCallback,
         /** Closes the whole flow, not just the current step. */
         val onCloseFlow: () -> Unit,
@@ -354,5 +357,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
 
     interface ModelCallback {
         fun onResult(sendWithSwapUM: SendWithSwapUM)
+        fun onAmountResult(amountUM: SwapAmountUM)
+        fun onProviderHidden(providerId: String)
     }
 }
