@@ -21,6 +21,7 @@ import kotlin.reflect.safeCast
 internal class DefaultRouter(
     private val navigationProvider: AppNavigationProvider,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val navigationFailureHandler: NavigationFailureHandler,
 ) : Router, InstanceKeeper.Instance {
 
     private val logger = TangemLogger.withTag("Router")
@@ -30,19 +31,23 @@ internal class DefaultRouter(
 
     override fun push(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
         logger.i("Push $route")
-        navigateSafely(onComplete) { complete -> pushNew(route, complete) }
+        navigateSafely(withDefaultCompletion(onComplete) { "Unable to push $route" }) { complete ->
+            pushNew(route, complete)
+        }
     }
 
     override fun replaceCurrent(route: Route, onComplete: (Boolean) -> Unit) {
         logger.i("Replace a current route with $route")
-        navigateSafely(onComplete) { complete -> this.replaceCurrent(route, { complete(true) }) }
+        val onCompleteOrReport = withDefaultCompletion(onComplete) { "Unable to replace a current route with $route" }
+
+        navigateSafely(onCompleteOrReport) { complete -> this.replaceCurrent(route, { complete(true) }) }
     }
 
     override fun replaceAll(vararg routes: Route, onComplete: (isSuccess: Boolean) -> Unit) {
         val newRoutes = routes.toList()
         logger.i("Replace all routes with ${newRoutes.ifEmpty { "<empty>" }}")
 
-        navigateSafely(onComplete) { complete ->
+        navigateSafely(withDefaultCompletion(onComplete) { "Unable to replace routes with $newRoutes" }) { complete ->
             navigate(
                 transformer = { newRoutes },
                 onComplete = { newStack, _ -> complete(newStack == newRoutes) },
@@ -52,14 +57,14 @@ internal class DefaultRouter(
 
     override fun pop(onComplete: (isSuccess: Boolean) -> Unit) {
         logger.i("Pop route")
-        navigateSafely(onComplete) { complete -> this.pop(complete) }
+        navigateSafely(withDefaultCompletion(onComplete) { "Unable to pop route" }) { complete -> this.pop(complete) }
     }
 
     override fun popTo(route: Route, onComplete: (isSuccess: Boolean) -> Unit) {
         logger.i("Pop to $route")
         popTo(
             predicate = { it != route },
-            onComplete = onComplete,
+            onComplete = withDefaultCompletion(onComplete) { "Unable to pop to $route" },
         )
     }
 
@@ -67,7 +72,7 @@ internal class DefaultRouter(
         logger.i("Pop to $routeClass")
         popTo(
             predicate = { it::class != routeClass },
-            onComplete = onComplete,
+            onComplete = withDefaultCompletion(onComplete) { "Unable to pop to $routeClass" },
         )
     }
 
@@ -78,8 +83,9 @@ internal class DefaultRouter(
     ) {
         logger.i("Pop to the last matching $routeClass")
         val matches: (Route) -> Boolean = { route -> routeClass.safeCast(route)?.let(predicate) == true }
+        val onCompleteOrReport = withDefaultCompletion(onComplete) { "Unable to pop to the last matching $routeClass" }
 
-        navigateSafely(onComplete) { complete ->
+        navigateSafely(onCompleteOrReport) { complete ->
             navigate(
                 transformer = { stack -> stack.dropLastWhile { !matches(it) }.ifEmpty { stack } },
                 onComplete = { newStack, _ -> complete(newStack.lastOrNull()?.let(matches) == true) },
@@ -88,12 +94,16 @@ internal class DefaultRouter(
     }
 
     override fun navigate(transformer: (stack: List<Route>) -> List<Route>, onComplete: (isSuccess: Boolean) -> Unit) {
-        navigateSafely(onComplete) { complete ->
+        navigateSafely(withDefaultCompletion(onComplete) { "Unable to rebuild the stack" }) { complete ->
             navigate(
                 transformer = { stack -> transformer(stack).also { logger.i("Rebuild the stack to $it") } },
                 onComplete = { _, _ -> complete(true) },
             )
         }
+    }
+
+    override fun defaultCompletionHandler(isSuccess: Boolean, errorMessage: String) {
+        if (!isSuccess) navigationFailureHandler.onNavigationFailed(errorMessage)
     }
 
     override suspend fun contains(route: Route): Boolean = withContext(dispatchers.mainImmediate) {
