@@ -4,6 +4,7 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonUM
 import kotlinx.collections.immutable.ImmutableList
 
@@ -11,6 +12,7 @@ internal interface TokenActionsComponent : ComposableBottomSheetComponent, Compo
     data class Params(
         val actions: ImmutableList<TokenActionButtonUM>,
         val tokenRowUM: TangemTokenRowUM?,
+        val tokenRowState: TangemTokenRow.State? = null,
         val offsetX: Float,
         val offsetY: Float,
         val onDismiss: () -> Unit,
