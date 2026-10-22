@@ -38,5 +38,7 @@ class GetWalletsUseCase(
         }
 
     @Throws(IllegalArgumentException::class)
-    fun invokeSync(): List<UserWallet> = userWalletsListRepository.userWallets.value!!
+    fun invokeSync(): List<UserWallet> = requireNotNull(userWalletsListRepository.userWallets.value) {
+        "User wallets are not loaded"
+    }
 }
