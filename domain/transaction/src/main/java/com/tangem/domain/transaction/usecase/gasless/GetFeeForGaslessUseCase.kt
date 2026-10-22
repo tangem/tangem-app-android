@@ -6,7 +6,7 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.domain.account.models.AccountStatusList
-import com.tangem.domain.account.status.supplier.NonPortfolioAccountCurrencies
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -28,7 +28,7 @@ import java.math.BigDecimal
  */
 class GetFeeForGaslessUseCase(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
-    private val nonPortfolioAccountCurrencies: NonPortfolioAccountCurrencies,
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val getFeeUseCase: GetFeeUseCase,
     private val evmGaslessFeeResolver: EvmGaslessFeeResolver,
@@ -56,7 +56,7 @@ class GetFeeForGaslessUseCase(
                         ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
 
                     val nativeCurrencyStatus = accountStatusList.getCoinStatus(network).getOrNull()
-                        ?: nonPortfolioAccountCurrencies.getStatuses(userWallet.walletId, network)
+                        ?: nonPortfolioCurrenciesProvider.getStatuses(userWallet.walletId, network)
                             .firstOrNull { it.currency is CryptoCurrency.Coin }
                         ?: raiseIllegalStateError("No native currency found: ${network.id}")
 
