@@ -8,6 +8,7 @@ data class WithdrawStoreData(
     @SerialName("orderId") val orderId: String,
     @SerialName("exchangeData") val exchangeData: ExchangeStoreData?,
     @SerialName("txHash") val txHash: String?,
+    @SerialName("createdAtMillis") val createdAtMillis: Long = 0L,
 )
 
 @Serializable

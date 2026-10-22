@@ -31,6 +31,7 @@ import com.tangem.store.datasource.jointaccount.models.JointAccountDto
 import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
+import com.tangem.domain.jointaccount.model.JointAccountInvite
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
@@ -410,7 +411,9 @@ internal class DefaultJointAccountRepositoryTest {
         val actual = repository.getInvites(userWalletId = WALLET_ID, cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID)
 
         // Assert
-        assertThat(actual).containsExactly("invite-a", "invite-b").inOrder()
+        assertThat(actual)
+            .containsExactly(JointAccountInvite(id = "invite-a"), JointAccountInvite(id = "invite-b"))
+            .inOrder()
     }
 
     @Test

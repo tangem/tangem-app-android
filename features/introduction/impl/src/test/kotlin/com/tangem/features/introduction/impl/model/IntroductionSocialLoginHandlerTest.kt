@@ -206,6 +206,20 @@ internal class IntroductionSocialLoginHandlerTest {
         assertThat(order).containsExactly("signOut", "finished").inOrder()
     }
 
+    @Test
+    fun `GIVEN the sign-in throws WHEN signIn THEN the progress is cleared and the entry points reopen`() = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } throws IllegalStateException()
+
+        // Act
+        val thrown = runCatching { handler.signIn(PROVIDER, SOURCE, host) }.exceptionOrNull()
+
+        // Assert
+        assertThat(thrown).isInstanceOf(IllegalStateException::class.java)
+        assertThat(host.progress.last()).isNull()
+        assertThat(host.finishedCount).isEqualTo(1)
+    }
+
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN a failure WHEN signIn THEN it is shown the way the spec puts it`(model: FailureModel) = runTest {
@@ -225,6 +239,30 @@ internal class IntroductionSocialLoginHandlerTest {
             verify(exactly = 0) { uiMessageSender.send(any<DialogMessage>()) }
         }
     }
+
+    @ParameterizedTest
+    @MethodSource("provideGenericFailures")
+    fun `GIVEN a failure with no wording of its own WHEN signIn THEN the generic snackbar is shown`(
+        error: SocialLoginError,
+    ) = runTest {
+        // Arrange
+        coEvery { socialLoginUseCase.signIn(PROVIDER, any(), any(), any()) } returns error.left()
+
+        // Act
+        handler.signIn(PROVIDER, SOURCE, host)
+
+        // Assert
+        val message = slot<SnackbarMessage>()
+        verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+        assertThat(message.captured.message).isEqualTo(resourceReference(CoreResR.string.social_login_error_generic))
+    }
+
+    private fun provideGenericFailures() = listOf(
+        SocialLoginError.BindingConflict,
+        SocialLoginError.NoProviderAccount,
+        SocialLoginError.ProviderUnavailable,
+        SocialLoginError.ServerError(),
+    )
 
     @Test
     fun `GIVEN two failed attempts WHEN support is contacted THEN each opens the chat under its own id`() = runTest {
@@ -638,7 +676,6 @@ internal class IntroductionSocialLoginHandlerTest {
                 "Consent Type" to "Offers & Updates by email",
                 "Consent Given" to if (isEmailSharingAllowed) "Yes" else "No",
                 "Consent Text" to CONSENT_TEXT,
-                "walletId" to WALLET_ID.stringValue,
                 AnalyticsParam.PRODUCT_TYPE to AnalyticsParam.ProductType.MobileWallet.value,
             ),
         )

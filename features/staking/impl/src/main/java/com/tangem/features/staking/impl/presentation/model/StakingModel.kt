@@ -9,7 +9,6 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.getValidatorsCount
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
@@ -24,6 +23,7 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
@@ -157,7 +157,7 @@ internal class StakingModel @Inject constructor(
     private val coroutineScope: AppCoroutineScope,
     private val innerRouter: InnerStakingRouter,
     private val messageSender: UiMessageSender,
-    private val appRouter: AppRouter,
+    private val router: Router,
 ) : Model(), StakingClickIntents {
 
     val uiState: StateFlow<StakingUiState> = stateController.uiState
@@ -177,7 +177,7 @@ internal class StakingModel @Inject constructor(
     )
 
     private val stakingStateRouter: StakingStateRouter = StakingStateRouter(
-        appRouter = appRouter,
+        router = router,
         stateController = stateController,
         analyticsEventsHandler = analyticsEventHandler,
     )
@@ -344,7 +344,7 @@ internal class StakingModel @Inject constructor(
             currency = params.cryptoCurrency,
             screenSource = AnalyticsParam.ScreensSources.Staking,
         ) ?: return false
-        appRouter.push(route)
+        router.push(route)
         return true
     }
 
@@ -794,7 +794,7 @@ internal class StakingModel @Inject constructor(
         val networkId = cryptoCurrencyStatus.currency.network.rawId
         val preferredValidators = (integration as? StakeKitIntegration)?.targets
             ?.filterIsInstance<StakingTarget.Validator>()
-            ?.filter { it.delegate.preferred }
+            ?.filter { it.delegate.isPreferred }
             .orEmpty()
         val pendingActions = activeStake.pendingActions.mapNotNull { action ->
             if (action.type in listOf(StakingActionType.RESTAKE, StakingActionType.STAKE) &&

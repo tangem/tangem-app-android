@@ -36,7 +36,6 @@ import com.tangem.domain.wallets.usecase.GetHotWalletContextualUnlockUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
 import com.tangem.features.hotwallet.CreateCloudBackupComponent
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.createcloudbackup.entity.CreateCloudBackupUM
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -66,7 +65,6 @@ internal class CreateCloudBackupModel @Inject constructor(
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase,
     private val cloudBackupRepository: CloudBackupRepository,
     private val saveBackupPasswordUseCase: SaveBackupPasswordUseCase,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<CreateCloudBackupComponent.Params>()
@@ -192,7 +190,6 @@ internal class CreateCloudBackupModel @Inject constructor(
         onCloseClick = ::onClose,
         password = String(password),
         isPasswordVisible = isPasswordVisible,
-        isPasswordManagerEnabled = hotWalletFeatureToggles.isPasswordManagerEnabled,
         strength = PasswordStrengthEvaluator.evaluateRated(password),
         hint = PasswordStrengthEvaluator.hint(password),
         onPasswordChange = ::onPasswordChange,
@@ -207,7 +204,6 @@ internal class CreateCloudBackupModel @Inject constructor(
             onCloseClick = ::onClose,
             confirmPassword = String(confirmPassword),
             isPasswordVisible = isPasswordVisible,
-            isPasswordManagerEnabled = hotWalletFeatureToggles.isPasswordManagerEnabled,
             isMismatch = isMismatch,
             isConsentChecked = isConsentChecked,
             isLoading = isLoading,
@@ -304,9 +300,7 @@ internal class CreateCloudBackupModel @Inject constructor(
                     setCloudBackupStateUseCase(params.userWalletId.stringValue, isBackedUp = true)
                     // offered only once the file exists, so the password is never stored for a backup that
                     // failed to upload and the username can be the name the file actually got
-                    if (hotWalletFeatureToggles.isPasswordManagerEnabled) {
-                        saveBackupPasswordUseCase(username = backup.backupName, password = password)
-                    }
+                    saveBackupPasswordUseCase(username = backup.backupName, password = password)
                     wipeSecrets()
                     sendBackupCompletedEvents()
                     uiState.value = CreateCloudBackupUM.Completed(onFinishClick = ::onFinish)

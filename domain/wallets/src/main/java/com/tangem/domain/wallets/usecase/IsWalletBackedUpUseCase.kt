@@ -23,14 +23,14 @@ class IsWalletBackedUpUseCase @Inject constructor(
 
     suspend operator fun invoke(wallet: UserWallet): Boolean = when (wallet) {
         is UserWallet.Cold -> wallet.isColdBackedUp()
-        is UserWallet.Hot -> wallet.backedUp ||
+        is UserWallet.Hot -> wallet.isBackedUp ||
             cloudBackupRepository.isBackedUp(wallet.walletId.stringValue) ||
             isSocialBackupCompletedUseCase(wallet.walletId)
     }
 
     fun flow(wallet: UserWallet): Flow<Boolean> = when (wallet) {
         is UserWallet.Cold -> flowOf(wallet.isColdBackedUp())
-        is UserWallet.Hot -> if (wallet.backedUp) {
+        is UserWallet.Hot -> if (wallet.isBackedUp) {
             flowOf(true)
         } else {
             combine(

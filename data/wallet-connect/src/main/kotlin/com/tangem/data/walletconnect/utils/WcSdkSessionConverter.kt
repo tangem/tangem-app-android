@@ -21,7 +21,7 @@ internal object WcSdkSessionConverter : Converter<WcSdkSessionConverter.Input, W
                 ?: WcAppMetaDataConverter.empty,
             namespaces = value.session.namespaces.mapValues { (_, session) ->
                 WcSdkSession.Session(
-                    chains = session.chains ?: listOf(),
+                    chains = session.chains.orEmpty(),
                     accounts = session.accounts,
                     methods = session.methods,
                     events = session.events,

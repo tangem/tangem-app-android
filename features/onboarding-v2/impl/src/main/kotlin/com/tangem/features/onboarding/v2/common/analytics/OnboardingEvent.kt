@@ -6,12 +6,12 @@ import com.tangem.core.analytics.models.AnalyticsParam
 sealed class OnboardingEvent(
     category: String,
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category, event, params) {
 
     sealed class Backup(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : OnboardingEvent("Onboarding / Backup", event, params) {
 
         class ScreenOpened : Backup("Backup Screen Opened")
@@ -49,7 +49,7 @@ sealed class OnboardingEvent(
 
     sealed class Twins(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : OnboardingEvent("Onboarding / Twins", event, params) {
 
         class ScreenOpened : Twins("Twinning Screen Opened")

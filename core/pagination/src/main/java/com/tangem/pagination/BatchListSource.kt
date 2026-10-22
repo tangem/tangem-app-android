@@ -159,7 +159,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
                     )
                 }
 
-                if (action.async) {
+                if (action.isAsync) {
                     collectAsyncUpdateAction(action)
                 } else {
                     collectSyncUpdateAction(action)
@@ -221,9 +221,9 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
             waitingUpdateJobs.update { it - actionJob }
 
             // No other task are mutating batches with the same keys, so we can start a job
-            val started = job.start()
+            val isStarted = job.start()
 
-            if (started) {
+            if (isStarted) {
                 updateJobs.update { it + actionJob }
 
                 job.invokeOnCompletion { cause ->
@@ -248,9 +248,9 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
 
         state.value = when (res) {
             is BatchFetchResult.Success -> {
-                val batch = if (res.empty.not()) {
+                val batch = if (res.isEmpty.not()) {
                     Batch(
-                        key = generateNewKey(listOf()),
+                        key = generateNewKey(emptyList()),
                         data = res.data,
                     )
                 } else {
@@ -258,8 +258,8 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
                 }
 
                 BatchListState(
-                    data = batch?.let { listOf(it) } ?: emptyList(),
-                    status = if (res.last) {
+                    data = batch?.let { listOf(it) }.orEmpty(),
+                    status = if (res.isLast) {
                         PaginationStatus.EndOfPagination
                     } else {
                         PaginationStatus.Paginating(res)
@@ -307,7 +307,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
         state.update { currentState ->
             when (res) {
                 is BatchFetchResult.Success -> {
-                    val newBatch = if (res.empty.not()) {
+                    val newBatch = if (res.isEmpty.not()) {
                         Batch(
                             key = generateNewKey(currentState.data.map { it.key }),
                             data = res.data,
@@ -318,7 +318,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
 
                     currentState.copy(
                         data = newBatch?.let { currentState.data + it } ?: currentState.data,
-                        status = if (res.last) {
+                        status = if (res.isLast) {
                             PaginationStatus.EndOfPagination
                         } else {
                             PaginationStatus.Paginating(res)

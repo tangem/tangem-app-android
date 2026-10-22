@@ -3,7 +3,6 @@ package com.tangem.features.send.sendnft.confirm.model
 import android.os.SystemClock
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.common.ui.backup.BackupErrorWarningSender
@@ -70,7 +69,6 @@ internal class NFTSendConfirmModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val appRouter: AppRouter,
     private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase,
     private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
     private val createNFTTransferTransactionUseCase: CreateNFTTransferTransactionUseCase,
@@ -314,7 +312,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                 TangemLogger.e(error.toString())
                 alertFactory.getSendTransactionErrorState(
                     error = error,
-                    popBack = appRouter::pop,
+                    popBack = params.onCloseFlow,
                     onFailedTxEmailClick = ::onFailedTxEmailClick,
                 )
                 analyticsEventHandler.send(
@@ -412,7 +410,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                     is ConfirmUM.Success -> {
                         modelScope.launch {
                             nftSendSuccessTrigger.triggerSuccessNFTSend()
-                            appRouter.pop()
+                            params.onCloseFlow()
                         }
                     }
                     is ConfirmUM.Content -> if (confirmUM.isSending) {

@@ -81,12 +81,12 @@ internal class WalletBackupModelTest {
     private val hotWalletNotBackedUp: UserWallet.Hot = mockk {
         every { walletId } returns this@WalletBackupModelTest.walletId
         every { hotWalletId } returns this@WalletBackupModelTest.hotWalletId
-        every { backedUp } returns false
+        every { isBackedUp } returns false
     }
     private val hotWalletBackedUp: UserWallet.Hot = mockk {
         every { walletId } returns this@WalletBackupModelTest.walletId
         every { hotWalletId } returns this@WalletBackupModelTest.hotWalletId
-        every { backedUp } returns true
+        every { isBackedUp } returns true
     }
     private val coldWallet: UserWallet.Cold = mockk {
         every { walletId } returns this@WalletBackupModelTest.walletId

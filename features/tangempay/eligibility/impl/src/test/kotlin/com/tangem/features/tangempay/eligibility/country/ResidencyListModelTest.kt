@@ -4,6 +4,8 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -11,19 +13,27 @@ import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCountry
 import com.tangem.domain.models.pay.TangemPayEligibility
 import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.pay.TangemPayRegion
+import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.CheckTangemPayEligibilityUseCase
+import com.tangem.domain.pay.usecase.ClearTangemPayCustomerResidencyUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
+import com.tangem.domain.pay.usecase.StoreTangemPayCustomerResidencyUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.features.tangempay.eligibility.TangemPayEligibilityComponent
+import com.tangem.features.tangempay.eligibility.EligibilityInnerRoute
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.TestScope
@@ -33,6 +43,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ResidencyListModelTest {
@@ -41,8 +52,11 @@ internal class ResidencyListModelTest {
     private val getCountriesUseCase: GetTangemPayCountriesUseCase = mockk()
     private val getRegionsUseCase: GetTangemPayRegionsUseCase = mockk()
     private val checkEligibilityUseCase: CheckTangemPayEligibilityUseCase = mockk()
+    private val storeCustomerResidencyUseCase: StoreTangemPayCustomerResidencyUseCase = mockk()
+    private val clearCustomerResidencyUseCase: ClearTangemPayCustomerResidencyUseCase = mockk()
     private val onboardingRepository: OnboardingRepository = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     @BeforeEach
     fun resetMocks() {
@@ -51,12 +65,68 @@ internal class ResidencyListModelTest {
             getCountriesUseCase,
             getRegionsUseCase,
             checkEligibilityUseCase,
+            storeCustomerResidencyUseCase,
+            clearCustomerResidencyUseCase,
             onboardingRepository,
             uiMessageSender,
+            analytics,
         )
-        coEvery { getCountriesUseCase() } returns listOf(GERMANY).right()
+        coEvery { getCountriesUseCase() } returns listOf(GERMANY, USA).right()
         coEvery { checkEligibilityUseCase(any(), GERMANY.code, null) } returns
             TangemPayEligibility(isAvailable = true, country = GERMANY.code, region = null).right()
+        coEvery { storeCustomerResidencyUseCase(any(), any()) } just Runs
+        coEvery { clearCustomerResidencyUseCase(any()) } just Runs
+    }
+
+    @Test
+    fun `GIVEN eligible country WHEN country clicked THEN customer residency cleared`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns
+            customerInfo(KycStatus.APPROVED).right()
+        val model = createModel(testScope = this, product = TangemPayProduct.PAYMENT_ACCOUNT)
+        advanceUntilIdle()
+
+        // Act
+        model.item(GERMANY.code).onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { clearCustomerResidencyUseCase(USER_WALLET_ID) }
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @EnumSource(TangemPayProduct::class)
+    fun `GIVEN unavailable region WHEN region clicked THEN residency stored`(product: TangemPayProduct) = runTest {
+        // Arrange
+        coEvery { getRegionsUseCase(USA.code) } returns listOf(TEXAS).right()
+        coEvery { checkEligibilityUseCase(any(), USA.code, TEXAS.code) } returns
+            TangemPayEligibility(isAvailable = false, country = USA.code, region = TEXAS.code).right()
+        val regionsModel = createModel(
+            testScope = this,
+            product = product,
+            step = ResidencyListComponent.Step.Regions(countryCode = USA.code, countryName = USA.name),
+        )
+        advanceUntilIdle()
+
+        // Act
+        regionsModel.item(TEXAS.code).onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) {
+            storeCustomerResidencyUseCase(
+                userWalletId = USER_WALLET_ID,
+                residency = TangemPayCustomerResidency(countryCode = USA.code, regionCode = TEXAS.code),
+            )
+        }
+        verify(exactly = 1) {
+            router.push(
+                route = EligibilityInnerRoute.RegionUnavailable(countryCode = USA.code, regionCode = TEXAS.code),
+                onComplete = any(),
+            )
+        }
+        regionsModel.onDestroy()
     }
 
     @ParameterizedTest
@@ -99,6 +169,52 @@ internal class ResidencyListModelTest {
             model.onDestroy()
         }
 
+    @Test
+    fun `GIVEN country with regions WHEN country and region clicked THEN single eligibility result sent`() =
+        runTest {
+            // Arrange
+            coEvery { checkEligibilityUseCase(any(), USA.code, null) } returns
+                TangemPayEligibility(isAvailable = true, country = USA.code, region = null).right()
+            coEvery { checkEligibilityUseCase(any(), USA.code, TEXAS.code) } returns
+                TangemPayEligibility(isAvailable = true, country = USA.code, region = TEXAS.code).right()
+            coEvery { getRegionsUseCase(USA.code) } returns listOf(TEXAS).right()
+            coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns
+                customerInfo(KycStatus.APPROVED).right()
+            val countriesModel = createModel(testScope = this, product = TangemPayProduct.BANKING_ACCOUNT)
+            val regionsModel = createModel(
+                testScope = this,
+                product = TangemPayProduct.BANKING_ACCOUNT,
+                step = ResidencyListComponent.Step.Regions(countryCode = USA.code, countryName = USA.name),
+            )
+            advanceUntilIdle()
+
+            // Act
+            countriesModel.item(USA.code).onClick()
+            advanceUntilIdle()
+            regionsModel.item(TEXAS.code).onClick()
+            advanceUntilIdle()
+
+            // Assert
+            val sentEvents = mutableListOf<AnalyticsEvent>()
+            verify { analytics.send(capture(sentEvents)) }
+            assertThat(sentEvents.filterIsInstance<TangemPayAnalyticsEvents.Eligibility.EligibilityCheckResult>())
+                .containsExactly(
+                    TangemPayAnalyticsEvents.Eligibility.EligibilityCheckResult(
+                        isEligible = true,
+                        country = USA.name,
+                        state = TEXAS.name,
+                    ),
+                )
+            verify(exactly = 1) {
+                router.push(
+                    route = EligibilityInnerRoute.Regions(countryCode = USA.code, countryName = USA.name),
+                    onComplete = any(),
+                )
+            }
+            countriesModel.onDestroy()
+            regionsModel.onDestroy()
+        }
+
     private fun provideTestModels() = TangemPayProduct.entries.flatMap { product ->
         listOf(
             ContinueModel(
@@ -114,17 +230,28 @@ internal class ResidencyListModelTest {
         )
     }
 
-    private fun createModel(testScope: TestScope, product: TangemPayProduct) = ResidencyListModel(
+    private fun createModel(
+        testScope: TestScope,
+        product: TangemPayProduct,
+        step: ResidencyListComponent.Step = ResidencyListComponent.Step.Countries,
+    ) = ResidencyListModel(
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         router = router,
         getCountriesUseCase = getCountriesUseCase,
         getRegionsUseCase = getRegionsUseCase,
         checkEligibilityUseCase = checkEligibilityUseCase,
+        storeCustomerResidencyUseCase = storeCustomerResidencyUseCase,
+        clearCustomerResidencyUseCase = clearCustomerResidencyUseCase,
         onboardingRepository = onboardingRepository,
         uiMessageSender = uiMessageSender,
-        analytics = mockk(relaxed = true),
+        analytics = analytics,
         paramsContainer = MutableParamsContainer(
-            value = TangemPayEligibilityComponent.Params(product = product, userWalletId = USER_WALLET_ID),
+            value = ResidencyListComponent.Params(
+                product = product,
+                userWalletId = USER_WALLET_ID,
+                step = step,
+                onCloseClick = {},
+            ),
         ),
     )
 
@@ -152,5 +279,13 @@ internal class ResidencyListModelTest {
             isSuggested = false,
             hasRegions = false,
         )
+        val USA = TangemPayCountry(
+            code = "US",
+            name = "United States",
+            flagUrl = null,
+            isSuggested = false,
+            hasRegions = true,
+        )
+        val TEXAS = TangemPayRegion(code = "TX", name = "Texas", isSuggested = false)
     }
 }

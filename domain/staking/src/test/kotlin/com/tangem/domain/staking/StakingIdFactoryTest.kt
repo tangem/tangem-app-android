@@ -14,6 +14,7 @@ import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.staking.MockStaking
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -48,7 +49,7 @@ internal class StakingIdFactoryTest {
         private val defaultAddress = "address"
 
         @Test
-        fun `create returns UnsupportedCurrency if integrationId is null`() = runTest {
+        fun `GIVEN unsupported currency WHEN create THEN UnsupportedCurrency and address not requested`() = runTest {
             // Arrange
             val userWalletId = UserWalletId(stringValue = "011")
             val currency = MockCryptoCurrencyFactory().createCoin(Blockchain.Bitcoin)
@@ -63,7 +64,7 @@ internal class StakingIdFactoryTest {
             // Assert
             val expected = StakingIdFactory.Error.UnsupportedCurrency
 
-            Truth.assertThat(actual.leftOrNull()).isEqualTo(expected)
+            Truth.assertThat(actual).isEqualTo(expected.left())
 
             coVerify(inverse = true) {
                 walletManagersFacade.getDefaultAddress(userWalletId = any(), network = any())
@@ -71,7 +72,7 @@ internal class StakingIdFactoryTest {
         }
 
         @Test
-        fun `create returns UnsupportedCurrency if integration is disabled by toggle`() = runTest {
+        fun `GIVEN integration disabled by toggle WHEN create THEN UnsupportedCurrency and address not requested`() = runTest {
             // Arrange
             val userWalletId = UserWalletId(stringValue = "011")
             val currency = MockCryptoCurrencyFactory().createCoin(Blockchain.TON)
@@ -90,7 +91,7 @@ internal class StakingIdFactoryTest {
             // Assert
             val expected = StakingIdFactory.Error.UnsupportedCurrency
 
-            Truth.assertThat(actual.leftOrNull()).isEqualTo(expected)
+            Truth.assertThat(actual).isEqualTo(expected.left())
 
             coVerify(inverse = true) {
                 walletManagersFacade.getDefaultAddress(userWalletId = any(), network = any())
@@ -98,7 +99,7 @@ internal class StakingIdFactoryTest {
         }
 
         @Test
-        fun `create returns UnableToGetAddress if address is null`() = runTest {
+        fun `GIVEN null default address WHEN create THEN UnableToGetAddress`() = runTest {
             // Arrange
             val userWalletId = UserWalletId(stringValue = "011")
             val currency = MockCryptoCurrencyFactory().createCoin(Blockchain.TON)
@@ -119,16 +120,41 @@ internal class StakingIdFactoryTest {
                 integrationId = StakingIntegrationID.StakeKit.Coin.Ton,
             )
 
-            Truth.assertThat(actual.leftOrNull()).isEqualTo(expected)
+            Truth.assertThat(actual).isEqualTo(expected.left())
 
             coVerify(exactly = 1) {
                 walletManagersFacade.getDefaultAddress(userWalletId = userWalletId, network = currency.network)
             }
         }
 
+        @Test
+        fun `GIVEN empty default address WHEN create THEN UnableToGetAddress`() = runTest {
+            // Arrange
+            val userWalletId = UserWalletId(stringValue = "011")
+            val currency = MockCryptoCurrencyFactory().createCoin(Blockchain.TON)
+
+            coEvery {
+                walletManagersFacade.getDefaultAddress(userWalletId = userWalletId, network = currency.network)
+            } returns ""
+
+            // Act
+            val actual = factory.create(
+                userWalletId = userWalletId,
+                currencyId = currency.id,
+                network = currency.network,
+            )
+
+            // Assert
+            val expected = StakingIdFactory.Error.UnableToGetAddress(
+                integrationId = StakingIntegrationID.StakeKit.Coin.Ton,
+            )
+
+            Truth.assertThat(actual).isEqualTo(expected.left())
+        }
+
         @ParameterizedTest
         @ProvideTestModels
-        fun create(model: CreateModel) = runTest {
+        fun `GIVEN currency id WHEN create THEN expected staking id or error`(model: CreateModel) = runTest {
             // Arrange
             val userWalletId = UserWalletId(stringValue = "011")
             val network = MockCryptoCurrencyFactory().createCoin(Blockchain.TON).network
@@ -193,6 +219,54 @@ internal class StakingIdFactoryTest {
 
         private fun createStakingId(integrationId: StakingIntegrationID): Either<Nothing, StakingID> {
             return StakingID(integrationId = integrationId.value, address = defaultAddress).right()
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CreateByCurrency {
+
+        private val userWalletId = UserWalletId(stringValue = "011")
+
+        @Test
+        fun `GIVEN solana currency WHEN create THEN address requested for currency network`() = runTest {
+            // Arrange
+            val solana = MockCryptoCurrencyFactory().createCoin(Blockchain.Solana)
+            coEvery { walletManagersFacade.getDefaultAddress(userWalletId, solana.network) } returns "address"
+
+            // Act
+            val actual = factory.create(userWalletId = userWalletId, cryptoCurrency = solana)
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(StakingID(MockStaking.SOLANA_ID, "address").right())
+            coVerify(exactly = 1) { walletManagersFacade.getDefaultAddress(userWalletId, solana.network) }
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CreateSync {
+
+        private val tonId = MockCryptoCurrencyFactory().createCoin(Blockchain.TON).id
+
+        @Test
+        fun `GIVEN supported id and address WHEN create sync THEN staking id returned`() {
+            // Act
+            val actual = factory.create(currencyId = tonId, defaultAddress = "address")
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(StakingID(MockStaking.TON_ID, "address").right())
+            coVerify(exactly = 0) { walletManagersFacade.getDefaultAddress(any(), any()) }
+        }
+
+        // Pins current behaviour: only null or empty addresses are rejected, blank passes
+        @Test
+        fun `GIVEN blank address WHEN create sync THEN staking id with blank address`() {
+            // Act
+            val actual = factory.create(currencyId = tonId, defaultAddress = "  ")
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(StakingID(MockStaking.TON_ID, "  ").right())
         }
     }
 

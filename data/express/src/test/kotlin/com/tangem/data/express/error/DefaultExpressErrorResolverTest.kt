@@ -26,7 +26,7 @@ internal class DefaultExpressErrorResolverTest {
     }
 
     @Test
-    fun `GIVEN http exception with unknown intent code WHEN resolve THEN data error with that code is returned`() {
+    fun `GIVEN http exception with intent not found code WHEN resolve THEN that typed error is returned`() {
         // Arrange
         val exception = httpException(errorBody = """{"error":{"code":2600,"description":"Not found"}}""")
 
@@ -34,7 +34,7 @@ internal class DefaultExpressErrorResolverTest {
         val actual = resolver.resolve(exception)
 
         // Assert
-        assertThat(actual).isEqualTo(ExpressError.DataError(code = 2600, description = "Not found"))
+        assertThat(actual).isEqualTo(ExpressError.IntentNotFoundError(code = 2600))
     }
 
     @Test

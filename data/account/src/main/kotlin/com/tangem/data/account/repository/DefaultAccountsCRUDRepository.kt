@@ -211,8 +211,7 @@ internal class DefaultAccountsCRUDRepository(
 
         if (!hasDefaultName) return
 
-        val defaultName = resources.getStringSafe(AccountNameUM.DefaultMain.stringResId)
-            .let(AccountName::invoke).getOrNull()
+        val defaultName = AccountName(resources.getStringSafe(AccountNameUM.DefaultMain.stringResId)).getOrNull()
 
         require(defaultName != accountName) {
             "Cannot use default account name \"$accountName\" for custom accounts"

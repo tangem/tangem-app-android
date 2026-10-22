@@ -35,22 +35,24 @@ internal class ItemsBuilder @Inject constructor(
         onBuyClick: () -> Unit,
     ): ImmutableList<DetailsItemUM> = buildList {
         buildWalletActionBlock(isWalletConnectAvailable, userWalletId)
-        buildUserWalletListBlock().let(::add)
+        add(buildUserWalletListBlock())
 
         if (hotWalletRestrictionManager.isCreationEnabledSync() && hasAnyMobileWallet) {
-            DetailsItemUM.UnderSectionText(
-                id = "only_one_mobile_wallet_explanation",
-                text = resourceReference(R.string.only_one_mobile_wallet_explanation),
-            ).let(::add)
+            add(
+                DetailsItemUM.UnderSectionText(
+                    id = "only_one_mobile_wallet_explanation",
+                    text = resourceReference(R.string.only_one_mobile_wallet_explanation),
+                ),
+            )
         }
 
-        buildShopBlock(onBuyClick).let(::add)
-        buildSettingsBlock().let(::add)
-        buildSupportBlock(onSupportClick = onSupportClick).let(::add)
+        add(buildShopBlock(onBuyClick))
+        add(buildSettingsBlock())
+        add(buildSupportBlock(onSupportClick = onSupportClick))
     }.toImmutableList()
 
     fun addTangemPayItem(items: ImmutableList<DetailsItemUM>, onClick: () -> Unit): ImmutableList<DetailsItemUM> {
-        return items.toMutableList().map { block ->
+        return removeTangemPayItem(items).map { block ->
             if (block.id == "shop" && block is DetailsItemUM.Basic) {
                 val newItems = block
                     .items
@@ -61,6 +63,10 @@ internal class ItemsBuilder @Inject constructor(
                 block
             }
         }.toImmutableList()
+    }
+
+    fun hasTangemPayItem(items: ImmutableList<DetailsItemUM>): Boolean = items.any { block ->
+        block is DetailsItemUM.Basic && block.items.any { it.id == TANGEM_PAY_ITEM_ID }
     }
 
     fun removeTangemPayItem(items: ImmutableList<DetailsItemUM>): ImmutableList<DetailsItemUM> {
@@ -74,7 +80,7 @@ internal class ItemsBuilder @Inject constructor(
     }
 
     fun addMoneyAccountItem(items: ImmutableList<DetailsItemUM>, onClick: () -> Unit): ImmutableList<DetailsItemUM> {
-        return items.map { block ->
+        return removeMoneyAccountItem(items).map { block ->
             if (block.id == "shop" && block is DetailsItemUM.Basic) {
                 val newItems = block
                     .items
@@ -144,37 +150,43 @@ internal class ItemsBuilder @Inject constructor(
     private fun buildSettingsBlock(): DetailsItemUM = DetailsItemUM.Basic(
         id = "settings",
         items = buildList {
-            DetailsItemUM.Basic.Item(
-                id = "app_settings",
-                block = BlockUM(
-                    text = resourceReference(R.string.app_settings_title),
-                    iconRes = R.drawable.ic_settings_24,
-                    onClick = { router.push(AppRoute.AppSettings) },
+            add(
+                DetailsItemUM.Basic.Item(
+                    id = "app_settings",
+                    block = BlockUM(
+                        text = resourceReference(R.string.app_settings_title),
+                        iconRes = R.drawable.ic_settings_24,
+                        onClick = { router.push(AppRoute.AppSettings) },
+                    ),
                 ),
-            ).let(::add)
+            )
         }.toImmutableList(),
     )
 
     private fun buildSupportBlock(onSupportClick: () -> Unit): DetailsItemUM = DetailsItemUM.Basic(
         id = "support",
         items = buildList {
-            DetailsItemUM.Basic.Item(
-                id = "contact_support",
-                block = BlockUM(
-                    text = resourceReference(R.string.common_contact_support),
-                    iconRes = R.drawable.ic_comment_24,
-                    onClick = onSupportClick,
+            add(
+                DetailsItemUM.Basic.Item(
+                    id = "contact_support",
+                    block = BlockUM(
+                        text = resourceReference(R.string.common_contact_support),
+                        iconRes = R.drawable.ic_comment_24,
+                        onClick = onSupportClick,
+                    ),
                 ),
-            ).let(::add)
+            )
 
-            DetailsItemUM.Basic.Item(
-                id = "disclaimer",
-                block = BlockUM(
-                    text = resourceReference(R.string.disclaimer_title),
-                    iconRes = R.drawable.ic_text_24,
-                    onClick = { router.push(AppRoute.Disclaimer(isTosAccepted = true)) },
+            add(
+                DetailsItemUM.Basic.Item(
+                    id = "disclaimer",
+                    block = BlockUM(
+                        text = resourceReference(R.string.disclaimer_title),
+                        iconRes = R.drawable.ic_text_24,
+                        onClick = { router.push(AppRoute.Disclaimer(isTosAccepted = true)) },
+                    ),
                 ),
-            ).let(::add)
+            )
         }.toPersistentList(),
     )
 

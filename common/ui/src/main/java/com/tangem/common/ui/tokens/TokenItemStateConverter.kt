@@ -181,7 +181,7 @@ class TokenItemStateConverter(
                         text = stringReference(currencyStatus.currency.name),
                         hasPending = value.hasCurrentNetworkTransactions,
                         earnApy = apyInfo?.text,
-                        earnApyIsActive = apyInfo?.isActive == true,
+                        isEarnApyActive = apyInfo?.isActive == true,
                     )
                 }
             }
@@ -202,7 +202,7 @@ class TokenItemStateConverter(
                     )
                 }?.value
                 if (yieldSupplyApy != null) {
-                    val isActive = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive ?: false
+                    val isActive = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive == true
                     return EarnApyInfo(
                         text = resourceReference(
                             R.string.yield_module_earn_badge,
@@ -274,14 +274,14 @@ class TokenItemStateConverter(
                         .firstNotNullOfOrNull { address ->
                             validatorsByAddress[address]?.rewardInfo
                         } ?: stakingOptions.yield.validators
-                        .filter { it.preferred }
+                        .filter { it.isPreferred }
                         .mapNotNull { validator ->
                             validator.rewardInfo
                         }
                         .maxByOrNull { it.rate }
                 } else {
                     stakingOptions.yield.validators
-                        .filter { it.preferred }
+                        .filter { it.isPreferred }
                         .mapNotNull { validator ->
                             validator.rewardInfo
                         }
@@ -358,10 +358,12 @@ class TokenItemStateConverter(
                             if (status.value.yieldSupplyStatus?.isActive == true &&
                                 status.value.yieldSupplyStatus?.isAllowedToSpend == false
                             ) {
-                                TokenItemState.FiatAmountState.Content.IconUM(
-                                    iconRes = R.drawable.ic_alert_triangle_20,
-                                    tint = IconTint.Warning,
-                                ).let(::add)
+                                add(
+                                    TokenItemState.FiatAmountState.Content.IconUM(
+                                        iconRes = R.drawable.ic_alert_triangle_20,
+                                        tint = IconTint.Warning,
+                                    ),
+                                )
                             }
                             if (status.value.sources.total == StatusSource.ONLY_CACHE) {
                                 add(

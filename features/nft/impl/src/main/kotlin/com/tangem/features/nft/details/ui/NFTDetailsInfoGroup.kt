@@ -162,7 +162,7 @@ private fun Rarity(state: NFTAssetUM.Rarity, modifier: Modifier = Modifier) {
     when (state) {
         is NFTAssetUM.Rarity.Empty -> Unit
         is NFTAssetUM.Rarity.Content -> {
-            if (state.showDivider) {
+            if (state.shouldShowDivider) {
                 HorizontalDivider(
                     modifier = Modifier.padding(
                         start = 12.dp,
@@ -234,7 +234,7 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
             rarity = NFTAssetUM.Rarity.Content(
                 rank = "Top 1% rarity",
                 label = "115.28",
-                showDivider = true,
+                shouldShowDivider = true,
                 onLabelClick = { },
                 onRankClick = { },
             ),
@@ -246,7 +246,7 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
             rarity = NFTAssetUM.Rarity.Content(
                 rank = "Top 1% rarity",
                 label = "115.28",
-                showDivider = true,
+                shouldShowDivider = true,
                 onLabelClick = { },
                 onRankClick = { },
             ),
@@ -262,7 +262,7 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
             rarity = NFTAssetUM.Rarity.Content(
                 rank = "Top 1% rarity",
                 label = "115.28",
-                showDivider = true,
+                shouldShowDivider = true,
                 onLabelClick = { },
                 onRankClick = { },
             ),
@@ -294,7 +294,7 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
             rarity = NFTAssetUM.Rarity.Content(
                 rank = "Top 1% rarity",
                 label = "115.28",
-                showDivider = true,
+                shouldShowDivider = true,
                 onLabelClick = { },
                 onRankClick = { },
             ),
@@ -306,7 +306,7 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
             rarity = NFTAssetUM.Rarity.Content(
                 rank = "Top 1% rarity",
                 label = "115.28",
-                showDivider = false,
+                shouldShowDivider = false,
                 onLabelClick = { },
                 onRankClick = { },
             ),

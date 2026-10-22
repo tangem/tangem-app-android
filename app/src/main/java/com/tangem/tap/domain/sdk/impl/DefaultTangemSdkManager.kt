@@ -37,7 +37,6 @@ import com.tangem.domain.visa.model.*
 import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.hot.sdk.android.PassphraseValidator
-import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
@@ -76,12 +75,12 @@ internal class DefaultTangemSdkManager(
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
+    private val cardContextInterceptorFactory: CardContextInterceptor.Factory,
     private val cardRepository: CardRepository,
     private val derivationsHelper: DerivationsHelper,
     // Lazy breaks a DI cycle: the launcher -> hot wallet accessor -> LegacySettingsRepository ->
     // TangemSdkManager. It's only needed when a scan actually runs.
     private val walletRegistrationLauncher: Lazy<WalletRegistrationLauncher>,
-    private val authFeatureToggles: AuthFeatureToggles,
 ) : TangemSdkManager {
 
     private val tangemSdk: TangemSdk
@@ -262,7 +261,7 @@ internal class DefaultTangemSdkManager(
                 // We don't use the standard analytics event enrichment mechanism with card context params here,
                 // because we've just scanned a new card that may not yet be selected as the current one
                 val analyticsEvent = Basic.CardWasScanned(source)
-                val interceptor = CardContextInterceptor(scanResponse)
+                val interceptor = cardContextInterceptorFactory.create(scanResponse)
                 val params = analyticsEvent.params.toMutableMap()
                 interceptor.intercept(params)
 
@@ -462,8 +461,7 @@ internal class DefaultTangemSdkManager(
      * Wraps [runnable] so that the card is bound to the device via cold wallet registration on the
      * same NFC tap — after [runnable] succeeds, or mid-scan before the card attestation (see
      * [ColdWalletRegistrationHost]). Applied only when the call site opts in via
-     * `registerColdWallet = true` (and the backend-auth toggle is on) — currently scan / wallet
-     * creation / key derivation; signing opts in separately in `TangemSigner`, and the primary
+     * `registerColdWallet = true` — currently scan / wallet creation / key derivation; signing opts in separately in `TangemSigner`, and the primary
      * card's backup finalization calls this directly. Twin / Visa /
      * walletless cards are skipped inside [WalletRegistrationLauncher]. The registration is launched
      * on the card session's own scope (see [RegisterColdWalletRunnable]), so it can't outlive the tap.
@@ -472,8 +470,6 @@ internal class DefaultTangemSdkManager(
         runnable: CardSessionRunnable<T>,
         shouldForceRegistration: Boolean,
     ): CardSessionRunnable<T> {
-        if (!authFeatureToggles.isBackendAuthenticationEnabled) return runnable
-
         return RegisterColdWalletRunnable(
             inner = runnable,
             launcher = walletRegistrationLauncher.get(),

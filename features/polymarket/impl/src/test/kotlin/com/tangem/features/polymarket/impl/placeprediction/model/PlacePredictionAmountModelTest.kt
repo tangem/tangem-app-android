@@ -3,6 +3,11 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketEvent
+import kotlinx.coroutines.CompletableDeferred
+import com.tangem.features.polymarket.impl.createPolymarketOutcome
+import com.tangem.features.polymarket.impl.createPolymarketMarket
+import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
@@ -84,6 +89,72 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
                 )
             }
             assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a legacy asset id of a moved market WHEN the amount is entered THEN the current token is quoted`() =
+            runTest {
+                // Arrange
+                coEvery { getEventUseCase(eventId = EVENT_ID) } returns createPolymarketEvent(
+                    id = EVENT_ID,
+                    markets = listOf(
+                        createPolymarketMarket(
+                            id = MARKET_ID,
+                            eventId = EVENT_ID,
+                            outcomes = listOf(
+                                createPolymarketOutcome(assetId = "asset-v2", title = "Yes", legacyAssetId = ASSET_ID),
+                            ),
+                        ),
+                    ),
+                ).right()
+                val model = createAmountModel(testScope = this)
+                advanceUntilIdle()
+                model.onResume()
+
+                // Act
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+                // Assert
+                assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
+                coVerify(exactly = 1) {
+                    getQuoteUseCase(
+                        request = PredictionOrderQuoteRequest(
+                            marketId = MARKET_ID,
+                            assetId = "asset-v2",
+                            side = PredictionOrderSide.BUY,
+                            amount = BigDecimal("10"),
+                            slippagePercent = DEFAULT_SLIPPAGE_PERCENT,
+                        ),
+                    )
+                }
+                coVerify(exactly = 0) { getQuoteUseCase(request = match { it.assetId == ASSET_ID }) }
+                assertThat((model.uiState.value.quote as QuoteUM.Content).signable.assetId).isEqualTo("asset-v2")
+
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN the event is still loading WHEN resumed THEN no price is polled until the market lands`() = runTest {
+            // Arrange
+            val event = CompletableDeferred<PolymarketEvent>()
+            coEvery { getEventUseCase(eventId = EVENT_ID) } coAnswers { event.await().right() }
+            val model = createAmountModel(testScope = this)
+            model.onResume()
+            runCurrent()
+
+            // Act
+            val polledWhileLoading = runCatching {
+                coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
+            }.isSuccess
+            event.complete(createEvent())
+            runCurrent()
+
+            // Assert
+            assertThat(polledWhileLoading).isTrue()
+            coVerify(exactly = 1) { getPriceUseCase(assetId = ASSET_ID, side = PredictionOrderSide.SELL) }
 
             model.onDestroy()
         }

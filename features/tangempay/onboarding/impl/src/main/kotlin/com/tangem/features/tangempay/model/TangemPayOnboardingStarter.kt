@@ -45,6 +45,7 @@ internal class TangemPayOnboardingStarter @Inject constructor(
     class Callbacks(
         val onLoadingChange: (Boolean) -> Unit,
         val onExit: () -> Unit,
+        val shouldKeepBackStack: Boolean = false,
         val onWalletSelectorRequested: (List<UserWalletId>) -> Unit = {},
         val onCustomerAlreadyApproved: (suspend (UserWalletId) -> Unit)? = null,
     )
@@ -156,13 +157,15 @@ internal class TangemPayOnboardingStarter @Inject constructor(
             if (!isOrderCreated) return
         }
         if (tangemPayFeatureToggles.isResidencyStepEnabled) {
-            router.replaceAll(
-                AppRoute.Wallet,
-                AppRoute.TangemPayEligibility(
-                    product = TangemPayProduct.PAYMENT_ACCOUNT,
-                    userWalletId = userWalletId,
-                ),
+            val eligibility = AppRoute.TangemPayEligibility(
+                product = TangemPayProduct.PAYMENT_ACCOUNT,
+                userWalletId = userWalletId,
             )
+            if (callbacks.shouldKeepBackStack) {
+                router.replaceCurrent(eligibility)
+            } else {
+                router.replaceAll(AppRoute.Wallet, eligibility)
+            }
         } else {
             openKyc(userWalletId)
         }

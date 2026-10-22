@@ -1,7 +1,5 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
@@ -391,18 +389,8 @@ internal object TransactionDomainModule {
     @Singleton
     fun provideIsTronGaslessSupportedUseCase(
         tronGaslessTransactionRepository: TronGaslessTransactionRepository,
-        walletManagersFacade: WalletManagersFacade,
-        featureTogglesManager: FeatureTogglesManager,
     ): IsTronGaslessSupportedUseCase {
-        return IsTronGaslessSupportedUseCase(
-            repository = tronGaslessTransactionRepository,
-            walletManagersFacade = walletManagersFacade,
-            isAccountActivationSponsored = {
-                featureTogglesManager.isFeatureEnabled(
-                    toggle = FeatureToggles.TWI_1783_TRON_GASLESS_ACCOUNT_ACTIVATION_ENABLED,
-                )
-            },
-        )
+        return IsTronGaslessSupportedUseCase(repository = tronGaslessTransactionRepository)
     }
 
     @Provides
@@ -551,5 +539,23 @@ internal object TransactionDomainModule {
             cardSdkConfigRepository = cardSdkConfigRepository,
             getHotWalletSigner = tangemHotWalletSignerFactory::create,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetSendIntentUseCase(sendIntentRepository: SendIntentRepository): GetSendIntentUseCase {
+        return GetSendIntentUseCase(sendIntentRepository = sendIntentRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCompleteSendIntentUseCase(sendIntentRepository: SendIntentRepository): CompleteSendIntentUseCase {
+        return CompleteSendIntentUseCase(sendIntentRepository = sendIntentRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideReportSendIntentHashUseCase(sendIntentRepository: SendIntentRepository): ReportSendIntentHashUseCase {
+        return ReportSendIntentHashUseCase(sendIntentRepository = sendIntentRepository)
     }
 }

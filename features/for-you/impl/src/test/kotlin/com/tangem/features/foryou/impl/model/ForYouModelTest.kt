@@ -4,12 +4,12 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
@@ -101,7 +101,7 @@ internal class ForYouModelTest {
     private val earnErrorResolver: EarnErrorResolver = mockk()
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory = mockk()
     private val portfolioFetcherFactory: PortfolioFetcher.Factory = mockk(relaxed = true)
-    private val router: AppRouter = mockk(relaxUnitFun = true)
+    private val router: Router = mockk(relaxUnitFun = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
 
     // A working controller fake: selecting accounts pushes them into the flow the model observes.

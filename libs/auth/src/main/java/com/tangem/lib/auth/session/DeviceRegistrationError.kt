@@ -23,7 +23,4 @@ sealed class DeviceRegistrationError {
      * (DataStore I/O). The flag stays `false`, so the next launch retries cleanly.
      */
     data class PersistenceFailed(val cause: Throwable) : DeviceRegistrationError()
-
-    /** Registrar is disabled via `AND_15438_BACKEND_AUTHENTICATION_ENABLED` feature toggle. */
-    data object Disabled : DeviceRegistrationError()
 }

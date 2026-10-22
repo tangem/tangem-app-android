@@ -86,7 +86,7 @@ internal fun ExcludedBlockchainsScreen(state: ExcludedBlockchainsScreenUM, modif
                     TogglesNotification(
                         modifier = Modifier.padding(vertical = 12.dp),
                         appVersion = state.appVersion,
-                        isVisible = state.showRecoverWarning,
+                        isVisible = state.shouldShowRecoverWarning,
                     )
                 }
 
@@ -172,7 +172,7 @@ private class ExcludedBlockchainsScreenPreviewProvider : PreviewParameterProvide
                     excludedBlockchainsIds = setOf(Blockchain.Ethereum.id, Blockchain.Solana.id),
                     onExcludedStateChange = { _, _ -> },
                 ).toPersistentList(),
-                showRecoverWarning = true,
+                shouldShowRecoverWarning = true,
                 appVersion = "1.0.0",
                 search = SearchBarUM(
                     placeholderText = resourceReference(R.string.excluded_blockchains_search_placeholder),

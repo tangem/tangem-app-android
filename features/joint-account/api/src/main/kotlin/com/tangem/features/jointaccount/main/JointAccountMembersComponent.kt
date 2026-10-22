@@ -10,8 +10,8 @@ import com.tangem.domain.models.wallet.UserWalletId
  * The wallet row, account settings and the push-notification deep link all push the same route;
  * the screen renders whatever the account's current data says — see `MembersScreenPhase` for how
  * [com.tangem.domain.jointaccount.model.JointAccount.Status] and "does this device hold the
- * account's invites" (only the creating device ever does) drive the title, progress line,
- * share-safely banner, archive menu and activation CTA.
+ * account's invites" (only the creating device ever does) drive the title, progress line and
+ * activation CTA.
  */
 interface JointAccountMembersComponent : ComposableContentComponent {
 

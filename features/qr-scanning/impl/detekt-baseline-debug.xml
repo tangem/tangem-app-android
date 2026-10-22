@@ -4,7 +4,6 @@
   <CurrentIssues>
     <ID>CanBeNonNullable:MLKitBarcodeAnalyzer.kt$MLKitBarcodeAnalyzer$onClose: (() -&gt; Unit)? = null</ID>
     <ID>NestedScopeFunctions:MLKitBarcodeAnalyzer.kt$MLKitBarcodeAnalyzer$let { onScanned.invoke(it) }</ID>
-    <ID>NoNameShadowing:QrScanningModel.kt$QrScanningModel$qrCode</ID>
     <ID>PropertyUsedBeforeDeclaration:QrScanningStateController.kt$QrScanningStateController$mutableUiState</ID>
   </CurrentIssues>
 </SmellBaseline>

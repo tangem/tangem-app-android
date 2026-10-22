@@ -84,8 +84,8 @@ internal class WcConnectedAppInfoModel @Inject constructor(
                                 )
                             }.toImmutableList(),
                         disconnectButtonConfig = WcPrimaryButtonConfig(
-                            showProgress = false,
-                            enabled = true,
+                            shouldShowProgress = false,
+                            isEnabled = true,
                             onClick = { disconnect(session) },
                         ),
                         notification = extractNotificationInfo(session),
@@ -119,7 +119,7 @@ internal class WcConnectedAppInfoModel @Inject constructor(
     private fun disconnect(session: WcSession) {
         uiState.update { state ->
             state?.copy(
-                disconnectButtonConfig = state.disconnectButtonConfig.copy(showProgress = true),
+                disconnectButtonConfig = state.disconnectButtonConfig.copy(shouldShowProgress = true),
             )
         }
         modelScope.launch {

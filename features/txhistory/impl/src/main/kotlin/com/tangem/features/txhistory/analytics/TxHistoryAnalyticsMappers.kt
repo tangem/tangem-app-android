@@ -38,6 +38,7 @@ private fun TxInfo.TransactionType.toAnalyticsType(isOutgoing: Boolean): String 
     TxInfo.TransactionType.Swap -> "Swap"
     is TxInfo.TransactionType.Staking -> "Staking"
     is TxInfo.TransactionType.YieldSupply -> "Yield Supply"
+    TxInfo.TransactionType.IncentiveClaim -> "Incentive Claim"
     TxInfo.TransactionType.GaslessFee -> "Gasless Fee"
     is TxInfo.TransactionType.NetworkFee -> "Network Fee"
     is TxInfo.TransactionType.Operation -> name

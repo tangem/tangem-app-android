@@ -190,15 +190,16 @@ private fun MerchantIcon(url: String?, @DrawableRes fallbackRes: Int) {
 
 @Composable
 private fun TransactionSecondaryLine(state: TangemPayTxHistoryDetailsUM, modifier: Modifier = Modifier) {
+    val transactionTitle = state.transactionTitle ?: return
     val secondaryText = when {
         state.localTransactionText != null -> {
             buildString {
                 append(state.localTransactionText.orMaskWithStars(state.isBalanceHidden))
                 append(" · ")
-                append(state.transactionTitle.resolveReference())
+                append(transactionTitle.resolveReference())
             }
         }
-        else -> state.transactionTitle.resolveReference()
+        else -> transactionTitle.resolveReference()
     }
     Text(
         modifier = modifier,
@@ -595,7 +596,7 @@ private class TangemPayTxHistoryDetailsUMProvider :
                 title = resourceReference(R.string.tangem_pay_deposit),
                 subtitle = stringReference("12 June 2026, 12:40"),
                 iconState = TangemIconUM.Icon(imageVector = Icons.ic_arrow_down_24),
-                transactionTitle = resourceReference(R.string.common_transfer),
+                transactionTitle = null,
                 detail = null,
                 cashbackDetail = null,
                 transactionCategory = resourceReference(R.string.common_transfer),

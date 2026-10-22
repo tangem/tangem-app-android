@@ -102,7 +102,7 @@ internal class OnboardingEntryModel @Inject constructor(
 
                 OnboardingRoute.MultiWallet(
                     scanResponse = scanResponse,
-                    withSeedPhraseFlow = scanResponse.productType != ProductType.Wallet,
+                    isSeedPhraseFlow = scanResponse.productType != ProductType.Wallet,
                     titleProvider = titleProvider,
                     onDone = ::onMultiWalletOnboardingDone,
                     onForceExit = ::popOrExitComponentScreen,

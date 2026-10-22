@@ -137,6 +137,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValueDM.KycRequired -> PaymentAccountStatusValue.KycRequired(
                 source = StatusSource.CACHE,
                 customerId = value.customerId,
+                customerResidency = null,
             )
             is PaymentAccountStatusValueDM.UnderReview -> PaymentAccountStatusValue.UnderReview(
                 source = StatusSource.CACHE,

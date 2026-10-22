@@ -4,6 +4,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.domain.mcp.McpRequestService
 import com.tangem.domain.walletconnect.WcPairService
@@ -24,9 +25,10 @@ internal class WcRoutingModel @Inject constructor(
     private val mcpRequestService: McpRequestService,
     private val cardSdkProvider: CardSdkProvider,
     override val dispatchers: CoroutineDispatcherProvider,
+    router: Router,
 ) : Model() {
 
-    val innerRouter = WcRouter(SlotNavigation())
+    val innerRouter = WcRouter(slotNavigation = SlotNavigation(), fallBackRouter = router)
 
     private val isSlotEmpty = MutableStateFlow(true)
     private val permittedAppRoute = MutableStateFlow(false)

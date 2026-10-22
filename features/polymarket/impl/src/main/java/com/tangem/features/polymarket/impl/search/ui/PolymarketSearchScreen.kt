@@ -56,6 +56,7 @@ import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBarClearanc
 import com.tangem.features.polymarket.impl.main.ui.PolymarketEventCard
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
 import com.tangem.features.polymarket.impl.search.ui.state.PolymarketSearchUM
 import kotlinx.collections.immutable.persistentListOf
@@ -192,9 +193,16 @@ private fun ResultsList(content: PolymarketSearchUM.ContentUM.Results, onLoadMor
             )
         }
 
-        if (content.isLoadingNextPage) {
-            item(key = KEY_STATUS) {
+        when (val footer = content.footer) {
+            is PolymarketFeedFooterUM.None -> Unit
+            is PolymarketFeedFooterUM.Loading -> item(key = KEY_STATUS) {
                 PolymarketNextPageLoader()
+            }
+            is PolymarketFeedFooterUM.Error -> item(key = KEY_STATUS) {
+                PolymarketReloadPrompt(
+                    text = resourceReference(R.string.prediction_main_events_load_error),
+                    onReloadClick = footer.onRetryClick,
+                )
             }
         }
     }
@@ -276,7 +284,30 @@ private fun PolymarketSearchScreenResultsPreview() {
             state = previewState(
                 content = PolymarketSearchUM.ContentUM.Results(
                     events = persistentListOf(previewEvent()),
-                    isLoadingNextPage = false,
+                    footer = PolymarketFeedFooterUM.None,
+                ),
+            ),
+            onLoadMore = {},
+        )
+    }
+}
+
+@Preview(name = "Next page error Light", showBackground = true, widthDp = 360, heightDp = 640)
+@Preview(
+    name = "Next page error Dark",
+    showBackground = true,
+    widthDp = 360,
+    heightDp = 640,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+private fun PolymarketSearchScreenNextPageErrorPreview() {
+    TangemThemePreviewRedesign {
+        PolymarketSearchScreen(
+            state = previewState(
+                content = PolymarketSearchUM.ContentUM.Results(
+                    events = persistentListOf(previewEvent()),
+                    footer = PolymarketFeedFooterUM.Error(onRetryClick = {}),
                 ),
             ),
             onLoadMore = {},

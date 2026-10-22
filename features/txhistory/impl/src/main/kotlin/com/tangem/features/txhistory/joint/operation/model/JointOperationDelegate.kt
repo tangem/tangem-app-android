@@ -39,6 +39,7 @@ import com.tangem.features.txhistory.joint.ownJointAccount
 import com.tangem.features.txhistory.model.ContactCandidate
 import com.tangem.features.txhistory.model.TxHistoryOwnerLookupProducer
 import com.tangem.features.txhistory.model.isSavableAsContact
+import com.tangem.features.txhistory.model.resolveCounterparty
 import com.tangem.utils.extensions.addHexPrefix
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -93,16 +94,21 @@ internal class JointOperationDelegate @Inject constructor(
     ) { rate, appCurrency -> JointOperationFiat(rate = rate, appCurrency = appCurrency) }
 
     /**
-     * Creating a contact is offered for a foreign [recipient] this wallet has not saved yet — never for one of the
-     * user's own addresses — and only while the address book can be written to: one stored by a newer build cannot.
+     * The recipient as the history shows it — an own account, own wallet or saved contact by name. Creating a contact
+     * is offered for a foreign recipient this wallet has not saved yet, and only while the address book can be written
+     * to: one stored by a newer build cannot.
      */
-    fun canCreateContact(userWalletId: UserWalletId, recipient: String, network: Network): Flow<Boolean> = combine(
-        flow = ownerLookupProducer(userWalletId),
-        flow2 = isAddressBookCompatibleUseCase(userWalletId),
-    ) { lookup, isCompatible ->
-        isCompatible &&
-            lookup.isSavableAsContact(ContactCandidate(address = recipient, networkId = network.id.rawId))
-    }
+    fun recipient(userWalletId: UserWalletId, recipient: String, network: Network): Flow<JointOperationRecipient> =
+        combine(
+            flow = ownerLookupProducer(userWalletId),
+            flow2 = isAddressBookCompatibleUseCase(userWalletId),
+        ) { lookup, isCompatible ->
+            JointOperationRecipient(
+                owner = lookup.resolveCounterparty(address = recipient, networkRawId = network.id.rawId),
+                canCreateContact = isCompatible &&
+                    lookup.isSavableAsContact(ContactCandidate(address = recipient, networkId = network.id.rawId)),
+            )
+        }
 
     fun openContactCreation(address: String, network: Network) {
         router.push(

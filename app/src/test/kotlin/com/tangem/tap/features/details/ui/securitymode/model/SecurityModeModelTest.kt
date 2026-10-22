@@ -4,10 +4,10 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.CompletionResult
 import com.tangem.common.SuccessResponse
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
@@ -34,13 +34,13 @@ internal class SecurityModeModelTest {
     private val tangemSdkManager: TangemSdkManager = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val analyticsErrorHandler: AnalyticsErrorHandler = mockk(relaxed = true)
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
 
     private val cardSettingsInteractor = CardSettingsInteractor()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(tangemSdkManager, analyticsEventHandler, analyticsErrorHandler, appRouter)
+        clearMocks(tangemSdkManager, analyticsEventHandler, analyticsErrorHandler, router)
         cardSettingsInteractor.clear()
     }
 
@@ -81,7 +81,7 @@ internal class SecurityModeModelTest {
         assertThat(card?.isPasscodeSet).isTrue()
         assertThat(card?.isAccessCodeSet).isFalse()
         coVerify(exactly = 1) { tangemSdkManager.setPasscode(any()) }
-        verify(exactly = 1) { appRouter.pop(any()) }
+        verify(exactly = 1) { router.pop(any()) }
 
         model.onDestroy()
     }
@@ -103,7 +103,7 @@ internal class SecurityModeModelTest {
         val card = cardSettingsInteractor.scannedScanResponse.value?.card
         assertThat(card?.isPasscodeSet).isFalse()
         assertThat(card?.isAccessCodeSet).isFalse()
-        verify(exactly = 0) { appRouter.pop(any()) }
+        verify(exactly = 0) { router.pop(any()) }
 
         model.onDestroy()
     }
@@ -164,7 +164,7 @@ internal class SecurityModeModelTest {
             cardSettingsInteractor = cardSettingsInteractor,
             analyticsEventHandler = analyticsEventHandler,
             analyticsErrorHandler = analyticsErrorHandler,
-            appRouter = appRouter,
+            router = router,
         )
     }
 

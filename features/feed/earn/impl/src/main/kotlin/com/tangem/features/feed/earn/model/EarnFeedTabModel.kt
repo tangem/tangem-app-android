@@ -4,10 +4,10 @@ import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.earn.model.EarnFilter
 import com.tangem.domain.earn.model.EarnFilterNetwork
@@ -49,7 +49,7 @@ internal class EarnFeedTabModel @Inject constructor(
     private val fetchTopEarnTokensUseCase: FetchTopEarnTokensUseCase,
     private val getEarnFilterUseCase: GetEarnFilterUseCase,
     private val setEarnFilterUseCase: SetEarnFilterUseCase,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val stateController: EarnStateController,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
@@ -79,7 +79,7 @@ internal class EarnFeedTabModel @Inject constructor(
     private val addToPortfolioLauncher = EarnAddToPortfolioLauncher(
         addToPortfolioManagerFactory = addToPortfolioManagerFactory,
         analyticsEventHandler = analyticsEventHandler,
-        appRouter = appRouter,
+        router = router,
         modelScope = modelScope,
         showSheet = { source, manager ->
             bottomSheetNavigation.activate(

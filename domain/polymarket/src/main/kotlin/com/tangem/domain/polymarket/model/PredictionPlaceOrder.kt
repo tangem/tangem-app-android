@@ -5,6 +5,7 @@ import java.math.BigDecimal
 data class PredictionSignedOrder(
     val order: PredictionOrder,
     val signature: String,
+    val domain: PolymarketExchangeDomain,
 )
 
 data class PredictionPlaceOrderResult(

@@ -51,6 +51,7 @@ class SignPredictionOrderInteractor(
             draft = draft,
             depositWalletAddress = addresses.depositWalletAddress,
             marketTokenId = request.assetId,
+            marketVersion = request.quote.version,
             isNegRisk = request.isNegRisk,
             quoteReceivedAtMillis = request.quoteReceivedAtMillis,
             nowMillis = System.currentTimeMillis(),

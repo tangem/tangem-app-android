@@ -41,6 +41,7 @@ import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -49,6 +50,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -210,45 +212,61 @@ internal class SwapTransferInteractorImplTest {
             verify { getBalanceHidingSettingsUseCase.isBalanceHidden() }
         }
 
-    @Test
-    fun `GIVEN accounts mode off and a Prediction account on one side WHEN updateTransfer THEN accounts mode is on`() =
-        runTest {
-            // Arrange
-            val fromCurrencyStatus = buildCurrencyStatus(
-                rawCurrencyId = FROM_RAW_CURRENCY_ID,
-                decimals = FROM_DECIMALS,
-                amount = BigDecimal("1.6"),
-                account = mockk<Account.Prediction>(),
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN accounts mode off and an account that forces it on one side WHEN updateTransfer THEN accounts mode is on`(
+        model: AccountsModeModel,
+    ) = runTest {
+        // Arrange
+        val fromCurrencyStatus = buildCurrencyStatus(
+            rawCurrencyId = FROM_RAW_CURRENCY_ID,
+            decimals = FROM_DECIMALS,
+            amount = BigDecimal("1.6"),
+            account = model.fromAccount,
+        )
+        val toCurrencyStatus = buildCurrencyStatus(
+            rawCurrencyId = TO_RAW_CURRENCY_ID,
+            decimals = TO_DECIMALS,
+            account = model.toAccount,
+        )
+        every { getSelectedAppCurrencyUseCase() } returns flowOf(AppCurrency.Default.right())
+        every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
+        coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
+        coEvery {
+            getCurrencyCheckUseCase(
+                userWalletId = any(),
+                currencyStatus = any(),
+                feeCurrencyStatus = any(),
+                amount = any(),
+                fee = any(),
+                feeCurrencyBalanceAfterTransaction = any(),
+                recipientAddress = any(),
             )
-            val toCurrencyStatus = buildCurrencyStatus(rawCurrencyId = TO_RAW_CURRENCY_ID, decimals = TO_DECIMALS)
-            every { getSelectedAppCurrencyUseCase() } returns flowOf(AppCurrency.Default.right())
-            every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
-            coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
-            coEvery {
-                getCurrencyCheckUseCase(
-                    userWalletId = any(),
-                    currencyStatus = any(),
-                    feeCurrencyStatus = any(),
-                    amount = any(),
-                    fee = any(),
-                    feeCurrencyBalanceAfterTransaction = any(),
-                    recipientAddress = any(),
-                )
-            } returns buildCurrencyCheck()
-            coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns false.right()
+        } returns buildCurrencyCheck()
+        coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns false.right()
 
-            // Act
-            val result = sut.updateTransfer(
-                fromSwapCurrencyStatus = fromCurrencyStatus,
-                toSwapCurrencyStatus = toCurrencyStatus,
-                fromTokenAmount = "1",
-                feePaidCurrencyStatus = null,
-                fee = null,
-            )
+        // Act
+        val result = sut.updateTransfer(
+            fromSwapCurrencyStatus = fromCurrencyStatus,
+            toSwapCurrencyStatus = toCurrencyStatus,
+            fromTokenAmount = "1",
+            feePaidCurrencyStatus = null,
+            fee = null,
+        )
 
-            // Assert
-            assertThat((result as SwapState.Transfer).isAccountsMode).isTrue()
-        }
+        // Assert
+        assertThat((result as SwapState.Transfer).isAccountsMode).isTrue()
+    }
+
+    private fun provideTestModels() = listOf(
+        AccountsModeModel(fromAccount = mockk<Account.Prediction>(), toAccount = mockk<Account.CryptoPortfolio>()),
+        AccountsModeModel(fromAccount = mockk<Account.CryptoPortfolio>(), toAccount = mockk<Account.Collectibles>()),
+        AccountsModeModel(fromAccount = mockk<Account.CryptoPortfolio>(), toAccount = mockk<Account.Money>()),
+    )
+
+    class AccountsModeModel(val fromAccount: Account, val toAccount: Account) {
+        override fun toString(): String = "${fromAccount::class.simpleName} -> ${toAccount::class.simpleName}"
+    }
 
     @Test
     fun `GIVEN insufficient amount WHEN updateTransfer THEN return state with insufficient amount`() = runTest {

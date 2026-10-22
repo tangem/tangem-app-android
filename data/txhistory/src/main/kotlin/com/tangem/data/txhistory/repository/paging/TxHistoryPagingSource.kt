@@ -36,7 +36,7 @@ internal class TxHistoryPagingSource(
             val wrappedItems = loadItems(
                 pageToLoad = pageToLoad,
                 pageSize = sourceParams.pageSize,
-                refresh = sourceParams.refresh && params is LoadParams.Refresh,
+                refresh = sourceParams.isRefresh && params is LoadParams.Refresh,
             )
             val nextKey = when (wrappedItems.nextPage) {
                 Page.LastPage -> null
@@ -122,6 +122,6 @@ internal class TxHistoryPagingSource(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
         val pageSize: Int,
-        val refresh: Boolean,
+        val isRefresh: Boolean,
     )
 }

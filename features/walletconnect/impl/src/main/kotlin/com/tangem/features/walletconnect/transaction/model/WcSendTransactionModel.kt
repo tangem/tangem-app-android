@@ -227,7 +227,7 @@ internal class WcSendTransactionModel @Inject constructor(
             state?.copy(
                 feeSelectorUM = feeSelectorUM,
                 transaction = state.transaction.copy(
-                    sendEnabled = feeSelectorUM is FeeSelectorUM.Content && feeErrorNotification == null,
+                    isSendEnabled = feeSelectorUM is FeeSelectorUM.Content && feeErrorNotification == null,
                     feeErrorNotification = feeErrorNotification,
                 ),
             )
@@ -376,7 +376,7 @@ internal class WcSendTransactionModel @Inject constructor(
     }
 
     fun onClickAllowToSpend() {
-        wcApproval?.let { stackNavigation.pushNew(WcTransactionRoutes.CustomAllowance) }
+        if (wcApproval != null) stackNavigation.pushNew(WcTransactionRoutes.CustomAllowance)
     }
 
     private fun showVerifiedAlert(appName: String) {

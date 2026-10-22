@@ -45,7 +45,7 @@ internal class CollectibleGachaMachinesBatchFetcher(
             ?: lastConfig
             ?: error("fetchFirst() must be called before fetchNext()")
 
-        if (lastResult is BatchFetchResult.Success && lastResult.last && overrideRequestParams == null) {
+        if (lastResult is BatchFetchResult.Success && lastResult.isLast && overrideRequestParams == null) {
             return BatchFetchResult.Error(EndOfPaginationException())
         }
 
@@ -80,8 +80,8 @@ internal class CollectibleGachaMachinesBatchFetcher(
                 collectibleGachaMachines = page.collectibleGachaMachines,
                 requestCursor = requestCursor,
             ),
-            empty = page.collectibleGachaMachines.isEmpty(),
-            last = !page.hasNext || page.cursor == null,
+            isEmpty = page.collectibleGachaMachines.isEmpty(),
+            isLast = !page.hasNext || page.cursor == null,
         )
     }
 }

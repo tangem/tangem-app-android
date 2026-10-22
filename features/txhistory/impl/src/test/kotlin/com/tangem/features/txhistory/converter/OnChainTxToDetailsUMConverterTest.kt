@@ -18,6 +18,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
@@ -282,8 +283,8 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN own account counterparty WHEN convert THEN Copy address is still offered`() {
-        // Arrange — the card reads "to <my account>", but the menu row copies that account's address all the same.
+    fun `GIVEN own account counterparty WHEN convert THEN no Copy address row`() {
+        // Arrange — the tx reads "Transferred", not "Sent", so the address behind the card is not offered for copy.
         val ownConverter = onChainConverter(
             lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
         )
@@ -297,10 +298,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val menu = ownConverter.convert(tx).header.menu
 
         // Assert
-        assertThat(menu).hasSize(1)
-
-        (menu[0].action as TxHistoryDetailsUM.MenuItemUM.Action.Direct).onClick()
-        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
+        assertThat(menu).isEmpty()
     }
 
     @Test
@@ -424,7 +422,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val amountBlock = converter.convert(tx).amountBlock
 
         // Assert
-        assertThat(amountBlock.amount.resolveString()).startsWith("- ")
+        assertThat(amountBlock.amount.resolveString()).startsWith("— ")
     }
 
     @Test
@@ -861,12 +859,11 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert — an own portfolio outranks the address book.
         assertThat(counterparty?.avatar).isInstanceOf(TxHistoryDetailsUM.CounterpartyAvatar.Account::class.java)
 
-        counterparty?.onCopyClick?.invoke()
-        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
+        assertThat(counterparty?.onCopyClick).isNull()
     }
 
     @Test
-    fun `GIVEN Transfer to own Payment account WHEN convert THEN payment counterparty card copies its address`() {
+    fun `GIVEN Transfer to own Payment account WHEN convert THEN payment counterparty card is not tappable`() {
         // Arrange — the recipient address belongs to the user's own Tangem Pay (Payment) account.
         val ownConverter = onChainConverter(
             lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownPaymentAccount)),
@@ -880,12 +877,11 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Act
         val counterparty = ownConverter.convert(tx).counterparty
 
-        // Assert — resolved as own Payment account (not an external address): Visa avatar and name, address still copied.
+        // Assert — resolved as own Payment account (not an external address): Visa avatar and name, and an own
+        // portfolio is not an address the user copies.
         assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.PaymentAccount)
         assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
-
-        counterparty?.onCopyClick?.invoke()
-        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
+        assertThat(counterparty?.onCopyClick).isNull()
     }
 
     @Test
@@ -943,7 +939,24 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN Transfer to own account WHEN convert THEN account counterparty card copies its address`() {
+    fun `GIVEN on-chain swap WHEN convert THEN counterparty card is not tappable and no Copy address row`() {
+        // Arrange — a swap names the address it interacted with, not a recipient the user chose.
+        val tx = txInfo(
+            type = TransactionType.Swap,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(EXTERNAL_ADDRESS),
+        )
+
+        // Act
+        val result = converter.convert(tx)
+
+        // Assert
+        assertThat(result.counterparty?.onCopyClick).isNull()
+        assertThat(result.header.menu).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN Transfer to own account WHEN convert THEN account counterparty card is not tappable`() {
         // Arrange — the counterparty resolves to the user's own account, so the card shows its name and avatar.
         val ownConverter = onChainConverter(
             lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
@@ -966,9 +979,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
                 icon = CryptoPortfolioIconConverter.convert(ownAccount.icon),
             ),
         )
-
-        counterparty?.onCopyClick?.invoke()
-        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
+        assertThat(counterparty?.onCopyClick).isNull()
     }
 
     @Test
@@ -997,9 +1008,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
                 deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
             ),
         )
-
-        counterparty?.onCopyClick?.invoke()
-        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
+        assertThat(counterparty?.onCopyClick).isNull()
     }
 
     @Test
@@ -1130,6 +1139,23 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Act
         val rows = converter.convert(tx).rows
+
+        // Assert
+        assertThat(rows).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN incentive reward received on the token with fee WHEN convert THEN no network-fee row`() {
+        // Arrange
+        val token = mockCurrencyFactory.createToken(Blockchain.Ethereum)
+        val tx = txInfo(
+            type = TransactionType.IncentiveClaim,
+            isOutgoing = false,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val rows = onChainConverter(currency = token).convert(tx).rows
 
         // Assert
         assertThat(rows).isEmpty()
@@ -1514,6 +1540,33 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         TransactionType.YieldSupply.Exit(address = USER_ADDRESS),
     )
 
+    @ParameterizedTest
+    @MethodSource("provideYieldServiceIconModels")
+    fun `GIVEN yield service tx WHEN convert THEN header repeats the list row glyph`(model: YieldServiceIconModel) {
+        // Act
+        val icon = converter.convert(txInfo(type = model.type)).header.icon
+
+        // Assert
+        assertThat(icon).isEqualTo(model.expectedIcon)
+    }
+
+    internal data class YieldServiceIconModel(val type: TransactionType.YieldSupply, val expectedIcon: TxIcon)
+
+    private fun provideYieldServiceIconModels() = listOf(
+        YieldServiceIconModel(
+            type = TransactionType.YieldSupply.DeployContract(address = USER_ADDRESS),
+            expectedIcon = TxIcon.Vector(Icons.ic_document_20),
+        ),
+        YieldServiceIconModel(
+            type = TransactionType.YieldSupply.InitializeToken(address = USER_ADDRESS),
+            expectedIcon = TxIcon.Res(R.drawable.ic_gear_24),
+        ),
+        YieldServiceIconModel(
+            type = TransactionType.YieldSupply.ReactivateToken(address = USER_ADDRESS),
+            expectedIcon = TxIcon.Vector(Icons.ic_arrow_refresh_20),
+        ),
+    )
+
     @Test
     fun `GIVEN yield-supply topup WHEN convert THEN header keeps the lightning glyph`() {
         // Act
@@ -1533,6 +1586,54 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(pair.leading).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Item.Currency::class.java)
         assertThat(pair.trailing).isEqualTo(TxHistoryDetailsUM.AmountIconUM.Item.Resource(R.drawable.img_aave_22))
         assertThat(amountBlock.label).isNull()
+    }
+
+    @Test
+    fun `GIVEN incentive reward on the token WHEN convert THEN Merkl paired with the asset and no counterparty`() {
+        // Arrange
+        val token = mockCurrencyFactory.createToken(Blockchain.Ethereum)
+        val tx = txInfo(
+            type = TransactionType.IncentiveClaim,
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(USER_ADDRESS),
+        )
+
+        // Act
+        val result = onChainConverter(currency = token).convert(tx)
+
+        // Assert
+        assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_received))
+        assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
+        assertThat(result.amountBlock.amount.resolveString()).startsWith("+ ")
+        val pair = result.amountBlock.icon as TxHistoryDetailsUM.AmountIconUM.OverlappingPair
+        assertThat(pair.leading).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Item.Currency::class.java)
+        assertThat(pair.trailing).isEqualTo(TxHistoryDetailsUM.AmountIconUM.Item.Resource(R.drawable.img_merkl_22))
+        assertThat(result.counterparty).isNull()
+        assertThat(result.header.menu.map { it.title })
+            .doesNotContain(resourceReference(R.string.yield_module_explore_sheet_explore_aave_button_title))
+    }
+
+    @Test
+    fun `GIVEN incentive claim on the coin WHEN convert THEN no Explore Aave row and no counterparty`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.IncentiveClaim,
+            isOutgoing = true,
+            amount = BigDecimal.ZERO,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(USER_ADDRESS),
+        )
+
+        // Act
+        val result = converter.convert(tx)
+
+        // Assert
+        assertThat(result.header.title)
+            .isEqualTo(resourceReference(R.string.transaction_history_incentive_rewards_claimed))
+        assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_lightning_20))
+        assertThat(result.amountBlock.icon).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Single::class.java)
+        assertThat(result.counterparty).isNull()
+        assertThat(result.header.menu.map { it.title })
+            .doesNotContain(resourceReference(R.string.yield_module_explore_sheet_explore_aave_button_title))
     }
 
     @Test
@@ -1648,7 +1749,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_up_20))
         assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_sent))
-        assertThat(result.amountBlock.amount.resolveString()).startsWith("- ")
+        assertThat(result.amountBlock.amount.resolveString()).startsWith("— ")
         assertThat(result.counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
         assertThat(result.counterparty?.avatar)
             .isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(USER_ADDRESS))

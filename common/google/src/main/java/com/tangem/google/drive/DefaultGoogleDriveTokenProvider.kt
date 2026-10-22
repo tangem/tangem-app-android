@@ -60,6 +60,10 @@ internal class DefaultGoogleDriveTokenProvider(
         authMutex.withLock { dropAuthorization() }
     }
 
+    override suspend fun invalidateToken() {
+        authMutex.withLock { dropToken() }
+    }
+
     override suspend fun switchAccount(accountName: String) {
         authMutex.withLock {
             dropAuthorization()
@@ -75,9 +79,13 @@ internal class DefaultGoogleDriveTokenProvider(
     }
 
     private suspend fun dropAuthorization() {
+        dropToken()
+        authorizer.clearAuthorization()
+    }
+
+    private suspend fun dropToken() {
         cachedToken?.let { authorizer.clearToken(it) }
         cachedToken = null
-        authorizer.clearAuthorization()
     }
 
     @Suppress("TooGenericExceptionCaught", "SwallowedException")

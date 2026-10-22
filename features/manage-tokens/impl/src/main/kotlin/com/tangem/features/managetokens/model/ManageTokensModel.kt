@@ -163,7 +163,7 @@ internal class ManageTokensModel @Inject constructor(
             hasChanges = false,
             saveChanges = ::saveChanges,
             loadMore = ::loadMoreItems,
-            needToInteractWithColdWallet = false,
+            shouldInteractWithColdWallet = false,
             isSavingInProgress = false,
         )
     }

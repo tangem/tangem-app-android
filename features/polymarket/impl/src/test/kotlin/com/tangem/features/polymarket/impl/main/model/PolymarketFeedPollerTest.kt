@@ -25,6 +25,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -59,6 +60,97 @@ internal class PolymarketFeedPollerTest {
         // Assert
         assertThat(refreshRequests())
             .containsExactly(PolymarketEventsUpdateRequest(batchKey = 0, config = CONFIG))
+    }
+
+    @Test
+    fun `GIVEN a delayed initial response WHEN twenty seconds from load start pass THEN the page is refreshed`() =
+        runTest {
+            val poller = startPoller()
+            poller.resume()
+            poller.setVisibleEventIds(setOf("event-1"))
+            runCurrent()
+
+            advanceTimeBy(5.seconds)
+            batchState.value = PolymarketEventsBatchListState(
+                data = listOf(page(key = 0, eventIds = arrayOf("event-1"))),
+                status = PaginationStatus.EndOfPagination,
+            )
+            runCurrent()
+            advanceTimeBy(15.seconds - 1.milliseconds)
+            runCurrent()
+            assertThat(refreshRequests()).isEmpty()
+
+            advanceTimeBy(1.milliseconds)
+            runCurrent()
+            assertThat(refreshedKeys()).containsExactly(0)
+        }
+
+    @Test
+    fun `GIVEN an active ticker WHEN feed reloads between ticks THEN the first refresh uses the new load start`() =
+        runTest {
+            val poller = pollFeed(pages = arrayOf(page(key = 0, eventIds = arrayOf("event-1"))))
+            advanceTimeBy(7.seconds)
+            poller.onFeedReloaded(CONFIG)
+            batchState.value = PolymarketEventsBatchListState(
+                data = emptyList(),
+                status = PaginationStatus.InitialLoading,
+            )
+            runCurrent()
+            advanceTimeBy(5.seconds)
+            batchState.value = PolymarketEventsBatchListState(
+                data = listOf(page(key = 0, eventIds = arrayOf("event-1"))),
+                status = PaginationStatus.EndOfPagination,
+            )
+            runCurrent()
+
+            advanceTimeBy(15.seconds - 1.milliseconds)
+            runCurrent()
+            assertThat(refreshRequests()).isEmpty()
+            advanceTimeBy(1.milliseconds)
+            runCurrent()
+            assertThat(refreshedKeys()).containsExactly(0)
+        }
+
+    @Test
+    fun `GIVEN a paused feed WHEN it reloads THEN polling stays paused until resume`() = runTest {
+        val poller = pollFeed(pages = arrayOf(page(key = 0, eventIds = arrayOf("event-1"))))
+        poller.pause()
+        advanceTimeBy(7.seconds)
+        poller.onFeedReloaded(CONFIG)
+        batchState.value = PolymarketEventsBatchListState(
+            data = emptyList(),
+            status = PaginationStatus.InitialLoading,
+        )
+        runCurrent()
+        advanceTimeBy(5.seconds)
+        batchState.value = PolymarketEventsBatchListState(
+            data = listOf(page(key = 0, eventIds = arrayOf("event-1"))),
+            status = PaginationStatus.EndOfPagination,
+        )
+        runCurrent()
+        passPollInterval()
+        assertThat(refreshRequests()).isEmpty()
+
+        poller.resume()
+        runCurrent()
+        assertThat(refreshedKeys()).containsExactly(0)
+    }
+
+    @Test
+    fun `GIVEN another page loaded later WHEN the first interval ends THEN only the first page is stale`() = runTest {
+        val firstPage = page(key = 0, eventIds = arrayOf("event-1"))
+        val poller = pollFeed(pages = arrayOf(firstPage))
+        advanceTimeBy(15.seconds)
+        batchState.value = PolymarketEventsBatchListState(
+            data = listOf(firstPage, page(key = 1, eventIds = arrayOf("event-2"))),
+            status = PaginationStatus.EndOfPagination,
+        )
+        poller.setVisibleEventIds(setOf("event-1", "event-2"))
+        runCurrent()
+
+        advanceTimeBy(5.seconds)
+        runCurrent()
+        assertThat(refreshedKeys()).containsExactly(0)
     }
 
     @Test
@@ -130,6 +222,46 @@ internal class PolymarketFeedPollerTest {
 
         // Assert
         assertThat(refreshedKeys()).containsExactly(0)
+    }
+
+    @Test
+    fun `GIVEN delayed successful responses WHEN ticks fire THEN requests stay twenty seconds apart`() = runTest {
+        // Arrange
+        pollFeed(pages = arrayOf(page(key = 0, eventIds = arrayOf("event-1"))))
+        passPollInterval()
+
+        listOf(1.seconds, 5.seconds, 19.seconds).forEachIndexed { index, responseDelay ->
+            // Act
+            advanceTimeBy(responseDelay)
+            succeedRefresh(batchKey = 0)
+            advanceTimeBy(POLL_INTERVAL - responseDelay - 1.milliseconds)
+            runCurrent()
+
+            // Assert
+            assertThat(refreshRequests()).hasSize(index + 1)
+
+            advanceTimeBy(1.milliseconds)
+            runCurrent()
+            assertThat(refreshRequests()).hasSize(index + 2)
+        }
+    }
+
+    @Test
+    fun `GIVEN a response slower than the interval WHEN it completes THEN polling resumes on the next tick`() = runTest {
+        // Arrange
+        pollFeed(pages = arrayOf(page(key = 0, eventIds = arrayOf("event-1"))))
+        passPollInterval()
+        passPollInterval()
+        assertThat(refreshRequests()).hasSize(1)
+
+        // Act
+        advanceTimeBy(1.seconds)
+        succeedRefresh(batchKey = 0)
+        advanceTimeBy(POLL_INTERVAL - 1.seconds)
+        runCurrent()
+
+        // Assert
+        assertThat(refreshedKeys()).containsExactly(0, 0)
     }
 
     @Test

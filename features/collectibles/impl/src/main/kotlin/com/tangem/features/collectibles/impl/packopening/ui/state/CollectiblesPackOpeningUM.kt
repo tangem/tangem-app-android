@@ -39,6 +39,8 @@ internal sealed interface CollectiblesPackOpeningUM {
         val card: RewardCardUM?,
         val onKeepCardClick: () -> Unit,
         val onSellBackClick: () -> Unit,
+        val sellBack: SellBackButtonUM,
+        val isKeepCardEnabled: Boolean = true,
         val stage: Stage = Stage.Order,
         val isFullReveal: Boolean = true,
         val isSkipped: Boolean = false,
@@ -46,6 +48,13 @@ internal sealed interface CollectiblesPackOpeningUM {
         val onRevealTap: () -> Unit = {},
         val onSurfaceAttached: (SurfaceView) -> Unit = {},
         val onSurfaceDetached: (SurfaceView) -> Unit = {},
+    )
+
+    /** @property isLoading the offer is being checked or the sale is running */
+    data class SellBackButtonUM(
+        val textRef: TextReference,
+        val isEnabled: Boolean,
+        val isLoading: Boolean,
     )
 
     /** Order: the confirm screen. Launching: the pack is thrown. Reveal: the video. Reward: the card. */

@@ -46,7 +46,7 @@ internal class TangemPayTxHistoryDetailsConverterTest {
 
     @ParameterizedTest
     @MethodSource("provideTestModels")
-    fun `GIVEN collateral type WHEN convert THEN sheet title, icon and signed amount match the type`(
+    fun `GIVEN collateral type WHEN convert THEN sheet shows type title, icon, signed amount and no subtitle`(
         model: CollateralModel,
     ) {
         // Arrange
@@ -75,7 +75,7 @@ internal class TangemPayTxHistoryDetailsConverterTest {
                 imageVector = model.expectedIcon,
                 tintReference = (actual.iconState as TangemIconUM.Icon).tint,
             ),
-            transactionTitle = resourceReference(R.string.common_transfer),
+            transactionTitle = null,
             detail = null,
             cashbackDetail = null,
             transactionCategory = resourceReference(R.string.common_transfer),
