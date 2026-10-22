@@ -55,7 +55,6 @@ import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.isOutdatedDataHeld
 import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.jointaccount.model.JointOperationSlot
 import com.tangem.domain.jointaccount.usecase.GetJointOperationSlotUseCase
@@ -87,7 +86,6 @@ import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Compan
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.DetailsScreenOpened.TokenBalance
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.model.details.TokenAction
-import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.error.AssociateAssetError
 import com.tangem.domain.transaction.error.IncompleteTransactionError
 import com.tangem.domain.transaction.error.OpenTrustlineError
@@ -98,6 +96,7 @@ import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.models.YieldSupplyRewardBalance
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase
+import com.tangem.feature.tokendetails.domain.CurrencyWarningsStabilizer
 import com.tangem.feature.tokendetails.domain.GetCurrencyWarningsUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
@@ -225,8 +224,7 @@ internal class TokenDetailsModel @Inject constructor(
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var account: Account.CryptoPortfolio? = null
     private var isBalanceLoadedEventSent = false
-    private var isOutdatedDataWarningHeld = false
-    private var handledWarnings: Set<CryptoCurrencyWarning>? = null
+    private val warningsStabilizer = CurrencyWarningsStabilizer()
     private var latestTokenActions: List<TokenActionsState.ActionState> = emptyList()
 
     val bottomSheetNavigation: SlotNavigation<TokenDetailsBottomSheetConfig> = SlotNavigation()
@@ -425,10 +423,10 @@ internal class TokenDetailsModel @Inject constructor(
                 derivationPath = cryptoCurrency.network.derivationPath,
             )
                 .distinctUntilChanged()
-                .map { warnings -> holdOutdatedDataWarning(warnings, cryptoCurrencyStatus) }
-                .filter { it != handledWarnings }
+                .mapNotNull { warnings ->
+                    warningsStabilizer.stabilize(warnings, totalSource = cryptoCurrencyStatus.value.sources.total)
+                }
                 .onEach { warnings ->
-                    handledWarnings = warnings
                     val updatedState = stateFactory.getStateWithNotifications(warnings)
                     notificationsAnalyticsSender.send(
                         displayedUiState = uiState.value,
@@ -450,23 +448,8 @@ internal class TokenDetailsModel @Inject constructor(
         }
     }
 
-    private fun holdOutdatedDataWarning(
-        warnings: Set<CryptoCurrencyWarning>,
-        status: CryptoCurrencyStatus,
-    ): Set<CryptoCurrencyWarning> {
-        val outdatedDataWarning = CryptoCurrencyWarning.UsedOutdatedDataWarning
-
-        isOutdatedDataWarningHeld = isOutdatedDataHeld(
-            isOutdated = outdatedDataWarning in warnings,
-            source = status.value.sources.total,
-            wasHeld = isOutdatedDataWarningHeld,
-        )
-
-        return if (isOutdatedDataWarningHeld) warnings + outdatedDataWarning else warnings
-    }
-
     private fun applyLocalNotificationsChange(newState: TokenDetailsState) {
-        handledWarnings = null
+        warningsStabilizer.invalidate()
         uiState.value = newState
     }
 
