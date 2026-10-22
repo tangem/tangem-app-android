@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>PropertyUsedBeforeDeclaration:TokenReceiveModel.kt$TokenReceiveModel$state</ID>
-  </CurrentIssues>
-</SmellBaseline>

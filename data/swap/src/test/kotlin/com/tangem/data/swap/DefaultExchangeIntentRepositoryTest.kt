@@ -174,7 +174,20 @@ internal class DefaultExchangeIntentRepositoryTest {
             failure: ApiResponseError,
         ) = runTest {
             // Arrange
-            stubError(httpError(code))
+            stubError(failure)
+
+            // Act
+            val actual = repository.getExchangeIntent(walletId, INTENT_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(Either.Left(ExchangeIntentError.Unreachable(INTENT_ID)))
+        }
+
+        @Test
+        fun `GIVEN express fails with 5xx WHEN getExchangeIntent THEN the failure is returned as is`() = runTest {
+            // Arrange
+            val failure = httpError(ApiResponseError.HttpException.Code.SERVICE_UNAVAILABLE)
+            stubError(failure)
             every { expressErrorResolver.resolve(any()) } returns ExpressError.UnknownError()
 
             // Act
