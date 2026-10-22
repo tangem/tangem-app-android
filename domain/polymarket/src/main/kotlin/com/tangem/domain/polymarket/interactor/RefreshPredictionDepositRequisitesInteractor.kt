@@ -42,7 +42,7 @@ class RefreshPredictionDepositRequisitesInteractor(
 
         val (assets, addresses) = try {
             coroutineScope {
-                val assets = async { bridgeRepository.getSupportedAssets().orFail() }
+                val assets = async { bridgeRepository.refreshSupportedAssets().orFail() }
                 val addresses = async {
                     bridgeRepository.createDepositAddresses(
                         walletId = userWalletId.stringValue,
