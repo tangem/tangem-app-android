@@ -275,7 +275,6 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
     /** A refresh resets the source from cache-only to cache, so the banner is kept until the data is actual */
     private fun nextOutdatedDataShown(totalFiatBalance: TotalFiatBalance, wasShown: Boolean): Boolean {
-        
         val source = (totalFiatBalance as? TotalFiatBalance.Loaded)?.source
 
         return when (source) {
