@@ -42,6 +42,9 @@ class GrowPreferencesKeys @Inject constructor() {
     val yieldSupplyShouldShowMainPromoKey: Preferences.Key<Boolean> =
         booleanPreferencesKey(name = "yieldSupplyShouldShowMainPromo")
 
+    val yieldModePromoBottomSheetShownKey: Preferences.Key<Boolean> =
+        booleanPreferencesKey(name = "yieldModePromoBottomSheetShown")
+
     fun getShouldShowStoriesKey(storyId: String): Preferences.Key<Boolean> =
         booleanPreferencesKey("shouldShowStories_$storyId")
 }

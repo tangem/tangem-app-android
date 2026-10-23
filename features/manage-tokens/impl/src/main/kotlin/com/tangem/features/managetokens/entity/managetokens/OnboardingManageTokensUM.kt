@@ -18,23 +18,23 @@ internal data class OnboardingManageTokensUM(
 ) {
     sealed class ActionButtonConfig {
         abstract val onClick: () -> Unit
-        abstract val showProgress: Boolean
+        abstract val shouldShowProgress: Boolean
 
         data class Continue(
             override val onClick: () -> Unit,
-            override val showProgress: Boolean = false,
-            val showTangemIcon: Boolean,
+            override val shouldShowProgress: Boolean = false,
+            val shouldShowTangemIcon: Boolean,
         ) : ActionButtonConfig()
 
         data class Later(
             override val onClick: () -> Unit,
-            override val showProgress: Boolean = false,
+            override val shouldShowProgress: Boolean = false,
         ) : ActionButtonConfig()
 
         fun copySealed(showProgress: Boolean): ActionButtonConfig {
             return when (this) {
-                is Continue -> copy(showProgress = showProgress)
-                is Later -> copy(showProgress = showProgress)
+                is Continue -> copy(shouldShowProgress = showProgress)
+                is Later -> copy(shouldShowProgress = showProgress)
             }
         }
     }

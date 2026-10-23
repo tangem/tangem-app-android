@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.rows.RoundableCornersRow
 import com.tangem.core.ui.extensions.TextReference
@@ -116,9 +117,9 @@ private fun InitialInfoContentRow(
 fun RoundedListDivider(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(start = TangemTheme.dimens.spacing16)
+            .padding(start = 16.dp)
             .fillMaxWidth()
-            .height(TangemTheme.dimens.size0_5)
+            .height(0.5.dp)
             .background(TangemTheme.colors.stroke.primary),
     )
 }

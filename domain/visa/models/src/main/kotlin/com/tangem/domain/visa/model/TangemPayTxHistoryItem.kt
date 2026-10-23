@@ -63,7 +63,7 @@ sealed class TangemPayTxHistoryItem {
         override val date: SerializedDateTime,
         override val amount: SerializedBigDecimal,
         override val currency: SerializedCurrency,
-        val transactionHash: String,
+        val transactionHash: String?,
         val type: Type,
     ) : TangemPayTxHistoryItem()
 

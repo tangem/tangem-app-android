@@ -253,7 +253,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
         )
         val action = BatchAction.UpdateBatches(
             keys = setOf(batchKey),
-            async = true,
+            isAsync = true,
             updateRequest = request,
         )
 

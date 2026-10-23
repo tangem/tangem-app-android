@@ -3,7 +3,7 @@ package com.tangem.data.moneyaccount.converter
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
 import com.tangem.utils.converter.Converter
 import javax.inject.Inject
@@ -11,7 +11,7 @@ import javax.inject.Singleton
 
 @Singleton
 internal class MoneyAccountStatusValueDMConverter @Inject constructor(
-    private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
+    private val moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory,
 ) : Converter<MoneyAccountStatusValue, MoneyAccountStatusValueDM?> {
 
     override fun convert(value: MoneyAccountStatusValue): MoneyAccountStatusValueDM? {
@@ -45,12 +45,10 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
             )
             is MoneyAccountStatusValue.Account.Active -> MoneyAccountStatusValueDM.ActiveAccount(
                 customerId = value.customerId,
-                productInstanceId = value.productInstanceId,
                 balance = value.balance?.toDM(),
             )
             is MoneyAccountStatusValue.Account.Deactivated -> MoneyAccountStatusValueDM.Deactivated(
                 customerId = value.customerId,
-                productInstanceId = value.productInstanceId,
                 balance = value.balance?.toDM(),
             )
             is MoneyAccountStatusValue.Loading,
@@ -96,15 +94,15 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
             )
             is MoneyAccountStatusValueDM.ActiveAccount -> MoneyAccountStatusValue.Account.Active(
                 source = StatusSource.CACHE,
-                balance = value.balance?.toDomain(userWalletId),
+                cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId),
+                balance = value.balance?.toDomain(),
                 customerId = value.customerId,
-                productInstanceId = value.productInstanceId,
             )
             is MoneyAccountStatusValueDM.Deactivated -> MoneyAccountStatusValue.Account.Deactivated(
                 source = StatusSource.CACHE,
-                balance = value.balance?.toDomain(userWalletId),
+                cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId),
+                balance = value.balance?.toDomain(),
                 customerId = value.customerId,
-                productInstanceId = value.productInstanceId,
             )
             null -> MoneyAccountStatusValue.Error.Unavailable
         }
@@ -119,12 +117,9 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
         )
     }
 
-    private fun MoneyAccountStatusValueDM.BalanceDM.toDomain(
-        userWalletId: UserWalletId,
-    ): MoneyAccountStatusValue.Balance {
+    private fun MoneyAccountStatusValueDM.BalanceDM.toDomain(): MoneyAccountStatusValue.Balance {
         return MoneyAccountStatusValue.Balance(
             cryptoAmount = cryptoAmount,
-            cryptoCurrency = tangemPayCurrencyFactory.createMoneyAccountToken(userWalletId),
             depositAddress = depositAddress,
             currencyCode = currencyCode,
             fiatRate = fiatRate,

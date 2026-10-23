@@ -34,7 +34,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.resetB
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.state.MultiWalletBackupUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.WalletCardsBackupReporter
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.usedSeedPhrase
-import com.tangem.sdk.api.BackupServiceHolder
+import com.tangem.sdk.api.BackupServiceProvider
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -51,7 +51,7 @@ import javax.inject.Inject
 internal class MultiWalletBackupModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val backupServiceHolder: BackupServiceHolder,
+    private val backupServiceProvider: BackupServiceProvider,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val tangemSdkManager: TangemSdkManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -67,7 +67,7 @@ internal class MultiWalletBackupModel @Inject constructor(
     private val scanResponse
         get() = params.multiWalletState.value.currentScanResponse
     private val backupService
-        get() = backupServiceHolder.backupService.get()!!
+        get() = backupServiceProvider.backupService
 
     private val state = MutableStateFlow(BackupState())
 
@@ -106,9 +106,9 @@ internal class MultiWalletBackupModel @Inject constructor(
         return MultiWalletBackupUM(
             title = resourceReference(R.string.onboarding_title_no_backup_cards),
             bodyText = resourceReference(R.string.onboarding_subtitle_no_backup_cards),
-            finalizeButtonEnabled = false,
-            addBackupButtonEnabled = true,
-            addBackupButtonLoading = false,
+            isFinalizeButtonEnabled = false,
+            isAddBackupButtonEnabled = true,
+            isAddBackupButtonLoading = false,
             onAddBackupClick = ::addBackupCardWithService,
             onFinalizeButtonClick = ::onFinalizeClick,
         )
@@ -122,7 +122,7 @@ internal class MultiWalletBackupModel @Inject constructor(
                     st.copy(
                         title = resourceReference(R.string.onboarding_title_no_backup_cards),
                         bodyText = resourceReference(R.string.onboarding_subtitle_no_backup_cards),
-                        addBackupButtonEnabled = true,
+                        isAddBackupButtonEnabled = true,
                     )
                 }
                 1 -> {
@@ -133,8 +133,8 @@ internal class MultiWalletBackupModel @Inject constructor(
                     st.copy(
                         title = resourceReference(R.string.onboarding_title_one_backup_card),
                         bodyText = resourceReference(R.string.onboarding_subtitle_one_backup_card),
-                        addBackupButtonEnabled = true,
-                        finalizeButtonEnabled = true,
+                        isAddBackupButtonEnabled = true,
+                        isFinalizeButtonEnabled = true,
                     )
                 }
                 2 -> {
@@ -145,11 +145,11 @@ internal class MultiWalletBackupModel @Inject constructor(
                     st.copy(
                         title = resourceReference(R.string.onboarding_title_two_backup_cards),
                         bodyText = resourceReference(R.string.onboarding_subtitle_two_backup_cards),
-                        addBackupButtonEnabled = false,
-                        finalizeButtonEnabled = true,
+                        isAddBackupButtonEnabled = false,
+                        isFinalizeButtonEnabled = true,
                     )
                 }
-                else -> st.copy(addBackupButtonEnabled = false)
+                else -> st.copy(isAddBackupButtonEnabled = false)
             }
         }
     }
@@ -175,8 +175,8 @@ internal class MultiWalletBackupModel @Inject constructor(
     }
 
     private fun showOnlyOneBackupWarningDialog() {
-        _uiState.update {
-            it.copy(
+        _uiState.update { state ->
+            state.copy(
                 dialog = onlyOneBackupDeviceDialog(
                     onDismiss = { _uiState.update { it.copy(dialog = null) } },
                     onConfirm = { onFinalizeClick(fromDialog = true) },
@@ -187,7 +187,7 @@ internal class MultiWalletBackupModel @Inject constructor(
 
     private fun addBackupCardWithService() {
         _uiState.update { st ->
-            st.copy(addBackupButtonLoading = true)
+            st.copy(isAddBackupButtonLoading = true)
         }
 
         backupService.addBackupCard { result ->
@@ -195,7 +195,7 @@ internal class MultiWalletBackupModel @Inject constructor(
             cardSdkConfigRepository.sdk.config.filter.cardIdFilter = null
 
             _uiState.update { st ->
-                st.copy(addBackupButtonLoading = false)
+                st.copy(isAddBackupButtonLoading = false)
             }
 
             when (result) {
@@ -210,10 +210,10 @@ internal class MultiWalletBackupModel @Inject constructor(
                         manufacturer = result.data.manufacturer,
                         firmwareVersion = result.data.firmwareVersion,
                     )
-                    params.backups.update {
-                        it.copy(
-                            card2 = if (state.value.numberOfBackupCards == 1) backupCardInfo else it.card2,
-                            card3 = if (state.value.numberOfBackupCards == 2) backupCardInfo else it.card3,
+                    params.backups.update { currentState ->
+                        currentState.copy(
+                            card2 = if (state.value.numberOfBackupCards == 1) backupCardInfo else currentState.card2,
+                            card3 = if (state.value.numberOfBackupCards == 2) backupCardInfo else currentState.card3,
                         )
                     }
 

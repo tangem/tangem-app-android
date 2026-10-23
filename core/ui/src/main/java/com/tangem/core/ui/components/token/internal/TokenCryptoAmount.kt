@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.audits.AuditLabel
@@ -40,7 +41,7 @@ internal fun TokenCryptoAmount(
             )
         }
         is TokenCryptoAmountState.Loading -> {
-            RectangleShimmer(modifier = modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
+            RectangleShimmer(modifier = modifier.placeholderSize(), radius = 4.dp)
         }
         is TokenCryptoAmountState.Locked -> {
             LockedRectangle(modifier = modifier.placeholderSize())
@@ -74,6 +75,6 @@ private fun CryptoAmountText(amount: String, modifier: Modifier = Modifier, isFl
 
 private fun Modifier.placeholderSize(): Modifier = composed {
     return@composed this
-        .padding(vertical = TangemTheme.dimens.spacing2)
-        .size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12)
+        .padding(vertical = 2.dp)
+        .size(width = 40.dp, height = 12.dp)
 }

@@ -42,7 +42,7 @@ internal val UserWallet.publicInformation: UserWalletPublicInformation
             cardsInWallet = emptySet(),
             scanResponse = null,
             hotWalletId = hotWalletId,
-            backedUp = backedUp,
+            backedUp = isBackedUp,
             // left out unless set, so a wallet without social login keeps its stored record as it was
             isSocialBackupCompleted = isSocialBackupCompleted.takeIf { it },
         )
@@ -55,7 +55,7 @@ internal fun UserWalletPublicInformation.toUserWallet(): UserWallet {
             walletId = walletId,
             hotWalletId = hotWalletId,
             wallets = null,
-            backedUp = requireNotNull(backedUp),
+            isBackedUp = requireNotNull(backedUp),
             isSocialBackupCompleted = isSocialBackupCompleted == true,
         )
     } else {

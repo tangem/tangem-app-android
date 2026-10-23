@@ -98,7 +98,8 @@ class GetOnrampOffersUseCase(
             instantOffers.maxWithOrNull(fastestOfferComparator(isGooglePayAvailable))
         } else {
             val offersBySpeed = comparableOffers.groupBy { offer ->
-                offer.quote.paymentMethod.type.getProcessingSpeed().speed
+                val paymentMethodType = offer.quote.paymentMethod.type
+                paymentMethodType.getProcessingSpeed().speed
             }
             val fastestSpeed = offersBySpeed.keys.minOrNull() ?: return null
             val fastestOffers = offersBySpeed[fastestSpeed] ?: return null
@@ -172,10 +173,10 @@ class GetOnrampOffersUseCase(
                         offers = listOf(
                             recentOffer.copy(
                                 advantages = determineAdvantages(
-                                    recentOffer,
-                                    bestRateOffer,
-                                    fastestOffer,
-                                    isSingleOffer,
+                                    recentOffer = recentOffer,
+                                    bestRateOffer = bestRateOffer,
+                                    fastestOffer = fastestOffer,
+                                    isSingleOffer = isSingleOffer,
                                 ),
                                 rateDif = if (bestRateOffer != null) recentOffer.rateDif else null,
                             ),
