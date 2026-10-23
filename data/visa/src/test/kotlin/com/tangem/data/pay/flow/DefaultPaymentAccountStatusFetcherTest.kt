@@ -30,7 +30,9 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.pay.model.CachePolicy
 import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.model.CustomerSummary
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
@@ -39,9 +41,12 @@ import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
+import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
+import com.tangem.domain.pay.usecase.ResolvePaymentAccountStatusFromSummaryUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
@@ -75,6 +80,9 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     private val issueCardRepository: TangemPayIssueCardRepository = mockk()
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase = mockk()
     private val findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase = mockk()
+    private val resolvePaymentAccountStatusFromSummaryUseCase: ResolvePaymentAccountStatusFromSummaryUseCase = mockk()
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
+    private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase = mockk()
 
     private val fetcher = DefaultPaymentAccountStatusFetcher(
         paymentAccountStatusesStore = paymentAccountStatusesStore,
@@ -91,6 +99,9 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         issueCardRepository = issueCardRepository,
         getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
         findMoneyAccountCreationOrderUseCase = findMoneyAccountCreationOrderUseCase,
+        resolvePaymentAccountStatusFromSummaryUseCase = resolvePaymentAccountStatusFromSummaryUseCase,
+        moneyAccountFeatureToggles = moneyAccountFeatureToggles,
+        getCustomerSummaryUseCase = getCustomerSummaryUseCase,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -242,12 +253,16 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             issueCardRepository,
             getTangemPayTariffPlanStateUseCase,
             findMoneyAccountCreationOrderUseCase,
+            resolvePaymentAccountStatusFromSummaryUseCase,
+            moneyAccountFeatureToggles,
+            getCustomerSummaryUseCase,
         )
         // Relaxed mocks don't need clearing — deviceSecurity, eligibilityManager, paymentAccountStatusesStore
         // are relaxed and consistent with their relaxed defaults (false, empty, etc.)
         clearMocks(paymentAccountStatusesStore, answers = false)
         every { tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any()) } returns emptyList()
         coEvery { findMoneyAccountCreationOrderUseCase(userWalletId) } returns null.right()
+        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns false
     }
 
     /**
@@ -742,6 +757,118 @@ internal class DefaultPaymentAccountStatusFetcherTest {
      */
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class StatusFromCustomerSummary {
+
+        private val summary: CustomerSummary = mockk()
+
+        @BeforeEach
+        fun setUpSummary() {
+            every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
+            coEvery { onboardingRepository.hasTangemPayInWallet(userWalletId) } returns Either.Right(true)
+            coEvery { onboardingRepository.isTangemPayInitialDataProduced(userWalletId) } returns true
+            coEvery { onboardingRepository.getOrderId(userWalletId) } returns null
+            coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns VisaApiError.Unspecified.left()
+        }
+
+        @Test
+        fun `GIVEN summary resolves status WHEN invoke THEN it is stored without customer me`() = runTest {
+            // Arrange
+            val resolved = PaymentAccountStatusValue.Verified(source = StatusSource.ACTUAL)
+            coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.REFRESH) } returns summary.right()
+            coEvery { resolvePaymentAccountStatusFromSummaryUseCase(userWalletId, summary) } returns resolved
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.map { it.value }.last()).isEqualTo(resolved)
+            coVerify(exactly = 0) { onboardingRepository.getCustomerInfo(any()) }
+        }
+
+        @Test
+        fun `GIVEN summary does not resolve status WHEN invoke THEN status built from customer me`() = runTest {
+            // Arrange
+            coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.REFRESH) } returns summary.right()
+            coEvery { resolvePaymentAccountStatusFromSummaryUseCase(userWalletId, summary) } returns null
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            coVerify(exactly = 1) { onboardingRepository.getCustomerInfo(userWalletId) }
+        }
+
+        @Test
+        fun `GIVEN summary request fails WHEN invoke THEN unavailable is stored without customer me`() = runTest {
+            // Arrange
+            coEvery { paymentAccountStatusesStore.getSyncOrNull(userWalletId) } returns null
+            coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.REFRESH) } returns VisaApiError.Unspecified.left()
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.map { it.value }.last()).isEqualTo(PaymentAccountStatusValue.Error.Unavailable)
+            coVerify(exactly = 0) { resolvePaymentAccountStatusFromSummaryUseCase(any(), any()) }
+            coVerify(exactly = 0) { onboardingRepository.getCustomerInfo(any()) }
+        }
+
+        @Test
+        fun `GIVEN refresh token expired on summary WHEN invoke THEN not synced is stored`() = runTest {
+            // Arrange
+            coEvery { paymentAccountStatusesStore.getSyncOrNull(userWalletId) } returns null
+            coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.REFRESH) } returns VisaApiError.RefreshTokenExpired.left()
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.map { it.value }.last()).isEqualTo(PaymentAccountStatusValue.Error.NotSynced)
+        }
+
+        @Test
+        fun `GIVEN cached account AND summary request fails WHEN invoke THEN cached status kept as only cache`() =
+            runTest {
+                // Arrange
+                val cached = loadedFixture(virtualAccount = null)
+                coEvery { paymentAccountStatusesStore.getSyncOrNull(userWalletId) } returns AccountStatus.Payment(
+                    account = Account.Payment(userWalletId = userWalletId),
+                    value = cached,
+                )
+                coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.REFRESH) } returns VisaApiError.Unspecified.left()
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                assertThat(storedStatuses.map { it.value }.last()).isEqualTo(
+                    cached.copySealed(
+                        source = StatusSource.ONLY_CACHE,
+                        error = PaymentAccountStatusValue.Error.Unavailable,
+                    ),
+                )
+            }
+
+        @Test
+        fun `GIVEN money accounts disabled WHEN invoke THEN summary not requested`() = runTest {
+            // Arrange
+            every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns false
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            coVerify(exactly = 0) { getCustomerSummaryUseCase(any(), any()) }
+            coVerify(exactly = 1) { onboardingRepository.getCustomerInfo(userWalletId) }
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class StaleOrderIdRecovery {
 
         @Test
@@ -823,6 +950,9 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             issueCardRepository = issueCardRepository,
             getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
             findMoneyAccountCreationOrderUseCase = findMoneyAccountCreationOrderUseCase,
+            resolvePaymentAccountStatusFromSummaryUseCase = resolvePaymentAccountStatusFromSummaryUseCase,
+            moneyAccountFeatureToggles = moneyAccountFeatureToggles,
+            getCustomerSummaryUseCase = getCustomerSummaryUseCase,
         )
 
         private val account = Account.Payment(userWalletId = userWalletId)

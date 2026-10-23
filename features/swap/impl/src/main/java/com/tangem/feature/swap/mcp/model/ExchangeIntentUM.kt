@@ -1,18 +1,33 @@
 package com.tangem.feature.swap.mcp.model
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.extensions.TextReference
 
 @Immutable
-internal data class ExchangeIntentUM(
-    val fromToken: TangemTokenIcon.UiState,
-    val toToken: TangemTokenIcon.UiState,
-    val title: TextReference,
-    val agent: ExchangeIntentAgentUM,
-    val description: TextReference,
-    val primaryButton: ExchangeIntentButtonUM,
-)
+internal sealed interface ExchangeIntentUM {
+
+    val primaryButton: ExchangeIntentButtonUM
+
+    /** What the agent asks for, to be accepted. */
+    data class Offer(
+        val fromToken: TangemTokenIcon.UiState,
+        val toToken: TangemTokenIcon.UiState,
+        val title: TextReference,
+        val agent: ExchangeIntentAgentUM,
+        val description: TextReference,
+        override val primaryButton: ExchangeIntentButtonUM,
+    ) : ExchangeIntentUM
+
+    /** An intent that cannot be offered: it has already been processed, or it cannot be reached. */
+    data class Status(
+        val variant: TangemModalStatus.Variant,
+        val title: TextReference,
+        val subtitle: TextReference?,
+        override val primaryButton: ExchangeIntentButtonUM,
+    ) : ExchangeIntentUM
+}
 
 @Immutable
 internal sealed interface ExchangeIntentAgentUM {
