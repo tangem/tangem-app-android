@@ -446,7 +446,7 @@ internal class TokenDetailsModel @Inject constructor(
             wasShown = previous?.isOutdatedDataShown == true,
         )
         val warnings = if (isOutdatedDataShown) {
-            current.warnings + CryptoCurrencyWarning.UsedOutdatedDataWarning
+            setOf<CryptoCurrencyWarning>(CryptoCurrencyWarning.UsedOutdatedDataWarning) + current.warnings
         } else {
             current.warnings
         }

@@ -3,6 +3,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.test.core.ProvideTestModels
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -36,6 +37,32 @@ internal class TokenDetailsModelOutdatedBannerTest : TokenDetailsModelTestBase()
             .inOrder()
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN banner and other warning WHEN refresh goes CACHE then ONLY_CACHE THEN notifications keep their order`() =
+        runTest {
+            // Arrange
+            extraWarnings = setOf(CryptoCurrencyWarning.SomeNetworksUnreachable)
+            val model = createModel(testScope = this)
+            val notifications = recordNotifications(model)
+            emitStatus(createLoadedStatus(networkSource = StatusSource.ONLY_CACHE))
+            advanceUntilIdle()
+
+            // Act
+            emitStatus(createLoadedStatus(networkSource = StatusSource.CACHE))
+            advanceUntilIdle()
+            emitStatus(createLoadedStatus(networkSource = StatusSource.ONLY_CACHE, amount = BANNER_AMOUNT))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(notifications)
+                .containsExactly(
+                    emptyList<TokenDetailsNotification>(),
+                    listOf(TokenDetailsNotification.UsedOutdatedData, TokenDetailsNotification.NetworksUnreachable),
+                )
+                .inOrder()
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN banner shown WHEN refresh goes CACHE then ACTUAL THEN banner is kept until ACTUAL`() = runTest {

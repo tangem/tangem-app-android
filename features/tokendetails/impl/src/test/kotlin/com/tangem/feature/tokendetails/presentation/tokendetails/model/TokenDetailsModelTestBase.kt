@@ -318,7 +318,7 @@ internal abstract class TokenDetailsModelTestBase {
 
     private fun warningsFor(status: CryptoCurrencyStatus): Set<CryptoCurrencyWarning> {
         return if (status.value.sources.total == StatusSource.ONLY_CACHE) {
-            extraWarnings + CryptoCurrencyWarning.UsedOutdatedDataWarning
+            setOf<CryptoCurrencyWarning>(CryptoCurrencyWarning.UsedOutdatedDataWarning) + extraWarnings
         } else {
             extraWarnings
         }
