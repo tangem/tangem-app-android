@@ -346,18 +346,85 @@ internal class PolymarketPositionDetailsModelTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN a position that cannot be sold WHEN opened THEN close is not offered`(model: UnsellableModel) =
+    fun `GIVEN a position that cannot be sold WHEN close tapped THEN market closed sheet is shown`(
+        model: UnsellableModel,
+    ) = runModelTest {
+        // Arrange
+        coEvery { repository.getPosition(addresses, position.id) } returns model.position.right()
+        val details = createModel()
+        details.onResume()
+        runCurrent()
+
+        // Act
+        requireNotNull(details.data().onClosePositionClick).invoke()
+
+        // Assert
+        assertThat(details.uiState.value.isMarketClosedSheetShown).isTrue()
+        verify(exactly = 0) { router.push(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a position without a market WHEN buy tapped THEN market closed sheet is shown`() = runModelTest {
+        // Arrange
+        coEvery { repository.getPosition(addresses, position.id) } returns position.copy(marketId = null).right()
+        coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket())).right()
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+
+        // Act
+        requireNotNull(model.data().onBuyMoreClick).invoke()
+
+        // Assert
+        assertThat(model.uiState.value.isMarketClosedSheetShown).isTrue()
+        verify(exactly = 0) { router.push(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a position without an event WHEN close and buy tapped THEN both show market closed`() =
         runModelTest {
             // Arrange
-            coEvery { repository.getPosition(addresses, position.id) } returns model.position.right()
-            val details = createModel()
-
-            // Act
-            details.onResume()
+            coEvery { repository.getPosition(addresses, position.id) } returns position.copy(eventId = null).right()
+            val model = createModel()
+            model.onResume()
             runCurrent()
 
+            // Act
+            requireNotNull(model.data().onClosePositionClick).invoke()
+            val isShownAfterClose = model.uiState.value.isMarketClosedSheetShown
+            model.uiState.value.onMarketClosedSheetDismiss()
+            requireNotNull(model.data().onBuyMoreClick).invoke()
+
             // Assert
-            assertThat(details.data().onClosePositionClick).isNull()
+            assertThat(isShownAfterClose).isTrue()
+            assertThat(model.uiState.value.isMarketClosedSheetShown).isTrue()
+            verify(exactly = 0) { router.push(any(), any()) }
+            assertThat(model.data().event?.onClick).isNull()
+            coVerify(exactly = 0) { getEvent(any()) }
+        }
+
+    @Test
+    fun `GIVEN the event is still loading WHEN buy tapped THEN nothing happens until the event arrives`() =
+        runModelTest {
+            // Arrange
+            val event = CompletableDeferred<PolymarketEvent>()
+            coEvery { repository.getPosition(addresses, position.id) } returns
+                position.copy(isAcceptingOrders = false).right()
+            coEvery { getEvent("event") } coAnswers { event.await().right() }
+            val model = createModel()
+            model.onResume()
+            runCurrent()
+
+            // Act
+            requireNotNull(model.data().onBuyMoreClick).invoke()
+            val isShownWhileLoading = model.uiState.value.isMarketClosedSheetShown
+            event.complete(createEvent(markets = listOf(createMarket())))
+            runCurrent()
+            requireNotNull(model.data().onBuyMoreClick).invoke()
+
+            // Assert
+            assertThat(isShownWhileLoading).isFalse()
+            verify(exactly = 1) { router.push(any<PolymarketRoute.PlacePrediction>(), any()) }
         }
 
     @Test
@@ -384,6 +451,30 @@ internal class PolymarketPositionDetailsModelTest {
             assertThat(whileIndexing).isEqualTo(Content.Loading)
             assertThat(model.data().metrics.quantity).isEqualTo(stringReference("10"))
             coVerify(exactly = 4) { repository.getPosition(addresses, position.id) }
+        }
+
+    @Test
+    fun `GIVEN a loaded event WHEN the position size changes while indexing THEN the event is not read again`() =
+        runModelTest {
+            // Arrange
+            coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket())).right()
+            val model = createModel()
+            model.onResume()
+            runCurrent()
+            coEvery { repository.getPosition(addresses, position.id) } returnsMany listOf(
+                position.right(),
+                position.copy(size = BigDecimal("10")).right(),
+            )
+            model.onPause()
+
+            // Act
+            model.onResume()
+            runCurrent()
+            advanceTimeBy(PolymarketConst.POSITION_INDEXING_RETRY_MILLIS + 1)
+
+            // Assert
+            assertThat(model.data().metrics.quantity).isEqualTo(stringReference("10"))
+            coVerify(exactly = 2) { getEvent("event") }
         }
 
     @Test
@@ -567,17 +658,20 @@ internal class PolymarketPositionDetailsModelTest {
         }
 
     @Test
-    fun `GIVEN no market of the event holds the outcome WHEN opened THEN buy is not offered`() = runModelTest {
+    fun `GIVEN no event market holds the outcome WHEN buy tapped THEN market closed sheet is shown`() = runModelTest {
         // Arrange
         coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket(assetId = "other"))).right()
         val model = createModel()
 
-        // Act
         model.onResume()
         runCurrent()
 
+        // Act
+        requireNotNull(model.data().onBuyMoreClick).invoke()
+
         // Assert
-        assertThat(model.data().onBuyMoreClick).isNull()
+        assertThat(model.uiState.value.isMarketClosedSheetShown).isTrue()
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     @Test
@@ -652,32 +746,38 @@ internal class PolymarketPositionDetailsModelTest {
         }
 
     @Test
-    fun `GIVEN empty asset ids on both sides WHEN opened THEN buy is not offered`() = runModelTest {
+    fun `GIVEN empty asset ids on both sides WHEN buy tapped THEN market closed sheet is shown`() = runModelTest {
         // Arrange
         val blank = position.copy(id = position.id.copy(assetId = ""))
         coEvery { repository.getPosition(addresses, blank.id) } returns blank.right()
         coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket(assetId = ""))).right()
         val model = createModel(positionId = blank.id)
 
-        // Act
         model.onResume()
         runCurrent()
 
+        // Act
+        requireNotNull(model.data().onBuyMoreClick).invoke()
+
         // Assert
-        assertThat(model.data().onBuyMoreClick).isNull()
+        assertThat(model.uiState.value.isMarketClosedSheetShown).isTrue()
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     @Test
-    fun `GIVEN the event could not be read WHEN opened THEN buy is not offered`() = runModelTest {
+    fun `GIVEN the event could not be read WHEN buy tapped THEN market closed sheet is shown`() = runModelTest {
         // Arrange
         val model = createModel()
 
-        // Act
         model.onResume()
         runCurrent()
 
+        // Act
+        requireNotNull(model.data().onBuyMoreClick).invoke()
+
         // Assert
-        assertThat(model.data().onBuyMoreClick).isNull()
+        assertThat(model.uiState.value.isMarketClosedSheetShown).isTrue()
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     private fun runModelTest(block: suspend TestScope.() -> Unit) = runTest {

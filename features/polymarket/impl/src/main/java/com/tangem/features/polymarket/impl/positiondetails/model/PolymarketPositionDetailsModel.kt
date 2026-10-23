@@ -57,6 +57,7 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
     private var position: PolymarketPosition.Open? = null
     private var hasShownPosition = false
     private var event: PolymarketEvent? = null
+    private var isEventSettled = false
 
     val uiState: StateFlow<PolymarketPositionDetailsUM>
         field = MutableStateFlow(
@@ -86,6 +87,7 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
         val shownSize = position?.size
         position = null
         event = null
+        isEventSettled = false
         uiState.update { it.copy(content = Content.Loading) }
         loadJob = modelScope.launch {
             val addresses = withContext(dispatchers.default) { deriveAddresses.stored(params.userWalletId) }
@@ -128,23 +130,24 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
         }
         position = loaded
         hasShownPosition = true
+        val isEventKnown = event?.id == loaded.eventId || eventJob?.isActive == true
+        loaded.eventId?.takeUnless { isEventKnown }?.let(::loadEvent)
         publishPosition()
-        loaded.eventId?.let(::loadEvent)
     }
 
     private fun loadEvent(eventId: String) {
+        eventJob?.cancel()
+        isEventSettled = false
         eventJob = modelScope.launch {
             val result = withContext(dispatchers.default) { getEvent(eventId) }
             ensureActive()
+            if (position?.eventId != eventId) return@launch
             result.fold(
                 ifLeft = { TangemLogger.e("Failed to load position event: $it") },
-                ifRight = { loaded ->
-                    if (position?.eventId == eventId && loaded.id == eventId) {
-                        event = loaded
-                        publishPosition()
-                    }
-                },
+                ifRight = { loaded -> if (loaded.id == eventId) event = loaded },
             )
+            isEventSettled = true
+            publishPosition()
         }
     }
 
@@ -177,9 +180,8 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
         )
     }
 
-    private fun closePositionAction(loaded: PolymarketPosition.Open): (() -> Unit)? = when {
-        !loaded.canClosePosition -> null
-        loaded.isMarketTradable -> ::closePosition
+    private fun closePositionAction(loaded: PolymarketPosition.Open): () -> Unit = when {
+        loaded.canClosePosition && loaded.eventId != null && loaded.isMarketTradable -> ::closePosition
         else -> ::showMarketClosedSheet
     }
 
@@ -188,12 +190,18 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
      * market's legacy token reports that it accepts no orders while the market itself trades on under its new
      * token. The resolution status stays the position's.
      */
-    private fun buyMoreAction(loaded: PolymarketPosition.Open): (() -> Unit)? {
+    private fun buyMoreAction(loaded: PolymarketPosition.Open): () -> Unit {
         val market = eventMarket(loaded)
         val outcome = market?.findOutcome(loaded)
+        val isEventLoading = loaded.eventId != null && !isEventSettled
         return when {
-            market == null || outcome == null -> if (loaded.isMarketTradable) null else ::showMarketClosedSheet
-            market.isAcceptingOrders && loaded.resolutionStatus == PolymarketResolutionStatus.OPEN -> {
+            loaded.marketId == null || loaded.resolutionStatus != PolymarketResolutionStatus.OPEN ->
+                ::showMarketClosedSheet
+            market == null && isEventLoading -> {
+                {}
+            }
+            market == null || outcome == null -> ::showMarketClosedSheet
+            market.isAcceptingOrders -> {
                 { buyMore(market = market, outcome = outcome) }
             }
             else -> ::showMarketClosedSheet
