@@ -53,7 +53,6 @@ internal class SetContentTransformerTest {
             creatorName = "Alice",
             creatorAddress = OWNER_ADDRESS,
             wallet = null,
-            confirmation = null,
             onRequiredApprovalsClick = onRequiredApprovalsClick,
             onCreatorInfoClick = onCreatorInfoClick,
             onContinueClick = onContinueClick,

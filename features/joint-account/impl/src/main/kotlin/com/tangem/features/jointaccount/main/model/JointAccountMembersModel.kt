@@ -32,14 +32,27 @@ import com.tangem.features.jointaccount.main.entity.JointAccountMembersSheetConf
 import com.tangem.features.jointaccount.main.entity.MemberCardConfig
 import com.tangem.features.jointaccount.main.navigation.JointAccountMembersRoute
 import com.tangem.features.jointaccount.main.state.JointAccountMembersStateController
-import com.tangem.features.jointaccount.main.state.transformers.*
+import com.tangem.features.jointaccount.main.state.transformers.ClearMembersAccountTransformer
+import com.tangem.features.jointaccount.main.state.transformers.UpdateMembersAccountTransformer
+import com.tangem.features.jointaccount.main.state.transformers.UpdateMembersInitialStateTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
-import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 import com.tangem.core.ui.R as CoreUiR
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -66,30 +79,14 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private val params = paramsContainer.require<JointAccountMembersListParams>()
 
-    val bottomSheetNavigation: SlotNavigation<JointAccountMembersSheetConfig> = SlotNavigation()
-
-    private val converterCallbacks = JointAccountToMembersUMConverter.Callbacks(
-        onMemberInfoClick = { avatar, name, address ->
-            bottomSheetNavigation.activate(
-                JointAccountMembersSheetConfig.MemberCard(
-                    card = MemberCardConfig(avatar = avatar, name = name, address = address),
-                ),
-            )
-        },
-        onInviteClick = ::onInviteClick,
-        onConfirmAddressClick = { cryptoAccountId ->
-            router.push(JointAccountMembersRoute.ConfirmAddress(cryptoAccountId = cryptoAccountId))
-        },
-        onApprovalsInfoClick = { threshold, total ->
-            bottomSheetNavigation.activate(
-                JointAccountMembersSheetConfig.AboutSignatures(threshold = threshold, total = total),
-            )
-        },
-        onCloseClick = ::onCloseClick,
-    )
-
     val uiState: StateFlow<JointAccountMembersUM>
         get() = stateController.uiState
+
+    val bottomSheetNavigation: SlotNavigation<JointAccountMembersSheetConfig> = SlotNavigation()
+
+    /** Fires when a member joined or confirmed between two updates while the screen is resumed; silent on the first render */
+    val memberStatusChanges: Flow<Unit>
+        field = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     private val isResumed = MutableStateFlow(false)
 
@@ -101,6 +98,14 @@ internal class JointAccountMembersModel @Inject constructor(
             }
             .distinctUntilChanged(),
         onCompromised = params.onCloseFlow,
+    )
+
+    private val converterCallbacks = JointAccountToMembersUMConverter.Callbacks(
+        onMemberInfoClick = ::onMemberInfoClick,
+        onInviteClick = ::onInviteClick,
+        onConfirmAddressClick = ::onConfirmAddressClick,
+        onApprovalsInfoClick = ::onApprovalsInfoClick,
+        onCloseClick = ::onCloseClick,
     )
 
     init {
@@ -119,14 +124,7 @@ internal class JointAccountMembersModel @Inject constructor(
         isResumed.value = false
     }
 
-    private fun refreshAccounts() {
-        modelScope.launch {
-            jointAccountListFetcher(
-                params = SingleJointAccountListFetcher.Params(userWalletId = params.userWalletId),
-            )
-        }
-    }
-
+    // region Subscriptions
     private fun observeAccount() {
         resolvedAccountFlow
             .flatMapLatest { account ->
@@ -154,30 +152,37 @@ internal class JointAccountMembersModel @Inject constructor(
                 }
             }
             .onEach { resolved ->
-                val transformer = resolved
-                    ?.let { account ->
-                        UpdateMembersAccountTransformer(
-                            account = account.account,
-                            invites = account.invites,
-                            sharedInvites = account.sharedInvites,
-                            ownAddress = account.ownAddress,
-                            callbacks = converterCallbacks,
-                            accountName = account.name,
-                            accountIcon = account.icon,
-                        )
-                    }
-                    ?: ClearMembersAccountTransformer()
+                val previous = uiState.value.memberStatuses()
+                stateController.update(resolved.toTransformer())
+                val next = uiState.value.memberStatuses()
 
-                stateController.update(transformer)
+                val isChanged = previous.isNotEmpty() && next.isNotEmpty() && previous != next
+                if (isChanged && isResumed.value) memberStatusChanges.tryEmit(Unit)
             }
             .launchIn(modelScope)
     }
 
+    private fun ResolvedAccount?.toTransformer() = if (this == null) {
+        ClearMembersAccountTransformer()
+    } else {
+        UpdateMembersAccountTransformer(
+            account = account,
+            invites = invites,
+            sharedInvites = sharedInvites,
+            ownAddress = ownAddress,
+            callbacks = converterCallbacks,
+            accountName = name,
+            accountIcon = icon,
+        )
+    }
+
+    private fun JointAccountMembersUM.memberStatuses(): List<Pair<String, JointAccountMembersUM.MemberStatusUM>> =
+        joined.map { member -> member.id to member.status }
+
     /**
-     * The account's `/accounts` record as this wallet sees it: its name, icon and the wallet's own owner address,
-     * derived from the key index the record carries. Starts with null so the screen renders before that record
-     * arrives (the create and join flows refresh the two lists concurrently) and settles once it does; the key is
-     * derived once per index.
+     * The account's `/accounts` record as this wallet sees it. Starts with `null` so the screen renders before the
+     * record arrives (the create and join flows refresh the two lists concurrently); the own address is derived
+     * once per key index.
      */
     private fun ownJointAccountFlow(cryptoAccountId: String): Flow<OwnJointAccount?> {
         val accountId = AccountId
@@ -210,12 +215,15 @@ internal class JointAccountMembersModel @Inject constructor(
         .onLeft { TangemLogger.e("Unable to resolve the own owner address of the joint account", it) }
         .getOrNull()
 
+    private fun recordSharedInvites() {
+        inviteSharing
+            .recordShared(userWalletId = params.userWalletId, account = resolvedAccountFlow)
+            .launchIn(modelScope)
+    }
+
     /**
-     * The backend won't silent-push joint-account state changes (a slot filling, activation, an operation awaiting
-     * a co-signature), so while this screen is on top a 5-second poll keeps it fresh — the current status can't
-     * tell us whether it's stale, so it isn't used to gate this, and neither is whether an account is currently
-     * resolved: an empty store (offline, cold start, a failed [refreshAccounts]) must still poll, or it could
-     * never recover on its own. [pollingCoordinator] paces itself — this only decides whether to collect.
+     * The backend does not push joint-account changes, so the screen polls while on top. An empty store (offline,
+     * cold start, a failed refresh) must poll too, or it could never recover; [pollingCoordinator] paces itself.
      */
     private fun subscribePolling() {
         isResumed
@@ -225,20 +233,16 @@ internal class JointAccountMembersModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun recordSharedInvites() {
-        inviteSharing
-            .recordShared(userWalletId = params.userWalletId, account = resolvedAccountFlow)
-            .launchIn(modelScope)
+    private fun refreshAccounts() {
+        modelScope.launch {
+            jointAccountListFetcher(
+                params = SingleJointAccountListFetcher.Params(userWalletId = params.userWalletId),
+            )
+        }
     }
+    // endregion
 
-    private fun onInviteClick(inviteId: String, accountName: TextReference) {
-        bottomSheetNavigation.activate(
-            JointAccountMembersSheetConfig.InviteMember(
-                message = inviteSharing.message(inviteId = inviteId, accountName = accountName),
-            ),
-        )
-    }
-
+    // region Clicks
     fun onShareInviteClick(message: String) {
         inviteSharing.share(message = message)
     }
@@ -253,10 +257,38 @@ internal class JointAccountMembersModel @Inject constructor(
         )
     }
 
+    private fun onMemberInfoClick(avatar: JointAccountMembersUM.MemberAvatarUM, name: TextReference, address: String) {
+        bottomSheetNavigation.activate(
+            JointAccountMembersSheetConfig.MemberCard(
+                card = MemberCardConfig(avatar = avatar, name = name, address = address),
+            ),
+        )
+    }
+
+    private fun onInviteClick(inviteId: String, accountName: TextReference) {
+        bottomSheetNavigation.activate(
+            JointAccountMembersSheetConfig.InviteMember(
+                message = inviteSharing.message(inviteId = inviteId, accountName = accountName),
+            ),
+        )
+    }
+
+    private fun onConfirmAddressClick(cryptoAccountId: String) {
+        router.push(JointAccountMembersRoute.ConfirmAddress(cryptoAccountId = cryptoAccountId))
+    }
+
+    private fun onApprovalsInfoClick(threshold: Int, total: Int) {
+        bottomSheetNavigation.activate(
+            JointAccountMembersSheetConfig.AboutSignatures(threshold = threshold, total = total),
+        )
+    }
+
     private fun onCloseClick() {
         params.onCloseFlow()
     }
+    // endregion
 
+    // region Models
     private data class ResolvedAccount(
         val account: JointAccount,
         val invites: List<JointAccountInvite>,
@@ -272,4 +304,5 @@ internal class JointAccountMembersModel @Inject constructor(
         val icon: CryptoPortfolioIcon,
         val ownAddress: String?,
     )
+    // endregion
 }

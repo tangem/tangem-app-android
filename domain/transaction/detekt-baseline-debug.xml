@@ -1,7 +1,5 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
   <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>NamedArguments:SendTransactionUseCase.kt$SendTransactionUseCase$invoke(listOf(txData), userWallet, network, TransactionSender.MultipleTransactionSendMode.DEFAULT)</ID>
-  </CurrentIssues>
+  <CurrentIssues/>
 </SmellBaseline>

@@ -102,7 +102,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             logger.i("invoke status ${params.userWalletId}: $status")
             paymentAccountStatusesStore.store(
                 userWalletId = params.userWalletId,
-                status = AccountStatus.Payment(account = account, value = PaymentAccountStatusValue.Verified(StatusSource.ACTUAL)),
+                status = AccountStatus.Payment(account = account, value = status),
             )
         }.onLeft { throwable ->
             logger.e("invoke() ${params.userWalletId} threw, falling back to ONLY_CACHE", throwable)

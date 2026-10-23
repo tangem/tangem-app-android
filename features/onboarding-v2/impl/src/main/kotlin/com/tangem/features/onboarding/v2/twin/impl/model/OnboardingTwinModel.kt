@@ -361,8 +361,10 @@ internal class OnboardingTwinModel @Inject constructor(
     }
 
     private suspend fun getIssuerKeys(): KeyPair {
+        val cardIssuer = params.scanResponse.card.issuer
+        val issuerPublicKey = cardIssuer.publicKey.toHexString()
         val issuer = issuersConfigStorage.getConfig()
-            .first { it.publicKey == params.scanResponse.card.issuer.publicKey.toHexString() }
+            .first { it.publicKey == issuerPublicKey }
 
         return KeyPair(
             publicKey = issuer.publicKey.hexToBytes(),

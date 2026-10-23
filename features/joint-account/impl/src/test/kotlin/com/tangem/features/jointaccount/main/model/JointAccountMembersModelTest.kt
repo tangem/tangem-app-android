@@ -55,7 +55,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -575,6 +577,89 @@ internal class JointAccountMembersModelTest {
         subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
         return tracked
     }
+
+    @Test
+    fun `GIVEN a member joins after the first load WHEN the account updates THEN a status change is emitted`() =
+        runTest {
+            // Arrange
+            val accounts = MutableStateFlow(listOf(pendingAccount(members = listOf(creator))))
+            every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns accounts
+            coEvery { getInvitesUseCase(any(), any()) } returns emptyList()
+            val model = createModel()
+            model.onResume()
+            val changes = mutableListOf<Unit>()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.memberStatusChanges.collect { changes += it } }
+            runCurrent()
+
+            // Act
+            accounts.value = listOf(pendingAccount(members = listOf(creator, member)))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(changes).hasSize(1)
+        }
+
+    @Test
+    fun `GIVEN a member confirms WHEN the account updates THEN a status change is emitted`() = runTest {
+        // Arrange
+        val confirming = pendingAccount(members = listOf(creator, member)).copy(status = JointAccount.Status.CONFIRMING)
+        val accounts = MutableStateFlow(listOf(confirming))
+        every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns accounts
+        coEvery { getInvitesUseCase(any(), any()) } returns emptyList()
+        val model = createModel()
+        model.onResume()
+        val changes = mutableListOf<Unit>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.memberStatusChanges.collect { changes += it } }
+        runCurrent()
+
+        // Act
+        accounts.value = listOf(confirming.copy(members = listOf(creator, member.copy(isVerified = true))))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(changes).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN paused screen WHEN a member joins THEN no status change is emitted`() = runTest {
+        // Arrange
+        val accounts = MutableStateFlow(listOf(pendingAccount(members = listOf(creator))))
+        every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns accounts
+        coEvery { getInvitesUseCase(any(), any()) } returns emptyList()
+        val model = createModel()
+        model.onResume()
+        model.onPause()
+        val changes = mutableListOf<Unit>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.memberStatusChanges.collect { changes += it } }
+        runCurrent()
+
+        // Act
+        accounts.value = listOf(pendingAccount(members = listOf(creator, member)))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(changes).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN first load and a refresh without changes WHEN the account arrives THEN no status change is emitted`() =
+        runTest {
+            // Arrange
+            val accounts = MutableStateFlow(listOf(pendingAccount(members = listOf(creator, member))))
+            every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns accounts
+            coEvery { getInvitesUseCase(any(), any()) } returns emptyList()
+            val changes = mutableListOf<Unit>()
+
+            // Act
+            val model = createModel()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.memberStatusChanges.collect { changes += it } }
+            runCurrent()
+            accounts.value = listOf(pendingAccount(members = listOf(creator, member)).copy(source = StatusSource.CACHE))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(changes).isEmpty()
+        }
 
     @Test
     fun `GIVEN the composition does not verify WHEN the screen opens THEN it closes with the alert shown`() = runTest {

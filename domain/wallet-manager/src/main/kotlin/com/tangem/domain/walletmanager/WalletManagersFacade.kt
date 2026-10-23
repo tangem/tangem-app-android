@@ -278,7 +278,21 @@ interface WalletManagersFacade {
         signer: TransactionSigner,
     ): List<String>?
 
+    /**
+     * Returns the multiplier between the [currency] amount shown to the user and its on-chain amount, or `null` when
+     * the two coincide. Only Solana Token-2022 mints with `scaledUiAmountConfig` declare one.
+     *
+     * A failure means the mint may be scaled but the multiplier could not be trusted, so the amount must not reach
+     * a transaction unscaled.
+     */
+    suspend fun getScaledUiAmountMultiplier(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): Either<Throwable, BigDecimal?>
+
     suspend fun isSwapSpenderAllowed(userWalletId: UserWalletId, network: Network, spenderAddress: String): Boolean
+
+    suspend fun isSwapTargetAllowed(userWalletId: UserWalletId, network: Network, targetAddress: String): Boolean
 
     /**
      * Get requirements for asset(currency)

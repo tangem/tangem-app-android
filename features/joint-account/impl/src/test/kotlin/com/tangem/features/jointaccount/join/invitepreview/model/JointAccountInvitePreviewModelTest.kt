@@ -311,7 +311,7 @@ internal class JointAccountInvitePreviewModelTest {
     }
 
     @Test
-    fun `GIVEN preview loaded WHEN continue tapped THEN the name step opens without the confirmation sheet`() = runTest {
+    fun `GIVEN preview loaded WHEN continue tapped THEN the name step opens`() = runTest {
         // Arrange
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
         every { portfolioSelectorController.selectedAccountWithData(any()) } returns MutableStateFlow(wallet to mockk())
@@ -324,7 +324,6 @@ internal class JointAccountInvitePreviewModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat((model.uiState.value as JointAccountInvitePreviewUM.Content).confirmation).isNull()
         verify(exactly = 1) { router.push(JointAccountJoinRoute.DisplayName) }
         model.onDestroy()
     }

@@ -74,7 +74,7 @@ import dev.chrisbanes.haze.rememberHazeState
  * Design-system v2 modal bottom sheet: a floating modal-material card with a drag indicator,
  * optional [title] slot and [content], shown above a dimmed scrim.
  *
- * Version: 1.1.1
+ * Version: 1.1.2
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=8256-1265&m=dev)
  *
@@ -200,7 +200,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
 /** Public namespace of the modal component. */
 object TangemModal {
 
-    val version = DsVersion(major = 1, minor = 1, patch = 1)
+    val version = DsVersion(major = 1, minor = 1, patch = 2)
 
     /**
      * Where the modal is presented.
@@ -629,7 +629,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
             ),
             isMaterial = isMaterial,
             materialStyle = TangemSurface.MaterialStyle.Modal,
-            isMaterialBorderEnabled = false,
+            materialBorderAlpha = { 1f - morphGeometry.flatten },
             color = opaqueColor,
             shape = shape,
         ) {

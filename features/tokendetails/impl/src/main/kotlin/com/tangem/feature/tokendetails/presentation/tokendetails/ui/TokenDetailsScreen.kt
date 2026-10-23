@@ -53,7 +53,6 @@ import com.tangem.features.txhistory.component.JointCosignRequestsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.JointCosignRequestsUM
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
-import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.rememberHazeState
@@ -337,15 +336,9 @@ private fun TokenDetailsScreen_Preview() {
                 override fun Content(modifier: Modifier) = Unit
             },
             txHistoryComponent = object : TxHistoryComponent {
-                override val legacyTxHistoryState: StateFlow<TxHistoryUM> = MutableStateFlow(
-                    value = TxHistoryUM.Empty(isBalanceHidden = false, onExploreClick = {}),
-                )
-
                 override val txHistoryState: StateFlow<TxHistoryItemsUM> = MutableStateFlow(
                     value = TxHistoryItemsUM.Empty(isBalanceHidden = false, onExploreClick = {}),
                 )
-
-                override fun LazyListScope.txHistoryContentLegacy(listState: LazyListState, state: TxHistoryUM) = Unit
 
                 override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryItemsUM) = Unit
 

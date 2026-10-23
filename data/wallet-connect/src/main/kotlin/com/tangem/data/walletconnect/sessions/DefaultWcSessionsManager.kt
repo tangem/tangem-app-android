@@ -172,7 +172,7 @@ internal class DefaultWcSessionsManager(
 
         val emptyNetworkSessions = wcSessions.filter { it.networks.isEmpty() }
         val emptyNetworksDto = storeSessions
-            .filter { dto -> emptyNetworkSessions.find { it.sdkModel.topic == dto.topic } != null }
+            .filter { dto -> emptyNetworkSessions.any { it.sdkModel.topic == dto.topic } }
             .toSet()
         val hasEmptySessions = emptyNetworkSessions.isNotEmpty()
         val hasEmptyDto = emptyNetworksDto.isNotEmpty()

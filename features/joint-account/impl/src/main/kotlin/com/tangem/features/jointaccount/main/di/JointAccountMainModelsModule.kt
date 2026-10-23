@@ -2,7 +2,7 @@ package com.tangem.features.jointaccount.main.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
-import com.tangem.features.jointaccount.main.confirmaddress.model.JointAccountConfirmAddressModel
+import com.tangem.features.jointaccount.confirmaddress.model.JointAccountConfirmAddressModel
 import com.tangem.features.jointaccount.main.model.JointAccountMembersModel
 import dagger.Binds
 import dagger.Module

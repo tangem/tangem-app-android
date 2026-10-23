@@ -1,9 +1,5 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
   <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>CanBeNonNullable:MLKitBarcodeAnalyzer.kt$MLKitBarcodeAnalyzer$onClose: (() -&gt; Unit)? = null</ID>
-    <ID>NestedScopeFunctions:MLKitBarcodeAnalyzer.kt$MLKitBarcodeAnalyzer$let { onScanned.invoke(it) }</ID>
-    <ID>PropertyUsedBeforeDeclaration:QrScanningStateController.kt$QrScanningStateController$mutableUiState</ID>
-  </CurrentIssues>
+  <CurrentIssues/>
 </SmellBaseline>

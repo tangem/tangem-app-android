@@ -193,18 +193,3 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
         ): FeedMarketsTokenDetailsComponent
     }
 }
-
-private fun TokenSummaryComponent.Token.toRouteToken(): FeedRoute.TokenSummary.Token {
-    return when (this) {
-        is TokenSummaryComponent.Token.Portfolio -> FeedRoute.TokenSummary.Token.Portfolio(
-            cryptoCurrency = cryptoCurrency,
-        )
-        is TokenSummaryComponent.Token.Market -> FeedRoute.TokenSummary.Token.Market(
-            cryptoCurrencyRawId = cryptoCurrencyRawId,
-            symbol = symbol,
-            title = title,
-            tangemIconUrl = tangemIconUrl,
-            networks = networks,
-        )
-    }
-}
