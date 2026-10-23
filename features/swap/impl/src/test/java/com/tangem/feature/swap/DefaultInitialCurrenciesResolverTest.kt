@@ -2131,6 +2131,66 @@ internal class DefaultInitialCurrenciesResolverTest {
         assertThat(to?.status).isSameInstanceAs(walletStatus)
     }
 
+    @ParameterizedTest
+    @MethodSource("provideEmptyAccountWithdrawals")
+    fun `GIVEN an account withdrawal WHEN its empty token is asked for in any position THEN it lands as FROM only`(
+        case: AccountTokenCase,
+    ) = runTest {
+        // Arrange
+        val walletStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("100"))
+        val accountToken = mockAccountToken()
+        val (accountStatus, accountTokenStatus) = case.createSource(accountToken)
+        setupSupplier(listOf(createCryptoPortfolioAccountStatus(listOf(walletStatus)), accountStatus))
+        setupAvailabilityForAnyCurrency()
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = accountToken,
+            swapCurrencyPosition = CurrencyPosition.ANY,
+            accountFlow = case.accountFlow,
+        )
+
+        // Assert
+        assertThat(from?.status).isEqualTo(accountTokenStatus)
+        assertThat(to).isNull()
+    }
+
+    @Test
+    fun `GIVEN a money withdrawal while the account loads WHEN opened without a currency THEN FROM stays empty`() =
+        runTest {
+            // Arrange
+            val walletStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("100"))
+            setupSupplier(
+                listOf(
+                    createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                    AccountStatus.Money(account = Account.Money(userWalletId), value = MoneyAccountStatusValue.Loading),
+                ),
+            )
+            setupAvailabilityForAnyCurrency()
+
+            // Act
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = null,
+                swapCurrencyPosition = CurrencyPosition.FROM,
+                accountFlow = AccountFlow.MoneyWithdraw,
+            )
+
+            // Assert
+            assertThat(from).isNull()
+            assertThat(to).isNull()
+        }
+
+    private fun provideEmptyAccountWithdrawals() = listOf(
+        AccountTokenCase(accountFlow = AccountFlow.PredictionWithdraw, source = "empty prediction") { token ->
+            createPredictionSource(token, fiatAmount = BigDecimal.ZERO)
+        },
+        AccountTokenCase(accountFlow = AccountFlow.MoneyWithdraw, source = "empty money") { token ->
+            createMoneySource(token)
+        },
+    )
+
     private fun provideAccountWithdrawals() = listOf(
         AccountTokenCase(accountFlow = AccountFlow.PredictionWithdraw, source = "prediction") { token ->
             createPredictionSource(token)
@@ -2151,8 +2211,11 @@ internal class DefaultInitialCurrenciesResolverTest {
         },
     )
 
-    private fun createPredictionSource(token: CryptoCurrency.Token): Pair<AccountStatus, CryptoCurrencyStatus> {
-        val collateralStatus = createCurrencyStatus(token, fiatAmount = BigDecimal("50"))
+    private fun createPredictionSource(
+        token: CryptoCurrency.Token,
+        fiatAmount: BigDecimal = BigDecimal("50"),
+    ): Pair<AccountStatus, CryptoCurrencyStatus> {
+        val collateralStatus = createCurrencyStatus(token, fiatAmount = fiatAmount)
         return createPredictionAccountStatus(collateralStatus) to collateralStatus
     }
 

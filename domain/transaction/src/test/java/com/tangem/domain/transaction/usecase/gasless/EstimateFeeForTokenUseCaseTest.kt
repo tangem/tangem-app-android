@@ -228,14 +228,20 @@ internal class EstimateFeeForTokenUseCaseTest {
             // Arrange
             val feeTokenStatus = tokenStatus(balance = TOKEN_BALANCE, yieldSupplyStatus = null)
             coEvery {
+                walletManager.getGasLimit(any(), FEE_RECEIVER, any())
+            } returns Result.Success(BigInteger("60000"))
+            val portfolioFee = createUseCase().invoke(
+                userWallet = userWallet,
+                feeTokenCurrencyStatus = feeTokenStatus,
+                sendingTokenCurrencyStatus = feeTokenStatus,
+                amount = SWAP_AMOUNT,
+            )
+            coEvery {
                 singleAccountStatusListSupplier.getSyncOrNull(userWalletId)
             } returns accountStatusList(currencies = emptyList())
             coEvery {
                 nonPortfolioCurrenciesProvider.getStatuses(userWalletId, network)
             } returns listOf(coinStatus(), feeTokenStatus)
-            coEvery {
-                walletManager.getGasLimit(any(), FEE_RECEIVER, any())
-            } returns Result.Success(BigInteger("60000"))
 
             // Act
             val result = createUseCase().invoke(
@@ -246,7 +252,7 @@ internal class EstimateFeeForTokenUseCaseTest {
             )
 
             // Assert
-            assertThat(result.getOrNull()?.feeTokenId).isEqualTo(usdc.id)
+            assertThat(result).isEqualTo(portfolioFee)
         }
 
     // region Fixtures
