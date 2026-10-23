@@ -92,6 +92,5 @@ private fun AnimatedContentTransitionScope<FeedEntryActiveChild>.feedEntrySlideT
 
 private fun FeedEntryChildFactory.Child?.usesFadeStackTransition(): Boolean = when (this) {
     is FeedEntryChildFactory.Child.Search -> true
-    is FeedEntryChildFactory.Child.TokenList -> params.shouldAlwaysShowSearchBar
     else -> false
 }
