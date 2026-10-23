@@ -299,7 +299,12 @@ private fun JoinedMemberRow(member: MemberUM.Joined, modifier: Modifier = Modifi
         },
         titleSlot = { TangemRowText(text = member.name, role = TangemRowTextRole.Title) },
         subtitleSlot = { TangemRowText(text = memberRole(member = member), role = TangemRowTextRole.Subtitle) },
-        endSlot = { MemberStatusBadge(status = member.status) },
+        endSlot = when (val status = member.status) {
+            MemberStatusUM.None -> null
+            is MemberStatusUM.Badge -> {
+                { MemberStatusBadge(status = status) }
+            }
+        },
     )
 }
 
@@ -321,7 +326,7 @@ private fun memberRole(member: MemberUM.Joined): TextReference {
 }
 
 @Composable
-private fun MemberStatusBadge(status: MemberStatusUM) {
+private fun MemberStatusBadge(status: MemberStatusUM.Badge) {
     AnimatedContent(
         targetState = status,
         transitionSpec = { fadeIn().togetherWith(fadeOut()) },
@@ -508,6 +513,7 @@ private class JointAccountMembersPreviewProvider :
                 title = "Members",
                 joinedCount = 5,
                 slots = emptyList(),
+                memberStatus = MemberStatusUM.None,
                 completed = true,
             ),
         ),
@@ -576,10 +582,9 @@ private fun previewJoined(joinedCount: Int, ownStatus: MemberStatusUM) = List(si
         name = stringReference(if (index == 0) "Ivan Zolo" else "Member $index"),
         isYou = index == 0,
         isCreator = index == 0,
-        status = when {
-            ownStatus == MemberStatusUM.Joined -> MemberStatusUM.Joined
-            index == 0 -> ownStatus
-            else -> MemberStatusUM.NotConfirmed
+        status = when (ownStatus) {
+            MemberStatusUM.None, MemberStatusUM.Joined -> ownStatus
+            else -> if (index == 0) ownStatus else MemberStatusUM.NotConfirmed
         },
         onInfoClick = {},
     )
