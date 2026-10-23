@@ -92,7 +92,7 @@ The project is a heavily modularized Android app (~290 modules) organized in lay
 - **`domain/`** — Business logic and models. Each domain area (e.g., `tokens`, `wallets`, `card`) has a `models` submodule for pure data types and a core module for use cases
 - **`data/`** — Repository implementations and data sources, mirrors domain structure
 - **`features/`** — UI features using **API/Impl split pattern**: `features:foo:api` defines the public contract, `features:foo:impl` contains the implementation. This enforces clean dependency boundaries
-- **`core/`** — Cross-cutting concerns: `ui`, `analytics`, `datasource`, `decompose`, `navigation`, `res`, `utils`, `security`, `pagination`
+- **`core/`** — Cross-cutting concerns: `ui`, `analytics`, `datasource`, `decompose`, `navigation`, `res`, `utils`, `security`, `pagination`, `media` (looping video; `media:ui` — its Compose surface)
 - **`common/`** — Shared models, routing, UI components, test utilities
 - **`libs/`** — SDK wrappers: `blockchain-sdk`, `tangem-sdk-api`, `crypto`, `auth`, `visa`
 

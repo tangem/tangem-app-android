@@ -1,10 +1,10 @@
-package com.tangem.features.introduction.impl.model
+package com.tangem.core.media
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.features.introduction.impl.engine.IntroductionVideoPlayer
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -12,9 +12,10 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-internal class IntroductionVideoOutputWatchdogTest {
+@OptIn(ExperimentalCoroutinesApi::class)
+internal class VideoOutputWatchdogTest {
 
-    private val videoPlayer: IntroductionVideoPlayer = mockk(relaxed = true)
+    private val videoPlayer: LoopingVideoPlayer = mockk(relaxed = true)
 
     private var replacements = 0
     private var giveUps = 0
@@ -94,7 +95,13 @@ internal class IntroductionVideoOutputWatchdogTest {
     @Test
     fun `GIVEN the replacements spent WHEN the surface is gone for a while THEN they are not given back`() = runTest {
         // Arrange
-        every { videoPlayer.outputFrameCount } returns 28L
+        var frames = 28L
+        var isOutputFlowing = false
+        every { videoPlayer.outputFrameCount } answers {
+            // Without a surface the decoder still drops and skips frames, which must not count as recovery.
+            if (isOutputFlowing) frames += 6
+            frames
+        }
         val watchdog = createWatchdog()
         watchdog.onPlayingChanged(isPlaying = true)
         advanceTimeBy(THREE_REPLACEMENTS_AFTER_MS)
@@ -102,8 +109,10 @@ internal class IntroductionVideoOutputWatchdogTest {
 
         // Act
         every { videoPlayer.isSurfaceAttached } returns false
+        isOutputFlowing = true
         advanceTimeBy(RECOVERED_AFTER_MS + CHECK_INTERVAL_MS)
         every { videoPlayer.isSurfaceAttached } returns true
+        isOutputFlowing = false
         advanceTimeBy(STALL_DETECTED_AFTER_MS)
         runCurrent()
 
@@ -195,9 +204,10 @@ internal class IntroductionVideoOutputWatchdogTest {
             assertThat(giveUps).isEqualTo(1)
         }
 
-    private fun TestScope.createWatchdog() = IntroductionVideoOutputWatchdog(
+    private fun TestScope.createWatchdog() = VideoOutputWatchdog(
         scope = backgroundScope,
         videoPlayer = videoPlayer,
+        subject = "Test video",
         onReplaceSurface = { replacements++ },
         onGiveUp = { giveUps++ },
     )

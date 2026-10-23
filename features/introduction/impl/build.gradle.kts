@@ -22,6 +22,8 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.decompose)
+    implementation(projects.core.media)
+    implementation(projects.core.media.ui)
     implementation(projects.core.navigation)
     implementation(projects.core.res)
     implementation(projects.core.ui)
@@ -49,18 +51,12 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.lifecycle.compose)
 
-    /** Media */
-    implementation(deps.androidx.media3.common)
-    implementation(deps.androidx.media3.datasource)
-    implementation(deps.androidx.media3.exoplayer)
-
     /** SDK */
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.hot.core)
 
     /** Other */
     implementation(deps.androidx.annotation)
-    implementation(deps.androidx.annotation.experimental)
     implementation(deps.androidx.appCompat)
     implementation(deps.arrow.core)
     implementation(deps.decompose)
