@@ -28,6 +28,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardCornerRadius
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardFrame
+import com.tangem.features.polymarket.impl.common.ui.polymarketPnlColor
 import com.tangem.features.polymarket.impl.positions.ui.preview.PolymarketPositionCardPreviewCase
 import com.tangem.features.polymarket.impl.positions.ui.preview.PolymarketPositionCardPreviewProvider
 import com.tangem.features.polymarket.impl.positions.ui.preview.PolymarketPositionCardLayoutPreviewProvider
@@ -71,7 +72,7 @@ private fun PositionValues(state: PolymarketPositionUM) {
         )
 
         if (state.priceChange != null) {
-            TangemPriceChange(state = state.priceChange, modifier = Modifier.weight(1f).alignBy(FirstBaseline))
+            PositionPnl(state = state.priceChange, modifier = Modifier.weight(1f).alignBy(FirstBaseline))
         } else {
             Spacer(modifier = Modifier.weight(1f))
         }
@@ -97,6 +98,22 @@ private fun PositionValues(state: PolymarketPositionUM) {
                 overflow = TextOverflow.Ellipsis,
             )
         }
+    }
+}
+
+@Composable
+private fun PositionPnl(state: TangemPriceChange.State, modifier: Modifier = Modifier) {
+    if (state.direction == TangemPriceChange.Direction.Neutral) {
+        Text(
+            modifier = modifier,
+            text = state.value.resolveReference(),
+            color = state.direction.polymarketPnlColor(),
+            style = TangemTheme.typography3.caption.medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    } else {
+        TangemPriceChange(state = state, modifier = modifier)
     }
 }
 
