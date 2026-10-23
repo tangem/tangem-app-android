@@ -100,11 +100,10 @@ internal class WalletTokensListUMConverter(
         )
     }
 
-    private fun tokenRowConverter(accountId: AccountId, shouldShowPromo: Boolean): WalletTokenRowConverter {
+    private fun tokenRowConverter(accountId: AccountId): WalletTokenRowConverter {
         return WalletTokenRowConverter(
             appCurrency = appCurrency,
             accountId = accountId,
-            shouldShowPromo = shouldShowPromo,
             clickIntents = clickIntents,
             yieldModuleApyMap = yieldModuleApyMap,
             stakingAvailabilityMap = stakingAvailabilityMap,
@@ -226,9 +225,10 @@ internal class WalletTokensListUMConverter(
         accountStatus: AccountStatus.CryptoPortfolio,
         promoCryptoCurrency: CryptoCurrencyStatus?,
     ): Sequence<TokensListItemUM2> {
+        val converter = tokenRowConverter(accountStatus.accountId)
         fun tokenItem(currencyStatus: CryptoCurrencyStatus): TokensListItemUM2.TokenV2 {
             val shouldShowPromo = promoCryptoCurrency?.currency?.id == currencyStatus.currency.id
-            return tokenRowConverter(accountStatus.accountId, shouldShowPromo).convert(currencyStatus)
+            return converter.convert(currencyStatus, shouldShowPromo)
         }
 
         return when (val tokenList = accountStatus.tokenList) {

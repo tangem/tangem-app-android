@@ -27,21 +27,18 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletContentClickIn
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.utils.StringsSigns
-import com.tangem.utils.converter.Converter
-import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 
 @Suppress("LongParameterList")
 internal class WalletTokenRowConverter(
     private val appCurrency: AppCurrency,
     private val accountId: AccountId,
-    private val shouldShowPromo: Boolean,
     private val clickIntents: WalletContentClickIntents,
     yieldModuleApyMap: Map<String, BigDecimal>,
     stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
     private val userWalletId: UserWalletId,
     private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
-) : Converter<CryptoCurrencyStatus, TokensListItemUM2.TokenV2> {
+) {
 
     private val currencyToIconStateConverter = CryptoCurrencyToIconStateConverter()
     private val earnApyConverter = EarnApyConverter(
@@ -49,12 +46,13 @@ internal class WalletTokenRowConverter(
         stakingApyMap = stakingAvailabilityMap,
     )
 
-    override fun convert(value: CryptoCurrencyStatus): TokensListItemUM2.TokenV2 {
+    fun convert(value: CryptoCurrencyStatus, shouldShowPromo: Boolean): TokensListItemUM2.TokenV2 {
         val earnApyInfo = earnApyConverter.convert(value)
-        val promo = toYieldPromo(value, earnApyInfo.takeIf { shouldShowPromo })
+        val pendingOperationBubble = toPendingOperationBubble(value)
+        val promo = if (pendingOperationBubble == null && shouldShowPromo) toYieldPromo(value, earnApyInfo) else null
 
         return TokensListItemUM2.TokenV2(
-            state = toState(value, earnApyInfo, promo?.bubble),
+            state = toState(value, earnApyInfo, messageBubble = pendingOperationBubble ?: promo?.bubble),
             onLongClick = if (value.value is CryptoCurrencyStatus.Loading) {
                 null
             } else {
@@ -74,7 +72,7 @@ internal class WalletTokenRowConverter(
     private fun toState(
         currencyStatus: CryptoCurrencyStatus,
         earnApyInfo: EarnApyConverter.EarnApyInfo?,
-        promoBubble: TangemTokenRow.MessageBubble?,
+        messageBubble: TangemTokenRow.MessageBubble?,
     ): TangemTokenRow.State {
         val id = currencyStatus.currency.id.value
         val icon = currencyToIconStateConverter.convert(currencyStatus).toTokenIconState()
@@ -101,6 +99,7 @@ internal class WalletTokenRowConverter(
                 icon = icon,
                 title = title,
                 fiatBalance = stringReference(StringsSigns.DASH_SIGN),
+                messageBubble = messageBubble,
                 onClick = onClick,
             )
             is CryptoCurrencyStatus.Loaded,
@@ -121,7 +120,7 @@ internal class WalletTokenRowConverter(
                             fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
                         },
                     ),
-                    priceChange = value.priceChange.orZero().toPriceChangeState(),
+                    priceChange = value.priceChange?.toPriceChangeState(),
                     fiatBalance = stringReference(
                         currencyStatus.getTotalFiatAmount().format {
                             fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
@@ -134,7 +133,7 @@ internal class WalletTokenRowConverter(
                     shouldShowUpdateWarning = value.sources.total == StatusSource.ONLY_CACHE,
                     isQuoteFlickering = isFlickering,
                     isBalanceFlickering = isFlickering,
-                    messageBubble = toPendingOperationBubble(currencyStatus) ?: promoBubble,
+                    messageBubble = messageBubble,
                     onClick = onClick,
                 )
             }
