@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.update
 @Stable
 @Suppress("LongParameterList", "LargeClass")
 internal class MarketsListUMStateManager(
-    private val shouldAlwaysShowSearchBar: Provider<Boolean>,
     private val currentVisibleIds: Provider<List<CryptoCurrency.RawID>>,
     private val preselectedSortType: Provider<SortByTypeUM>,
     private val preselectedInterval: Provider<MarketsListUM.TrendInterval>,
@@ -32,7 +31,6 @@ internal class MarketsListUMStateManager(
     private val onRetryButtonClicked: () -> Unit,
     private val onTokenClick: (MarketsListItemUM) -> Unit,
     private val onShowTokensUnder100kClicked: () -> Unit,
-    private val onBackClick: () -> Unit,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val onSearchBarClick: () -> Unit,
 ) {
@@ -211,13 +209,7 @@ internal class MarketsListUMStateManager(
                 onQueryChange = { searchQuery = it },
                 isActive = false,
                 onActiveChange = ::changeSearchBarIsActive,
-                onClearClick = {
-                    if (shouldAlwaysShowSearchBar()) {
-                        onBackClick()
-                    }
-                },
             ),
-            shouldAlwaysShowSearchBar = shouldAlwaysShowSearchBar(),
         ),
         selectedSortBy = preselectedSortType(),
         selectedInterval = preselectedInterval(),

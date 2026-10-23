@@ -127,6 +127,10 @@ internal interface TangemPayDataModule {
     fun bindPaymentAccountStatusFetcher(impl: DefaultPaymentAccountStatusFetcher): PaymentAccountStatusFetcher
 
     @Binds
+    @Singleton
+    fun bindCustomerSummaryRepository(impl: DefaultCustomerSummaryRepository): CustomerSummaryRepository
+
+    @Binds
     @IntoSet
     fun bindTangemPayUserWalletDataCleaner(impl: TangemPayUserWalletDataCleaner): UserWalletDataCleaner
 
@@ -552,8 +556,22 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideGetCustomerSummaryUseCase(onboardingRepository: OnboardingRepository): GetCustomerSummaryUseCase {
-            return GetCustomerSummaryUseCase(onboardingRepository = onboardingRepository)
+        fun provideGetCustomerSummaryUseCase(
+            customerSummaryRepository: CustomerSummaryRepository,
+        ): GetCustomerSummaryUseCase {
+            return GetCustomerSummaryUseCase(customerSummaryRepository = customerSummaryRepository)
+        }
+
+        @Provides
+        fun provideResolvePaymentAccountStatusFromSummaryUseCase(
+            onboardingRepository: OnboardingRepository,
+        ): ResolvePaymentAccountStatusFromSummaryUseCase {
+            return ResolvePaymentAccountStatusFromSummaryUseCase(onboardingRepository = onboardingRepository)
+        }
+
+        @Provides
+        fun provideResolveMoneyAccountStatusFromSummaryUseCase(): ResolveMoneyAccountStatusFromSummaryUseCase {
+            return ResolveMoneyAccountStatusFromSummaryUseCase()
         }
 
         @Provides

@@ -1,7 +1,6 @@
 package com.tangem.features.feed.ui
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
@@ -9,10 +8,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
@@ -36,52 +33,22 @@ import dev.chrisbanes.haze.rememberHazeState
  */
 internal val LocalContentTopFadeHeightOverride = compositionLocalOf<MutableState<Dp?>?> { null }
 
-internal val LocalIsOpenedInBottomSheet = staticCompositionLocalOf { true }
-
-@OptIn(ExperimentalDecomposeApi::class)
 @Composable
 internal fun EntryContent(
     bottomSheetState: State<BottomSheetState>,
     stackState: State<ChildStack<FeedEntryChildFactory.Child, ComposableModularBottomSheetContentComponent>>,
-    onHeaderSizeChange: (Dp) -> Unit,
-    onExpandSheet: () -> Unit,
-    isOpenedInBottomSheet: Boolean,
-) {
-    CompositionLocalProvider(LocalIsOpenedInBottomSheet provides isOpenedInBottomSheet) {
-        EntryContent(
-            bottomSheetState = bottomSheetState,
-            stackState = stackState,
-            onHeaderSizeChange = onHeaderSizeChange,
-            onExpandSheet = onExpandSheet,
-        )
-    }
-}
-
-@Composable
-private fun EntryContent(
-    bottomSheetState: State<BottomSheetState>,
-    stackState: State<ChildStack<FeedEntryChildFactory.Child, ComposableModularBottomSheetContentComponent>>,
-    onHeaderSizeChange: (Dp) -> Unit,
-    onExpandSheet: () -> Unit,
 ) {
     val background = LocalMainBottomSheetColor.current.value
     var topBarHeight by remember { mutableStateOf(0.dp) }
     val hazeState = rememberHazeState()
     val fadeHeightOverride = remember { mutableStateOf<Dp?>(null) }
-    val statusBarInset = if (LocalIsOpenedInBottomSheet.current) {
-        0.dp
-    } else {
-        WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    }
-    val effectiveTopBarHeight = topBarHeight + statusBarInset
+    val effectiveTopBarHeight = topBarHeight + WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val effectiveFadeHeight = fadeHeightOverride.value ?: effectiveTopBarHeight
-    val isTopFadeSolid = LocalIsOpenedInBottomSheet.current && bottomSheetState.value == BottomSheetState.COLLAPSED
 
     Surface(color = background, contentColor = background) {
         CompositionLocalProvider(
             LocalHazeState provides hazeState,
             LocalContentTopFadeHeightOverride provides fadeHeightOverride,
-            LocalBottomSheetTopFadeSolid provides isTopFadeSolid,
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 ContentBlock(
@@ -93,11 +60,7 @@ private fun EntryContent(
                 TitleBlock(
                     bottomSheetState = bottomSheetState,
                     stackState = stackState,
-                    onTopBarHeightChang = { dp ->
-                        onHeaderSizeChange(dp)
-                        topBarHeight = dp
-                    },
-                    onExpandSheet = onExpandSheet,
+                    onTopBarHeightChange = { topBarHeight = it },
                 )
             }
         }
@@ -108,41 +71,29 @@ private fun EntryContent(
 private fun BoxScope.TitleBlock(
     bottomSheetState: State<BottomSheetState>,
     stackState: State<ChildStack<FeedEntryChildFactory.Child, ComposableModularBottomSheetContentComponent>>,
-    onTopBarHeightChang: (Dp) -> Unit,
-    onExpandSheet: () -> Unit,
+    onTopBarHeightChange: (Dp) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
     val animationAppBar = remember(stackState) { topBarFeedEntryAnimatedContentTransitionSpec(stackState) }
-    val isOpenedInBottomSheet = LocalIsOpenedInBottomSheet.current
 
     Box(
         modifier = modifier
             .align(Alignment.TopStart)
-            .then(if (!isOpenedInBottomSheet) Modifier.statusBarsPadding() else Modifier),
-    ) {
-        Box(
-            modifier = Modifier.onGloballyPositioned { coordinates ->
+            .statusBarsPadding()
+            .onGloballyPositioned { coordinates ->
                 if (coordinates.size.height > 0) {
-                    with(density) {
-                        val height = coordinates.size.height.toDp()
-                        onTopBarHeightChang(height)
-                    }
+                    with(density) { onTopBarHeightChange(coordinates.size.height.toDp()) }
                 }
             },
-        ) {
-            AnimatedContent(
-                targetState = stackState.value.active,
-                transitionSpec = animationAppBar,
-                contentKey = { it.key },
-                label = "FeedEntryAppBar",
-            ) { state ->
-                state.instance.Title(bottomSheetState)
-            }
-            CollapsedTitleClickOverlay(
-                bottomSheetState = bottomSheetState,
-                onExpandSheet = onExpandSheet,
-            )
+    ) {
+        AnimatedContent(
+            targetState = stackState.value.active,
+            transitionSpec = animationAppBar,
+            contentKey = { it.key },
+            label = "FeedEntryAppBar",
+        ) { state ->
+            state.instance.Title(bottomSheetState)
         }
     }
 }
@@ -168,27 +119,11 @@ private fun BoxScope.ContentBlock(
                 .hazeSourceTangem(zIndex = 0f, state = LocalHazeState.current)
                 .topFade(
                     height = effectiveFadeHeight,
-                    color = feedTopFadeColor(TangemTheme.colors3.bg.primary.copy(BASE_FADE_LEVEL)),
-                    solidStop = feedTopFadeSolidStop(),
+                    color = TangemTheme.colors3.bg.primary.copy(BASE_FADE_LEVEL),
+                    solidStop = FEED_TOP_FADE_SOLID_STOP,
                 ),
             contentPadding = PaddingValues(top = topBarHeight),
             bottomSheetState = bottomSheetState,
-        )
-    }
-}
-
-@Composable
-private fun BoxScope.CollapsedTitleClickOverlay(bottomSheetState: State<BottomSheetState>, onExpandSheet: () -> Unit) {
-    if (bottomSheetState.value == BottomSheetState.COLLAPSED) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .clickable(
-                    interactionSource = null,
-                    indication = null,
-                    onClick = onExpandSheet,
-                )
-                .clearAndSetSemantics {},
         )
     }
 }

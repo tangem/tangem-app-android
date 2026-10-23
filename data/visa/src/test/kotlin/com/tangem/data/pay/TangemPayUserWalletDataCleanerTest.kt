@@ -5,6 +5,7 @@ import com.tangem.data.pay.repository.TangemPayRequestPerformer
 import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.TangemPayCustomerInfoStore
+import com.tangem.data.pay.store.TangemPayCustomerSummaryStore
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.spend.datasource.pay.store.TangemPayTxHistoryItemsStore
 import com.tangem.domain.models.wallet.UserWalletId
@@ -31,6 +32,7 @@ internal class TangemPayUserWalletDataCleanerTest {
     private val tangemPayStorage: TangemPayStorage = mockk()
     // A real store, so the assertions can look at what actually stayed in the cache
     private val customerInfoStore = TangemPayCustomerInfoStore()
+    private val customerSummaryStore = TangemPayCustomerSummaryStore()
     private val requestPerformer: TangemPayRequestPerformer = mockk()
 
     private val cleaner = TangemPayUserWalletDataCleaner(
@@ -39,6 +41,7 @@ internal class TangemPayUserWalletDataCleanerTest {
         cashbackSummaryStore = cashbackSummaryStore,
         tangemPayStorage = tangemPayStorage,
         customerInfoStore = customerInfoStore,
+        customerSummaryStore = customerSummaryStore,
         requestPerformer = requestPerformer,
     )
 
@@ -52,6 +55,7 @@ internal class TangemPayUserWalletDataCleanerTest {
             requestPerformer,
         )
         customerInfoStore.clear()
+        customerSummaryStore.clear()
         coEvery { paymentAccountStatusesStore.remove(any<List<UserWalletId>>()) } just Runs
         coEvery { txHistoryItemsStore.remove(any<List<String>>()) } just Runs
         coEvery { cashbackSummaryStore.remove(any()) } just Runs
@@ -92,6 +96,20 @@ internal class TangemPayUserWalletDataCleanerTest {
         // Assert
         assertThat(customerInfoStore.get().value.keys).containsExactly(WALLET_B)
     }
+
+    @Test
+    fun `GIVEN cached customer summary WHEN clear THEN only the removed wallets are dropped from the cache`() =
+        runTest {
+            // Arrange
+            val entry = TangemPayCustomerSummaryStore.Entry(summary = mockk(), fetchedAt = 0)
+            customerSummaryStore.store(mapOf(WALLET_A to entry, WALLET_B to entry))
+
+            // Act
+            cleaner.clear(listOf(WALLET_A))
+
+            // Assert
+            assertThat(customerSummaryStore.get().value.keys).containsExactly(WALLET_B)
+        }
 
     @Test
     fun `GIVEN stored address WHEN clear THEN clearAll receives it and runs after the address is read`() = runTest {
