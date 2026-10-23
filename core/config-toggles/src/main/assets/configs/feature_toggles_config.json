@@ -33,7 +33,7 @@
     },
     {
         "name": "AND_16204_POLYMARKET_ENABLED",
-        "version": "undefined"
+        "version": "6.6"
     },
     {
         "name": "TWI_1803_TRON_GASLESS_SWAP_ENABLED",
@@ -45,7 +45,7 @@
     },
     {
         "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE",
-        "version": "undefined"
+        "version": "6.6"
     },
     {
         "name": "TWI_1524_NEW_FIRMWARE_SUPPORT",
@@ -61,7 +61,7 @@
     },
     {
         "name": "TWI_1555_SOCIAL_LOGIN_ENABLED",
-        "version": "undefined"
+        "version": "6.6"
     },
     {
         "name": "TWI_1771_PAY_RESIDENCY_STEP_ENABLED",
@@ -73,7 +73,7 @@
     },
     {
         "name": "TWI_1520_MERKL_INCENTIVES_ENABLED",
-        "version": "undefined"
+        "version": "6.6"
     },
     {
         "name": "TWI_1705_PROMO_CAMPAIGNS_V2_ENABLED",
