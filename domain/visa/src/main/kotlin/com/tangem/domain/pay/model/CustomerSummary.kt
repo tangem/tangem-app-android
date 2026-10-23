@@ -191,7 +191,7 @@ data class CustomerSummary(
     )
 }
 
-val CustomerSummary.KycStatus.inProgress: Boolean
+val CustomerSummary.KycStatus.isInProgress: Boolean
     get() = when (this) {
         CustomerSummary.KycStatus.IN_PROGRESS,
         CustomerSummary.KycStatus.UNKNOWN,
