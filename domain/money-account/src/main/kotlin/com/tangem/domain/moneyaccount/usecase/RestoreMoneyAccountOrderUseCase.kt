@@ -39,7 +39,7 @@ class RestoreMoneyAccountOrderUseCase(
         val PaymentAccountActivationState.isTerminal: Boolean
             get() = when (this) {
                 is PaymentAccountActivationState.Issuing -> false
-                is PaymentAccountActivationState.AwaitingKyc -> !kycStatus.inProgress
+                is PaymentAccountActivationState.AwaitingKyc -> !kycStatus.isInProgress
 
                 PaymentAccountActivationState.NotStarted,
                 PaymentAccountActivationState.Unavailable,
@@ -51,7 +51,7 @@ class RestoreMoneyAccountOrderUseCase(
         val MoneyAccountActivationState.isTerminal: Boolean
             get() = when (this) {
                 MoneyAccountActivationState.Issuing -> false
-                is MoneyAccountActivationState.AwaitingKyc -> !kycStatus.inProgress
+                is MoneyAccountActivationState.AwaitingKyc -> !kycStatus.isInProgress
 
                 MoneyAccountActivationState.NotStarted,
                 MoneyAccountActivationState.Unavailable,
