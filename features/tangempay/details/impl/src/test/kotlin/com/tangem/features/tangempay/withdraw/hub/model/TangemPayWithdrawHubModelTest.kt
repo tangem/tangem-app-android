@@ -18,6 +18,7 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
@@ -31,8 +32,12 @@ import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
 import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.availableNetwork
+import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSourcesObserver
+import com.tangem.features.tangempay.withdraw.bank.moneyAccountStatus
 import com.tangem.features.tangempay.withdraw.bank.offrampOptions
 import com.tangem.features.tangempay.withdraw.bank.paymentToken
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
@@ -40,6 +45,7 @@ import com.tangem.features.tangempay.withdraw.hub.recentBankAccounts
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.BankSectionUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentsUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.TokenRecentsUM
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -51,10 +57,14 @@ import io.mockk.verify
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flowOf
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayWithdrawHubModelTest {
 
     private val userWalletId = UserWalletId("123")
@@ -67,6 +77,7 @@ internal class TangemPayWithdrawHubModelTest {
     private val getRecentTokenTransfersUseCase: GetRecentTokenTransfersUseCase = mockk()
     private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase = mockk()
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
+    private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
@@ -90,6 +101,7 @@ internal class TangemPayWithdrawHubModelTest {
             getRecentTokenTransfersUseCase,
             getBankOfframpOptionsUseCase,
             paymentAccountStatusSupplier,
+            moneyAccountStatusSupplier,
             analytics,
         )
         statusFlow.resetReplayCache()
@@ -98,8 +110,9 @@ internal class TangemPayWithdrawHubModelTest {
         every { currencyFactory.create(userWalletId) } returns token
         coEvery { withdrawRepository.hasWithdrawOrder(userWalletId) } returns false
         coEvery { getRecentBankAccountsUseCase(userWalletId) } returns recentBankAccounts().right()
-        coEvery { getBankOfframpOptionsUseCase(userWalletId) } returns offrampOptions().right()
+        coEvery { getBankOfframpOptionsUseCase(userWalletId, any()) } returns offrampOptions().right()
         every { paymentAccountStatusSupplier(userWalletId) } returns statusFlow
+        every { moneyAccountStatusSupplier(userWalletId) } returns flowOf(moneyAccountStatus(userWalletId))
         every { getRecentTokenTransfersUseCase(userWalletId) } returns tokenRecentsFlow
         emitStatus()
     }
@@ -239,13 +252,39 @@ internal class TangemPayWithdrawHubModelTest {
     @Test
     fun `GIVEN offramp options fail WHEN model created THEN bank section unavailable`() {
         // Arrange
-        coEvery { getBankOfframpOptionsUseCase(userWalletId) } returns optionsFailure
+        coEvery { getBankOfframpOptionsUseCase(userWalletId, any()) } returns optionsFailure
 
         // Act
         val model = createModel()
 
         // Assert
         assertThat(model.bankContent().isAvailable).isFalse()
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN source account WHEN model created THEN options requested for its product instance`(
+        testModel: ProductInstanceModel,
+    ) {
+        // Act
+        val model = createModel(sourceAccount = testModel.sourceAccount)
+
+        // Assert
+        coVerify(exactly = 1) { getBankOfframpOptionsUseCase(userWalletId, testModel.expectedProductInstanceId) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN money account with balance WHEN to personal account clicked THEN wizard opened with its USDC`() {
+        // Arrange
+        val model = createModel(sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID))
+
+        // Act
+        model.bankContent().toPersonalAccount.onClick()
+
+        // Assert
+        assertThat(opened.single().second.value).isEqualTo(bankWithdrawOptions())
         model.onDestroy()
     }
 
@@ -402,7 +441,7 @@ internal class TangemPayWithdrawHubModelTest {
         // Assert
         assertThat(model.recents()).isInstanceOf(RecentsUM.Content::class.java)
         coVerify(exactly = 2) { getRecentBankAccountsUseCase(userWalletId) }
-        coVerify(exactly = 1) { getBankOfframpOptionsUseCase(userWalletId) }
+        coVerify(exactly = 1) { getBankOfframpOptionsUseCase(userWalletId, any()) }
         model.onDestroy()
     }
 
@@ -601,10 +640,12 @@ internal class TangemPayWithdrawHubModelTest {
         return RecentTokenTransfer(account = account, currency = currency)
     }
 
-    private fun createModel(): TangemPayWithdrawHubModel = TangemPayWithdrawHubModel(
+    private fun createModel(
+        sourceAccount: BankWithdrawSourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
+    ): TangemPayWithdrawHubModel = TangemPayWithdrawHubModel(
         paramsContainer = MutableParamsContainer(
             TangemPayWithdrawHubModel.Params(
-                userWalletId = userWalletId,
+                sourceAccount = sourceAccount,
                 onOpenBankWithdraw = { entry, options -> opened += entry to options },
             ),
         ),
@@ -616,11 +657,31 @@ internal class TangemPayWithdrawHubModelTest {
         getRecentBankAccountsUseCase = getRecentBankAccountsUseCase,
         getRecentTokenTransfersUseCase = getRecentTokenTransfersUseCase,
         getBankOfframpOptionsUseCase = getBankOfframpOptionsUseCase,
-        paymentAccountStatusSupplier = paymentAccountStatusSupplier,
+        bankWithdrawSourcesObserver = BankWithdrawSourcesObserver(
+            paymentAccountStatusSupplier = paymentAccountStatusSupplier,
+            moneyAccountStatusSupplier = moneyAccountStatusSupplier,
+        ),
         analytics = analytics,
+    )
+
+    private fun provideTestModels(): List<ProductInstanceModel> = listOf(
+        ProductInstanceModel(
+            sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
+            expectedProductInstanceId = null,
+        ),
+        ProductInstanceModel(
+            sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
+            expectedProductInstanceId = PRODUCT_INSTANCE_ID,
+        ),
+    )
+
+    internal data class ProductInstanceModel(
+        val sourceAccount: BankWithdrawSourceAccount,
+        val expectedProductInstanceId: String?,
     )
 
     private companion object {
         const val RECENT_CURRENCY_ID_VALUE = "coin⟨polygon-pos⟩matic-network"
+        const val PRODUCT_INSTANCE_ID = "instance-1"
     }
 }
