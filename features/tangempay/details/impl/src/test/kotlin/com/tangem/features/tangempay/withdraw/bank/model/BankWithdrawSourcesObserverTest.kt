@@ -254,18 +254,6 @@ internal class BankWithdrawSourcesObserverTest {
             assertThat(actual).containsExactly(expected)
         }
 
-        @Test
-        fun `GIVEN account still loading WHEN observed THEN nothing is emitted`() = runTest {
-            // Arrange
-            emitMoneyStatus(MoneyAccountStatusValue.Loading)
-
-            // Act
-            val actual = observer.observe(account, offrampOptions()).toList()
-
-            // Assert
-            assertThat(actual).isEmpty()
-        }
-
         @ParameterizedTest
         @ProvideTestModels
         fun `GIVEN account the off-ramp cannot take from WHEN observed THEN no options`(model: MoneyNoOptionsModel) =

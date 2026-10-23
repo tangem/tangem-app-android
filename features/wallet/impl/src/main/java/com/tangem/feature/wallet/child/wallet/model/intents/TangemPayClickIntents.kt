@@ -293,4 +293,13 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
                 .onLeft { uiMessageSender.send(ToastMessage(resourceReference(R.string.common_something_went_wrong))) }
         }
     }
+
+    private fun kycRequiredFeedbackEmailType(userWalletId: UserWalletId, customerId: String?): FeedbackEmailType {
+        val walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId)
+        return if (customerId != null) {
+            FeedbackEmailType.Visa.DirectUserRequest(walletMetaInfo = walletMetaInfo, customerId = customerId)
+        } else {
+            FeedbackEmailType.DirectUserRequest(walletMetaInfo = walletMetaInfo)
+        }
+    }
 }
