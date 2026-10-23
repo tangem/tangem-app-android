@@ -2533,11 +2533,11 @@ internal class SwapModel @Inject constructor(
 
     /** The provider stays hidden until [SwapProcessDataState.selectedPairProviders] is rebuilt for another pair */
     private fun hideProviderIfRejected(provider: SwapProvider, error: SwapTransactionState.Error) {
-        val errorCode = (error as? SwapTransactionState.Error.ExpressError)?.error?.code ?: return
-        if (!SwapProviderHidingPolicy.shouldHide(providerId = provider.providerId, errorCode = errorCode)) return
+        val expressError = (error as? SwapTransactionState.Error.ExpressError)?.error?.toExpressError() ?: return
+        if (!SwapProviderHidingPolicy.shouldHide(providerId = provider.providerId, error = expressError)) return
 
-        TangemLogger.i("Provider ${provider.providerId} is hidden after swap error $errorCode")
-        analyticsEventHandler.send(SwapEvents.ProviderHidden(provider = provider, errorCode = errorCode))
+        TangemLogger.i("Provider ${provider.providerId} is hidden after swap error ${expressError.code}")
+        analyticsEventHandler.send(SwapEvents.ProviderHidden(provider = provider, errorCode = expressError.code))
         dataState = dataState.copy(
             selectedPairProviders = dataState.selectedPairProviders.filterNot { it.providerId == provider.providerId },
         )
