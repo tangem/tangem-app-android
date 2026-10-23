@@ -12,6 +12,7 @@ import com.tangem.data.walletconnect.sign.*
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.SignStateConverter.toSigning
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.walletconnect.model.WcJsonRpcError
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
@@ -187,7 +188,7 @@ internal class WcSignUseCaseDelegateTest {
             expectNoEvents()
         }
         assertEquals(false, onSignCalled)
-        verify { respondService.rejectRequestNonBlock(rawRequestMock, "") }
+        verify { respondService.rejectRequestNonBlock(rawRequestMock, WcJsonRpcError.UserRejected) }
     }
 
     @Test

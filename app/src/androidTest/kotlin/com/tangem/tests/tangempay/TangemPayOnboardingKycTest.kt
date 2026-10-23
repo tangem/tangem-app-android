@@ -89,18 +89,14 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
     }
 
     @AllureId("9673")
-    @DisplayName("Tangem Pay: onboarding opens from app Details for the DETAILS channel")
+    @DisplayName("Tangem Pay: onboarding opens from Get Tangem Pay in app Details")
     @Test
     fun onboardingOpensFromAppDetailsWhenDetailsChannelReceivedTest() {
         val eligibilityStartedState = "Started"
-        val channelsBannerAndDetailsState = "BannerAndDetails"
 
         setupHooks().run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityStartedState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityStartedState)
-            }
-            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO' to '$channelsBannerAndDetailsState'") {
-                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsBannerAndDetailsState)
             }
             step("Open 'Main' screen with existing hot wallet") {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
@@ -213,16 +209,12 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
     @Test
     fun getTangemPayFromAppDetailsListsWalletsWithoutTangemPayTest() {
         val eligibilityStartedState = "Started"
-        val channelsBannerAndDetailsState = "BannerAndDetails"
         val hotWalletName = "Wallet"
         val cardWalletName = "Wallet 2"
 
         setupHooks().run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityStartedState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityStartedState)
-            }
-            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO' to '$channelsBannerAndDetailsState'") {
-                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsBannerAndDetailsState)
             }
             step("Open 'Main' screen with a hot wallet and a card wallet") { openMainScreenWithHotAndCardWallets() }
             step("Click on 'More' button") {
