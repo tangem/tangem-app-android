@@ -28,9 +28,6 @@ object SupportedLanguages {
     /**
      * Returns the ISO 639-1 code of the device's current language when it belongs to
      * [supportedLanguageCodes], otherwise falls back to [ENGLISH].
-     *
-     * Intended for callers that need a plain two-letter language code (e.g. URL path segments
-     * like `tangem.com/{en|ru}/...`).
      */
     fun getCurrentSupportedLanguageCode(): String {
         val locale = Locale.getDefault()
