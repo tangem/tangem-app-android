@@ -1,20 +1,20 @@
-package com.tangem.store.datasource.txhistory.db.entity.express
+package com.tangem.store.datasource.txhistory.db.entity.sync
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 
 /**
- * Persisted sync state of the express tx history.
+ * Persisted cursor-paged sync state of the backend-sourced tx histories: express and joint operations.
  *
  * Stored inside [com.tangem.store.datasource.txhistory.db.TxHistoryDatabase] on purpose: if the history tables are
  * dropped (e.g. destructive migration), the sync state is wiped together with them and the history is re-synced
  * from scratch.
  */
 @Entity(
-    tableName = "express_sync_state",
+    tableName = "history_sync_state",
     primaryKeys = ["type", "user_wallet_id"],
 )
-data class ExpressSyncStateEntity(
+data class HistorySyncStateEntity(
 
     @ColumnInfo(name = "type")
     val type: String,
@@ -35,5 +35,6 @@ data class ExpressSyncStateEntity(
     enum class Type {
         EXCHANGE,
         ONRAMP,
+        JOINT_OPERATION,
     }
 }
