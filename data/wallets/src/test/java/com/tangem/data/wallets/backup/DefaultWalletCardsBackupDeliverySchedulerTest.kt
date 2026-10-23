@@ -36,6 +36,7 @@ internal class DefaultWalletCardsBackupDeliverySchedulerTest {
         mockkStatic(WorkManager::class)
         every { WorkManager.getInstance(any()) } returns workManager
         every { networkConnectionManager.isOnline } returns isOnlineFlow
+        every { networkConnectionManager.isOnlineSync } answers { isOnlineFlow.value }
         every {
             workManager.enqueueUniqueWork(any<String>(), ExistingWorkPolicy.REPLACE, capture(enqueuedRequests))
         } returns mockk()
@@ -111,6 +112,25 @@ internal class DefaultWalletCardsBackupDeliverySchedulerTest {
 
             // Assert
             assertThat(enqueuedRequests.count { it.requiredNetworkType() == NetworkType.NOT_REQUIRED }).isEqualTo(2)
+        }
+
+    @Test
+    fun `GIVEN connection already back WHEN schedule again THEN enqueues delivery not requiring a network`() =
+        runTest {
+            // Arrange
+            val scheduler = createScheduler()
+            scheduler.schedule()
+            isOnlineFlow.value = true
+            runCurrent()
+
+            // Act
+            scheduler.schedule()
+            runCurrent()
+
+            // Assert
+            assertThat(enqueuedRequests.map { it.requiredNetworkType() })
+                .containsExactly(NetworkType.CONNECTED, NetworkType.NOT_REQUIRED, NetworkType.NOT_REQUIRED)
+                .inOrder()
         }
 
     private fun TestScope.createScheduler() = DefaultWalletCardsBackupDeliveryScheduler(
