@@ -13,7 +13,8 @@ class SoundClip internal constructor(
 ) {
 
     private var isReady = false
-    private var isPausedInBackground = false
+    private var isRunning = true
+    private var isWaitingForForeground = false
 
     private val playerListener = object : Player.Listener {
 
@@ -39,24 +40,29 @@ class SoundClip internal constructor(
         player.prepare()
     }
 
-    /** Ignored until the sound is ready, and after it failed. */
+    /** Ignored until the sound is ready, and after it failed; in the background it waits for the screen. */
     fun play() {
         if (!isReady) return
 
         player.seekTo(0L)
-        player.play()
+        if (isRunning) player.play() else isWaitingForForeground = true
     }
 
     /** Whether the screen is in front; a sound cut off by the background carries on from where it was. */
     fun setRunning(isRunning: Boolean) {
+        this.isRunning = isRunning
         if (isRunning) {
-            if (isPausedInBackground) player.play()
-            isPausedInBackground = false
-        } else if (player.isPlaying) {
+            if (isWaitingForForeground) player.play()
+            isWaitingForForeground = false
+        } else if (player.isStarted()) {
             player.pause()
-            isPausedInBackground = true
+            isWaitingForForeground = true
         }
     }
+
+    // Still buffering after the seek in play() is not isPlaying yet, though the sound is on its way
+    private fun Player.isStarted(): Boolean =
+        playWhenReady && (playbackState == Player.STATE_READY || playbackState == Player.STATE_BUFFERING)
 
     fun release() {
         player.removeListener(playerListener)
