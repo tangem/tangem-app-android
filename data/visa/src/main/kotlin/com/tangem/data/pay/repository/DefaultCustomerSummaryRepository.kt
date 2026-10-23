@@ -35,7 +35,7 @@ internal class DefaultCustomerSummaryRepository @Inject constructor(
             cache?.summary?.right() ?: request(userWalletId).onRight { summary ->
                 val entry = TangemPayCustomerSummaryStore.Entry(
                     summary = summary,
-                    fetchedAt = System.nanoTime()
+                    fetchedAt = System.nanoTime(),
                 )
                 customerSummaryStore.update { cache -> cache + (userWalletId to entry) }
             }

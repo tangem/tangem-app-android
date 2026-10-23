@@ -14,7 +14,6 @@ import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
 import com.tangem.domain.pay.model.CachePolicy
 import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.repository.CustomerSummaryRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.pay.usecase.ResolveMoneyAccountStatusFromSummaryUseCase
