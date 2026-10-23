@@ -1,0 +1,61 @@
+package com.tangem.store.datasource.txhistory.db.dao
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import com.tangem.store.datasource.txhistory.db.entity.sync.HistorySyncStateEntity
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface HistorySyncStateDao {
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(item: HistorySyncStateEntity)
+
+    @Query(
+        """
+        UPDATE history_sync_state
+        SET after_cursor = :afterCursor,
+            is_initial_completed = :isInitialCompleted
+        WHERE type = :type
+          AND user_wallet_id = :userWalletId
+        """,
+    )
+    suspend fun updateHistoryCursor(
+        type: String,
+        userWalletId: String,
+        afterCursor: String?,
+        isInitialCompleted: Boolean,
+    )
+
+    @Query(
+        """
+        UPDATE history_sync_state
+        SET delta_cursor = :deltaCursor
+        WHERE type = :type
+          AND user_wallet_id = :userWalletId
+        """,
+    )
+    suspend fun updateDeltaCursor(type: String, userWalletId: String, deltaCursor: String)
+
+    @Query(
+        """
+        DELETE FROM history_sync_state
+        WHERE type = :type
+          AND user_wallet_id = :userWalletId
+        """,
+    )
+    suspend fun delete(type: String, userWalletId: String)
+
+    @Query(
+        """
+        SELECT *
+        FROM history_sync_state
+        WHERE type = :type
+          AND user_wallet_id = :userWalletId
+        LIMIT 1
+        """,
+    )
+    fun observe(type: String, userWalletId: String): Flow<HistorySyncStateEntity?>
+}

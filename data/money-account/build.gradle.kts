@@ -53,11 +53,14 @@ dependencies {
     api(projects.domain.moneyAccount)
     api(projects.domain.quotes)
     implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
     implementation(projects.domain.common)
     implementation(projects.domain.core)
     implementation(projects.domain.models)
     implementation(projects.domain.networks)
+    implementation(projects.domain.tokens)
     implementation(projects.domain.visa)
+    implementation(projects.domain.walletManager)
     implementation(projects.domain.wallets)
     // endregion
 
@@ -67,6 +70,7 @@ dependencies {
     // endregion
 
     // region Test
+    testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     // endregion
 }

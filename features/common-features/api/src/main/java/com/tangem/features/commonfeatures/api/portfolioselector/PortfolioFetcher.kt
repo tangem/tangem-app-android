@@ -43,7 +43,7 @@ interface PortfolioFetcher {
     }
 
     sealed interface Mode {
-        data class All(val isOnlyMultiCurrency: Boolean) : Mode
+        data class All(val isOnlyMultiCurrency: Boolean, val isOnlyRegistered: Boolean = false) : Mode
         data class Wallet(val walletId: UserWalletId) : Mode
     }
 

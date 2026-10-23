@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.right
+import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.blockchains.tron.gasless.TronGaslessTransactionSigner
 import com.tangem.blockchain.common.*
@@ -594,6 +595,21 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             ?: return@withContext false
         walletManager.isSwapTargetAllowed(targetAddress)
     }
+
+    override suspend fun hasContractCode(userWalletId: UserWalletId, network: Network, address: String): Boolean? =
+        withContext(dispatchers.io) {
+            val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+                as? EthereumWalletManager
+                ?: return@withContext null
+
+            when (val result = walletManager.getCode(address = address)) {
+                is Result.Success -> result.data.removePrefix(HEX_PREFIX).isNotEmpty()
+                is Result.Failure -> {
+                    TangemLogger.e("Failed to read the contract code at $address in ${network.name}", result.error)
+                    null
+                }
+            }
+        }
 
     override suspend fun getDynamicAddressesReceiveAddress(userWalletId: UserWalletId, network: Network): String? {
         val dynamicAddressesManager = getEnabledDynamicAddressesManagerOrNull(userWalletId, network) ?: return null

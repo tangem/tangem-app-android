@@ -241,8 +241,6 @@ sealed class AnalyticsParam {
         data object PrivateKey : WalletCreationType(value = "Private Key")
         data object NewSeed : WalletCreationType(value = "New Seed")
         data object SeedImport : WalletCreationType(value = "Seed Import")
-        data object NewSocialLogin : WalletCreationType(value = "New Social Login")
-        data object SocialLoginImport : WalletCreationType(value = "Social Login Import")
     }
 
     sealed class WalletType(val value: String) {

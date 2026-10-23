@@ -32,6 +32,7 @@ internal data class WcSendTransactionItemUM(
     val transactionValidationResult: ValidationResult?,
     val isSendEnabled: Boolean,
     val feeErrorNotification: NotificationUM.Info?,
+    val targetNotification: NotificationUM.Error? = null,
     val isLoading: Boolean = false,
     val walletInteractionIcon: Int? = null,
     val isHoldToConfirmEnabled: Boolean = false,

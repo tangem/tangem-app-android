@@ -28,7 +28,6 @@ internal class CollectiblesSellBackButtonConverterTest {
     internal data class ButtonModel(val state: BuybackState, val expected: SellBackButtonUM)
 
     private fun provideTestModels() = listOf(
-        ButtonModel(state = BuybackState.Checking, expected = UNAVAILABLE.copy(isEnabled = true, isLoading = true)),
         ButtonModel(state = BuybackState.Unavailable, expected = UNAVAILABLE),
         ButtonModel(state = BuybackState.Available(OFFER), expected = AVAILABLE),
         ButtonModel(state = BuybackState.InProgress(OFFER), expected = AVAILABLE.copy(isLoading = true)),

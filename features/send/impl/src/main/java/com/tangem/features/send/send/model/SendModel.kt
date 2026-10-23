@@ -18,6 +18,7 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
@@ -106,6 +107,7 @@ internal class SendModel @Inject constructor(
     private val defaultFeeLoader: DefaultFeeLoader,
     private val tronGaslessSentAmountQuoter: TronGaslessSentAmountQuoter,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val sendAmountUpdateTrigger: SendAmountUpdateTrigger,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -500,9 +502,13 @@ internal class SendModel @Inject constructor(
                 ifRight = { wallet ->
                     userWallet = wallet
 
-                    getAccountCurrencyStatusUseCase(
-                        userWalletId = params.userWalletId,
-                        currency = cryptoCurrency,
+                    merge(
+                        getAccountCurrencyStatusUseCase(userWalletId = params.userWalletId, currency = cryptoCurrency)
+                            .map { it.account to it.status },
+                        nonPortfolioCurrenciesProvider.observe(
+                            userWalletId = params.userWalletId,
+                            currency = cryptoCurrency,
+                        ),
                     ).onEach { (account, cryptoCurrencyStatus) ->
                         isAccountModeFlow.value = isAccountsModeEnabledUseCase.invokeSync()
                         accountFlow.value = account
@@ -522,20 +528,23 @@ internal class SendModel @Inject constructor(
     }
 
     private suspend fun resolveFeeCurrencyStatus(
-        account: Account?,
+        account: Account,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): CryptoCurrencyStatus {
-        val resolved = if (account is Account.Joint) {
-            jointSendDelegate.resolveFeeCurrencyStatus(
+        val resolved = when (account) {
+            is Account.Joint -> jointSendDelegate.resolveFeeCurrencyStatus(
                 userWalletId = params.userWalletId,
                 account = account,
                 status = cryptoCurrencyStatus,
             )
-        } else {
-            getFeePaidCryptoCurrencyStatusSyncUseCase(
+            is Account.CryptoPortfolio -> getFeePaidCryptoCurrencyStatusSyncUseCase(
                 userWalletId = params.userWalletId,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
             ).getOrNull()
+            else -> nonPortfolioCurrenciesProvider.getStatuses(
+                userWalletId = params.userWalletId,
+                network = cryptoCurrencyStatus.currency.network,
+            ).firstOrNull { it.currency is CryptoCurrency.Coin }
         }
         return resolved ?: cryptoCurrencyStatus
     }

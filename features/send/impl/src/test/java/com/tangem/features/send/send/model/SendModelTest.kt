@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -158,6 +159,40 @@ internal class SendModelTest : SendModelTestBase() {
             // Assert
             assertThat(result).isEqualTo(CommonSendAnalyticEvents.SendEntryType.Manual)
         }
+    }
+
+    @Nested
+    inner class NonPortfolioAccountCurrency {
+
+        @Test
+        fun `GIVEN token of a non-portfolio account WHEN model created THEN its network coin pays the fee`() =
+            runTest {
+                // Arrange
+                val account = Account.Money(userWalletId = testUserWalletId)
+                val accountTokenStatus = CryptoCurrencyStatus(
+                    currency = mockk<CryptoCurrency.Token>(relaxed = true),
+                    value = mockk(relaxed = true),
+                )
+                val accountCoinStatus = CryptoCurrencyStatus(
+                    currency = mockk<CryptoCurrency.Coin>(relaxed = true),
+                    value = mockk(relaxed = true),
+                )
+                every { nonPortfolioCurrenciesProvider.observe(testUserWalletId, testCryptoCurrency) } returns
+                    flowOf(account to testCryptoCurrencyStatus)
+                coEvery {
+                    nonPortfolioCurrenciesProvider.getStatuses(testUserWalletId, testCryptoCurrency.network)
+                } returns listOf(accountTokenStatus, accountCoinStatus)
+
+                // Act
+                val model = createSendModel(this)
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.accountFlow.value).isEqualTo(account)
+                assertThat(model.cryptoCurrencyStatusFlow.value).isEqualTo(testCryptoCurrencyStatus)
+                assertThat(model.feeCryptoCurrencyStatusFlow.value).isEqualTo(accountCoinStatus)
+                coVerify(exactly = 0) { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) }
+            }
     }
 
     @Nested

@@ -15,9 +15,9 @@ import com.tangem.grow.datasource.onramp.models.response.OnrampItemResponse
 import com.tangem.datasource.local.converter.toEntity
 import com.tangem.store.datasource.txhistory.db.TxHistoryDatabase
 import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
-import com.tangem.store.datasource.txhistory.db.dao.ExpressSyncStateDao
+import com.tangem.store.datasource.txhistory.db.dao.HistorySyncStateDao
 import com.tangem.store.datasource.txhistory.db.dao.HistoryIndexDao
-import com.tangem.store.datasource.txhistory.db.entity.express.ExpressSyncStateEntity
+import com.tangem.store.datasource.txhistory.db.entity.sync.HistorySyncStateEntity
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.repository.TokenInfoRepository
 import kotlinx.coroutines.flow.first
@@ -33,13 +33,13 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
     private val onrampApi: OnrampApi,
     private val expressHistoryDao: ExpressHistoryDao,
     private val historyIndexDao: HistoryIndexDao,
-    private val expressSyncStateDao: ExpressSyncStateDao,
+    private val historySyncStateDao: HistorySyncStateDao,
     private val tokenInfoRepository: TokenInfoRepository,
     private val database: TxHistoryDatabase,
 ) : ExpressHistoryRepository {
 
     suspend fun fetchExchangeHistory(userWalletId: UserWalletId, limit: Int = DEFAULT_LIMIT): ExchangeHistoryResponse {
-        val state = syncState(ExpressSyncStateEntity.Type.EXCHANGE, userWalletId)
+        val state = syncState(HistorySyncStateEntity.Type.EXCHANGE, userWalletId)
 
         val response = exchangeApi.getHistory(
             userWalletId = userWalletId.stringValue,
@@ -49,7 +49,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
 
         storeExchanges(items = response.items)
         persistHistoryState(
-            type = ExpressSyncStateEntity.Type.EXCHANGE,
+            type = HistorySyncStateEntity.Type.EXCHANGE,
             userWalletId = userWalletId,
             previous = state,
             pagination = response.pagination,
@@ -61,7 +61,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
         userWalletId: UserWalletId,
         limit: Int = DEFAULT_LIMIT,
     ): ExchangeHistoryDeltaResponse {
-        val state = syncState(ExpressSyncStateEntity.Type.EXCHANGE, userWalletId)
+        val state = syncState(HistorySyncStateEntity.Type.EXCHANGE, userWalletId)
 
         val response = exchangeApi.getHistoryDelta(
             userWalletId = userWalletId.stringValue,
@@ -71,7 +71,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
 
         storeExchanges(items = response.items)
         persistDeltaState(
-            type = ExpressSyncStateEntity.Type.EXCHANGE,
+            type = HistorySyncStateEntity.Type.EXCHANGE,
             userWalletId = userWalletId,
             pagination = response.pagination,
         )
@@ -79,7 +79,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
     }
 
     suspend fun fetchOnrampHistory(userWalletId: UserWalletId, limit: Int = DEFAULT_LIMIT): OnrampHistoryResponse {
-        val state = syncState(ExpressSyncStateEntity.Type.ONRAMP, userWalletId)
+        val state = syncState(HistorySyncStateEntity.Type.ONRAMP, userWalletId)
 
         val response = onrampApi.getHistory(
             userWalletId = userWalletId.stringValue,
@@ -89,7 +89,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
 
         storeOnramps(items = response.items)
         persistHistoryState(
-            type = ExpressSyncStateEntity.Type.ONRAMP,
+            type = HistorySyncStateEntity.Type.ONRAMP,
             userWalletId = userWalletId,
             previous = state,
             pagination = response.pagination,
@@ -101,7 +101,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
         userWalletId: UserWalletId,
         limit: Int = DEFAULT_LIMIT,
     ): OnrampHistoryDeltaResponse {
-        val state = syncState(ExpressSyncStateEntity.Type.ONRAMP, userWalletId)
+        val state = syncState(HistorySyncStateEntity.Type.ONRAMP, userWalletId)
 
         val response = onrampApi.getHistoryDelta(
             userWalletId = userWalletId.stringValue,
@@ -111,7 +111,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
 
         storeOnramps(items = response.items)
         persistDeltaState(
-            type = ExpressSyncStateEntity.Type.ONRAMP,
+            type = HistorySyncStateEntity.Type.ONRAMP,
             userWalletId = userWalletId,
             pagination = response.pagination,
         )
@@ -145,19 +145,19 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
         tokenInfoRepository.fetchMissing(entities.mapTo(mutableSetOf()) { it.to.toAssetId() })
     }
 
-    suspend fun syncState(type: ExpressSyncStateEntity.Type, userWalletId: UserWalletId): ExpressSyncStateEntity? {
-        return expressSyncStateDao.observe(type = type.name, userWalletId = userWalletId.stringValue).first()
+    suspend fun syncState(type: HistorySyncStateEntity.Type, userWalletId: UserWalletId): HistorySyncStateEntity? {
+        return historySyncStateDao.observe(type = type.name, userWalletId = userWalletId.stringValue).first()
     }
 
     private suspend fun persistHistoryState(
-        type: ExpressSyncStateEntity.Type,
+        type: HistorySyncStateEntity.Type,
         userWalletId: UserWalletId,
-        previous: ExpressSyncStateEntity?,
+        previous: HistorySyncStateEntity?,
         pagination: ExpressPagination,
     ) {
         if (previous == null) {
-            expressSyncStateDao.upsert(
-                ExpressSyncStateEntity(
+            historySyncStateDao.upsert(
+                HistorySyncStateEntity(
                     type = type.name,
                     userWalletId = userWalletId.stringValue,
                     isInitialCompleted = !pagination.hasMore,
@@ -166,7 +166,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
                 ),
             )
         } else {
-            expressSyncStateDao.updateHistoryCursor(
+            historySyncStateDao.updateHistoryCursor(
                 type = type.name,
                 userWalletId = userWalletId.stringValue,
                 afterCursor = pagination.endCursor,
@@ -176,12 +176,12 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
     }
 
     private suspend fun persistDeltaState(
-        type: ExpressSyncStateEntity.Type,
+        type: HistorySyncStateEntity.Type,
         userWalletId: UserWalletId,
         pagination: ExpressPaginationDelta,
     ) {
         val cursor = pagination.startCursor ?: return
-        expressSyncStateDao.updateDeltaCursor(
+        historySyncStateDao.updateDeltaCursor(
             type = type.name,
             userWalletId = userWalletId.stringValue,
             deltaCursor = cursor,
