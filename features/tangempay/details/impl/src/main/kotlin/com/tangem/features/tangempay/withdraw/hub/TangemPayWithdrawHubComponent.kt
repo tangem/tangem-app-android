@@ -81,6 +81,8 @@ internal class TangemPayWithdrawHubComponent(
                 sourceAccount = params.sourceAccount,
                 entry = config.entry,
                 options = config.options,
+                onCloseFlow = router::pop,
+                onWithdrawSent = model::onWithdrawSent,
             ),
             countrySelectorFactory = countrySelectorFactory,
         )
