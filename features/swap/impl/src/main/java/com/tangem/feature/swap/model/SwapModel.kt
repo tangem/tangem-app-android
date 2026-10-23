@@ -3166,6 +3166,7 @@ internal class SwapModel @Inject constructor(
             toSwapCurrencyStatus = toSwapCurrencyStatus,
         )
         val isCexOnly = isTangemPayWithdrawal(pairFromSwapCurrencyStatus) ||
+            isMoneyWithdrawFlow ||
             pairFromSwapCurrencyStatus?.account is Account.Money
         pair.copy(
             providers = pair.providers.filterIf(isCexOnly) { provider ->
@@ -3389,6 +3390,8 @@ internal class SwapModel @Inject constructor(
         override suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
             val fromSwapCurrencyStatus =
                 dataState.fromSwapCurrencyStatus ?: return Either.Left(GetFeeError.UnknownError)
+            val isFeePaidOnlyInAccountToken = fromSwapCurrencyStatus.account is Account.Money
+            if (isFeePaidOnlyInAccountToken) return Either.Left(GetFeeError.UnknownError)
             val toSwapCurrencyStatus =
                 dataState.toSwapCurrencyStatus ?: return Either.Left(GetFeeError.UnknownError)
             val amount = lastAmount.value.parseBigDecimalOrNull() ?: return Either.Left(GetFeeError.UnknownError)

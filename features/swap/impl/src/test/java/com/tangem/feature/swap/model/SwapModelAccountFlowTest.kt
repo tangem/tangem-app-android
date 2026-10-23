@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -56,6 +57,7 @@ import com.tangem.domain.polymarket.model.PredictionWithdrawDestination
 import com.tangem.domain.polymarket.model.PredictionWithdrawalReceipt
 import com.tangem.domain.polymarket.model.PreparedPredictionWithdrawal
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.feature.swap.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -470,7 +472,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         )
         val from = swapCurrencyStatus(account = filter.createSourceAccount(userWalletId))
         val to = swapCurrencyStatus()
-        every { swapInteractor.extractFromSwapCurrencyFromPair(pair, from, to) } returns from
+        every {
+            swapInteractor.extractFromSwapCurrencyFromPair(pair, from, to)
+        } returns from.takeIf { filter.isPairSourceMatched }
 
         // Act
         val result = invokeFilterTangemPayProviders(
@@ -1074,6 +1078,31 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         coVerify(exactly = 0) {
             getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
         }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a money withdraw WHEN the network coin fee is requested THEN it is refused`() = runTest {
+        // Arrange
+        stubResolvedAccountPair(
+            fromAccount = Account.Money(userWalletId),
+            toAccount = Account.Personal.createMainAccount(userWalletId),
+        )
+        every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns true
+        stubTransferState()
+        stubTransferStateBuilderPassthrough()
+        coEvery { swapTransferInteractor.loadFee(any(), any(), any()) } returns mockk<TransactionFee>().right()
+        val model = createModel(accountFlow = AccountFlow.MoneyWithdraw, dispatchers = deferredDispatchers())
+        advanceUntilIdle()
+        model.enterAmount("5")
+        advanceUntilIdle()
+
+        // Act
+        val result = model.feeSelectorRepository.loadFee()
+
+        // Assert
+        assertThat(result).isEqualTo(GetFeeError.UnknownError.left())
+        coVerify(exactly = 0) { swapTransferInteractor.loadFee(any(), any(), any()) }
         model.onDestroy()
     }
 
@@ -2865,6 +2894,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         val source: String,
         val createSourceAccount: (UserWalletId) -> Account,
         val expectedTypes: List<ExchangeProviderType>,
+        val isPairSourceMatched: Boolean = true,
     ) {
         override fun toString(): String = "$accountFlow from $source"
     }
@@ -2905,6 +2935,13 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 source = "money account",
                 createSourceAccount = { userWalletId -> Account.Money(userWalletId) },
                 expectedTypes = listOf(ExchangeProviderType.CEX),
+            ),
+            ProviderFilter(
+                accountFlow = AccountFlow.MoneyWithdraw,
+                source = "money account the pair does not match",
+                createSourceAccount = { userWalletId -> Account.Money(userWalletId) },
+                expectedTypes = listOf(ExchangeProviderType.CEX),
+                isPairSourceMatched = false,
             ),
         )
 

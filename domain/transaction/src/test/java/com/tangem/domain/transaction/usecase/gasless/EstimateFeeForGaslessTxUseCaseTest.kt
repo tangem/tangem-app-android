@@ -259,22 +259,28 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
         nativeBalance: BigDecimal,
     ) = runTest {
         // Arrange
-        givenNetworkOutsidePortfolio(nativeBalance = nativeBalance, tokenBalance = SWAP_AMOUNT + BigDecimal("5"))
+        val tokenBalance = SWAP_AMOUNT + BigDecimal("5")
+        val sendingTokenStatus = tokenStatus(balance = tokenBalance, yieldSupplyStatus = null)
         coEvery {
             walletManager.getGasLimit(any(), FEE_RECEIVER, any())
         } returns Result.Success(BigInteger("60000"))
+        givenAccountStatusList(nativeBalance = BigDecimal.ZERO, tokenBalance = tokenBalance, yieldSupplyStatus = null)
+        val portfolioTokenFee = createUseCase().invoke(
+            userWallet = userWallet,
+            amount = SWAP_AMOUNT,
+            sendingTokenCurrencyStatus = sendingTokenStatus,
+        )
+        givenNetworkOutsidePortfolio(nativeBalance = nativeBalance, tokenBalance = tokenBalance)
 
         // Act
         val result = createUseCase().invoke(
             userWallet = userWallet,
             amount = SWAP_AMOUNT,
-            sendingTokenCurrencyStatus = tokenStatus(balance = SWAP_AMOUNT + BigDecimal("5"), yieldSupplyStatus = null),
+            sendingTokenCurrencyStatus = sendingTokenStatus,
         )
 
         // Assert
-        val feeExtended = result.getOrNull()
-        assertThat(feeExtended?.feeTokenId).isEqualTo(usdc.id)
-        assertThat(feeExtended?.isGasless).isTrue()
+        assertThat(result).isEqualTo(portfolioTokenFee)
     }
 
     @Test
