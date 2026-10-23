@@ -73,6 +73,26 @@ internal class PolymarketEventDetailsContentTransformerTest {
             // Assert
             Truth.assertThat(actual.activeMarkets.map { it.id }).containsExactly("active", "unknown").inOrder()
             Truth.assertThat(actual.closedMarkets.map { it.id }).containsExactly("closed")
+            Truth.assertThat(actual.isClosedMarketsExpanded).isFalse()
+        }
+
+        @Test
+        fun `GIVEN only closed markets WHEN transform THEN they are shown immediately in market order`() {
+            // Arrange
+            val event = createEvent(
+                markets = listOf(
+                    createMarket(id = "second", status = PolymarketStatus.CLOSED, orderIndex = 1),
+                    createMarket(id = "first", status = PolymarketStatus.CLOSED, orderIndex = 0),
+                ),
+            )
+
+            // Act
+            val actual = transform(event)
+
+            // Assert
+            Truth.assertThat(actual.activeMarkets).isEmpty()
+            Truth.assertThat(actual.closedMarkets.map { it.id }).containsExactly("first", "second").inOrder()
+            Truth.assertThat(actual.isClosedMarketsExpanded).isTrue()
         }
 
         @Test
