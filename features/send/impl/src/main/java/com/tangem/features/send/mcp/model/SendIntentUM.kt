@@ -1,17 +1,32 @@
 package com.tangem.features.send.mcp.model
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.extensions.TextReference
 
 @Immutable
-internal data class SendIntentUM(
-    val token: TangemTokenIcon.UiState,
-    val title: TextReference,
-    val agent: SendIntentAgentUM,
-    val description: TextReference,
-    val primaryButton: SendIntentButtonUM,
-)
+internal sealed interface SendIntentUM {
+
+    val primaryButton: SendIntentButtonUM
+
+    /** What the agent asks for, to be accepted. */
+    data class Offer(
+        val token: TangemTokenIcon.UiState,
+        val title: TextReference,
+        val agent: SendIntentAgentUM,
+        val description: TextReference,
+        override val primaryButton: SendIntentButtonUM,
+    ) : SendIntentUM
+
+    /** An intent that cannot be offered: it has already been processed, or it cannot be reached. */
+    data class Status(
+        val variant: TangemModalStatus.Variant,
+        val title: TextReference,
+        val subtitle: TextReference?,
+        override val primaryButton: SendIntentButtonUM,
+    ) : SendIntentUM
+}
 
 @Immutable
 internal sealed interface SendIntentAgentUM {
