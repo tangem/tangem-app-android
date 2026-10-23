@@ -2,8 +2,10 @@ package com.tangem.features.send.mcp.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.transaction.models.SendIntent
+import com.tangem.features.send.impl.R
 import com.tangem.features.send.mcp.createSendIntent
 import com.tangem.features.send.mcp.createToken
 import org.junit.jupiter.api.AfterEach
@@ -39,7 +41,9 @@ internal class SendIntentProcessedConverterTest {
         val actual = converter.convert(input(intent = createSendIntent(amount = BigDecimal("42"))))
 
         // Assert
-        assertThat(actual.subtitle).isEqualTo(stringReference("Send 42.00 USDT"))
+        assertThat(actual.subtitle).isEqualTo(
+            resourceReference(R.string.mcp_send_intent_processed_subtitle, wrappedList("42.00\u00a0USDT")),
+        )
     }
 
     @Test
@@ -73,8 +77,8 @@ internal class SendIntentProcessedConverterTest {
 
         // Assert
         assertThat(actual.variant).isEqualTo(TangemModalStatus.Variant.Info)
-        assertThat(actual.title).isEqualTo(stringReference("This intent has already been processed"))
-        assertThat(actual.primaryButton.text).isEqualTo(stringReference("Got it"))
+        assertThat(actual.title).isEqualTo(resourceReference(R.string.mcp_intent_processed_title))
+        assertThat(actual.primaryButton.text).isEqualTo(resourceReference(R.string.common_got_it))
         assertThat(closed).isTrue()
     }
 
