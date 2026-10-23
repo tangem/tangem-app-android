@@ -50,6 +50,7 @@ internal class PolymarketEventDetailsContentTransformer(
     private val onClosedMarketsClick: () -> Unit,
     private val onReadMoreClick: () -> Unit,
     private val onResolutionSourceClick: (String) -> Unit = {},
+    private val categoryLabel: String? = null,
 ) : Transformer<PolymarketEventDetailsUM> {
 
     override fun transform(prevState: PolymarketEventDetailsUM): PolymarketEventDetailsUM {
@@ -58,6 +59,7 @@ internal class PolymarketEventDetailsContentTransformer(
             .filter { it.status == PolymarketStatus.ACTIVE || it.status == PolymarketStatus.UNKNOWN }
         return PolymarketEventDetailsUM.Content(
             title = stringReference(event.title),
+            categoryLabel = categoryLabel?.takeIf(String::isNotBlank)?.let(::stringReference),
             iconUrl = event.iconUrl,
             totalVolume = stringReference(event.volume.formatPolymarketVolume()),
             change24h = transformChange24h(volume = event.volume, volume24h = event.volume24h),
