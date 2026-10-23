@@ -83,7 +83,6 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                     params = DefaultMarketsTokenListComponent.Params(
                         preselectedSortType = SortByTypeUM.Rating,
                         preselectedInterval = MarketsListUM.TrendInterval.H24,
-                        shouldAlwaysShowSearchBar = false,
                     ),
                 ),
             )
@@ -220,7 +219,6 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                 DefaultMarketsTokenListComponent.Params(
                     preselectedSortType = mapOrderToSortType(entryRoute.preselectedOrder),
                     preselectedInterval = mapIntervalToTrendInterval(entryRoute.preselectedInterval),
-                    shouldAlwaysShowSearchBar = false,
                 ),
             )
             is FeedEntryRoute.NewsDetail -> FeedEntryChildFactory.Child.NewsDetails(
