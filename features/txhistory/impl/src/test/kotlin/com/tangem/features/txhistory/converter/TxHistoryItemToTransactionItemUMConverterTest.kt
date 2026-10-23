@@ -209,6 +209,53 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
+    fun `GIVEN failed NetworkFee WHEN convert THEN row reads confirmed and keeps the signed amount`() {
+        val tx = txInfo(
+            type = TransactionType.NetworkFee(amount = null, address = EXTERNAL_ADDRESS),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            status = TxInfo.TransactionStatus.Failed,
+            interactionAddressType = null,
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.status).isEqualTo(TransactionItemUM.Content.Status.Confirmed)
+        assertThat(result.amount).isEqualTo("${StringsSigns.DASH_SIGN}0.000015")
+    }
+
+    @Test
+    fun `GIVEN unconfirmed NetworkFee WHEN convert THEN row still reads pending`() {
+        val tx = txInfo(
+            type = TransactionType.NetworkFee(amount = null, address = EXTERNAL_ADDRESS),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            status = TxInfo.TransactionStatus.Unconfirmed,
+            interactionAddressType = null,
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.status).isEqualTo(TransactionItemUM.Content.Status.Unconfirmed)
+    }
+
+    @Test
+    fun `GIVEN failed zero-amount Operation in coin history WHEN convert THEN fee row reads confirmed`() {
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "YieldSend"),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            status = TxInfo.TransactionStatus.Failed,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(EXTERNAL_ADDRESS),
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.status).isEqualTo(TransactionItemUM.Content.Status.Confirmed)
+        assertThat(result.amount).isEqualTo("${StringsSigns.DASH_SIGN}0.000015")
+    }
+
+    @Test
     fun `GIVEN NetworkFee for an untracked token WHEN convert THEN generic for-sending subtitle`() {
         val tx = txInfo(
             type = TransactionType.NetworkFee(amount = null, address = EXTERNAL_ADDRESS),
