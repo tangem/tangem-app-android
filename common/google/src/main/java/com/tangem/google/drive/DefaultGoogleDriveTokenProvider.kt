@@ -51,7 +51,7 @@ internal class DefaultGoogleDriveTokenProvider(
             // a token cached under `null` belongs to whichever account Google picked, not the one about to be chosen
             val isAccountPickPending = interactive && requested == null && authorizer.selectedAccountName == null
             if (!isAccountPickPending) cachedTokens[requested.accountName()]?.let { return@withLock it.right() }
-            if (!networkConnectionManager.isOnline) return@withLock GoogleAuthError.NetworkError.left()
+            if (!networkConnectionManager.isOnlineSync) return@withLock GoogleAuthError.NetworkError.left()
 
             val result = if (requested != null) {
                 authorizer.authorizeAccount(accountName = requested.name, scopes = scopes, interactive = interactive)
