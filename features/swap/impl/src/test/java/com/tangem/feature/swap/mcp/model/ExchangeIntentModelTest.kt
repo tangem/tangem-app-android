@@ -230,20 +230,26 @@ internal class ExchangeIntentModelTest {
     fun `GIVEN intent already carried out WHEN model created THEN processed sheet names the swap and closes once`() =
         runTest {
             // Arrange
-            coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns intent.copy(isHandled = true).right()
+            val processedIntent = intent.copy(isHandled = true)
+            coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns processedIntent.right()
+            val model = createModel(testScope = this)
+            val expected = processedConverter.convert(
+                ExchangeIntentProcessedConverter.Input(
+                    intent = processedIntent,
+                    from = usdt,
+                    to = pol,
+                    onClose = model::onClose,
+                ),
+            )
 
             // Act
-            val model = createModel(testScope = this)
             advanceUntilIdle()
             val status = model.shownStatus()
             status.primaryButton.onClick()
             status.primaryButton.onClick()
 
             // Assert
-            assertThat(status.variant).isEqualTo(TangemModalStatus.Variant.Info)
-            assertThat(status.title).isEqualTo(stringReference("This intent has already been processed"))
-            assertThat(status.subtitle.toString()).contains("Swap 42.00")
-            assertThat(status.primaryButton.text).isEqualTo(stringReference("Got it"))
+            assertThat(status).isEqualTo(expected)
             verify(exactly = 1) { router.pop(any()) }
             model.onDestroy()
         }

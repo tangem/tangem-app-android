@@ -3,7 +3,7 @@ package com.tangem.features.swap.mcp
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 
-/** The offer an AI agent raised to swap, and the hand-over to Swap that carries it out. */
+/** Presents an AI agent's swap intent or its status and hands accepted intents over to Swap. */
 interface ExchangeIntentComponent : ComposableContentComponent {
 
     data class Params(val intentId: String)
