@@ -291,18 +291,18 @@ internal class JointAccountToMembersUMConverterTest {
                 status = JointAccount.Status.CONFIRMING,
                 isCreator = false,
                 members = listOf(creator, member, member.copy(address = "0xthird")),
-                expected = FooterExpectation(hint = null, isButtonEnabled = false),
+                expected = FooterExpectation(hint = null, isButtonEnabled = true),
             ),
             FooterModel(
                 status = JointAccount.Status.CONFIRMING,
                 isCreator = false,
-                members = listOf(creator, member.copy(isVerified = true), member.copy(address = "0xthird")),
+                members = listOf(creator, member.copy(signature = SIGNATURE), member.copy(address = "0xthird")),
                 expected = FooterExpectation(hint = STILL_NEED_TO_CONFIRM_TWO, isButtonEnabled = null),
             ),
             FooterModel(
                 status = JointAccount.Status.CONFIRMING,
                 isCreator = true,
-                members = listOf(creator.copy(isVerified = true), member.copy(isVerified = true), member.copy(address = "0xthird")),
+                members = listOf(creator.copy(signature = SIGNATURE), member.copy(signature = SIGNATURE), member.copy(address = "0xthird")),
                 expected = FooterExpectation(hint = STILL_NEED_TO_CONFIRM_ONE, isButtonEnabled = null),
             ),
             FooterModel(status = JointAccount.Status.ACTIVE, isCreator = true, expected = null),
@@ -489,7 +489,7 @@ internal class JointAccountToMembersUMConverterTest {
     inner class Confirming {
 
         private val confirmingAccount = pendingAccount(
-            members = listOf(creator, member.copy(isVerified = true), member.copy(address = "0xthird")),
+            members = listOf(creator, member.copy(signature = SIGNATURE), member.copy(address = "0xthird")),
         ).copy(status = JointAccount.Status.CONFIRMING)
 
         @Test
@@ -529,7 +529,7 @@ internal class JointAccountToMembersUMConverterTest {
         fun `GIVEN pending account WHEN convert THEN every joined member is Joined`() {
             // Arrange
             val input = input(
-                account = pendingAccount(members = listOf(creator, member.copy(isVerified = true))),
+                account = pendingAccount(members = listOf(creator, member.copy(signature = SIGNATURE))),
                 invites = listOf(INVITE_A),
             )
 
@@ -818,6 +818,7 @@ internal class JointAccountToMembersUMConverterTest {
         const val FIVE_SLOTS = 5
         const val INVITE_A = "invite-a"
         const val INVITE_B = "invite-b"
+        const val SIGNATURE = "0xsigned"
 
         val INVITE_TWO = pluralReference(
             id = CoreUiR.plurals.joint_account_invite_members_invite_count,
