@@ -27,7 +27,7 @@ import java.math.BigInteger
  * 3. the `SafeTx` decodes to exactly what the UI shows the user — recipient, amount, asset;
  * 4. the payload has one of the two allowed shapes and never targets the Safe itself;
  * 5. the refund fields pay what the operation was built to pay, and no one else;
- * 6. every `approve` vote the backend relays recovers to the member it is attributed to.
+ * 6. every `approve` vote the backend relays, the initiator's own included, recovers to the member it names.
  */
 class JointOperationVerifier(
     private val payloadCodec: JointTransferPayloadCodec,
@@ -73,7 +73,8 @@ class JointOperationVerifier(
 
     /**
      * The relayer executes with the very signatures relayed here, so one that does not recover to its member means
-     * a signature set other than the one on screen would execute. A `reject` carries none and is not checked.
+     * a signature set other than the one on screen would execute. The initiator signs by creating the operation and
+     * is shown as approving, so their vote must be among them. A `reject` carries none and is not checked.
      */
     private fun Raise<JointOperationSignError>.checkVotes(
         jointAccount: JointAccount,
@@ -81,9 +82,12 @@ class JointOperationVerifier(
         safeAddress: String,
     ) {
         val voteMismatch = VerificationFailed(reason = VerificationFailed.Reason.VOTE_SIGNATURE_MISMATCH)
+        val approvals = operation.signatures.filter { it.state == JointOperation.MemberSignature.State.SIGNED }
 
-        operation.signatures
-            .filter { it.state == JointOperation.MemberSignature.State.SIGNED }
+        operation.initiator?.let { initiator ->
+            ensure(approvals.any { it.address.equals(initiator, ignoreCase = true) }) { voteMismatch }
+        }
+        approvals
             .forEach { vote ->
                 val signature = ensureNotNull(vote.signature) { voteMismatch }
                 val isMember = jointAccount.members.any { it.address.equals(vote.address, ignoreCase = true) }
