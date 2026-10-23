@@ -320,11 +320,13 @@ internal object TransactionDomainModule {
     fun provideGetAvailableFeeTokensUseCase(
         gaslessTransactionRepository: GaslessTransactionRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
         currencyChecksRepository: CurrencyChecksRepository,
         isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
     ): GetAvailableFeeTokensUseCase {
         return GetAvailableFeeTokensUseCase(
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
             gaslessTransactionRepository = gaslessTransactionRepository,
             currencyChecksRepository = currencyChecksRepository,
             isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
@@ -426,12 +428,14 @@ internal object TransactionDomainModule {
     @Singleton
     fun provideGetFeeForTokenUseCase(
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
         currencyChecksRepository: CurrencyChecksRepository,
         evmGaslessFeeResolver: EvmGaslessFeeResolver,
         tronGaslessFeeResolver: TronGaslessFeeResolver,
     ): GetFeeForTokenUseCase {
         return GetFeeForTokenUseCase(
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
             currencyChecksRepository = currencyChecksRepository,
             evmGaslessFeeResolver = evmGaslessFeeResolver,
             tronGaslessFeeResolver = tronGaslessFeeResolver,
@@ -464,11 +468,13 @@ internal object TransactionDomainModule {
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
         singleAccountListSupplier: SingleAccountListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
         gaslessSignerProvider: GaslessSignerProvider,
     ): CreateAndSendEvmGaslessTransactionUseCase {
         return CreateAndSendEvmGaslessTransactionUseCase(
             walletManagersFacade = walletManagersFacade,
             singleAccountListSupplier = singleAccountListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
             gaslessTransactionRepository = gaslessTransactionRepository,
             gaslessSignerProvider = gaslessSignerProvider,
         )
