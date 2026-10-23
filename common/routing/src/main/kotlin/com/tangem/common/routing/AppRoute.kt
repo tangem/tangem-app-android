@@ -656,24 +656,6 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/tangem_pay_eligibility")
 
     @Serializable
-    data class MoneyAccountOnboarding(
-        val mode: Mode,
-    ) : AppRoute(path = "/money_account_onboarding/$mode") {
-
-        @Serializable
-        sealed class Mode {
-            @Serializable
-            data class Deeplink(val deeplink: String) : Mode()
-
-            @Serializable
-            data object FromMain : Mode()
-
-            @Serializable
-            data object FromDetailsScreen : Mode()
-        }
-    }
-
-    @Serializable
     data class MoneyAccountDetails(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/money_account_details/${userWalletId.stringValue}")
