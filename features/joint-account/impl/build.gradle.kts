@@ -59,7 +59,6 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Other */
-    implementation(deps.androidx.annotation)
     implementation(deps.androidx.appCompat)
     implementation(deps.arrow.core)
     implementation(deps.decompose)
