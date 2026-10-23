@@ -300,7 +300,6 @@ internal class IntroductionModel @Inject constructor(
         socialLoginHandler.start(
             scope = modelScope,
             provider = provider,
-            source = source,
             host = SocialLoginHost(),
         )
     }
