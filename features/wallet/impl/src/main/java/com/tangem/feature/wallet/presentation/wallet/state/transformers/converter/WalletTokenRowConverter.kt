@@ -1,23 +1,16 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
-import com.tangem.common.getTotalCryptoAmount
-import com.tangem.common.getTotalFiatAmount
-import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.tokens.TokenRowStateConverter
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chart_ascending_16
 import com.tangem.core.ui.res.generated.icons.ic_clock_16
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.jointaccount.model.JointPendingOperation
-import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -26,12 +19,11 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletContentClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
-import com.tangem.utils.StringsSigns
 import java.math.BigDecimal
 
 @Suppress("LongParameterList")
 internal class WalletTokenRowConverter(
-    private val appCurrency: AppCurrency,
+    appCurrency: AppCurrency,
     private val accountId: AccountId,
     private val clickIntents: WalletContentClickIntents,
     yieldModuleApyMap: Map<String, BigDecimal>,
@@ -40,7 +32,7 @@ internal class WalletTokenRowConverter(
     private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
 ) {
 
-    private val currencyToIconStateConverter = CryptoCurrencyToIconStateConverter()
+    private val tokenRowStateConverter = TokenRowStateConverter(appCurrency)
     private val earnApyConverter = EarnApyConverter(
         yieldModuleApyMap = yieldModuleApyMap,
         stakingApyMap = stakingAvailabilityMap,
@@ -52,7 +44,12 @@ internal class WalletTokenRowConverter(
         val promo = if (pendingOperationBubble == null && shouldShowPromo) toYieldPromo(value, earnApyInfo) else null
 
         return TokensListItemUM2.TokenV2(
-            state = toState(value, earnApyInfo, messageBubble = pendingOperationBubble ?: promo?.bubble),
+            state = tokenRowStateConverter.convert(
+                currencyStatus = value,
+                onClick = { clickIntents.onTokenItemClick(accountId, value) },
+                badge = earnApyInfo?.toBadge(),
+                messageBubble = pendingOperationBubble ?: promo?.bubble,
+            ),
             onLongClick = if (value.value is CryptoCurrencyStatus.Loading) {
                 null
             } else {
@@ -67,77 +64,6 @@ internal class WalletTokenRowConverter(
             },
             onPromoShown = promo?.onShown,
         )
-    }
-
-    private fun toState(
-        currencyStatus: CryptoCurrencyStatus,
-        earnApyInfo: EarnApyConverter.EarnApyInfo?,
-        messageBubble: TangemTokenRow.MessageBubble?,
-    ): TangemTokenRow.State {
-        val id = currencyStatus.currency.id.value
-        val icon = currencyToIconStateConverter.convert(currencyStatus).toTokenIconState()
-        val title = stringReference(currencyStatus.currency.name)
-        val onClick = { clickIntents.onTokenItemClick(accountId, currencyStatus) }
-
-        return when (val value = currencyStatus.value) {
-            CryptoCurrencyStatus.Loading -> TangemTokenRow.State.Shimmer(id = id)
-            is CryptoCurrencyStatus.Unreachable -> TangemTokenRow.State.Unreachable(
-                id = id,
-                icon = icon,
-                title = title,
-                badge = resourceReference(R.string.common_unreachable),
-                onClick = onClick,
-            )
-            is CryptoCurrencyStatus.MissedDerivation -> TangemTokenRow.State.NoAddress(
-                id = id,
-                icon = icon,
-                title = title,
-                message = resourceReference(R.string.common_no_address),
-            )
-            is CryptoCurrencyStatus.NoAmount -> TangemTokenRow.State.Content(
-                id = id,
-                icon = icon,
-                title = title,
-                fiatBalance = stringReference(StringsSigns.DASH_SIGN),
-                messageBubble = messageBubble,
-                onClick = onClick,
-            )
-            is CryptoCurrencyStatus.Loaded,
-            is CryptoCurrencyStatus.Custom,
-            is CryptoCurrencyStatus.NoQuote,
-            is CryptoCurrencyStatus.NoAccount,
-            -> {
-                val isFlickering = value.sources.total == StatusSource.CACHE
-                val yieldSupply = value.yieldSupplyStatus
-                TangemTokenRow.State.Content(
-                    id = id,
-                    icon = icon,
-                    title = title,
-                    badge = earnApyInfo?.toBadge(),
-                    hasPending = value.hasCurrentNetworkTransactions,
-                    quote = stringReference(
-                        value.fiatRate.format {
-                            fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
-                        },
-                    ),
-                    priceChange = value.priceChange?.toPriceChangeState(),
-                    fiatBalance = stringReference(
-                        currencyStatus.getTotalFiatAmount().format {
-                            fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
-                        },
-                    ),
-                    cryptoBalance = stringReference(
-                        currencyStatus.getTotalCryptoAmount().format { crypto(currencyStatus.currency) },
-                    ),
-                    shouldShowContractWarning = yieldSupply?.isActive == true && !yieldSupply.isAllowedToSpend,
-                    shouldShowUpdateWarning = value.sources.total == StatusSource.ONLY_CACHE,
-                    isQuoteFlickering = isFlickering,
-                    isBalanceFlickering = isFlickering,
-                    messageBubble = messageBubble,
-                    onClick = onClick,
-                )
-            }
-        }
     }
 
     private fun EarnApyConverter.EarnApyInfo.toBadge(): TangemTokenRow.Badge? {
