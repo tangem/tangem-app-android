@@ -78,8 +78,6 @@ class ConfirmJointAccountUseCase(
             .mapLeft(::toConfirmationError)
             .bind()
 
-        // The owner address is known only after the tap, so the membership check is post-sign: the backend would
-        // reject a stranger's signature with 403 anyway, this only fails fast with a domain error instead
         val isMember = jointAccount.members.any { it.address.equals(signResult.ownerAddress, ignoreCase = true) }
         ensure(isMember) {
             refused(
