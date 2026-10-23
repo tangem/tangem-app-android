@@ -28,6 +28,7 @@ import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
+import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.converter.WcHandleMethodErrorConverter
 import com.tangem.features.walletconnect.transaction.converter.WcPortfolioNameDelegate
@@ -248,22 +249,32 @@ internal class WcSignTransactionModel @Inject constructor(
                     router.pop()
                     true
                 }
-                is Either.Left<WcRequestError> -> {
-                    val error = result.value
-                    if (error is WcRequestError.WrappedSendError && error.sendTransactionError is UserCancelledError) {
-                        false
-                    } else {
-                        cancel(useCase)
-                        true
-                    }
-                }
+                is Either.Left<WcRequestError> -> handleSigningError(result.value)
             }
+        }
+    }
+
+    private fun handleSigningError(error: WcRequestError): Boolean = when {
+        error is WcRequestError.WrappedSendError && error.sendTransactionError is UserCancelledError -> false
+        error is WcRequestError.ForbiddenRequest -> {
+            rejectWithUnsupportedMethodAlert(useCase)
+            true
+        }
+        else -> {
+            cancel(useCase)
+            true
         }
     }
 
     private fun cancel(useCase: WcSignUseCase<*>) {
         useCase.cancel()
         router.pop()
+    }
+
+    /** Activating the alert replaces this request in the WalletConnect slot; dismissing it frees the queue. */
+    private fun rejectWithUnsupportedMethodAlert(useCase: WcSignUseCase<*>) {
+        useCase.cancel()
+        router.push(WcInnerRoute.UnsupportedMethodAlert)
     }
 
     private fun copyData(text: String) {

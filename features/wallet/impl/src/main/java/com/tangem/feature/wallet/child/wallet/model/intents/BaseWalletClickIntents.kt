@@ -10,14 +10,13 @@ import kotlin.properties.Delegates
  *
 [REDACTED_AUTHOR]
  */
-@Suppress("UnnecessaryAbstractClass")
-internal abstract class BaseWalletClickIntents {
-
-    protected val router: InnerWalletRouter get() = _router
-    protected val modelScope: CoroutineScope get() = _modelScope
+internal open class BaseWalletClickIntents {
 
     private var _router: InnerWalletRouter by Delegates.notNull()
     private var _modelScope: CoroutineScope by Delegates.notNull()
+
+    protected val router: InnerWalletRouter get() = _router
+    protected val modelScope: CoroutineScope get() = _modelScope
 
     open fun initialize(router: InnerWalletRouter, coroutineScope: CoroutineScope) {
         _router = router

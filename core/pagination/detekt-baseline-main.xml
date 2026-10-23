@@ -2,9 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>NamedArguments:BatchListSource.kt$DefaultBatchListSource(fetchDispatcher, context, generateNewKey, batchFetcher, null)</ID>
-    <ID>NamedArguments:BatchListSource.kt$DefaultBatchListSource(fetchDispatcher, context, generateNewKey, batchFetcher, updateFetcher)</ID>
-    <ID>NestedScopeFunctions:BatchListSource.kt$DefaultBatchListSource$also { currentCoroutineContext().ensureActive() }</ID>
     <ID>SuspendFunSwallowedCancellation:BatchListSource.kt$DefaultBatchListSource$runCatching</ID>
     <ID>SuspendFunSwallowedCancellation:CursorBatchFetcher.kt$CursorBatchFetcher$runCatching</ID>
     <ID>SuspendFunSwallowedCancellation:LimitOffsetBatchFetcher.kt$LimitOffsetBatchFetcher$runCatching</ID>
