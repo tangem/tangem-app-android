@@ -27,7 +27,7 @@ internal sealed interface PolymarketEventDetailsUM {
      *  (the BFF does not serve subcategories yet)
      * @property activeMarkets markets open for trading
      * @property closedMarkets resolved markets, hidden behind the "Closed Markets" chip
-     * @property isClosedMarketsExpanded whether the closed markets are unfolded under the chip
+     * @property isClosedMarketsExpanded whether closed markets are shown; always true when no active markets remain
      * @property description resolution criteria text, `null` when blank
      * @property isDescriptionExpanded whether the description shows in full or clipped with "Read more"
      * @property resolutionDate formatted resolution date of the event, a dash when unknown
