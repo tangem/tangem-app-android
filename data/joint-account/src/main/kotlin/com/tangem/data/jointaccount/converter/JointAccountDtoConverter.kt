@@ -25,6 +25,7 @@ internal class JointAccountDtoConverter @Inject constructor(
                 address = member.address.lowercase(),
                 role = JointAccountFieldsConverter.convertRole(member.role),
                 inviteId = member.inviteId,
+                signature = member.signature?.lowercase(),
             )
         },
         source = StatusSource.ACTUAL,
