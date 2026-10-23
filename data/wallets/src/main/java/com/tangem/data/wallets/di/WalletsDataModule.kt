@@ -37,6 +37,7 @@ import com.tangem.domain.wallets.repository.WalletCardsBackupRepository
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletsPromoRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.domain.wallets.signing.DeriveAndSignSession
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
@@ -61,6 +62,7 @@ internal object WalletsDataModule {
         userWalletsListRepository: UserWalletsListRepository,
         dispatchers: CoroutineDispatcherProvider,
         walletServerBinder: WalletServerBinder,
+        walletRegistrar: WalletRegistrar,
         @NetworkMoshi moshi: Moshi,
     ): WalletsRepository {
         return DefaultWalletsRepository(
@@ -70,6 +72,7 @@ internal object WalletsDataModule {
             userWalletsListRepository = userWalletsListRepository,
             dispatchers = dispatchers,
             walletServerBinder = walletServerBinder,
+            walletRegistrar = walletRegistrar,
             moshi = moshi,
         )
     }

@@ -64,6 +64,7 @@ dependencies {
 
     // region Libs
     api(projects.libs.tangemSdkApi)
+    implementation(projects.libs.auth)
     implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.demo.models)
     // endregion
