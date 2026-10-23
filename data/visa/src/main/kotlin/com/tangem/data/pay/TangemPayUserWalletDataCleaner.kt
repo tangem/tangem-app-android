@@ -11,6 +11,7 @@ import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.models.wallet.UserWalletId
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 internal class TangemPayUserWalletDataCleaner @Inject constructor(
     private val paymentAccountStatusesStore: PaymentAccountStatusesStore,
     private val txHistoryItemsStore: TangemPayTxHistoryItemsStore,
