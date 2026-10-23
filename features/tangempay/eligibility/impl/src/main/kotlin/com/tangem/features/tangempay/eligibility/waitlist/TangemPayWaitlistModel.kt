@@ -98,9 +98,9 @@ internal class TangemPayWaitlistModel @Inject constructor(
         modelScope.launch {
             joinWaitlistUseCase(
                 userWalletId = params.userWalletId,
+                products = params.products,
                 entry = TangemPayWaitlistEntry(
                     email = email,
-                    product = params.product,
                     countryCode = params.countryCode,
                     regionCode = params.regionCode,
                     isMarketingConsentGiven = state.isMarketingConsentGiven,

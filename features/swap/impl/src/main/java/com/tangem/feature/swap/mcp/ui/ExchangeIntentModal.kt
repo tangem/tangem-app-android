@@ -17,7 +17,7 @@ import com.tangem.feature.swap.mcp.model.ExchangeIntentButtonUM
 import com.tangem.feature.swap.mcp.model.ExchangeIntentUM
 
 /**
- * Sheet of the intent flow: the offer in [state] and the one action it carries. It is shown for as long as it stays
+ * Sheet of the intent flow: the offer or the status in [state] and the one action it carries. It is shown for as long as it stays
  * in composition, so the caller opens and closes it by adding it to and removing it from composition.
  *
  * [Figma](https://www.figma.com/design/Qqm0dNTOnqtxLYEcmgc32C/Store?node-id=23363-122221)
@@ -35,7 +35,10 @@ internal fun ExchangeIntentModal(state: ExchangeIntentUM, onDismiss: () -> Unit)
         title = { TangemModal.TopNavigation(endButton = { TangemButton.Close(onClick = onDismiss) }) },
     ) {
         Column(modifier = Modifier.weight(weight = 1f, fill = false).verticalScroll(rememberScrollState())) {
-            ExchangeIntentOfferContent(state = state)
+            when (state) {
+                is ExchangeIntentUM.Offer -> ExchangeIntentOfferContent(state = state)
+                is ExchangeIntentUM.Status -> ExchangeIntentStatusContent(state = state)
+            }
         }
         ExchangeIntentFooter(button = state.primaryButton)
     }

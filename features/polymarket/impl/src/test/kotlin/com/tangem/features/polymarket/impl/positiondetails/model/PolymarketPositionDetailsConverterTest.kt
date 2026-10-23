@@ -42,7 +42,7 @@ internal class PolymarketPositionDetailsConverterTest {
             PolymarketPositionDetailsUM.Metrics(
                 quantity = stringReference("28.08"),
                 priceChanges = stringReference("35.6¢ → 35.5¢"),
-                unrealizedPnl = stringReference("-$0.03"),
+                unrealizedPnl = TangemPriceChange.State(stringReference("-$0.03"), TangemPriceChange.Direction.Down),
                 realizedPnl = stringReference("+$12.00"),
             ),
         )
@@ -126,7 +126,9 @@ internal class PolymarketPositionDetailsConverterTest {
         // Assert
         assertThat(actual.event).isNull()
         assertThat(actual.information.endDate).isNull()
-        assertThat(actual.metrics.unrealizedPnl).isEqualTo(stringReference("$0.00"))
+        assertThat(actual.metrics.unrealizedPnl).isEqualTo(
+            TangemPriceChange.State(stringReference("$0.00"), TangemPriceChange.Direction.Neutral),
+        )
         assertThat(actual.metrics.realizedPnl).isEqualTo(stringReference("<$0.01"))
     }
 

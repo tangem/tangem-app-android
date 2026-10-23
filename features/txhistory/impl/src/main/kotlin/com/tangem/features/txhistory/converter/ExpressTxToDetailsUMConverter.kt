@@ -588,15 +588,15 @@ private fun BigDecimal?.takeIfPositive(): BigDecimal? = this?.takeIf { it > BigD
 // region Amount signs
 
 /** Leading sign of the pay-in / "You send" leg: always `−` — the funds left regardless of how the deal ended. */
-private const val OUTGOING_SIGN = "${StringsSigns.DASH_SIGN} "
+private const val OUTGOING_SIGN = "${StringsSigns.MINUS_SIGN}${StringsSigns.THIN_SPACE}"
 
 /**
  * Leading sign of the payout / "You receive" leg: `~` while in flight (the final received amount is still an estimate),
  * `+` once the funds have settled, and dropped on a failed deal (the amount is then only struck through).
  */
 private fun Status.incomingSign(): String = when (this) {
-    is Status.Unconfirmed -> "${StringsSigns.TILDE_SIGN} "
-    is Status.Confirmed, is Status.PendingSignature -> "${StringsSigns.PLUS} "
+    is Status.Unconfirmed -> "${StringsSigns.TILDE_SIGN}${StringsSigns.THIN_SPACE}"
+    is Status.Confirmed, is Status.PendingSignature -> "${StringsSigns.PLUS}${StringsSigns.THIN_SPACE}"
     is Status.Failed -> ""
 }
 

@@ -9,6 +9,7 @@ import com.tangem.domain.sociallogin.repository.SocialBackupRepository
 import com.tangem.google.drive.AppDataDrive
 import com.tangem.google.drive.GoogleDriveApi
 import com.tangem.google.drive.GoogleDriveTokenProvider
+import com.tangem.google.drive.store.DriveAccountStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
 import dagger.Lazy
@@ -33,12 +34,14 @@ internal interface SocialBackupModule {
         fun provideSocialBackupRepository(
             api: GoogleDriveApi,
             @AppDataDrive tokenProvider: GoogleDriveTokenProvider,
+            @AppDataDrive accountStore: DriveAccountStore,
             userWalletsListRepository: Lazy<UserWalletsListRepository>,
             dispatchers: CoroutineDispatcherProvider,
         ): SocialBackupRepository {
             return DefaultSocialBackupRepository(
                 api = api,
                 tokenProvider = tokenProvider,
+                accountStore = accountStore,
                 userWalletsListRepository = userWalletsListRepository,
                 cipher = SocialBackupCipher(),
                 dispatchers = dispatchers,
