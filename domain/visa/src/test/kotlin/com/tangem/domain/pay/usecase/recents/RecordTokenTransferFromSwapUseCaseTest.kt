@@ -4,7 +4,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.recents.TokenTransferJournal
-import com.tangem.domain.pay.repository.PaymentAccountRecentsStore
+import com.tangem.domain.pay.repository.AccountRecentsStore
 import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.coVerify
@@ -18,7 +18,7 @@ import org.junit.jupiter.params.provider.MethodSource
 
 internal class RecordTokenTransferFromSwapUseCaseTest {
 
-    private val recentsStore: PaymentAccountRecentsStore = mockk(relaxed = true)
+    private val recentsStore: AccountRecentsStore = mockk(relaxed = true)
 
     private val useCase = RecordTokenTransferFromSwapUseCase(recentsStore = recentsStore)
 
