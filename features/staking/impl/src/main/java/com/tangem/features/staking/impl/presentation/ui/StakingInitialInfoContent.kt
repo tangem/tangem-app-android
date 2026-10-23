@@ -89,7 +89,7 @@ internal fun StakingInitialInfoContent(
             modifier = Modifier
                 .fillMaxSize()
                 .background(TangemTheme.colors.background.secondary)
-                .padding(horizontal = TangemTheme.dimens.spacing16),
+                .padding(horizontal = 16.dp),
         ) {
             if (state.isBannerVisible) {
                 item(key = BANNER_BLOCK_KEY) {
@@ -162,10 +162,10 @@ private fun LazyListScope.activeStakingBlock(
                     .fillMaxWidth()
                     .background(TangemTheme.colors.background.action)
                     .padding(
-                        top = TangemTheme.dimens.spacing12,
-                        start = TangemTheme.dimens.spacing12,
-                        end = TangemTheme.dimens.spacing12,
-                        bottom = TangemTheme.dimens.spacing4,
+                        top = 12.dp,
+                        start = 12.dp,
+                        end = 12.dp,
+                        bottom = 4.dp,
                     ),
             )
         }
@@ -202,7 +202,7 @@ private fun LazyListScope.activeStakingBlock(
 private fun BannerBlock(onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(size = TangemTheme.dimens.radius14))
+            .clip(RoundedCornerShape(size = 14.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
@@ -220,7 +220,7 @@ private fun BannerBlock(onClick: () -> Unit) {
         Text(
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .padding(TangemTheme.dimens.spacing16)
+                .padding(16.dp)
                 .testTag(StakingDetailsScreenTestTags.BANNER_TEXT),
             text = buildAnnotatedString {
                 withStyle(SpanStyle(Brush.linearGradient(textGradientColors))) {
@@ -317,7 +317,7 @@ private fun ActiveStakingBlock(
                     onClick()
                 },
             )
-            .padding(TangemTheme.dimens.spacing12),
+            .padding(12.dp),
     ) {
         StakingBalanceIcon(
             balance = balance,
@@ -334,7 +334,7 @@ private fun ActiveStakingBlock(
                     modifier = Modifier.testTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_TITLE),
                 )
                 if (balance.isPending) {
-                    Spacer(modifier = Modifier.width(TangemTheme.dimens.spacing4))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Icon(
                         painter = rememberVectorPainter(
                             image = ImageVector.vectorResource(id = R.drawable.ic_staking_pending_transaction),
@@ -342,7 +342,7 @@ private fun ActiveStakingBlock(
                         tint = TangemTheme.colors.icon.informative,
                         contentDescription = null,
                         modifier = Modifier
-                            .size(TangemTheme.dimens.size18)
+                            .size(18.dp)
                             .testTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_PENDING_ICON),
                     )
                 }
@@ -353,7 +353,7 @@ private fun ActiveStakingBlock(
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
                 modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing2)
+                    .padding(top = 2.dp)
                     .testTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_SUBTITLE),
             )
         }
@@ -370,7 +370,7 @@ private fun ActiveStakingBlock(
                 text = balance.formattedCryptoAmount.orMaskWithStars(isBalanceHidden).resolveReference(),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing2),
+                modifier = Modifier.padding(top = 2.dp),
             )
         }
     }
@@ -386,7 +386,7 @@ private fun StakingBalanceIcon(balance: BalanceState, icon: Int?, iconTint: Colo
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(TangemTheme.dimens.spacing36)
+                            .size(36.dp)
                             .clip(TangemTheme.shapes.roundedCornersXLarge)
                             .background(iconTint.copy(alpha = 0.08f)),
                     ) {
@@ -396,7 +396,7 @@ private fun StakingBalanceIcon(balance: BalanceState, icon: Int?, iconTint: Colo
                             ),
                             tint = iconTint,
                             contentDescription = null,
-                            modifier = Modifier.size(TangemTheme.dimens.size18),
+                            modifier = Modifier.size(18.dp),
                         )
                     }
                 }
@@ -404,7 +404,7 @@ private fun StakingBalanceIcon(balance: BalanceState, icon: Int?, iconTint: Colo
                 { ValidatorImagePlaceholder() }
             },
             modifier = Modifier
-                .size(TangemTheme.dimens.spacing36)
+                .size(36.dp)
                 .clip(TangemTheme.shapes.roundedCornersXLarge),
         )
         SpacerW12()
@@ -422,7 +422,7 @@ private fun StakeButtonBlock(
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         state?.let { buttonsState ->
             StakingTosText(

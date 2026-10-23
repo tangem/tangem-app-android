@@ -17,7 +17,6 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
-import com.tangem.domain.models.tokenlist.TokenList.GroupedByNetwork.NetworkGroup
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -99,11 +98,11 @@ internal class TokenListStateConverter(
             val tokenList: TokenList = this.tokenList
             val account: Account.CryptoPortfolio = this.account
             val isExtend = params.expandedAccounts.contains(account.accountId)
-            val onItemClick: (Account.CryptoPortfolio) -> Unit = {
+            val onItemClick: (Account.CryptoPortfolio) -> Unit = { clickedAccount ->
                 if (isExtend) {
-                    clickIntents.onAccountCollapseClick(it)
+                    clickIntents.onAccountCollapseClick(clickedAccount)
                 } else {
-                    clickIntents.onAccountExpandClick(it)
+                    clickIntents.onAccountExpandClick(clickedAccount)
                 }
             }
             val converter = AccountCryptoPortfolioItemStateConverter(
@@ -120,7 +119,7 @@ internal class TokenListStateConverter(
                 is WalletTokensListState.ContentState.Content -> tokensListState.items
                 is WalletTokensListState.ContentState.Loading -> tokensListState.items
                 is WalletTokensListState.ContentState.Locked -> tokensListState.items
-                is WalletTokensListState.Empty -> listOf()
+                is WalletTokensListState.Empty -> emptyList()
             }
             val onEmptyAction = PortfolioItemContentUM.Empty.Action(
                 text = resourceReference(id = R.string.onboarding_add_tokens),
@@ -147,7 +146,7 @@ internal class TokenListStateConverter(
     private fun getOrganizeTokensButtonState(tokenList: TokenList): WalletOrganizeTokensButtonConfig? {
         val currenciesSize = when (tokenList) {
             TokenList.Empty -> return null
-            is TokenList.GroupedByNetwork -> tokenList.groups.flatMap(NetworkGroup::currencies).size
+            is TokenList.GroupedByNetwork -> tokenList.groups.sumOf { it.currencies.size }
             is TokenList.Ungrouped -> tokenList.currencies.size
         }
         return if (currenciesSize > 1 && !isSingleCurrencyWalletWithToken()) {

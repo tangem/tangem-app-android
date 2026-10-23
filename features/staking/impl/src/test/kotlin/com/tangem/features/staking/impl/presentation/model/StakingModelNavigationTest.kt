@@ -31,7 +31,7 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
     @Test
     fun `WHEN onBackClick THEN router pop and stateController clear called`() = runTest {
         every { stateController.value } returns initialUiState
-        every { appRouter.pop(any()) } just Runs
+        every { router.pop(any()) } just Runs
         every { stateController.clear() } just Runs
 
         val model = createModel(testScope = this)
@@ -39,7 +39,7 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
 
         model.onBackClick()
 
-        verify { appRouter.pop(any()) }
+        verify { router.pop(any()) }
         verify { stateController.clear() }
 
         model.onDestroy()
@@ -49,7 +49,7 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
     fun `GIVEN targets AND no yield balance WHEN onNextClick with balance THEN validators unavailable alert sent`() =
         runTest {
             every { messageSender.send(any()) } just Runs
-            every { testYield.allValidatorsFull } returns true
+            every { testYield.areAllValidatorsFull } returns true
 
             val model = createModel(testScope = this)
             advanceUntilIdle()
@@ -252,7 +252,7 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
         every { stateController.uiState } returns uiStateFlow
         every { stateController.value } returns initialUiState
         every { stateController.update(any<(StakingUiState) -> StakingUiState>()) } just Runs
-        every { appRouter.pop(any()) } just Runs
+        every { router.pop(any()) } just Runs
         every { stateController.clear() } just Runs
 
         val amountUiState = mockk<StakingUiState>(relaxed = true) {
@@ -357,7 +357,7 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
     @Test
     fun `GIVEN empty preferredTargets AND Exit action WHEN onAmountEnterClick THEN no alert sent`() = runTest {
         every { stateController.value } returns initialUiState
-        every { initialUiState.actionType } returns StakingActionCommonType.Exit(partiallyUnstakeDisabled = false)
+        every { initialUiState.actionType } returns StakingActionCommonType.Exit(isPartiallyUnstakeDisabled = false)
         every { testYield.preferredValidators } returns emptyList()
         every { messageSender.send(any()) } just Runs
 
@@ -377,7 +377,7 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
         runTest {
             every { stateController.value } returns initialUiState
             every { testYield.preferredValidators } returns listOf(mockk(relaxed = true))
-            every { initialUiState.actionType } returns StakingActionCommonType.Enter(skipEnterAmount = false)
+            every { initialUiState.actionType } returns StakingActionCommonType.Enter(shouldSkipEnterAmount = false)
             every { testYield.args.enter.isPartialAmountDisabled } returns true
 
             val model = createModel(testScope = this)

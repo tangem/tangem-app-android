@@ -11,6 +11,7 @@ import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.TangemPayCustomerInfoStore
 import com.tangem.data.pay.util.BankCredentialsConverter
 import com.tangem.data.pay.util.CustomerInfoConverter
+import com.tangem.data.pay.util.CustomerSummaryConverter
 import com.tangem.data.pay.util.AccountFeeConverter
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.DeeplinkValidityRequest
@@ -37,10 +38,12 @@ import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerOrderRequest
+import com.tangem.domain.pay.model.CustomerSummary
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -48,7 +51,7 @@ import javax.inject.Inject
 
 private const val VALID_STATUS = "valid"
 
-@Suppress("LongParameterList", "TooManyFunctions")
+@Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 internal class DefaultOnboardingRepository @Inject constructor(
     private val analytics: AnalyticsEventHandler,
     private val dispatcherProvider: CoroutineDispatcherProvider,
@@ -62,6 +65,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val txHistoryItemsStore: TangemPayTxHistoryItemsStore,
     private val cashbackSummaryStore: CashbackSummaryStore,
     private val customerInfoStore: TangemPayCustomerInfoStore,
+    private val derivationsRepository: DerivationsRepository,
 ) : OnboardingRepository {
 
     override suspend fun validateDeeplink(link: String): Either<VisaApiError, Boolean> {
@@ -85,14 +89,21 @@ internal class DefaultOnboardingRepository @Inject constructor(
     override suspend fun produceInitialData(userWalletId: UserWalletId) {
         withContext(dispatcherProvider.io) {
             val userWallet = getUserWallet(userWalletId)
-            val initialCredentials = authDataSource.produceInitialCredentials(userWallet)
+            val initialData = authDataSource.produceInitialData(userWallet)
                 .fold(
                     ifLeft = { error -> error("Can not produce initial data: ${error.message}") },
                     ifRight = { it },
                 )
             // should storeCheckCustomerWalletResult because we already know this
             tangemPayStorage.storeCheckCustomerWalletResult(userWallet.walletId, true)
-            storeInitialCredentials(userWalletId = userWallet.walletId, initialCredentials = initialCredentials)
+            storeInitialCredentials(
+                userWalletId = userWallet.walletId,
+                initialCredentials = initialData.initialCredentials,
+            )
+            derivationsRepository.storeDerivedKeys(
+                userWalletId = userWallet.walletId,
+                derivedKeys = initialData.moneyAccountDerivedKeys,
+            )
         }
     }
 
@@ -127,6 +138,15 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 }
                 getCustomerInfo(userWalletId = userWalletId, response = result).right()
             }
+    }
+
+    override suspend fun getCustomerSummary(userWalletId: UserWalletId): Either<VisaApiError, CustomerSummary> {
+        return requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.getCustomerSummary(authHeader = authHeader)
+        }.flatMap { response ->
+            val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
+            CustomerSummaryConverter.convert(result).right()
+        }
     }
 
     override suspend fun getBankCredentials(

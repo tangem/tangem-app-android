@@ -171,7 +171,7 @@ data class CardDTO(
             get() = StringBuilder()
                 .append("$major.$minor")
                 .append(if (patch != 0) ".$patch" else "")
-                .append(type.rawValue ?: "")
+                .append(type.rawValue.orEmpty())
                 .toString()
 
         val doubleValue: Double

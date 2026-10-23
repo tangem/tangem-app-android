@@ -2,7 +2,6 @@ package com.tangem.features.jointaccount.join.invitepreview.ui.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.account.AccountIconUM
-import com.tangem.features.jointaccount.join.confirmation.ui.state.JointAccountJoinConfirmationUM
 
 @Immutable
 internal sealed interface JointAccountInvitePreviewUM {
@@ -17,7 +16,7 @@ internal sealed interface JointAccountInvitePreviewUM {
         val creatorName: String,
         val creatorAddress: String,
         val wallet: WalletUM?,
-        val confirmation: JointAccountJoinConfirmationUM?,
+        val onRequiredApprovalsClick: () -> Unit,
         val onCreatorInfoClick: () -> Unit,
         val onContinueClick: () -> Unit,
         val onCloseClick: () -> Unit,

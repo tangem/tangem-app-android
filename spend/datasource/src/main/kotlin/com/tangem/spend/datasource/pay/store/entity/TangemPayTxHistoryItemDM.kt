@@ -67,7 +67,7 @@ internal sealed class TangemPayTxHistoryItemDM {
         @SerialName("date") override val date: SerializedDateTime,
         @SerialName("amount") override val amount: SerializedBigDecimal,
         @SerialName("currency") override val currency: SerializedCurrency,
-        @SerialName("transaction_hash") val transactionHash: String,
+        @SerialName("transaction_hash") val transactionHash: String?,
         @SerialName("type") val type: Type,
     ) : TangemPayTxHistoryItemDM()
 

@@ -22,9 +22,9 @@ internal class CaipNamespaceDelegate(
         val userWallet = sessionForApprove.wallet
         val result = mutableMapOf<String, Session>()
 
-        val requiredNamespaces = sessionProposal.requiredNamespaces.setOfChainId()
-        val optionalNamespaces = sessionProposal.optionalNamespaces.setOfChainId()
-        val allWcNetworks = (requiredNamespaces + optionalNamespaces)
+        val requiredChainIds = sessionProposal.requiredNamespaces.setOfChainId()
+        val optionalChainIds = sessionProposal.optionalNamespaces.setOfChainId()
+        val allWcNetworks = (requiredChainIds + optionalChainIds)
             .mapNotNull { chainId ->
                 val network = namespaceConverters
                     .firstNotNullOfOrNull { it.toNetwork(chainId, userWallet) }

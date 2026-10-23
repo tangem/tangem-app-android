@@ -2,21 +2,17 @@ package com.tangem.tap
 
 import androidx.hilt.work.HiltWorkerFactory
 import com.tangem.core.abtests.manager.ABTestsManager
-import com.tangem.core.analytics.filter.OneTimeEventFilter
-import com.tangem.core.analytics.paramsinterceptor.SendTransactionSignerInfoInterceptor
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.remote.config.managers.ApiConfigsManager
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
-import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.tap.common.analytics.AnalyticsHandlersInitializer
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
-import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
 import com.tangem.tap.common.log.TangemLoggingInitializer
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
@@ -27,19 +23,13 @@ import dagger.hilt.components.SingletonComponent
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 @Suppress("TooManyFunctions")
-interface ApplicationEntryPoint {
-
-    fun getEnvironmentConfig(): EnvironmentConfig
+internal interface ApplicationEntryPoint {
 
     fun getFeatureTogglesManager(): FeatureTogglesManager
 
     fun getExcludedBlockchainsManager(): ExcludedBlockchainsManager
 
     fun getGetAppThemeModeUseCase(): GetAppThemeModeUseCase
-
-    fun getWalletsRepository(): WalletsRepository
-
-    fun getOneTimeEventFilter(): OneTimeEventFilter
 
     fun getTangemLoggingInitializer(): TangemLoggingInitializer
 
@@ -53,19 +43,19 @@ interface ApplicationEntryPoint {
 
     fun getABTestsManager(): ABTestsManager
 
-    fun getAppsFlyerClientFactory(): AppsFlyerClient.Factory
-
-    fun getSendTransactionSignerInfoInterceptor(): SendTransactionSignerInfoInterceptor
-
     fun getDeviceKeyManager(): DeviceKeyManager
 
     fun getDeviceRegistrar(): DeviceRegistrar
-
-    fun getAuthFeatureToggles(): AuthFeatureToggles
 
     fun getWalletRegistrationLauncher(): WalletRegistrationLauncher
 
     fun getUserWalletsListRepository(): UserWalletsListRepository
 
     fun getOpenTelemetryMetricsHolder(): OpenTelemetryMetricsHolder
+
+    fun getAnalyticsEventHandler(): AnalyticsEventHandler
+
+    fun getAnalyticsHandlersInitializer(): AnalyticsHandlersInitializer
+
+    fun getForegroundActivityObserver(): ForegroundActivityObserver
 }

@@ -15,7 +15,7 @@ class PeriodicTask<T>(
     private val initialDelay: Long = 0L,
 ) {
 
-    private var isActive: AtomicBoolean = AtomicBoolean(false)
+    private val isActive: AtomicBoolean = AtomicBoolean(false)
 
     suspend fun runTaskWithDelay() {
         isActive.set(true)
@@ -30,17 +30,17 @@ class PeriodicTask<T>(
             // authority here.
             currentCoroutineContext().ensureActive()
             result
-                .onSuccess {
+                .onSuccess { value ->
                     if (!isActive.get()) {
                         return@onSuccess
                     }
-                    onSuccess.invoke(it)
+                    onSuccess.invoke(value)
                 }
-                .onFailure {
+                .onFailure { throwable ->
                     if (!isActive.get()) {
                         return@onFailure
                     }
-                    onError.invoke(it)
+                    onError.invoke(throwable)
                 }
             delay(delay)
         }

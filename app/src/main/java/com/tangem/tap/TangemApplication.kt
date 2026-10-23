@@ -11,32 +11,18 @@ import coil.ImageLoader
 import coil.ImageLoaderFactory
 import com.tangem.blockchain.common.ExceptionHandler
 import com.tangem.core.abtests.manager.ABTestsManager
-import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.TechAnalyticsEvent
 import com.tangem.core.ui.components.background.northernlights.NorthernLightsCrashGuard
 import com.tangem.core.ui.components.background.northernlights.NorthernLightsCrashGuardPreferences
-import com.tangem.core.analytics.filter.AppsFlyerEventFilter
-import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.remote.config.managers.ApiConfigsManager
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
-import com.tangem.domain.common.LogConfig
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.session.DeviceRegistrar
-import com.tangem.tap.common.analytics.AnalyticsFactory
-import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
-import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
-import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerAnalyticsHandler
-import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
-import com.tangem.tap.common.analytics.handlers.customerio.CustomerIoAnalyticsHandler
-import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
-import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLoggingInitializer
@@ -49,18 +35,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
-lateinit var walletsRepository: WalletsRepository
-
-val foregroundActivityObserver = ForegroundActivityObserver
-
 open class TangemApplication : Application(), ImageLoaderFactory, Configuration.Provider {
 
     // region DI
     private val entryPoint: ApplicationEntryPoint
         get() = EntryPoints.get(this, ApplicationEntryPoint::class.java)
-
-    private val environmentConfig: EnvironmentConfig
-        get() = entryPoint.getEnvironmentConfig()
 
     private val featureTogglesManager: FeatureTogglesManager
         get() = entryPoint.getFeatureTogglesManager()
@@ -70,9 +49,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
     val getAppThemeModeUseCase: GetAppThemeModeUseCase
         get() = entryPoint.getGetAppThemeModeUseCase()
-
-    private val oneTimeEventFilter: OneTimeEventFilter
-        get() = entryPoint.getOneTimeEventFilter()
 
     private val tangemLoggingInitializer: TangemLoggingInitializer
         get() = entryPoint.getTangemLoggingInitializer()
@@ -97,20 +73,11 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val abTestsManager: ABTestsManager
         get() = entryPoint.getABTestsManager()
 
-    private val appsFlyerClientFactory: AppsFlyerClient.Factory
-        get() = entryPoint.getAppsFlyerClientFactory()
-
-    private val sendTransactionSignerInfoInterceptor
-        get() = entryPoint.getSendTransactionSignerInfoInterceptor()
-
     private val deviceKeyManager: DeviceKeyManager
         get() = entryPoint.getDeviceKeyManager()
 
     private val deviceRegistrar: DeviceRegistrar
         get() = entryPoint.getDeviceRegistrar()
-
-    private val authFeatureToggles: AuthFeatureToggles
-        get() = entryPoint.getAuthFeatureToggles()
 
     private val walletRegistrationLauncher: WalletRegistrationLauncher
         get() = entryPoint.getWalletRegistrationLauncher()
@@ -120,6 +87,9 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
     private val openTelemetryMetricsHolder: OpenTelemetryMetricsHolder
         get() = entryPoint.getOpenTelemetryMetricsHolder()
+
+    private val analyticsEventHandler: AnalyticsEventHandler
+        get() = entryPoint.getAnalyticsEventHandler()
 
     // endregion
 
@@ -161,34 +131,30 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
             store = NorthernLightsCrashGuardPreferences(context = this),
             appVersion = BuildConfig.VERSION_CODE,
         )
-        registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
+        registerActivityLifecycleCallbacks(entryPoint.getForegroundActivityObserver().callbacks)
     }
 
     fun init() {
-        if (authFeatureToggles.isBackendAuthenticationEnabled) {
-            appScope.launch {
-                // Order matters: registration reads the device public key, so it must wait for
-                // generation to complete. Running them concurrently on first launch would race —
-                // register() would see `DeviceKeyUnavailable` and defer to the next app launch.
-                deviceKeyManager.generateIfMissing()
-                deviceRegistrar.register()
-                    .onLeft { error -> TangemLogger.w("Device registration deferred: $error") }
-                    .onRight {
-                        // Safety net: register any MOBILE wallets that missed it (created before the
-                        // toggle was on, or after a transient failure). Requires the DPoP session from
-                        // device registration, so it runs only once that succeeded. Best-effort —
-                        // loading the wallet list (userWalletsSync) can throw, which must not crash
-                        // startup, so the whole retry is guarded.
-                        runSuspendCatching {
-                            walletRegistrationLauncher.retryMobileRegistrations(
-                                userWalletsListRepository.userWalletsSync(),
-                            )
-                        }.onFailure { error -> TangemLogger.e("Mobile wallet registration retry failed", error) }
-                    }
-            }
+        appScope.launch {
+            // Order matters: registration reads the device public key, so it must wait for
+            // generation to complete. Running them concurrently on first launch would race —
+            // register() would see `DeviceKeyUnavailable` and defer to the next app launch.
+            deviceKeyManager.generateIfMissing()
+            deviceRegistrar.register()
+                .onLeft { error -> TangemLogger.w("Device registration deferred: $error") }
+                .onRight {
+                    // Safety net: register any MOBILE wallets that missed it (created on an older app
+                    // version, or after a transient failure). Requires the DPoP session from device
+                    // registration, so it runs only once that succeeded. Best-effort — loading the
+                    // wallet list (userWalletsSync) can throw, which must not crash startup, so the
+                    // whole retry is guarded.
+                    runSuspendCatching {
+                        walletRegistrationLauncher.retryMobileRegistrations(
+                            userWalletsListRepository.userWalletsSync(),
+                        )
+                    }.onFailure { error -> TangemLogger.e("Mobile wallet registration retry failed", error) }
+                }
         }
-        walletsRepository = entryPoint.getWalletsRepository()
-
         apiConfigsManager.initialize()
 
         TangemLogger.i("APP STARTED")
@@ -197,7 +163,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
             TangemLogger.i(excludedBlockchainsManager.toString())
         }
 
-        initAnalytics(application = this, environmentConfig = environmentConfig)
+        initAnalyticsHandlers()
 
         reportShaderCrashIfDetected()
 
@@ -227,7 +193,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private fun reportShaderCrashIfDetected() {
         if (!NorthernLightsCrashGuard.hasDetectedCrash) return
 
-        Analytics.send(
+        analyticsEventHandler.send(
             TechAnalyticsEvent.ShaderCrashDetected(
                 model = Build.MODEL,
                 manufacturer = Build.MANUFACTURER,
@@ -238,28 +204,8 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         )
     }
 
-    private fun initAnalytics(application: Application, environmentConfig: EnvironmentConfig) {
-        val factory = AnalyticsFactory()
-        factory.addHandlerBuilder(AmplitudeAnalyticsHandler.Builder())
-        factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
-        factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder(appsFlyerClientFactory))
-
-        factory.addHandlerBuilder(CustomerIoAnalyticsHandler.Builder())
-        factory.addHandlerBuilder(OpenTelemetryAnalyticsHandler.Builder(openTelemetryMetricsHolder))
-
-        factory.addFilter(oneTimeEventFilter)
-        factory.addFilter(AppsFlyerEventFilter())
-
-        val buildData = AnalyticsHandlerBuilder.Data(
-            application = application,
-            config = environmentConfig,
-            isDebug = BuildConfig.DEBUG,
-            logConfig = LogConfig.analyticsHandlers,
-        )
-
-        Analytics.addParamsInterceptor(interceptor = sendTransactionSignerInfoInterceptor)
-
-        factory.build(Analytics, buildData)
+    private fun initAnalyticsHandlers() {
+        entryPoint.getAnalyticsHandlersInitializer().initialize()
     }
 
     private fun initOpenTelemetry() {

@@ -73,6 +73,10 @@ internal object BlockAidMapper {
         )
     }
 
+    private fun TransactionData.toMetadata(): TransactionMetadata {
+        return domainUrl?.let { TransactionMetadata(domain = it) } ?: TransactionMetadata(isNonDapp = true)
+    }
+
     fun mapToEvmRequest(from: TransactionData): EvmTransactionScanRequest {
         return EvmTransactionScanRequest(
             chain = from.chain.lowercase(),
@@ -82,7 +86,7 @@ internal object BlockAidMapper {
                 method = from.method,
                 params = parseParams((from.params as TransactionParams.Evm).params),
             ),
-            metadata = TransactionMetadata(from.domainUrl),
+            metadata = from.toMetadata(),
         )
     }
 
@@ -113,7 +117,7 @@ internal object BlockAidMapper {
         return SolanaTransactionScanRequest(
             blockchain = from.chain.lowercase(),
             accountAddress = from.accountAddress,
-            metadata = TransactionMetadata(from.domainUrl),
+            metadata = from.toMetadata(),
             method = from.method,
             transactions = (from.params as TransactionParams.Solana).transactions,
         )

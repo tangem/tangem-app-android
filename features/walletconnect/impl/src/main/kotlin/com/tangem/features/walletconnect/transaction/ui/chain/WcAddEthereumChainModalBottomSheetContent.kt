@@ -150,7 +150,12 @@ private fun WcAddEthereumChainBottomSheetPreview(
                 )
             },
             content = {
-                WcAddEthereumChainModalBottomSheetContent(state, {}, {}, {})
+                WcAddEthereumChainModalBottomSheetContent(
+                    state = state,
+                    onClickTransactionRequest = {},
+                    onBack = {},
+                    onDismiss = {},
+                )
             },
         )
     }

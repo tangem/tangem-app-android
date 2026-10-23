@@ -85,8 +85,8 @@ internal fun TwinWalletArtworks(state: TwinWalletArtworkUM, modifier: Modifier =
                 density = density,
                 maxHeightDp = maxHeight.value,
             )
-            animationSetState.fastForEach {
-                animationState = it
+            animationSetState.fastForEach { animationStep ->
+                animationState = animationStep
                 val maxTime = maxOf(
                     transition1.totalDurationNanos,
                     transition2.totalDurationNanos,

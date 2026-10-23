@@ -26,6 +26,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.TangemTextFieldsDefault
@@ -107,8 +108,8 @@ private fun CollapsedSearchView(
             painter = painterResource(R.drawable.ic_close_24),
             contentDescription = null,
             modifier = Modifier
-                .padding(TangemTheme.dimens.spacing16)
-                .size(TangemTheme.dimens.size24)
+                .padding(16.dp)
+                .size(24.dp)
                 .clickable { onBackClick() },
             tint = TangemTheme.colors.icon.primary1,
         )
@@ -122,7 +123,7 @@ private fun CollapsedSearchView(
                     color = TangemTheme.colors.text.primary1,
                     maxLines = 1,
                     style = TangemTheme.typography.subtitle1,
-                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size24),
+                    modifier = Modifier.defaultMinSize(minHeight = 24.dp),
                 )
             }
             if (subtitle != null) {
@@ -137,7 +138,7 @@ private fun CollapsedSearchView(
             contentDescription = null,
             modifier = Modifier
                 .clickable { onExpandedChange(true) }
-                .padding(end = TangemTheme.dimens.spacing16)
+                .padding(end = 16.dp)
                 .testTag(AppBarWithSearchTestTags.SEARCH_ICON),
         )
     }
@@ -146,14 +147,14 @@ private fun CollapsedSearchView(
 @Composable
 private fun SubtitleView(subtitle: String, icon: Painter?) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         icon?.let { icon ->
             Image(
                 painter = icon,
                 contentDescription = null,
-                modifier = Modifier.size(TangemTheme.dimens.size16),
+                modifier = Modifier.size(16.dp),
             )
         }
         Text(

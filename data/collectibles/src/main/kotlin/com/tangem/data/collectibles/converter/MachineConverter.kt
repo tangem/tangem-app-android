@@ -24,6 +24,13 @@ internal object MachineConverter : Converter<MachineDTO, CollectibleGachaMachine
         expectedValue = value.expectedValue.movePointLeft(CENTS_SCALE),
         imageUrl = value.image,
         categoryId = value.categoryId,
+        revealAssets = value.openPackMedia?.toDomain(),
+    )
+
+    private fun MachineDTO.OpenPackMediaDTO.toDomain() = CollectibleGachaMachine.RevealAssets(
+        lightVideoUrl = videoLight,
+        darkVideoUrl = videoDark,
+        skipAudioUrl = skipAnimationAudio,
     )
 
     private fun MachineDTO.MachineOddsDTO.toDomain() = CollectibleGachaMachine.Odds(

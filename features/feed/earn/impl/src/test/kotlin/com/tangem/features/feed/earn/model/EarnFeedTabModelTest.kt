@@ -3,8 +3,8 @@ package com.tangem.features.feed.earn.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.earn.model.*
 import com.tangem.domain.earn.usecase.*
@@ -47,7 +47,7 @@ internal class EarnFeedTabModelTest {
     private val fetchTopEarnTokensUseCase: FetchTopEarnTokensUseCase = mockk()
     private val getEarnFilterUseCase: GetEarnFilterUseCase = mockk()
     private val setEarnFilterUseCase: SetEarnFilterUseCase = mockk()
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory = mockk(relaxed = true)
 
@@ -372,7 +372,7 @@ internal class EarnFeedTabModelTest {
             fetchTopEarnTokensUseCase = fetchTopEarnTokensUseCase,
             getEarnFilterUseCase = getEarnFilterUseCase,
             setEarnFilterUseCase = setEarnFilterUseCase,
-            appRouter = appRouter,
+            router = router,
             stateController = EarnStateController(),
             analyticsEventHandler = analyticsEventHandler,
             addToPortfolioManagerFactory = addToPortfolioManagerFactory,
@@ -410,7 +410,7 @@ internal class EarnFeedTabModelTest {
             ),
         ),
         status = PaginationStatus.Paginating(
-            lastResult = BatchFetchResult.Success(data = emptyList<Nothing>(), empty = false, last = false),
+            lastResult = BatchFetchResult.Success(data = emptyList<Nothing>(), isEmpty = false, isLast = false),
         ),
     )
 

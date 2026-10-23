@@ -79,7 +79,7 @@ internal class WcSignUseCaseDelegateTest {
                     redirect = "",
                 ),
             ),
-            showWalletInfo = false,
+            shouldShowWalletInfo = false,
         ),
     )
 

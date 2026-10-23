@@ -8,6 +8,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -75,15 +79,10 @@ private fun AgentCard(agent: McpAgentUM, modifier: Modifier = Modifier) {
 
 @Composable
 private fun AgentAvatar(iconUrl: String?, modifier: Modifier = Modifier) {
-    if (iconUrl == null) {
-        TangemAvatar(
-            modifier = modifier,
-            state = TangemAvatar.UiState.Icon(
-                imageVector = Icons.ic_grid_plus_20,
-                appearance = TangemAvatar.Appearance.Neutral,
-            ),
-            size = TangemAvatar.Size.X40,
-        )
+    var hasIconFailed by remember(iconUrl) { mutableStateOf(false) }
+
+    if (iconUrl == null || hasIconFailed) {
+        AgentAvatarPlaceholder(modifier)
     } else {
         AsyncImage(
             modifier = modifier
@@ -91,8 +90,21 @@ private fun AgentAvatar(iconUrl: String?, modifier: Modifier = Modifier) {
                 .clip(RoundedCornerShape(12.dp)),
             model = iconUrl,
             contentDescription = null,
+            onError = { hasIconFailed = true },
         )
     }
+}
+
+@Composable
+private fun AgentAvatarPlaceholder(modifier: Modifier = Modifier) {
+    TangemAvatar(
+        modifier = modifier,
+        state = TangemAvatar.UiState.Icon(
+            imageVector = Icons.ic_grid_plus_20,
+            appearance = TangemAvatar.Appearance.Neutral,
+        ),
+        size = TangemAvatar.Size.X40,
+    )
 }
 
 @Composable

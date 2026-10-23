@@ -197,6 +197,25 @@ internal class SwapInteractorImplApprovalInProgressTest : SwapInteractorImplTest
         coVerify(exactly = 0) { allowPermissionsHandler.removeAddressFromProgress(any()) }
     }
 
+    @Test
+    fun `GIVEN Tron token lacking allowance and gasless on WHEN findBestQuote THEN separate approval required`() =
+        runTest {
+            // Arrange
+            inProgress = false
+            every { swapFeatureToggles.isTronGaslessDexSwapEnabled } returns true
+            stubAllowance(AllowanceInfo.NotEnough(allowance = BigDecimal.ZERO, requiredAmount = BigDecimal("8")))
+            val provider = stubTronDexQuote()
+
+            // Act
+            val result = invokeTronTokenQuote(provider, amountToSwap = "8")
+
+            // Assert
+            val loaded = result[provider] as SwapState.QuotesLoadedState
+            assertThat(loaded.permissionState).isEqualTo(
+                PermissionDataState.PermissionRequired(isResetApproval = false, spenderAddress = spender),
+            )
+        }
+
     // region — stubs & helpers
 
     private fun stubAllowance(info: AllowanceInfo) {

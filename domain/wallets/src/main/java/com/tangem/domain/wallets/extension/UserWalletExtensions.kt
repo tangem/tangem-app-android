@@ -22,7 +22,8 @@ fun UserWallet.hasDerivation(blockchain: Blockchain, derivationPath: String): Bo
                 listOf(DerivationPath(derivationPath))
             }
             list.all { dp ->
-                wallets.orEmpty().first { it.curve == primaryCurve }.derivedKeys.keys.any { it == dp }
+                val primaryWallet = wallets.orEmpty().first { it.curve == primaryCurve }
+                primaryWallet.derivedKeys.keys.any { it == dp }
             }
         }
     }

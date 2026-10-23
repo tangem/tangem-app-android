@@ -15,10 +15,12 @@ import com.tangem.datasource.api.common.response.fold
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.backup.WalletCardsBackupDeliveryScheduler
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.models.errors.WalletCardsBackupError
 import com.tangem.domain.wallets.repository.WalletCardsBackupRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -28,6 +30,7 @@ import java.util.UUID
 internal class DefaultWalletCardsBackupRepository(
     private val tangemTechApi: TangemTechApi,
     private val pendingStore: PendingWalletCardsBackupStore,
+    private val deliveryScheduler: WalletCardsBackupDeliveryScheduler,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletCardsBackupRepository {
 
@@ -52,9 +55,12 @@ internal class DefaultWalletCardsBackupRepository(
 
         // queued before the request leaves, so a report is never lost to a dead network or a killed process,
         // and sent by the same drain as everything else so an earlier report still waiting goes out first
-        pendingStore.enqueue(pending)
+        runSuspendCatching { pendingStore.enqueue(pending) }.getOrElse { error ->
+            TangemLogger.e("Unable to queue cards backup report wallet=$userWalletId", error)
+            return@withContext WalletCardsBackupError.Unexpected(cause = error).left()
+        }
 
-        drain()
+        drain().onLeft { deliveryScheduler.schedule() }
     }
 
     override suspend fun sendPendingWalletCards(): Either<WalletCardsBackupError, Unit> =
@@ -83,12 +89,19 @@ internal class DefaultWalletCardsBackupRepository(
      * progressed in, so a report still waiting is never overtaken by a newer one.
      */
     private suspend fun drain(): Either<WalletCardsBackupError, Unit> = sendMutex.withLock {
+        runSuspendCatching { drainQueue() }.getOrElse { error ->
+            TangemLogger.e("Pending cards backup queue is unavailable", error)
+            WalletCardsBackupError.Unexpected(cause = error).left()
+        }
+    }
+
+    private suspend fun drainQueue(): Either<WalletCardsBackupError, Unit> {
         for (pending in pendingStore.getAll()) {
             when (val result = send(pending)) {
                 SendResult.Delivered -> Unit
                 // whatever stopped this one will stop the rest: leave them queued, in order, for the next
                 // attempt rather than hammering a backend that is down
-                is SendResult.Deferred -> return@withLock result.error.left()
+                is SendResult.Deferred -> return result.error.left()
                 is SendResult.Rejected -> {
                     TangemLogger.e("Dropping rejected cards backup report wallet=${pending.walletId}: $result")
                     pendingStore.remove(pending.id)
@@ -96,7 +109,7 @@ internal class DefaultWalletCardsBackupRepository(
             }
         }
 
-        Unit.right()
+        return Unit.right()
     }
 
     private suspend fun send(pending: PendingWalletCardsBackup): SendResult {

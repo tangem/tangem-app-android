@@ -43,6 +43,7 @@ fun TangemCurrencyIcon(state: CurrencyIconState, modifier: Modifier = Modifier, 
             is CurrencyIconState.TokenIcon,
             is CurrencyIconState.PaymentAccount,
             is CurrencyIconState.PredictionAccount,
+            is CurrencyIconState.CollectiblesAccount,
             is CurrencyIconState.CryptoPortfolio.Icon,
             is CurrencyIconState.CryptoPortfolio.Letter,
             -> {
@@ -100,6 +101,7 @@ fun CurrencyIcon(
             is CurrencyIconState.TokenIcon,
             is CurrencyIconState.PaymentAccount,
             is CurrencyIconState.PredictionAccount,
+            is CurrencyIconState.CollectiblesAccount,
             is CurrencyIconState.CryptoPortfolio.Icon,
             is CurrencyIconState.CryptoPortfolio.Letter,
             -> {
@@ -162,7 +164,7 @@ private fun BoxScope.ContentIconContainer(
     modifier: Modifier = Modifier,
     iconSize: Dp = 36.dp,
 ) {
-    val networkBadgeOffset = TangemTheme.dimens.spacing4
+    val networkBadgeOffset = 4.dp
     val (alpha, colorFilter) = remember(icon.isGrayscale) {
         getGreyScaleColorFilter(icon.isGrayscale)
     }

@@ -76,7 +76,7 @@ internal class MockAwareTangemPayTxHistoryRepository @Inject constructor(
         batchSize = batchSize,
         subFetcher = { _, _, _ ->
             val items = mockItems()
-            BatchFetchResult.Success(data = items, last = true, empty = items.isEmpty())
+            BatchFetchResult.Success(data = items, isLast = true, isEmpty = items.isEmpty())
         },
         cursorFromItem = { it.id },
     )

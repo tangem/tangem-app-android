@@ -1,9 +1,9 @@
 package com.tangem.features.yield.supply.impl.main.model
 
 import arrow.core.getOrElse
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -35,10 +35,12 @@ import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
+import com.tangem.features.yield.supply.impl.common.formatter.formatApy
 import com.tangem.common.ui.earn.EarnBlockUM
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.features.yield.supply.impl.main.model.converter.YieldSupplyToEarnBlockConverter
 import com.tangem.features.yield.supply.impl.main.model.transformers.YieldSupplyTokenStatusSuccessTransformer
+import com.tangem.utils.StringsSigns
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
@@ -53,7 +55,7 @@ internal class YieldSupplyModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventsHandler: AnalyticsEventHandler,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
@@ -187,7 +189,7 @@ internal class YieldSupplyModel @Inject constructor(
     }
 
     override fun onLearnMoreClick() {
-        appRouter.push(
+        router.push(
             AppRoute.Stories(
                 storyId = StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id,
                 nextScreen = buildYieldEntryRoute(),
@@ -199,7 +201,7 @@ internal class YieldSupplyModel @Inject constructor(
 
     private fun navigateToYieldSupplyEntry() {
         val route = buildYieldEntryRoute() ?: return
-        appRouter.push(route)
+        router.push(route)
     }
 
     private fun buildYieldEntryRoute(): AppRoute.YieldSupplyEntry? {
@@ -288,7 +290,8 @@ internal class YieldSupplyModel @Inject constructor(
                             resourceReference(
                                 R.string.yield_module_token_details_earn_notification_apy,
                             ),
-                            stringReference(" ${tokenStatus.effectiveApy}%"),
+                            stringReference(StringsSigns.WHITE_SPACE),
+                            tokenStatus.effectiveApy.formatApy(),
                         ),
                         onClick = ::onActiveClick,
                         shouldShowWarningIcon = shouldShowWarningIcon,

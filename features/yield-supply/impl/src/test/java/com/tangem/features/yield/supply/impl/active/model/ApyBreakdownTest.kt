@@ -26,15 +26,15 @@ internal class ApyBreakdownTest {
 
     private fun provideTestModels() = listOf(
         BreakdownModel(
-            market = market(campaign = campaign(rewardsApr = BigDecimal("1.40"))),
-            expected = ApyBreakdown(baseApy = BigDecimal("3.09"), rewardsApr = BigDecimal("1.40")),
+            market = market(campaign = campaign(rewardsApy = BigDecimal("1.40"))),
+            expected = ApyBreakdown(baseApy = BigDecimal("3.09"), rewardsApy = BigDecimal("1.40")),
         ),
         BreakdownModel(
-            market = market(campaign = campaign(hasActiveCampaign = false, rewardsApr = BigDecimal("1.40"))),
+            market = market(campaign = campaign(hasActiveCampaign = false, rewardsApy = BigDecimal("1.40"))),
             expected = null,
         ),
         BreakdownModel(
-            market = market(campaign = campaign(rewardsApr = BigDecimal.ZERO)),
+            market = market(campaign = campaign(rewardsApy = BigDecimal.ZERO)),
             expected = null,
         ),
         BreakdownModel(market = market(campaign = null), expected = null),

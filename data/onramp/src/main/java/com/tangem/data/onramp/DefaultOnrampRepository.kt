@@ -47,10 +47,8 @@ import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.onramp.model.error.OnrampPairsError
 import com.tangem.domain.onramp.model.error.OnrampRedirectError
-import com.tangem.domain.onramp.repositories.OnrampFeatureToggles
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.tokens.model.Amount
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -81,15 +79,13 @@ internal class DefaultOnrampRepository(
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val expressHistoryDao: ExpressHistoryDao,
     private val expressHistoryRepository: ExpressHistoryRepository,
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
-    private val onrampFeatureToggles: OnrampFeatureToggles,
     moshi: Moshi,
 ) : OnrampRepository {
 
     private val currencyConverter = CurrencyConverter()
     private val countryConverter = CountryConverter(currencyConverter)
     private val statusConverter = StatusConverter(moshi)
-    private val paymentMethodsConverter = PaymentMethodConverter(onrampFeatureToggles = onrampFeatureToggles)
+    private val paymentMethodsConverter = PaymentMethodConverter()
     private val onrampDataAdapter = moshi.adapter(OnrampDataJson::class.java)
     private val onrampErrorAdapter = moshi.adapter(ExpressErrorResponse::class.java)
     private val onrampErrorConverter = OnrampErrorConverter(onrampErrorAdapter)
@@ -105,9 +101,7 @@ internal class DefaultOnrampRepository(
         )
             .getOrThrow()
 
-        if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
-            expressHistoryDao.upsertCurrencies(response.map { it.toEntity() })
-        }
+        expressHistoryDao.upsertCurrencies(response.map { it.toEntity() })
 
         val result = response.map(currencyConverter::convert)
         currenciesStore.store(CURRENCIES_KEY, result)
@@ -165,9 +159,7 @@ internal class DefaultOnrampRepository(
         )
             .getOrThrow()
 
-        if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
-            expressHistoryRepository.storeOnramps(items = listOf(response))
-        }
+        expressHistoryRepository.storeOnramps(items = listOf(response))
 
         statusConverter.convert(response)
     }
@@ -323,8 +315,7 @@ internal class DefaultOnrampRepository(
                                         paymentMethod = paymentMethod,
                                         provider = provider,
                                         countryCode = response.countryCode,
-                                        isRestricted = response.isRestricted &&
-                                            onrampFeatureToggles.isExpressCategoriesGeoBlockingEnabled,
+                                        isRestricted = response.isRestricted,
                                     )
                                 },
                                 onError = { error ->

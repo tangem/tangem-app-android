@@ -27,18 +27,22 @@ internal class DefaultPolymarketBridgeRepository @Inject constructor(
 
     override suspend fun getSupportedAssets(): Either<PolymarketBridgeError, List<PolymarketBridgeAsset>> =
         withContext(dispatchers.io) {
-            assetsStore.getSyncOrNull()?.let { return@withContext it.right() }
-
-            safeApiCall(
-                call = {
-                    bridgeApi.getSupportedAssets().bind().supportedAssets
-                        .map(::toAsset)
-                        .also { assetsStore.store(it) }
-                        .right()
-                },
-                onError = { PolymarketBridgeError.Network.left() },
-            )
+            assetsStore.getSyncOrNull()?.right() ?: fetchSupportedAssets()
         }
+
+    override suspend fun refreshSupportedAssets(): Either<PolymarketBridgeError, List<PolymarketBridgeAsset>> =
+        withContext(dispatchers.io) { fetchSupportedAssets() }
+
+    private suspend fun fetchSupportedAssets(): Either<PolymarketBridgeError, List<PolymarketBridgeAsset>> =
+        safeApiCall(
+            call = {
+                bridgeApi.getSupportedAssets().bind().supportedAssets
+                    .map(::toAsset)
+                    .also { assetsStore.store(it) }
+                    .right()
+            },
+            onError = { PolymarketBridgeError.Network.left() },
+        )
 
     private fun toAsset(dto: PolymarketSupportedAssetDto) = PolymarketBridgeAsset(
         chainId = dto.chainId,

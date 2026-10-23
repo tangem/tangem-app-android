@@ -46,6 +46,10 @@ interface ExpressHistoryDao {
      *
 
      * loading the whole table; [activeStatuses] keeps in-progress deals visible even outside the window.
+     *
+     * [excludedStatus] is a status to leave out entirely — an expired quote request, which is no operation of the
+     * user's and only stands between them and their real transactions. `null` keeps every status, so each call site
+     * decides whether it wants the whole table.
      */
     @Query(
         """
@@ -54,6 +58,7 @@ interface ExpressHistoryDao {
           AND from_network = :network
           AND from_contract_address = :contract
           AND (created_at >= :fromCreatedAtIso OR status IN (:activeStatuses))
+          AND (:excludedStatus IS NULL OR status != :excludedStatus)
         ORDER BY created_at DESC
         """,
     )
@@ -63,11 +68,14 @@ interface ExpressHistoryDao {
         contract: String,
         fromCreatedAtIso: String,
         activeStatuses: List<String>,
+        excludedStatus: String? = null,
     ): Flow<List<ExpressExchangeEntity>>
 
     /**
      * Incoming swaps: the viewed currency is the swap's `to` side, so the row is looked up by its `payout_address`
      * (where the target assets landed = one of this currency's addresses). Join to on-chain by `payout_hash`.
+     *
+     * [excludedStatus] leaves the same deals out as on the from-token screen — see [observeOutgoingSwaps].
      */
     @Query(
         """
@@ -76,6 +84,7 @@ interface ExpressHistoryDao {
           AND to_network = :network
           AND to_contract_address = :contract
           AND (created_at >= :fromCreatedAtIso OR status IN (:activeStatuses))
+          AND (:excludedStatus IS NULL OR status != :excludedStatus)
         ORDER BY created_at DESC
         """,
     )
@@ -85,10 +94,13 @@ interface ExpressHistoryDao {
         contract: String,
         fromCreatedAtIso: String,
         activeStatuses: List<String>,
+        excludedStatus: String? = null,
     ): Flow<List<ExpressExchangeEntity>>
 
     /**
      * Onramp is always incoming, looked up by its `payout_address`. Join by `payout_hash`.
+     *
+     * [excludedStatus] leaves the same deals out as for swaps — see [observeOutgoingSwaps].
      */
     @Query(
         """
@@ -97,6 +109,7 @@ interface ExpressHistoryDao {
           AND to_network = :network
           AND to_contract_address = :contract
           AND (created_at >= :fromCreatedAtIso OR status IN (:activeStatuses))
+          AND (:excludedStatus IS NULL OR status != :excludedStatus)
         ORDER BY created_at DESC
         """,
     )
@@ -106,6 +119,7 @@ interface ExpressHistoryDao {
         contract: String,
         fromCreatedAtIso: String,
         activeStatuses: List<String>,
+        excludedStatus: String? = null,
     ): Flow<List<ExpressOnrampEntity>>
 
     /** Swap row for [txId], regardless of address/window; `null` if [txId] is not a swap. */

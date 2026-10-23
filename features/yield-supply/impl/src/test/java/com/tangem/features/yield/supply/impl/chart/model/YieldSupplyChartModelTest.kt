@@ -190,7 +190,7 @@ internal class YieldSupplyChartModelTest {
                 YieldAprHistory(
                     chainId = CHAIN_ID,
                     tokenAddress = TOKEN_ADDRESS,
-                    points = listOf(point(totalApyEst = "6.0", baseApy = "4.0", rewardsApr = "1.0")),
+                    points = listOf(point(totalApyEst = "6.0", baseApy = "4.0", rewardsApy = "1.0")),
                 ).right()
 
             // Act
@@ -211,7 +211,7 @@ internal class YieldSupplyChartModelTest {
             YieldAprHistory(
                 chainId = CHAIN_ID,
                 tokenAddress = TOKEN_ADDRESS,
-                points = listOf(point(totalApyEst = "3.5", baseApy = "4.0", rewardsApr = "1.0")),
+                points = listOf(point(totalApyEst = "3.5", baseApy = "4.0", rewardsApy = "1.0")),
             ).right()
 
         // Act
@@ -378,14 +378,14 @@ internal class YieldSupplyChartModelTest {
         isCarriedForward: Boolean = false,
         date: LocalDate = SEPTEMBER_FIRST,
         baseApy: String? = null,
-        rewardsApr: String = REWARDS_APR.toPlainString(),
+        rewardsApy: String = REWARDS_APY.toPlainString(),
     ): YieldAprHistory.Point {
         val total = BigDecimal(totalApyEst)
 
         return YieldAprHistory.Point(
             date = date,
-            baseApy = baseApy?.let(::BigDecimal) ?: (total - REWARDS_APR),
-            rewardsApr = BigDecimal(rewardsApr),
+            baseApy = baseApy?.let(::BigDecimal) ?: (total - REWARDS_APY),
+            rewardsApy = BigDecimal(rewardsApy),
             totalApyEst = total,
             isCarriedForward = isCarriedForward,
         )
@@ -618,7 +618,7 @@ internal class YieldSupplyChartModelTest {
         const val MONTH_LABELS_COUNT = 5
         const val CHAIN_ID = 1
         const val TOKEN_ADDRESS = "0xToken"
-        val REWARDS_APR: BigDecimal = BigDecimal("1.5")
+        val REWARDS_APY: BigDecimal = BigDecimal("1.5")
         val SEPTEMBER_FIRST = LocalDate(year = 2026, monthNumber = 9, dayOfMonth = 1)
         val DAY = DateTimeUnit.DAY
     }

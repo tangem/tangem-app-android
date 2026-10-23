@@ -17,8 +17,8 @@ data class P2PEthPoolStaking(
 ) {
 
     data class Status(
-        val enter: Boolean, // Can deposit
-        val exit: Boolean, // Can unstake/withdraw
+        val canEnter: Boolean, // Can deposit
+        val canExit: Boolean, // Can unstake/withdraw
     )
 
     data class Metadata(
@@ -40,7 +40,7 @@ data class P2PEthPoolStaking(
         )
 
         data class Fee(
-            val enabled: Boolean,
+            val isEnabled: Boolean,
             val percent: SerializedBigDecimal?,
         )
 

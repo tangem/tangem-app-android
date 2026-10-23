@@ -70,13 +70,13 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
         modelScope.launch {
             while (true) {
                 val result = visaActivationRepository.getActivationRemoteState()
-                    .getOrElse {
-                        if (it.isUnknown()) {
+                    .getOrElse { error ->
+                        if (error.isUnknown()) {
                             uiMessageSender.send(unexpectedErrorAlertBS)
                         } else {
-                            uiMessageSender.showErrorDialog(it)
+                            uiMessageSender.showErrorDialog(error)
                         }
-                        analyticsEventHandler.send(VisaAnalyticsEvent.ErrorOnboarding(it))
+                        analyticsEventHandler.send(VisaAnalyticsEvent.ErrorOnboarding(error))
                         delay(timeMillis = 2000)
                         runShortPolling()
                         return@launch
@@ -143,7 +143,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
                     Params.DoneEvent.NavigateTo(
                         OnboardingVisaRoute.PinCode(
                             activationOrderInfo = remoteState.activationOrderInfo,
-                            pinCodeValidationError = false,
+                            hasPinCodeValidationError = false,
                         ),
                     ),
                 )
@@ -154,7 +154,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
                     Params.DoneEvent.NavigateTo(
                         OnboardingVisaRoute.PinCode(
                             activationOrderInfo = remoteState.activationOrderInfo,
-                            pinCodeValidationError = true,
+                            hasPinCodeValidationError = true,
                         ),
                     ),
                 )
@@ -168,8 +168,8 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
             ?: error("Auth tokens are not found. This should not happen.")
 
         val newTokens = visaAuthRemoteDataSource.exchangeAccessToken(authTokens)
-            .getOrElse {
-                uiMessageSender.showErrorDialog(it)
+            .getOrElse { error ->
+                uiMessageSender.showErrorDialog(error)
                 return
             }
 

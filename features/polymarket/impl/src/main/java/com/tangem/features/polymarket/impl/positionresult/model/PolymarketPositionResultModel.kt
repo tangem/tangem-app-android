@@ -66,7 +66,9 @@ internal class PolymarketPositionResultModel @Inject constructor(
                     ownerAddress = addresses.ownerAddress,
                     depositWalletAddress = addresses.depositWalletAddress,
                     conditionId = params.position.id.conditionId,
+                    assetId = params.position.id.assetId,
                     isNegRisk = params.position.isNegRisk,
+                    version = params.position.version,
                 ),
             ).fold(
                 ifLeft = { failure ->
@@ -109,9 +111,18 @@ internal class PolymarketPositionResultModel @Inject constructor(
                     else -> showError(R.string.prediction_claim_error_generic)
                 }
             }
+            is PredictionClaimFailure.NothingToRedeem -> {
+                TangemLogger.i(
+                    "The backend has nothing to redeem for the position, hiding the claim: ${failure.detail}",
+                )
+                positionsUpdateEmitter.triggerUpdate(params.userWalletId)
+                uiState.update { it.copy(action = PolymarketPositionResultUM.Action.Dismiss) }
+            }
             PredictionClaimFailure.CallUnavailable,
             PredictionClaimFailure.NonceUnavailable,
             PredictionClaimFailure.Expired,
+            is PredictionClaimFailure.VersionUnavailable,
+            is PredictionClaimFailure.CallRejected,
             -> {
                 TangemLogger.e("The claim was never prepared: $failure")
                 showError(R.string.prediction_claim_error_generic)

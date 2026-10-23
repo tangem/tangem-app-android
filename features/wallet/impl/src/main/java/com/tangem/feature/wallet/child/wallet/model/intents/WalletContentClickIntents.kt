@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 
 import androidx.compose.ui.geometry.Offset
 import arrow.core.getOrElse
+import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -78,6 +79,8 @@ internal interface WalletContentClickIntents {
 
     fun onJointAccountClick(userWalletId: UserWalletId, cryptoAccountId: String)
 
+    fun onCompromisedJointAccountClick(userWalletId: UserWalletId)
+
     fun onJointOperationBannerClick(userWalletId: UserWalletId, currency: CryptoCurrency, operationId: String)
 
     fun onManageTokensClick(userWalletId: UserWalletId)
@@ -117,6 +120,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val yieldSupplySetShouldShowMainPromoUseCase: YieldSupplySetShouldShowMainPromoUseCase,
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
     private val uiMessageSender: UiMessageSender,
+    private val jointAccountCompromisedAlert: JointAccountCompromisedAlert,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
 
     override fun onDetailsClick() {
@@ -130,7 +134,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     override fun onDismissMarketsTooltip() {
-        stateHolder.update { it.copy(showMarketsOnboarding = false) }
+        stateHolder.update { it.copy(shouldShowMarketsOnboarding = false) }
         modelScope.launch {
             shouldShowMarketsTooltipUseCase(isShown = true)
         }
@@ -258,6 +262,10 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
 
     override fun onJointAccountClick(userWalletId: UserWalletId, cryptoAccountId: String) {
         router.openJointAccountMembers(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId)
+    }
+
+    override fun onCompromisedJointAccountClick(userWalletId: UserWalletId) {
+        jointAccountCompromisedAlert.show(userWalletId = userWalletId)
     }
 
     override fun onJointOperationBannerClick(

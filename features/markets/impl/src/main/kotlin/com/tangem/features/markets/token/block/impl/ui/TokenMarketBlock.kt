@@ -49,7 +49,7 @@ internal fun TokenMarketBlock(tokenMarketBlockUM: TokenMarketBlockUM, modifier: 
     TangemRowContainer(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(TangemTheme.dimens2.x5))
+            .clip(RoundedCornerShape(20.dp))
             .background(TangemTheme.colors2.surface.level3)
             .clickable(onClick = tokenMarketBlockUM.onClick)
             .testTag(TokenMarketBlockTestTags.BLOCK),

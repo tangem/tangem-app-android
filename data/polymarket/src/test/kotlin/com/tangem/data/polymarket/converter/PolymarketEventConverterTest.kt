@@ -7,6 +7,7 @@ import com.tangem.grow.datasource.polymarket.models.PolymarketOutcomeDto
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.test.core.ProvideTestModels
@@ -32,8 +33,14 @@ internal class PolymarketEventConverterTest {
                 markets = listOf(
                     createMarketDto(
                         outcomes = listOf(
-                            PolymarketOutcomeDto(assetId = "asset-yes", label = "Yes", probability = 0.18),
+                            PolymarketOutcomeDto(
+                                assetId = "asset-yes",
+                                label = "Yes",
+                                probability = 0.18,
+                                legacyAssetId = "legacy-yes",
+                            ),
                         ),
+                        version = "v2",
                     ),
                 ),
             )
@@ -83,8 +90,14 @@ internal class PolymarketEventConverterTest {
                         liquidity = BigDecimal("8.5"),
                         orderIndex = 1,
                         outcomes = listOf(
-                            PolymarketOutcome(assetId = "asset-yes", title = "Yes", probability = BigDecimal("0.18")),
+                            PolymarketOutcome(
+                                assetId = "asset-yes",
+                                title = "Yes",
+                                probability = BigDecimal("0.18"),
+                                legacyAssetId = "legacy-yes",
+                            ),
                         ),
+                        version = PolymarketMarketVersion.V2,
                     ),
                 ),
             )
@@ -296,6 +309,7 @@ internal class PolymarketEventConverterTest {
         outcomes: List<PolymarketOutcomeDto> = emptyList(),
         isAcceptingOrders: Boolean? = true,
         conditionId: String? = "0xcondition",
+        version: String? = "v1",
     ): PolymarketMarketDto =
         PolymarketMarketDto(
             id = "market-id",
@@ -319,5 +333,6 @@ internal class PolymarketEventConverterTest {
             liquidity = 8.5,
             orderIndex = 1,
             outcomes = outcomes,
+            version = version,
         )
 }

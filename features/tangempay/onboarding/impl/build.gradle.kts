@@ -30,6 +30,7 @@ dependencies {
     implementation(projects.features.tangempay.commonUi)
     implementation(projects.features.tangempay.details.api)
     implementation(projects.features.tangempay.eligibility.api)
+    implementation(projects.features.moneyAccount.details.api)
 
     /** Domain */
     api(projects.domain.common)
@@ -39,6 +40,7 @@ dependencies {
     api(projects.domain.visa.models)
     api(projects.domain.wallets)
     implementation(projects.domain.models)
+    implementation(projects.domain.moneyAccount)
 
     /** Libs */
     implementation(tangemDeps.hot.core)

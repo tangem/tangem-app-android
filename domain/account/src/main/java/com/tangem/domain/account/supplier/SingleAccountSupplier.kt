@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.filterIsInstance
  * @property factory A factory to create instances of [SingleAccountProducer].
  * @property keyCreator A function that generates a unique key for caching based on [SingleAccountProducer.Params].
  */
-abstract class SingleAccountSupplier(
+open class SingleAccountSupplier(
     override val factory: SingleAccountProducer.Factory,
     override val keyCreator: (SingleAccountProducer.Params) -> String,
 ) : FlowCachingSupplier<SingleAccountProducer, SingleAccountProducer.Params, Account>() {
