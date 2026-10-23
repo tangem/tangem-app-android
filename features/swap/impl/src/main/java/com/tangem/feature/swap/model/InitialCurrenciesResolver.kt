@@ -24,6 +24,7 @@ import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.isNullOrZero
 import javax.inject.Inject
+import kotlin.reflect.KClass
 
 /**
  * Resolves the initial FROM and TO currencies when the swap screen opens.
@@ -82,8 +83,8 @@ internal class InitialCurrenciesResolver @Inject constructor(
      *  underlying currencies ([AccountUnderlyingCurrencies]), if it has a balance — this turns the operation
      *  into a same-wallet transfer; (b) otherwise the regular most-funded wallet token; (c) otherwise `null`
      *  (falls through to "Choose token"). For [AccountFlow.Withdraw]: the account's most-funded token. For
-     *  [AccountFlow.PredictionWithdraw]: the prediction account's collateral. For [AccountFlow.MoneyWithdraw]: the
-     *  Money account's token. For [AccountFlow.PredictionTopUp]:
+     *  [AccountFlow.PredictionWithdraw] and [AccountFlow.MoneyWithdraw]: the token of the account withdrawn from,
+     *  always as FROM and never replaced by a portfolio token. For [AccountFlow.PredictionTopUp]:
      *  the most-funded wallet token the account accepts as a deposit as is, otherwise the portfolio auto-fill.
      *  For [AccountFlow.CollectiblesTopUp] and [AccountFlow.MoneyTopUp]: the most-funded wallet holding of the
      *  target account's own token, otherwise the portfolio auto-fill.
@@ -100,8 +101,7 @@ internal class InitialCurrenciesResolver @Inject constructor(
         initialToCryptoCurrency: CryptoCurrency? = null,
     ): Pair<SwapCurrencyStatus?, SwapCurrencyStatus?> {
         val isPaymentAccount = accountFlow is AccountFlow.TopUp || accountFlow is AccountFlow.Withdraw
-        val isAccountWithdraw = accountFlow is AccountFlow.PredictionWithdraw ||
-            accountFlow is AccountFlow.MoneyWithdraw
+        val isAccountWithdraw = accountFlow.withdrawnAccount != null
         val walletAccountList = getWalletAccountCurrencyStatusList(userWalletId)
         val cryptoPortfolioAccounts = walletAccountList.filterKeys { accountStatus ->
             accountStatus is AccountStatus.CryptoPortfolio
@@ -127,16 +127,16 @@ internal class InitialCurrenciesResolver @Inject constructor(
             else -> cryptoPortfolioAccounts
         }
 
-        val (from, to) = if (initialCryptoCurrency != null) {
-            resolveInitialPair(
+        val (from, to) = when {
+            initialCryptoCurrency != null -> resolveInitialPair(
                 initialCryptoCurrency = initialCryptoCurrency,
-                swapCurrencyPosition = swapCurrencyPosition,
+                swapCurrencyPosition = if (isAccountWithdraw) CurrencyPosition.FROM else swapCurrencyPosition,
                 lookupAccounts = lookupAccounts,
                 targetOnlyAccounts = targetOnlyAccounts,
                 cryptoPortfolioAccounts = fromEligibleAccounts,
             )
-        } else {
-            selectCryptoCurrency(
+            isAccountWithdraw -> null to null
+            else -> selectCryptoCurrency(
                 cryptoPortfolioAccountsMap = fromEligibleAccounts,
                 cryptoCurrencyList = cryptoCurrencyList,
             ) to null
@@ -481,14 +481,17 @@ internal class InitialCurrenciesResolver @Inject constructor(
     }
 }
 
-internal fun AccountFlow?.withdrawsFrom(account: Account): Boolean = when (this) {
-    is AccountFlow.PredictionWithdraw -> account is Account.Prediction
-    is AccountFlow.MoneyWithdraw -> account is Account.Money
-    is AccountFlow.TopUp,
-    is AccountFlow.Withdraw,
-    is AccountFlow.PredictionTopUp,
-    is AccountFlow.CollectiblesTopUp,
-    is AccountFlow.MoneyTopUp,
-    null,
-    -> false
-}
+internal val AccountFlow?.withdrawnAccount: KClass<out Account>?
+    get() = when (this) {
+        is AccountFlow.PredictionWithdraw -> Account.Prediction::class
+        is AccountFlow.MoneyWithdraw -> Account.Money::class
+        is AccountFlow.TopUp,
+        is AccountFlow.Withdraw,
+        is AccountFlow.PredictionTopUp,
+        is AccountFlow.CollectiblesTopUp,
+        is AccountFlow.MoneyTopUp,
+        null,
+        -> null
+    }
+
+internal fun AccountFlow?.withdrawsFrom(account: Account): Boolean = withdrawnAccount?.isInstance(account) == true
