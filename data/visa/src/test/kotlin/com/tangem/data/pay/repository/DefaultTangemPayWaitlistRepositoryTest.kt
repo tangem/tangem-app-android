@@ -49,6 +49,7 @@ internal class DefaultTangemPayWaitlistRepositoryTest {
         // WHEN
         val actual = repository.join(
             userWalletId = USER_WALLET_ID,
+            product = TangemPayProduct.BANKING_ACCOUNT,
             entry = ENTRY,
             idempotencyKey = IDEMPOTENCY_KEY,
         )
@@ -74,7 +75,6 @@ internal class DefaultTangemPayWaitlistRepositoryTest {
     fun `GIVEN payment account entry without region WHEN join THEN request carries null region`() = runTest {
         // GIVEN
         val entry = ENTRY.copy(
-            product = TangemPayProduct.PAYMENT_ACCOUNT,
             regionCode = null,
             isMarketingConsentGiven = false,
         )
@@ -82,6 +82,7 @@ internal class DefaultTangemPayWaitlistRepositoryTest {
         // WHEN
         val actual = repository.join(
             userWalletId = USER_WALLET_ID,
+            product = TangemPayProduct.PAYMENT_ACCOUNT,
             entry = entry,
             idempotencyKey = IDEMPOTENCY_KEY,
         )
@@ -106,7 +107,12 @@ internal class DefaultTangemPayWaitlistRepositoryTest {
     @Test
     fun `GIVEN no user wallet WHEN join THEN request is performed with null userWalletId`() = runTest {
         // WHEN
-        val actual = repository.join(userWalletId = null, entry = ENTRY, idempotencyKey = IDEMPOTENCY_KEY)
+        val actual = repository.join(
+            userWalletId = null,
+            product = TangemPayProduct.BANKING_ACCOUNT,
+            entry = ENTRY,
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
 
         // THEN
         assertThat(actual).isEqualTo(Unit.right())
@@ -124,6 +130,7 @@ internal class DefaultTangemPayWaitlistRepositoryTest {
         // WHEN
         val actual = repository.join(
             userWalletId = USER_WALLET_ID,
+            product = TangemPayProduct.BANKING_ACCOUNT,
             entry = ENTRY,
             idempotencyKey = IDEMPOTENCY_KEY,
         )
@@ -139,7 +146,6 @@ internal class DefaultTangemPayWaitlistRepositoryTest {
 
         val ENTRY = TangemPayWaitlistEntry(
             email = "user@tangem.com",
-            product = TangemPayProduct.BANKING_ACCOUNT,
             countryCode = "US",
             regionCode = "CA",
             isMarketingConsentGiven = true,

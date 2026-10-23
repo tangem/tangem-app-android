@@ -210,11 +210,12 @@ internal class WalletComponent @AssistedInject constructor(
                     )
                 }
                 is WalletDialogConfig.TangemPayWaitlist -> {
+                    // TODO v_rodionov: [REDACTED_TASK_KEY] - remove it
                     tangemPayWaitlistComponentFactory.create(
                         context = childByContext(componentContext),
                         params = TangemPayWaitlistComponent.Params(
                             userWalletId = dialogConfig.userWalletId,
-                            product = TangemPayProduct.BANKING_ACCOUNT,
+                            products = listOf(TangemPayProduct.BANKING_ACCOUNT),
                             countryCode = dialogConfig.countryCode,
                             regionCode = null,
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
