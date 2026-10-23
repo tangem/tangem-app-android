@@ -111,7 +111,6 @@ internal class DefaultMarketsTokenListComponent(
     data class Params(
         val preselectedSortType: SortByTypeUM,
         val preselectedInterval: MarketsListUM.TrendInterval,
-        val shouldAlwaysShowSearchBar: Boolean,
     )
 
     data class ClickIntents(

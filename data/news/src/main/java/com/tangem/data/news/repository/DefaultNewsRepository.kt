@@ -4,21 +4,15 @@ import arrow.core.Either
 import arrow.core.flatten
 import arrow.core.left
 import arrow.core.right
-import com.tangem.core.remote.response.ApiResponse
-import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.fold
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.store.datasource.news.NewsApi
-import com.tangem.store.datasource.news.models.response.NewsTrendingResponse
 import com.tangem.data.news.store.details.NewsDetailsStore
 import com.tangem.data.news.store.liked.NewsLikedStore
-import com.tangem.data.news.store.trending.TrendingNewsStore
 import com.tangem.data.news.store.viewed.NewsViewedStore
 import com.tangem.domain.models.news.ArticleCategory
 import com.tangem.domain.models.news.DetailedArticle
 import com.tangem.domain.models.news.ShortArticle
-import com.tangem.domain.models.news.TrendingNews
-import com.tangem.domain.news.NewsErrorResolver
 import com.tangem.domain.news.model.NewsListBatchFlow
 import com.tangem.domain.news.model.NewsListBatchingContext
 import com.tangem.domain.news.model.NewsListConfig
@@ -37,15 +31,12 @@ import kotlinx.coroutines.flow.*
  * Implementation of [NewsRepository].
 [REDACTED_AUTHOR]
  */
-@Suppress("LongParameterList")
 internal class DefaultNewsRepository(
     private val newsApi: NewsApi,
     private val dispatchers: CoroutineDispatcherProvider,
     private val newsDetailsStore: NewsDetailsStore,
-    private val trendingNewsStore: TrendingNewsStore,
     private val newsViewedStore: NewsViewedStore,
     private val newsLikedStore: NewsLikedStore,
-    private val newsErrorResolver: NewsErrorResolver,
 ) : NewsRepository {
 
     private val language: String
@@ -111,29 +102,6 @@ internal class DefaultNewsRepository(
 
     override suspend fun fetchDetailedArticles(newsIds: Collection<Int>): Either<Map<Int, Throwable>, Unit> =
         fetchDetailedArticlesInternal(newsIds = newsIds, language = language)
-
-    override suspend fun fetchTrendingNews(limit: Int) {
-        fetchAndStoreTrendingNews(limit = limit, language = language)
-    }
-
-    override fun observeTrendingNews(): Flow<TrendingNews> {
-        return combine(
-            trendingNewsStore.get(TRENDING_NEWS_KEY),
-            newsViewedStore.getAll(),
-        ) { trendingNews, viewedFlags ->
-            when (trendingNews) {
-                is TrendingNews.Data -> {
-                    val articlesWithViewedFlags = trendingNews.articles
-                        .map { article ->
-                            article.copy(isViewed = viewedFlags[article.id] == true)
-                        }
-                        .sortedBy { it.isViewed }
-                    TrendingNews.Data(articlesWithViewedFlags)
-                }
-                is TrendingNews.Error -> trendingNews
-            }
-        }
-    }
 
     override suspend fun getCategories(): List<ArticleCategory> {
         return withContext(dispatchers.io) {
@@ -221,37 +189,6 @@ internal class DefaultNewsRepository(
             if (errors.isEmpty()) Unit.right() else errors.left()
         }
     }.mapLeft { t -> mapOf(GLOBAL_ERROR_ID to t) }.flatten()
-
-    private suspend fun fetchAndStoreTrendingNews(limit: Int, language: String?) {
-        return withContext(dispatchers.io) {
-            when (val apiResponse = newsApi.getTrendingNews(limit = limit, language = language)) {
-                is ApiResponse.Error -> {
-                    TangemLogger.e(
-                        "Trending news fetch failed cause: ${
-                            when (val error = apiResponse.cause) {
-                                is ApiResponseError.HttpException -> error.code
-                                is ApiResponseError.NetworkException -> "NetworkException"
-                                is ApiResponseError.TimeoutException -> "TimeoutException"
-                                is ApiResponseError.UnknownException -> "UnknownException"
-                            }
-                        }",
-                        apiResponse.cause,
-                    )
-                    trendingNewsStore.clear()
-                    trendingNewsStore.store(
-                        key = TRENDING_NEWS_KEY,
-                        value = TrendingNews.Error(error = newsErrorResolver.resolve(apiResponse.cause)),
-                    )
-                }
-                is ApiResponse.Success<NewsTrendingResponse> -> {
-                    val freshArticles = apiResponse.data.items.map { it.toDomainShortArticle() }
-                    val articles = freshArticles.take(limit)
-                    trendingNewsStore.store(TRENDING_NEWS_KEY, TrendingNews.Data(articles))
-                    TrendingNews.Data(articles)
-                }
-            }
-        }
-    }
 
     private fun createBatchFetcher(batchSize: Int): BatchFetcher<NewsListConfig, List<ShortArticle>> {
         return NewsBatchFetcher(
@@ -404,7 +341,6 @@ internal class DefaultNewsRepository(
     private companion object {
         private const val INITIAL_BATCH_KEY = 0
         private const val FIRST_PAGE = 1
-        private const val TRENDING_NEWS_KEY = "trending_news"
         private const val GLOBAL_ERROR_ID = -1
     }
 }
