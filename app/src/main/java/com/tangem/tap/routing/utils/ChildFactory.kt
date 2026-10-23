@@ -51,7 +51,6 @@ import com.tangem.features.tangempay.components.TangemPayVerifiedComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
-import com.tangem.features.moneyaccount.onboarding.component.MoneyAccountOnboardingComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
 import com.tangem.features.polymarket.api.PolymarketComponent
@@ -127,7 +126,6 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
     private val tangemPayCampaignComponentFactory: TangemPayCampaignComponent.Factory,
-    private val moneyAccountOnboardingComponentFactory: MoneyAccountOnboardingComponent.Factory,
     private val moneyAccountDetailsComponentFactory: MoneyAccountDetailsComponent.Factory,
     private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
     private val jointAccountJoinComponentFactory: JointAccountJoinComponent.Factory,
@@ -795,20 +793,6 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = TangemPayCampaignComponent.Params(campaignKey = route.campaignKey),
                     componentFactory = tangemPayCampaignComponentFactory,
-                )
-            }
-            is AppRoute.MoneyAccountOnboarding -> {
-                createComponentChild(
-                    context = context,
-                    params = when (val mode = route.mode) {
-                        is AppRoute.MoneyAccountOnboarding.Mode.Deeplink ->
-                            MoneyAccountOnboardingComponent.Params.Deeplink(deeplink = mode.deeplink)
-                        AppRoute.MoneyAccountOnboarding.Mode.FromMain ->
-                            MoneyAccountOnboardingComponent.Params.FromMain
-                        AppRoute.MoneyAccountOnboarding.Mode.FromDetailsScreen ->
-                            MoneyAccountOnboardingComponent.Params.FromDetailsScreen
-                    },
-                    componentFactory = moneyAccountOnboardingComponentFactory,
                 )
             }
             is AppRoute.MoneyAccountDetails -> {
