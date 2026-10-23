@@ -4,12 +4,14 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.pay.model.bankofframp.BankRail
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromUM
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderUM
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
 internal data class TangemPayBankWithdrawAmountUM(
     val header: BankWithdrawHeaderUM,
+    val from: BankWithdrawFromUM,
     val amount: AmountFieldUM,
     val source: SourceRowUM,
     val route: RouteRowUM,
@@ -35,7 +37,7 @@ internal data class TangemPayBankWithdrawAmountUM(
         val symbol: String,
         val subtitle: TextReference,
         val onMaxClick: () -> Unit,
-        val onClick: () -> Unit,
+        val onClick: (() -> Unit)?,
     )
 
     /** [onClick] is null when the backend offers a single rail: the row is then static and shows no chevron. */
