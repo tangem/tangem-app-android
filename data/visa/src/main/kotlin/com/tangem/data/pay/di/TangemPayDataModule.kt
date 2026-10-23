@@ -552,6 +552,11 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideGetCustomerSummaryUseCase(onboardingRepository: OnboardingRepository): GetCustomerSummaryUseCase {
+            return GetCustomerSummaryUseCase(onboardingRepository = onboardingRepository)
+        }
+
+        @Provides
         fun provideGetAccountFeesUseCase(onboardingRepository: OnboardingRepository): GetAccountFeesUseCase {
             return GetAccountFeesUseCase(onboardingRepository = onboardingRepository)
         }
@@ -600,6 +605,13 @@ internal interface TangemPayDataModule {
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 appCoroutineScope = appCoroutineScope,
             )
+        }
+
+        @Provides
+        fun provideCreateOnboardingOrderUseCase(
+            customerOrderRepository: CustomerOrderRepository,
+        ): CreateOnboardingOrderUseCase {
+            return CreateOnboardingOrderUseCase(customerOrderRepository = customerOrderRepository)
         }
 
         @Provides

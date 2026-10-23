@@ -33,9 +33,7 @@ internal class EnvironmentsTogglesViewModel @Inject constructor(
 
     /** Current ui state */
     val uiState: StateFlow<EnvironmentTogglesScreenUM>
-        get() = _uiState
-
-    private val _uiState = MutableStateFlow(value = getInitialState())
+        field = MutableStateFlow(value = getInitialState())
 
     private val mutableApiConfigsManager: MutableApiConfigsManager =
         requireNotNull(apiConfigsManager as? MutableApiConfigsManager) {
@@ -48,7 +46,7 @@ internal class EnvironmentsTogglesViewModel @Inject constructor(
 
     /** Setup navigation state property by router [router] */
     fun setupNavigation(router: InnerTesterRouter) {
-        _uiState.update {
+        uiState.update {
             it.copy(onBackClick = router::back)
         }
     }
@@ -56,7 +54,7 @@ internal class EnvironmentsTogglesViewModel @Inject constructor(
     private fun subscribeOnApiConfigs() {
         mutableApiConfigsManager.configs
             .onEach { configs ->
-                _uiState.update {
+                uiState.update {
                     it.copy(apiInfoList = configs.toUiModel())
                 }
             }

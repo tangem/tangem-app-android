@@ -2,6 +2,8 @@ package com.tangem.features.jointaccount.compromised
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.core.utils.lceLoading
@@ -16,6 +18,7 @@ import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.flow
@@ -23,6 +26,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import com.tangem.core.ui.R as CoreUiR
 
 internal class DefaultJointAccountCompromisedAlertTest {
 
@@ -43,6 +47,21 @@ internal class DefaultJointAccountCompromisedAlertTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(uiMessageSender, singleAccountStatusListSupplier)
+    }
+
+    @Test
+    fun `GIVEN wallet WHEN show THEN the dialog carries the cannot-verify texts`() {
+        // Arrange
+        val message = slot<DialogMessage>()
+        every { uiMessageSender.send(capture(message)) } returns Unit
+
+        // Act
+        alert.show(userWalletId = userWalletId)
+
+        // Assert
+        assertThat(message.captured.title).isEqualTo(resourceReference(CoreUiR.string.joint_account_compromised_title))
+        assertThat(message.captured.message)
+            .isEqualTo(resourceReference(CoreUiR.string.joint_account_compromised_message))
     }
 
     @Test

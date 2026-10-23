@@ -10,18 +10,17 @@ import javax.inject.Singleton
 @Singleton
 internal class QrScanningStateController @Inject constructor() {
 
-    val uiState: StateFlow<QrScanningState> get() = mutableUiState
+    val uiState: StateFlow<QrScanningState>
+        field = MutableStateFlow(value = getInitialState())
 
     val value: QrScanningState get() = uiState.value
 
-    private val mutableUiState: MutableStateFlow<QrScanningState> = MutableStateFlow(value = getInitialState())
-
     fun update(function: (QrScanningState) -> QrScanningState) {
-        mutableUiState.update(function = function)
+        uiState.update(function = function)
     }
 
     fun update(transformer: QrScanningTransformer) {
-        mutableUiState.update(function = transformer::transform)
+        uiState.update(function = transformer::transform)
     }
 
     private fun getInitialState(): QrScanningState {
