@@ -59,8 +59,11 @@ internal class ForgetWalletModelTest {
     private val hotWallet: UserWallet.Hot = mockk { every { walletId } returns this@ForgetWalletModelTest.walletId }
     private val fileId = "file-1"
 
+    private var pinnedWalletId: String? = null
+
     @BeforeEach
     fun setUp() {
+        pinnedWalletId = null
         clearMocks(
             router,
             deleteWalletUseCase,
@@ -76,6 +79,10 @@ internal class ForgetWalletModelTest {
         coEvery { deleteWalletUseCase(walletId) } returns true.right()
         coEvery { revokeSocialRecoveryUseCase(hotWallet) } returns Unit.right()
         coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+        coEvery { cloudBackupRepository.withAccountOf<Any?>(any(), any()) } coAnswers {
+            pinnedWalletId = firstArg()
+            secondArg<suspend () -> Any?>().invoke().also { pinnedWalletId = null }
+        }
     }
 
     @Test
@@ -83,16 +90,23 @@ internal class ForgetWalletModelTest {
         runTest {
             // Arrange
             every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
-            coEvery { cloudBackupRepository.findBackups() } returns listOf(backup(walletId = "011")).right()
-            coEvery { deleteCloudBackupWithRetryUseCase(fileId) } returns Unit.right()
+            val calledFor = mutableListOf<String?>()
+            coEvery { cloudBackupRepository.findBackups() } answers {
+                calledFor += pinnedWalletId
+                listOf(backup(walletId = "011")).right()
+            }
+            coEvery { deleteCloudBackupWithRetryUseCase(fileId) } answers {
+                calledFor += pinnedWalletId
+                Unit.right()
+            }
 
             // Act
             confirmForget(createModel(this, deleteCloudBackup = true))
 
             // Assert
             coVerify(exactly = 1) { deleteWalletUseCase(walletId) }
-            coVerify(exactly = 1) { cloudBackupRepository.findBackups() }
-            coVerify(exactly = 1) { deleteCloudBackupWithRetryUseCase(fileId) }
+            // found and deleted in the wallet's own account
+            assertThat(calledFor).containsExactly("011", "011")
             coVerify(exactly = 1) { setCloudBackupStateUseCase("011", isBackedUp = false) }
             verify(exactly = 1) {
                 analyticsEventHandler.send(ofType<WalletSettingsAnalyticEvents.WalletForgotten>())
