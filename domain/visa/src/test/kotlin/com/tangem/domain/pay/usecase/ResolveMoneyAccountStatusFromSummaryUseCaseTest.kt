@@ -128,7 +128,7 @@ internal class ResolveMoneyAccountStatusFromSummaryUseCaseTest {
                 bankingStep = MoneyAccount.Activation.Step.ISSUING,
                 bankingFailureReason = MoneyAccount.Activation.FailureReason.RAIN_REJECTED,
             ),
-            expected = MoneyAccountStatusValue.Error.Unavailable,
+            expected = MoneyAccountStatusValue.Empty,
         ),
         ResolveModel(
             name = "closed with failed account",
@@ -139,7 +139,7 @@ internal class ResolveMoneyAccountStatusFromSummaryUseCaseTest {
                 bankingStep = MoneyAccount.Activation.Step.ISSUING,
                 bankingFailureReason = MoneyAccount.Activation.FailureReason.TECHNICAL,
             ),
-            expected = MoneyAccountStatusValue.Error.Unavailable,
+            expected = MoneyAccountStatusValue.Empty,
         ),
         ResolveModel(
             name = "completed requires full fetch",
