@@ -271,6 +271,7 @@ private fun SelectFooter(content: TangemPaySelectPlanUM.Content.Select, modifier
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.tangempay_select_plan_btn_select),
+            iconEnd = content.selectButtonIconEnd,
             onClick = content.onSelectClick,
             isLoading = content.isProcessing,
         )
@@ -393,6 +394,7 @@ private fun previewState(isConfirm: Boolean) = TangemPaySelectPlanUM(
     } else {
         TangemPaySelectPlanUM.Content.Select(
             isProcessing = false,
+            selectButtonIconEnd = null,
             onComparePlansClick = {},
             onSelectClick = {},
         )
