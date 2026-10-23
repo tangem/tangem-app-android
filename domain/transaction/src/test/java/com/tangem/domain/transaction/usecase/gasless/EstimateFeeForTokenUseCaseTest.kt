@@ -10,6 +10,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
@@ -57,6 +58,7 @@ internal class EstimateFeeForTokenUseCaseTest {
     private val gaslessTransactionRepository: GaslessTransactionRepository = mockk()
     private val gaslessYieldRepository: GaslessYieldRepository = mockk()
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider = mockk()
     private val currencyChecksRepository: CurrencyChecksRepository = mockk()
     private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase = mockk()
     private val walletManager: EthereumWalletManager = mockk()
@@ -68,6 +70,7 @@ internal class EstimateFeeForTokenUseCaseTest {
             gaslessTransactionRepository,
             gaslessYieldRepository,
             singleAccountStatusListSupplier,
+            nonPortfolioCurrenciesProvider,
             currencyChecksRepository,
             resolveGaslessFeePlanUseCase,
             walletManager,
@@ -219,6 +222,33 @@ internal class EstimateFeeForTokenUseCaseTest {
         coVerify(exactly = 0) { resolveGaslessFeePlanUseCase(any(), any(), any(), any(), any()) }
     }
 
+    @Test
+    fun `GIVEN a network outside the portfolio WHEN estimate THEN its coin comes from the account holding it`() =
+        runTest {
+            // Arrange
+            val feeTokenStatus = tokenStatus(balance = TOKEN_BALANCE, yieldSupplyStatus = null)
+            coEvery {
+                singleAccountStatusListSupplier.getSyncOrNull(userWalletId)
+            } returns accountStatusList(currencies = emptyList())
+            coEvery {
+                nonPortfolioCurrenciesProvider.getStatuses(userWalletId, network)
+            } returns listOf(coinStatus(), feeTokenStatus)
+            coEvery {
+                walletManager.getGasLimit(any(), FEE_RECEIVER, any())
+            } returns Result.Success(BigInteger("60000"))
+
+            // Act
+            val result = createUseCase().invoke(
+                userWallet = userWallet,
+                feeTokenCurrencyStatus = feeTokenStatus,
+                sendingTokenCurrencyStatus = feeTokenStatus,
+                amount = SWAP_AMOUNT,
+            )
+
+            // Assert
+            assertThat(result.getOrNull()?.feeTokenId).isEqualTo(usdc.id)
+        }
+
     // region Fixtures
 
     private fun createUseCase() = EstimateFeeForTokenUseCase(
@@ -227,11 +257,14 @@ internal class EstimateFeeForTokenUseCaseTest {
         walletManagersFacade = walletManagersFacade,
         demoConfig = mockk { every { isDemoCardId(any()) } returns false },
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
         currencyChecksRepository = currencyChecksRepository,
         resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
     )
 
-    private fun accountStatusList() = AccountStatusList(
+    private fun accountStatusList(
+        currencies: List<CryptoCurrencyStatus> = listOf(coinStatus(), tokenStatus(TOKEN_BALANCE, null)),
+    ) = AccountStatusList(
         userWalletId = userWalletId,
         accountStatuses = listOf(
             AccountStatus.Personal(
@@ -239,7 +272,7 @@ internal class EstimateFeeForTokenUseCaseTest {
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,
                     sortedBy = TokensSortType.NONE,
-                    currencies = listOf(coinStatus(), tokenStatus(TOKEN_BALANCE, null)),
+                    currencies = currencies,
                 ),
                 priceChangeLce = lceLoading(),
             ),
