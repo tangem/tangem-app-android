@@ -183,10 +183,10 @@ private fun PositionInformation(state: PolymarketPositionDetailsUM.Information) 
             value = state.status,
             divider = state.endDate != null || state.resolutionSource != null,
         )
-        state.endDate?.let {
+        state.endDate?.let { endDate ->
             PositionInfoRow(
                 title = resourceReference(R.string.prediction_details_resolution_date),
-                value = it,
+                value = endDate,
                 divider = state.resolutionSource != null,
             )
         }

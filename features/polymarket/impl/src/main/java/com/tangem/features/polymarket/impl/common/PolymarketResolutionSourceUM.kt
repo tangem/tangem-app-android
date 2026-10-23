@@ -8,9 +8,9 @@ internal data class PolymarketResolutionSourceUM(val text: String, val url: Stri
 
 internal fun String?.toResolutionSourceUM(): PolymarketResolutionSourceUM? {
     val source = this?.trim()?.takeIf(String::isNotEmpty) ?: return null
-    val webUri = runCatching { URI(source) }.getOrNull()?.takeIf {
-        !it.host.isNullOrBlank() && (it.scheme.equals("https", ignoreCase = true) ||
-            it.scheme.equals("http", ignoreCase = true))
+    val webUri = runCatching { URI(source) }.getOrNull()?.takeIf { uri ->
+        !uri.host.isNullOrBlank() && (uri.scheme.equals("https", ignoreCase = true) ||
+            uri.scheme.equals("http", ignoreCase = true))
     }
     return PolymarketResolutionSourceUM(
         text = webUri?.host?.removePrefix("www.") ?: source,
