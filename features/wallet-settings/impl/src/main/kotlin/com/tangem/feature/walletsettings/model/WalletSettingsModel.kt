@@ -163,7 +163,11 @@ internal class WalletSettingsModel @Inject constructor(
                 .distinctUntilChanged()
                 .conflate(),
             flow2 = walletCardItemDelegate.cardItemFlow(wallet),
-            flow3 = accountItemsDelegate.loadAccount(wallet, onAddAccountClick = ::onAddAccountClick),
+            flow3 = accountItemsDelegate.loadAccount(
+                wallet = wallet,
+                onAddAccountClick = ::onAddAccountClick,
+                pushRoute = ::pushRoute,
+            ),
             flow4 = isWalletBackedUpUseCase.flow(wallet),
             flow5 = isSocialWalletFlow(wallet),
         ) { nftEnabled, cardItem, accountList, isWalletBackedUp, isSocialWallet ->
@@ -276,6 +280,7 @@ internal class WalletSettingsModel @Inject constructor(
 
     private fun forgetWallet(onForgotten: () -> Unit = {}) {
         if (forgetWalletJobHolder.isActive) return
+        upgradeJobHolder.cancel()
 
         modelScope.launch {
             val userWallet = getUserWalletUseCase(params.userWalletId)
