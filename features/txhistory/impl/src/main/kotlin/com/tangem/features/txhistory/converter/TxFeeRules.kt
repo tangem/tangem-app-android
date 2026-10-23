@@ -121,7 +121,7 @@ internal fun TxInfo.feeAmountText(currency: CryptoCurrency): TextReference? {
     if (!showsFeeAsAmount(currency)) return null
     val feeValue = fee?.value ?: return null
     val formatted = feeValue.format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
-    val prefix = if (status is TxInfo.TransactionStatus.Failed) "" else "${StringsSigns.DASH_SIGN} "
+    val prefix = if (readsFailed(currency)) "" else "${StringsSigns.DASH_SIGN} "
     return stringReference((prefix + approximateMark() + formatted).trim())
 }
 
@@ -129,5 +129,27 @@ internal fun TxInfo.showsFeeAsAmount(currency: CryptoCurrency): Boolean = isToke
 
 /** A joint account's fee is the refund cap the operation was signed with, not what was paid */
 internal fun TxInfo.approximateMark(): String = if (type is TransactionType.Joint) StringsSigns.TILDE_SIGN else ""
+
+// endregion
+
+// region The status a fee row reads as
+
+/**
+ * The status the history row and the details header show. A transaction that is nothing but a network fee never
+ * reads failed: the validators processed it and the gas left the balance whatever the call it paid for did, so
+ * striking its amount through in red would tell the user a fee they were charged was not taken ([REDACTED_TASK_KEY]). Until
+ * the node confirms it the fee is not settled either, so pending stays pending; the operation the fee paid for is a
+ * transaction of its own and keeps the status the node gave it.
+ */
+internal fun TxInfo.displayedStatus(currency: CryptoCurrency): TxInfo.TransactionStatus =
+    if (status is TxInfo.TransactionStatus.Failed && isFeeOnly(currency)) {
+        TxInfo.TransactionStatus.Confirmed
+    } else {
+        status
+    }
+
+/** Whether the transaction reads as failed — the state that strikes an amount through and paints it red. */
+internal fun TxInfo.readsFailed(currency: CryptoCurrency): Boolean =
+    displayedStatus(currency) is TxInfo.TransactionStatus.Failed
 
 // endregion
