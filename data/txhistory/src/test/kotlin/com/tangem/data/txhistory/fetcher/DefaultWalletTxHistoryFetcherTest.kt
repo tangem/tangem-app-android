@@ -24,13 +24,23 @@ internal class DefaultWalletTxHistoryFetcherTest {
     private val accountFetcherFactory: DefaultAccountTxHistoryFetcher.Factory = mockk()
     private val expressFetcherFactory: DefaultExpressTxHistoryFetcher.Factory = mockk()
     private val expressFetcher: DefaultExpressTxHistoryFetcher = mockk(relaxed = true)
+    private val jointOperationFetcherFactory: DefaultJointOperationTxHistoryFetcher.Factory = mockk()
+    private val jointOperationFetcher: DefaultJointOperationTxHistoryFetcher = mockk(relaxed = true)
 
     private val currency: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
 
     @BeforeEach
     fun setup() {
-        clearMocks(singleAccountListSupplier, accountFetcherFactory, expressFetcherFactory, expressFetcher)
+        clearMocks(
+            singleAccountListSupplier,
+            accountFetcherFactory,
+            expressFetcherFactory,
+            expressFetcher,
+            jointOperationFetcherFactory,
+            jointOperationFetcher,
+        )
         every { expressFetcherFactory.create(WALLET_ID) } returns expressFetcher
+        every { jointOperationFetcherFactory.create(WALLET_ID) } returns jointOperationFetcher
     }
 
     @Test
@@ -86,6 +96,51 @@ internal class DefaultWalletTxHistoryFetcherTest {
         assertThat(utils.fetcherScope.coroutineContext.job.isActive).isFalse()
     }
 
+    @Test
+    fun `GIVEN token details trigger WHEN invoke THEN routed to the joint operation fetcher too`() = runTest {
+        // Arrange
+        val fetcher = createFetcher(createUtils())
+        advanceUntilIdle()
+        val trigger = TxHistoryFetchTrigger.TokenDetailsOpen(walletId = WALLET_ID, currency = currency)
+
+        // Act
+        fetcher.invoke(trigger)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { expressFetcher.invoke(trigger) }
+        verify(exactly = 1) { jointOperationFetcher.invoke(trigger) }
+    }
+
+    @Test
+    fun `GIVEN joint history poll WHEN invoke THEN routed to the joint operation fetcher only`() = runTest {
+        // Arrange
+        val fetcher = createFetcher(createUtils())
+        advanceUntilIdle()
+        val trigger = TxHistoryFetchTrigger.JointHistoryPoll(walletId = WALLET_ID)
+
+        // Act
+        fetcher.invoke(trigger)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { jointOperationFetcher.invoke(trigger) }
+        verify(exactly = 0) { expressFetcher.invoke(any()) }
+    }
+
+    @Test
+    fun `GIVEN wallet fetcher WHEN close THEN joint operation fetcher closed`() = runTest {
+        // Arrange
+        val fetcher = createFetcher(createUtils())
+        advanceUntilIdle()
+
+        // Act
+        fetcher.close()
+
+        // Assert
+        verify(exactly = 1) { jointOperationFetcher.close() }
+    }
+
     private fun TestScope.createUtils(): DefaultTxHistoryFetcherUtils = DefaultTxHistoryFetcherUtils(
         appScope = TestAppCoroutineScope(testScope = this),
         analyticsEventHandler = mockk(relaxed = true),
@@ -98,6 +153,7 @@ internal class DefaultWalletTxHistoryFetcherTest {
         singleAccountListSupplier = singleAccountListSupplier,
         accountTxHistoryFetcher = accountFetcherFactory,
         expressTxHistoryFetcher = expressFetcherFactory,
+        jointOperationTxHistoryFetcher = jointOperationFetcherFactory,
     )
 
     private companion object {
