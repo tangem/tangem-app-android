@@ -32,7 +32,8 @@ private const val AGENT_LOOKUP_TIMEOUT_MILLIS = 3_000L
 
 /**
  * Reads the exchange intent as the selected wallet, offers it to the owner and hands it over to the Swap screen that
- * carries it out. An intent the wallet cannot act on yet closes the sheet.
+ * carries it out. Processed and unavailable intents keep a status sheet open until dismissed; only network failures
+ * and timeouts offer retry. Without a selected wallet, the queue slot is released without showing a sheet.
  */
 @Suppress("LongParameterList")
 @ModelScoped
