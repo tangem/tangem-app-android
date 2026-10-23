@@ -10,6 +10,7 @@ import com.tangem.domain.jointaccount.model.JointOperationSignError.Verification
 import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.data.jointaccount.safe.DefaultJointTransferPayloadCodec
 import com.tangem.data.jointaccount.safe.DefaultSafeAddressCalculator
+import com.tangem.data.jointaccount.signing.DefaultJointSignatureRecoverer
 import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
@@ -29,6 +30,7 @@ internal class JointOperationVerifierTest {
     private val verifier = JointOperationVerifier(
         payloadCodec = DefaultJointTransferPayloadCodec(),
         safeAddressCalculator = DefaultSafeAddressCalculator(),
+        signatureRecoverer = DefaultJointSignatureRecoverer(),
     )
 
     @Test
