@@ -13,6 +13,7 @@ import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.features.polymarket.impl.common.formatPolymarketPrice
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
+import com.tangem.features.polymarket.impl.common.toResolutionSourceUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsMarketUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsOutcomeUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
@@ -48,6 +49,7 @@ internal class PolymarketEventDetailsContentTransformer(
     private val onOutcomeClick: (marketId: String, assetId: String) -> Unit,
     private val onClosedMarketsClick: () -> Unit,
     private val onReadMoreClick: () -> Unit,
+    private val onResolutionSourceClick: (String) -> Unit = {},
 ) : Transformer<PolymarketEventDetailsUM> {
 
     override fun transform(prevState: PolymarketEventDetailsUM): PolymarketEventDetailsUM {
@@ -72,6 +74,8 @@ internal class PolymarketEventDetailsContentTransformer(
             isDescriptionExpanded = isDescriptionExpanded,
             resolutionDate = stringReference(formatEasternDate(raw = event.endDate)),
             marketOpenedDate = stringReference(formatEasternDate(raw = event.startDate)),
+            resolutionSource = event.resolutionSource.toResolutionSourceUM(),
+            onResolutionSourceClick = onResolutionSourceClick,
             onShareClick = { onShareClick(event.slug) },
             onClosedMarketsClick = onClosedMarketsClick,
             onReadMoreClick = onReadMoreClick,
