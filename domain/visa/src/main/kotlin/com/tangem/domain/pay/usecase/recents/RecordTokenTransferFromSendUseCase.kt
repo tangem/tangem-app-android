@@ -6,6 +6,7 @@ import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.pay.model.recents.TokenTransferJournal
 import com.tangem.domain.pay.repository.PaymentAccountRecentsStore
 import kotlinx.coroutines.flow.firstOrNull
 
@@ -37,6 +38,11 @@ class RecordTokenTransferFromSendUseCase(
 
         if (!isDeposit) return
 
-        recentsStore.markUsed(userWalletId = userWalletId, accountId = account.accountId, currencyId = currency.id)
+        recentsStore.markUsed(
+            userWalletId = userWalletId,
+            journal = TokenTransferJournal.PAYMENT_ACCOUNT,
+            accountId = account.accountId,
+            currencyId = currency.id,
+        )
     }
 }
