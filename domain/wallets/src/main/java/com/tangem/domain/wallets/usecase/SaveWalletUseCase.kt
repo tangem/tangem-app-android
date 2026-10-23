@@ -28,18 +28,18 @@ class SaveWalletUseCase(
         analyticsSource: AnalyticsParam.ScreensSources? = null,
     ): Either<SaveWalletError, Unit> {
         return either {
-            val newUserWallet =
+            val isNewUserWallet =
                 userWalletsListRepository.userWalletsSync().none { it.walletId == userWallet.walletId }
-            val userWallet = userWalletsListRepository.saveWithoutLock(userWallet, canOverride)
+            val savedUserWallet = userWalletsListRepository.saveWithoutLock(userWallet, canOverride)
                 .onRight { trackColdWalletAddedIfNeeded(analyticsSource, it) }
                 .bind()
 
-            if (newUserWallet) {
-                when (userWallet) {
+            if (isNewUserWallet) {
+                when (savedUserWallet) {
                     is UserWallet.Cold -> {
                         if (walletsRepository.useBiometricAuthentication()) {
                             userWalletsListRepository.setLock(
-                                userWallet.walletId,
+                                savedUserWallet.walletId,
                                 UserWalletsListRepository.LockMethod.Biometric,
                             )
                         } else {
@@ -48,14 +48,14 @@ class SaveWalletUseCase(
                     }
                     is UserWallet.Hot -> {
                         userWalletsListRepository.setLock(
-                            userWallet.walletId,
+                            savedUserWallet.walletId,
                             UserWalletsListRepository.LockMethod.NoLock,
                         )
                     }
                 }.mapLeft {
                     SaveWalletError.DataError(null)
                 }.map {
-                    userWalletsListRepository.select(userWallet.walletId)
+                    userWalletsListRepository.select(savedUserWallet.walletId)
                 }.bind()
             }
         }

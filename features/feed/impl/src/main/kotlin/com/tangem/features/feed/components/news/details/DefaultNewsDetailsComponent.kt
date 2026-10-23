@@ -59,14 +59,14 @@ internal class DefaultNewsDetailsComponent(
                     contentDescription = null,
                     tint = TangemTheme.colors2.graphic.neutral.primary,
                     modifier = Modifier
-                        .size(TangemTheme.dimens2.x11)
+                        .size(44.dp)
                         .clip(CircleShape)
                         .hazeEffectTangem { blurRadius = 8.dp }
                         .clickableSingle(
                             onClick = state.onBackClick,
                             enabled = bottomSheetState.value == BottomSheetState.EXPANDED,
                         )
-                        .padding(TangemTheme.dimens2.x2),
+                        .padding(8.dp),
                 )
             },
             endContent = {
@@ -75,7 +75,7 @@ internal class DefaultNewsDetailsComponent(
                     contentDescription = null,
                     tint = TangemTheme.colors2.graphic.neutral.primary,
                     modifier = Modifier
-                        .size(TangemTheme.dimens2.x11)
+                        .size(44.dp)
                         .clip(CircleShape)
                         .hazeEffectTangem { blurRadius = 8.dp }
                         .clickableSingle(
@@ -83,7 +83,7 @@ internal class DefaultNewsDetailsComponent(
                             enabled = bottomSheetState.value == BottomSheetState.EXPANDED &&
                                 state.articlesStateUM is ArticlesStateUM.Content,
                         )
-                        .padding(TangemTheme.dimens2.x2_5),
+                        .padding(10.dp),
                 )
             },
         )

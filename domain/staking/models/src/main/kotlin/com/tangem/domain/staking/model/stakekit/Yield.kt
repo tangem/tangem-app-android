@@ -4,6 +4,7 @@ import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.staking.YieldToken
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -26,15 +27,16 @@ data class Yield(
     val allValidators: List<Validator> = validators,
 ) {
 
-    val allValidatorsFull: Boolean = validators.all { it.status == Validator.ValidatorStatus.FULL }
+    @SerialName("allValidatorsFull")
+    val areAllValidatorsFull: Boolean = validators.all { it.status == Validator.ValidatorStatus.FULL }
 
     val preferredValidators: List<Validator>
-        get() = validators.filter { it.preferred }
+        get() = validators.filter { it.isPreferred }
 
     @Serializable
     data class Status(
-        val enter: Boolean,
-        val exit: Boolean?,
+        @SerialName("enter") val canEnter: Boolean,
+        @SerialName("exit") val canExit: Boolean?,
     )
 
     @Serializable
@@ -81,7 +83,7 @@ data class Yield(
         val commission: Double? = null,
         val stakedBalance: String? = null,
         val votingPower: Double? = null,
-        val preferred: Boolean,
+        @SerialName("preferred") val isPreferred: Boolean,
         val isStrategicPartner: Boolean,
     ) {
 
@@ -111,7 +113,7 @@ data class Yield(
         val rewardClaiming: RewardClaiming,
         val defaultValidator: String?,
         val minimumStake: Int?,
-        val supportsMultipleValidators: Boolean?,
+        @SerialName("supportsMultipleValidators") val isMultipleValidatorsSupported: Boolean?,
         val revshare: Enabled,
         val fee: Enabled,
     ) {
@@ -124,7 +126,7 @@ data class Yield(
 
         @Serializable
         data class Enabled(
-            val enabled: Boolean,
+            @SerialName("enabled") val isEnabled: Boolean,
         )
 
         enum class RewardSchedule {
@@ -150,7 +152,7 @@ data class Yield(
 
 @Serializable
 data class AddressArgument(
-    val required: Boolean,
+    @SerialName("required") val isRequired: Boolean,
     val network: String? = null,
     val minimum: SerializedBigDecimal? = null,
     val maximum: SerializedBigDecimal? = null,

@@ -33,12 +33,12 @@ import com.tangem.features.nft.details.entity.transformer.NFTPriceChangeTransfor
 import com.tangem.features.nft.details.entity.transformer.NFTPriceUpdatingTransformer
 import com.tangem.features.nft.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -60,8 +60,6 @@ internal class NFTDetailsModel @Inject constructor(
 
     private val params: NFTDetailsComponent.Params = paramsContainer.require()
 
-    val state: StateFlow<NFTDetailsUM> get() = _state
-
     private var appCurrency: AppCurrency = AppCurrency.Default
 
     private val stateFactory: NFTDetailsUMFactory = NFTDetailsUMFactory(
@@ -78,12 +76,10 @@ internal class NFTDetailsModel @Inject constructor(
         onRefresh = ::onRefresh,
         onTokenAddressBlockClick = ::onTokenAddressBlockClick,
     )
-
-    private val _state by lazy {
-        MutableStateFlow(
+    val state: StateFlow<NFTDetailsUM>
+        field = MutableStateFlow(
             value = stateFactory.getInitialState(params.nftAsset, params.nftCollection),
         )
-    }
 
     val bottomSheetNavigation: SlotNavigation<NFTDetailsBottomSheetConfig> = SlotNavigation()
 
@@ -110,7 +106,7 @@ internal class NFTDetailsModel @Inject constructor(
     }
 
     private fun subscribeToPriceChanges() {
-        _state.update(NFTPriceUpdatingTransformer)
+        state.update(NFTPriceUpdatingTransformer)
         modelScope.launch {
             getNFTPriceUseCase(params.userWalletId, params.nftAsset)
                 .fold(
@@ -121,7 +117,7 @@ internal class NFTDetailsModel @Inject constructor(
                         quoteFlow
                             .distinctUntilChanged()
                             .onEach { salePrice ->
-                                _state.update(
+                                state.update(
                                     NFTPriceChangeTransformer(
                                         appCurrency = appCurrency,
                                         nftSalePrice = salePrice,
@@ -134,10 +130,10 @@ internal class NFTDetailsModel @Inject constructor(
     }
 
     private fun onRefresh() {
-        _state.update {
+        state.update {
             it.copy(pullToRefreshConfig = it.pullToRefreshConfig.copy(isRefreshing = true))
         }
-        _state.update(NFTPriceUpdatingTransformer)
+        state.update(NFTPriceUpdatingTransformer)
         modelScope.launch {
             awaitAll(
                 async {
@@ -154,7 +150,7 @@ internal class NFTDetailsModel @Inject constructor(
                     )
                 },
             )
-            _state.update {
+            state.update {
                 it.copy(pullToRefreshConfig = it.pullToRefreshConfig.copy(isRefreshing = false))
             }
         }
@@ -172,7 +168,7 @@ internal class NFTDetailsModel @Inject constructor(
 
     private fun onReadMoreClick() {
         analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonReadMore())
-        when (val topInfo = _state.value.nftAsset.topInfo) {
+        when (val topInfo = state.value.nftAsset.topInfo) {
             is NFTAssetUM.TopInfo.Empty -> Unit
             is NFTAssetUM.TopInfo.Content -> {
                 bottomSheetNavigation.activate(

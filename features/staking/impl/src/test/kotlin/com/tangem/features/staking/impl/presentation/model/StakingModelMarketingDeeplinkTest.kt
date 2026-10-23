@@ -19,7 +19,7 @@ internal class StakingModelMarketingDeeplinkTest : StakingModelTestBase() {
     fun `GIVEN swap deeplink WHEN onMarketingBannerDeeplink THEN not handled and no navigation`() =
         runTest {
             // Arrange
-            every { appRouter.push(any(), any()) } just Runs
+            every { router.push(any(), any()) } just Runs
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
@@ -30,7 +30,7 @@ internal class StakingModelMarketingDeeplinkTest : StakingModelTestBase() {
 
             // Assert
             assertThat(handled).isFalse()
-            verify(exactly = 0) { appRouter.push(any(), any()) }
+            verify(exactly = 0) { router.push(any(), any()) }
 
             model.onDestroy()
         }
@@ -38,7 +38,7 @@ internal class StakingModelMarketingDeeplinkTest : StakingModelTestBase() {
     @Test
     fun `GIVEN buy deeplink WHEN onMarketingBannerDeeplink THEN pushes Onramp for current token`() = runTest {
         // Arrange
-        every { appRouter.push(any(), any()) } just Runs
+        every { router.push(any(), any()) } just Runs
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -48,7 +48,7 @@ internal class StakingModelMarketingDeeplinkTest : StakingModelTestBase() {
         // Assert
         assertThat(handled).isTrue()
         verify {
-            appRouter.push(
+            router.push(
                 match {
                     it is AppRoute.Onramp &&
                         it.userWalletId == testUserWalletId &&
@@ -65,7 +65,7 @@ internal class StakingModelMarketingDeeplinkTest : StakingModelTestBase() {
     @Test
     fun `GIVEN external deeplink WHEN onMarketingBannerDeeplink THEN not handled and no navigation`() = runTest {
         // Arrange
-        every { appRouter.push(any(), any()) } just Runs
+        every { router.push(any(), any()) } just Runs
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -74,7 +74,7 @@ internal class StakingModelMarketingDeeplinkTest : StakingModelTestBase() {
 
         // Assert
         assertThat(handled).isFalse()
-        verify(exactly = 0) { appRouter.push(any(), any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
 
         model.onDestroy()
     }

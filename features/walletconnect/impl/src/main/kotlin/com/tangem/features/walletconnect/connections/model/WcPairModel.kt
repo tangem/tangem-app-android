@@ -149,11 +149,11 @@ internal class WcPairModel @Inject constructor(
     ) {
         when (pairState) {
             is WcPairState.Approving.Loading -> appInfoUiState.transformerUpdate(
-                WcConnectButtonProgressTransformer(showProgress = true),
+                WcConnectButtonProgressTransformer(shouldShowProgress = true),
             )
             is WcPairState.Approving.Result -> {
                 appInfoUiState.transformerUpdate(
-                    WcConnectButtonProgressTransformer(showProgress = false),
+                    WcConnectButtonProgressTransformer(shouldShowProgress = false),
                 )
                 pairState
                     .result
@@ -163,7 +163,7 @@ internal class WcPairModel @Inject constructor(
             }
             is WcPairState.Error -> {
                 appInfoUiState.transformerUpdate(
-                    WcConnectButtonProgressTransformer(showProgress = false),
+                    WcConnectButtonProgressTransformer(shouldShowProgress = false),
                 )
                 processError(pairState.error)
             }
@@ -385,7 +385,7 @@ internal class WcPairModel @Inject constructor(
     private fun createLoadingState(isAccountMode: Boolean = false): WcAppInfoUM.Loading {
         return WcAppInfoUM.Loading(
             onDismiss = ::rejectPairing,
-            connectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = false, onClick = {}),
+            connectButtonConfig = WcPrimaryButtonConfig(shouldShowProgress = false, isEnabled = false, onClick = {}),
             portfolioName = if (isAccountMode) {
                 resourceReference(R.string.account_details_title)
             } else {

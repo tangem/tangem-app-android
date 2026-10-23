@@ -82,13 +82,13 @@ internal fun AddToPortfolioBottomSheetV2(
 private fun AddToPortfolioRouteContent(animatedStack: ChildStack<AddToPortfolioRoutes, ComposableContentComponent>) {
     val spec = animatedStack.active.configuration.uiSpec()
     val baseModifier = if (spec.shouldApplyHorizontalPadding) {
-        Modifier.padding(horizontal = TangemTheme.dimens2.x4)
+        Modifier.padding(horizontal = 16.dp)
     } else {
         Modifier
     }
     if (spec.isScrollable) {
         val bottomInset = LocalTangemBottomSheetContentBottomInset.current
-        val scrollBottomReserve = if (bottomInset > 0.dp) bottomInset else TangemTheme.dimens2.x4
+        val scrollBottomReserve = if (bottomInset > 0.dp) bottomInset else 16.dp
         Column(modifier = baseModifier.verticalScroll(rememberScrollState())) {
             animatedStack.active.instance.Content(modifier = Modifier)
             Spacer(modifier = Modifier.height(scrollBottomReserve))
@@ -130,13 +130,13 @@ private fun AddToPortfolioBottomSheetTitle(
                 contentDescription = null,
                 tint = TangemTheme.colors2.graphic.neutral.primary,
                 modifier = Modifier
-                    .size(TangemTheme.dimens2.x11)
+                    .size(44.dp)
                     .background(
                         color = TangemTheme.colors2.button.backgroundSecondary,
                         shape = CircleShape,
                     )
                     .clickableSingle(onClick = onCloseClick)
-                    .padding(TangemTheme.dimens2.x2),
+                    .padding(8.dp),
             )
         },
     )

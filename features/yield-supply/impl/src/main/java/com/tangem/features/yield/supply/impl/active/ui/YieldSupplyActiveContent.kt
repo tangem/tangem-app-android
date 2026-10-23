@@ -91,7 +91,7 @@ internal fun YieldSupplyActiveContent(
             AnimatedVisibility(state.boostText != null) {
                 Column {
                     HorizontalDivider(
-                        thickness = TangemTheme.dimens.size0_5,
+                        thickness = 0.5.dp,
                         color = TangemTheme.colors.stroke.primary,
                     )
                     state.boostText?.let { boostText ->

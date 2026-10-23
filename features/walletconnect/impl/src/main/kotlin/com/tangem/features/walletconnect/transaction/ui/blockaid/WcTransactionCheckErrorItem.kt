@@ -25,7 +25,7 @@ internal fun WcTransactionCheckErrorItem(notification: BlockAidNotificationUM, m
             .fillMaxWidth(),
         config = NotificationConfig(
             title = notification.title,
-            subtitle = TextReference.Str(notification.text?.resolveReference() ?: ""),
+            subtitle = TextReference.Str(notification.text?.resolveReference().orEmpty()),
             iconResId = when (notification.type) {
                 BlockAidNotificationUM.Type.ERROR -> R.drawable.ic_alert_circle_24
                 BlockAidNotificationUM.Type.WARNING -> R.drawable.ic_alert_triangle_20
