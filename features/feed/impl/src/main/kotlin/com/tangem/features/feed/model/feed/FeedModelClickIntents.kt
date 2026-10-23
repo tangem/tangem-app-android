@@ -4,7 +4,6 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.news.model.NewsListConfig
-import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.foryou.TokenSummaryComponent
 
 /**
@@ -12,7 +11,7 @@ import com.tangem.features.foryou.TokenSummaryComponent
  */
 internal interface FeedModelClickIntents {
     fun onMarketItemClick(token: TokenMarketParams, appCurrency: AppCurrency, source: String, newsId: Int? = null)
-    fun onMarketOpenClick(sortBy: SortByTypeUM?)
+    fun onMarketOpenClick()
 
     /**
      * Method to open article of news from different places.
