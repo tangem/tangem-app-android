@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.tiers.select
 
 import androidx.compose.runtime.Stable
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -202,7 +203,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
                     uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
                 }
             }.onRight {
-                // TODO v_rodiononov: #[REDACTED_TASK_KEY] Tangem Pay Onboarding Success Screen
+                router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayOnboardingSuccess)
             }
         }
     }

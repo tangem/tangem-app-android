@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.verified
 
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pushNew
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -44,7 +45,6 @@ internal class TangemPayVerifiedModel @Inject constructor(
     private val stateFactory = TangemPayVerifiedUMFactory(
         onChoosePlanClick = ::onChoosePlanClick,
         onOpenMoneyAccountClick = ::onOpenMoneyAccountClick,
-        onNotifyClick = ::onNotifyClick,
         onCloseClick = ::onCloseClick,
     )
 
@@ -104,7 +104,7 @@ internal class TangemPayVerifiedModel @Inject constructor(
                     showErrorDialog()
                 }
             }.onRight {
-                // TODO v_rodiononov: #[REDACTED_TASK_KEY] Tangem Pay Onboarding Success Screen
+                router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayOnboardingSuccess)
             }
         }.saveIn(createOrderJobHolder)
     }
@@ -116,10 +116,6 @@ internal class TangemPayVerifiedModel @Inject constructor(
                 message = resourceReference(R.string.common_try_again_later),
             ),
         )
-    }
-
-    private fun onNotifyClick() {
-        // TODO v_rodiononov: #[REDACTED_TASK_KEY] Remove Notify Button
     }
 
     private fun onCloseClick() {
