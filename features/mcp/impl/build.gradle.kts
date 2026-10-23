@@ -30,6 +30,7 @@ dependencies {
     implementation(projects.domain.mcp)
     implementation(projects.domain.mcp.models)
     implementation(projects.domain.models)
+    implementation(projects.domain.wallets)
 
     /** Core */
     implementation(projects.core.configToggles)
