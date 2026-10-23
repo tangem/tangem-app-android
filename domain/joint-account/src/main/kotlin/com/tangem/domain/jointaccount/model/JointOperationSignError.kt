@@ -35,7 +35,7 @@ sealed interface JointOperationSignError {
              */
             REFUND_MISMATCH,
 
-            /** An `approve` vote carries no signature, or one that does not recover to the member it names */
+            /** An `approve` vote, the initiator's included, is missing its signature or does not recover to its member */
             VOTE_SIGNATURE_MISMATCH,
         }
     }
