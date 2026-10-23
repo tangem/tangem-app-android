@@ -152,6 +152,28 @@ internal class SwapAmountHideProvidersTransformerTest {
         assertThat(result.swapCurrencies).isEqualTo(SwapCurrencies(fromGroup = expectedGroup, toGroup = expectedGroup))
     }
 
+    @Test
+    fun `GIVEN last fixed rate provider is hidden WHEN transform THEN rate mode becomes float only`() {
+        // Arrange
+        val fixedAndFloat = changelly.copy(rateTypes = listOf(ExpressRateType.Fixed, ExpressRateType.Float))
+        val floatOnly = changeHero.copy(rateTypes = listOf(ExpressRateType.Float))
+        val state = buildContentState(
+            providers = listOf(fixedAndFloat, floatOnly),
+            quotes = emptyList(),
+            selectedQuote = SwapQuoteUM.Empty,
+        ).copy(
+            secondaryCryptoCurrencyStatus = currencyStatus,
+            swapRateMode = SwapRateMode.FLOAT_AND_FIXED,
+        )
+
+        // Act
+        val result = buildTransformer(providerIds = setOf(changelly.providerId)).transform(state)
+
+        // Assert
+        result as SwapAmountUM.Content
+        assertThat(result.swapRateMode).isEqualTo(SwapRateMode.FLOAT_ONLY)
+    }
+
     private fun buildTransformer(providerIds: Set<String>) = SwapAmountHideProvidersTransformer(
         providerIds = providerIds,
         secondaryMaximumAmountBoundary = null,
