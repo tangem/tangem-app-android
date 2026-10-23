@@ -27,6 +27,7 @@ class ReceiveAddressesFactory(
     private val getDynamicReceiveAddressUseCase: GetDynamicReceiveAddressUseCase,
     private val dynamicAddressesRepository: DynamicAddressesRepository,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val isSolanaPnftAndCoreNftEnabled: () -> Boolean,
 ) {
 
     suspend fun create(
@@ -151,7 +152,11 @@ class ReceiveAddressesFactory(
                 add(
                     TokenReceiveNotification(
                         title = R.string.nft_receive_unsupported_types,
-                        subtitle = R.string.nft_receive_unsupported_types_description,
+                        subtitle = if (isSolanaPnftAndCoreNftEnabled()) {
+                            R.string.nft_receive_unsupported_cnft_description
+                        } else {
+                            R.string.nft_receive_unsupported_types_description
+                        },
                     ),
                 )
             }
