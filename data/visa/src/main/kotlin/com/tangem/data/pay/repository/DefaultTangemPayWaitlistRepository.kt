@@ -1,6 +1,7 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.pay.id
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.TangemPayWaitlistEntry
@@ -17,6 +18,7 @@ internal class DefaultTangemPayWaitlistRepository @Inject constructor(
 
     override suspend fun join(
         userWalletId: UserWalletId?,
+        product: TangemPayProduct,
         entry: TangemPayWaitlistEntry,
         idempotencyKey: String,
     ): Either<VisaApiError, Unit> {
@@ -26,7 +28,7 @@ internal class DefaultTangemPayWaitlistRepository @Inject constructor(
                 idempotencyKey = idempotencyKey,
                 body = WaitlistRequest(
                     email = entry.email,
-                    product = entry.product.id,
+                    product = product.id,
                     country = entry.countryCode,
                     region = entry.regionCode,
                     hasMarketingConsent = entry.isMarketingConsentGiven,

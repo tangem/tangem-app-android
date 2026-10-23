@@ -66,10 +66,8 @@ internal class MarketsListModel @Inject constructor(
             onRetryButtonClicked = { activeListManager.reload() },
             onTokenClick = { onTokenUIClicked(it) },
             onShowTokensUnder100kClicked = { analyticsEventHandler.send(MarketsListAnalyticsEvent.ShowTokens()) },
-            shouldAlwaysShowSearchBar = Provider { modelParams.params.shouldAlwaysShowSearchBar },
             preselectedSortType = Provider { modelParams.params.preselectedSortType },
             preselectedInterval = Provider { modelParams.params.preselectedInterval },
-            onBackClick = modelParams.clickIntents.onBackClicked,
             analyticsEventHandler = analyticsEventHandler,
             onSearchBarClick = { modelParams.clickIntents.onSearchClicked(AnalyticsParam.ScreensSources.Market.value) },
         )

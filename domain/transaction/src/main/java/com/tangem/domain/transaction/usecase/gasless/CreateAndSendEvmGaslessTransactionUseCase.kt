@@ -1,7 +1,6 @@
 package com.tangem.domain.transaction.usecase.gasless
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
@@ -18,6 +17,7 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.utils.CryptoCurrencyOperations.getCryptoCurrency
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -37,6 +37,7 @@ import java.math.BigInteger
 class CreateAndSendEvmGaslessTransactionUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val singleAccountListSupplier: SingleAccountListSupplier,
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val gaslessSignerProvider: GaslessSignerProvider,
 ) {
@@ -84,7 +85,9 @@ class CreateAndSendEvmGaslessTransactionUseCase(
     ): GaslessContext {
         val currency = singleAccountListSupplier.getSyncOrNull(userWalletId = userWallet.walletId)
             .getCryptoCurrency(currencyId = fee.feeTokenId, network = null)
-            .getOrElse { error("Token for fee not found") }
+            .getOrNull()
+            ?: nonPortfolioCurrenciesProvider.findCurrency(userWallet.walletId, fee.feeTokenId)
+            ?: error("Token for fee not found")
 
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWallet.walletId,

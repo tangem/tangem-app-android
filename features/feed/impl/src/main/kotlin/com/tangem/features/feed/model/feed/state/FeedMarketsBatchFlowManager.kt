@@ -29,7 +29,7 @@ internal class FeedMarketsBatchFlowManager(
     private val currentAppCurrency: Provider<AppCurrency>,
     private val modelScope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
-    orders: List<TokenMarketListConfig.Order> = USER_FACING_SORTS,
+    orders: List<TokenMarketListConfig.Order>,
 ) {
     private val managersByOrder = orders.associateWith { order ->
         createManagerForOrder(order)
@@ -110,28 +110,12 @@ internal class FeedMarketsBatchFlowManager(
         )
     }
 
-    fun reloadAll() {
-        managersByOrder.values.forEach { manager ->
-            manager.reload(currentAppCurrency().code)
-        }
-    }
-
     fun reloadManager(order: TokenMarketListConfig.Order) {
         managersByOrder[order]?.reload(currentAppCurrency().code)
     }
 
-    fun updateQuotes() {
-        managersByOrder.values.forEach { manager ->
-            manager.updateQuotes(currentAppCurrency().code)
-        }
-    }
-
     fun loadCharts(order: TokenMarketListConfig.Order) {
         managersByOrder[order]?.loadCharts()
-    }
-
-    fun getOnLastBatchLoadedSuccessFlow(order: TokenMarketListConfig.Order): Flow<Int>? {
-        return managersByOrder[order]?.onLastBatchLoadedSuccess
     }
 
     fun getTokenMarketById(tokenId: CryptoCurrency.RawID): TokenMarket? {
@@ -214,24 +198,6 @@ internal class FeedMarketsBatchFlowManager(
                 initialValue = null,
             )
 
-        val onLastBatchLoadedSuccess = batchFlow.state
-            .distinctUntilChanged { old, new -> old.status == new.status && old.data.size == new.data.size }
-            .mapNotNull { batchListState ->
-                when (val status = batchListState.status) {
-                    is PaginationStatus.Paginating -> {
-                        if (status.lastResult is BatchFetchResult.Success) {
-                            batchListState.data.lastOrNull()?.key
-                        } else {
-                            null
-                        }
-                    }
-                    is PaginationStatus.EndOfPagination -> {
-                        batchListState.data.lastOrNull()?.key
-                    }
-                    else -> null
-                }
-            }
-
         init {
             batchFlow.state
                 .map { it.data }
@@ -261,32 +227,6 @@ internal class FeedMarketsBatchFlowManager(
                             priceChangeInterval = TokenMarketListConfig.Interval.H24,
                             order = order,
                         ),
-                    ),
-                )
-            }
-        }
-
-        fun updateQuotes(fiatPriceCurrency: String) {
-            modelScope.launch(dispatchers.default) {
-                actionsFlow.emit(
-                    BatchAction.CancelUpdates {
-                        it.updateRequest is TokenMarketUpdateRequest.UpdateQuotes
-                    },
-                )
-
-                actionsFlow.emit(
-                    BatchAction.UpdateBatches(
-                        keys = batchFlow
-                            .state
-                            .value
-                            .data
-                            .map { it.key }
-                            .toSet(),
-                        updateRequest = TokenMarketUpdateRequest.UpdateQuotes(
-                            currencyId = fiatPriceCurrency,
-                        ),
-                        isAsync = true,
-                        operationId = "update quotes",
                     ),
                 )
             }
@@ -340,15 +280,3 @@ internal class FeedMarketsBatchFlowManager(
         }
     }
 }
-
-/**
-
- * order without a [SortByTypeUM] would cost a request nothing renders.
- */
-private val USER_FACING_SORTS = listOf(
-    TokenMarketListConfig.Order.ByRating,
-    TokenMarketListConfig.Order.Trending,
-    TokenMarketListConfig.Order.Buyers,
-    TokenMarketListConfig.Order.TopGainers,
-    TokenMarketListConfig.Order.TopLosers,
-)
