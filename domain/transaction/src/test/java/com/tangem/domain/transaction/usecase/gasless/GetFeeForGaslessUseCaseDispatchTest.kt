@@ -80,6 +80,10 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
         currency = accountCoin,
         value = mockk(relaxed = true),
     )
+    private val accountTokenStatus = CryptoCurrencyStatus(
+        currency = currencyFactory.createToken(blockchain = Blockchain.Polygon),
+        value = mockk(relaxed = true),
+    )
 
     private val sut = GetFeeForGaslessUseCase(
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
@@ -193,6 +197,32 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
                 transactionData = transactionData,
                 nativeCurrencyStatus = accountCoinStatus,
                 accountStatusList = accountStatusList,
+                sentAmount = null,
+            )
+        } returns expected.right()
+
+        // Act
+        val actual = sut(userWallet = userWallet, network = accountNetwork, transactionData = transactionData)
+
+        // Assert
+        assertThat(actual).isEqualTo(expected.right())
+    }
+
+    @Test
+    fun `GIVEN token of a non-portfolio account WHEN invoke THEN the fee is quoted in that token`() = runTest {
+        // Arrange
+        val expected = TransactionFeeExtended(transactionFee = nativeFee, feeTokenId = accountTokenStatus.currency.id)
+        every { currencyChecksRepository.isNetworkSupportedForGaslessTx(accountNetwork) } returns true
+        coEvery {
+            nonPortfolioCurrenciesProvider.getStatuses(userWalletId, accountNetwork)
+        } returns listOf(accountCoinStatus, accountTokenStatus)
+        coEvery {
+            evmGaslessFeeResolver.resolveWithSelectedFeeToken(
+                userWallet = userWallet,
+                network = accountNetwork,
+                transactionData = transactionData,
+                nativeCurrencyStatus = accountCoinStatus,
+                tokenCurrencyStatus = accountTokenStatus,
                 sentAmount = null,
             )
         } returns expected.right()
