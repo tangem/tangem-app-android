@@ -22,6 +22,7 @@ dependencies {
     implementation(deps.androidx.datastore)
     implementation(deps.arrow.core)
     implementation(deps.moshi)
+    implementation(deps.web3j.core)
     // endregion
 
     // region Tangem SDK
@@ -72,6 +73,5 @@ dependencies {
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
-    testImplementation(deps.web3j.core)
     // endregion
 }

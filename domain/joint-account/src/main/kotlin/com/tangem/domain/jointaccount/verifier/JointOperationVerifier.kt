@@ -16,6 +16,7 @@ import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
 import com.tangem.domain.jointaccount.safe.SafeSingleton
+import com.tangem.domain.jointaccount.signing.JointSignatureRecoverer
 import java.math.BigInteger
 
 /**
@@ -25,11 +26,13 @@ import java.math.BigInteger
  * 2. this wallet's own owner address is among the members;
  * 3. the `SafeTx` decodes to exactly what the UI shows the user — recipient, amount, asset;
  * 4. the payload has one of the two allowed shapes and never targets the Safe itself;
- * 5. the refund fields pay what the operation was built to pay, and no one else.
+ * 5. the refund fields pay what the operation was built to pay, and no one else;
+ * 6. every `approve` vote the backend relays recovers to the member it is attributed to.
  */
 class JointOperationVerifier(
     private val payloadCodec: JointTransferPayloadCodec,
     private val safeAddressCalculator: SafeAddressCalculator,
+    private val signatureRecoverer: JointSignatureRecoverer,
 ) {
 
     /**
@@ -65,6 +68,37 @@ class JointOperationVerifier(
         checkDisplayedPayload(safeTx = operation.safeTx, displayed = displayed)
         checkForm(safeTx = operation.safeTx, safeAddress = safeAddress)
         checkRefund(safeTx = operation.safeTx, bounds = refundBounds)
+        checkVotes(jointAccount = jointAccount, operation = operation, safeAddress = safeAddress)
+    }
+
+    /**
+     * The relayer executes with the very signatures relayed here, so one that does not recover to its member means
+     * a signature set other than the one on screen would execute. A `reject` carries none and is not checked.
+     */
+    private fun Raise<JointOperationSignError>.checkVotes(
+        jointAccount: JointAccount,
+        operation: JointOperation,
+        safeAddress: String,
+    ) {
+        val voteMismatch = VerificationFailed(reason = VerificationFailed.Reason.VOTE_SIGNATURE_MISMATCH)
+
+        operation.signatures
+            .filter { it.state == JointOperation.MemberSignature.State.SIGNED }
+            .forEach { vote ->
+                val signature = ensureNotNull(vote.signature) { voteMismatch }
+                val isMember = jointAccount.members.any { it.address.equals(vote.address, ignoreCase = true) }
+                ensure(isMember) { voteMismatch }
+
+                val signer = signatureRecoverer
+                    .recoverSafeTxSigner(
+                        safeTx = operation.safeTx,
+                        chainId = operation.chainId,
+                        safeAddress = safeAddress,
+                        signature = signature,
+                    )
+                    .getOrNull()
+                ensure(signer != null && signer.equals(vote.address, ignoreCase = true)) { voteMismatch }
+            }
     }
 
     /**

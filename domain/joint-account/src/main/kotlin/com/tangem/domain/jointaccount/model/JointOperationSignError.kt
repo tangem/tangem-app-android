@@ -34,6 +34,9 @@ sealed interface JointOperationSignError {
              * `refundReceiver` on top of the transfer the user sees, so these four move money.
              */
             REFUND_MISMATCH,
+
+            /** An `approve` vote carries no signature, or one that does not recover to the member it names */
+            VOTE_SIGNATURE_MISMATCH,
         }
     }
 
