@@ -17,8 +17,6 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.moneyaccount.model.MoneyAccountEligibility
-import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
@@ -32,7 +30,6 @@ import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.*
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
@@ -65,9 +62,7 @@ internal class DetailsModel @Inject constructor(
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
-    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val tangemPayEligibilityManager: TangemPayEligibilityManager,
-    private val getMoneyAccountEligibilityUseCase: GetMoneyAccountEligibilityUseCase,
 ) : Model() {
 
     private val params: DetailsComponent.Params = paramsContainer.require()
@@ -294,7 +289,6 @@ internal class DetailsModel @Inject constructor(
 
     fun onResume() {
         updateTangemPayItem()
-        updateMoneyAccountItem()
     }
 
     private fun updateTangemPayItem() {
@@ -332,31 +326,6 @@ internal class DetailsModel @Inject constructor(
                 router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings))
             } else {
                 items.update { itemsBuilder.removeTangemPayItem(it) }
-            }
-        }
-    }
-
-    private fun updateMoneyAccountItem() {
-        modelScope.launch {
-            val isMoneyAccountEnabled = moneyAccountFeatureToggles.isMoneyAccountsEnabled
-            val eligibility = getMoneyAccountEligibilityUseCase()
-            if (eligibility is MoneyAccountEligibility.Available && isMoneyAccountEnabled) {
-                items.update { items ->
-                    itemsBuilder.addMoneyAccountItem(items = items, onClick = ::onMoneyAccountItemClicked)
-                }
-            } else {
-                items.update { items -> itemsBuilder.removeMoneyAccountItem(items = items) }
-            }
-        }
-    }
-
-    private fun onMoneyAccountItemClicked() {
-        modelScope.launch {
-            when (getMoneyAccountEligibilityUseCase()) {
-                is MoneyAccountEligibility.Available -> router.push(
-                    AppRoute.MoneyAccountOnboarding(AppRoute.MoneyAccountOnboarding.Mode.FromDetailsScreen),
-                )
-                MoneyAccountEligibility.NotAvailable -> items.update { itemsBuilder.removeMoneyAccountItem(it) }
             }
         }
     }

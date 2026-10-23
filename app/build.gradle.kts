@@ -391,8 +391,6 @@ dependencies {
     implementation(projects.features.tangempay.onboarding.impl)
     implementation(projects.features.jointAccount.api)
     implementation(projects.features.jointAccount.impl)
-    implementation(projects.features.moneyAccount.onboarding.impl)
-    implementation(projects.features.moneyAccount.onboarding.api)
     implementation(projects.features.moneyAccount.main.impl)
     implementation(projects.features.moneyAccount.main.api)
     implementation(projects.features.moneyAccount.details.impl)
