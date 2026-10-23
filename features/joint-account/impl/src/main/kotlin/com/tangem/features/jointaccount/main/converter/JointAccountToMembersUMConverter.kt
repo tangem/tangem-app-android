@@ -20,21 +20,15 @@ import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 
 /**
- * Maps a [JointAccount] (plus the invites this device holds) to [JointAccountMembersUM]. Everything on the screen
- * follows [JointAccount.status], whether this wallet is the creator and whether it has confirmed the account
- * (see [MembersScreenPhase]); there is no separate "mode" per entry point.
- *
- * The wallet recognises itself among the members by [Input.ownAddress], derived from the keys on the device: the
- * backend marks nobody as "you".
+ * Everything on the screen follows the [MembersScreenPhase]; there is no separate mode per entry point. The wallet
+ * recognises itself among the members by [Input.ownAddress]: the backend marks nobody as "you".
  */
 internal class JointAccountToMembersUMConverter(
     private val callbacks: Callbacks,
 ) : Converter<JointAccountToMembersUMConverter.Input, JointAccountMembersUM> {
-
     /**
-     * @property invites    the invites this device holds; only the creating device ever receives them
-     * @property ownAddress this wallet's owner address in the account, null while its key is not derived yet
-     * @property nowMillis  the moment an invite's expiry is judged against
+     * @property invites    only the creating device ever receives them
+     * @property ownAddress `null` while the wallet's key is not derived yet
      */
     data class Input(
         val account: JointAccount,
@@ -82,11 +76,6 @@ internal class JointAccountToMembersUMConverter(
             freeSlots = freeSlots.toImmutableList(),
             membersLabel = if (joined.isNotEmpty()) {
                 resourceReference(CoreUiR.string.joint_account_members_title)
-            } else {
-                null
-            },
-            waitingLabel = if (freeSlots.isNotEmpty()) {
-                resourceReference(CoreUiR.string.joint_account_invite_members_waiting_to_join)
             } else {
                 null
             },
@@ -155,7 +144,11 @@ internal class JointAccountToMembersUMConverter(
         return when (phase.stage) {
             MembersScreenPhase.Stage.Completed -> null
             MembersScreenPhase.Stage.Collecting -> JointAccountMembersUM.FooterUM(
-                hint = collectingHint(phase = phase, freeSlots = freeSlots),
+                hint = collectingHint(
+                    phase = phase,
+                    freeSlots = freeSlots,
+                    isAnyInviteShared = input.sharedInvites.isNotEmpty(),
+                ),
                 button = button,
             )
             MembersScreenPhase.Stage.Confirming -> if (phase.isOwnVerified) {
@@ -174,23 +167,29 @@ internal class JointAccountToMembersUMConverter(
         }
     }
 
-    private fun collectingHint(phase: MembersScreenPhase, freeSlots: List<MemberUM.FreeSlot>): TextReference {
+    /** "Invite K members" only before any invite was ever shared; a redeemed invite stays in the shared set */
+    private fun collectingHint(
+        phase: MembersScreenPhase,
+        freeSlots: List<MemberUM.FreeSlot>,
+        isAnyInviteShared: Boolean,
+    ): TextReference {
         if (freeSlots.isEmpty()) return resourceReference(CoreUiR.string.joint_account_invite_members_everyone_joined)
 
         val notInvited = freeSlots.count { slot -> slot.status is SlotStatusUM.NotInvited }
-        return if (phase.isThisDeviceCreator && notInvited > 0) {
-            pluralReference(
-                id = CoreUiR.plurals.joint_account_invite_members_invite_more,
-                count = notInvited,
-                formatArgs = wrappedList(notInvited),
-            )
-        } else {
-            pluralReference(
+        if (!phase.isThisDeviceCreator || notInvited == 0) {
+            return pluralReference(
                 id = CoreUiR.plurals.joint_account_invite_members_awaiting_to_join,
                 count = freeSlots.size,
                 formatArgs = wrappedList(freeSlots.size),
             )
         }
+
+        val id = if (!isAnyInviteShared) {
+            CoreUiR.plurals.joint_account_invite_members_invite_count
+        } else {
+            CoreUiR.plurals.joint_account_invite_members_invite_more
+        }
+        return pluralReference(id = id, count = notInvited, formatArgs = wrappedList(notInvited))
     }
 
     private fun joinedMember(

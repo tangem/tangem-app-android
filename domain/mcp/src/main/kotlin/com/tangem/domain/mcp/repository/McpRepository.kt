@@ -49,6 +49,20 @@ interface McpRepository {
      */
     fun getSessions(): Flow<List<McpSession>>
 
-    /** Revokes [sessionId], cutting off the client's access and refresh tokens. */
+    /**
+     * Revokes [sessionId], cutting off the client's access and refresh tokens.
+     *
+     * A session the service no longer knows is a success, not a failure: the authorization is gone
+     * either way, and the caller has nothing left to tell the owner about.
+     */
     suspend fun revokeSession(sessionId: String): Either<Throwable, Unit>
+
+    /**
+     * Revokes every authorization currently issued, across all wallets — the agent half of the
+     * screen's Disconnect All, which cuts off every dApp the same way.
+     *
+     * The service has no bulk endpoint, so this is the single-session revoke sent for each of them at
+     * once. A session that fails to be revoked stays, and comes back with the reloaded list.
+     */
+    suspend fun revokeAllSessions()
 }

@@ -56,6 +56,7 @@ internal class WcEthTxHelperTest {
             gasPrice = null,
             value = "0x0de0b6b3a7640000",
             nonce = null,
+            chainId = null,
         )
     }
 

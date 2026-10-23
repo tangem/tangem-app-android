@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.tiers.select
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
@@ -48,6 +49,7 @@ internal data class TangemPaySelectPlanUM(
 
         data class Select(
             val isProcessing: Boolean,
+            val selectButtonIconEnd: TangemIconUM?,
             val onComparePlansClick: () -> Unit,
             val onSelectClick: () -> Unit,
         ) : Content

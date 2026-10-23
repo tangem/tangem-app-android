@@ -16,6 +16,7 @@ import com.tangem.tap.domain.tasks.SignHashesTask
 import com.tangem.tap.domain.tasks.product.RegisterColdWalletRunnable
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 
 @Suppress("LongParameterList")
@@ -95,12 +96,13 @@ class TangemSigner(
         val runnable = withColdRegistration(task)
         return session?.let { runnable.run(session = it) }
             ?: suspendCancellableCoroutine { continuation ->
+                val isResumed = AtomicBoolean(false)
                 tangemSdk.startSessionWithRunnable(
                     runnable = runnable,
                     cardId = cardId,
                     initialMessage = initialMessage,
                 ) { result ->
-                    if (continuation.isActive) continuation.resume(result)
+                    if (isResumed.compareAndSet(false, true) && continuation.isActive) continuation.resume(result)
                 }
             }
     }

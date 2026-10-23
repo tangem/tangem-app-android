@@ -96,7 +96,4 @@ sealed class CollectibleException(message: String?) : Exception(message) {
 
     /** The machine has too many packs currently open. */
     class LowInventory : CollectibleException("Low inventory")
-
-    /** The backend will not buy this card back; a retry gets the same answer. */
-    class BuybackRefused : CollectibleException("Buyback refused")
 }

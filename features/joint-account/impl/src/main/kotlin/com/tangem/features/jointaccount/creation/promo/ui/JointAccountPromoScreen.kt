@@ -7,11 +7,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -139,17 +141,25 @@ private fun Point(point: JointAccountPromoUM.PointUM, modifier: Modifier = Modif
         )
 
         Text(
-            text = buildAnnotatedString {
-                withStyle(SpanStyle(color = TangemTheme.colors3.text.primary)) {
-                    append(point.lead.resolveReference())
-                }
-                append(' ')
-                withStyle(SpanStyle(color = TangemTheme.colors3.text.secondary)) {
-                    append(point.description.resolveReference())
-                }
-            },
+            text = pointText(point = point),
             style = TangemTheme.typography3.subheading.medium,
         )
+    }
+}
+
+@Composable
+private fun pointText(point: JointAccountPromoUM.PointUM): AnnotatedString {
+    val lead = point.lead.resolveReference()
+    val description = point.description.resolveReference()
+    val leadColor = TangemTheme.colors3.text.primary
+    val descriptionColor = TangemTheme.colors3.text.secondary
+
+    return remember(lead, description, leadColor, descriptionColor) {
+        buildAnnotatedString {
+            withStyle(SpanStyle(color = leadColor)) { append(lead) }
+            append(' ')
+            withStyle(SpanStyle(color = descriptionColor)) { append(description) }
+        }
     }
 }
 

@@ -24,7 +24,7 @@ class TangemSnapFlingBehavior(
 ) : FlingBehavior {
 
     private val velocityThreshold = with(density) { shortSnapVelocityThreshold.toPx() }
-    private var motionScaleDuration = DefaultScrollMotionDurationScale
+    private val motionScaleDuration = DefaultScrollMotionDurationScale
 
     override suspend fun ScrollScope.performFling(initialVelocity: Float): Float {
         return performFling(initialVelocity) {}
@@ -85,10 +85,10 @@ class TangemSnapFlingBehavior(
 
         val animationState = AnimationState(NoDistance, velocity)
         return animateSnap(
-            closestOffset,
-            closestOffset,
-            animationState,
-            snapAnimationSpec,
+            targetOffset = closestOffset,
+            cancelOffset = closestOffset,
+            animationState = animationState,
+            snapAnimationSpec = snapAnimationSpec,
         ) { delta ->
             remainingScrollOffset -= delta
             onRemainingScrollOffsetUpdate(remainingScrollOffset)
@@ -116,10 +116,10 @@ class TangemSnapFlingBehavior(
         remainingScrollOffset = remainingOffset
 
         return animateSnap(
-            remainingOffset,
-            remainingOffset,
-            animationState.copy(value = 0f),
-            snapAnimationSpec,
+            targetOffset = remainingOffset,
+            cancelOffset = remainingOffset,
+            animationState = animationState.copy(value = 0f),
+            snapAnimationSpec = snapAnimationSpec,
         ) { delta ->
             remainingScrollOffset -= delta
             onAnimationStep(remainingScrollOffset)
@@ -143,12 +143,12 @@ class TangemSnapFlingBehavior(
             }
 
         return approach(
-            initialTargetOffset,
-            initialVelocity,
-            animation,
-            snapLayoutInfoProvider,
-            density,
-            onAnimationStep,
+            initialTargetOffset = initialTargetOffset,
+            initialVelocity = initialVelocity,
+            animation = animation,
+            snapLayoutInfoProvider = snapLayoutInfoProvider,
+            density = density,
+            onAnimationStep = onAnimationStep,
         )
     }
 
@@ -194,10 +194,10 @@ private suspend fun ScrollScope.approach(
     onAnimationStep: (delta: Float) -> Unit,
 ): AnimationResult<Float, AnimationVector1D> {
     val (_, currentAnimationState) = animation.approachAnimation(
-        this,
-        initialTargetOffset,
-        initialVelocity,
-        onAnimationStep,
+        scope = this,
+        offset = initialTargetOffset,
+        velocity = initialVelocity,
+        onAnimationStep = onAnimationStep,
     )
 
     val remainingOffset = with(snapLayoutInfoProvider) {
@@ -263,7 +263,12 @@ private class HighVelocityApproachAnimation(
     ): AnimationResult<Float, AnimationVector1D> {
         val animationState = AnimationState(initialValue = 0f, initialVelocity = velocity)
         return with(scope) {
-            animateDecay(offset, animationState, decayAnimationSpec, onAnimationStep)
+            animateDecay(
+                targetOffset = offset,
+                animationState = animationState,
+                decayAnimationSpec = decayAnimationSpec,
+                onAnimationStep = onAnimationStep,
+            )
         }
     }
 }
