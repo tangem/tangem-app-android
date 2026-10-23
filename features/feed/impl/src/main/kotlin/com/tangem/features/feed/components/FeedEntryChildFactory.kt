@@ -15,7 +15,6 @@ import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListCo
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
 import com.tangem.features.feed.components.search.DefaultSearchComponent
-import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.foryou.TokenSummaryBlockComponent
 import com.tangem.features.foryou.TokenSummaryComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
@@ -137,7 +136,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                         )
                     },
                     sourceParams = child.source,
-                    onSeeAllMarketsClick = { feedEntryClickIntents.onMarketOpenClick(SortByTypeUM.Rating) },
+                    onSeeAllMarketsClick = { feedEntryClickIntents.onMarketOpenClick() },
                 ),
             )
             is Child.TokenSummary -> tokenSummaryComponentFactory.create(

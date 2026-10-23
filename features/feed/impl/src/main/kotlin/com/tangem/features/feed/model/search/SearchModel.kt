@@ -35,7 +35,6 @@ import com.tangem.features.feed.model.search.converter.*
 import com.tangem.features.feed.model.search.state.SearchStateController
 import com.tangem.features.feed.model.search.state.transformers.*
 import com.tangem.features.feed.ui.feed.state.MarketChartUM
-import com.tangem.features.feed.ui.feed.state.SortChartConfigUM
 import com.tangem.features.feed.ui.search.state.MarketSearchResultUM
 import com.tangem.features.feed.ui.search.state.SearchContentUM
 import com.tangem.features.feed.ui.search.state.SearchUM
@@ -436,10 +435,7 @@ internal class SearchModel @Inject constructor(
             val ratingItems = itemsByOrder[SortByTypeUM.Rating] ?: persistentListOf()
             val error = errorsByOrder[SortByTypeUM.Rating]
             when {
-                ratingItems.isNotEmpty() -> MarketChartUM.Content(
-                    items = ratingItems,
-                    sortChartConfig = SortChartConfigUM(sortByType = SortByTypeUM.Rating, isSelected = true),
-                )
+                ratingItems.isNotEmpty() -> MarketChartUM.Content(items = ratingItems)
                 error != null -> MarketChartUM.LoadingError(
                     onRetryClicked = { topMarketsManager.reloadManager(TokenMarketListConfig.Order.ByRating) },
                 )

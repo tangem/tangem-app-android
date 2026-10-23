@@ -4,7 +4,6 @@ import arrow.core.Either
 import com.tangem.domain.models.news.ArticleCategory
 import com.tangem.domain.models.news.DetailedArticle
 import com.tangem.domain.models.news.ShortArticle
-import com.tangem.domain.models.news.TrendingNews
 import com.tangem.domain.news.model.NewsListBatchFlow
 import com.tangem.domain.news.model.NewsListBatchingContext
 import com.tangem.domain.news.model.NewsListConfig
@@ -39,18 +38,6 @@ interface NewsRepository {
      * Fetches and caches detailed articles for provided ids in parallel.
      */
     suspend fun fetchDetailedArticles(newsIds: Collection<Int>): Either<Map<Int, Throwable>, Unit>
-
-    /**
-     * Fetch list of trending news by limit and with correct locale and store it in runtime data store.
-     *
-     * @param limit
-     */
-    suspend fun fetchTrendingNews(limit: Int)
-
-    /**
-     * Observes trending news with runtime viewed flag support.
-     */
-    fun observeTrendingNews(): Flow<TrendingNews>
 
     /**
      * Returns available categories.
