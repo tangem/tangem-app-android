@@ -122,7 +122,7 @@ internal class JointAccountMembersModelTest {
         }
         every { singleAccountListSupplier(USER_WALLET_ID) } returns
             flowOf(mockk<AccountList> { every { accounts } returns listOf(localAccount) })
-        coEvery { compositionVerifier.isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any()) } returns
+        coEvery { compositionVerifier.isVerified(account = any(), jointAccount = any()) } returns
             true
         every { pollingCoordinator.poll(walletId = any()) } returns emptyFlow()
         every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns emptyFlow()
@@ -666,7 +666,7 @@ internal class JointAccountMembersModelTest {
         // Arrange
         stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
         coEvery {
-            compositionVerifier.isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any())
+            compositionVerifier.isVerified(account = any(), jointAccount = any())
         } returns false
 
         // Act
