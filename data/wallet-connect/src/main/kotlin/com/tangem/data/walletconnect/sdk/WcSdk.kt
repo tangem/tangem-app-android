@@ -165,6 +165,20 @@ internal class WcSdk(
         }
     }
 
+    /**
+     * Tells the dApp about a change on our side, such as EIP-1193's `chainChanged`. The SDK refuses an event
+     * the session's namespaces do not list, so a dApp that never asked for it gets nothing.
+     */
+    suspend fun emitSessionEvent(params: Wallet.Params.SessionEmit) = withStartedSdk {
+        suspendCancellableCoroutine { continuation ->
+            WalletKit.emitSessionEvent(
+                params = params,
+                onSuccess = { if (continuation.isActive) continuation.resume(it.right()) },
+                onError = { if (continuation.isActive) continuation.resume(it.throwable.left()) },
+            )
+        }
+    }
+
     suspend fun respondSessionRequest(params: Wallet.Params.SessionRequestResponse) = withStartedSdk {
         suspendCancellableCoroutine { continuation ->
             WalletKit.respondSessionRequest(
@@ -188,6 +202,30 @@ internal class WcSdk(
 
     fun getPendingSessionRequests(topic: String): List<Wallet.Model.SessionRequest> =
         WalletKit.getPendingListOfSessionRequests(topic)
+
+    /**
+     * Whether the session on [topic] carries [rawChainId] (a CAIP-2 id) right now, and whether that
+     * session exists at all — `null` when it does not, or when the SDK cannot be read.
+     *
+     * Read from the SDK rather than from our own session models: those are rebuilt only when wallets,
+     * stored sessions or accounts change, so a chain added through [updateSession] does not reach them.
+     *
+     * Unlike [getActiveSessionByTopic] a failed read comes back as `null` instead of throwing, because the
+     * callers answer dApp requests and must not take the request pipeline down with them. Touches the
+     * SDK's database on the calling thread, so call it off the main one.
+     */
+    fun sessionCarriesChain(topic: String, rawChainId: String): Boolean? {
+        val namespaces = runCatching { getActiveSessionByTopic(topic) }
+            .getOrNull()
+            ?.namespaces
+            ?.values
+            ?: return null
+
+        return namespaces.any { namespace ->
+            namespace.chains?.contains(rawChainId) == true ||
+                namespace.accounts.any { account -> account.startsWith("$rawChainId:") }
+        }
+    }
 
     // Keeps these calls total: a failed start-up comes back as Left, the same channel the SDK's own
     // failures use, instead of cancelling the caller's coroutine.

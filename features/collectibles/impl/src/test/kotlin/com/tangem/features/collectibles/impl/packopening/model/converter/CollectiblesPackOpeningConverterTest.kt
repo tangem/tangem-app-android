@@ -154,7 +154,7 @@ internal class CollectiblesPackOpeningConverterTest {
             card = null,
             onKeepCardClick = {},
             onSellBackClick = {},
-            sellBack = CollectiblesSellBackButtonConverter.convert(BuybackState.Checking),
+            sellBack = CollectiblesSellBackButtonConverter.convert(BuybackState.Unavailable),
         ),
     )
 
