@@ -3,6 +3,7 @@ package com.tangem.feature.swap.domain
 import android.util.Base64
 import androidx.annotation.VisibleForTesting
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.raise.either
@@ -39,6 +40,7 @@ import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.swap.models.SwapSourceAmountScale
 import com.tangem.domain.swap.models.SwapTxType
 import com.tangem.domain.swap.usecase.GetSwapPairUseCase
 import com.tangem.domain.tokens.GetAssetRequirementsUseCase
@@ -151,6 +153,8 @@ internal class SwapInteractorImpl @Inject constructor(
 
     private val yieldSwapAllowedRouters = newSetFromMap(ConcurrentHashMap<String, Boolean>())
 
+    private val yieldSwapAllowedTargets = newSetFromMap(ConcurrentHashMap<String, Boolean>())
+
     /**
      * Whether [network] can run the integrated approve+swap flow, which batches both transactions
      * through `sendMultiple` — something TRON accepts only for compiled transaction data.
@@ -168,16 +172,63 @@ internal class SwapInteractorImpl @Inject constructor(
     private suspend fun isYieldSwapRouterAllowed(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         routerAddress: String,
+    ): Boolean = isAllowedByYieldSwapRegistry(
+        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+        address = routerAddress,
+        allowedCache = yieldSwapAllowedRouters,
+        check = walletManagersFacade::isSwapSpenderAllowed,
+    )
+
+    private suspend fun isYieldSwapTargetAllowed(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        targetAddress: String,
+    ): Boolean = isAllowedByYieldSwapRegistry(
+        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+        address = targetAddress,
+        allowedCache = yieldSwapAllowedTargets,
+        check = walletManagersFacade::isSwapTargetAllowed,
+    )
+
+    private suspend fun isAllowedByYieldSwapRegistry(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        address: String,
+        allowedCache: MutableSet<String>,
+        check: suspend (UserWalletId, Network, String) -> Boolean,
     ): Boolean {
         val network = fromSwapCurrencyStatus.currency.network
-        val key = "${network.rawId}:${routerAddress.lowercase()}"
-        if (yieldSwapAllowedRouters.contains(key)) return true
-        val isAllowed = walletManagersFacade.isSwapSpenderAllowed(
-            userWalletId = fromSwapCurrencyStatus.userWalletId,
-            network = network,
-            spenderAddress = routerAddress,
-        )
-        if (isAllowed) yieldSwapAllowedRouters.add(key)
+        val key = "${network.rawId}:${address.lowercase()}"
+        if (allowedCache.contains(key)) return true
+        val isAllowed = check(fromSwapCurrencyStatus.userWalletId, network, address)
+        if (isAllowed) allowedCache.add(key)
+        return isAllowed
+    }
+
+    /**
+     * Whether the yield module can execute the provider's payload. Its `swap()` reverts unless the swap execution
+     * registry allows both the call target and the spender, so such a payload is skipped. A transfer runs through the
+     * module's `send()` instead and needs neither. Mirrors iOS `CommonSendYieldModuleHelper`.
+     */
+    private suspend fun isYieldSwapPayloadAllowed(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        swapData: SwapDataModel,
+        providerId: String,
+    ): Boolean {
+        if (!swapFeatureToggles.isYieldDexTransferEnabled) return true
+        if (fromSwapCurrencyStatus.currency !is CryptoCurrency.Token) return true
+        if (!fromSwapCurrencyStatus.isYieldSwapActive) return true
+        if (resolveSendInsteadOfYieldSwap(fromSwapCurrencyStatus, swapData) != null) return true
+        val dexTransaction = swapData.transaction as? ExpressTransactionModel.DEX ?: return true
+
+        val spender = dexTransaction.allowanceContract
+        val isAllowed = spender != null &&
+            isYieldSwapRouterAllowed(fromSwapCurrencyStatus, spender) &&
+            isYieldSwapTargetAllowed(fromSwapCurrencyStatus, dexTransaction.txTo)
+        if (!isAllowed) {
+            TangemLogger.i(
+                "Yield swap via $providerId skipped: spender $spender or target ${dexTransaction.txTo} " +
+                    "is not allowed by the swap execution registry",
+            )
+        }
         return isAllowed
     }
 
@@ -421,19 +472,21 @@ internal class SwapInteractorImpl @Inject constructor(
         customSlippage: BigDecimal?,
         intentId: String?,
     ): Pair<SwapProvider, SwapState>? {
-        val maybeQuote = repository.findBestQuote(
-            userWallet = fromSwapCurrencyStatus.userWallet,
-            fromContractAddress = fromSwapCurrencyStatus.currency.getContractAddress(),
-            fromNetwork = fromSwapCurrencyStatus.currency.network.rawId,
-            toContractAddress = toSwapCurrencyStatus.currency.getContractAddress(),
-            toNetwork = toSwapCurrencyStatus.currency.network.rawId,
-            fromAmount = amount.toStringWithRightOffset(),
-            fromDecimals = amount.decimals,
-            toDecimals = toSwapCurrencyStatus.currency.decimals,
-            providerId = provider.providerId,
-            rateType = RateType.FLOAT,
-            customSlippage = customSlippage,
-        )
+        val maybeQuote = fromSwapCurrencyStatus.toExpressFromAmount(amount).flatMap { fromAmount ->
+            repository.findBestQuote(
+                userWallet = fromSwapCurrencyStatus.userWallet,
+                fromContractAddress = fromSwapCurrencyStatus.currency.getContractAddress(),
+                fromNetwork = fromSwapCurrencyStatus.currency.network.rawId,
+                toContractAddress = toSwapCurrencyStatus.currency.getContractAddress(),
+                toNetwork = toSwapCurrencyStatus.currency.network.rawId,
+                fromAmount = fromAmount,
+                fromDecimals = amount.decimals,
+                toDecimals = toSwapCurrencyStatus.currency.decimals,
+                providerId = provider.providerId,
+                rateType = RateType.FLOAT,
+                customSlippage = customSlippage,
+            )
+        }
 
         if (maybeQuote.getOrNull()?.txType == ExpressTxType.SEND) {
             return manageCex(
@@ -467,7 +520,11 @@ internal class SwapInteractorImpl @Inject constructor(
 
         val dexRouterSpenderAddress = maybeQuote.getOrNull()?.allowanceContract
 
-        if (isYieldSwap && dexRouterSpenderAddress != null &&
+        // With transfer detection the registry is checked against the exchange-data payload instead
+        // (isYieldSwapPayloadAllowed): a provider's quote and data are routed independently, so the
+        // quote's router does not tell which contract the module will actually call.
+        val isQuoteRouterGated = isYieldSwap && !swapFeatureToggles.isYieldDexTransferEnabled
+        if (isQuoteRouterGated && dexRouterSpenderAddress != null &&
             !isYieldSwapRouterAllowed(fromSwapCurrencyStatus, dexRouterSpenderAddress)
         ) {
             return null
@@ -571,19 +628,21 @@ internal class SwapInteractorImpl @Inject constructor(
         customSlippage: BigDecimal?,
         intentId: String?,
     ): Pair<SwapProvider, SwapState>? {
-        val maybeQuotes = repository.findBestQuote(
-            userWallet = fromSwapCurrencyStatus.userWallet,
-            fromContractAddress = fromSwapCurrencyStatus.currency.getContractAddress(),
-            fromNetwork = fromSwapCurrencyStatus.currency.network.rawId,
-            toContractAddress = toSwapCurrencyStatus.currency.getContractAddress(),
-            toNetwork = toSwapCurrencyStatus.currency.network.rawId,
-            fromAmount = amount.toStringWithRightOffset(),
-            fromDecimals = amount.decimals,
-            toDecimals = toSwapCurrencyStatus.currency.decimals,
-            providerId = provider.providerId,
-            rateType = RateType.FLOAT,
-            customSlippage = customSlippage,
-        )
+        val maybeQuotes = fromSwapCurrencyStatus.toExpressFromAmount(amount).flatMap { fromAmount ->
+            repository.findBestQuote(
+                userWallet = fromSwapCurrencyStatus.userWallet,
+                fromContractAddress = fromSwapCurrencyStatus.currency.getContractAddress(),
+                fromNetwork = fromSwapCurrencyStatus.currency.network.rawId,
+                toContractAddress = toSwapCurrencyStatus.currency.getContractAddress(),
+                toNetwork = toSwapCurrencyStatus.currency.network.rawId,
+                fromAmount = fromAmount,
+                fromDecimals = amount.decimals,
+                toDecimals = toSwapCurrencyStatus.currency.decimals,
+                providerId = provider.providerId,
+                rateType = RateType.FLOAT,
+                customSlippage = customSlippage,
+            )
+        }
 
         if (maybeQuotes.getOrNull()?.txType == ExpressTxType.SEND) {
             return manageCex(
@@ -645,19 +704,21 @@ internal class SwapInteractorImpl @Inject constructor(
         // balance here — that discards the entered amount ([REDACTED_TASK_KEY] regression: CEX always sent max).
         // The amount-vs-balance part cannot be deferred for a Tangem Pay withdrawal: it is the one flow
         // that keeps the fee selector hidden, so nothing would ever resolve a `Pending` ([REDACTED_TASK_KEY]).
-        val quotes = repository.findBestQuote(
-            userWallet = fromSwapCurrencyStatus.userWallet,
-            fromContractAddress = fromToken.getContractAddress(),
-            fromNetwork = fromToken.network.rawId,
-            toContractAddress = toToken.getContractAddress(),
-            toNetwork = toToken.network.rawId,
-            fromAmount = amount.toStringWithRightOffset(),
-            fromDecimals = amount.decimals,
-            toDecimals = toToken.decimals,
-            providerId = provider.providerId,
-            rateType = RateType.FLOAT,
-            customSlippage = customSlippage,
-        )
+        val quotes = fromSwapCurrencyStatus.toExpressFromAmount(amount).flatMap { fromAmount ->
+            repository.findBestQuote(
+                userWallet = fromSwapCurrencyStatus.userWallet,
+                fromContractAddress = fromToken.getContractAddress(),
+                fromNetwork = fromToken.network.rawId,
+                toContractAddress = toToken.getContractAddress(),
+                toNetwork = toToken.network.rawId,
+                fromAmount = fromAmount,
+                fromDecimals = amount.decimals,
+                toDecimals = toToken.decimals,
+                providerId = provider.providerId,
+                rateType = RateType.FLOAT,
+                customSlippage = customSlippage,
+            )
+        }
 
         val isWithdrawOverBalance = fromSwapCurrencyStatus.account is Account.Payment &&
             !isBalanceEnough(fromSwapCurrencyStatus, amount, null)
@@ -1207,25 +1268,27 @@ internal class SwapInteractorImpl @Inject constructor(
         val fromAddress = fromNetworkAddress?.defaultAddress?.value.orEmpty()
         val toNetworkAddress = toSwapCurrencyStatus.status.value.networkAddress
         val toAddress = toNetworkAddress?.defaultAddress?.value.orEmpty()
-        val exchangeData = repository.getExchangeData(
-            userWallet = fromSwapCurrencyStatus.userWallet,
-            fromContractAddress = fromSwapCurrencyStatus.currency.getContractAddress(),
-            fromNetwork = fromSwapCurrencyStatus.currency.network.rawId,
-            toContractAddress = toSwapCurrencyStatus.currency.getContractAddress(),
-            fromAddress = fromAddress,
-            toNetwork = toSwapCurrencyStatus.currency.network.rawId,
-            fromAmount = amount.toStringWithRightOffset(),
-            fromDecimals = amount.decimals,
-            toDecimals = toSwapCurrencyStatus.currency.decimals,
-            providerId = swapProvider.providerId,
-            rateType = RateType.FLOAT,
-            expressOperationType = expressOperationType,
-            toAddress = toAddress,
-            refundAddress = fromNetworkAddress?.defaultAddress?.value,
-            refundExtraId = null, // currently always null,
-            customSlippage = customSlippage,
-            intentId = intentId,
-        ).getOrElse { error -> return SwapTransactionState.Error.ExpressError(error) }
+        val exchangeData = fromSwapCurrencyStatus.toExpressFromAmount(amount).flatMap { fromAmount ->
+            repository.getExchangeData(
+                userWallet = fromSwapCurrencyStatus.userWallet,
+                fromContractAddress = fromSwapCurrencyStatus.currency.getContractAddress(),
+                fromNetwork = fromSwapCurrencyStatus.currency.network.rawId,
+                toContractAddress = toSwapCurrencyStatus.currency.getContractAddress(),
+                fromAddress = fromAddress,
+                toNetwork = toSwapCurrencyStatus.currency.network.rawId,
+                fromAmount = fromAmount,
+                fromDecimals = amount.decimals,
+                toDecimals = toSwapCurrencyStatus.currency.decimals,
+                providerId = swapProvider.providerId,
+                rateType = RateType.FLOAT,
+                expressOperationType = expressOperationType,
+                toAddress = toAddress,
+                refundAddress = fromNetworkAddress?.defaultAddress?.value,
+                refundExtraId = null, // currently always null,
+                customSlippage = customSlippage,
+                intentId = intentId,
+            )
+        }.getOrElse { error -> return SwapTransactionState.Error.ExpressError(error) }
 
         val exchangeDataCex =
             exchangeData.transaction as? ExpressTransactionModel.CEX ?: return SwapTransactionState.Error.UnknownError
@@ -2320,24 +2383,26 @@ internal class SwapInteractorImpl @Inject constructor(
         val dexFromAddress = yieldModuleAddress ?: walletAddress.orEmpty()
         val toNetworkAddress = toSwapCurrencyStatus.status.value.networkAddress
         val dexToAddress = toNetworkAddress?.defaultAddress?.value.orEmpty()
-        return repository.getExchangeData(
-            userWallet = fromSwapCurrencyStatus.userWallet,
-            fromContractAddress = fromSwapCurrencyStatus.currency.getContractAddress(),
-            fromNetwork = fromSwapCurrencyStatus.currency.network.rawId,
-            toContractAddress = toSwapCurrencyStatus.currency.getContractAddress(),
-            fromAddress = dexFromAddress,
-            toNetwork = toSwapCurrencyStatus.currency.network.rawId,
-            fromAmount = amount.toStringWithRightOffset(),
-            fromDecimals = amount.decimals,
-            toDecimals = toSwapCurrencyStatus.currency.decimals,
-            providerId = provider.providerId,
-            rateType = RateType.FLOAT,
-            toAddress = dexToAddress,
-            refundAddress = walletAddress,
-            expressOperationType = expressOperationType,
-            customSlippage = customSlippage,
-            intentId = intentId,
-        ).map { swapData ->
+        return fromSwapCurrencyStatus.toExpressFromAmount(amount).flatMap { fromAmount ->
+            repository.getExchangeData(
+                userWallet = fromSwapCurrencyStatus.userWallet,
+                fromContractAddress = fromSwapCurrencyStatus.currency.getContractAddress(),
+                fromNetwork = fromSwapCurrencyStatus.currency.network.rawId,
+                toContractAddress = toSwapCurrencyStatus.currency.getContractAddress(),
+                fromAddress = dexFromAddress,
+                toNetwork = toSwapCurrencyStatus.currency.network.rawId,
+                fromAmount = fromAmount,
+                fromDecimals = amount.decimals,
+                toDecimals = toSwapCurrencyStatus.currency.decimals,
+                providerId = provider.providerId,
+                rateType = RateType.FLOAT,
+                toAddress = dexToAddress,
+                refundAddress = walletAddress,
+                expressOperationType = expressOperationType,
+                customSlippage = customSlippage,
+                intentId = intentId,
+            )
+        }.map { swapData ->
             val dexTx = swapData.transaction as? ExpressTransactionModel.DEX
             if (dexTx != null && dexRouterSpenderAddress != null && dexTx.allowanceContract == null) {
                 swapData.copy(transaction = dexTx.copy(allowanceContract = dexRouterSpenderAddress))
@@ -2347,6 +2412,13 @@ internal class SwapInteractorImpl @Inject constructor(
         }.fold(
             ifRight = { swapData ->
                 if (!isYieldPayloadConsistent(fromSwapCurrencyStatus, swapData)) {
+                    TangemLogger.i(
+                        "Yield swap via ${provider.providerId} skipped: call data disagrees with its destination " +
+                            (swapData.transaction as? ExpressTransactionModel.DEX)?.txTo,
+                    )
+                    return@fold null
+                }
+                if (!isYieldSwapPayloadAllowed(fromSwapCurrencyStatus, swapData, provider.providerId)) {
                     return@fold null
                 }
 
@@ -2646,6 +2718,19 @@ internal class SwapInteractorImpl @Inject constructor(
                 currency.contractAddress
             }
         }
+    }
+
+    /** Express takes the source amount in on-chain units, see [SwapSourceAmountScale]. */
+    private suspend fun SwapCurrencyStatus.toExpressFromAmount(amount: SwapAmount): Either<ExpressDataError, String> {
+        return walletManagersFacade.getScaledUiAmountMultiplier(userWalletId = userWalletId, currency = currency)
+            .map { multiplier ->
+                val onChainValue = SwapSourceAmountScale(multiplier).toOnChain(amount.value, amount.decimals)
+                amount.copy(value = onChainValue).toStringWithRightOffset()
+            }
+            .mapLeft { error ->
+                TangemLogger.e("Failed to resolve the scaled UI amount multiplier of ${currency.id}", error)
+                ExpressDataError.UnknownError()
+            }
     }
 
     private fun toBigDecimalOrNull(amountToSwap: String): BigDecimal? {

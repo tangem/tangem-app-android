@@ -10,10 +10,8 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.jointaccount.join.confirmation.ui.JointAccountJoinConfirmationBS
 import com.tangem.features.jointaccount.join.invitepreview.model.JointAccountInvitePreviewModel
 import com.tangem.features.jointaccount.join.invitepreview.ui.JointAccountInvitePreviewScreen
-import com.tangem.features.jointaccount.join.invitepreview.ui.state.JointAccountInvitePreviewUM
 import com.tangem.features.jointaccount.join.model.JointAccountJoinChildParams
 
 internal class JointAccountInvitePreviewComponent(
@@ -46,9 +44,5 @@ internal class JointAccountInvitePreviewComponent(
         JointAccountInvitePreviewScreen(state = state, modifier = modifier)
 
         bottomSheet.child?.instance?.BottomSheet()
-
-        (state as? JointAccountInvitePreviewUM.Content)?.confirmation?.let { confirmation ->
-            JointAccountJoinConfirmationBS(state = confirmation)
-        }
     }
 }

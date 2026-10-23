@@ -17,6 +17,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.slot
 import io.mockk.verify
@@ -69,6 +70,24 @@ internal class PlacePredictionAmountFundingTest : PlacePredictionModelTestBase()
                 assertThat(slot.configuration).isNull()
                 verify { messageSender.send(any<DialogMessage>()) }
             }
+
+        @Test
+        fun `GIVEN the requisites failed WHEN the failure is dismissed THEN they are requested again`() = runTest {
+            // Arrange
+            coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Unavailable.left()
+            val model = createAmountModel(testScope = this)
+            advanceUntilIdle()
+            val message = slot<DialogMessage>()
+            every { messageSender.send(capture(message)) } returns Unit
+            model.onAddFundsClick()
+
+            // Act
+            message.captured.onDismissRequest()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
+        }
 
         @Test
         fun `GIVEN the requisites are still loading WHEN add funds is tapped THEN nothing is opened or reported`() =

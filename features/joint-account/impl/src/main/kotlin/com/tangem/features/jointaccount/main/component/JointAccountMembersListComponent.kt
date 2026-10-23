@@ -1,6 +1,7 @@
 package com.tangem.features.jointaccount.main.component
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -12,6 +13,8 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.features.jointaccount.main.model.JointAccountMembersListParams
 import com.tangem.features.jointaccount.main.model.JointAccountMembersModel
 import com.tangem.features.jointaccount.main.ui.JointAccountMembersScreen
@@ -47,6 +50,10 @@ internal class JointAccountMembersListComponent(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
+        val hapticManager = LocalHapticManager.current
+        LaunchedEffect(model) {
+            model.memberStatusChanges.collect { hapticManager.perform(TangemHapticEffect.OneTime.Click) }
+        }
 
         JointAccountMembersScreen(state = state, modifier = modifier)
 

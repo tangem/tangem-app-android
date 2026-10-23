@@ -2,8 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>MaxChainedCallsOnSameLine:UserWalletExtensions.kt$wallets.orEmpty().first { it.curve == primaryCurve }.derivedKeys.keys.any { it == dp }</ID>
-    <ID>RedundantSuspendModifier:GetHotWalletContextualUnlockUseCase.kt$GetHotWalletContextualUnlockUseCase$suspend</ID>
     <ID>SuspendFunSwallowedCancellation:RenameWalletUseCase.kt$RenameWalletUseCase$runCatching</ID>
     <ID>UnsafeCallOnNullableType:GetWalletsUseCase.kt$GetWalletsUseCase$userWalletsListRepository.userWallets.value!!</ID>
     <ID>UnsafeCallOnNullableType:UserWalletIdBuilder.kt$UserWalletIdBuilder.Companion$UserWalletIdBuilder( publicKey = publicKey, ).build()!!</ID>
