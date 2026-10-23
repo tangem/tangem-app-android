@@ -1,23 +1,20 @@
-package com.tangem.features.introduction.impl.engine
+package com.tangem.core.media
 
 import android.os.Handler
 import android.os.Looper
 
 /**
- * Where the blocking half of a video teardown runs.
- *
- * Letting go of a surface makes media3 wait for the renderer to release it — up to the two seconds its builder
- * defaults to — and Compose disposes the view while the screen it belongs to is still animating away, so the wait
- * lands on the frames of that animation.
+ * Defers the blocking part of a teardown: media3 waits up to 2 s for the renderer to let go of a surface, and Compose
+ * disposes the view while the screen is still animating away.
  */
 internal interface VideoTeardownScheduler {
 
     fun schedule(action: () -> Unit)
 
-    /** Whatever was scheduled is no longer wanted: the screen came back before it ran. */
     fun cancel()
 }
 
+/** Drops everything it holds on [cancel], so each player needs an instance of its own. */
 internal class MainThreadVideoTeardownScheduler : VideoTeardownScheduler {
 
     private val handler = Handler(Looper.getMainLooper())
@@ -31,7 +28,7 @@ internal class MainThreadVideoTeardownScheduler : VideoTeardownScheduler {
     }
 
     private companion object {
-        /** Longer than the stack transition that plays while the screen is being disposed. */
+        /** Longer than the stack exit transition. */
         const val TEARDOWN_DELAY_MS = 500L
     }
 }
