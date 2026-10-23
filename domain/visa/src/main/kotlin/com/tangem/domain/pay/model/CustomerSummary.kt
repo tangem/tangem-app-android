@@ -190,3 +190,14 @@ data class CustomerSummary(
         val pending: Int,
     )
 }
+
+val CustomerSummary.KycStatus.isInProgress: Boolean
+    get() = when (this) {
+        CustomerSummary.KycStatus.IN_PROGRESS,
+        CustomerSummary.KycStatus.UNKNOWN,
+        -> true
+        CustomerSummary.KycStatus.REQUIRED,
+        CustomerSummary.KycStatus.DECLINED,
+        CustomerSummary.KycStatus.APPROVED,
+        -> false
+    }
