@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.EventMessage
 import com.tangem.core.ui.message.ModalMessage
@@ -85,6 +86,32 @@ internal class PolymarketPositionDetailsModelTest {
     @AfterEach
     fun tearDown() {
         unmockkStatic(BigDecimal?::formatPolymarketVolume)
+    }
+
+    @Test
+    fun `GIVEN pnl crossing zero WHEN position refreshes THEN amount and direction update together`() = runModelTest {
+        // Arrange
+        val amounts = listOf("0.02", "-0.0049", "-0.005", "0.0049", "0.005")
+        coEvery { repository.getPosition(addresses, position.id) } returnsMany amounts.map {
+            position.copy(cashPnl = it.toBigDecimal()).right()
+        }
+        val model = createModel()
+
+        // Act
+        val actual = amounts.map {
+            model.onResume()
+            runCurrent()
+            model.data().metrics.unrealizedPnl.also { model.onPause() }
+        }
+
+        // Assert
+        assertThat(actual).containsExactly(
+            TangemPriceChange.State(stringReference("+$0.02"), TangemPriceChange.Direction.Up),
+            TangemPriceChange.State(stringReference("$0.00"), TangemPriceChange.Direction.Neutral),
+            TangemPriceChange.State(stringReference("-$0.01"), TangemPriceChange.Direction.Down),
+            TangemPriceChange.State(stringReference("$0.00"), TangemPriceChange.Direction.Neutral),
+            TangemPriceChange.State(stringReference("+$0.01"), TangemPriceChange.Direction.Up),
+        ).inOrder()
     }
 
     @Test

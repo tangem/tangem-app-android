@@ -3058,6 +3058,8 @@
   <string name="tangempay_onboarding_security_title">Unrivaled privacy</string>
   <string name="tangempay_onboarding_setup_wallet_description">And link a payment card to it</string>
   <string name="tangempay_onboarding_setup_wallet_title">We\'ll set up a wallet</string>
+  <string name="tangempay_onboarding_success_description">Products activation might take a few minutes to finish</string>
+  <string name="tangempay_onboarding_success_title">Tangem Pay is activating</string>
   <string name="tangempay_onboarding_title">Get your Tangem Pay Card in minutes</string>
   <string name="tangempay_order_card_error_active_order">A card order is already in progress.</string>
   <string name="tangempay_order_card_error_insufficient_balance">Not enough money for delivery. Add funds and try again.</string>

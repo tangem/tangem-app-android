@@ -15,6 +15,7 @@ import com.tangem.domain.cloudbackup.repository.BackupPasswordRepository
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.google.drive.GoogleDriveApi
 import com.tangem.google.drive.GoogleDriveTokenProvider
+import com.tangem.google.drive.store.DriveAccountStore
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -49,12 +50,14 @@ internal object CloudBackupDataModule {
     fun provideCloudBackupRepository(
         api: GoogleDriveApi,
         tokenProvider: GoogleDriveTokenProvider,
+        accountStore: DriveAccountStore,
         store: CloudBackupStore,
         dispatchers: CoroutineDispatcherProvider,
     ): CloudBackupRepository {
         return DefaultCloudBackupRepository(
             api = api,
             tokenProvider = tokenProvider,
+            accountStore = accountStore,
             store = store,
             cipher = CloudBackupCipher(),
             dispatchers = dispatchers,

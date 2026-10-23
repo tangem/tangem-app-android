@@ -86,15 +86,6 @@ private fun StatusContent(state: TangemPayVerifiedUM.Content, animated: Boolean)
                     .fillMaxWidth()
                     .padding(16.dp),
             ) {
-                state.secondaryButton?.let { button ->
-                    TangemButton(
-                        variant = TangemButton.Variant.Secondary,
-                        size = TangemButton.Size.X12,
-                        text = button.text,
-                        iconEnd = button.iconEnd,
-                        onClick = button.onClick,
-                    )
-                }
                 TangemButton(
                     variant = TangemButton.Variant.Primary,
                     size = TangemButton.Size.X12,
@@ -160,7 +151,6 @@ private class TangemPayVerifiedPreviewProvider : CollectionPreviewParameterProvi
         TangemPayVerifiedUMFactory(
             onChoosePlanClick = {},
             onOpenMoneyAccountClick = {},
-            onNotifyClick = {},
             onCloseClick = {},
         )::create,
     ),

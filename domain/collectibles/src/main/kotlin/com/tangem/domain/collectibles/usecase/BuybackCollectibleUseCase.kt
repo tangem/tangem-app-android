@@ -10,7 +10,6 @@ import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetc
 import com.tangem.domain.collectibles.models.BuybackError
 import com.tangem.domain.collectibles.models.CollectibleBuybackStatus
 import com.tangem.domain.collectibles.models.CollectibleBuybackTx
-import com.tangem.domain.collectibles.models.CollectibleException
 import com.tangem.domain.collectibles.models.GenerateBuybackTxParams
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
@@ -64,14 +63,7 @@ class BuybackCollectibleUseCase @Inject constructor(
                 userWalletId = userWallet.walletId,
                 params = GenerateBuybackTxParams(fromAddress = owner, nftAddress = nftAddress, toAddress = vault),
             )
-        }.getOrElse { cause ->
-            val failure = when (cause) {
-                is CollectibleException.BuybackRefused -> BuybackError.NotAllowed
-                else -> BuybackError.Unexpected
-            }
-
-            raise(failure)
-        }
+        }.getOrElse { raise(BuybackError.Unexpected) }
     }
 
     /** A lost report is not fatal: the status poll tells whether the backend saw the transfer. */

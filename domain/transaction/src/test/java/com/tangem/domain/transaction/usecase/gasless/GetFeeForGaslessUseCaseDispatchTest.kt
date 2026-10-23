@@ -1,5 +1,6 @@
 package com.tangem.domain.transaction.usecase.gasless
 
+import arrow.core.none
 import arrow.core.right
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
@@ -10,6 +11,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -18,6 +20,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import io.mockk.Called
@@ -38,6 +41,7 @@ import java.math.BigDecimal
 internal class GetFeeForGaslessUseCaseDispatchTest {
 
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk(relaxed = true)
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider = mockk()
     private val currencyChecksRepository: CurrencyChecksRepository = mockk()
     private val getFeeUseCase: GetFeeUseCase = mockk()
     private val evmGaslessFeeResolver: EvmGaslessFeeResolver = mockk()
@@ -70,8 +74,16 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
         normal = Fee.Common(amount = Amount(blockchain = Blockchain.Ethereum, value = BigDecimal.ONE)),
     )
 
+    private val accountCoin: CryptoCurrency.Coin = currencyFactory.createCoin(Blockchain.Polygon)
+    private val accountNetwork: Network = accountCoin.network
+    private val accountCoinStatus = CryptoCurrencyStatus(
+        currency = accountCoin,
+        value = mockk(relaxed = true),
+    )
+
     private val sut = GetFeeForGaslessUseCase(
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
         currencyChecksRepository = currencyChecksRepository,
         getFeeUseCase = getFeeUseCase,
         evmGaslessFeeResolver = evmGaslessFeeResolver,
@@ -80,12 +92,19 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(currencyChecksRepository, getFeeUseCase, evmGaslessFeeResolver, tronGaslessFeeResolver)
+        clearMocks(
+            nonPortfolioCurrenciesProvider,
+            currencyChecksRepository,
+            getFeeUseCase,
+            evmGaslessFeeResolver,
+            tronGaslessFeeResolver,
+        )
         mockkObject(CryptoCurrencyStatusOperations)
         coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns accountStatusList
         with(CryptoCurrencyStatusOperations) {
             every { accountStatusList.getCoinStatus(network) } returns nativeStatus.some()
             every { accountStatusList.getCoinStatus(tronNetwork) } returns tronNativeStatus.some()
+            every { accountStatusList.getCoinStatus(accountNetwork) } returns none()
         }
     }
 
@@ -154,4 +173,48 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
             )
             verify { evmGaslessFeeResolver wasNot Called }
         }
+
+    @Test
+    fun `GIVEN network of a non-portfolio account WHEN invoke THEN its coin is the native currency`() = runTest {
+        // Arrange
+        val expected = TransactionFeeExtended(
+            transactionFee = nativeFee,
+            feeTokenId = accountCoin.id,
+            nativeFee = nativeFee,
+        )
+        every { currencyChecksRepository.isNetworkSupportedForGaslessTx(accountNetwork) } returns true
+        coEvery {
+            nonPortfolioCurrenciesProvider.getStatuses(userWalletId, accountNetwork)
+        } returns listOf(accountCoinStatus)
+        coEvery {
+            evmGaslessFeeResolver.resolveWithAutoFeeToken(
+                userWallet = userWallet,
+                network = accountNetwork,
+                transactionData = transactionData,
+                nativeCurrencyStatus = accountCoinStatus,
+                accountStatusList = accountStatusList,
+                sentAmount = null,
+            )
+        } returns expected.right()
+
+        // Act
+        val actual = sut(userWallet = userWallet, network = accountNetwork, transactionData = transactionData)
+
+        // Assert
+        assertThat(actual).isEqualTo(expected.right())
+    }
+
+    @Test
+    fun `GIVEN a network without a coin anywhere WHEN invoke THEN data error`() = runTest {
+        // Arrange
+        coEvery { nonPortfolioCurrenciesProvider.getStatuses(userWalletId, accountNetwork) } returns emptyList()
+
+        // Act
+        val actual = sut(userWallet = userWallet, network = accountNetwork, transactionData = transactionData)
+
+        // Assert
+        assertThat(actual.leftOrNull()).isInstanceOf(GetFeeError.DataError::class.java)
+        verify { evmGaslessFeeResolver wasNot Called }
+        verify { tronGaslessFeeResolver wasNot Called }
+    }
 }

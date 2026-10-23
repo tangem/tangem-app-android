@@ -54,6 +54,18 @@ internal class WcEthTxHelper @Inject constructor(
             .getOrNull()
     }
 
+    /**
+     * What the dApp asked for, next to the network it will actually be signed on. Written at signing time,
+     * because a transaction built for another chain is only visible by comparing the two.
+     */
+    fun logDescription(txParams: WcEthTransactionParams, network: Network, fee: Fee?): String {
+        val callDataBytes = txParams.data?.removePrefix(HEX_PREFIX)?.length?.div(HEX_CHARS_PER_BYTE) ?: 0
+        return "on ${network.name} (chain ID ${network.toBlockchain().getChainId()}): " +
+            "from ${txParams.from}, to ${txParams.to}, value ${txParams.value}, nonce ${txParams.nonce}, " +
+            "gas ${txParams.gas}, gasPrice ${txParams.gasPrice}, declared chain ID ${txParams.chainId}, " +
+            "fee ${fee?.amount?.value}, call data $callDataBytes bytes"
+    }
+
     fun createTransactionData(
         dAppFee: Fee?,
         network: Network,
@@ -108,6 +120,10 @@ internal class WcEthTxHelper @Inject constructor(
     private fun String.decodeApprovalCallData(): ApprovalERC20TokenCallData? {
         val bytes = runCatching { removePrefix(HEX_PREFIX).hexToBytes() }.getOrNull() ?: return null
         return ApprovalERC20TokenCallData(bytes)
+    }
+
+    private companion object {
+        const val HEX_CHARS_PER_BYTE = 2
     }
 }
 
