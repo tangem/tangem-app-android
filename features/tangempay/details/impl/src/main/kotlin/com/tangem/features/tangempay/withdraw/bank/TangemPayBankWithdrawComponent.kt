@@ -261,8 +261,10 @@ internal class TangemPayBankWithdrawComponent(
     }
 
     data class Params(
-        val userWalletId: UserWalletId,
+        val sourceAccount: BankWithdrawSourceAccount,
         val entry: BankWithdrawEntry,
         val options: StateFlow<BankWithdrawOptions>,
-    )
+    ) {
+        val userWalletId: UserWalletId get() = sourceAccount.userWalletId
+    }
 }
