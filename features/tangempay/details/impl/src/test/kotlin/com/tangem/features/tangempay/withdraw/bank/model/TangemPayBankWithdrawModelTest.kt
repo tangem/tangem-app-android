@@ -21,6 +21,7 @@ import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.POLYGON_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.USDC_POLYGON
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
@@ -512,7 +513,7 @@ internal class TangemPayBankWithdrawModelTest {
     private fun createModel(entry: BankWithdrawEntry): TangemPayBankWithdrawModel = TangemPayBankWithdrawModel(
         paramsContainer = MutableParamsContainer(
             TangemPayBankWithdrawComponent.Params(
-                userWalletId = userWalletId,
+                sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
                 entry = entry,
                 options = MutableStateFlow(bankWithdrawOptions()),
             ),
