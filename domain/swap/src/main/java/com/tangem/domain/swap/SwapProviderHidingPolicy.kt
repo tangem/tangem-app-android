@@ -1,22 +1,29 @@
 package com.tangem.domain.swap
 
+import com.tangem.domain.express.models.ExpressError
+
 /**
- * Changelly and ChangeHero screen addresses and reject the swap before signing. ChangeHero reports it with
- * [PROVIDER_REJECTED_ERROR_CODE]; Changelly has no code, so any error but user-fixable ones counts, `-1` included.
+ * Some providers screen addresses and reject the swap before signing. A provider is hidden when its error means
+ * such a rejection: either a dedicated one like [ExpressError.ExchangeProviderAddressBannedByAmlError] or, for
+ * providers without one, any error but user-fixable ones, [ExpressError.UnknownError] included.
  */
 object SwapProviderHidingPolicy {
-
-    const val PROVIDER_REJECTED_ERROR_CODE = 2264
 
     private const val CHANGEHERO_PROVIDER_ID = "changehero"
     private const val CHANGELLY_PROVIDER_ID = "changelly"
 
-    @Suppress("MagicNumber")
-    private val CHANGELLY_USER_RESOLVABLE_ERROR_CODES = setOf(2250, 2251, 2252, 2270, 2280, 2310, 2320)
+    fun shouldHide(providerId: String, error: ExpressError): Boolean = when (providerId) {
+        CHANGEHERO_PROVIDER_ID -> error is ExpressError.ExchangeProviderAddressBannedByAmlError
+        CHANGELLY_PROVIDER_ID -> !error.isUserResolvable()
+        else -> false
+    }
 
-    fun shouldHide(providerId: String, errorCode: Int): Boolean = when (providerId) {
-        CHANGEHERO_PROVIDER_ID -> errorCode == PROVIDER_REJECTED_ERROR_CODE
-        CHANGELLY_PROVIDER_ID -> errorCode !in CHANGELLY_USER_RESOLVABLE_ERROR_CODES
+    private fun ExpressError.isUserResolvable(): Boolean = when (this) {
+        is ExpressError.AmountError.TooSmallError,
+        is ExpressError.AmountError.TooBigError,
+        is ExpressError.NotEnoughBalanceError,
+        is ExpressError.InvalidAddressError,
+        is ExpressError.ProviderDifferentAmountError -> true
         else -> false
     }
 }

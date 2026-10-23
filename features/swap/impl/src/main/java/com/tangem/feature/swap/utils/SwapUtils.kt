@@ -7,12 +7,11 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.swap.SwapProviderHidingPolicy
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.presentation.R
 
 internal fun getExpressErrorMessage(expressError: ExpressError, providerName: String? = null): TextReference {
-    if (providerName != null && expressError.code == SwapProviderHidingPolicy.PROVIDER_REJECTED_ERROR_CODE) {
+    if (providerName != null && expressError is ExpressError.ExchangeProviderAddressBannedByAmlError) {
         return resourceReference(
             id = R.string.express_error_transaction_cannot_be_created,
             formatArgs = wrappedList(providerName, expressError.code),
