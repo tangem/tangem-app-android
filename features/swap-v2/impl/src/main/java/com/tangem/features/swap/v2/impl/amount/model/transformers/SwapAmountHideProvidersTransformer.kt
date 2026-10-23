@@ -20,14 +20,13 @@ internal class SwapAmountHideProvidersTransformer(
 
         val quotes = prevState.swapQuotes.filterNot { quote -> quote.provider?.providerId in providerIds }
         val swapCurrencies = prevState.swapCurrencies.withoutProviders()
-        val state = prevState.copy(
+        return prevState.copy(
             swapCurrencies = swapCurrencies,
             swapQuotes = quotes.toPersistentList(),
             swapRateMode = prevState.getSwapRateMode(swapCurrencies),
+            selectedQuote = SwapQuoteUM.Loading,
+            isPrimaryButtonEnabled = false,
         )
-        if (prevState.selectedQuote.provider?.providerId !in providerIds) return state
-
-        return state.copy(selectedQuote = SwapQuoteUM.Loading, isPrimaryButtonEnabled = false)
     }
 
     private fun SwapAmountUM.Content.getSwapRateMode(swapCurrencies: SwapCurrencies): SwapRateMode {
