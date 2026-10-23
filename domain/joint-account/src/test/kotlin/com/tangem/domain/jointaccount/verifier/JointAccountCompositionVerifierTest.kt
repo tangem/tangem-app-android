@@ -93,13 +93,29 @@ internal class JointAccountCompositionVerifierTest {
     fun `GIVEN pending account without safe and own membership WHEN verify THEN verified without computing`() =
         runTest {
             // Act
-            val actual = verifier.isVerified(account, jointAccount(safeAddress = null))
+            val actual = verifier.isVerified(
+                account,
+                jointAccount(members = listOf(ALICE to null, BOB to null), safeAddress = null),
+            )
 
             // Assert
             assertThat(actual).isTrue()
             coVerify(exactly = 0) { safeAddressCalculator.compute(owners = any(), threshold = any(), singleton = any()) }
             verify(exactly = 0) { signatureRecoverer.recoverPayloadSigner(payload = any(), signature = any()) }
         }
+
+    @Test
+    fun `GIVEN pending account with a member signature WHEN verify THEN not verified`() = runTest {
+        // Act
+        val actual = verifier.isVerified(
+            account,
+            jointAccount(members = listOf(ALICE to ALICE_SIGNATURE, BOB to null), safeAddress = null),
+        )
+
+        // Assert
+        assertThat(actual).isFalse()
+        verify(exactly = 0) { signatureRecoverer.recoverPayloadSigner(payload = any(), signature = any()) }
+    }
 
     @Test
     fun `GIVEN an active account without a safe address WHEN verify THEN not verified`() = runTest {
