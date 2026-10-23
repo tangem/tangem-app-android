@@ -46,18 +46,22 @@ data class JointAccount(
     /**
      * @property name     the member's display name, 1..25 chars
      * @property address  the member's owner address in the Safe, lower-case hex — compare case-insensitively
-     * @property role     only the creator sends invites and activates the account
+     * @property role     only the creator sends invites
      * @property inviteId the invite this member redeemed to take the slot; `null` for the creator, who never had
      * one, and for data cached before the backend started reporting it
-     * @property isVerified the member confirmed the final composition; `false` until the backend reports it
+     * @property signature the member's confirmation signature, lower-case hex; `null` until the member confirms
      */
     data class Member(
         val name: String,
         val address: String,
         val role: Role,
         val inviteId: String? = null,
-        val isVerified: Boolean = false,
-    )
+        val signature: String? = null,
+    ) {
+
+        val isVerified: Boolean
+            get() = signature != null
+    }
 
     /** [UNKNOWN] is a backend value this build does not know. */
     enum class Role {

@@ -5,12 +5,12 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
-import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
+import com.tangem.domain.jointaccount.usecase.ConfirmJointAccountUseCase
 import com.tangem.data.jointaccount.safe.DefaultSafeAddressCalculator
 import com.tangem.domain.jointaccount.model.JointAccount
-import com.tangem.domain.jointaccount.model.JointAccountActivationError
-import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
 import com.tangem.domain.jointaccount.model.JointAccountConfig
+import com.tangem.domain.jointaccount.model.JointAccountConfirmationError
+import com.tangem.domain.jointaccount.model.JointAccountConfirmationPayload
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.model.JointAccountSignResult
@@ -42,14 +42,14 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class ActivateJointAccountUseCaseTest {
+internal class ConfirmJointAccountUseCaseTest {
 
     private val repository: JointAccountRepository = mockk()
     private val signer: JointAccountSigner = mockk()
     private val fetcher: SingleJointAccountListFetcher = mockk()
     private val supplier: SingleJointAccountListSupplier = mockk()
 
-    private val useCase = ActivateJointAccountUseCase(
+    private val useCase = ConfirmJointAccountUseCase(
         repository = repository,
         signer = signer,
         fetcher = fetcher,
@@ -71,7 +71,7 @@ internal class ActivateJointAccountUseCaseTest {
         clearMocks(repository, signer, fetcher, supplier)
         coEvery { fetcher.invoke(params = any()) } returns Unit.right()
         coEvery { signer.sign(userWalletId = any(), input = any()) } returns signResult().right()
-        coEvery { repository.activate(any(), any(), any()) } returns Unit.right()
+        coEvery { repository.confirm(any(), any(), any()) } returns jointAccount().right()
     }
 
     @Test
@@ -82,34 +82,31 @@ internal class ActivateJointAccountUseCaseTest {
         val inputSlot = slot<JointAccountSignInput>()
         coEvery { signer.sign(userWalletId = MockAccounts.userWalletId, input = capture(inputSlot)) } returns
             signResult().right()
-        val payloadSlot = slot<JointAccountActivationPayload>()
+        val payloadSlot = slot<JointAccountConfirmationPayload>()
+        val confirmed = jointAccount(status = JointAccount.Status.ACTIVE)
         coEvery {
-            repository.activate(
+            repository.confirm(
                 userWalletId = MockAccounts.userWalletId,
                 payload = capture(payloadSlot),
                 signature = SIGNATURE,
             )
-        } returns Unit.right()
+        } returns confirmed.right()
 
         // Act
         val actual = useCase(account = account)
 
         // Assert
-        assertThat(actual).isEqualTo(Unit.right())
+        assertThat(actual).isEqualTo(confirmed.right())
         assertThat(inputSlot.captured.derivationIndex.value).isEqualTo(3)
-        val expectedPayload = JointAccountActivationPayload(
-            walletId = MockAccounts.userWalletId.stringValue,
-            cryptoAccountId = jointAccount.cryptoAccountId,
-            config = JointAccountActivationPayload.ConfirmedConfig(
-                base = JointAccountConfig(
-                    name = "Family",
-                    icon = "Star",
-                    iconColor = "Azure",
-                    membersCount = 2,
-                    threshold = 2,
-                ),
-                safeAddress = computedSafeAddress(SafeSingleton.SAFE_L2),
+        val expectedPayload = JointAccountConfirmationPayload(
+            config = JointAccountConfig(
+                name = "Family",
+                icon = "Star",
+                iconColor = "Azure",
+                membersCount = 2,
+                threshold = 2,
             ),
+            safeAddress = computedSafeAddress(SafeSingleton.SAFE_L2).lowercase(),
         )
         assertThat(payloadSlot.captured).isEqualTo(expectedPayload)
         // The signed payload and the sent payload are one and the same object of values
@@ -125,35 +122,35 @@ internal class ActivateJointAccountUseCaseTest {
         // Arrange — which Safe singleton the backend deploys is undecided (alignment №21), both must work
         val jointAccount = jointAccount(safeAddress = computedSafeAddress(model.singleton))
         every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
-        val payloadSlot = slot<JointAccountActivationPayload>()
-        coEvery { repository.activate(any(), capture(payloadSlot), any()) } returns Unit.right()
+        val payloadSlot = slot<JointAccountConfirmationPayload>()
+        coEvery { repository.confirm(any(), capture(payloadSlot), any()) } returns jointAccount.right()
 
         // Act
         val actual = useCase(account = account)
 
         // Assert
-        assertThat(actual).isEqualTo(Unit.right())
-        assertThat(payloadSlot.captured.config.safeAddress).isEqualTo(computedSafeAddress(model.singleton))
+        assertThat(actual).isEqualTo(jointAccount.right())
+        assertThat(payloadSlot.captured.safeAddress).isEqualTo(computedSafeAddress(model.singleton).lowercase())
     }
 
     @Test
-    fun `GIVEN backend spells the address in lowercase WHEN invoke THEN that spelling is signed and sent`() = runTest {
-        // Arrange — the backend stores the config it compares with, so the payload must carry its exact string
-        val lowercaseAddress = computedSafeAddress(SafeSingleton.SAFE_L2).lowercase()
-        val jointAccount = jointAccount(safeAddress = lowercaseAddress)
+    fun `GIVEN a checksummed safe address WHEN invoke THEN the lower-case spelling is signed and sent`() = runTest {
+        // Arrange — the backend compares the canonical payload byte by byte and only knows the lower-case form
+        val checksummed = computedSafeAddress(SafeSingleton.SAFE_L2)
+        val jointAccount = jointAccount(safeAddress = checksummed)
         every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
         val inputSlot = slot<JointAccountSignInput>()
         coEvery { signer.sign(userWalletId = MockAccounts.userWalletId, input = capture(inputSlot)) } returns
             signResult().right()
-        val payloadSlot = slot<JointAccountActivationPayload>()
-        coEvery { repository.activate(any(), capture(payloadSlot), any()) } returns Unit.right()
+        val payloadSlot = slot<JointAccountConfirmationPayload>()
+        coEvery { repository.confirm(any(), capture(payloadSlot), any()) } returns jointAccount.right()
 
         // Act
-        val actual = useCase(account = account)
+        useCase(account = account)
 
         // Assert
-        assertThat(actual).isEqualTo(Unit.right())
-        assertThat(payloadSlot.captured.config.safeAddress).isEqualTo(lowercaseAddress)
+        assertThat(checksummed).isNotEqualTo(checksummed.lowercase())
+        assertThat(payloadSlot.captured.safeAddress).isEqualTo(checksummed.lowercase())
         // The signed payload carries the same spelling as the one sent
         assertThat(inputSlot.captured.makePayload(OWNER_ADDRESS)).isEqualTo(payloadSlot.captured)
     }
@@ -173,12 +170,12 @@ internal class ActivateJointAccountUseCaseTest {
             val actual = useCase(account = account)
 
             // Assert
-            assertThat(actual).isEqualTo(JointAccountActivationError.AddressMismatch.left())
+            assertThat(actual).isEqualTo(JointAccountConfirmationError.AddressMismatch.left())
             coVerify(exactly = 0) { signer.sign(any(), any()) }
         }
 
     @Test
-    fun `GIVEN pending account WHEN invoke THEN NotReadyForActivation`() = runTest {
+    fun `GIVEN pending account WHEN invoke THEN NotReadyForConfirmation`() = runTest {
         // Arrange
         val jointAccount = jointAccount(status = JointAccount.Status.PENDING)
         every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
@@ -187,12 +184,12 @@ internal class ActivateJointAccountUseCaseTest {
         val actual = useCase(account = account)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountActivationError.NotReadyForActivation.left())
+        assertThat(actual).isEqualTo(JointAccountConfirmationError.NotReadyForConfirmation.left())
         coVerify(exactly = 0) { signer.sign(any(), any()) }
     }
 
     @Test
-    fun `GIVEN a free slot WHEN invoke THEN NotReadyForActivation`() = runTest {
+    fun `GIVEN a free slot WHEN invoke THEN NotReadyForConfirmation`() = runTest {
         // Arrange — the button state may be stale by the time of the tap, so the gate is repeated here
         val jointAccount = jointAccount().let { it.copy(members = it.members.take(1)) }
         every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
@@ -201,11 +198,11 @@ internal class ActivateJointAccountUseCaseTest {
         val actual = useCase(account = account)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountActivationError.NotReadyForActivation.left())
+        assertThat(actual).isEqualTo(JointAccountConfirmationError.NotReadyForConfirmation.left())
     }
 
     @Test
-    fun `GIVEN no safe address yet WHEN invoke THEN NotReadyForActivation`() = runTest {
+    fun `GIVEN no safe address yet WHEN invoke THEN NotReadyForConfirmation`() = runTest {
         // Arrange
         val jointAccount = jointAccount(safeAddress = null)
         every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
@@ -214,7 +211,7 @@ internal class ActivateJointAccountUseCaseTest {
         val actual = useCase(account = account)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountActivationError.NotReadyForActivation.left())
+        assertThat(actual).isEqualTo(JointAccountConfirmationError.NotReadyForConfirmation.left())
     }
 
     @Test
@@ -227,22 +224,37 @@ internal class ActivateJointAccountUseCaseTest {
         val actual = useCase(account = account)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountActivationError.AccountNotFound.left())
+        assertThat(actual).isEqualTo(JointAccountConfirmationError.AccountNotFound.left())
     }
 
     @Test
-    fun `GIVEN the tapped wallet is not the creator WHEN invoke THEN NotCreator and nothing is sent`() = runTest {
-        // Arrange — the backend would reject the signature with 403 anyway, the check only fails fast
-        every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
-            flowOf(listOf(jointAccount()))
+    fun `GIVEN the tapped wallet is a plain member WHEN invoke THEN its signature is sent`() = runTest {
+        // Arrange — every member confirms, not only the creator
+        val jointAccount = jointAccount()
+        every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
         coEvery { signer.sign(any(), any()) } returns signResult(ownerAddress = MEMBER_ADDRESS).right()
 
         // Act
         val actual = useCase(account = account)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountActivationError.NotCreator.left())
-        coVerify(exactly = 0) { repository.activate(any(), any(), any()) }
+        assertThat(actual).isEqualTo(jointAccount.right())
+        coVerify(exactly = 1) { repository.confirm(MockAccounts.userWalletId, any(), SIGNATURE) }
+    }
+
+    @Test
+    fun `GIVEN the tapped wallet is not a member WHEN invoke THEN NotMember and nothing is sent`() = runTest {
+        // Arrange — the backend would reject the signature with 403 anyway, the check only fails fast
+        every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
+            flowOf(listOf(jointAccount()))
+        coEvery { signer.sign(any(), any()) } returns signResult(ownerAddress = DEAD_ADDRESS).right()
+
+        // Act
+        val actual = useCase(account = account)
+
+        // Assert
+        assertThat(actual).isEqualTo(JointAccountConfirmationError.NotMember.left())
+        coVerify(exactly = 0) { repository.confirm(any(), any(), any()) }
     }
 
     @Test
@@ -275,16 +287,16 @@ internal class ActivateJointAccountUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(JointAccountFlowError.UserCancelled.left())
-        coVerify(exactly = 0) { repository.activate(any(), any(), any()) }
+        coVerify(exactly = 0) { repository.confirm(any(), any(), any()) }
     }
 
     @Test
-    fun `GIVEN activation request fails WHEN invoke THEN Failed`() = runTest {
+    fun `GIVEN confirmation request fails WHEN invoke THEN Failed`() = runTest {
         // Arrange
         val cause = IllegalStateException("500")
         every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
             flowOf(listOf(jointAccount()))
-        coEvery { repository.activate(any(), any(), any()) } returns cause.left()
+        coEvery { repository.confirm(any(), any(), any()) } returns cause.left()
 
         // Act
         val actual = useCase(account = account)
@@ -295,8 +307,8 @@ internal class ActivateJointAccountUseCaseTest {
     }
 
     @Test
-    fun `GIVEN refresh fails after activation WHEN invoke THEN still a success`() = runTest {
-        // Arrange — the account is active on the backend; failing here would push the user into a pointless retry
+    fun `GIVEN refresh fails after confirmation WHEN invoke THEN still a success`() = runTest {
+        // Arrange — the signature is recorded on the backend; failing here would push the user into a pointless retry
         every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
             flowOf(listOf(jointAccount()))
         coEvery { fetcher.invoke(params = any()) } returns IllegalStateException("no network").left()
@@ -305,7 +317,7 @@ internal class ActivateJointAccountUseCaseTest {
         val actual = useCase(account = account)
 
         // Assert
-        assertThat(actual).isEqualTo(Unit.right())
+        assertThat(actual).isEqualTo(jointAccount().right())
     }
 
     /**

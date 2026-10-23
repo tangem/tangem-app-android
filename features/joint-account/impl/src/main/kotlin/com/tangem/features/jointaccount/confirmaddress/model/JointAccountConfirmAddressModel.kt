@@ -18,11 +18,12 @@ import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.domain.jointaccount.model.JointAccountActivationError
+import com.tangem.domain.jointaccount.model.JointAccount
+import com.tangem.domain.jointaccount.model.JointAccountConfirmationError
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
-import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
+import com.tangem.domain.jointaccount.usecase.ConfirmJointAccountUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.features.jointaccount.confirmaddress.JointAccountConfirmAddressComponent
@@ -59,7 +60,7 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
     private val shareManager: ShareManager,
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
     private val singleAccountSupplier: SingleAccountSupplier,
-    private val activateJointAccountUseCase: ActivateJointAccountUseCase,
+    private val confirmJointAccountUseCase: ConfirmJointAccountUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val pollingCoordinator: JointAccountPollingCoordinator,
@@ -150,9 +151,9 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
             return
         }
 
-        activateJointAccountUseCase(account = account)
+        confirmJointAccountUseCase(account = account)
             .onLeft(::onConfirmError)
-            .onRight { onConfirmed() }
+            .onRight(::onConfirmed)
     }
 
     private suspend fun findAccount(): Account.Joint? {
@@ -166,24 +167,27 @@ internal class JointAccountConfirmAddressModel @Inject constructor(
         }
     }
 
-    private fun onConfirmed() {
-        uiMessageSender.send(
-            SnackbarMessage(
-                message = resourceReference(CoreUiR.string.joint_account_activated_snackbar),
-                startIconId = CoreUiR.drawable.ic_success_20,
-                isIconTinted = false,
-            ),
-        )
+    /** Only the last signature activates the account; until then the members screen shows who is still due */
+    private fun onConfirmed(account: JointAccount) {
+        if (account.status == JointAccount.Status.ACTIVE) {
+            uiMessageSender.send(
+                SnackbarMessage(
+                    message = resourceReference(CoreUiR.string.joint_account_activated_snackbar),
+                    startIconId = CoreUiR.drawable.ic_success_20,
+                    isIconTinted = false,
+                ),
+            )
+        }
         router.pop()
     }
 
-    private fun onConfirmError(error: JointAccountActivationError) {
+    private fun onConfirmError(error: JointAccountConfirmationError) {
         when (error) {
             JointAccountFlowError.UserCancelled -> Unit
-            JointAccountActivationError.AccountNotFound,
-            JointAccountActivationError.NotReadyForActivation,
-            JointAccountActivationError.AddressMismatch,
-            JointAccountActivationError.NotCreator,
+            JointAccountConfirmationError.AccountNotFound,
+            JointAccountConfirmationError.NotReadyForConfirmation,
+            JointAccountConfirmationError.AddressMismatch,
+            JointAccountConfirmationError.NotMember,
             is JointAccountFlowError.Failed,
             -> showError()
         }
