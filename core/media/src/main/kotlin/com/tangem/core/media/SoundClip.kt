@@ -44,6 +44,7 @@ class SoundClip internal constructor(
     fun play() {
         if (!isReady) return
 
+        if (!isRunning) player.pause()
         player.seekTo(0L)
         if (isRunning) player.play() else isWaitingForForeground = true
     }
