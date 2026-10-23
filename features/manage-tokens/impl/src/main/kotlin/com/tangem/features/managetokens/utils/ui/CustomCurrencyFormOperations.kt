@@ -25,7 +25,7 @@ internal fun CustomTokenFormUM.updateTokenForm(
 
 internal fun CustomTokenFormUM.updateWithProgress(
     showProgress: Boolean,
-    isWasFilled: Boolean = this.tokenForm?.wasFilled ?: false,
+    isWasFilled: Boolean = this.tokenForm?.wasFilled == true,
     canAddToken: Boolean = this.canAddToken,
     walletInteractionIcon: Int? = this.walletInteractionIcon,
     clearNotifications: Boolean = false,
@@ -93,8 +93,8 @@ internal fun CustomTokenFormUM.updateWithContractAddressException(
     exception: CustomTokenFormValidationException.ContractAddress,
 ): CustomTokenFormUM {
     return updateTokenForm {
-        val updatedFields = fields.mutate {
-            it[Field.CONTRACT_ADDRESS] = it.getValue(Field.CONTRACT_ADDRESS).copy(
+        val updatedFields = fields.mutate { mutableFields ->
+            mutableFields[Field.CONTRACT_ADDRESS] = mutableFields.getValue(Field.CONTRACT_ADDRESS).copy(
                 error = when (exception) {
                     CustomTokenFormValidationException.ContractAddress.Invalid -> {
                         resourceReference(R.string.custom_token_creation_error_invalid_contract_address)
@@ -111,8 +111,8 @@ internal fun CustomTokenFormUM.updateWithDecimalsException(
     exception: CustomTokenFormValidationException.Decimals,
 ): CustomTokenFormUM {
     return updateTokenForm {
-        val updatedFields = fields.mutate {
-            it[Field.DECIMALS] = it.getValue(Field.DECIMALS).copy(
+        val updatedFields = fields.mutate { mutableFields ->
+            mutableFields[Field.DECIMALS] = mutableFields.getValue(Field.DECIMALS).copy(
                 error = when (exception) {
                     is CustomTokenFormValidationException.Decimals.Empty -> {
                         null // Should not display this error

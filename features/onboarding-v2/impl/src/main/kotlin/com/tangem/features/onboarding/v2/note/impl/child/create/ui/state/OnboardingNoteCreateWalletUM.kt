@@ -4,6 +4,6 @@ import com.tangem.core.ui.components.artwork.ArtworkUM
 
 data class OnboardingNoteCreateWalletUM(
     val artwork: ArtworkUM? = null,
-    val createWalletInProgress: Boolean = false,
+    val isCreateWalletInProgress: Boolean = false,
     val onCreateClick: () -> Unit = {},
 )

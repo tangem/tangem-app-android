@@ -1,7 +1,6 @@
 package com.tangem.features.yield.supply.impl.subcomponents.notifications.model
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addExceedsBalanceNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachableNotification
@@ -11,6 +10,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
@@ -31,7 +31,7 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     private val yieldSupplyNotificationsUpdateListener: YieldSupplyNotificationsUpdateListener,
 ) : Model() {
@@ -91,6 +91,9 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
                 // Business requirement that YieldSupplyHighNetworkFee is not an error and doesn't block the button
                 val hasError = notifications.any { it !is NotificationUM.Info.YieldSupplyHighNetworkFee }
                 yieldSupplyNotificationsUpdateListener.callbackHasError(hasError)
+                yieldSupplyNotificationsUpdateListener.callbackCannotCoverFee(
+                    cannotCoverFee = notifications.any { it is NotificationUM.Error.TokenExceedsBalance },
+                )
             }.launchIn(modelScope)
     }
 
@@ -117,7 +120,7 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
     }
 
     private fun openTokenDetails(cryptoCurrency: CryptoCurrency) {
-        appRouter.push(
+        router.push(
             AppRoute.CurrencyDetails(
                 userWalletId = params.userWalletId,
                 currency = cryptoCurrency,

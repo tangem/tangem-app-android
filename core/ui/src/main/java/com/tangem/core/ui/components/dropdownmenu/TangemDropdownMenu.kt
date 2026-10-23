@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.PopUpMenuTestTags
 import kotlin.math.max
 import kotlin.math.min
@@ -35,7 +34,7 @@ fun TangemDropdownMenu(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    offset: DpOffset = DpOffset(x = TangemTheme.dimens.spacing20, y = TangemTheme.dimens.spacing10.times(-1)),
+    offset: DpOffset = DpOffset(x = 20.dp, y = 10.dp.times(-1)),
     properties: PopupProperties = PopupProperties(focusable = true),
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -98,8 +97,8 @@ private fun DropdownMenuContent(
             }
         },
         label = "",
-    ) {
-        if (it) {
+    ) { isExpanded ->
+        if (isExpanded) {
             // Menu is expanded.
             1f
         } else {
@@ -119,8 +118,8 @@ private fun DropdownMenuContent(
             }
         },
         label = "",
-    ) {
-        if (it) {
+    ) { isExpanded ->
+        if (isExpanded) {
             // Menu is expanded.
             1f
         } else {

@@ -324,7 +324,7 @@ internal object TangemPayTxHistoryDetailsConverter :
         val transactionLoadState: TransactionLoadState,
         val cashbackDetails: TangemPayTxHistoryItem.Cashback?,
         val cashbackLoadState: TransactionLoadState,
-        val onExplorerClick: (String?) -> Unit,
+        val onExplorerClick: (String) -> Unit,
         val onDisputeClick: () -> Unit,
         val onCardRefreshClick: () -> Unit,
         val onCashbackRefreshClick: () -> Unit,

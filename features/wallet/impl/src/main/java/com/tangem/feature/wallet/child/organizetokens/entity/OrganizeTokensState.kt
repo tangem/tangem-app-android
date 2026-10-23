@@ -25,7 +25,7 @@ internal data class OrganizeTokensState(
 
     data class ActionsConfig(
         val canApply: Boolean = false,
-        val showApplyProgress: Boolean = false,
+        val shouldShowApplyProgress: Boolean = false,
         val onApplyClick: () -> Unit,
         val onCancelClick: () -> Unit,
     )

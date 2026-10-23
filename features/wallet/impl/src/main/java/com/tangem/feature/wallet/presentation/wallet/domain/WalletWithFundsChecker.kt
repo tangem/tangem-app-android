@@ -24,17 +24,17 @@ internal class WalletWithFundsChecker @Inject constructor(
 
     suspend fun check(userWalletId: UserWalletId, currencies: List<CryptoCurrencyStatus>) {
         val hasNonZeroWallets = currencies.hasNonZeroWallets()
-        val prevStatus = statusByWalletId.get(userWalletId)
+        val wasWithFunds = statusByWalletId.get(userWalletId)
 
-        if (hasNonZeroWallets && prevStatus != true) {
+        if (hasNonZeroWallets && wasWithFunds != true) {
             statusByWalletId[userWalletId] = true
             setWalletWithFundsFoundUseCase()
         }
     }
 
     private fun List<CryptoCurrencyStatus>.hasNonZeroWallets(): Boolean {
-        return any {
-            val amount = it.value.amount ?: return@any false
+        return any { status ->
+            val amount = status.value.amount ?: return@any false
             !amount.isZero()
         }
     }

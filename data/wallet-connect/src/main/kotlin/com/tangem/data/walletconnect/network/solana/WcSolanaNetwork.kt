@@ -105,25 +105,25 @@ internal class WcSolanaNetwork(
         return when (this) {
             WcSolanaMethodName.SignMessage -> moshi.fromJson<WcSolanaSignMessageRequest>(rawParams)
                 .getOrElse { return it.left() }
-                ?.let { request ->
-                    val humanMsg = request.message.decodeBase58()?.toHexString().orEmpty()
+                ?.let { params ->
+                    val humanMsg = params.message.decodeBase58()?.toHexString().orEmpty()
                     SignMessage(
-                        pubKey = request.publicKey,
-                        rawMessage = request.message,
+                        pubKey = params.publicKey,
+                        rawMessage = params.message,
                         humanMsg = humanMsg,
                     )
                 }
             WcSolanaMethodName.SignTransaction -> moshi.fromJson<WcSolanaSignTransactionRequest>(rawParams)
                 .getOrElse { return it.left() }
-                ?.let { request -> SignTransaction(request.transaction, request.feePayer) }
+                ?.let { params -> SignTransaction(params.transaction, params.feePayer) }
             WcSolanaMethodName.SendAllTransaction -> moshi.fromJson<WcSolanaSignAllTransactionRequest>(rawParams)
                 .getOrElse { return it.left() }
-                ?.let { request -> SignAllTransaction(request.transactions) }
+                ?.let { params -> SignAllTransaction(params.transactions) }
             WcSolanaMethodName.SignAndSendTransaction -> moshi.fromJson<WcSolanaSignAndSendTransactionRequest>(
                 rawParams,
             )
                 .getOrElse { return it.left() }
-                ?.let { request -> SignAndSendTransaction(request.transaction) }
+                ?.let { params -> SignAndSendTransaction(params.transaction) }
         }.right()
     }
 

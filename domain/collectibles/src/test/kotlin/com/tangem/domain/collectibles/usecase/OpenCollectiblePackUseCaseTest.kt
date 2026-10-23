@@ -5,8 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
-import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.models.CollectibleException
 import com.tangem.domain.collectibles.models.CollectiblePurchaseTx
 import com.tangem.domain.collectibles.models.CollectibleTurboMode
@@ -17,6 +16,7 @@ import com.tangem.domain.collectibles.models.OpenPackRequest
 import com.tangem.domain.collectibles.models.OpenPackStep
 import com.tangem.domain.collectibles.models.OpenedCollectiblePack
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
+import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -38,31 +38,65 @@ internal class OpenCollectiblePackUseCaseTest {
 
     private val collectiblesRepository: CollectiblesRepository = mockk()
     private val gachaVaultRepository: GachaVaultRepository = mockk()
-    private val hotDelegate: CollectiblesHotDelegate = mockk()
     private val ownerDeriver: CollectiblesOwnerDeriver = mockk()
+    private val accountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
 
     private val userWallet: UserWallet = mockk { every { walletId } returns WALLET_ID }
 
     private val useCase = OpenCollectiblePackUseCase(
         collectiblesRepository = collectiblesRepository,
         gachaVaultRepository = gachaVaultRepository,
-        hotDelegate = hotDelegate,
         ownerDeriver = ownerDeriver,
+        accountStatusFetcher = accountStatusFetcher,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(collectiblesRepository, gachaVaultRepository, hotDelegate, ownerDeriver)
-        coEvery { hotDelegate.getPublicKeyOrNull(any()) } returns DELEGATE
+        clearMocks(collectiblesRepository, gachaVaultRepository, ownerDeriver, accountStatusFetcher)
+        coEvery { accountStatusFetcher(any()) } returns Unit.right()
         coEvery { ownerDeriver.storedOwner(WALLET_ID) } returns OWNER
-        coEvery { gachaVaultRepository.getVaultAddress(userWallet) } returns VAULT.right()
         coEvery { collectiblesRepository.generatePurchaseTx(WALLET_ID, any()) } returns PURCHASE
-        coEvery { gachaVaultRepository.sendPurchasePack(userWallet, DELEGATE, AMOUNT, FEE_AMOUNT, MEMO) } returns
+        coEvery { gachaVaultRepository.sendPurchasePack(userWallet, AMOUNT, FEE_AMOUNT, MEMO) } returns
             TX_HASH.right()
         coEvery { collectiblesRepository.reportPurchaseTxSent(WALLET_ID, TX_ID, TX_HASH) } returns
             CollectibleTxStatus.PURCHASE_TX_HASH
         coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) } returns PURCHASED
         coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID) } returns OPENED
+    }
+
+    @Test
+    fun `GIVEN the pack opens WHEN invoked THEN the vault balance is refreshed`() = runTest {
+        // Act
+        useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList()
+
+        // Assert
+        coVerify(exactly = 1) { accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(WALLET_ID)) }
+    }
+
+    @Test
+    fun `GIVEN the purchase fails WHEN invoked THEN the vault balance is refreshed anyway`() = runTest {
+        // Arrange
+        coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any()) } returns
+            CollectiblesAccountError.DelegateNotProvisioned.left()
+
+        // Act
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+
+        // Assert
+        assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
+        coVerify(exactly = 1) { accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(WALLET_ID)) }
+    }
+
+    @Test
+    fun `GIVEN the balance refresh fails WHEN invoked THEN the pack still opens`() = runTest {
+        // Arrange
+        coEvery { accountStatusFetcher(any()) } returns IllegalStateException().left()
+
+        // Act
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+
+        // Assert
+        assertThat(actual).isEqualTo(OpenPackStep.Opened(PACK))
     }
 
     @Test
@@ -80,7 +114,7 @@ internal class OpenCollectiblePackUseCaseTest {
         coVerify(exactly = 1) {
             collectiblesRepository.generatePurchaseTx(
                 WALLET_ID,
-                GeneratePurchaseTxParams(fromAddress = VAULT, machineId = MACHINE_ID, toAddress = OWNER),
+                GeneratePurchaseTxParams(fromAddress = OWNER, machineId = MACHINE_ID, toAddress = OWNER),
             )
         }
     }
@@ -95,7 +129,7 @@ internal class OpenCollectiblePackUseCaseTest {
             collectiblesRepository.generatePurchaseTx(
                 WALLET_ID,
                 GeneratePurchaseTxParams(
-                    fromAddress = VAULT,
+                    fromAddress = OWNER,
                     machineId = MACHINE_ID,
                     toAddress = OWNER,
                     collectibleTurboMode = CollectibleTurboMode(isEnabled = true, buybackAddress = OWNER),
@@ -105,36 +139,9 @@ internal class OpenCollectiblePackUseCaseTest {
     }
 
     @Test
-    fun `GIVEN the hot delegate is unreadable WHEN invoked THEN the purchase fails before generating`() = runTest {
-        // Arrange
-        coEvery { hotDelegate.getPublicKeyOrNull(any()) } returns null
-
-        // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
-
-        // Assert
-        assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
-        coVerify(exactly = 0) { collectiblesRepository.generatePurchaseTx(any(), any()) }
-    }
-
-    @Test
     fun `GIVEN the owner key is not stored WHEN invoked THEN the purchase fails before generating`() = runTest {
         // Arrange
         coEvery { ownerDeriver.storedOwner(WALLET_ID) } returns null
-
-        // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
-
-        // Assert
-        assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
-        coVerify(exactly = 0) { collectiblesRepository.generatePurchaseTx(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN the vault address is unknown WHEN invoked THEN the purchase fails before generating`() = runTest {
-        // Arrange
-        coEvery { gachaVaultRepository.getVaultAddress(userWallet) } returns
-            CollectiblesAccountError.DelegateNotProvisioned.left()
 
         // Act
         val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
@@ -154,7 +161,7 @@ internal class OpenCollectiblePackUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.LowInventory)
-        coVerify(exactly = 0) { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any()) }
     }
 
     @Test
@@ -167,26 +174,39 @@ internal class OpenCollectiblePackUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
-        coVerify(exactly = 0) { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any()) }
     }
 
     @Test
-    fun `GIVEN the send fails WHEN invoked THEN the pack is left unopened`() = runTest {
+    fun `GIVEN the send fails WHEN invoked THEN the purchase fails`() = runTest {
         // Arrange
-        coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any(), any()) } returns
+        coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any()) } returns
+            CollectiblesAccountError.Vault(GachaVaultError.WalletUnavailable).left()
+
+        // Act
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+
+        // Assert
+        assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
+    }
+
+    @Test
+    fun `GIVEN the hot delegate is not provisioned WHEN invoked THEN the purchase fails as unpaid`() = runTest {
+        // Arrange
+        coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any()) } returns
             CollectiblesAccountError.DelegateNotProvisioned.left()
 
         // Act
         val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
 
         // Assert
-        assertThat(actual).isEqualTo(OpenPackStep.Failed.PackUnopened(TX_ID))
+        assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
     }
 
     @Test
     fun `GIVEN the hot delegate fails to sign WHEN invoked THEN the purchase fails as unpaid`() = runTest {
         // Arrange
-        coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any(), any()) } returns
+        coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any()) } returns
             CollectiblesAccountError.DelegateSigningFailed(IllegalStateException()).left()
 
         // Act
@@ -342,7 +362,7 @@ internal class OpenCollectiblePackUseCaseTest {
         ).inOrder()
         coVerify(exactly = 0) {
             collectiblesRepository.generatePurchaseTx(any(), any())
-            gachaVaultRepository.sendPurchasePack(any(), any(), any(), any(), any())
+            gachaVaultRepository.sendPurchasePack(any(), any(), any(), any())
         }
         coVerify(exactly = 1) { collectiblesRepository.openPack(WALLET_ID, TX_ID) }
     }
@@ -362,9 +382,7 @@ internal class OpenCollectiblePackUseCaseTest {
     private companion object {
 
         val WALLET_ID = UserWalletId("aa")
-        val DELEGATE = HotDelegatePublicKey("3hTCy6rJu8iXNWnFMB741HrVnbS5bViyfguEAMF5iT2P")
         const val OWNER = "HoRGkYTxNBbufFhzGzaP8Bek6kJHcTdbYMSMPGN9Mk66"
-        const val VAULT = "AsE1WN52nUmrsGGDFtW4AA5YKV1thpj7jEfWV2Rhx28d"
         const val MACHINE_ID = "pokemon_50"
         const val TX_ID = "tx-id"
         const val MEMO = "cc-uuid"
@@ -388,7 +406,6 @@ internal class OpenCollectiblePackUseCaseTest {
             imageBackUrl = null,
             rarity = null,
             gradingCompany = null,
-            grade = null,
             gradingId = "123",
             year = null,
             set = null,

@@ -20,9 +20,11 @@ import com.tangem.tap.MainActivity
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.notifications.NotificationIdGenerator
 import com.tangem.wallet.R
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 
-class PushNotificationDelegate(
-    private val context: Context,
+class PushNotificationDelegate @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) {
 
