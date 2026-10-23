@@ -86,7 +86,10 @@ internal class JointOperationVerifierTest {
         // Act
         val actual = verifier.verify(
             jointAccount = JOINT_ACCOUNT,
-            operation = operation(gasPrice = NETWORK_GAS_PRICE).copy(signatures = model.votes),
+            operation = operation(gasPrice = NETWORK_GAS_PRICE).copy(
+                initiator = model.initiator,
+                signatures = model.votes,
+            ),
             displayed = DISPLAYED,
             ownerAddress = ALICE,
             refundBounds = JointOperationVerifier.RefundBounds(
@@ -101,26 +104,35 @@ internal class JointOperationVerifierTest {
     }
 
     private fun provideVotesModels() = listOf(
-        VotesModel(votes = emptyList(), expected = Unit.right()),
-        VotesModel(votes = listOf(vote(BOB, State.SIGNED, BOB_SIGNATURE)), expected = Unit.right()),
-        VotesModel(votes = listOf(vote(BOB, State.DECLINED, signature = null)), expected = Unit.right()),
-        VotesModel(votes = listOf(vote(BOB, State.UNKNOWN, signature = null)), expected = Unit.right()),
+        VotesModel(votes = listOf(ALICE_VOTE), expected = Unit.right()),
+        VotesModel(votes = listOf(ALICE_VOTE, vote(BOB, State.SIGNED, BOB_SIGNATURE)), expected = Unit.right()),
+        VotesModel(votes = listOf(ALICE_VOTE, vote(BOB, State.DECLINED, signature = null)), expected = Unit.right()),
+        VotesModel(votes = listOf(ALICE_VOTE, vote(BOB, State.UNKNOWN, signature = null)), expected = Unit.right()),
+        VotesModel(votes = emptyList(), initiator = null, expected = Unit.right()),
+        VotesModel(votes = listOf(vote(BOB, State.SIGNED, BOB_SIGNATURE)), initiator = null, expected = Unit.right()),
+        VotesModel(votes = emptyList(), expected = VOTE_MISMATCH.left()),
+        VotesModel(votes = listOf(vote(BOB, State.SIGNED, BOB_SIGNATURE)), expected = VOTE_MISMATCH.left()),
+        VotesModel(votes = listOf(vote(ALICE, State.DECLINED, signature = null)), expected = VOTE_MISMATCH.left()),
+        VotesModel(votes = listOf(vote(ALICE, State.SIGNED, signature = null)), expected = VOTE_MISMATCH.left()),
+        VotesModel(votes = listOf(vote(ALICE, State.SIGNED, BOB_SIGNATURE)), expected = VOTE_MISMATCH.left()),
         VotesModel(
-            votes = listOf(vote(ALICE, State.SIGNED, ALICE_SIGNATURE), vote(BOB, State.SIGNED, BOB_SIGNATURE)),
-            expected = Unit.right(),
+            votes = listOf(ALICE_VOTE, vote(BOB, State.SIGNED, signature = null)),
+            expected = VOTE_MISMATCH.left(),
         ),
-        VotesModel(votes = listOf(vote(BOB, State.SIGNED, signature = null)), expected = VOTE_MISMATCH.left()),
-        VotesModel(votes = listOf(vote(BOB, State.SIGNED, ALICE_SIGNATURE)), expected = VOTE_MISMATCH.left()),
-        VotesModel(votes = listOf(vote(BOB, State.SIGNED, "0xgarbage")), expected = VOTE_MISMATCH.left()),
-        VotesModel(votes = listOf(vote(MALLORY, State.SIGNED, MALLORY_SIGNATURE)), expected = VOTE_MISMATCH.left()),
         VotesModel(
-            votes = listOf(vote(ALICE, State.SIGNED, ALICE_SIGNATURE), vote(BOB, State.SIGNED, signature = null)),
+            votes = listOf(ALICE_VOTE, vote(BOB, State.SIGNED, ALICE_SIGNATURE)),
+            expected = VOTE_MISMATCH.left(),
+        ),
+        VotesModel(votes = listOf(ALICE_VOTE, vote(BOB, State.SIGNED, "0xgarbage")), expected = VOTE_MISMATCH.left()),
+        VotesModel(
+            votes = listOf(ALICE_VOTE, vote(MALLORY, State.SIGNED, MALLORY_SIGNATURE)),
             expected = VOTE_MISMATCH.left(),
         ),
     )
 
     data class VotesModel(
         val votes: List<JointOperation.MemberSignature>,
+        val initiator: String? = ALICE,
         val expected: Either<JointOperationSignError, Unit>,
     )
 
@@ -148,7 +160,7 @@ internal class JointOperationVerifierTest {
         ),
         status = JointOperation.Status.AWAITING_SIGNATURES,
         initiator = ALICE,
-        signatures = emptyList(),
+        signatures = listOf(ALICE_VOTE),
     )
 
     private companion object {
@@ -159,6 +171,12 @@ internal class JointOperationVerifierTest {
         val BOB_SIGNATURE = "0x" + "bb".repeat(n = 64) + "1c"
         val MALLORY_SIGNATURE = "0x" + "cc".repeat(n = 64) + "1b"
         val SIGNERS = mapOf(ALICE_SIGNATURE to ALICE, BOB_SIGNATURE to BOB, MALLORY_SIGNATURE to MALLORY)
+        val ALICE_VOTE = JointOperation.MemberSignature(
+            address = ALICE,
+            state = State.SIGNED,
+            at = "2026-09-07T10:00:00Z",
+            signature = ALICE_SIGNATURE,
+        )
         val VOTE_MISMATCH = VerificationFailed(reason = VerificationFailed.Reason.VOTE_SIGNATURE_MISMATCH)
         const val RECIPIENT = "0x1111111111111111111111111111111111111111"
         const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
