@@ -54,6 +54,8 @@ internal class PolymarketEventDetailsContentTransformer(
 
     override fun transform(prevState: PolymarketEventDetailsUM): PolymarketEventDetailsUM {
         val markets = event.markets.sortedBy(PolymarketMarket::orderIndex)
+        val activeMarkets = markets
+            .filter { it.status == PolymarketStatus.ACTIVE || it.status == PolymarketStatus.UNKNOWN }
         return PolymarketEventDetailsUM.Content(
             title = stringReference(event.title),
             iconUrl = event.iconUrl,
@@ -61,15 +63,14 @@ internal class PolymarketEventDetailsContentTransformer(
             change24h = transformChange24h(volume = event.volume, volume24h = event.volume24h),
             // The BFF does not serve subcategories yet; the UI hides the row while the list is empty.
             subcategories = persistentListOf(),
-            activeMarkets = markets
-                .filter { it.status == PolymarketStatus.ACTIVE || it.status == PolymarketStatus.UNKNOWN }
+            activeMarkets = activeMarkets
                 .map { transformMarket(market = it, isTradable = true) }
                 .toImmutableList(),
             closedMarkets = markets
                 .filter { it.status == PolymarketStatus.CLOSED }
                 .map { transformMarket(market = it, isTradable = false) }
                 .toImmutableList(),
-            isClosedMarketsExpanded = isClosedMarketsExpanded,
+            isClosedMarketsExpanded = isClosedMarketsExpanded || activeMarkets.isEmpty(),
             description = event.description.takeIf(String::isNotBlank)?.let(::stringReference),
             isDescriptionExpanded = isDescriptionExpanded,
             resolutionDate = stringReference(formatEasternDate(raw = event.endDate)),
