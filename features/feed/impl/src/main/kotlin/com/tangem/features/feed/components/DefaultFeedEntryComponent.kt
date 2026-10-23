@@ -76,14 +76,14 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             )
         }
 
-        override fun onMarketOpenClick(sortBy: SortByTypeUM?) {
+        override fun onMarketOpenClick() {
             // Markets list and search can reach each other
             stackNavigation.bringToFront(
                 FeedEntryChildFactory.Child.TokenList(
                     params = DefaultMarketsTokenListComponent.Params(
-                        preselectedSortType = sortBy ?: SortByTypeUM.Rating,
+                        preselectedSortType = SortByTypeUM.Rating,
                         preselectedInterval = MarketsListUM.TrendInterval.H24,
-                        shouldAlwaysShowSearchBar = sortBy == null,
+                        shouldAlwaysShowSearchBar = false,
                     ),
                 ),
             )
