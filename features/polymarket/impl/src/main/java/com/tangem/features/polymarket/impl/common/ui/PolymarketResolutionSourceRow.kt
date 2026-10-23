@@ -25,6 +25,7 @@ internal fun PolymarketResolutionSourceRow(
     modifier: Modifier = Modifier,
     includeInnerPaddings: Boolean = true,
 ) {
+    val url = state.url
     TangemRow(
         modifier = modifier,
         includeInnerPaddings = includeInnerPaddings,
@@ -44,7 +45,7 @@ internal fun PolymarketResolutionSourceRow(
                 textAlign = TextAlign.End,
             )
         },
-        endSlot = if (state.url != null) {
+        endSlot = if (url != null) {
             {
                 Icon(
                     modifier = Modifier.size(24.dp),
@@ -56,6 +57,10 @@ internal fun PolymarketResolutionSourceRow(
         } else {
             null
         },
-        onClick = state.url?.let { url -> { onOpenUrl(url) } },
+        onClick = if (url != null) {
+            { onOpenUrl(url) }
+        } else {
+            null
+        },
     )
 }
