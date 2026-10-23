@@ -116,6 +116,7 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
                             balance = balance,
                             customerId = customerInfo.customerId,
                             isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
+                            productInstanceId = instance.id,
                         )
                     }
                     else -> onboardingStatus(userWalletId = userWalletId, customerInfo = customerInfo).bind()

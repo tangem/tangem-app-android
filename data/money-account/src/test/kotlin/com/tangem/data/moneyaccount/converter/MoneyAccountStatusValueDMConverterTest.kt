@@ -21,7 +21,7 @@ internal class MoneyAccountStatusValueDMConverterTest {
     private val converter = MoneyAccountStatusValueDMConverter(moneyAccountCurrencyFactory)
 
     @Test
-    fun `GIVEN active account with known bank off-ramp WHEN cached and restored THEN availability is unknown`() {
+    fun `GIVEN active account with fetched-only fields WHEN cached and restored THEN they are unknown`() {
         // Arrange
         val active = MoneyAccountStatusValue.Account.Active(
             source = StatusSource.ACTUAL,
@@ -34,13 +34,16 @@ internal class MoneyAccountStatusValueDMConverterTest {
             ),
             customerId = "customer-1",
             isBankOfframpAvailable = true,
+            productInstanceId = "instance-1",
         )
 
         // Act
         val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = converter.convert(active))
 
         // Assert
-        assertThat(restored).isEqualTo(active.copy(source = StatusSource.CACHE, isBankOfframpAvailable = null))
+        assertThat(restored).isEqualTo(
+            active.copy(source = StatusSource.CACHE, isBankOfframpAvailable = null, productInstanceId = null),
+        )
     }
 
     private companion object {
