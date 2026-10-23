@@ -32,7 +32,6 @@ import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
 import com.tangem.features.swap.deeplink.SwapDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayAccountDeepLinkHandler
-import com.tangem.features.moneyaccount.onboarding.deeplink.OnboardMoneyAccountDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.PromoDeeplinkHandler
@@ -97,10 +96,6 @@ internal class DeepLinkFactoryTest {
     }
 
     private val onboardVisaDeepLink = mockk<OnboardVisaDeepLinkHandler.Factory>(relaxed = true) {
-        every { create(any()) } returns mockk()
-    }
-
-    private val onboardMoneyAccountDeepLink = mockk<OnboardMoneyAccountDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any()) } returns mockk()
     }
 
@@ -218,7 +213,6 @@ internal class DeepLinkFactoryTest {
         swapDeepLink = swapDeepLinkFactory,
         promoDeepLink = promoDeepLinkFactory,
         onboardVisaDeepLink = onboardVisaDeepLink,
-        onboardMoneyAccountDeepLink = onboardMoneyAccountDeepLink,
         tangemPayMainDeepLink = tangemPayMainDeepLink,
         tangemPayAccountDeepLink = tangemPayAccountDeepLink,
         newsDetailsDeepLink = newsDeeplink,
