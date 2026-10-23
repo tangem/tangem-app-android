@@ -614,7 +614,7 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN content WHEN event card clicked THEN details route pushed`() = runTest {
+    fun `GIVEN content WHEN event card clicked THEN details route carries the selected category`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns categories().right()
         val model = createModel(testScope = this)
@@ -634,6 +634,7 @@ internal class PolymarketMainModelTest {
                 PolymarketRoute.EventDetails(
                     eventId = "event-1",
                     userWalletId = USER_WALLET_ID,
+                    categoryLabel = "Trending",
                 ),
                 any(),
             )
