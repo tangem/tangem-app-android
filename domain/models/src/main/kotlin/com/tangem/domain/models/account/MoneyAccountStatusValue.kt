@@ -97,16 +97,29 @@ sealed class MoneyAccountStatusValue {
 
         val cryptoCurrencyStatus: CryptoCurrencyStatus?
             get() = balance?.let { accountBalance ->
-                CryptoCurrencyStatus(
+                statusOf(
                     currency = cryptoCurrency,
-                    value = depositCryptoCurrencyStatusValue(
-                        amount = accountBalance.cryptoAmount,
-                        fiatRate = accountBalance.fiatRate,
-                        depositAddress = accountBalance.depositAddress,
-                        source = source,
-                    ),
+                    amount = accountBalance.cryptoAmount,
+                    fiatRate = accountBalance.fiatRate,
                 )
             }
+
+        fun statusOf(
+            currency: CryptoCurrency,
+            amount: SerializedBigDecimal,
+            fiatRate: SerializedBigDecimal?,
+        ): CryptoCurrencyStatus? {
+            val accountBalance = balance ?: return null
+            return CryptoCurrencyStatus(
+                currency = currency,
+                value = depositCryptoCurrencyStatusValue(
+                    amount = amount,
+                    fiatRate = fiatRate,
+                    depositAddress = accountBalance.depositAddress,
+                    source = source,
+                ),
+            )
+        }
 
         @Serializable
         data class Active(

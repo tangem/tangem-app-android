@@ -21,37 +21,44 @@ import org.junit.jupiter.api.Test
 internal class StakingBalancesStoreInitializationTest {
 
     @Test
-    fun `test initialization if cache store is empty`() = runTest {
+    fun `GIVEN persistence emits nothing WHEN store created THEN runtime stays uninitialized`() = runTest {
+        // Arrange
         val runtimeStore = RuntimeSharedStore<WalletIdWithStakingBalances>()
         val persistenceStore: DataStore<WalletIdWithWrappers> = mockk()
 
         every { persistenceStore.data } returns emptyFlow()
 
+        // Act
         DefaultStakeKitBalancesStore(
             runtimeStore = runtimeStore,
             persistenceStore = persistenceStore,
             scope = TestAppCoroutineScope(),
         )
 
+        // Assert
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(null)
     }
 
     @Test
-    fun `test initialization if cache store contains empty map`() = runTest {
+    fun `GIVEN persistence holds empty map WHEN store created THEN runtime holds empty map`() = runTest {
+        // Arrange
         val runtimeStore = RuntimeSharedStore<WalletIdWithStakingBalances>()
         val persistenceStore = MockStateDataStore<WalletIdWithWrappers>(default = emptyMap())
 
+        // Act
         DefaultStakeKitBalancesStore(
             runtimeStore = runtimeStore,
             persistenceStore = persistenceStore,
             scope = TestAppCoroutineScope(),
         )
 
+        // Assert
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(emptyMap<String, Set<StakingBalance>>())
     }
 
     @Test
-    fun `test initialization if cache store is not empty`() = runTest {
+    fun `GIVEN persisted wrapper WHEN store created THEN runtime holds CACHE balance`() = runTest {
+        // Arrange
         val runtimeStore = RuntimeSharedStore<WalletIdWithStakingBalances>()
         val persistenceStore = MockStateDataStore<WalletIdWithWrappers>(default = emptyMap())
 
@@ -63,12 +70,14 @@ internal class StakingBalancesStoreInitializationTest {
             }
         }
 
+        // Act
         DefaultStakeKitBalancesStore(
             runtimeStore = runtimeStore,
             persistenceStore = persistenceStore,
             scope = TestAppCoroutineScope(),
         )
 
+        // Assert
         val expected = mapOf(userWalletId to setOf(wrapper.toDomain()))
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(expected)
