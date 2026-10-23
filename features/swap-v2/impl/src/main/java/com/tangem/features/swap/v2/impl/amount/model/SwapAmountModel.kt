@@ -540,7 +540,7 @@ internal class SwapAmountModel @Inject constructor(
 
     private fun subscribeOnHiddenProvidersUpdates() {
         params.hiddenProviderIdsFlow
-            .drop(1)
+            .filter { hiddenProviderIds -> hiddenProviderIds.isNotEmpty() }
             .onEach { hiddenProviderIds ->
                 uiState.transformerUpdate(SwapAmountHideProvidersTransformer(providerIds = hiddenProviderIds))
                 val state = uiState.value as? SwapAmountUM.Content ?: return@onEach
