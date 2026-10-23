@@ -241,7 +241,6 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
 
     @AllureId("9455")
     @DisplayName("Action buttons (token details screen): 'Swap' for a zero-balance token pre-fills the most funded token as source")
-    @Ignore("[REDACTED_JIRA]")
     @Test
     fun checkSwapForZeroBalanceTokenTest() {
         val emptyTokenTitle = "Polygon"
@@ -250,10 +249,15 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
         val mainAccountName = getResourceString(R.string.account_main_account_title)
         val polygonBalanceScenarioName = "polygon_coin_balance"
         val zeroBalanceState = "ZeroBalance"
+        val pairsToScenarioName = "polygon_pos_to_pairs"
+        val pairsToScenarioState = "SwapTokensSwitch"
 
         setupHooks().run {
             step("Set WireMock scenario: '$polygonBalanceScenarioName' to state: '$zeroBalanceState'") {
                 setWireMockScenarioState(polygonBalanceScenarioName, zeroBalanceState)
+            }
+            step("Set WireMock scenario: '$pairsToScenarioName' to state: '$pairsToScenarioState'") {
+                setWireMockScenarioState(pairsToScenarioName, pairsToScenarioState)
             }
             step("Open 'Main Screen'") {
                 openMainScreen()
