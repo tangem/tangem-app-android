@@ -20,6 +20,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 internal class SoundClipTest {
 
@@ -130,10 +132,12 @@ internal class SoundClipTest {
         verify(exactly = 1) { player.prepare() }
     }
 
-    @Test
-    fun `GIVEN a playing sound WHEN the screen goes and comes back THEN it pauses and carries on`() {
+    @ParameterizedTest
+    @ValueSource(ints = [Player.STATE_READY, Player.STATE_BUFFERING])
+    fun `GIVEN a started sound WHEN the screen goes and comes back THEN it pauses and carries on`(state: Int) {
         // Arrange
-        every { player.isPlaying } returns true
+        every { player.playWhenReady } returns true
+        every { player.playbackState } returns state
         val clip = createClip()
 
         // Act
@@ -150,7 +154,8 @@ internal class SoundClipTest {
     @Test
     fun `GIVEN a silent sound WHEN the screen goes and comes back THEN it does not start`() {
         // Arrange
-        every { player.isPlaying } returns false
+        every { player.playWhenReady } returns false
+        every { player.playbackState } returns Player.STATE_READY
         val clip = createClip()
 
         // Act
@@ -161,6 +166,55 @@ internal class SoundClipTest {
         verify(exactly = 0) { player.pause() }
         verify(exactly = 0) { player.play() }
     }
+
+    @ParameterizedTest
+    @ValueSource(ints = [Player.STATE_ENDED, Player.STATE_IDLE])
+    fun `GIVEN a finished sound WHEN the screen goes and comes back THEN it does not start again`(state: Int) {
+        // Arrange
+        every { player.playWhenReady } returns true
+        every { player.playbackState } returns state
+        val clip = createClip()
+
+        // Act
+        clip.setRunning(false)
+        clip.setRunning(true)
+
+        // Assert
+        verify(exactly = 0) { player.pause() }
+        verify(exactly = 0) { player.play() }
+    }
+
+    @Test
+    fun `GIVEN the screen in the background WHEN played THEN nothing plays`() = runTest {
+        // Arrange
+        val clip = createReadyClip()
+        clip.setRunning(false)
+
+        // Act
+        clip.play()
+
+        // Assert
+        verify(exactly = 0) { player.play() }
+    }
+
+    @Test
+    fun `GIVEN a sound played in the background WHEN the screen comes back THEN it plays once from its start`() =
+        runTest {
+            // Arrange
+            val clip = createReadyClip()
+            clip.setRunning(false)
+            clip.play()
+
+            // Act
+            clip.setRunning(true)
+
+            // Assert
+            verifyOrder {
+                player.seekTo(0L)
+                player.play()
+            }
+            verify(exactly = 1) { player.play() }
+        }
 
     @Test
     fun `GIVEN a sound WHEN released THEN its listener is removed before the player goes`() {
@@ -178,6 +232,13 @@ internal class SoundClipTest {
     }
 
     private fun createClip() = SoundClip(player = player, cache = cache, diagnosticsSubject = "Test sound")
+
+    private suspend fun createReadyClip(): SoundClip {
+        val clip = createClip()
+        clip.prepare(URL)
+        media3Listener.captured.onPlaybackStateChanged(Player.STATE_READY)
+        return clip
+    }
 
     private companion object {
         const val URL = "https://cdn.test/skip.mp3"
