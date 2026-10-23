@@ -34,7 +34,6 @@ internal class SetTokenListTransformer(
     private val isHotBackedUp: Boolean? = null,
     private val accountIdsWithInvites: Set<String> = emptySet(),
     private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
-    private val isMoneyAccountHidden: Boolean = false,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val tangemPayConverter by lazy {
@@ -169,8 +168,6 @@ internal class SetTokenListTransformer(
     }
 
     private fun MoneyAccountMainUM.toLoadedMoneyAccountState(): MoneyAccountMainUM {
-        if (isMoneyAccountHidden) return MoneyAccountMainUM.Empty
-
         val moneyAccountStatus = when (params) {
             is TokenConverterParams.Account -> params.accountList.accountStatuses
                 .filterIsInstance<AccountStatus.Money>()
