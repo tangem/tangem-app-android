@@ -1,6 +1,5 @@
 package com.tangem.features.swap.v2.impl.amount.model.transformers
 
-import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.domain.swap.models.SwapCryptoCurrency
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapCurrenciesGroup
@@ -8,20 +7,11 @@ import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
 import com.tangem.domain.swap.models.SwapRateMode
 import com.tangem.domain.swap.models.getGroupWithDirection
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
-import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toPersistentList
-import java.math.BigDecimal
 
-@Suppress("LongParameterList")
 internal class SwapAmountHideProvidersTransformer(
     private val providerIds: Set<String>,
-    private val secondaryMaximumAmountBoundary: EnterAmountBoundary?,
-    private val secondaryMinimumAmountBoundary: EnterAmountBoundary?,
-    private val isNeedApplyFCARestrictions: Boolean,
-    private val isBalanceHidden: Boolean,
-    private val primaryFiatRateUSD: BigDecimal?,
-    private val secondaryFiatRateUSD: BigDecimal?,
 ) : Transformer<SwapAmountUM> {
 
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
@@ -29,22 +19,11 @@ internal class SwapAmountHideProvidersTransformer(
 
         val quotes = prevState.swapQuotes.filterNot { quote -> quote.provider?.providerId in providerIds }
         val swapCurrencies = prevState.swapCurrencies.withoutProviders()
-        val state = prevState.copy(
+        return prevState.copy(
             swapCurrencies = swapCurrencies,
             swapQuotes = quotes.toPersistentList(),
             swapRateMode = prevState.getSwapRateMode(swapCurrencies),
         )
-        if (prevState.selectedQuote.provider?.providerId !in providerIds) return state
-
-        return SwapAmountSelectQuoteTransformer(
-            quoteUM = quotes.firstOrNull { quote -> quote is SwapQuoteUM.Content } ?: SwapQuoteUM.Empty,
-            secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
-            secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
-            isNeedApplyFCARestrictions = isNeedApplyFCARestrictions,
-            isBalanceHidden = isBalanceHidden,
-            primaryFiatRateUSD = primaryFiatRateUSD,
-            secondaryFiatRateUSD = secondaryFiatRateUSD,
-        ).transform(state)
     }
 
     private fun SwapAmountUM.Content.getSwapRateMode(swapCurrencies: SwapCurrencies): SwapRateMode {

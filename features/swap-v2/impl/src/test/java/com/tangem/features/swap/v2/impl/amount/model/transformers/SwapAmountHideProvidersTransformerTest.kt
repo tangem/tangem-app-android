@@ -44,7 +44,7 @@ internal class SwapAmountHideProvidersTransformerTest {
     }
 
     @Test
-    fun `GIVEN hidden provider is not selected WHEN transform THEN it is dropped and selection is kept`() {
+    fun `GIVEN hidden provider WHEN transform THEN it is dropped and selection is kept`() {
         // Arrange
         val changeHeroQuote = quote(provider = changeHero)
         val state = buildContentState(
@@ -62,67 +62,6 @@ internal class SwapAmountHideProvidersTransformerTest {
             swapQuotes = persistentListOf(changeHeroQuote),
         )
         assertThat(result).isEqualTo(expected)
-    }
-
-    @Test
-    fun `GIVEN hidden provider is selected and others are left WHEN transform THEN best remaining quote is selected`() {
-        // Arrange
-        val changellyQuote = quote(provider = changelly)
-        val changeHeroQuote = quote(provider = changeHero)
-        val simpleSwapQuote = quote(provider = simpleSwap)
-        val state = buildContentState(
-            providers = listOf(changelly, changeHero, simpleSwap),
-            quotes = listOf(changellyQuote, changeHeroQuote, simpleSwapQuote),
-            selectedQuote = changellyQuote,
-        )
-
-        // Act
-        val result = buildTransformer(providerIds = setOf(changelly.providerId)).transform(state)
-
-        // Assert
-        result as SwapAmountUM.Content
-        assertThat(result.selectedQuote).isEqualTo(changeHeroQuote)
-        assertThat(result.swapQuotes).containsExactly(changeHeroQuote, simpleSwapQuote).inOrder()
-    }
-
-    @Test
-    fun `GIVEN only error quotes are left WHEN transform THEN quote is empty`() {
-        // Arrange
-        val changellyQuote = quote(provider = changelly)
-        val changeHeroError = SwapQuoteUM.Error(provider = changeHero, expressError = mockk(relaxed = true))
-        val state = buildContentState(
-            providers = listOf(changelly, changeHero),
-            quotes = listOf(changellyQuote, changeHeroError),
-            selectedQuote = changellyQuote,
-        )
-
-        // Act
-        val result = buildTransformer(providerIds = setOf(changelly.providerId)).transform(state)
-
-        // Assert
-        result as SwapAmountUM.Content
-        assertThat(result.selectedQuote).isEqualTo(SwapQuoteUM.Empty)
-        assertThat(result.swapQuotes).containsExactly(changeHeroError)
-    }
-
-    @Test
-    fun `GIVEN selected provider is the last one WHEN transform THEN quote is empty and button is disabled`() {
-        // Arrange
-        val changellyQuote = quote(provider = changelly)
-        val state = buildContentState(
-            providers = listOf(changelly),
-            quotes = listOf(changellyQuote),
-            selectedQuote = changellyQuote,
-        )
-
-        // Act
-        val result = buildTransformer(providerIds = setOf(changelly.providerId)).transform(state)
-
-        // Assert
-        result as SwapAmountUM.Content
-        assertThat(result.selectedQuote).isEqualTo(SwapQuoteUM.Empty)
-        assertThat(result.swapQuotes).isEmpty()
-        assertThat(result.isPrimaryButtonEnabled).isFalse()
     }
 
     @Test
@@ -174,15 +113,7 @@ internal class SwapAmountHideProvidersTransformerTest {
         assertThat(result.swapRateMode).isEqualTo(SwapRateMode.FLOAT_ONLY)
     }
 
-    private fun buildTransformer(providerIds: Set<String>) = SwapAmountHideProvidersTransformer(
-        providerIds = providerIds,
-        secondaryMaximumAmountBoundary = null,
-        secondaryMinimumAmountBoundary = null,
-        isNeedApplyFCARestrictions = false,
-        isBalanceHidden = false,
-        primaryFiatRateUSD = null,
-        secondaryFiatRateUSD = null,
-    )
+    private fun buildTransformer(providerIds: Set<String>) = SwapAmountHideProvidersTransformer(providerIds)
 
     private fun provider(id: String) = ExpressProvider(
         providerId = id,
