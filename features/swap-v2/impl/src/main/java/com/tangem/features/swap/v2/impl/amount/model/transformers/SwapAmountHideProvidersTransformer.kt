@@ -7,6 +7,7 @@ import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
 import com.tangem.domain.swap.models.SwapRateMode
 import com.tangem.domain.swap.models.getGroupWithDirection
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
+import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toPersistentList
 
@@ -19,11 +20,14 @@ internal class SwapAmountHideProvidersTransformer(
 
         val quotes = prevState.swapQuotes.filterNot { quote -> quote.provider?.providerId in providerIds }
         val swapCurrencies = prevState.swapCurrencies.withoutProviders()
-        return prevState.copy(
+        val state = prevState.copy(
             swapCurrencies = swapCurrencies,
             swapQuotes = quotes.toPersistentList(),
             swapRateMode = prevState.getSwapRateMode(swapCurrencies),
         )
+        if (prevState.selectedQuote.provider?.providerId !in providerIds) return state
+
+        return state.copy(selectedQuote = SwapQuoteUM.Loading, isPrimaryButtonEnabled = false)
     }
 
     private fun SwapAmountUM.Content.getSwapRateMode(swapCurrencies: SwapCurrencies): SwapRateMode {
