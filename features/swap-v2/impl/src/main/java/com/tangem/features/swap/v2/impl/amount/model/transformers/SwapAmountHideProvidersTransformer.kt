@@ -4,6 +4,9 @@ import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.domain.swap.models.SwapCryptoCurrency
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapCurrenciesGroup
+import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
+import com.tangem.domain.swap.models.SwapRateMode
+import com.tangem.domain.swap.models.getGroupWithDirection
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.utils.transformer.Transformer
@@ -25,9 +28,11 @@ internal class SwapAmountHideProvidersTransformer(
         if (prevState !is SwapAmountUM.Content) return prevState
 
         val quotes = prevState.swapQuotes.filterNot { quote -> quote.provider?.providerId in providerIds }
+        val swapCurrencies = prevState.swapCurrencies.withoutProviders()
         val state = prevState.copy(
-            swapCurrencies = prevState.swapCurrencies.withoutProviders(),
+            swapCurrencies = swapCurrencies,
             swapQuotes = quotes.toPersistentList(),
+            swapRateMode = prevState.getSwapRateMode(swapCurrencies),
         )
         if (prevState.selectedQuote.provider?.providerId !in providerIds) return state
 
@@ -40,6 +45,18 @@ internal class SwapAmountHideProvidersTransformer(
             primaryFiatRateUSD = primaryFiatRateUSD,
             secondaryFiatRateUSD = secondaryFiatRateUSD,
         ).transform(state)
+    }
+
+    private fun SwapAmountUM.Content.getSwapRateMode(swapCurrencies: SwapCurrencies): SwapRateMode {
+        val toCurrency = swapDirection.withSwapDirection(
+            onDirect = { secondaryCryptoCurrencyStatus?.currency },
+            onReverse = { primaryCryptoCurrencyStatus.currency },
+        ) ?: return swapRateMode
+
+        val providers = swapCurrencies.getGroupWithDirection(swapDirection).available
+            .filter { swapCurrency -> swapCurrency.currencyStatus.currency.id == toCurrency.id }
+            .flatMap(SwapCryptoCurrency::providers)
+        return if (providers.isEmpty()) swapRateMode else providers.getSwapRateMode()
     }
 
     private fun SwapCurrencies.withoutProviders(): SwapCurrencies {
