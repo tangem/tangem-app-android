@@ -132,7 +132,7 @@ private fun TangemPayRow(
         subtitleSlot = {
             TangemPaySubtitle(
                 text = subtitle,
-                color = subtitleColor
+                color = subtitleColor,
             )
         },
         endSlot = if (showError) {
