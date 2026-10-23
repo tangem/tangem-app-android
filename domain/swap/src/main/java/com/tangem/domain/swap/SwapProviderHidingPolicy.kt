@@ -19,7 +19,8 @@ object SwapProviderHidingPolicy {
         is ExpressError.AmountError.TooBigError,
         is ExpressError.NotEnoughBalanceError,
         is ExpressError.InvalidAddressError,
-        is ExpressError.ProviderDifferentAmountError -> true
+        is ExpressError.ProviderDifferentAmountError,
+        -> true
         else -> false
     }
 }
