@@ -48,7 +48,6 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         isHotBackedUp: Boolean? = null,
         accountIdsWithInvites: Set<String> = emptySet(),
         jointPendingOperations: List<JointPendingOperation> = emptyList(),
-        isMoneyAccountHidden: Boolean = false,
     ) {
         stateController.update(
             SetTokenListTransformer(
@@ -63,7 +62,6 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 isHotBackedUp = isHotBackedUp,
                 accountIdsWithInvites = accountIdsWithInvites,
                 jointPendingOperations = jointPendingOperations,
-                isMoneyAccountHidden = isMoneyAccountHidden,
             ),
         )
     }

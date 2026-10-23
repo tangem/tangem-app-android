@@ -53,9 +53,6 @@ internal sealed interface WalletDialogConfig {
     data class KycRejected(val walletId: UserWalletId, val customerId: String) : WalletDialogConfig
 
     @Serializable
-    data class TangemPayWaitlist(val userWalletId: UserWalletId, val countryCode: String) : WalletDialogConfig
-
-    @Serializable
     data class YieldModePromo(val offer: YieldModePromoOffer) : WalletDialogConfig
 
     @Serializable
