@@ -172,6 +172,11 @@ internal class PolymarketFeedPoller(
 
     /** An event served twice counts towards the page it first appeared on — the rule the feed renders by. */
     private fun visibleBatchKeys(state: PolymarketEventsBatchListState): Set<Int> {
+        // A refresh can remove every card; keep polling the first loaded page so the feed can recover.
+        if (state.data.isNotEmpty() && state.data.all { it.data.events.isEmpty() }) {
+            return setOf(state.data.first().key)
+        }
+
         val visibleIds = visibleEventIds
         if (visibleIds.isEmpty()) return emptySet()
 
