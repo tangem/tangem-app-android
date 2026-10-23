@@ -2,26 +2,22 @@ package com.tangem.data.moneyaccount.flow
 
 import arrow.core.Either
 import arrow.core.getOrElse
-import arrow.core.raise.either
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
-import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
-import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
+import com.tangem.domain.pay.model.CachePolicy
 import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.OrderStatus
-import com.tangem.domain.pay.model.OrderStep
-import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
+import com.tangem.domain.pay.usecase.ResolveMoneyAccountStatusFromSummaryUseCase
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -33,23 +29,23 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
     private val moneyAccountStatusesStore: MoneyAccountStatusesStore,
-    private val orderRepository: MoneyAccountOrderRepository,
     private val onboardingRepository: OnboardingRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val getMoneyAccountBalanceUseCase: GetMoneyAccountBalanceUseCase,
     private val deviceSecurity: DeviceSecurityInfoProvider,
     private val moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory,
+    private val resolveMoneyAccountStatusFromSummaryUseCase: ResolveMoneyAccountStatusFromSummaryUseCase,
+    private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
 ) : MoneyAccountStatusFetcher {
 
     override suspend fun invoke(params: MoneyAccountStatusFetcher.Params): Either<Throwable, Unit> {
         val account = Account.Money(userWalletId = params.userWalletId)
         return Either.catchOn(dispatchers.default) {
-            val status = fetch(params.userWalletId).getOrElse { error("Cannot fetch money account information") }
             moneyAccountStatusesStore.store(
                 userWalletId = params.userWalletId,
                 status = AccountStatus.Money(
                     account = account,
-                    value = status,
+                    value = fetch(params.userWalletId),
                 ),
             )
         }.onLeft {
@@ -58,132 +54,62 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
                     userWalletId = params.userWalletId,
                     status = AccountStatus.Money(
                         account = account,
-                        value = MoneyAccountStatusValue.Error.Unavailable,
+                        value = MoneyAccountStatusValue.Empty,
                     ),
                 )
             }
         }
     }
 
-    private suspend fun fetch(userWalletId: UserWalletId): Either<VisaApiError, MoneyAccountStatusValue> =
-        coroutineScope {
-            either {
-                if (deviceSecurity.isSecurityExposed()) {
-                    return@either MoneyAccountStatusValue.Error.ExposedDevice
-                }
+    private suspend fun fetch(userWalletId: UserWalletId): MoneyAccountStatusValue {
+        if (deviceSecurity.isSecurityExposed()) return MoneyAccountStatusValue.Error.ExposedDevice
 
-                val cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId)
-                val balanceDeferred = async { getMoneyAccountBalanceUseCase.invoke(userWalletId, cryptoCurrency) }
-                val customerInfoDeferred = async { onboardingRepository.getCustomerInfo(userWalletId) }
-                val channelsDeferred = async { onboardingRepository.fetchCustomerEligibility(userWalletId) }
+        val summary = getCustomerSummaryUseCase.invoke(userWalletId, CachePolicy.REFRESH).getOrNull()
+            ?: return MoneyAccountStatusValue.Empty
 
-                val customerInfo = customerInfoDeferred.await().getOrElse { error ->
-                    return@either when (error) {
-                        VisaApiError.RefreshTokenExpired -> MoneyAccountStatusValue.Error.NotSynced
-                        else -> MoneyAccountStatusValue.Error.Unavailable
-                    }
-                }
-                val balance = balanceDeferred.await().getOrNull()
-                val channels = channelsDeferred.await().getOrNull()
-                val instance = customerInfo.moneyAccountProductInstance
-                when {
-                    instance == null && customerInfo.state == CustomerInfo.State.FORMER -> {
-                        MoneyAccountStatusValue.Empty
-                    }
-                    instance == null -> {
-                        onboardingStatus(userWalletId = userWalletId, customerInfo = customerInfo).bind()
-                    }
-                    customerInfo.state == CustomerInfo.State.FORMER -> {
-                        MoneyAccountStatusValue.Account.Deactivated(
-                            source = StatusSource.ACTUAL,
-                            cryptoCurrency = cryptoCurrency,
-                            balance = balance,
-                            customerId = customerInfo.customerId,
-                        )
-                    }
-                    instance.status == CustomerInfo.ProductInstance.Status.DEACTIVATED -> {
-                        MoneyAccountStatusValue.Account.Deactivated(
-                            source = StatusSource.ACTUAL,
-                            cryptoCurrency = cryptoCurrency,
-                            balance = balance,
-                            customerId = customerInfo.customerId,
-                        )
-                    }
-                    instance.status == CustomerInfo.ProductInstance.Status.ACTIVE -> {
-                        MoneyAccountStatusValue.Account.Active(
-                            source = StatusSource.ACTUAL,
-                            cryptoCurrency = cryptoCurrency,
-                            balance = balance,
-                            customerId = customerInfo.customerId,
-                            isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
-                            productInstanceId = instance.id,
-                        )
-                    }
-                    else -> onboardingStatus(userWalletId = userWalletId, customerInfo = customerInfo).bind()
-                }
-            }
-        }
+        resolveMoneyAccountStatusFromSummaryUseCase(summary)?.let { return it }
 
-    private fun onboardingStatus(
-        userWalletId: UserWalletId,
-        customerInfo: CustomerInfo,
-    ): Either<VisaApiError, MoneyAccountStatusValue> = either {
-        val orderResult = orderRepository.getOrder(userWalletId) ?: return@either MoneyAccountStatusValue.Loading
-        val order = orderResult.getOrElse { return@either MoneyAccountStatusValue.Error.Unavailable }
-
-        val customerId = customerInfo.customerId
-        return@either when {
-            order == null -> MoneyAccountStatusValue.NotCreated
-            customerInfo.kycStatus == KycStatus.REQUIRED && order.orderStatus != OrderStatus.CANCELED -> {
-                MoneyAccountStatusValue.Onboarding.KycRequired(
-                    source = StatusSource.ACTUAL,
-                    customerId = customerId,
-                )
-            }
-            order.orderStatus == OrderStatus.COMPLETED -> {
-                MoneyAccountStatusValue.Onboarding.Activating(
-                    source = StatusSource.ACTUAL,
-                    customerId = customerId,
-                )
-            }
-            else -> when (order.orderStep) {
-                OrderStep.AWAITING_KYC -> kycStatus(customerId = customerId, customerInfo = customerInfo)
-                OrderStep.ACCOUNT_ISSUE,
-                OrderStep.ACCOUNT_ACTIVATION,
-                -> MoneyAccountStatusValue.Onboarding.Activating(
-                    source = StatusSource.ACTUAL,
-                    customerId = customerId,
-                )
-                else -> MoneyAccountStatusValue.Onboarding.Issuing(
-                    source = StatusSource.ACTUAL,
-                    customerId = customerId,
-                    step = order.toIssuingStep(),
-                )
-            }
-        }
+        return fetchAccount(userWalletId)
     }
 
-    private fun kycStatus(customerId: String, customerInfo: CustomerInfo): MoneyAccountStatusValue {
-        val kycStatus = customerInfo.kycStatus
-        return if (kycStatus == KycStatus.REJECTED) {
-            MoneyAccountStatusValue.Onboarding.VerificationDeclined(
+    private suspend fun fetchAccount(userWalletId: UserWalletId): MoneyAccountStatusValue = coroutineScope {
+        val cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId)
+        val balanceDeferred = async { getMoneyAccountBalanceUseCase.invoke(userWalletId, cryptoCurrency) }
+        val channelsDeferred = async { onboardingRepository.fetchCustomerEligibility(userWalletId) }
+        val customerInfo = onboardingRepository.getCustomerInfo(userWalletId).getOrElse {
+            balanceDeferred.cancel()
+            channelsDeferred.cancel()
+            return@coroutineScope MoneyAccountStatusValue.Empty
+        }
+        val balance = balanceDeferred.await().getOrNull()
+        val channels = channelsDeferred.await().getOrNull()
+        val instance = customerInfo.moneyAccountProductInstance
+        val isFormer = customerInfo.state == CustomerInfo.State.FORMER
+
+        when {
+            instance == null && isFormer -> MoneyAccountStatusValue.Empty
+            isFormer || instance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED -> {
+                MoneyAccountStatusValue.Account.Deactivated(
+                    source = StatusSource.ACTUAL,
+                    cryptoCurrency = cryptoCurrency,
+                    balance = balance,
+                    customerId = customerInfo.customerId,
+                )
+            }
+            instance?.status == CustomerInfo.ProductInstance.Status.ACTIVE -> {
+                MoneyAccountStatusValue.Account.Active(
+                    source = StatusSource.ACTUAL,
+                    cryptoCurrency = cryptoCurrency,
+                    balance = balance,
+                    customerId = customerInfo.customerId,
+                    isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
+                    productInstanceId = instance.id,
+                )
+            }
+            else -> MoneyAccountStatusValue.Onboarding.Activating(
                 source = StatusSource.ACTUAL,
-                customerId = customerId,
-            )
-        } else {
-            MoneyAccountStatusValue.Onboarding.UnderReview(
-                source = StatusSource.ACTUAL,
-                customerId = customerId,
-                kycStatus = kycStatus,
+                customerId = customerInfo.customerId,
             )
         }
-    }
-
-    private fun TangemPayOrderInfo.toIssuingStep(): MoneyAccountStatusValue.IssuingStep = when (orderStep) {
-        OrderStep.STARTING -> MoneyAccountStatusValue.IssuingStep.STARTING
-        OrderStep.INITIALIZATION -> MoneyAccountStatusValue.IssuingStep.INITIALIZATION
-        OrderStep.ELIGIBILITY_CHECK -> MoneyAccountStatusValue.IssuingStep.ELIGIBILITY_CHECK
-        OrderStep.RAIN_APPROVAL -> MoneyAccountStatusValue.IssuingStep.RAIN_APPROVAL
-        else -> MoneyAccountStatusValue.IssuingStep.UNKNOWN
     }
 }
