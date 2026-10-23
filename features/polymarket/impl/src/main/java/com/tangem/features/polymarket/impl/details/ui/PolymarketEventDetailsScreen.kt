@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.ds2.badge.TangemBadge
 // import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -201,13 +202,18 @@ private fun CollapsedBar(state: PolymarketEventDetailsUM.Content, modifier: Modi
         verticalAlignment = Alignment.CenterVertically,
     ) {
         EventIcon(iconUrl = state.iconUrl, size = 40.dp)
-        Text(
-            text = state.title.resolveReference(),
-            color = TangemTheme.colors3.text.primary,
-            style = TangemTheme.typography3.body.medium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = state.title.resolveReference(),
+                color = TangemTheme.colors3.text.primary,
+                style = TangemTheme.typography3.body.medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            state.categoryLabel?.let { category ->
+                TangemBadge(text = category, size = TangemBadge.Size.X4)
+            }
+        }
     }
 }
 
@@ -315,6 +321,7 @@ private fun PolymarketEventDetailsScreenPreview() {
 private fun previewContent(): PolymarketEventDetailsUM.Content {
     return PolymarketEventDetailsUM.Content(
         title = stringReference("Who will win FIFA World Cup 2026 in the USA?"),
+        categoryLabel = stringReference("Sports"),
         iconUrl = null,
         totalVolume = stringReference("\$6.3M"),
         change24h = PriceChangeState.Content(valueInPercent = "2.08%", type = PriceChangeType.UP),
