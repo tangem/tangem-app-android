@@ -23,6 +23,12 @@ class TangemPayKycSheetPageObject(semanticsProvider: SemanticsNodeInteractionsPr
         useUnmergedTree = true
     }
 
+    fun secondaryButtonWithText(text: String): KNode = child {
+        hasTestTag(WarningBottomSheetTestTags.BUTTON_SECONDARY)
+        hasAnyDescendant(withText(text))
+        useUnmergedTree = true
+    }
+
     val closeButton: KNode = child {
         hasTestTag(WarningBottomSheetTestTags.CLOSE_BUTTON)
         useUnmergedTree = true

@@ -8,6 +8,7 @@ import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.data.walletconnect.DefaultWalletConnectRepository
 import com.tangem.data.walletconnect.initialize.DefaultWcInitializeUseCase
 import com.tangem.data.walletconnect.network.bitcoin.WcBitcoinNetwork
+import com.tangem.data.walletconnect.network.ethereum.WcEthChainRequestResolver
 import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork
 import com.tangem.data.walletconnect.network.solana.WcSolanaNetwork
 import com.tangem.data.walletconnect.pair.*
@@ -182,12 +183,14 @@ internal object WalletConnectDataModule {
         factories: WcEthNetwork.Factories,
         wcNetworksConverter: WcNetworksConverter,
         analyticsExceptionHandler: AnalyticsExceptionHandler,
+        chainRequestResolver: WcEthChainRequestResolver,
     ): WcEthNetwork = WcEthNetwork(
         moshi = moshi,
         networksConverter = wcNetworksConverter,
         sessionsManager = sessionsManager,
         factories = factories,
         analyticsExceptionHandler = analyticsExceptionHandler,
+        chainRequestResolver = chainRequestResolver,
     )
 
     @Provides

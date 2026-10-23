@@ -8,6 +8,7 @@ import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.toHexString
 import com.tangem.data.walletconnect.sdk.WcSdk
 import com.tangem.domain.walletconnect.WC_TAG
+import com.tangem.domain.walletconnect.model.WcJsonRpcError
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.utils.logging.TangemLogger
@@ -26,7 +27,7 @@ internal class DefaultWcRespondService(
         return request.request.params.calculateSha256().toHexString()
     }
 
-    override suspend fun respond(request: WcSdkSessionRequest, response: String): Either<WcRequestError, String> {
+    override suspend fun respond(request: WcSdkSessionRequest, response: String?): Either<WcRequestError, String> {
         val params = Wallet.Params.SessionRequestResponse(
             sessionTopic = request.topic,
             jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(
@@ -51,7 +52,7 @@ internal class DefaultWcRespondService(
                     }
                     is Wallet.Model.JsonRpcResponse.JsonRpcResult -> {
                         TangemLogger.withTag(WC_TAG).i("Successful respond $jsonRpcResponse for request $request")
-                        if (jsonRpcResponse.result == null) {
+                        if (response != null && jsonRpcResponse.result == null) {
                             TangemLogger.withTag(WC_TAG).e(
                                 "Response result is null, but requestResponse should be String. Casted to empty",
                             )
@@ -86,16 +87,16 @@ internal class DefaultWcRespondService(
         return isStillPending
     }
 
-    override fun rejectRequestNonBlock(request: WcSdkSessionRequest, message: String) {
-        TangemLogger.withTag(WC_TAG).i("reject request $request")
+    override fun rejectRequestNonBlock(request: WcSdkSessionRequest, error: WcJsonRpcError) {
+        TangemLogger.withTag(WC_TAG).i("reject request $request with code ${error.code}")
         removeCachedRequest(request)
         wcSdk.respondSessionRequestNonBlocking(
             params = Wallet.Params.SessionRequestResponse(
                 sessionTopic = request.topic,
                 jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcError(
                     id = request.request.id,
-                    code = 0,
-                    message = message,
+                    code = error.code,
+                    message = error.message,
                 ),
             ),
             onSuccess = {},
