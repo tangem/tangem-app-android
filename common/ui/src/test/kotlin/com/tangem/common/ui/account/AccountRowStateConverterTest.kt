@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
+package com.tangem.common.ui.account
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
@@ -19,25 +19,18 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.ProvideTestModels
-import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import kotlin.reflect.KClass
 
-internal class WalletAccountRowConverterTest {
+internal class AccountRowStateConverterTest {
 
     private val userWalletId = UserWalletId("00")
     private val currencyFactory = MockCryptoCurrencyFactory()
 
-    private val converter = WalletAccountRowConverter(
-        appCurrency = AppCurrency.Default,
-        expandedAccounts = emptySet(),
-        onAccountCollapseClick = {},
-        onAccountExpandClick = {},
-        onManageTokensClick = {},
-    )
+    private val converter = AccountRowStateConverter(appCurrency = AppCurrency.Default)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -50,10 +43,10 @@ internal class WalletAccountRowConverterTest {
             val accountStatus = accountStatus(totalFiatBalance = model.totalFiatBalance, values = model.values)
 
             // Act
-            val actual = converter.convert(value = accountStatus, tokenList = persistentListOf())
+            val actual = converter.convert(value = accountStatus, onClick = {})
 
             // Assert
-            assertThat(actual.state).isInstanceOf(model.expected.java)
+            assertThat(actual).isInstanceOf(model.expected.java)
         }
 
         private fun provideTestModels() = listOf(
@@ -105,10 +98,10 @@ internal class WalletAccountRowConverterTest {
             )
 
             // Act
-            val actual = converter.convert(value = accountStatus, tokenList = persistentListOf())
+            val actual = accountStatus.account.toAvatarState()
 
             // Assert
-            assertThat((actual.avatar as TangemAvatar.UiState.Account).color).isEqualTo(model.expected)
+            assertThat((actual as TangemAvatar.UiState.Account).color).isEqualTo(model.expected)
         }
 
         private fun provideTestModels() = listOf(

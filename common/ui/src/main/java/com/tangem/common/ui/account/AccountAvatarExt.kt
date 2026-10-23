@@ -1,12 +1,7 @@
-package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
+package com.tangem.common.ui.account
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
-import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
-import com.tangem.core.ui.ds2.util.TangemPriceChange
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.generated.assets.il_account_airplane
 import com.tangem.core.ui.res.generated.assets.il_account_beach
 import com.tangem.core.ui.res.generated.assets.il_account_bookmark
@@ -26,22 +21,17 @@ import com.tangem.core.ui.res.generated.assets.il_account_star
 import com.tangem.core.ui.res.generated.assets.il_account_user
 import com.tangem.core.ui.res.generated.assets.il_account_wallet
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.CryptoPortfolioIcon
-import java.math.BigDecimal
 
-internal fun BigDecimal.toPriceChangeState(): TangemPriceChange.State = TangemPriceChange.State(
-    value = stringReference(format { percent() }),
-    direction = when (PriceChangeType.fromBigDecimal(this)) {
-        PriceChangeType.UP -> TangemPriceChange.Direction.Up
-        PriceChangeType.DOWN -> TangemPriceChange.Direction.Down
-        PriceChangeType.NEUTRAL -> TangemPriceChange.Direction.Neutral
-    },
+// TODO([REDACTED_TASK_KEY]): render the initial for Letter accounts and the pending-operation indicator
+fun Account.CryptoPortfolio.toAvatarState(): TangemAvatar.UiState = TangemAvatar.UiState.Account(
+    imageVector = icon.value.toAvatarIcon(),
+    color = icon.color.toFillColor(),
 )
 
 // TODO([REDACTED_TASK_KEY]): replace with the account-avatar colour DS tokens once they are added
-internal fun CryptoPortfolioIcon.Color.toFillColor(): TangemAvatar.FillColor = when (this) {
+fun CryptoPortfolioIcon.Color.toFillColor(): TangemAvatar.FillColor = when (this) {
     CryptoPortfolioIcon.Color.Azure -> TangemAvatar.FillColor.DarkBlue
     CryptoPortfolioIcon.Color.CaribbeanBlue -> TangemAvatar.FillColor.LightBlue
     CryptoPortfolioIcon.Color.DullLavender -> TangemAvatar.FillColor.Lavender
@@ -57,7 +47,7 @@ internal fun CryptoPortfolioIcon.Color.toFillColor(): TangemAvatar.FillColor = w
 }
 
 @Suppress("CyclomaticComplexMethod")
-internal fun CryptoPortfolioIcon.Icon.toAvatarIcon(): ImageVector = when (this) {
+fun CryptoPortfolioIcon.Icon.toAvatarIcon(): ImageVector = when (this) {
     CryptoPortfolioIcon.Icon.Letter -> Icons.il_account_letter
     CryptoPortfolioIcon.Icon.Star -> Icons.il_account_star
     CryptoPortfolioIcon.Icon.User -> Icons.il_account_user
@@ -77,20 +67,3 @@ internal fun CryptoPortfolioIcon.Icon.toAvatarIcon(): ImageVector = when (this) 
     CryptoPortfolioIcon.Icon.Package -> Icons.il_account_package
     CryptoPortfolioIcon.Icon.Gift -> Icons.il_account_gift
 }
-
-internal fun CurrencyIconState.toTokenIconState(): TangemTokenIcon.UiState = when (this) {
-    is CurrencyIconState.CoinIcon -> tokenIcon(url = url)
-    is CurrencyIconState.TokenIcon -> tokenIcon(url = url)
-    is CurrencyIconState.CustomTokenIcon -> tokenIcon(url = null)
-    CurrencyIconState.Loading -> TangemTokenIcon.UiState.Shimmer
-    else -> TangemTokenIcon.UiState.Error
-}
-
-private fun CurrencyIconState.tokenIcon(url: String?): TangemTokenIcon.UiState = TangemTokenIcon.UiState.Token(
-    TangemTokenIcon.State(
-        url = url,
-        topIcon = topBadgeIconResId,
-        isGrayscale = isGrayscale,
-        indicator = TangemTokenIcon.State.Indicator().takeIf { shouldShowCustomBadge },
-    ),
-)

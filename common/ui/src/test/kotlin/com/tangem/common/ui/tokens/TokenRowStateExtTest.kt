@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
+package com.tangem.common.ui.tokens
 
 import androidx.compose.ui.graphics.Color
 import com.google.common.truth.Truth.assertThat
@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
-internal class DsRowStateExtTest {
+internal class TokenRowStateExtTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
