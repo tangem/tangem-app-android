@@ -36,7 +36,7 @@ import com.tangem.features.introduction.impl.analytics.SocialLoginAnalyticsEvent
 import com.tangem.features.introduction.impl.ui.state.SocialLoginConsentUM
 import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
-import com.tangem.utils.SupportedLanguages
+import com.tangem.utils.TangemHelpCenterUrlBuilder
 import com.tangem.utils.logging.TangemLogger
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
@@ -184,8 +184,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
     )
 
     private fun openHelpArticle() {
-        val language = SupportedLanguages.getCurrentSupportedLanguageCode()
-        urlOpener.openUrl("https://tangem.com/$language/$HELP_ARTICLE_PATH")
+        urlOpener.openUrl(TangemHelpCenterUrlBuilder.helpCenterUrl(HELP_ARTICLE_PATH, HELP_ARTICLE_ANCHOR))
     }
 
     /**
@@ -387,8 +386,8 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
 
     private companion object {
         const val SEED_PHRASE_LENGTH = 12
-        const val HELP_ARTICLE_PATH = "help-center/getting-started-with-mobile-wallet/" +
-            "how-to-create-a-mobile-wallet/#create-a-wallet-with-google-or-apple"
+        const val HELP_ARTICLE_PATH = "getting-started-with-mobile-wallet/how-to-create-a-mobile-wallet"
+        const val HELP_ARTICLE_ANCHOR = "create-a-wallet-with-google-or-apple"
     }
 }
 
