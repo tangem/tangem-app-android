@@ -254,6 +254,18 @@ internal class StakingBalanceConverterTest {
             // Assert
             assertThat(actual.validatorAddress).isNull()
         }
+
+        @Test
+        fun `GIVEN empty validatorAddresses WHEN convert THEN validator address null`() {
+            // Arrange
+            val balance = balanceDTO(validatorAddress = null, validatorAddresses = emptyList())
+
+            // Act
+            val actual = convertItems(wrapper(balance)).single()
+
+            // Assert
+            assertThat(actual.validatorAddress).isNull()
+        }
     }
 
     private fun convertItems(wrapper: YieldBalanceWrapperDTO): List<BalanceItem> {
