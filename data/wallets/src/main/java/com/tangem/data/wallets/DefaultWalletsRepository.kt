@@ -1,5 +1,6 @@
 package com.tangem.data.wallets
 
+import android.util.Base64
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
@@ -30,6 +31,7 @@ import com.tangem.domain.wallets.models.UserWalletRemoteInfo
 import com.tangem.domain.wallets.models.WalletSyncResult
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -44,6 +46,7 @@ internal class DefaultWalletsRepository(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val walletServerBinder: WalletServerBinder,
+    private val walletRegistrar: WalletRegistrar,
     private val moshi: com.squareup.moshi.Moshi,
 ) : WalletsRepository {
 
@@ -113,6 +116,10 @@ internal class DefaultWalletsRepository(
         return appPreferencesStore
             .getSyncOrDefault(key = storePreferencesKeys.addedWalletsWithRingKey, default = emptySet())
             .contains(element = userWalletId.stringValue)
+    }
+
+    override suspend fun isWalletRegistered(userWalletId: UserWalletId): Boolean {
+        return walletRegistrar.isRegistered(walletId = Base64.encodeToString(userWalletId.value, Base64.NO_WRAP))
     }
 
     override suspend fun setHasWalletsWithRing(userWalletId: UserWalletId) {

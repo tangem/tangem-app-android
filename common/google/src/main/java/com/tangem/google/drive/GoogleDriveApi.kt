@@ -7,8 +7,6 @@ import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
-import retrofit2.http.Field
-import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.PATCH
@@ -74,10 +72,6 @@ interface GoogleDriveApi {
         @Header("Authorization") authorization: String,
         @Query("fields") fields: String = ABOUT_FIELDS,
     ): Response<DriveAbout>
-
-    @FormUrlEncoded
-    @POST("https://oauth2.googleapis.com/revoke")
-    suspend fun revokeToken(@Field("token") token: String): Response<Unit>
 
     companion object {
         const val BASE_URL = "https://www.googleapis.com/"
