@@ -9,6 +9,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.ExpressDataError
+import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.SwapTransactionState
@@ -31,6 +32,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SwapModelHideRejectedProviderTest : SwapModelTestBase() {
@@ -64,7 +66,7 @@ internal class SwapModelHideRejectedProviderTest : SwapModelTestBase() {
         every { swapFeatureToggles.isHideRejectedCexProviderEnabled } returns true
         val model = createModelFailingWith(
             selectedProvider = changeHero,
-            errorCode = REJECTED_CODE,
+            error = rejectedError,
             pairProviders = listOf(changeHero, changelly),
         )
 
@@ -91,7 +93,7 @@ internal class SwapModelHideRejectedProviderTest : SwapModelTestBase() {
         every { swapFeatureToggles.isHideRejectedCexProviderEnabled } returns false
         val model = createModelFailingWith(
             selectedProvider = changeHero,
-            errorCode = REJECTED_CODE,
+            error = rejectedError,
             pairProviders = listOf(changeHero, changelly),
         )
 
@@ -105,13 +107,13 @@ internal class SwapModelHideRejectedProviderTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN hiding enabled and Changelly fails with user-fixable code WHEN swap clicked THEN pair providers unchanged`() =
+    fun `GIVEN hiding enabled and Changelly fails with user-fixable error WHEN swap clicked THEN pair providers unchanged`() =
         runTest {
             // Arrange
             every { swapFeatureToggles.isHideRejectedCexProviderEnabled } returns true
             val model = createModelFailingWith(
                 selectedProvider = changelly,
-                errorCode = TOO_SMALL_AMOUNT_CODE,
+                error = tooSmallAmountError,
                 pairProviders = listOf(changeHero, changelly),
             )
 
@@ -130,7 +132,7 @@ internal class SwapModelHideRejectedProviderTest : SwapModelTestBase() {
         every { swapFeatureToggles.isHideRejectedCexProviderEnabled } returns true
         val model = createModelFailingWith(
             selectedProvider = changeHero,
-            errorCode = REJECTED_CODE,
+            error = rejectedError,
             pairProviders = listOf(changeHero),
         )
 
@@ -146,7 +148,7 @@ internal class SwapModelHideRejectedProviderTest : SwapModelTestBase() {
 
     private fun TestScope.createModelFailingWith(
         selectedProvider: SwapProvider,
-        errorCode: Int,
+        error: ExpressDataError,
         pairProviders: List<SwapProvider>,
     ): SwapModel {
         val wallet: UserWallet = mockk(relaxed = true) { every { walletId } returns userWalletId }
@@ -163,7 +165,7 @@ internal class SwapModelHideRejectedProviderTest : SwapModelTestBase() {
                 customSlippage = any(),
                 intentId = any(),
             )
-        } returns SwapTransactionState.Error.ExpressError(ExpressDataError.UnknownErrorWithCode(errorCode))
+        } returns SwapTransactionState.Error.ExpressError(error)
 
         val model = createModel(createParams(), dispatchers = deferredDispatchers())
         advanceUntilIdle()
@@ -203,7 +205,10 @@ internal class SwapModelHideRejectedProviderTest : SwapModelTestBase() {
     )
 
     private companion object {
-        const val REJECTED_CODE = 2264
-        const val TOO_SMALL_AMOUNT_CODE = 2250
+        val rejectedError = ExpressDataError.ExchangeProviderAddressBannedByAmlError(code = 2264)
+        val tooSmallAmountError = ExpressDataError.ExchangeTooSmallAmountError(
+            code = 2250,
+            amount = SwapAmount(value = BigDecimal.ONE, decimals = 18),
+        )
     }
 }
