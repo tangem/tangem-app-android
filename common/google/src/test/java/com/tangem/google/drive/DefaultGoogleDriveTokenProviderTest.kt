@@ -44,7 +44,7 @@ internal class DefaultGoogleDriveTokenProviderTest {
         clearMocks(authorizer, networkConnectionManager)
         mockkObject(GoogleServicesHelper)
         every { GoogleServicesHelper.checkGoogleServicesAvailability(any()) } returns true
-        every { networkConnectionManager.isOnline } returns true
+        every { networkConnectionManager.isOnlineSync } returns true
         every { authorizer.selectedAccountName } returns null
         provider = DefaultGoogleDriveTokenProvider(
             authorizer = authorizer,
@@ -74,7 +74,7 @@ internal class DefaultGoogleDriveTokenProviderTest {
     @Test
     fun `GIVEN device offline WHEN getAccessToken THEN NetworkError and no authorize`() = runTest {
         // Arrange
-        every { networkConnectionManager.isOnline } returns false
+        every { networkConnectionManager.isOnlineSync } returns false
 
         // Act
         val actual = provider.getAccessToken()
@@ -129,7 +129,7 @@ internal class DefaultGoogleDriveTokenProviderTest {
         // Arrange
         stubAuthorizePinningAccount()
         provider.getAccessToken()
-        every { networkConnectionManager.isOnline } returns false
+        every { networkConnectionManager.isOnlineSync } returns false
 
         // Act
         val actual = provider.getAccessToken()
