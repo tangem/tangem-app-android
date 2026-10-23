@@ -27,8 +27,13 @@ internal class DefaultWalletCardsBackupDeliveryScheduler @Inject constructor(
     private val isObservingConnection = AtomicBoolean(false)
 
     override fun schedule() {
-        enqueue(requiredNetworkType = NetworkType.CONNECTED)
-        TangemLogger.i("Pending cards backup delivery scheduled")
+        val requiredNetworkType = if (networkConnectionManager.isOnlineSync) {
+            NetworkType.NOT_REQUIRED
+        } else {
+            NetworkType.CONNECTED
+        }
+        enqueue(requiredNetworkType = requiredNetworkType)
+        TangemLogger.i("Pending cards backup delivery scheduled, required network: $requiredNetworkType")
 
         observeConnection()
     }
