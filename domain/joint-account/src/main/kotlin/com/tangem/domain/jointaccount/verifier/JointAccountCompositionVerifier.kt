@@ -36,7 +36,7 @@ class JointAccountCompositionVerifier(
         val isMember = jointAccount.members.any { it.address.equals(ownerAddress, ignoreCase = true) }
         // Only a pending account has no Safe address yet; once the composition is full one is always stated
         val safeAddress = jointAccount.safeAddress
-            ?: return isMember && jointAccount.status == JointAccount.Status.PENDING
+            ?: return isMember && isUnsignedPending(jointAccount)
 
         return isMember &&
             isSafeAddressComputed(jointAccount = jointAccount, safeAddress = safeAddress) &&
@@ -61,6 +61,17 @@ class JointAccountCompositionVerifier(
                 .getOrNull()
                 ?.equals(safeAddress, ignoreCase = true) == true
         }
+    }
+
+    /** Nobody can confirm before the Safe address exists, so a signature on a pending account is out of contract */
+    private fun isUnsignedPending(jointAccount: JointAccount): Boolean {
+        if (jointAccount.status != JointAccount.Status.PENDING) return false
+
+        val signed = jointAccount.members.count { it.signature != null }
+        if (signed > 0) {
+            TangemLogger.e("Joint account ${jointAccount.cryptoAccountId} is pending with $signed signed members")
+        }
+        return signed == 0
     }
 
     /** A wrong signature fails in any status; a missing one only once the account is active, i.e. fully confirmed */
@@ -100,11 +111,11 @@ class JointAccountCompositionVerifier(
     ): Boolean {
         val signature = member.signature ?: return false
         val signer = signatureRecoverer.recoverPayloadSigner(payload = payload, signature = signature)
-            .onLeft {
+            .onLeft { error ->
                 TangemLogger.e(
                     "The confirmation signature of ${member.address} in ${jointAccount.cryptoAccountId} " +
                         "does not recover",
-                    it,
+                    error,
                 )
             }
             .getOrNull()
