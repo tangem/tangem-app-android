@@ -72,7 +72,7 @@ internal class ManualBackupPhraseModelTest {
     @Test
     fun `GIVEN wallet without held unlock WHEN model created THEN wallet unlocked AND words populated`() = runTest {
         // Arrange
-        coEvery { getHotWalletContextualUnlockUseCase(hotWalletId) } returns null.right()
+        every { getHotWalletContextualUnlockUseCase(hotWalletId) } returns null.right()
         coEvery { unlockHotWalletContextualUseCase(hotWalletId) } returns unlockHotWallet.right()
 
         // Act
@@ -90,7 +90,7 @@ internal class ManualBackupPhraseModelTest {
     @Test
     fun `GIVEN wallet with held unlock WHEN model created THEN no unlock prompt AND words populated`() = runTest {
         // Arrange
-        coEvery { getHotWalletContextualUnlockUseCase(hotWalletId) } returns unlockHotWallet.right()
+        every { getHotWalletContextualUnlockUseCase(hotWalletId) } returns unlockHotWallet.right()
 
         // Act
         val model = createModel(this)
@@ -105,7 +105,7 @@ internal class ManualBackupPhraseModelTest {
     @Test
     fun `GIVEN unlock dismissed WHEN model created THEN words stay empty AND export not called`() = runTest {
         // Arrange
-        coEvery { getHotWalletContextualUnlockUseCase(hotWalletId) } returns null.right()
+        every { getHotWalletContextualUnlockUseCase(hotWalletId) } returns null.right()
         coEvery { unlockHotWalletContextualUseCase(hotWalletId) } returns TangemSdkError.UserCancelled().left()
 
         // Act

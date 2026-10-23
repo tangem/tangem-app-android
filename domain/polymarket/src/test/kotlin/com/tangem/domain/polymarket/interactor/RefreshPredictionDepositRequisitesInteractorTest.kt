@@ -128,7 +128,7 @@ internal class RefreshPredictionDepositRequisitesInteractorTest {
     @Test
     fun `GIVEN both bridge calls are slow WHEN refreshed THEN they run concurrently`() = runTest {
         // Arrange
-        coEvery { bridgeRepository.getSupportedAssets() } coAnswers {
+        coEvery { bridgeRepository.refreshSupportedAssets() } coAnswers {
             delay(CALL_DURATION_MS)
             listOf(asset(chainId = "137")).right()
         }
@@ -148,7 +148,7 @@ internal class RefreshPredictionDepositRequisitesInteractorTest {
     @Test
     fun `GIVEN the catalogue fails at once WHEN the address call is slow THEN the failure is not delayed`() = runTest {
         // Arrange
-        coEvery { bridgeRepository.getSupportedAssets() } returns PolymarketBridgeError.Network.left()
+        coEvery { bridgeRepository.refreshSupportedAssets() } returns PolymarketBridgeError.Network.left()
         coEvery { bridgeRepository.createDepositAddresses(any(), any()) } coAnswers {
             delay(CALL_DURATION_MS)
             BRIDGE_ADDRESSES.right()
@@ -165,7 +165,7 @@ internal class RefreshPredictionDepositRequisitesInteractorTest {
     @Test
     fun `GIVEN the address call fails at once WHEN the catalogue is slow THEN the failure is not delayed`() = runTest {
         // Arrange
-        coEvery { bridgeRepository.getSupportedAssets() } coAnswers {
+        coEvery { bridgeRepository.refreshSupportedAssets() } coAnswers {
             delay(CALL_DURATION_MS)
             listOf(asset(chainId = "137")).right()
         }
@@ -223,7 +223,7 @@ internal class RefreshPredictionDepositRequisitesInteractorTest {
     @Test
     fun `GIVEN the catalogue call failed WHEN refreshed THEN nothing is stored`() = runTest {
         // Arrange
-        coEvery { bridgeRepository.getSupportedAssets() } returns PolymarketBridgeError.Network.left()
+        coEvery { bridgeRepository.refreshSupportedAssets() } returns PolymarketBridgeError.Network.left()
         coEvery { bridgeRepository.createDepositAddresses(any(), any()) } returns BRIDGE_ADDRESSES.right()
 
         // Act
@@ -239,14 +239,14 @@ internal class RefreshPredictionDepositRequisitesInteractorTest {
     fun `GIVEN no stored polymarket addresses WHEN refreshed THEN it fails without asking the bridge`() = runTest {
         // Arrange
         coEvery { deriveAddresses.stored(userWalletId = USER_WALLET_ID) } returns null
-        coEvery { bridgeRepository.getSupportedAssets() } returns emptyList<PolymarketBridgeAsset>().right()
+        coEvery { bridgeRepository.refreshSupportedAssets() } returns emptyList<PolymarketBridgeAsset>().right()
 
         // Act
         val actual = interactor(userWalletId = USER_WALLET_ID)
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketBridgeError.Unavailable.left())
-        coVerify(exactly = 0) { bridgeRepository.getSupportedAssets() }
+        coVerify(exactly = 0) { bridgeRepository.refreshSupportedAssets() }
         coVerify(exactly = 0) { bridgeRepository.createDepositAddresses(any(), any()) }
     }
 
@@ -270,7 +270,7 @@ internal class RefreshPredictionDepositRequisitesInteractorTest {
         assets: List<PolymarketBridgeAsset>,
         addresses: PolymarketBridgeAddresses = BRIDGE_ADDRESSES,
     ) {
-        coEvery { bridgeRepository.getSupportedAssets() } returns assets.right()
+        coEvery { bridgeRepository.refreshSupportedAssets() } returns assets.right()
         coEvery {
             bridgeRepository.createDepositAddresses(
                 walletId = USER_WALLET_ID.stringValue,

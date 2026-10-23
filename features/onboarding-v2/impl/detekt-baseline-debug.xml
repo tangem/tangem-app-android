@@ -2,15 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CanBeNonNullable:DefaultOnboardingTwinComponent.kt$DefaultOnboardingTwinComponent.TwinInnerNavigationState$override val stackMaxSize: Int? = 5</ID>
-    <ID>MaxChainedCallsOnSameLine:MultiWalletCreateWalletModel.kt$MultiWalletCreateWalletModel$result.data.card.settings.isBackupAllowed.not()</ID>
-    <ID>MaxChainedCallsOnSameLine:MultiWalletUpgradeWalletModel.kt$MultiWalletUpgradeWalletModel$result.data.card.settings.isBackupAllowed.not()</ID>
-    <ID>MaxChainedCallsOnSameLine:OnboardingTwinModel.kt$OnboardingTwinModel$params.scanResponse.card.issuer.publicKey.toHexString()</ID>
-    <ID>MaxChainedCallsOnSameLine:OnboardingVisaAccessCodeModel.kt$OnboardingVisaAccessCodeModel$result.data.signedActivationData.dataToSign.request.activationOrderInfo.customerWalletAddress</ID>
-    <ID>MaxChainedCallsOnSameLine:OnboardingVisaAccessCodeModel.kt$OnboardingVisaAccessCodeModel$result.data.signedActivationData.dataToSign.request.activationOrderInfo.orderId</ID>
-    <ID>MaxChainedCallsOnSameLine:OnboardingVisaAccessCodeModel.kt$OnboardingVisaAccessCodeModel$result.data.signedActivationData.dataToSign.request.cardWalletAddress</ID>
-    <ID>MaxChainedCallsOnSameLine:Wallet1ChooseOptionModel.kt$Wallet1ChooseOptionModel$params.multiWalletState.value.currentScanResponse.card.canSkipBackup</ID>
-    <ID>PropertyUsedBeforeDeclaration:MultiWalletCreateWalletModel.kt$MultiWalletCreateWalletModel$onDone</ID>
     <ID>UnreachableCode:OnboardingNoteCreateWalletModel.kt$OnboardingNoteCreateWalletModel$params.childParams.commonState.value.scanResponse ?: return@launch</ID>
   </CurrentIssues>
 </SmellBaseline>

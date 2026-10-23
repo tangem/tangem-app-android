@@ -2,8 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>PropertyUsedBeforeDeclaration:JobHolder.kt$JobHolder$job</ID>
     <ID>SuspendFunSwallowedCancellation:CoroutineExt.kt$runCatching</ID>
-    <ID>VarCouldBeVal:PeriodicTask.kt$PeriodicTask$private var isActive: AtomicBoolean = AtomicBoolean(false)</ID>
   </CurrentIssues>
 </SmellBaseline>

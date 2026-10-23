@@ -17,8 +17,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.atoms.text.EllipsisText
-import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
@@ -76,12 +74,13 @@ internal fun TxHistoryDetailsInfoRows(
                             .orMaskWithStars(isBalanceHidden && row.isValueHideable)
                             .resolveReference()
                         if (row.isValueAddress) {
-                            EllipsisText(
+                            Text(
                                 text = value,
                                 color = TangemTheme.colors3.text.secondary,
                                 style = TangemTheme.typography3.body.medium,
                                 textAlign = TextAlign.End,
-                                ellipsis = TextEllipsis.Middle,
+                                maxLines = 1,
+                                overflow = TextOverflow.MiddleEllipsis,
                                 modifier = Modifier.weight(weight = 1f, fill = false),
                             )
                         } else {

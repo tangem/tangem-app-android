@@ -86,6 +86,9 @@ unsupported market version) — none is a generic conflict.
   the EOA can only be derived *from* the wallet. A new per-wallet store must join the cleaner.
 - **`PredictionAccountStatusStore` writes wait for the disk preload** so a deletion during startup is not
   resurrected by the snapshot; reads never wait.
+- **The bridge catalogue (`/supported-assets`) lives for the session** and only a successful answer fills it.
+  The funding-requisites refresh always re-fetches it, as iOS does, so a retry or pull-to-refresh can heal a bad
+  answer; the withdraw flow reads the stored copy.
 - **`DefaultPolymarketOnboardedStore` is only an optimisation** over asking the BFF; every read failure
   degrades to "not recorded".
 

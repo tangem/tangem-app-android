@@ -7,22 +7,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.legal.LegalCaption
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.features.tangempay.ui.TangemPayBundleIntroductionLayout
 import com.tangem.features.tangempay.ui.TangemPayOnboardingLayout
 
 @Composable
 internal fun TangemPayHotWalletOnboardingScreen(state: TangemPayHotWalletOnboardingUM, modifier: Modifier = Modifier) {
-    TangemPayOnboardingLayout(
-        modifier = modifier,
-        isGetCardLoading = state.isLoading,
-        onGetCardClick = state.onGetCardClick,
-        onTermsClick = state.onTermsClick,
-        legalCaption = {
-            LegalCaption(
-                onTermsOfServiceClick = state.onTermsOfServiceClick,
-                onPrivacyPolicyClick = state.onPrivacyPolicyClick,
-            )
-        },
-    )
+    if (state.isPayBundleIntroductionEnabled) {
+        TangemPayBundleIntroductionLayout(
+            modifier = modifier,
+            isGetCardLoading = state.isLoading,
+            onGetCardClick = state.onGetCardClick,
+            onTermsClick = state.onTermsClick,
+            onTermsOfServiceClick = state.onTermsOfServiceClick,
+            onPrivacyPolicyClick = state.onPrivacyPolicyClick,
+        )
+    } else {
+        TangemPayOnboardingLayout(
+            modifier = modifier,
+            isGetCardLoading = state.isLoading,
+            onGetCardClick = state.onGetCardClick,
+            onTermsClick = state.onTermsClick,
+            legalCaption = {
+                LegalCaption(
+                    onTermsOfServiceClick = state.onTermsOfServiceClick,
+                    onPrivacyPolicyClick = state.onPrivacyPolicyClick,
+                )
+            },
+        )
+    }
 }
 
 @Preview(widthDp = 360, heightDp = 800, uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -31,6 +43,7 @@ private fun TangemPayHotWalletOnboardingScreenPreview() {
     TangemThemePreviewRedesign {
         TangemPayHotWalletOnboardingScreen(
             state = TangemPayHotWalletOnboardingUM(
+                isPayBundleIntroductionEnabled = false,
                 isLoading = false,
                 onGetCardClick = {},
                 onTermsClick = {},

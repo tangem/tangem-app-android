@@ -2,12 +2,18 @@ package com.tangem.features.tangempay.deeplink
 
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.google.common.truth.Truth.assertThat
+import com.tangem.test.core.ProvideTestModels
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.NullAndEmptySource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 import java.util.Currency
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TangemPayPushPayloadToTxHistoryItemConverterTest {
 
     @Test
@@ -228,124 +234,117 @@ class TangemPayPushPayloadToTxHistoryItemConverterTest {
         assertThat(result).isNull()
     }
 
-    @Test
-    fun `convertCollateral returns Collateral with all fields when payload is complete`() {
-        val payload = mapOf(
-            "transaction_id" to "col-123",
-            "amount" to "50.00",
-            "currency" to "usd",
-            "transaction_hash" to "0xabc123",
-            "posted_at" to "2025-10-25T19:22:22.597Z",
-        )
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN collateral push type WHEN convertCollateral THEN type and amount sign follow the push type`(
+        model: CollateralTypeModel,
+    ) {
+        // Arrange
+        val payload = collateralPayload(type = model.type, amount = model.amount)
+        val expected = expectedCollateral(payload = payload, amount = model.expectedAmount, type = model.expectedType)
 
+        // Act
         val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
 
-        assertThat(result).isNotNull()
-        assertThat(result!!.id).isEqualTo("col-123")
-        assertThat(result.amount).isEqualTo(BigDecimal("50.00"))
-        assertThat(result.currency.currencyCode).isEqualTo("USD")
-        assertThat(result.transactionHash).isEqualTo("0xabc123")
-        assertThat(result.type).isEqualTo(TangemPayTxHistoryItem.Type.Deposit)
+        // Assert
+        assertThat(result).isEqualTo(expected)
     }
 
     @Test
-    fun `convertCollateral returns Withdrawal type for negative amount`() {
+    fun `GIVEN cashback topup in usdc WHEN convertCollateral THEN Cashback in USD`() {
+        // Arrange
         val payload = mapOf(
-            "transaction_id" to "col-456",
-            "amount" to "-10.00",
-            "currency" to "usd",
-            "transaction_hash" to "0xdef789",
-            "posted_at" to "2025-10-25T19:22:22.597Z",
+            "customer_id" to "customer-123",
+            "customer_wallet_id" to "wallet-123",
+            "type" to "cashback_topup",
+            "transaction_id" to "col-321",
+            "amount" to "0.30",
+            "balance" to "85.18",
+            "currency" to "usdc",
+            "transaction_hash" to "0xcashback",
+            "posted_at" to "2026-10-21T13:21:51.055",
+        )
+        val expected = TangemPayTxHistoryItem.Collateral(
+            id = "col-321",
+            jsonRepresentation = payload.toString(),
+            date = DateTime.parse("2026-10-21T13:21:51.055").withZone(DateTimeZone.getDefault()),
+            amount = BigDecimal("0.30"),
+            currency = Currency.getInstance("USD"),
+            transactionHash = "0xcashback",
+            type = TangemPayTxHistoryItem.Type.Cashback,
         )
 
+        // Act
         val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
 
-        assertThat(result).isNotNull()
-        assertThat(result!!.type).isEqualTo(TangemPayTxHistoryItem.Type.Withdrawal)
+        // Assert
+        assertThat(result).isEqualTo(expected)
     }
 
-    @Test
-    fun `convertCollateral returns null when transaction_id is missing`() {
-        val payload = mapOf(
-            "amount" to "50.00",
-            "currency" to "usd",
-            "transaction_hash" to "0xabc123",
-            "posted_at" to "2025-10-25T19:22:22.597Z",
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = ["usd", "usdc", "rusd"])
+    fun `GIVEN collateral push in any or no currency WHEN convertCollateral THEN Collateral in USD`(currency: String?) {
+        // Arrange
+        val payload = if (currency == null) collateralPayload() - "currency" else collateralPayload(currency = currency)
+        val expected = expectedCollateral(
+            payload = payload,
+            amount = "50.00",
+            type = TangemPayTxHistoryItem.Type.Deposit,
         )
 
+        // Act
         val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
 
+        // Assert
+        assertThat(result).isEqualTo(expected)
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["type", "transaction_id", "amount", "posted_at"])
+    fun `GIVEN required field missing WHEN convertCollateral THEN returns null`(missingKey: String) {
+        // Arrange
+        val payload = collateralPayload() - missingKey
+
+        // Act
+        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
+
+        // Assert
         assertThat(result).isNull()
     }
 
-    @Test
-    fun `convertCollateral returns null when amount is missing`() {
-        val payload = mapOf(
-            "transaction_id" to "col-123",
-            "currency" to "usd",
-            "transaction_hash" to "0xabc123",
-            "posted_at" to "2025-10-25T19:22:22.597Z",
+    @ParameterizedTest
+    @NullAndEmptySource
+    fun `GIVEN no transaction_hash WHEN convertCollateral THEN Collateral without hash`(transactionHash: String?) {
+        // Arrange
+        val payload = if (transactionHash == null) {
+            collateralPayload() - "transaction_hash"
+        } else {
+            collateralPayload() + ("transaction_hash" to transactionHash)
+        }
+        val expected = expectedCollateral(
+            payload = payload,
+            amount = "50.00",
+            type = TangemPayTxHistoryItem.Type.Deposit,
+            transactionHash = null,
         )
 
+        // Act
         val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
 
-        assertThat(result).isNull()
+        // Assert
+        assertThat(result).isEqualTo(expected)
     }
 
     @Test
-    fun `convertCollateral returns null when transaction_hash is missing`() {
-        val payload = mapOf(
-            "transaction_id" to "col-123",
-            "amount" to "50.00",
-            "currency" to "usd",
-            "posted_at" to "2025-10-25T19:22:22.597Z",
-        )
+    fun `GIVEN spend push type WHEN convertCollateral THEN returns null`() {
+        // Arrange
+        val payload = collateralPayload(type = "transaction_spend")
 
+        // Act
         val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
 
-        assertThat(result).isNull()
-    }
-
-    @Test
-    fun `convertCollateral returns null when posted_at is missing`() {
-        val payload = mapOf(
-            "transaction_id" to "col-123",
-            "amount" to "50.00",
-            "currency" to "usd",
-            "transaction_hash" to "0xabc123",
-        )
-
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
-
-        assertThat(result).isNull()
-    }
-
-    @Test
-    fun `convertCollateral returns null when currency is missing`() {
-        val payload = mapOf(
-            "transaction_id" to "col-123",
-            "amount" to "50.00",
-            "transaction_hash" to "0xabc123",
-            "posted_at" to "2025-10-25T19:22:22.597Z",
-        )
-
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
-
-        assertThat(result).isNull()
-    }
-
-    @Test
-    fun `convertCollateral returns null when transaction_hash is empty`() {
-        val payload = mapOf(
-            "transaction_id" to "col-123",
-            "amount" to "50.00",
-            "currency" to "usd",
-            "transaction_hash" to "",
-            "posted_at" to "2025-10-25T19:22:22.597Z",
-        )
-
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
-
+        // Assert
         assertThat(result).isNull()
     }
 
@@ -371,50 +370,6 @@ class TangemPayPushPayloadToTxHistoryItemConverterTest {
         assertThat(result.merchantCategory).isNull()
         assertThat(result.merchantCategoryCode).isNull()
         assertThat(result.declinedReason).isNull()
-    }
-
-    @Test
-    fun `convertCollateral returns Deposit type for zero amount`() {
-        val payload = mapOf(
-            "transaction_id" to "col-789",
-            "amount" to "0",
-            "currency" to "usd",
-            "transaction_hash" to "0xdef",
-            "posted_at" to "2025-10-25T19:22:22.597Z",
-        )
-
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
-
-        assertThat(result).isNotNull()
-        assertThat(result!!.type).isEqualTo(TangemPayTxHistoryItem.Type.Deposit)
-    }
-
-    @Test
-    fun `GIVEN cashback topup type WHEN convertCollateral THEN Collateral with Cashback type`() {
-        // Arrange
-        val payload = mapOf(
-            "type" to "cashback_topup",
-            "transaction_id" to "col-321",
-            "amount" to "19.00",
-            "currency" to "usd",
-            "transaction_hash" to "0xcashback",
-            "posted_at" to "2025-10-25T19:22:22.597Z",
-        )
-        val expected = TangemPayTxHistoryItem.Collateral(
-            id = "col-321",
-            jsonRepresentation = payload.toString(),
-            date = DateTime.parse("2025-10-25T19:22:22.597Z").withZone(DateTimeZone.getDefault()),
-            amount = BigDecimal("19.00"),
-            currency = Currency.getInstance("USD"),
-            transactionHash = "0xcashback",
-            type = TangemPayTxHistoryItem.Type.Cashback,
-        )
-
-        // Act
-        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
-
-        // Assert
-        assertThat(result).isEqualTo(expected)
     }
 
     @Test
@@ -478,5 +433,67 @@ class TangemPayPushPayloadToTxHistoryItemConverterTest {
         "merchant_name" to "Tangem Coffee",
         "status" to "completed",
         "authorized_at" to "2025-10-24T10:32:24.496Z",
+    )
+
+    private fun collateralPayload(
+        type: String = "collateral_deposit",
+        amount: String = "50.00",
+        currency: String = "usdc",
+    ) = mapOf(
+        "type" to type,
+        "transaction_id" to "col-123",
+        "amount" to amount,
+        "currency" to currency,
+        "transaction_hash" to "0xabc123",
+        "posted_at" to "2025-10-25T19:22:22.597Z",
+    )
+
+    private fun expectedCollateral(
+        payload: Map<String, String>,
+        amount: String,
+        type: TangemPayTxHistoryItem.Type,
+        transactionHash: String? = "0xabc123",
+    ) = TangemPayTxHistoryItem.Collateral(
+        id = "col-123",
+        jsonRepresentation = payload.toString(),
+        date = DateTime.parse("2025-10-25T19:22:22.597Z").withZone(DateTimeZone.getDefault()),
+        amount = BigDecimal(amount),
+        currency = Currency.getInstance("USD"),
+        transactionHash = transactionHash,
+        type = type,
+    )
+
+    private fun provideTestModels() = listOf(
+        CollateralTypeModel(
+            type = "collateral_deposit",
+            amount = "50.00",
+            expectedType = TangemPayTxHistoryItem.Type.Deposit,
+            expectedAmount = "50.00",
+        ),
+        CollateralTypeModel(
+            type = "collateral_withdraw",
+            amount = "50.00",
+            expectedType = TangemPayTxHistoryItem.Type.Withdrawal,
+            expectedAmount = "-50.00",
+        ),
+        CollateralTypeModel(
+            type = "collateral_withdraw",
+            amount = "-50.00",
+            expectedType = TangemPayTxHistoryItem.Type.Withdrawal,
+            expectedAmount = "-50.00",
+        ),
+        CollateralTypeModel(
+            type = "cashback_topup",
+            amount = "0.30",
+            expectedType = TangemPayTxHistoryItem.Type.Cashback,
+            expectedAmount = "0.30",
+        ),
+    )
+
+    data class CollateralTypeModel(
+        val type: String,
+        val amount: String,
+        val expectedType: TangemPayTxHistoryItem.Type,
+        val expectedAmount: String,
     )
 }
