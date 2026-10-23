@@ -457,12 +457,14 @@ private fun TransactionType.amountSign(): AmountSign = when (this) {
  */
 private fun TxInfo.signedAmount(currency: CryptoCurrency): String {
     val formatted = amount.format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
+    val outgoingSign = "${StringsSigns.MINUS_SIGN}${StringsSigns.THIN_SPACE}"
+    val incomingSign = "${StringsSigns.PLUS}${StringsSigns.THIN_SPACE}"
     val prefix = when {
         status is TxInfo.TransactionStatus.Failed -> ""
         amount.isZero() -> ""
         else -> when (type.amountSign()) {
-            AmountSign.BY_DIRECTION -> if (isOutgoing) "${StringsSigns.DASH_SIGN} " else "${StringsSigns.PLUS} "
-            AmountSign.ALWAYS_PLUS -> "${StringsSigns.PLUS} "
+            AmountSign.BY_DIRECTION -> if (isOutgoing) outgoingSign else incomingSign
+            AmountSign.ALWAYS_PLUS -> incomingSign
             AmountSign.NONE -> ""
         }
     }
