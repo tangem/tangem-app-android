@@ -119,6 +119,7 @@ internal class SwapAmountModel @Inject constructor(
     private val amountAnalyticsSender = SwapAmountAnalyticsSender(analyticsEventHandler)
 
     private var autoUpdateSubscriberJob: Job? = null
+    private var quotesLoadingJob: Job? = null
 
     val uiState: StateFlow<SwapAmountUM>
         field = MutableStateFlow(params.amountUM)
@@ -157,12 +158,12 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     fun onStop() {
-        quoteTaskScheduler.cancelTask()
+        cancelQuotesLoading()
         autoUpdateSubscriberJob?.cancel()
     }
 
     override fun onDestroy() {
-        quoteTaskScheduler.cancelTask()
+        cancelQuotesLoading()
         super.onDestroy()
     }
 
@@ -247,7 +248,7 @@ internal class SwapAmountModel @Inject constructor(
                 isBalanceHidden = params.isBalanceHidingFlow.value,
             ),
         )
-        quoteTaskScheduler.cancelTask()
+        cancelQuotesLoading()
         amountDebouncer.debounce(
             coroutineScope = modelScope,
             waitMs = DEBOUNCE_AMOUNT_DELAY,
@@ -569,7 +570,7 @@ internal class SwapAmountModel @Inject constructor(
                 if (isEnabled) {
                     startLoadingQuotesTask(isSilentReload = true)
                 } else {
-                    quoteTaskScheduler.cancelTask()
+                    cancelQuotesLoading()
                 }
             }
             .launchIn(modelScope)
@@ -798,7 +799,8 @@ internal class SwapAmountModel @Inject constructor(
 
         if (!isSilentReload) uiState.transformerUpdate(SwapQuoteLoadingStateTransformer)
 
-        modelScope.launch {
+        quotesLoadingJob?.cancel()
+        quotesLoadingJob = modelScope.launch {
             val quotes = state.swapCurrencies.getGroupWithDirection(state.swapDirection).available
                 .asSequence()
                 .filter { swapCurrencyStatus -> swapCurrencyStatus.currencyStatus.currency.id == toCryptoCurrency.id }
@@ -907,6 +909,11 @@ internal class SwapAmountModel @Inject constructor(
             .filter { swapCurrencyStatus -> swapCurrencyStatus.currencyStatus.currency.id == toCurrency.id }
             .flatMap(SwapCryptoCurrency::providers)
         return providers.isNotEmpty() && providers.getSwapRateMode() == SwapRateMode.FLOAT_ONLY
+    }
+
+    private fun cancelQuotesLoading() {
+        quoteTaskScheduler.cancelTask()
+        quotesLoadingJob?.cancel()
     }
 
     private fun startLoadingQuotesTask(isSilentReload: Boolean) {
