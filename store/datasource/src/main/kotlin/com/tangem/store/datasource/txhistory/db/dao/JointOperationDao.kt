@@ -62,7 +62,7 @@ interface JointOperationDao {
           AND operation.chain_id = :chainId
           AND operation.status IN (:statuses)
           AND operation.finished_at >= :fromFinishedAtIso
-        ORDER BY operation.finished_at DESC
+        ORDER BY operation.finished_at DESC, operation.operation_id
         """,
     )
     fun observeWithVotes(
