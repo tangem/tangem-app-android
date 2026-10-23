@@ -18,6 +18,7 @@ sealed interface PolymarketPosition {
     val avgPrice: BigDecimal
     val curPrice: BigDecimal
     val realizedPnl: BigDecimal
+    val resolutionSource: String?
 
     /**
      * Shares still held, including resolved shares awaiting claim.
@@ -57,6 +58,7 @@ sealed interface PolymarketPosition {
         val period: String? = null,
         val isEnded: Boolean? = null,
         val dataFetchedAt: Instant? = null,
+        override val resolutionSource: String? = null,
     ) : PolymarketPosition
 
     /** History of sold-out or claimed shares. There is no remaining value or route to an event. */
@@ -73,5 +75,6 @@ sealed interface PolymarketPosition {
         val totalBought: BigDecimal,
         val closedAt: Instant,
         val status: PolymarketClosedPositionStatus,
+        override val resolutionSource: String? = null,
     ) : PolymarketPosition
 }
