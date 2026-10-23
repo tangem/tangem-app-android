@@ -28,7 +28,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.security.DisableAutofillEffect
+import com.tangem.core.ui.security.excludeFromAutofill
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.utils.InvalidWordsColorTransformation
@@ -37,8 +37,6 @@ import kotlinx.collections.immutable.ImmutableList
 @Suppress("LongMethod")
 @Composable
 internal fun MultiWalletSeedPhraseImport(state: MultiWalletSeedPhraseUM.Import, modifier: Modifier = Modifier) {
-    DisableAutofillEffect()
-
     if (state.dialog != null) {
         BasicDialog(
             title = state.dialog.title.resolveReference(),
@@ -83,6 +81,7 @@ internal fun MultiWalletSeedPhraseImport(state: MultiWalletSeedPhraseUM.Import, 
                 )
 
                 OutlineTextFieldWithIcon(
+                    isExcludedFromAutofill = true,
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .fillMaxWidth(),
@@ -142,6 +141,7 @@ private fun PhraseBlock(state: MultiWalletSeedPhraseUM.Import, modifier: Modifie
     ) {
         OutlinedTextField(
             modifier = Modifier
+                .excludeFromAutofill()
                 .fillMaxWidth()
                 .height(142.dp),
             value = state.words,
