@@ -5,6 +5,9 @@ object StringsSigns {
     const val DOT = "•"
     const val PLUS = "+"
     const val MINUS = "-"
+
+    /** Typographic minus `U+2212`, unlike the ASCII hyphen-minus [MINUS] */
+    const val MINUS_SIGN = "−"
     const val DASH_SIGN = "—"
     const val LOWER_SIGN = "<"
     const val TILDE_SIGN = "~"
@@ -12,6 +15,7 @@ object StringsSigns {
     const val POINT_SIGN = "."
     const val INFINITY_SIGN = "∞"
     const val NON_BREAKING_SPACE = '\u00A0'
+    const val THIN_SPACE = '\u2009'
     const val PERCENT = "%"
     const val THREE_STARS = "***"
     const val ASTERISK = "*"

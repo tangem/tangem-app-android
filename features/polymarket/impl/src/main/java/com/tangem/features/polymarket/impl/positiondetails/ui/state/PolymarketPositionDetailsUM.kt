@@ -5,6 +5,7 @@ import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.features.polymarket.impl.common.PolymarketResolutionSourceUM
 
 @Immutable
 internal data class PolymarketPositionDetailsUM(
@@ -58,7 +59,7 @@ internal data class PolymarketPositionDetailsUM(
     data class Metrics(
         val quantity: TextReference,
         val priceChanges: TextReference,
-        val unrealizedPnl: TextReference,
+        val unrealizedPnl: TangemPriceChange.State,
         val realizedPnl: TextReference,
     )
 
@@ -67,5 +68,7 @@ internal data class PolymarketPositionDetailsUM(
         val invested: TextReference,
         val status: TextReference,
         val endDate: TextReference?,
+        val resolutionSource: PolymarketResolutionSourceUM? = null,
+        val onResolutionSourceClick: (String) -> Unit = {},
     )
 }

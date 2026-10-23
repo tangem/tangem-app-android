@@ -22,7 +22,6 @@ internal class CollectiblesErrorResolver @Inject constructor(@NetworkJson privat
 
         TangemLogger.e("Collectibles backend error: code=${body?.code}, detail=${body?.detail}", error)
 
-        // TODO([REDACTED_TASK_KEY]): map the backend's buyback refusal codes to CollectibleException.BuybackRefused
         throw if (body?.code == LOW_INVENTORY_CODE) CollectibleException.LowInventory() else error
     }
 

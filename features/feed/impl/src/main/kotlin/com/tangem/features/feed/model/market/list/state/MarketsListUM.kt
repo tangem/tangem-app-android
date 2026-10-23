@@ -33,7 +33,6 @@ internal data class MarketsListUM(
 
 internal data class MarketsSearchBar(
     val searchBarUM: SearchBarUM,
-    val shouldAlwaysShowSearchBar: Boolean,
 )
 
 internal enum class SortByTypeUM(val text: TextReference) {

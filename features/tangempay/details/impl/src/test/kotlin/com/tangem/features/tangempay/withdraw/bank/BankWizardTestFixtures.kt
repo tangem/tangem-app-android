@@ -1,8 +1,13 @@
 package com.tangem.features.tangempay.withdraw.bank
 
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.OfframpDestination
@@ -75,6 +80,31 @@ internal fun availableNetwork(
     depositAddress = "0xdeposit",
     chainId = chainId,
     cryptoCurrencyStatuses = listOf(currencyStatus(token, fiatBalance)) + extraStatuses,
+)
+
+internal fun moneyAccountStatus(
+    userWalletId: UserWalletId,
+    value: MoneyAccountStatusValue = activeMoneyAccount(),
+): AccountStatus.Money = AccountStatus.Money(account = Account.Money(userWalletId), value = value)
+
+internal fun activeMoneyAccount(
+    token: CryptoCurrency.Token = paymentToken(),
+    balance: MoneyAccountStatusValue.Balance? = moneyAccountBalance(),
+): MoneyAccountStatusValue.Account.Active = MoneyAccountStatusValue.Account.Active(
+    source = StatusSource.ACTUAL,
+    cryptoCurrency = token,
+    balance = balance,
+    customerId = "cust_1",
+)
+
+internal fun moneyAccountBalance(
+    cryptoAmount: BigDecimal = BigDecimal("2325.55"),
+    fiatRate: BigDecimal? = BigDecimal.ONE,
+): MoneyAccountStatusValue.Balance = MoneyAccountStatusValue.Balance(
+    cryptoAmount = cryptoAmount,
+    depositAddress = "0xaccount",
+    currencyCode = "USD",
+    fiatRate = fiatRate,
 )
 
 internal fun offrampSource(

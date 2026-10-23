@@ -34,6 +34,7 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.features.txhistory.model.WalletInfo
 import com.tangem.test.mock.MockAccounts
+import com.tangem.utils.StringsSigns
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
@@ -337,6 +338,9 @@ internal open class TxDetailsConverterTestBase {
 
     protected companion object {
         const val TX_HASH = "0xtxhash"
+        const val OUTGOING_SIGN = "${StringsSigns.MINUS_SIGN}${StringsSigns.THIN_SPACE}"
+        const val INCOMING_SIGN = "${StringsSigns.PLUS}${StringsSigns.THIN_SPACE}"
+        const val ESTIMATED_SIGN = "${StringsSigns.TILDE_SIGN}${StringsSigns.THIN_SPACE}"
         const val TIMESTAMP = 1_700_000_000_000L
         const val USER_ADDRESS = "0x1234567890abcdef1234"
         const val VALIDATOR_ADDRESS = "0xvalidator"

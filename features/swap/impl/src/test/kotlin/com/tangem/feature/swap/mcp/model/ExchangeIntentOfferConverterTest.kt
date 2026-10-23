@@ -30,7 +30,9 @@ import java.util.Locale
 @ResourceLock(Resources.LOCALE)
 internal class ExchangeIntentOfferConverterTest {
 
-    private val converter = ExchangeIntentOfferConverter(amountConverter = ExchangeIntentAmountConverter())
+    private val converter = ExchangeIntentOfferConverter(
+        swapTextConverter = ExchangeIntentSwapTextConverter(ExchangeIntentAmountConverter()),
+    )
 
     private val usdt = createToken()
     private val pol = createCoin(network = createNetwork(rawId = "polygon-pos", name = "Polygon"), symbol = "POL")
@@ -479,7 +481,7 @@ internal class ExchangeIntentOfferConverterTest {
         from: CryptoCurrency = usdt,
         to: CryptoCurrency = pol,
         onProceed: () -> Unit = {},
-    ): ExchangeIntentUM? = converter.convert(
+    ): ExchangeIntentUM.Offer? = converter.convert(
         ExchangeIntentOfferConverter.Input(intent = intent, from = from, to = to, agent = agent, onProceed = onProceed),
     )
 

@@ -1,7 +1,5 @@
 package com.tangem.features.introduction.impl.model
 
-import android.view.SurfaceView
-import androidx.compose.ui.unit.IntSize
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.InitScreenLaunchMode
@@ -18,6 +16,8 @@ import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDi
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.media.LoopingVideoController
+import com.tangem.core.media.VideoFrameSize
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.analytics.repository.AnalyticsRepository
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
@@ -38,14 +38,13 @@ import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.cloudrestore.CloudRestoreErrorMessage
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.features.introduction.IntroductionComponent
-import com.tangem.features.introduction.impl.engine.IntroductionVideoPlayer
+import com.tangem.features.introduction.impl.R
 import com.tangem.features.introduction.impl.ui.state.CreateWalletUM
 import com.tangem.features.storiesv2.StoriesV2PendingAction
 import com.tangem.features.storiesv2.StoriesV2Result
 import com.tangem.features.storiesv2.StoryV2ActionTarget
 import com.tangem.features.introduction.impl.ui.state.HaveWalletUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
-import com.tangem.features.introduction.impl.ui.state.IntroductionUM
 import com.tangem.features.introduction.impl.ui.state.SocialLoginConsentUM
 import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.test.core.ProvideTestModels
@@ -85,8 +84,9 @@ internal class IntroductionModelTest {
 
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk()
-    private val videoPlayer: IntroductionVideoPlayer = mockk(relaxed = true)
-    private val videoPlayerFactory: IntroductionVideoPlayer.Factory = mockk(relaxed = true)
+    private val video: LoopingVideoController = mockk(relaxed = true)
+    private val videoFactory: LoopingVideoController.Factory = mockk()
+    private var onVideoFailed: ((Throwable, Boolean) -> Unit)? = null
     private val router: Router = mockk(relaxed = true)
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported = mockk()
     private val socialLoginHandler: IntroductionSocialLoginHandler = mockk(relaxed = true)
@@ -100,8 +100,6 @@ internal class IntroductionModelTest {
     private var entryReasonTracker = IntroductionEntryReasonTracker(analyticsRepository, analyticsEventHandler)
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
-    private val surfaceView: SurfaceView = mockk(relaxed = true)
-    private val otherSurfaceView: SurfaceView = mockk(relaxed = true)
 
     private val sentEvents = mutableListOf<AnalyticsEvent>()
 
@@ -110,8 +108,8 @@ internal class IntroductionModelTest {
         clearMocks(
             urlOpener,
             analyticsEventHandler,
-            videoPlayer,
-            videoPlayerFactory,
+            video,
+            videoFactory,
             router,
             isHotWalletCreationSupported,
             socialLoginHandler,
@@ -135,191 +133,35 @@ internal class IntroductionModelTest {
         }
         every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
         sentEvents.clear()
-        every { videoPlayer.isMotionEnabled } returns true
-        surfaceAttached(isAttached = false)
-        every { videoPlayerFactory.create(any(), any()) } returns videoPlayer
+        onVideoFailed = null
+        every { videoFactory.create(any(), any(), any(), any(), any()) } answers {
+            onVideoFailed = arg(4)
+            video
+        }
         every { analyticsEventHandler.send(capture(sentEvents)) } just runs
     }
 
     @Test
-    fun `GIVEN nothing rendered yet WHEN model created THEN shutter is down and the screen is opened once`() {
+    fun `GIVEN the welcome screen WHEN created THEN its clip is declared at its own size`() {
         // Act
-        val model = createModel()
+        createModel()
 
         // Assert
-        assertThat(model.uiState.value.isVideoReady).isFalse()
-        assertThat(model.uiState.value.isMotionEnabled).isTrue()
-        assertThat(sentEvents.map { it::class }).containsExactly(IntroductionProcess.ScreenOpened::class)
-    }
-
-    @Test
-    fun `GIVEN surface returns after leaving the screen WHEN each frame arrives THEN shutter follows the surface`() {
-        // Arrange
-        val model = createModel()
-
-        // Act & Assert
-        surfaceAttached(isAttached = true)
-        model.attachSurface(surfaceView)
-        model.renderFrame()
-        assertThat(model.uiState.value.isVideoReady).isTrue()
-
-        surfaceAttached(isAttached = false)
-        model.detachSurface(surfaceView)
-        assertThat(model.uiState.value.isVideoReady).isFalse()
-
-        surfaceAttached(isAttached = true)
-        model.attachSurface(otherSurfaceView)
-        assertThat(model.uiState.value.isVideoReady).isFalse()
-
-        model.renderFrame()
-        assertThat(model.uiState.value.isVideoReady).isTrue()
-    }
-
-    @Test
-    fun `GIVEN nothing decoded yet WHEN model created THEN the surface already has the size of the video`() {
-        // Act
-        val model = createModel()
-
-        // Assert
-        assertThat(model.uiState.value.videoSize).isEqualTo(VIDEO_SIZE)
-        assertThat(model.uiState.value.videoSurfaceKey).isEqualTo(0)
-    }
-
-    @Test
-    fun `GIVEN the declared size WHEN the decoder confirms it THEN the surface keeps its size`() {
-        // Arrange
-        val model = createModel()
-
-        // Act
-        model.onVideoSizeChanged(width = VIDEO_SIZE.width, height = VIDEO_SIZE.height)
-
-        // Assert
-        assertThat(model.uiState.value.videoSize).isEqualTo(VIDEO_SIZE)
-    }
-
-    @Test
-    fun `GIVEN a file of another size WHEN the decoder reports it THEN the surface keeps the declared size`() {
-        // Arrange
-        val model = createModel()
-        surfaceAttached(isAttached = true)
-        model.attachSurface(surfaceView)
-        model.renderFrame()
-
-        // Act
-        model.onVideoSizeChanged(width = 720, height = 1280)
-
-        // Assert
-        assertThat(model.uiState.value.videoSize).isEqualTo(VIDEO_SIZE)
-        assertThat(model.uiState.value.videoSurfaceKey).isEqualTo(0)
-        assertThat(model.uiState.value.isVideoReady).isTrue()
-    }
-
-    @Test
-    fun `GIVEN a replacement surface WHEN the previous one is released THEN the picture stays uncovered`() {
-        // Arrange
-        val model = createModel()
-        surfaceAttached(isAttached = true)
-        model.attachSurface(surfaceView)
-        model.renderFrame()
-        model.attachSurface(otherSurfaceView)
-
-        // Act
-        model.detachSurface(surfaceView)
-
-        // Assert
-        assertThat(model.uiState.value.isVideoReady).isTrue()
-        model.onError(PLAYBACK_ERROR)
-        assertThat(model.uiState.value.isVideoReady).isTrue()
-    }
-
-    @Test
-    fun `GIVEN nothing rendered yet WHEN playback fails THEN shutter stays down over the empty surface`() {
-        // Arrange
-        val model = createModel()
-        surfaceAttached(isAttached = true)
-        model.attachSurface(surfaceView)
-
-        // Act
-        model.onError(PLAYBACK_ERROR)
-
-        // Assert
-        assertThat(model.uiState.value.isVideoReady).isFalse()
-        assertThat(model.uiState.value.isVideoFailed).isTrue()
-        assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Load))
-    }
-
-    @Test
-    fun `GIVEN a frame already rendered WHEN playback fails THEN shutter stays up on the still frame`() {
-        // Arrange
-        val model = createModel()
-        surfaceAttached(isAttached = true)
-        model.attachSurface(surfaceView)
-        model.renderFrame()
-
-        // Act
-        model.onError(PLAYBACK_ERROR)
-
-        // Assert
-        assertThat(model.uiState.value.isVideoReady).isTrue()
-        assertThat(model.uiState.value.isVideoFailed).isTrue()
-        assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Playback))
-    }
-
-    @Test
-    fun `GIVEN a fresh surface after a rendered frame WHEN playback fails THEN shutter stays down`() {
-        // Arrange
-        val model = createModel()
-        surfaceAttached(isAttached = true)
-        model.attachSurface(surfaceView)
-        model.renderFrame()
-        surfaceAttached(isAttached = false)
-        model.detachSurface(surfaceView)
-        surfaceAttached(isAttached = true)
-        model.attachSurface(otherSurfaceView)
-
-        // Act
-        model.onError(PLAYBACK_ERROR)
-
-        // Assert
-        assertThat(model.uiState.value.isVideoReady).isFalse()
-        assertThat(model.uiState.value.isVideoFailed).isTrue()
-    }
-
-    @Test
-    fun `GIVEN surface already gone WHEN playback fails THEN shutter stays down`() {
-        // Arrange
-        val model = createModel()
-        surfaceAttached(isAttached = true)
-        model.attachSurface(surfaceView)
-        model.renderFrame()
-        surfaceAttached(isAttached = false)
-        model.detachSurface(surfaceView)
-
-        // Act
-        model.onError(PLAYBACK_ERROR)
-
-        // Assert
-        assertThat(model.uiState.value.isVideoReady).isFalse()
-        assertThat(model.uiState.value.isVideoFailed).isTrue()
-        assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Playback))
-    }
-
-    @Test
-    fun `GIVEN reduced motion WHEN model created THEN state reports motion disabled`() {
-        // Arrange
-        every { videoPlayer.isMotionEnabled } returns false
-
-        // Act
-        val model = createModel()
-
-        // Assert
-        assertThat(model.uiState.value.isMotionEnabled).isFalse()
+        verify(exactly = 1) {
+            videoFactory.create(
+                scope = any(),
+                videoRes = R.raw.introduction_background,
+                frameSize = VideoFrameSize(width = 1080, height = 1920),
+                diagnosticsSubject = "Welcome video",
+                onFailed = any(),
+            )
+        }
     }
 
     @Test
     fun `GIVEN playback under way WHEN the video position is read THEN the player position is returned`() {
         // Arrange
-        every { videoPlayer.positionMs } returns 4_200L
+        every { video.positionMs } returns 4_200L
         val model = createModel()
 
         // Act
@@ -339,7 +181,7 @@ internal class IntroductionModelTest {
         model.onDestroy()
 
         // Assert
-        verify(exactly = 2) { videoPlayer.release() }
+        verify(exactly = 2) { video.release() }
     }
 
     @Test
@@ -450,7 +292,6 @@ internal class IntroductionModelTest {
                 )
             }
             assertThat(sentEvents).containsExactly(SCREEN_OPENED)
-            assertThat(model.uiState.value.renderedFields()).isEqualTo(SHUTTER_DOWN)
         }
 
         @Test
@@ -524,7 +365,7 @@ internal class IntroductionModelTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun setVideoRunning(model: RunningModel) {
+        fun `GIVEN no story on screen WHEN the screen resumes or pauses THEN the video follows`(model: RunningModel) {
             // Arrange
             val introductionModel = createModel()
 
@@ -532,7 +373,7 @@ internal class IntroductionModelTest {
             introductionModel.setVideoRunning(model.isRunning)
 
             // Assert
-            verify(exactly = 1) { videoPlayer.setRunning(model.isRunning) }
+            verify(exactly = 1) { video.setRunning(model.isRunning) }
         }
 
         private fun provideTestModels() = listOf(
@@ -541,70 +382,29 @@ internal class IntroductionModelTest {
         )
     }
 
-    @Test
-    fun `GIVEN no frames coming out while playing WHEN the stall is noticed THEN a covered surface replaces it`() =
-        runTest {
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class VideoFailure {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a frame shown or not WHEN the video fails THEN WelcomeMediaError carries the stage`(
+            model: VideoFailureModel,
+        ) {
             // Arrange
-            val model = createModel(dispatchers = createTestingCoroutineDispatcherProvider())
-            surfaceAttached(isAttached = true)
-            model.attachSurface(surfaceView)
-            model.renderFrame()
-            every { videoPlayer.outputFrameCount } returns 28L
+            createModel()
 
             // Act
-            model.onPlayingChanged(isPlaying = true)
-            advanceTimeBy(STALL_DETECTED_AFTER_MS)
-            runCurrent()
+            failVideo(hasRenderedFrame = model.hasRenderedFrame)
 
             // Assert
-            assertThat(model.uiState.value.videoSurfaceKey).isEqualTo(1)
-            assertThat(model.uiState.value.isVideoReady).isFalse()
-            model.attachSurface(otherSurfaceView)
-            model.renderFrame()
-            assertThat(model.uiState.value.isVideoReady).isTrue()
-            model.onDestroy()
+            assertThat(sentEvents.filterIsInstance<WelcomeMediaError>()).containsExactly(WelcomeMediaError(model.stage))
         }
 
-    @Test
-    fun `GIVEN a stall new surfaces do not cure WHEN the watchdog gives up THEN the video is treated as failed`() =
-        runTest {
-            // Arrange
-            val model = createModel(dispatchers = createTestingCoroutineDispatcherProvider())
-            surfaceAttached(isAttached = true)
-            model.attachSurface(surfaceView)
-            model.renderFrame()
-            every { videoPlayer.outputFrameCount } returns 28L
-
-            // Act
-            model.onPlayingChanged(isPlaying = true)
-            advanceTimeBy(STALL_DETECTED_AFTER_MS * 4)
-            runCurrent()
-
-            // Assert
-            assertThat(model.uiState.value.videoSurfaceKey).isEqualTo(3)
-            assertThat(model.uiState.value.isVideoReady).isFalse()
-            assertThat(model.uiState.value.isVideoFailed).isTrue()
-            assertThat(model.uiState.value.isVideoRunning).isFalse()
-            verify { videoPlayer.setRunning(isRunning = false) }
-            assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Playback))
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN the video failed WHEN the screen resumes THEN playback stays stopped`() {
-        // Arrange
-        val model = createModel()
-        surfaceAttached(isAttached = true)
-        model.attachSurface(surfaceView)
-        model.renderFrame()
-        model.onError(PLAYBACK_ERROR)
-
-        // Act
-        model.setVideoRunning(isRunning = true)
-
-        // Assert
-        verify(exactly = 0) { videoPlayer.setRunning(isRunning = true) }
-        assertThat(model.uiState.value.isVideoRunning).isFalse()
+        private fun provideTestModels() = listOf(
+            VideoFailureModel(hasRenderedFrame = false, stage = WelcomeMediaError.Stage.Load),
+            VideoFailureModel(hasRenderedFrame = true, stage = WelcomeMediaError.Stage.Playback),
+        )
     }
 
     @Nested
@@ -859,14 +659,14 @@ internal class IntroductionModelTest {
             val sheet = model.openSheet()
             model.setVideoRunning(isRunning = true)
             model.closeCreateWalletSheet()
-            clearMocks(videoPlayer, answers = false)
+            clearMocks(video, answers = false)
 
             // Act
             sheet.cardOrRing.onClick()
             model.uiState.value.onCreateWalletSheetCollapsed()
 
             // Assert
-            verify(exactly = 0) { videoPlayer.setRunning(isRunning = false) }
+            verify(exactly = 0) { video.setRunning(isRunning = false) }
         }
 
         @Test
@@ -874,15 +674,14 @@ internal class IntroductionModelTest {
             // Arrange
             val model = createModel()
             model.setVideoRunning(isRunning = true)
-            clearMocks(videoPlayer, answers = false)
+            clearMocks(video, answers = false)
 
             // Act
             model.openSheet().cardOrRing.onClick()
 
             // Assert
             assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
-            assertThat(model.uiState.value.isVideoRunning).isTrue()
-            verify(exactly = 0) { videoPlayer.setRunning(isRunning = false) }
+            verify(exactly = 0) { video.setRunning(isRunning = false) }
         }
 
         @Test
@@ -896,8 +695,7 @@ internal class IntroductionModelTest {
             model.uiState.value.onCreateWalletSheetCollapsed()
 
             // Assert
-            assertThat(model.uiState.value.isVideoRunning).isFalse()
-            verify(exactly = 1) { videoPlayer.setRunning(isRunning = false) }
+            verify(exactly = 1) { video.setRunning(isRunning = false) }
             verify { router wasNot Called }
         }
 
@@ -908,14 +706,13 @@ internal class IntroductionModelTest {
             model.setVideoRunning(isRunning = true)
             model.openSheet()
             model.closeCreateWalletSheet()
-            clearMocks(videoPlayer, answers = false)
+            clearMocks(video, answers = false)
 
             // Act
             model.uiState.value.onCreateWalletSheetCollapsed()
 
             // Assert
-            assertThat(model.uiState.value.isVideoRunning).isTrue()
-            verify(exactly = 0) { videoPlayer.setRunning(isRunning = false) }
+            verify(exactly = 0) { video.setRunning(isRunning = false) }
         }
 
         @Test
@@ -1084,7 +881,7 @@ internal class IntroductionModelTest {
             requireNotNull(options.socialLogin).onClick()
 
             // Assert
-            verify(exactly = 1) { socialLoginHandler.start(any(), SocialLoginProvider.Google, any(), any()) }
+            verify(exactly = 1) { socialLoginHandler.start(any(), SocialLoginProvider.Google, any()) }
             coVerify(exactly = 0) { cardScanner.scanAndOpenWallet(any(), any(), any()) }
         }
 
@@ -1584,7 +1381,7 @@ internal class IntroductionModelTest {
 
         private fun IntroductionModel.startSocialLoginFromHaveWallet(): IntroductionSocialLoginHandler.Host {
             val host = slot<IntroductionSocialLoginHandler.Host>()
-            every { socialLoginHandler.start(any(), any(), any(), capture(host)) } just runs
+            every { socialLoginHandler.start(any(), any(), capture(host)) } just runs
             requireNotNull(openHaveWallet().socialLogin).onClick()
             return host.captured
         }
@@ -1605,14 +1402,14 @@ internal class IntroductionModelTest {
             // Arrange
             val model = createModel()
             model.openStory()
-            clearMocks(videoPlayer, answers = false)
+            clearMocks(video, answers = false)
 
             // Act
             model.setVideoRunning(isRunning = true)
 
             // Assert
-            verify(exactly = 1) { videoPlayer.setRunning(isRunning = false) }
-            verify(exactly = 0) { videoPlayer.setRunning(isRunning = true) }
+            verify(exactly = 1) { video.setRunning(isRunning = false) }
+            verify(exactly = 0) { video.setRunning(isRunning = true) }
         }
 
         @ParameterizedTest
@@ -1623,15 +1420,15 @@ internal class IntroductionModelTest {
             // Arrange
             val introductionModel = createModel()
             introductionModel.openStory()
-            clearMocks(videoPlayer, answers = false)
+            clearMocks(video, answers = false)
 
             // Act
             introductionModel.onStoryResult(model.result)
 
             // Assert
             assertThat(introductionModel.uiState.value.bottomSheetConfig?.isShown).isNotEqualTo(true)
-            verify(exactly = 1) { videoPlayer.setRunning(isRunning = true) }
-            verify(exactly = 0) { videoPlayer.restart() }
+            verify(exactly = 1) { video.setRunning(isRunning = true) }
+            verify(exactly = 0) { video.restart() }
         }
 
         private fun provideTestModels() = listOf(
@@ -1678,6 +1475,7 @@ internal class IntroductionModelTest {
             val action = pendingAction(actionId = "learn_more")
             model.onStoryAction(action)
             model.setVideoRunning(isRunning = false)
+            clearMocks(video, answers = false)
 
             // Act
             model.setVideoRunning(isRunning = true)
@@ -1687,7 +1485,7 @@ internal class IntroductionModelTest {
             // Assert
             verify(exactly = 1) { action.resume() }
             verify(exactly = 0) { action.end() }
-            assertThat(model.uiState.value.isVideoRunning).isFalse()
+            verify(exactly = 0) { video.setRunning(isRunning = true) }
         }
 
         @Test
@@ -1836,13 +1634,13 @@ internal class IntroductionModelTest {
                     target = StoryV2ActionTarget.Screen(key = "scan_wallet"),
                 ),
             )
-            clearMocks(videoPlayer, answers = false)
+            clearMocks(video, answers = false)
 
             // Act
             model.setVideoRunning(isRunning = true)
 
             // Assert
-            verify(exactly = 1) { videoPlayer.setRunning(isRunning = true) }
+            verify(exactly = 1) { video.setRunning(isRunning = true) }
             assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
         }
 
@@ -1852,14 +1650,14 @@ internal class IntroductionModelTest {
             val model = createModel()
             model.openStory()
             model.setVideoRunning(isRunning = false)
-            clearMocks(videoPlayer, answers = false)
+            clearMocks(video, answers = false)
 
             // Act
             model.onStoryResult(StoriesV2Result.Dismissed)
 
             // Assert
-            verify(exactly = 1) { videoPlayer.setRunning(isRunning = false) }
-            verify(exactly = 0) { videoPlayer.setRunning(isRunning = true) }
+            verify(exactly = 1) { video.setRunning(isRunning = false) }
+            verify(exactly = 0) { video.setRunning(isRunning = true) }
         }
 
         @Test
@@ -1889,7 +1687,7 @@ internal class IntroductionModelTest {
             model.setVideoRunning(isRunning = true)
 
             // Assert
-            verify(exactly = 0) { videoPlayer.restart() }
+            verify(exactly = 0) { video.restart() }
         }
 
         @Test
@@ -1907,7 +1705,7 @@ internal class IntroductionModelTest {
             model.setVideoRunning(isRunning = true)
 
             // Assert
-            verify(exactly = 1) { videoPlayer.restart() }
+            verify(exactly = 1) { video.restart() }
         }
 
         @Test
@@ -1923,7 +1721,7 @@ internal class IntroductionModelTest {
             model.setVideoRunning(isRunning = true)
 
             // Assert
-            verify(exactly = 1) { videoPlayer.restart() }
+            verify(exactly = 1) { video.restart() }
             verify(exactly = 1) {
                 router.push(
                     AppRoute.AddExistingWallet(
@@ -2539,14 +2337,10 @@ internal class IntroductionModelTest {
 
     internal data class RunningModel(val isRunning: Boolean)
 
-    private fun IntroductionModel.renderFrame() {
-        onFirstFrameRendered()
-    }
+    internal data class VideoFailureModel(val hasRenderedFrame: Boolean, val stage: WelcomeMediaError.Stage)
 
-    private fun IntroductionUM.renderedFields() = isVideoReady to isMotionEnabled
-
-    private fun surfaceAttached(isAttached: Boolean) {
-        every { videoPlayer.isSurfaceAttached } returns isAttached
+    private fun failVideo(hasRenderedFrame: Boolean) {
+        checkNotNull(onVideoFailed) { "no model was created in this test" }(PLAYBACK_ERROR, hasRenderedFrame)
     }
 
     private fun createModel(
@@ -2556,7 +2350,7 @@ internal class IntroductionModelTest {
     ) = IntroductionModel(
         dispatchers = dispatchers,
         paramsContainer = MutableParamsContainer(IntroductionComponent.Params(launchMode, entryReason)),
-        videoPlayerFactory = videoPlayerFactory,
+        videoFactory = videoFactory,
         urlOpener = urlOpener,
         analyticsEventHandler = analyticsEventHandler,
         entryReasonTracker = entryReasonTracker,
@@ -2593,13 +2387,9 @@ internal class IntroductionModelTest {
 
     private companion object {
         val PLAYBACK_ERROR = IllegalStateException("decoder failed")
-        val VIDEO_SIZE = IntSize(width = 1080, height = 1920)
 
         val SCREEN_OPENED = IntroductionProcess.ScreenOpened(IntroductionProcess.ScreenOpened.EntryReason.NoWallets)
 
-        /** The first check only takes the baseline, then four more checks 250 ms apart see the count stand still. */
-        const val STALL_DETECTED_AFTER_MS = 1_251L
-        val SHUTTER_DOWN = false to true
         const val BUY_LINK = "https://buy.tangem.com/en?utm_source=tangem-app"
         const val LEAST_OS_VERSION = "Android 10"
         val BACKUP = CloudBackupInfo(
