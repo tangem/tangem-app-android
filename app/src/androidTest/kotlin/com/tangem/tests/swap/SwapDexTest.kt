@@ -42,14 +42,14 @@ class SwapDexTest : BaseTestCase() {
     private val inputAmount = "50"
     private val providerName = "1Inch"
     private val providerType = "DEX"
-    private val expressTxId = "e1f2a3b4-c5d6-7890-abcd-ef1234567890"
+    private val swapId = "mock-external-tx-id-004"
     private val providerUrl = "https://blockchair.com/polygon/transaction/mock-external-tx-id-004"
     private val sentSign = "-"
     private val receivedSign = "+"
     private val swappedTitle = getResourceString(CoreUiR.string.common_swapped)
     private val rateLabel = getResourceString(CoreUiR.string.common_rate)
-    private val transactionIdMenuItem = getResourceString(CoreUiR.string.common_transaction_id)
-    private val transactionIdCopiedMessage = getResourceString(CoreUiR.string.express_transaction_id_copied)
+    private val swapIdMenuItem = getResourceString(CoreUiR.string.express_swap_id)
+    private val swapIdCopiedMessage = getResourceString(CoreUiR.string.express_swap_id_copied)
     private val shareMenuItem = getResourceString(CoreUiR.string.common_share)
     private val userTokensState = "HotWalletSvS"
     private val quotesState = "PolygonUSDC"
@@ -147,16 +147,16 @@ class SwapDexTest : BaseTestCase() {
             step("Click on 'More' button") {
                 onTxHistoryDetailsBottomSheet { moreButton.performClick() }
             }
-            step("Click on '$transactionIdMenuItem' menu item") {
-                onTxHistoryDetailsBottomSheet { menuItem(transactionIdMenuItem).clickWithAssertion() }
+            step("Click on '$swapIdMenuItem' menu item") {
+                onTxHistoryDetailsBottomSheet { menuItem(swapIdMenuItem).clickWithAssertion() }
             }
-            step("Assert '$transactionIdCopiedMessage' message is displayed") {
+            step("Assert '$swapIdCopiedMessage' message is displayed") {
                 onTxHistoryDetailsBottomSheet {
-                    flakySafely(WAIT_UNTIL_TIMEOUT) { message(transactionIdCopiedMessage).assertIsDisplayed() }
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { message(swapIdCopiedMessage).assertIsDisplayed() }
                 }
             }
-            step("Assert the operation ID '$expressTxId' is copied to the clipboard") {
-                assertClipboardTextEquals(expressTxId)
+            step("Assert the swap ID '$swapId' is copied to the clipboard") {
+                assertClipboardTextEquals(swapId)
             }
             step("Stub the system share chooser") {
                 stubShareChooserIntent()
@@ -167,10 +167,10 @@ class SwapDexTest : BaseTestCase() {
             step("Click on '$shareMenuItem' menu item") {
                 onTxHistoryDetailsBottomSheet { menuItem(shareMenuItem).clickWithAssertion() }
             }
-            step("Assert the swap ID '$expressTxId' and provider '$providerName' are shared via the system chooser") {
+            step("Assert the swap ID '$swapId' and provider '$providerName' are shared via the system chooser") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
                     assertTextContainingSharedViaChooser(
-                        fragments = listOf(expressTxId, "$providerName $providerType"),
+                        fragments = listOf(swapId, "$providerName $providerType"),
                         times = 1,
                     )
                 }

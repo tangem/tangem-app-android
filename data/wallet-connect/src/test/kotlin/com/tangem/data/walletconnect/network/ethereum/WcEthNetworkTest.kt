@@ -49,6 +49,7 @@ internal class WcEthNetworkTest {
         ),
         networksConverter = networksConverter,
         analyticsExceptionHandler = analyticsExceptionHandler,
+        chainRequestResolver = mockk(relaxed = true),
     )
 
     @Test

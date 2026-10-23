@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.walletconnect.usecase.method.WcTransactionTargetCheck
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils
 import com.tangem.features.walletconnect.impl.R
@@ -23,6 +24,22 @@ internal class WcNotificationsFactory @Inject constructor() {
             FeeSelectorUM.Loading, null -> null
         }
     }
+
+    /**
+     * Placeholder texts: the generic error with a code, until the designs for these two arrive.
+     */
+    fun createTargetNotification(status: WcTransactionTargetCheck.Status): NotificationUM.Error? = when (status) {
+        is WcTransactionTargetCheck.Status.ChainMismatch -> genericError(code = CHAIN_MISMATCH_CODE)
+        WcTransactionTargetCheck.Status.RecipientIsNotContract -> genericError(code = RECIPIENT_IS_NOT_CONTRACT_CODE)
+        WcTransactionTargetCheck.Status.Checking,
+        WcTransactionTargetCheck.Status.Clear,
+        -> null
+    }
+
+    private fun genericError(code: String) = NotificationUM.Error(
+        title = resourceReference(R.string.common_something_went_wrong),
+        subtitle = resourceReference(R.string.generic_error_code, wrappedList(code)),
+    )
 
     private fun createFeeExceedsBalance(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
@@ -59,5 +76,10 @@ internal class WcNotificationsFactory @Inject constructor() {
             feeBalance = cryptoCurrencyStatus.value.amount,
             feeAmount = selectedFee.amount.value,
         )
+    }
+
+    private companion object {
+        const val CHAIN_MISMATCH_CODE = "wcChainMismatch"
+        const val RECIPIENT_IS_NOT_CONTRACT_CODE = "wcRecipientIsNotContract"
     }
 }
