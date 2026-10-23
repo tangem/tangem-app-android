@@ -456,7 +456,7 @@ internal class CexSwapFeeCalculatorTest {
         // Arrange
         val fromStatus = tronUsdtStatus()
         val expected = mockk<TransactionFeeExtended>()
-        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
         stubTronTransferTransaction()
         coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns expected.right()
 
@@ -486,7 +486,7 @@ internal class CexSwapFeeCalculatorTest {
                 transactionFee = TransactionFee.Single(normal = mockk<Fee.Common>(relaxed = true)),
                 feeTokenId = fromStatus.currency.id,
             )
-            coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+            coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
             stubTronTransferTransaction()
             coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns
                 GetFeeError.GaslessError.DataError(null).left()
@@ -514,7 +514,7 @@ internal class CexSwapFeeCalculatorTest {
             // Arrange
             val fromStatus = tronUsdtStatus()
             val nativeFee = tronNativeFee(value = "6.43")
-            coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+            coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
             coEvery { estimateFeeUseCase(any(), any(), any()) } returns nativeFee.right()
             val trxStatus = givenTrxBalance(balance = "50")
             stubTronTransferTransaction()
@@ -542,7 +542,7 @@ internal class CexSwapFeeCalculatorTest {
         // Arrange
         val fromStatus = tronUsdtStatus()
         val error = GetFeeError.GaslessError.TronActivationRateLimited(isPerWallet = true)
-        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
         stubTronTransferTransaction()
         coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns error.left()
 
@@ -589,7 +589,7 @@ internal class CexSwapFeeCalculatorTest {
             val loaded = result.getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended
             assertThat(loaded?.fee).isSameInstanceAs(nativeFee)
             coVerify(exactly = 0) {
-                isTronGaslessSupportedUseCase(any(), any(), any())
+                isTronGaslessSupportedUseCase(any(), any())
                 getTronGaslessFeeUseCase(any(), any(), any())
             }
         }
@@ -600,7 +600,7 @@ internal class CexSwapFeeCalculatorTest {
             // Arrange
             val fromStatus = tronUsdtStatus()
             val nativeFee = tronEnergyFee(remainingEnergy = 70_000, feeEnergy = 65_000)
-            coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+            coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
             coEvery { estimateFeeUseCase(any(), any(), any()) } returns nativeFee.right()
             val trxStatus = givenTrxBalance(balance = "50")
 
@@ -624,7 +624,7 @@ internal class CexSwapFeeCalculatorTest {
             // Arrange
             val fromStatus = tronUsdtStatus()
             val gasless = tronGaslessFee(fromStatus)
-            coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+            coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
             coEvery { estimateFeeUseCase(any(), any(), any()) } returns
                 tronEnergyFee(remainingEnergy = 70_000, feeEnergy = 65_000).right()
             givenTrxBalance(balance = "0.1")
@@ -645,7 +645,7 @@ internal class CexSwapFeeCalculatorTest {
             // Arrange
             val fromStatus = tronUsdtStatus()
             val nativeFee = tronEnergyFee(remainingEnergy = 10_000, feeEnergy = 65_000)
-            coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+            coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
             coEvery { estimateFeeUseCase(any(), any(), any()) } returns nativeFee.right()
             val trxStatus = givenTrxBalance(balance = "50")
             stubTronTransferTransaction()
@@ -670,7 +670,7 @@ internal class CexSwapFeeCalculatorTest {
         // Arrange
         val fromStatus = tronUsdtStatus()
         val nativeFee = tronNativeFee(value = "0.35")
-        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
         stubTronTransferTransaction()
         coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns tronGaslessFee(fromStatus).right()
         coEvery { estimateFeeUseCase(any(), any(), any()) } returns nativeFee.right()
@@ -694,7 +694,7 @@ internal class CexSwapFeeCalculatorTest {
         // Arrange
         val fromStatus = tronUsdtStatus()
         val gasless = tronGaslessFee(fromStatus)
-        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
         stubTronTransferTransaction()
         coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns gasless.right()
         coEvery { estimateFeeUseCase(any(), any(), any()) } returns tronNativeFee(value = "13").right()
@@ -713,7 +713,7 @@ internal class CexSwapFeeCalculatorTest {
         // Arrange
         val fromStatus = tronUsdtStatus()
         val gasless = tronGaslessFee(fromStatus)
-        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
         stubTronTransferTransaction()
         coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns gasless.right()
         coEvery { estimateFeeUseCase(any(), any(), any()) } returns tronNativeFee(value = "0.35").right()
@@ -733,7 +733,7 @@ internal class CexSwapFeeCalculatorTest {
             // Arrange
             val fromStatus = tronUsdtStatus()
             val gasless = tronGaslessFee(fromStatus)
-            coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
+            coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
             stubTronTransferTransaction()
             coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns gasless.right()
             coEvery { estimateFeeUseCase(any(), any(), any()) } returns

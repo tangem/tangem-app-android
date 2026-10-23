@@ -21,10 +21,37 @@ internal class DeleteWalletCloudBackupUseCaseTest {
 
     private val useCase = DeleteWalletCloudBackupUseCase(cloudBackupRepository, deleteCloudBackupWithRetryUseCase)
 
+    private var pinnedWalletId: String? = null
+
     @BeforeEach
     fun resetMocks() {
         clearMocks(cloudBackupRepository, deleteCloudBackupWithRetryUseCase)
+        pinnedWalletId = null
         coEvery { deleteCloudBackupWithRetryUseCase(any()) } returns Unit.right()
+        coEvery { cloudBackupRepository.withAccountOf<Any?>(any(), any()) } coAnswers {
+            pinnedWalletId = firstArg()
+            secondArg<suspend () -> Any?>().invoke().also { pinnedWalletId = null }
+        }
+    }
+
+    @Test
+    fun `GIVEN matching backup WHEN invoke THEN it is found and deleted in the wallet's account`() = runTest {
+        // Arrange
+        val calledFor = mutableListOf<String?>()
+        coEvery { cloudBackupRepository.findBackups() } answers {
+            calledFor += pinnedWalletId
+            listOf(backup(fileId = "file-1", walletId = WALLET_ID)).right()
+        }
+        coEvery { deleteCloudBackupWithRetryUseCase("file-1") } answers {
+            calledFor += pinnedWalletId
+            Unit.right()
+        }
+
+        // Act
+        useCase(WALLET_ID)
+
+        // Assert
+        assertThat(calledFor).containsExactly(WALLET_ID, WALLET_ID)
     }
 
     @Test

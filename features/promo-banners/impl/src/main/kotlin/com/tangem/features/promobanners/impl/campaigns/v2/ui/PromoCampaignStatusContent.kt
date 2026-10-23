@@ -34,19 +34,15 @@ import com.tangem.features.promobanners.impl.R
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoCampaignStatusUM
 
 @Composable
-internal fun PromoCampaignStatusContent(
-    state: PromoCampaignStatusUM,
-    modifier: Modifier = Modifier,
-    animated: Boolean = true,
-) {
+internal fun PromoCampaignStatusContent(state: PromoCampaignStatusUM, modifier: Modifier = Modifier) {
     TangemStatusScreen(
         modifier = modifier,
         variant = state.variant,
         title = state.title,
         description = state.description,
-        animated = animated,
+        animated = false,
         asset = {
-            TangemStatusIcon(kind = state.icon, modifier = Modifier.size(40.dp), animated = animated)
+            TangemStatusIcon(kind = state.icon, modifier = Modifier.size(40.dp), animated = false)
         },
         details = when (val details = state.details) {
             is PromoCampaignStatusUM.Details.EnrolledWallets -> {
@@ -152,7 +148,7 @@ private fun Preview_PromoCampaignStatusContent(
     @PreviewParameter(PromoCampaignStatusProvider::class) state: PromoCampaignStatusUM,
 ) {
     TangemThemePreviewRedesign {
-        PromoCampaignStatusContent(state = state, animated = false)
+        PromoCampaignStatusContent(state = state)
     }
 }
 

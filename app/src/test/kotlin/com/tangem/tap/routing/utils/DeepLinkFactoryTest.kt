@@ -257,6 +257,7 @@ internal class DeepLinkFactoryTest {
         every { mockedUri.authority } returns "example.com"
         every { mockedUri.port } returns 443 // Default HTTPS port
         every { mockedUri.fragment } returns null // No fragment in this URI
+        every { mockedUri.userInfo } returns null
 
     }
 
@@ -979,6 +980,7 @@ internal class DeepLinkFactoryTest {
         // Arrange
         every { mockedUri.scheme } returns model.scheme
         every { mockedUri.host } returns model.host
+        every { mockedUri.userInfo } returns model.userInfo
         every { mockedUri.path } returns model.path
         every { mockedUri.queryParameterNames } returns emptySet()
         every { mockedUri.toString() } returns model.url
@@ -1101,6 +1103,7 @@ internal class DeepLinkFactoryTest {
         val url: String,
         val source: DeeplinkSource,
         val isOpenedInBrowser: Boolean,
+        val userInfo: String? = null,
     )
 
     private companion object {
@@ -1168,6 +1171,25 @@ internal class DeepLinkFactoryTest {
                 url = "https://evil.com/phishing",
                 source = DeeplinkSource.Push,
                 isOpenedInBrowser = false,
+            ),
+            // An unpatched android.net.Uri reads the host as tangem.com, a browser as evil.com
+            WebFallbackModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pricing/",
+                url = "https://evil.com\\@tangem.com/pricing/",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = false,
+                userInfo = "evil.com\\",
+            ),
+            WebFallbackModel(
+                scheme = "https",
+                host = "join.tangem.com",
+                path = "/abc",
+                url = "https://[REDACTED_EMAIL]/abc",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = false,
+                userInfo = "user",
             ),
             // A custom scheme handed to ACTION_VIEW would bounce back in as an ungated intent.data.
             // The host must be one no handler claims, otherwise the fallback is never reached.

@@ -382,7 +382,8 @@ private class ProvidersDnDTarget(
     }
 
     override fun onDrop(event: DragAndDropEvent): Boolean {
-        val new = event.toAndroidDragEvent().clipData.getItemAt(0).text.toString().toInt()
+        val clipItem = event.toAndroidDragEvent().clipData.getItemAt(0)
+        val new = clipItem.text.toString().toInt()
 
         if (index == new) return false
 
