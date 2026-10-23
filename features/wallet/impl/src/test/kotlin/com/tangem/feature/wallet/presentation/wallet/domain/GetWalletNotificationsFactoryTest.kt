@@ -1174,6 +1174,24 @@ internal class GetWalletNotificationsFactoryTest {
     }
 
     @Test
+    fun `GIVEN outdated banner shown WHEN balance starts loading THEN banner is removed`() = runTest {
+        // Arrange
+        val accountLists = MutableStateFlow(accountStatusListOf(loadedBalance(StatusSource.ONLY_CACHE)))
+        stubAccountStatusListFlow(accountLists)
+
+        factory.create(coldWallet, clickIntents).test {
+            awaitItem()
+
+            // Act
+            accountLists.value = accountStatusListOf(TotalFiatBalance.Loading)
+
+            // Assert
+            assertThat(awaitItem().hasOutdatedDataBanner()).isFalse()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `GIVEN banner held in previous collection WHEN flow is collected again on cache THEN banner is not shown`() =
         runTest {
             // Arrange

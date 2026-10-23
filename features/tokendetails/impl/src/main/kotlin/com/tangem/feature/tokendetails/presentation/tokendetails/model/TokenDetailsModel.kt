@@ -86,6 +86,7 @@ import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Compan
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.DetailsScreenOpened.TokenBalance
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.model.details.TokenAction
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.error.AssociateAssetError
 import com.tangem.domain.transaction.error.IncompleteTransactionError
 import com.tangem.domain.transaction.error.OpenTrustlineError
@@ -96,7 +97,6 @@ import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.models.YieldSupplyRewardBalance
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase
-import com.tangem.feature.tokendetails.domain.CurrencyWarningsStabilizer
 import com.tangem.feature.tokendetails.domain.GetCurrencyWarningsUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
@@ -213,7 +213,6 @@ internal class TokenDetailsModel @Inject constructor(
 
     private val marketPriceJobHolder = JobHolder()
     private val refreshStateJobHolder = JobHolder()
-    private val warningsJobHolder = JobHolder()
     private val buttonsJobHolder = JobHolder()
     private val stakingJobHolder = JobHolder()
     private val yieldSupplyBalanceJobHolder = JobHolder()
@@ -224,7 +223,7 @@ internal class TokenDetailsModel @Inject constructor(
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var account: Account.CryptoPortfolio? = null
     private var isBalanceLoadedEventSent = false
-    private val warningsStabilizer = CurrencyWarningsStabilizer()
+    private val warningsStatus = MutableStateFlow<CryptoCurrencyStatus?>(null)
     private var latestTokenActions: List<TokenActionsState.ActionState> = emptyList()
 
     val bottomSheetNavigation: SlotNavigation<TokenDetailsBottomSheetConfig> = SlotNavigation()
@@ -310,6 +309,7 @@ internal class TokenDetailsModel @Inject constructor(
         initRedesign()
         updateTopBarMenu()
         initButtons()
+        subscribeOnWarnings()
         updateContent()
         handleBalanceHiding()
         handleNavigationParam()
@@ -416,43 +416,76 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun updateWarnings(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        modelScope.launch(dispatchers.main) {
-            getCurrencyWarningsUseCase(
-                userWalletId = userWalletId,
-                currencyStatus = cryptoCurrencyStatus,
-                derivationPath = cryptoCurrency.network.derivationPath,
-            )
-                .distinctUntilChanged()
-                .mapNotNull { warnings ->
-                    warningsStabilizer.stabilize(warnings, totalSource = cryptoCurrencyStatus.value.sources.total)
-                }
-                .onEach { warnings ->
-                    val updatedState = stateFactory.getStateWithNotifications(warnings)
-                    notificationsAnalyticsSender.send(
-                        displayedUiState = uiState.value,
-                        newNotifications = updatedState.notifications,
-                        cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    )
-                    uiState.value = updatedState
-
-                    redesignStateController.update(
-                        UpdateNotificationsTransformer(
-                            warnings = warnings,
-                            clickIntents = this@TokenDetailsModel,
-                            walletInteractionIcon = walletInterationIcon(userWallet),
-                        ),
-                    )
-                }
-                .launchIn(modelScope)
-                .saveIn(warningsJobHolder)
-        }
+        warningsStatus.value = cryptoCurrencyStatus
     }
 
-    private fun applyLocalNotificationsChange(buildState: () -> TokenDetailsState) {
-        modelScope.launch(dispatchers.mainImmediate) {
-            warningsStabilizer.invalidate()
-            uiState.value = buildState()
+    private fun subscribeOnWarnings() {
+        warningsStatus
+            .filterNotNull()
+            .flatMapLatest(::getStatusWarnings)
+            .runningFold(initial = null, operation = ::reduceDisplayedWarnings)
+            .filterNotNull()
+            .onEach(::applyDisplayedWarnings)
+            .launchIn(modelScope)
+    }
+
+    private suspend fun getStatusWarnings(status: CryptoCurrencyStatus): Flow<StatusWarnings> {
+        return getCurrencyWarningsUseCase(
+            userWalletId = userWalletId,
+            currencyStatus = status,
+            derivationPath = cryptoCurrency.network.derivationPath,
+        )
+            .distinctUntilChanged()
+            .map { warnings -> StatusWarnings(status = status, warnings = warnings) }
+    }
+
+    private fun reduceDisplayedWarnings(previous: DisplayedWarnings?, current: StatusWarnings): DisplayedWarnings {
+        val isOutdatedDataShown = nextOutdatedDataShown(
+            hasOutdatedDataWarning = CryptoCurrencyWarning.UsedOutdatedDataWarning in current.warnings,
+            source = current.status.value.sources.total,
+            wasShown = previous?.isOutdatedDataShown == true,
+        )
+        val warnings = if (isOutdatedDataShown) {
+            current.warnings + CryptoCurrencyWarning.UsedOutdatedDataWarning
+        } else {
+            current.warnings
         }
+
+        return DisplayedWarnings(
+            status = current.status,
+            warnings = warnings,
+            isOutdatedDataShown = isOutdatedDataShown,
+        )
+    }
+
+    /** A refresh resets the source from cache-only to cache, so the banner is kept until the data is actual */
+    private fun nextOutdatedDataShown(
+        hasOutdatedDataWarning: Boolean,
+        source: StatusSource,
+        wasShown: Boolean,
+    ): Boolean = when {
+        hasOutdatedDataWarning -> true
+        source == StatusSource.ACTUAL -> false
+        else -> wasShown
+    }
+
+    private fun applyDisplayedWarnings(displayed: DisplayedWarnings) {
+        val updatedState = stateFactory.getStateWithNotifications(displayed.warnings)
+
+        notificationsAnalyticsSender.send(
+            displayedUiState = uiState.value,
+            newNotifications = updatedState.notifications,
+            cryptoCurrencyStatus = displayed.status,
+        )
+        uiState.value = updatedState
+
+        redesignStateController.update(
+            UpdateNotificationsTransformer(
+                warnings = displayed.warnings,
+                clickIntents = this@TokenDetailsModel,
+                walletInteractionIcon = walletInterationIcon(userWallet),
+            ),
+        )
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
@@ -1100,7 +1133,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onCloseRentInfoNotification() {
-        applyLocalNotificationsChange { stateFactory.getStateWithRemovedRentNotification() }
+        uiState.value = stateFactory.getStateWithRemovedRentNotification()
     }
 
     override fun onCopyAddress(): TextReference? {
@@ -1156,9 +1189,7 @@ internal class TokenDetailsModel @Inject constructor(
                     }
                 },
                 ifRight = {
-                    applyLocalNotificationsChange {
-                        stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification()
-                    }
+                    uiState.value = stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification()
                 },
             )
         }
@@ -1201,9 +1232,7 @@ internal class TokenDetailsModel @Inject constructor(
                         dialogFactory.showError(text = message)
                     }
                 },
-                ifRight = {
-                    applyLocalNotificationsChange { stateFactory.getStateWithRemovedRequiredTrustlineNotification() }
-                },
+                ifRight = { uiState.value = stateFactory.getStateWithRemovedRequiredTrustlineNotification() },
             )
         }
     }
@@ -1231,9 +1260,7 @@ internal class TokenDetailsModel @Inject constructor(
                     TangemLogger.e("Error: $e")
                 },
                 ifRight = {
-                    applyLocalNotificationsChange {
-                        stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification()
-                    }
+                    uiState.value = stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification()
                 },
             )
         }
@@ -1268,9 +1295,7 @@ internal class TokenDetailsModel @Inject constructor(
                         }
                     }
                 },
-                ifRight = {
-                    applyLocalNotificationsChange { stateFactory.getStateWithRemovedHederaAssociateNotification() }
-                },
+                ifRight = { uiState.value = stateFactory.getStateWithRemovedHederaAssociateNotification() },
             )
         }
     }
@@ -1700,5 +1725,16 @@ internal class TokenDetailsModel @Inject constructor(
         val walletName: String,
         val deviceIconUM: DeviceIconUM,
         val account: Account.CryptoPortfolio?,
+    )
+
+    private data class StatusWarnings(
+        val status: CryptoCurrencyStatus,
+        val warnings: Set<CryptoCurrencyWarning>,
+    )
+
+    private data class DisplayedWarnings(
+        val status: CryptoCurrencyStatus,
+        val warnings: Set<CryptoCurrencyWarning>,
+        val isOutdatedDataShown: Boolean,
     )
 }

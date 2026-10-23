@@ -163,7 +163,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                 activationState,
                 upgradeBannerPrefs,
             ->
-            val (accountList, shouldShowOutdatedData, isTangemPayPromoHidden) = accountState
+            val (accountList, isOutdatedDataShown, isTangemPayPromoHidden) = accountState
             val (activationWallet, isWalletBackedUp) = activationState
             val (shouldShowUpgradeBanner, upgradeBannerClosureTimestamp) = upgradeBannerPrefs
 
@@ -178,7 +178,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             val isAddFundsBannerShown = isAddFundsBannerVisible(totalFiatBalance)
 
             val notifications = buildList {
-                addUsedOutdatedDataNotification(isShown = shouldShowOutdatedData)
+                addUsedOutdatedDataNotification(isOutdatedDataShown = isOutdatedDataShown)
 
                 addAddFundsBanner(
                     isVisible = isAddFundsBannerShown,
@@ -273,20 +273,20 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         )
     }
 
+    /** A refresh resets the source from cache-only to cache, so the banner is kept until the data is actual */
     private fun nextOutdatedDataShown(totalFiatBalance: TotalFiatBalance, wasShown: Boolean): Boolean {
-        if (totalFiatBalance is TotalFiatBalance.Failed) return false
-
+        
         val source = (totalFiatBalance as? TotalFiatBalance.Loaded)?.source
 
         return when (source) {
             StatusSource.ONLY_CACHE -> true
-            StatusSource.ACTUAL -> false
-            else -> wasShown
+            StatusSource.CACHE -> wasShown
+            StatusSource.ACTUAL, null -> false
         }
     }
 
-    private fun MutableList<WalletNotificationUM>.addUsedOutdatedDataNotification(isShown: Boolean) {
-        addIf(element = WalletNotificationUM.UsedOutdatedData, condition = isShown)
+    private fun MutableList<WalletNotificationUM>.addUsedOutdatedDataNotification(isOutdatedDataShown: Boolean) {
+        addIf(element = WalletNotificationUM.UsedOutdatedData, condition = isOutdatedDataShown)
     }
 
     private fun isAddFundsBannerVisible(totalFiatBalance: TotalFiatBalance): Boolean {
