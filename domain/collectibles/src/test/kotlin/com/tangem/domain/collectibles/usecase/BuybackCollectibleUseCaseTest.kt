@@ -9,7 +9,6 @@ import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetc
 import com.tangem.domain.collectibles.models.BuybackError
 import com.tangem.domain.collectibles.models.CollectibleBuybackStatus
 import com.tangem.domain.collectibles.models.CollectibleBuybackTx
-import com.tangem.domain.collectibles.models.CollectibleException
 import com.tangem.domain.collectibles.models.GenerateBuybackTxParams
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
 import com.tangem.domain.collectibles.vault.GachaVaultError
@@ -207,12 +206,7 @@ internal class BuybackCollectibleUseCaseTest {
 
     private fun provideTestModels() = listOf(
         FailureModel(
-            description = "backend refuses",
-            arrange = { stubGenerateThrows(CollectibleException.BuybackRefused()) },
-            expected = BuybackError.NotAllowed,
-        ),
-        FailureModel(
-            description = "backend fails otherwise",
+            description = "backend fails",
             arrange = { stubGenerateThrows(IllegalStateException()) },
             expected = BuybackError.Unexpected,
         ),

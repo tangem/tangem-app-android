@@ -13,11 +13,6 @@ import com.tangem.utils.converter.Converter
 internal object CollectiblesSellBackButtonConverter : Converter<BuybackState, SellBackButtonUM> {
 
     override fun convert(value: BuybackState): SellBackButtonUM = when (value) {
-        BuybackState.Checking -> SellBackButtonUM(
-            textRef = resourceReference(R.string.collectibles_open_pack_buyback_unavailable),
-            isEnabled = true,
-            isLoading = true,
-        )
         BuybackState.Unavailable -> SellBackButtonUM(
             textRef = resourceReference(R.string.collectibles_open_pack_buyback_unavailable),
             isEnabled = false,

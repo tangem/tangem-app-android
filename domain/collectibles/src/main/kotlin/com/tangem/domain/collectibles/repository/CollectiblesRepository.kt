@@ -38,7 +38,6 @@ interface CollectiblesRepository {
     /** `null` while the backend has no offer for [nftAddress] yet. */
     suspend fun getBuybackOffer(userWalletId: UserWalletId, nftAddress: String): CollectibleBuybackOffer?
 
-    /** @throws CollectibleException.BuybackRefused when the backend will not buy the card back */
     suspend fun generateBuybackTx(userWalletId: UserWalletId, params: GenerateBuybackTxParams): CollectibleBuybackTx
 
     /** Reports the hash of the buyback transaction sent on chain; the backend then starts watching it. */
