@@ -542,23 +542,12 @@ internal class SwapAmountModel @Inject constructor(
         params.hiddenProviderIdsFlow
             .drop(1)
             .onEach { hiddenProviderIds ->
-                uiState.transformerUpdate(
-                    SwapAmountHideProvidersTransformer(
-                        providerIds = hiddenProviderIds,
-                        secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
-                        secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
-                        isNeedApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
-                        isBalanceHidden = params.isBalanceHidingFlow.value,
-                        primaryFiatRateUSD = primaryFiatRateUSD,
-                        secondaryFiatRateUSD = secondaryFiatRateUSD,
-                    ),
-                )
+                uiState.transformerUpdate(SwapAmountHideProvidersTransformer(providerIds = hiddenProviderIds))
                 val state = uiState.value as? SwapAmountUM.Content ?: return@onEach
-                val shouldSwitch = shouldSwitchToFloat(state)
-                if (shouldSwitch) {
+                if (shouldSwitchToFloat(state)) {
                     uiState.transformerUpdate(SwapAmountSwitchToFloatTransformer(params.isBalanceHidingFlow.value))
                 }
-                startLoadingQuotesTask(isSilentReload = !shouldSwitch)
+                startLoadingQuotesTask(isSilentReload = false)
             }
             .launchIn(modelScope)
     }
