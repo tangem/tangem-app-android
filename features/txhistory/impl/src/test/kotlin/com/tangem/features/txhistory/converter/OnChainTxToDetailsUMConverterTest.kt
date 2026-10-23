@@ -409,7 +409,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val amountBlock = converter.convert(tx).amountBlock
 
         // Assert
-        assertThat(amountBlock.amount.resolveString()).startsWith("+ ")
+        assertThat(amountBlock.amount.resolveString()).startsWith(INCOMING_SIGN)
         assertThat(amountBlock.isFailed).isFalse()
     }
 
@@ -422,7 +422,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val amountBlock = converter.convert(tx).amountBlock
 
         // Assert
-        assertThat(amountBlock.amount.resolveString()).startsWith("— ")
+        assertThat(amountBlock.amount.resolveString()).startsWith(OUTGOING_SIGN)
     }
 
     @Test
@@ -494,7 +494,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val amount = converter.convert(tx).amountBlock.amount.resolveString()
 
         // Assert
-        assertThat(amount).startsWith("+ ")
+        assertThat(amount).startsWith(INCOMING_SIGN)
     }
 
     @Test
@@ -1604,7 +1604,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_received))
         assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
-        assertThat(result.amountBlock.amount.resolveString()).startsWith("+ ")
+        assertThat(result.amountBlock.amount.resolveString()).startsWith(INCOMING_SIGN)
         val pair = result.amountBlock.icon as TxHistoryDetailsUM.AmountIconUM.OverlappingPair
         assertThat(pair.leading).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Item.Currency::class.java)
         assertThat(pair.trailing).isEqualTo(TxHistoryDetailsUM.AmountIconUM.Item.Resource(R.drawable.img_merkl_22))
@@ -1749,7 +1749,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_up_20))
         assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_sent))
-        assertThat(result.amountBlock.amount.resolveString()).startsWith("— ")
+        assertThat(result.amountBlock.amount.resolveString()).startsWith(OUTGOING_SIGN)
         assertThat(result.counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
         assertThat(result.counterparty?.avatar)
             .isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(USER_ADDRESS))
@@ -1793,7 +1793,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(result.header.title).isEqualTo(resourceReference(R.string.transaction_history_withdrawn))
         assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_lightning_20))
-        assertThat(result.amountBlock.amount.resolveString()).startsWith("+ ")
+        assertThat(result.amountBlock.amount.resolveString()).startsWith(INCOMING_SIGN)
         assertThat(result.amountBlock.label).isNull()
         val pair = result.amountBlock.icon as TxHistoryDetailsUM.AmountIconUM.OverlappingPair
         assertThat(pair.leading).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Item.Currency::class.java)

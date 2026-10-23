@@ -121,7 +121,8 @@ internal fun TxInfo.feeAmountText(currency: CryptoCurrency): TextReference? {
     if (!showsFeeAsAmount(currency)) return null
     val feeValue = fee?.value ?: return null
     val formatted = feeValue.format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
-    val prefix = if (status is TxInfo.TransactionStatus.Failed) "" else "${StringsSigns.DASH_SIGN} "
+    val outgoingSign = "${StringsSigns.MINUS_SIGN}${StringsSigns.THIN_SPACE}"
+    val prefix = if (status is TxInfo.TransactionStatus.Failed) "" else outgoingSign
     return stringReference((prefix + approximateMark() + formatted).trim())
 }
 
