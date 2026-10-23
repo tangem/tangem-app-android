@@ -5,11 +5,12 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.TangemBlogUrlBuilder
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.popToOrReplaceCurrent
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
@@ -43,7 +44,12 @@ import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.core.res.R as CoreResR
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
+import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
+import com.tangem.domain.yield.supply.models.YieldSupplyTransactionOutcome
 import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
+import com.tangem.features.yield.supply.impl.incentives.claim.model.YieldSupplyClaimPreparer
+import com.tangem.features.yield.supply.impl.incentives.claim.result.entity.YieldSupplyClaimResultUM
+import com.tangem.features.yield.supply.impl.subcomponents.stopearning.model.YieldSupplyWithdrawalClaimBatching
 import com.tangem.features.yield.supply.impl.common.formatter.formatApy
 import com.tangem.features.yield.supply.impl.active.model.transformers.YieldSupplyActiveFeeContentTransformer
 import com.tangem.features.yield.supply.impl.active.model.transformers.YieldSupplyActiveMinAmountTransformer
@@ -56,7 +62,9 @@ import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.Clock
 import javax.inject.Inject
 
@@ -68,6 +76,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val analyticsHandler: AnalyticsEventHandler,
     private val yieldSupplyGetProtocolBalanceUseCase: YieldSupplyGetProtocolBalanceUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
+    private val yieldSupplyClaimPreparer: YieldSupplyClaimPreparer,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
     private val yieldSupplyGetCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase,
     private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
@@ -75,10 +84,11 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val urlOpener: UrlOpener,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
     private val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase,
     private val boostStoryPreloader: YieldBoostStoryPreloader,
+    private val yieldSupplyClaimTracker: YieldSupplyClaimTracker,
 ) : Model(), YieldSupplyStopEarningComponent.ModelCallback,
     YieldSupplyApproveComponent.ModelCallback {
 
@@ -95,12 +105,20 @@ internal class YieldSupplyActiveModel @Inject constructor(
         ),
     )
 
+    val claimResultFlow: StateFlow<YieldSupplyClaimResultUM?>
+        field = MutableStateFlow<YieldSupplyClaimResultUM?>(null)
+
     val balanceHiddenFlow = MutableStateFlow(false)
     val transactionInProgressFlow: StateFlow<Boolean>
         field = MutableStateFlow(false)
 
     private val userWalletId = params.userWalletId
     private val cryptoCurrency = cryptoCurrencyStatusFlow.value.currency
+
+    private var wasClaimOfferedBeforeWithdrawal = false
+
+    private var stopEarningDecision: Job? = null
+
     private var appCurrency = AppCurrency.Default
 
     val marketingRequest: Flow<MarketingBannerRequest?> = flowOf(
@@ -141,6 +159,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
             ),
         )
         subscribeOnCurrencyStatusUpdates()
+        subscribeOnClaimOutcome()
         loadBoostBlock()
         modelScope.launch(dispatchers.io) { boostStoryPreloader.preload() }
 
@@ -170,7 +189,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
             currency = cryptoCurrency,
             screenSource = AnalyticsParam.ScreensSources.Token,
         ) ?: return false
-        appRouter.push(route)
+        router.push(route)
         return true
     }
 
@@ -186,35 +205,138 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     override fun onStopEarningTransactionSent() {
         transactionInProgressFlow.update { false }
-        appRouter.pop()
+        exitAfterTransaction()
     }
 
     override fun onTransactionSent() {
         transactionInProgressFlow.update { false }
-        appRouter.pop()
+        exitAfterTransaction()
+    }
+
+    // Transaction callbacks arrive from background dispatchers, while the entry host's back handling reads its stack
+    private fun exitAfterTransaction() {
+        modelScope.launch(dispatchers.mainImmediate) { router.pop() }
     }
 
     fun onApprove() {
         slotNavigation.activate(YieldSupplyActiveRoute.Approve)
     }
 
+    /**
+     * Where the claim cannot ride the withdrawal batch, the first withdrawal attempt with claimable rewards opens the
+     * claim sheet instead: the withdrawal deactivates the module the rewards sit on. Offered once — a second tap goes
+     * through to the withdrawal whatever the owner chose.
+     */
     fun onStopEarning() {
-        slotNavigation.activate(YieldSupplyActiveRoute.Exit)
+        if (YieldSupplyWithdrawalClaimBatching.isSupported(cryptoCurrency.network)) {
+            slotNavigation.activate(YieldSupplyActiveRoute.Exit)
+        } else {
+            offerClaimBeforeWithdrawal()
+        }
     }
 
-    /** Dismiss that skips the in-transaction guard of [onDismissClick] — the About APY sheet signs nothing. */
-    fun onAboutApyDismiss() {
+    private fun offerClaimBeforeWithdrawal() {
+        if (stopEarningDecision?.isActive == true) return
+
+        stopEarningDecision = modelScope.launch {
+            // A stalled incentives backend must not keep the user from the withdrawal
+            val claimRoute = withTimeoutOrNull(OFFER_CLAIM_TIMEOUT_MILLIS) { claimRouteBeforeWithdrawal() }
+            if (claimRoute != null) {
+                wasClaimOfferedBeforeWithdrawal = true
+                slotNavigation.activate(claimRoute)
+            } else {
+                slotNavigation.activate(YieldSupplyActiveRoute.Exit)
+            }
+        }
+    }
+
+    private suspend fun claimRouteBeforeWithdrawal(): YieldSupplyActiveRoute.Claim? {
+        if (wasClaimOfferedBeforeWithdrawal) return null
+
+        val token = cryptoCurrency as? CryptoCurrency.Token ?: return null
+        val chainId = yieldSupplyGetTokenStatusUseCase(token).getOrNull()?.chainId ?: return null
+        val userAddress = cryptoCurrencyStatusFlow.value.value.networkAddress
+            ?.defaultAddress
+            ?.value
+            ?: return null
+
+        val isClaimInFlight = yieldSupplyClaimTracker
+            .isClaimInFlight(chainId = chainId, userAddress = userAddress)
+            .firstOrNull()
+        if (isClaimInFlight != false) return null
+
+        yieldSupplyClaimPreparer.loadRecommendedRewards(chainId = chainId, userAddress = userAddress) ?: return null
+
+        return YieldSupplyActiveRoute.Claim(chainId = chainId, userAddress = userAddress)
+    }
+
+    /**
+     * Skips the in-transaction guard of [onDismissClick]: the About APY sheet signs nothing, and the claim sheet
+     * guards its own dismissal.
+     */
+    fun onUnguardedSheetDismiss() {
         slotNavigation.dismiss()
     }
 
-    fun onClaimRewardsClick() {
-        // The claim sheet arrives with the claim part of the Merkl incentives series.
+    fun onClaimRewardsClick(chainId: Int, userAddress: String) {
+        slotNavigation.activate(YieldSupplyActiveRoute.Claim(chainId = chainId, userAddress = userAddress))
+    }
+
+    fun onClaimSubmitted(result: YieldSupplyClaimResultUM) {
+        slotNavigation.dismiss()
+        claimResultFlow.update { result }
+    }
+
+    fun onClaimResultDismiss() {
+        claimResultFlow.update { null }
+    }
+
+    /**
+     * Yield Mode is also opened from the main screen, Markets, For You and a deep link, so the token screen is not
+     * always the one beneath it.
+     */
+    fun onGoToTokenClick() {
+        onClaimResultDismiss()
+        // Matched by wallet and currency: the route in the stack may carry a navigation action or a market block flag
+        router.popToOrReplaceCurrent(
+            route = AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = cryptoCurrency),
+        ) { route -> route.userWalletId == userWalletId && route.currency.id == cryptoCurrency.id }
+    }
+
+    private fun subscribeOnClaimOutcome() {
+        yieldSupplyClaimTracker.outcomes
+            // A claim signed on the way out was never put to the user as a transaction of its own, so its failure
+            // would point at the withdrawal they did make
+            .filter { it.origin == YieldSupplyClaimOrigin.ClaimSheet }
+            .filter { it.userWalletId == userWalletId && it.cryptoCurrencyId == cryptoCurrency.id }
+            .onEach { claimOutcome ->
+                when (claimOutcome.outcome) {
+                    YieldSupplyTransactionOutcome.Confirmed -> claimResultFlow.update { result ->
+                        result?.copy(
+                            status = YieldSupplyClaimResultUM.Status.Confirmed(
+                                timestamp = Clock.System.now().toEpochMilliseconds(),
+                            ),
+                        )
+                    }
+                    // Shown even when the result was already closed: the user would not learn about it otherwise
+                    YieldSupplyTransactionOutcome.Reverted -> claimResultFlow.update { result ->
+                        result?.copy(status = YieldSupplyClaimResultUM.Status.Failed)
+                            ?: YieldSupplyClaimResultUM(
+                                status = YieldSupplyClaimResultUM.Status.Failed,
+                                total = TextReference.EMPTY,
+                                serviceFee = null,
+                                networkFee = null,
+                            )
+                    }
+                }
+            }
+            .launchIn(modelScope)
     }
 
     private fun onApyInfoClick() {
         val breakdown = uiState.value.apyBreakdown ?: return
         slotNavigation.activate(
-            YieldSupplyActiveRoute.AboutApy(baseApy = breakdown.baseApy, rewardsApr = breakdown.rewardsApr),
+            YieldSupplyActiveRoute.AboutApy(baseApy = breakdown.baseApy, rewardsApy = breakdown.rewardsApy),
         )
     }
 
@@ -303,7 +425,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     }
 
     private fun onBoostClick() {
-        appRouter.push(
+        router.push(
             AppRoute.Stories(
                 storyId = StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id,
                 nextScreen = null,
@@ -421,5 +543,6 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     private companion object {
         const val AAVEV3_PREFIX = "a"
+        const val OFFER_CLAIM_TIMEOUT_MILLIS = 3_000L
     }
 }

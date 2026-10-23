@@ -54,7 +54,7 @@ internal object SafeTestFixtures {
                 },
             ),
         ),
-        backedUp = true,
+        isBackedUp = true,
     )
 
     /** The Safe's wallet as the SDK manager holds it: the owner key, the Safe address */

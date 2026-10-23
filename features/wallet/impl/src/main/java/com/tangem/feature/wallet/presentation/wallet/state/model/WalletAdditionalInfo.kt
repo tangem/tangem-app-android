@@ -5,7 +5,7 @@ import com.tangem.core.ui.extensions.TextReference
 
 @Immutable
 data class WalletAdditionalInfo(
-    val hideable: Boolean,
+    val isHideable: Boolean,
     val content: Content,
     val isHotBackedUp: Boolean = false,
 ) {

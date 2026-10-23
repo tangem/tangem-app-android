@@ -71,10 +71,10 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
                     cardWalletAddress = request.cardWalletAddress,
                 ),
             ).getOrThrow()
-        }.map {
+        }.map { response ->
             VisaDataToSignByCardWallet(
                 request = request,
-                hashToSign = it.result.hash,
+                hashToSign = response.result.hash,
             )
         }
     }
@@ -93,10 +93,10 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
                     customerWalletAddress = request.customerWalletAddress,
                 ),
             ).getOrThrow()
-        }.map {
+        }.map { response ->
             VisaDataToSignByCustomerWallet(
                 request = request,
-                hashToSign = it.result.hash,
+                hashToSign = response.result.hash,
             )
         }
     }
@@ -214,10 +214,10 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
 
             runCatching {
                 Either.Right(requestBlock())
-            }.getOrElse { responseError ->
-                if (responseError is ApiResponseError.HttpException && responseError.errorBody != null) {
-                    val errorCode = TangemPayErrorResponse.decodeOrNull(json, responseError.errorBody)?.error?.code
-                        ?: responseError.code.numericCode
+            }.getOrElse { retryError ->
+                if (retryError is ApiResponseError.HttpException && retryError.errorBody != null) {
+                    val errorCode = TangemPayErrorResponse.decodeOrNull(json, retryError.errorBody)?.error?.code
+                        ?: retryError.code.numericCode
                     Either.Left(VisaApiError.fromBackendError(errorCode))
                 } else {
                     Either.Left(VisaApiError.UnknownWithoutCode)

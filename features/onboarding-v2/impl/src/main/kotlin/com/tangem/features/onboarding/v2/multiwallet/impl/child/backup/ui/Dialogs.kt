@@ -10,7 +10,7 @@ internal fun resetBackupCardDialog(onReset: () -> Unit, onDismiss: () -> Unit, o
         bodyText = resourceReference(R.string.onboarding_linking_error_card_with_wallets),
         confirmText = resourceReference(R.string.common_cancel),
         cancelText = resourceReference(R.string.card_settings_action_sheet_reset),
-        warningCancelColor = true,
+        isWarningCancelColor = true,
         onDismiss = {
             onDismiss()
             onDismissClick()
@@ -24,7 +24,7 @@ internal fun backupCardAttestationFailedDialog(onDismiss: () -> Unit) = MultiWal
     bodyText = resourceReference(R.string.issuer_signature_loading_failed),
     confirmText = resourceReference(R.string.common_ok),
     cancelText = null,
-    warningCancelColor = true,
+    isWarningCancelColor = true,
     onDismiss = onDismiss,
     onConfirm = onDismiss,
     onCancel = null,
@@ -35,7 +35,7 @@ internal fun onlyOneBackupDeviceDialog(onDismiss: () -> Unit, onConfirm: () -> U
     bodyText = resourceReference(R.string.onboarding_alert_message_not_max_backup_cards_added),
     confirmText = resourceReference(R.string.common_continue),
     cancelText = resourceReference(R.string.common_cancel),
-    warningCancelColor = false,
+    isWarningCancelColor = false,
     onDismiss = onDismiss,
     onConfirm = {
         onDismiss()

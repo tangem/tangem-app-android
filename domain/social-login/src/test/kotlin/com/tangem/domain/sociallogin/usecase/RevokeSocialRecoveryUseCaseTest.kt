@@ -3,6 +3,7 @@ package com.tangem.domain.sociallogin.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.repository.SocialBackupRepository
@@ -11,6 +12,7 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -27,25 +29,26 @@ internal class RevokeSocialRecoveryUseCaseTest {
     )
 
     private val walletId = UserWalletId(stringValue = "0011")
+    private val userWallet: UserWallet.Hot = mockk { every { walletId } returns this@RevokeSocialRecoveryUseCaseTest.walletId }
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(socialRecoveryRepository, socialBackupRepository)
-        coEvery { socialRecoveryRepository.unbindWallet(walletId) } returns Unit.right()
+        coEvery { socialRecoveryRepository.unbindWallet(userWallet) } returns Unit.right()
         coEvery { socialBackupRepository.setSocialBackupCompleted(walletId, any()) } returns Unit.right()
-        coEvery { socialBackupRepository.deleteBackup(walletId) } returns Unit.right()
+        coEvery { socialBackupRepository.deleteBackup(walletId) } returns true.right()
     }
 
     @Test
     fun `GIVEN every step succeeds WHEN invoke THEN the flag goes before the binding and the file`() = runTest {
         // Act
-        val actual = useCase(walletId)
+        val actual = useCase(userWallet)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
         coVerifyOrder {
             socialBackupRepository.setSocialBackupCompleted(walletId = walletId, isCompleted = false)
-            socialRecoveryRepository.unbindWallet(walletId)
+            socialRecoveryRepository.unbindWallet(userWallet)
             socialBackupRepository.deleteBackup(walletId)
         }
     }
@@ -59,7 +62,7 @@ internal class RevokeSocialRecoveryUseCaseTest {
             } returns SocialLoginError.PersistenceFailed().left()
 
             // Act
-            val actual = useCase(walletId)
+            val actual = useCase(userWallet)
 
             // Assert
             assertThat(actual).isEqualTo(SocialLoginError.PersistenceFailed().left())
@@ -70,16 +73,16 @@ internal class RevokeSocialRecoveryUseCaseTest {
     @Test
     fun `GIVEN unbind fails WHEN invoke THEN the flag is restored and the file is kept`() = runTest {
         // Arrange
-        coEvery { socialRecoveryRepository.unbindWallet(walletId) } returns SocialLoginError.NetworkError.left()
+        coEvery { socialRecoveryRepository.unbindWallet(userWallet) } returns SocialLoginError.NetworkError.left()
 
         // Act
-        val actual = useCase(walletId)
+        val actual = useCase(userWallet)
 
         // Assert
         assertThat(actual).isEqualTo(SocialLoginError.NetworkError.left())
         coVerifyOrder {
             socialBackupRepository.setSocialBackupCompleted(walletId = walletId, isCompleted = false)
-            socialRecoveryRepository.unbindWallet(walletId)
+            socialRecoveryRepository.unbindWallet(userWallet)
             socialBackupRepository.setSocialBackupCompleted(walletId = walletId, isCompleted = true)
         }
         coVerify(exactly = 0) { socialBackupRepository.deleteBackup(any()) }
@@ -91,7 +94,7 @@ internal class RevokeSocialRecoveryUseCaseTest {
         coEvery { socialBackupRepository.deleteBackup(walletId) } returns SocialLoginError.CloudUnavailable.left()
 
         // Act
-        val actual = useCase(walletId)
+        val actual = useCase(userWallet)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())

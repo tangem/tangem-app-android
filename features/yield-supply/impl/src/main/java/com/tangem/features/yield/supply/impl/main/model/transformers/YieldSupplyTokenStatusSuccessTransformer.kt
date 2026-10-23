@@ -10,7 +10,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.features.yield.supply.impl.R
+import com.tangem.features.yield.supply.impl.common.formatter.formatApy
+import com.tangem.features.yield.supply.impl.common.formatter.formatApyText
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
+import com.tangem.utils.StringsSigns
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
 
@@ -40,7 +43,8 @@ internal class YieldSupplyTokenStatusSuccessTransformer(
             } else {
                 combinedReference(
                     resourceReference(R.string.yield_module_token_details_earn_notification_apy),
-                    stringReference(" ${tokenStatus.effectiveApy}%"),
+                    stringReference(StringsSigns.WHITE_SPACE),
+                    tokenStatus.effectiveApy.formatApy(),
                 )
             },
         )
@@ -49,8 +53,8 @@ internal class YieldSupplyTokenStatusSuccessTransformer(
     private fun buildBoostedApyText(baseApy: BigDecimal, boostedApy: BigDecimal) = buildAnnotatedString {
         append("APY ")
         withStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) {
-            append("$baseApy%")
+            append(baseApy.formatApyText())
         }
-        append(" x3 → $boostedApy%")
+        append(" x3 → ${boostedApy.formatApyText()}")
     }
 }

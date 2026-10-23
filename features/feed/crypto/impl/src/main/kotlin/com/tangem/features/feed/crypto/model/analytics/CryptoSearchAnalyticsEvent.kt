@@ -10,9 +10,8 @@ import com.tangem.core.analytics.models.IS_NOT_HTTP_ERROR
  * Events of the Crypto search tab.
  *
  * The strings duplicate `SearchAnalyticsEvent` in `:features:feed:impl` on purpose: they are a wire
- * protocol shared with the legacy search screen, which still ships behind
- * `TWI_1608_NEW_SHTORKA_ENABLED` and cannot be depended on from here. The legacy copy dies with the
- * toggle.
+ * protocol shared with the legacy search screen, which is still opened from the market token list and
+ * cannot be depended on from here.
  *
  * `Search Screen Opened` and `Search Started` belong to the search host, which owns the screen and its
  * search bar. Everything here needs data only this tab has — a clicked row, the result counts, the

@@ -1,8 +1,12 @@
 package com.tangem.domain.polymarket.interactor
 
 import arrow.core.Either
+import arrow.core.flatMap
+import arrow.core.left
+import arrow.core.raise.either
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
+import com.tangem.domain.polymarket.approval.PolymarketApprovalCalls
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
@@ -10,39 +14,49 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketSignedOnboarding
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.polymarket.signing.PolymarketApprovalsPayload
+import com.tangem.domain.polymarket.signing.PolymarketClobAuthData
+import com.tangem.domain.polymarket.signing.PolymarketRelayerDeadline
+import com.tangem.domain.polymarket.signing.PolymarketSignRequest
+import com.tangem.domain.polymarket.signing.PolymarketSigningSession
+import com.tangem.domain.polymarket.signing.PolymarketTypedPayload
 import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
 import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
-import com.tangem.domain.polymarket.usecase.SignOnboardingDigestsUseCase
 import com.tangem.domain.polymarket.usecase.SubmitApprovalsUseCase
 import com.tangem.domain.polymarket.usecase.SyncBalanceAllowanceUseCase
 import com.tangem.domain.polymarket.usecase.isRetryable
+import com.tangem.domain.polymarket.usecase.toOnboardingError
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.withTimeoutOrNull
+import java.math.BigInteger
 
 /**
  * Drives a Polymarket onboarding run to completion, resuming from the status the backend currently reports.
- * The card is used for at most one signing session per run: this use case never asks for a second signature,
- * it reports a retryable failure and lets the caller start a new run.
+ * The user is asked once per run — deriving the owner key and signing share one session; this use case never
+ * asks for a second signature, it reports a retryable failure and lets the caller start a new run.
  *
  * The run has no deadline of its own. While the backend reports a non-terminal status the poll continues; the
  * only way it stops waiting is a terminal status, a non-network error, or repeated network failures.
  */
 @Suppress("LongParameterList")
 class RunPolymarketOnboardingInteractor(
+    private val signingSession: PolymarketSigningSession,
     private val deriveAddresses: DerivePolymarketAddressesUseCase,
     private val getWalletStatus: GetPolymarketWalletStatusUseCase,
     private val getRelayerNonce: GetPolymarketRelayerNonceUseCase,
-    private val signOnboardingDigests: SignOnboardingDigestsUseCase,
     private val deployDepositWallet: DeployDepositWalletUseCase,
     private val getApiCredentials: GetPolymarketApiCredentialsUseCase,
     private val deriveApiCredentials: DeriveApiCredentialsUseCase,
@@ -50,12 +64,26 @@ class RunPolymarketOnboardingInteractor(
     private val syncBalanceAllowance: SyncBalanceAllowanceUseCase,
     private val polymarketOnboardedStore: PolymarketOnboardedStore,
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
+    private val nowMillis: () -> Long = System::currentTimeMillis,
 ) {
 
     operator fun invoke(userWalletId: UserWalletId): Flow<PolymarketOnboardingProgress> = flow {
-        emit(PolymarketOnboardingProgress.Deriving)
-        val addresses = step { deriveAddresses(userWalletId) } ?: return@flow
-        runOnboarding(addresses)
+        emit(PolymarketOnboardingProgress.AwaitingSignature)
+        val credentials = getApiCredentials(userWalletId)
+        val wasOnboarded = polymarketOnboardedStore.isOnboardedSync(userWalletId)
+        val session = signingSession
+            .run(userWalletId) { ownerAddress ->
+                prepareInSession(
+                    userWalletId = userWalletId,
+                    ownerAddress = ownerAddress,
+                    credentials = credentials,
+                    isFreshAccountLikely = credentials == null && !wasOnboarded,
+                )
+            }
+            .mapLeft { it.toOnboardingError() }
+        val outcome = step { session.flatMap { signed -> signed.value.map { it.toOutcome(signed.signatures) } } }
+            ?: return@flow
+        continueAfterSession(outcome = outcome, wasOnboarded = wasOnboarded)
     }.onEach { progress -> logProgress(progress) }
         .catch { throwable ->
             TangemLogger.e("Onboarding run failed", throwable)
@@ -70,22 +98,122 @@ class RunPolymarketOnboardingInteractor(
         }
     }
 
-    private suspend fun FlowCollector<PolymarketOnboardingProgress>.runOnboarding(addresses: PolymarketAddresses) {
-        val entry = (step { getWalletStatus(addresses) } ?: return).status
-        val credentials = getApiCredentials(addresses.userWalletId)
+    private suspend fun prepareInSession(
+        userWalletId: UserWalletId,
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials?,
+        isFreshAccountLikely: Boolean,
+    ): PolymarketSignRequest<Either<PolymarketOnboardingError, Prepared>> {
+        val prepared = prepare(
+            userWalletId = userWalletId,
+            ownerAddress = ownerAddress,
+            credentials = credentials,
+            isFreshAccountLikely = isFreshAccountLikely,
+        )
+        val payloads = (prepared.getOrNull() as? Prepared.ToSign)?.payloads.orEmpty()
+        return PolymarketSignRequest(value = prepared, payloads = payloads)
+    }
 
-        if (!entry.owesApprovals() && credentials != null) {
-            awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = entry) ?: return
-            finish(addresses, credentials, isNewAccount = entry != PolymarketWalletStatus.READY_TO_TRADE)
-            return
+    private suspend fun prepare(
+        userWalletId: UserWalletId,
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials?,
+        isFreshAccountLikely: Boolean,
+    ): Either<PolymarketOnboardingError, Prepared> = either {
+        val addresses = deriveAddresses.fromOwner(userWalletId, ownerAddress).bind()
+        val (entry, nonce) = withTimeoutOrNull(NETWORK_IN_SESSION_TIMEOUT_MILLIS) {
+            readBeforeSigning(addresses = addresses, isNonceReadAhead = isFreshAccountLikely)
+        }
+            .let { it ?: PolymarketOnboardingError.Network.left() }
+            .bind()
+
+        if (credentials != null && !entry.owesApprovals()) {
+            return@either Prepared.NothingToSign(addresses = addresses, entry = entry, credentials = credentials)
         }
 
-        val nonce = step { getRelayerNonce(addresses) } ?: return
+        val now = nowMillis()
+        val clobAuth = PolymarketClobAuthData(timestamp = (now / MILLIS_IN_SECOND).toString())
+            .takeIf { credentials == null }
+        val approvals = nonce?.let { relayerNonce ->
+            PolymarketApprovalsPayload(
+                depositWalletAddress = addresses.depositWalletAddress,
+                nonce = relayerNonce.toString(),
+                deadline = PolymarketRelayerDeadline.fromNow(now),
+                calls = PolymarketApprovalCalls.build(),
+            )
+        }
+        Prepared.ToSign(
+            addresses = addresses,
+            entry = entry,
+            credentials = credentials,
+            clobAuth = clobAuth,
+            approvals = approvals,
+        )
+    }
 
-        emit(PolymarketOnboardingProgress.AwaitingSignature)
-        val signed = step { signOnboardingDigests(addresses, nonce) } ?: return
+    private fun Prepared.toOutcome(signatures: List<String>): SessionOutcome = when (this) {
+        is Prepared.NothingToSign -> SessionOutcome.NothingToSign(
+            addresses = addresses,
+            entry = entry,
+            credentials = credentials,
+        )
+        is Prepared.ToSign -> {
+            val ordered = signatures.iterator()
+            SessionOutcome.Signed(
+                addresses = addresses,
+                entry = entry,
+                credentials = credentials,
+                signed = PolymarketSignedOnboarding(
+                    clobAuth = clobAuth?.let { data ->
+                        PolymarketSignedOnboarding.SignedClobAuth(ordered.next(), data.timestamp)
+                    },
+                    approvals = approvals?.let { batch ->
+                        PolymarketSignedOnboarding.SignedApprovals(batch, ordered.next())
+                    },
+                ),
+            )
+        }
+    }
 
-        settleWallet(addresses = addresses, entry = entry, signed = signed, credentials = credentials)
+    private suspend fun readBeforeSigning(
+        addresses: PolymarketAddresses,
+        isNonceReadAhead: Boolean,
+    ): Either<PolymarketOnboardingError, Pair<PolymarketWalletStatus, BigInteger?>> = coroutineScope {
+        val nonceAhead = if (isNonceReadAhead) async { getRelayerNonce(addresses) } else null
+        try {
+            either {
+                val entry = getWalletStatus(addresses).bind().status
+                val nonce = if (entry.owesApprovals()) {
+                    (nonceAhead?.await() ?: getRelayerNonce(addresses)).bind()
+                } else {
+                    null
+                }
+                entry to nonce
+            }
+        } finally {
+            nonceAhead?.cancel()
+        }
+    }
+
+    private suspend fun FlowCollector<PolymarketOnboardingProgress>.continueAfterSession(
+        outcome: SessionOutcome,
+        wasOnboarded: Boolean,
+    ) {
+        val isNewAccount = outcome.entry != PolymarketWalletStatus.READY_TO_TRADE && !wasOnboarded
+        when (outcome) {
+            is SessionOutcome.NothingToSign -> {
+                val (addresses, entry, credentials) = outcome
+                awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = entry) ?: return
+                finish(addresses, credentials, isNewAccount = isNewAccount)
+            }
+            is SessionOutcome.Signed -> settleWallet(
+                addresses = outcome.addresses,
+                entry = outcome.entry,
+                signed = outcome.signed,
+                credentials = outcome.credentials,
+                isNewAccount = isNewAccount,
+            )
+        }
     }
 
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.settleWallet(
@@ -93,6 +221,7 @@ class RunPolymarketOnboardingInteractor(
         entry: PolymarketWalletStatus,
         signed: PolymarketSignedOnboarding,
         credentials: PolymarketApiCredentials?,
+        isNewAccount: Boolean,
     ) {
         var current = entry
         if (current.needsDeploy()) {
@@ -101,11 +230,12 @@ class RunPolymarketOnboardingInteractor(
         }
 
         val activeCredentials = credentials ?: step {
+            val clobAuth = requireNotNull(signed.clobAuth)
             deriveApiCredentials(
                 userWalletId = addresses.userWalletId,
                 ownerAddress = addresses.ownerAddress,
-                l1Signature = signed.l1Signature,
-                timestamp = signed.clobAuthTimestamp,
+                l1Signature = clobAuth.l1Signature,
+                timestamp = clobAuth.timestamp,
             )
         } ?: return
 
@@ -113,12 +243,12 @@ class RunPolymarketOnboardingInteractor(
             if (!current.isDeployComplete()) {
                 current = awaitStatus(addresses, PolymarketWalletStatus.DEPLOYED, from = current) ?: return
             }
-            current = step { submitApprovals(addresses, signed) } ?: return
+            current = step { submitApprovals(addresses, requireNotNull(signed.approvals)) } ?: return
             if (reportFailure(current)) return
         }
 
         awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = current) ?: return
-        finish(addresses, activeCredentials, isNewAccount = entry != PolymarketWalletStatus.READY_TO_TRADE)
+        finish(addresses, activeCredentials, isNewAccount = isNewAccount)
     }
 
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.awaitStatus(
@@ -230,8 +360,52 @@ class RunPolymarketOnboardingInteractor(
         else -> null
     }
 
+    private sealed interface Prepared {
+
+        data class NothingToSign(
+            val addresses: PolymarketAddresses,
+            val entry: PolymarketWalletStatus,
+            val credentials: PolymarketApiCredentials,
+        ) : Prepared
+
+        data class ToSign(
+            val addresses: PolymarketAddresses,
+            val entry: PolymarketWalletStatus,
+            val credentials: PolymarketApiCredentials?,
+            val clobAuth: PolymarketClobAuthData?,
+            val approvals: PolymarketApprovalsPayload?,
+        ) : Prepared {
+
+            val payloads: List<PolymarketTypedPayload>
+                get() = listOfNotNull(
+                    clobAuth?.let(PolymarketTypedPayload::ClobAuth),
+                    approvals?.let(PolymarketTypedPayload::RelayedBatch),
+                )
+        }
+    }
+
+    private sealed interface SessionOutcome {
+
+        val entry: PolymarketWalletStatus
+
+        data class NothingToSign(
+            val addresses: PolymarketAddresses,
+            override val entry: PolymarketWalletStatus,
+            val credentials: PolymarketApiCredentials,
+        ) : SessionOutcome
+
+        data class Signed(
+            val addresses: PolymarketAddresses,
+            override val entry: PolymarketWalletStatus,
+            val credentials: PolymarketApiCredentials?,
+            val signed: PolymarketSignedOnboarding,
+        ) : SessionOutcome
+    }
+
     private companion object {
         const val POLL_INTERVAL_MILLIS = 2_500L
         const val MAX_CONSECUTIVE_POLL_FAILURES = 3
+        const val MILLIS_IN_SECOND = 1000L
+        const val NETWORK_IN_SESSION_TIMEOUT_MILLIS = 10_000L
     }
 }

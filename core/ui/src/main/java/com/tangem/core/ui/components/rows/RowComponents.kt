@@ -7,6 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.isNullOrEmpty
 import com.tangem.core.ui.extensions.resolveReference
@@ -16,7 +17,7 @@ import com.tangem.core.ui.test.ManageTokensScreenTestTags
 @Composable
 inline fun RowContentContainer(
     modifier: Modifier = Modifier,
-    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(8.dp),
     icon: @Composable BoxScope.() -> Unit,
     text: @Composable BoxScope.() -> Unit,
     action: @Composable BoxScope.() -> Unit,
@@ -34,15 +35,15 @@ inline fun RowContentContainer(
         Box(
             modifier = Modifier
                 .weight(1f)
-                .heightIn(min = TangemTheme.dimens.size22)
+                .heightIn(min = 22.dp)
                 .testTag(ManageTokensScreenTestTags.NETWORK_NAME),
             contentAlignment = Alignment.CenterStart,
             content = text,
         )
         Box(
             modifier = Modifier
-                .requiredWidthIn(max = TangemTheme.dimens.size80)
-                .heightIn(min = TangemTheme.dimens.size24)
+                .requiredWidthIn(max = 80.dp)
+                .heightIn(min = 24.dp)
                 .testTag(ManageTokensScreenTestTags.SWITCH),
             contentAlignment = Alignment.CenterEnd,
             content = action,
@@ -63,11 +64,11 @@ fun RowText(
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
                 modifier = Modifier.weight(weight = 10f, fill = false),

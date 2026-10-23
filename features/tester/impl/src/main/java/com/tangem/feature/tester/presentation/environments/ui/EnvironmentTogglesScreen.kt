@@ -95,9 +95,9 @@ private fun EnvironmentConfigBlock(
                 style = TangemTheme.typography.h3,
             )
 
-            AnimatedContent(targetState = uiModel.url, label = "") {
+            AnimatedContent(targetState = uiModel.url, label = "") { url ->
                 Text(
-                    text = it,
+                    text = url,
                     color = TangemTheme.colors.text.accent,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,

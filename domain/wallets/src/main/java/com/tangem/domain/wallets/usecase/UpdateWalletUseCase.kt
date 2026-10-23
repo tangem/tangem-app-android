@@ -29,10 +29,10 @@ class UpdateWalletUseCase(
             )
         val updatedWallet = update(userWallet)
         return userWalletsListRepository.saveWithoutLock(updatedWallet, canOverride = true)
-            .mapLeft {
-                when (it) {
+            .mapLeft { error ->
+                when (error) {
                     is SaveWalletError.DataError -> DataError(
-                        IllegalStateException("Failed to update wallet: ${it.messageId}"),
+                        IllegalStateException("Failed to update wallet: ${error.messageId}"),
                     )
                     is SaveWalletError.WalletAlreadySaved -> UpdateWalletError.NameAlreadyExists
                 }

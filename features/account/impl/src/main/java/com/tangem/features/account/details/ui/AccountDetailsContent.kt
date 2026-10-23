@@ -113,18 +113,18 @@ private fun ArchiveAccountRow(state: AccountDetailsUM.ArchiveMode.Available) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius12))
+            .clip(RoundedCornerShape(12.dp))
             .background(TangemTheme.colors3.bg.secondary)
             .clickable(enabled = !state.isLoading, onClick = state.onArchiveAccountClick)
-            .padding(all = TangemTheme.dimens.spacing12)
+            .padding(all = 12.dp)
             .testTag(AccountDetailsScreenTestTags.ARCHIVE_ACCOUNT_BUTTON),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (state.isLoading) {
             CircularProgressIndicator(
                 color = TangemTheme.colors3.text.tertiary,
-                modifier = Modifier.size(TangemTheme.dimens.size24),
+                modifier = Modifier.size(24.dp),
             )
             Text(
                 text = stringResourceSafe(R.string.account_details_archiving),
@@ -151,7 +151,7 @@ private fun AccountActionsBlock(state: AccountDetailsUM) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius12))
+            .clip(RoundedCornerShape(12.dp))
             .background(TangemTheme.colors3.bg.secondary),
     ) {
         val members = state.members
@@ -172,10 +172,10 @@ private fun MembersRow(state: AccountDetailsUM.MembersRowUM) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = state.onClick)
-            .padding(all = TangemTheme.dimens.spacing12)
+            .padding(all = 12.dp)
             .testTag(AccountDetailsScreenTestTags.MEMBERS_BUTTON),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Icon(
             imageVector = ImageVector.vectorResource(id = R.drawable.ic_user_24),
@@ -206,10 +206,10 @@ private fun ManageTokensRow(state: AccountDetailsUM) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = state.onManageTokensClick)
-            .padding(all = TangemTheme.dimens.spacing12)
+            .padding(all = 12.dp)
             .testTag(AccountDetailsScreenTestTags.MANAGE_TOKENS_BUTTON),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Icon(
             imageVector = ImageVector.vectorResource(id = R.drawable.ic_group_24),
@@ -259,13 +259,13 @@ private fun AccountRow(state: AccountDetailsUM) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius12))
+            .clip(RoundedCornerShape(12.dp))
             .background(TangemTheme.colors3.bg.secondary)
             .then(if (onEditClick != null) Modifier.clickable(onClick = onEditClick) else Modifier)
-            .padding(all = TangemTheme.dimens.spacing12)
+            .padding(all = 12.dp)
             .testTag(AccountDetailsScreenTestTags.EDIT_ACCOUNT_BUTTON),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         AccountRowLegacy(
             title = state.accountName,

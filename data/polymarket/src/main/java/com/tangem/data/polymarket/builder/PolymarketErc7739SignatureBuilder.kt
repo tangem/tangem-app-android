@@ -2,6 +2,7 @@ package com.tangem.data.polymarket.builder
 
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
 import com.tangem.domain.polymarket.model.PredictionOrder
 import com.tangem.utils.extensions.addHexPrefix
 import com.tangem.utils.extensions.toHexString
@@ -21,7 +22,7 @@ internal object PolymarketErc7739SignatureBuilder {
 
     private val EIP191_PREFIX = byteArrayOf(0x19, 0x01)
 
-    fun digest(order: PredictionOrder, isNegRisk: Boolean, depositWalletAddress: String): ByteArray {
+    fun digest(order: PredictionOrder, domain: PolymarketExchangeDomain, depositWalletAddress: String): ByteArray {
         val parent = concat(
             typedDataSignTypeHash(),
             PolymarketOrderTypedDataBuilder.hashStruct(order),
@@ -34,18 +35,18 @@ internal object PolymarketErc7739SignatureBuilder {
 
         return concat(
             EIP191_PREFIX,
-            PolymarketOrderTypedDataBuilder.domainSeparator(isNegRisk),
+            PolymarketOrderTypedDataBuilder.domainSeparator(domain),
             parent,
         ).toKeccak()
     }
 
-    fun wrap(innerSignature: String, order: PredictionOrder, isNegRisk: Boolean): String {
+    fun wrap(innerSignature: String, order: PredictionOrder, domain: PolymarketExchangeDomain): String {
         val description = PolymarketOrderTypedDataBuilder.orderTypeString().toByteArray()
 
         return (
             innerSignature.removePrefix(PolymarketContracts.HEX_PREFIX).lowercase() +
                 concat(
-                    PolymarketOrderTypedDataBuilder.domainSeparator(isNegRisk),
+                    PolymarketOrderTypedDataBuilder.domainSeparator(domain),
                     PolymarketOrderTypedDataBuilder.hashStruct(order),
                     description,
                     lengthSuffix(description.size),

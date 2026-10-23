@@ -112,6 +112,45 @@ internal class OrderRequestSerializationTest {
             expectedType = "ACCOUNT_ISSUE_BANKING_RAIN",
             expectedKeys = setOf("deposit_address", "signature", "specification_name"),
         ),
+        EncodeModel(
+            data = OrderRequest.Onboarding(
+                customerWalletAddress = WALLET,
+                tariffPlanTransition = OrderRequest.OnboardingTariffPlanTransition(
+                    targetTariffPlanId = "plan-plus",
+                    tariffPlanTransitionType = "UPGRADE",
+                ),
+                accountIssueBanking = OrderRequest.OnboardingAccountIssueBanking(
+                    depositAddress = "0xdeposit",
+                    signature = "0xsig",
+                ),
+            ),
+            expectedType = "ONBOARDING_RAIN",
+            expectedKeys = setOf("customer_wallet_address", "tariff_plan_transition", "account_issue_banking"),
+        ),
+        EncodeModel(
+            data = OrderRequest.Onboarding(
+                customerWalletAddress = WALLET,
+                tariffPlanTransition = OrderRequest.OnboardingTariffPlanTransition(
+                    targetTariffPlanId = "plan-plus",
+                    tariffPlanTransitionType = "ACTIVATION",
+                ),
+                accountIssueBanking = null,
+            ),
+            expectedType = "ONBOARDING_RAIN",
+            expectedKeys = setOf("customer_wallet_address", "tariff_plan_transition"),
+        ),
+        EncodeModel(
+            data = OrderRequest.Onboarding(
+                customerWalletAddress = WALLET,
+                tariffPlanTransition = null,
+                accountIssueBanking = OrderRequest.OnboardingAccountIssueBanking(
+                    depositAddress = "0xdeposit",
+                    signature = "0xsig",
+                ),
+            ),
+            expectedType = "ONBOARDING_RAIN",
+            expectedKeys = setOf("customer_wallet_address", "account_issue_banking"),
+        ),
     )
 
     internal data class EncodeModel(

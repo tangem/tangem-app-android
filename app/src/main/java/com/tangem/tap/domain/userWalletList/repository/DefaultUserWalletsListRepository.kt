@@ -585,7 +585,7 @@ internal class DefaultUserWalletsListRepository(
     ): Either<UnlockWalletError, UserWalletEncryptionKey?> {
         val attemptRequest = HotWalletPasswordRequester.AttemptRequest(
             hotWalletId = hotWalletId,
-            authMode = true, // In auth mode user wallet can be deleted after 30 failed attempts
+            isAuthMode = true, // In auth mode user wallet can be deleted after 30 failed attempts
             hasBiometry = hasBiometry(),
         )
         return when (val result = passwordRequester.requestPassword(attemptRequest)) {

@@ -14,6 +14,7 @@ import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.domain.polymarket.model.findOutcome
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.model.PredictionPriceError
@@ -125,6 +126,8 @@ internal class PlacePredictionAmountModel @Inject constructor(
     private var isNegRiskMarket: Boolean? = null
 
     private var positionId: PolymarketPositionId? = null
+    private var tradedAssetId: String = params.assetId
+    private var isTradedAssetResolved = params is PlacePredictionComponent.Params.Sell
 
     private var isResumed = false
 
@@ -278,10 +281,12 @@ internal class PlacePredictionAmountModel @Inject constructor(
             } ?: return@launch
 
             val market = event.markets.firstOrNull { it.id == params.marketId } ?: return@launch
-            val outcome = market.outcomes.firstOrNull { it.assetId == params.assetId } ?: return@launch
+            val outcome = market.findOutcome(params.assetId) ?: return@launch
 
             isNegRiskMarket = market.isNegRisk
-            positionId = market.conditionId?.let { PolymarketPositionId(conditionId = it, assetId = params.assetId) }
+            tradedAssetId = outcome.assetId
+            isTradedAssetResolved = true
+            positionId = market.conditionId?.let { PolymarketPositionId(conditionId = it, assetId = outcome.assetId) }
 
             uiState.update(SetMarketTransformer(market = market, outcome = outcome))
 
@@ -347,7 +352,8 @@ internal class PlacePredictionAmountModel @Inject constructor(
     private fun restartQuoteLoop(withDebounce: Boolean) {
         quoteJobHolder.cancel()
 
-        if (!isResumed || !uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
+        if (!isResumed || !isTradedAssetResolved) return
+        if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
 
         modelScope.launch {
             if (withDebounce && uiState.value.isQuotable()) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
@@ -367,7 +373,7 @@ internal class PlacePredictionAmountModel @Inject constructor(
 
     private suspend fun requestPrice(): Boolean {
         val result = withContext(dispatchers.default) {
-            getPredictionPriceUseCase(assetId = params.assetId, side = params.side.opposite())
+            getPredictionPriceUseCase(assetId = tradedAssetId, side = params.side.opposite())
         }
 
         return result.fold(
@@ -408,7 +414,7 @@ internal class PlacePredictionAmountModel @Inject constructor(
             getPredictionOrderQuoteUseCase(
                 request = PredictionOrderQuoteRequest(
                     marketId = params.marketId,
-                    assetId = params.assetId,
+                    assetId = tradedAssetId,
                     side = params.side,
                     amount = amount,
                     slippagePercent = state.slippage.percent,
@@ -417,7 +423,11 @@ internal class PlacePredictionAmountModel @Inject constructor(
         }
 
         uiState.update(
-            SetQuoteResultTransformer(result = result, receivedAtMillis = System.currentTimeMillis()),
+            SetQuoteResultTransformer(
+                result = result,
+                receivedAtMillis = System.currentTimeMillis(),
+                assetId = tradedAssetId,
+            ),
         )
     }
 

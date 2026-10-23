@@ -17,7 +17,6 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
@@ -68,6 +67,7 @@ import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -75,18 +75,22 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isHotWallet
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionWithdrawalTracker
 import com.tangem.domain.polymarket.interactor.PredictionWithdrawalFailure
 import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
+import com.tangem.domain.polymarket.model.PolymarketDepositAsset
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionWithdrawDestination
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionDepositCurrencyStatusesUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
@@ -106,7 +110,7 @@ import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.models.TransactionFeeExtended
-import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
+import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.analytics.SwapQuotePerformanceTracker
@@ -142,6 +146,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelector
 import com.tangem.features.send.impl.R
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.filterIf
@@ -165,7 +170,6 @@ internal class SwapModel @Inject constructor(
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     chooseTokenBridgeFactory: ChooseTokenBridge.Factory,
     private val router: Router,
-    private val appRouter: AppRouter,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsErrorEventHandler: AnalyticsErrorHandler,
@@ -180,6 +184,8 @@ internal class SwapModel @Inject constructor(
     private val shouldShowStoriesInteractor: ShouldShowStoriesInteractor,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val backupErrorWarningSender: BackupErrorWarningSender,
+    private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
+    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val swapInteractor: SwapInteractor,
     private val swapTransferInteractor: SwapTransferInteractor,
     private val swapTransferStateBuilder: SwapTransferStateBuilder,
@@ -188,7 +194,7 @@ internal class SwapModel @Inject constructor(
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val getPaymentAccountCryptoCurrencyStatusUseCase: GetPaymentAccountCryptoCurrencyStatusUseCase,
     private val tangemPayWithdrawWithSwapUseCase: TangemPayWithdrawWithSwapUseCase,
-    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    private val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
     private val appsFlyerRepository: AppsFlyerRepository,
@@ -204,7 +210,7 @@ internal class SwapModel @Inject constructor(
     private val predictionFundingWindow: PredictionFundingWindow,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val allowPermissionsHandler: AllowPermissionsHandler,
-    swapFeatureToggles: SwapFeatureToggles,
+    private val swapFeatureToggles: SwapFeatureToggles,
     private val getSwapUiModeUseCase: GetSwapUiModeUseCase,
     private val setSwapUiModeUseCase: SetSwapUiModeUseCase,
     private val calculateAmountUseCase: CalculateAmountUseCase,
@@ -212,6 +218,7 @@ internal class SwapModel @Inject constructor(
     private val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase,
     private val recordTokenTransferFromSwapUseCase: RecordTokenTransferFromSwapUseCase,
     private val predictionTopUpLimitsResolver: PredictionTopUpLimitsResolver,
+    private val getPredictionDepositCurrencyStatusesUseCase: GetPredictionDepositCurrencyStatusesUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -236,6 +243,9 @@ internal class SwapModel @Inject constructor(
 
     private val isCollectiblesTopUpFlow: Boolean
         get() = accountFlow is AccountFlow.CollectiblesTopUp
+
+    private val isMoneyTopUpFlow: Boolean
+        get() = accountFlow is AccountFlow.MoneyTopUp
 
     val isGaslessWithdrawal: Boolean
         get() = isTangemPayWithdrawal() || isPredictionWithdrawFlow
@@ -302,9 +312,7 @@ internal class SwapModel @Inject constructor(
         isBalanceHiddenProvider = Provider { isBalanceHidden },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isAccountsModeProvider = Provider { isAccountsMode },
-        isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
-        appRouter = appRouter,
-        isChooseTokenPulseEnabled = swapFeatureToggles.isChooseTokenPulseEnabled,
+        isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
         isCustomSlippageEnabled = swapFeatureToggles.isCustomSlippageEnabled,
         predictionTopUpLimitsProvider = Provider { predictionTopUpLimits },
     )
@@ -528,7 +536,7 @@ internal class SwapModel @Inject constructor(
             currency = fromCurrency,
             screenSource = ScreensSources.Swap,
         ) ?: return false
-        appRouter.push(route)
+        router.push(route)
         return true
     }
 
@@ -590,7 +598,9 @@ internal class SwapModel @Inject constructor(
         modelScope.launch(dispatchers.default) {
             isAccountsMode = isAccountsModeEnabledUseCase.invokeSync() ||
                 isPredictionTopUpFlow ||
-                isPredictionWithdrawFlow
+                isPredictionWithdrawFlow ||
+                isCollectiblesTopUpFlow ||
+                isMoneyTopUpFlow
 
             val (resolvedFromCurrencyStatus, resolvedToCurrencyStatus) = initialCurrenciesResolver(
                 userWalletId = params.userWalletId,
@@ -608,11 +618,7 @@ internal class SwapModel @Inject constructor(
             preselectedFromCurrency = fromSwapCurrencyStatus?.currency
             preselectedToCurrency = toSwapCurrencyStatus?.currency
 
-            if (isPredictionTopUpFlow) {
-                predictionTopUpLimits = toSwapCurrencyStatus?.currency?.let { receiveCurrency ->
-                    predictionTopUpLimitsResolver.resolve(params.userWalletId, receiveCurrency)
-                }
-            }
+            predictionTopUpLimits = resolvePredictionTopUpLimits(receiveCurrency = toSwapCurrencyStatus?.currency)
 
             analyticsEventHandler.send(
                 SwapEvents.SwapScreenOpened(
@@ -740,6 +746,12 @@ internal class SwapModel @Inject constructor(
             selectedCurrency = selectedCurrencyStatus.currency,
         )
 
+        val receiveLimits = if (toSwapCurrencyStatus?.currency == dataState.toSwapCurrencyStatus?.currency) {
+            predictionTopUpLimits
+        } else {
+            resolvePredictionTopUpLimits(receiveCurrency = toSwapCurrencyStatus?.currency)
+        }
+        predictionTopUpLimits = receiveLimits
         dataState = if (isFromDirection) {
             // Reset amount if from token is changed
             lastAmount.value = INITIAL_AMOUNT
@@ -779,11 +791,11 @@ internal class SwapModel @Inject constructor(
 
         router.pop()
 
+        subscribeToCoinBalanceUpdatesIfNeeded()
+
         if (isFromDirection && fromSwapCurrencyStatus != null) {
             updateFeePaidCryptoCurrencyFor(fromSwapCurrencyStatus)
         }
-
-        subscribeToCoinBalanceUpdatesIfNeeded()
 
         // Check swap availability if there is pair
         if (fromSwapCurrencyStatus != null && toSwapCurrencyStatus != null) {
@@ -1399,8 +1411,18 @@ internal class SwapModel @Inject constructor(
             swapFee = swapFee,
             feeError = feeSelectorRepository.state.value as? FeeSelectorUM.Error,
             isHighNetworkFee = isHighNetworkFee(swapFee),
+            isFeeCurrencyInStack = isFeeCurrencyInStack(state, dataState.feePaidCryptoCurrency),
             slippage = dataState.slippage,
         )
+    }
+
+    private suspend fun isFeeCurrencyInStack(
+        quoteModel: SwapState.QuotesLoadedState,
+        feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
+    ): Boolean {
+        val feeCurrency = feeCryptoCurrencyStatus?.currency ?: return false
+        val userWalletId = quoteModel.fromTokenInfo.swapCurrencyStatus.userWalletId
+        return router.contains(AppRoute.CurrencyDetails(userWalletId = userWalletId, currency = feeCurrency))
     }
 
     private suspend fun isHighNetworkFee(swapFee: SwapFee?): Boolean {
@@ -1667,7 +1689,10 @@ internal class SwapModel @Inject constructor(
 
         return if (consideredProviders.isNotEmpty()) {
             val successLoadedData = consideredProviders.getLastLoadedSuccessStates()
-            val bestQuotesProvider = SwapProviderResolver.findBest(states = successLoadedData)
+            val bestQuotesProvider = SwapProviderResolver.findBest(
+                states = successLoadedData,
+                isOverallBestPriceEnabled = swapFeatureToggles.isOverallBestPriceEnabled,
+            )
             val currentSelected = dataState.selectedProvider
             if (currentSelected != null && consideredProviders.keys.contains(currentSelected)) {
                 // logic for always choose best if already selected provider
@@ -2178,6 +2203,32 @@ internal class SwapModel @Inject constructor(
         )
     }
 
+    private fun predictionDepositStatusUpdates(depositStatus: SwapCurrencyStatus): Flow<CryptoCurrencyStatus> {
+        val networkAddress = depositStatus.status.value.networkAddress
+        val depositAddress = networkAddress?.defaultAddress?.value ?: return emptyFlow()
+
+        return singleAccountStatusSupplier(SingleAccountStatusProducer.Params(depositStatus.account.accountId))
+            .mapNotNull { accountStatus ->
+                val predictionValue = (accountStatus as? AccountStatus.Prediction)?.value
+                val active = predictionValue as? PredictionAccountStatusValue.Active ?: return@mapNotNull null
+
+                active.depositStatus(currency = depositStatus.currency, address = depositAddress)
+            }
+    }
+
+    private fun collectiblesVaultStatusUpdates(vaultStatus: SwapCurrencyStatus): Flow<CryptoCurrencyStatus> {
+        return singleAccountStatusSupplier(SingleAccountStatusProducer.Params(vaultStatus.account.accountId))
+            .mapNotNull { accountStatus -> (accountStatus as? AccountStatus.Collectibles)?.value?.cryptoCurrencyStatus }
+    }
+
+    private fun moneyAccountStatusUpdates(currencyStatus: SwapCurrencyStatus): Flow<CryptoCurrencyStatus> {
+        return singleAccountStatusSupplier(SingleAccountStatusProducer.Params(currencyStatus.account.accountId))
+            .mapNotNull { accountStatus ->
+                val value = (accountStatus as? AccountStatus.Money)?.value
+                (value as? MoneyAccountStatusValue.Account)?.cryptoCurrencyStatus
+            }
+    }
+
     private fun subscribeToCoinBalanceUpdates(swapCurrencyStatus: SwapCurrencyStatus, isFromCurrency: Boolean) {
         val swapCurrency = swapCurrencyStatus.currency
 
@@ -2190,17 +2241,10 @@ internal class SwapModel @Inject constructor(
                 userWalletId = swapCurrencyStatus.userWalletId,
                 cryptoCurrency = swapCurrency,
             ).map { (_, status) -> status }
-            // Virtual account isn't a swap source in the MVP (withdrawal reuses the send flow)
-            is Account.Money -> emptyFlow()
-            is Account.Prediction -> singleAccountStatusSupplier(
-                SingleAccountStatusProducer.Params(swapCurrencyStatus.account.accountId),
-            ).mapNotNull { accountStatus ->
-                val predictionValue = (accountStatus as? AccountStatus.Prediction)?.value
-                (predictionValue as? PredictionAccountStatusValue.Active)?.cryptoCurrencyStatus
-            }
-            // Collectibles account holds no spendable currencies of its own — its funds live in the gacha vault
-            is Account.Collectibles -> emptyFlow()
-            // A joint account isn't a swap source either — spending from a Safe is a future co-signed operation
+            is Account.Money -> moneyAccountStatusUpdates(swapCurrencyStatus)
+            is Account.Prediction -> predictionDepositStatusUpdates(swapCurrencyStatus)
+            is Account.Collectibles -> collectiblesVaultStatusUpdates(swapCurrencyStatus)
+            // A joint account isn't a swap source — spending from a Safe is a future co-signed operation
             is Account.Joint -> emptyFlow()
         }.distinctUntilChanged { old, new -> old.value.amount == new.value.amount } // Check only balance changes
             .onEach { currencyStatus ->
@@ -2674,7 +2718,7 @@ internal class SwapModel @Inject constructor(
                     currency = cryptoCurrency,
                 )
 
-                appRouter.push(route)
+                router.push(route)
             },
             onRetryClick = {
                 startLoadingQuotesFromLastState()
@@ -3034,7 +3078,7 @@ internal class SwapModel @Inject constructor(
             toSwapCurrencyStatus = toSwapCurrencyStatus,
             requirement = requirement,
             onAssociateClick = {
-                appRouter.push(
+                router.push(
                     AppRoute.CurrencyDetails(
                         userWalletId = toSwapCurrencyStatus.userWalletId,
                         currency = toSwapCurrencyStatus.currency,
@@ -3071,17 +3115,25 @@ internal class SwapModel @Inject constructor(
         )
     }
 
+    private suspend fun resolveAccountTopUpDestination(
+        from: SwapCurrencyStatus,
+        currentTo: SwapCurrencyStatus?,
+    ): SwapCurrencyStatus? = when {
+        currentTo == null -> null
+        isAccountTopUp -> resolvePaymentTopUpDestination(from = from, currentTo = currentTo)
+        isPredictionTopUpFlow -> resolvePredictionTopUpDestination(from = from, currentTo = currentTo)
+        else -> currentTo
+    }
+
     /**
      * Keeps the anchored TO in step with the source the user picked: an account currency identical to it makes
      * the operation a plain transfer, another account currency on the same network keeps the swap within that
      * network. Falls back to the currently anchored currency (the account's default) for anything else.
      */
-    private suspend fun resolveAccountTopUpDestination(
+    private suspend fun resolvePaymentTopUpDestination(
         from: SwapCurrencyStatus,
-        currentTo: SwapCurrencyStatus?,
-    ): SwapCurrencyStatus? {
-        if (!isAccountTopUp || currentTo == null) return currentTo
-
+        currentTo: SwapCurrencyStatus,
+    ): SwapCurrencyStatus {
         val accountCurrencies = accountUnderlyingCurrencies.get(params.userWalletId)
         if (accountCurrencies.size < 2) return currentTo
 
@@ -3092,10 +3144,29 @@ internal class SwapModel @Inject constructor(
         return if (resolved.currency.id == currentTo.currency.id) currentTo else currentTo.copy(status = resolved)
     }
 
+    private suspend fun resolvePredictionTopUpDestination(
+        from: SwapCurrencyStatus,
+        currentTo: SwapCurrencyStatus,
+    ): SwapCurrencyStatus {
+        val depositCurrencies = getPredictionDepositCurrencyStatusesUseCase(params.userWalletId)
+        val sourceAsset = PolymarketDepositAsset.CATALOG.firstOrNull { it.isAssetOf(from.currency) }
+        val sameToken = sourceAsset?.let { asset -> depositCurrencies.firstOrNull { asset.isAssetOf(it.currency) } }
+        val sameNetwork = depositCurrencies.firstOrNull { it.currency.network.rawId == from.currency.network.rawId }
+        val resolved = sameToken ?: sameNetwork ?: depositCurrencies.firstOrNull() ?: return currentTo
+
+        return if (resolved.currency == currentTo.currency) currentTo else currentTo.copy(status = resolved)
+    }
+
+    private suspend fun resolvePredictionTopUpLimits(receiveCurrency: CryptoCurrency?): PredictionTopUpLimits? {
+        if (!isPredictionTopUpFlow || receiveCurrency == null) return null
+
+        return predictionTopUpLimitsResolver.resolve(params.userWalletId, receiveCurrency)
+    }
+
     private fun SwapStateHolder.withAccountFlowPresentation(): SwapStateHolder = withAccountFlowPresentation(
         accountFlow = accountFlow,
         isReverseLocked = isReverseLocked,
-        predictionCollateralBalance = if (isPredictionWithdrawFlow) {
+        accountBalance = if (isPredictionWithdrawFlow) {
             dataState.fromSwapCurrencyStatus?.status?.value?.amount
         } else {
             dataState.toSwapCurrencyStatus?.status?.value?.amount
@@ -3169,6 +3240,24 @@ internal class SwapModel @Inject constructor(
                         fromSwapCurrencyStatus.currency.network,
                     )
                 }
+            }
+        }
+        when (dataState.toSwapCurrencyStatus?.account) {
+            is Account.Collectibles -> refreshAccountWithDelay(accountName = "collectibles vault") {
+                collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(params.userWalletId))
+            }
+            is Account.Money -> refreshAccountWithDelay(accountName = "money account") {
+                moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(params.userWalletId))
+            }
+            else -> Unit
+        }
+    }
+
+    private fun refreshAccountWithDelay(accountName: String, fetch: suspend () -> Either<Throwable, Unit>) {
+        modelScope.launch {
+            withContext(NonCancellable) {
+                delay(UPDATE_BALANCE_DELAY_MILLIS)
+                fetch().onLeft { error -> TangemLogger.e("Unable to refresh the $accountName", error) }
             }
         }
     }
@@ -3437,14 +3526,15 @@ internal class SwapModel @Inject constructor(
 
                 val swapAmount = SwapAmount(amount, fromSwapCurrencyStatus.currency.decimals)
 
-                // DEX path requires a SwapDataModel and does not support gasless yet. swap-xyz native
-                // transfers (txType=SEND) re-route to the CEX-style flow, so they take the CEX fee path.
+                // swap-xyz native transfers (txType=SEND) re-route to the CEX-style flow, so they take the CEX
+                // fee path.
                 val swapDataForCall = when (quoteState.swapProvider.type) {
                     ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
                         if (quoteState.txType == ExpressTxType.SEND) {
                             null
+                        } else if (isTronGaslessDexSwap(fromSwapCurrencyStatus)) {
+                            quoteState.swapDataModel ?: return Either.Left(GetFeeError.UnknownError)
                         } else {
-                            // TODO support gasless in DEX/DEX_BRIDGE
                             return Either.Left(GetFeeError.GaslessError.NetworkIsNotSupported)
                         }
                     }
@@ -3598,16 +3688,24 @@ internal class SwapModel @Inject constructor(
             } else {
                 TangemLogger.e("loadFee: ${feeError.error}, isHidden = true")
                 refreshTransferUIStateIfNeeded()
-                uiState = stateBuilder.createFeeErrorState(
-                    uiStateHolder = uiState,
-                    quoteModel = dataState.getCurrentLoadedSwapState() ?: return,
-                    feeCryptoCurrencyStatus = dataState.feePaidCryptoCurrency,
-                    feeError = feeError.error,
-                )
-                modelScope.launch { forceUpdateState.emit(feeError.copy(isHidden = true)) }
+                val quoteModel = dataState.getCurrentLoadedSwapState() ?: return
+                modelScope.launch {
+                    val feeCryptoCurrencyStatus = dataState.feePaidCryptoCurrency
+                    uiState = stateBuilder.createFeeErrorState(
+                        uiStateHolder = uiState,
+                        quoteModel = quoteModel,
+                        feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                        feeError = feeError.error,
+                        isFeeCurrencyInStack = isFeeCurrencyInStack(quoteModel, feeCryptoCurrencyStatus),
+                    )
+                    forceUpdateState.emit(feeError.copy(isHidden = true))
+                }
             }
         }
     }
+
+    private fun isTronGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
+        swapFeatureToggles.isTronGaslessDexSwapEnabled && isTron(fromSwapCurrencyStatus.currency.network.rawId)
 
     /**
      * Loads the approval transaction + its fee, stores both on the current
@@ -3717,6 +3815,8 @@ internal class SwapModel @Inject constructor(
             feeFooter = resourceReference(R.string.swap_give_permission_fee_footer),
             isResetApproval = permissionState.isResetApproval,
             isHoldToConfirm = isHoldToConfirm,
+            isTronGaslessSupported = swapFeatureToggles.isTronGaslessDexSwapEnabled &&
+                isTron(fromSwapCurrencyStatus.currency.network.rawId),
             callback = approvalFullCallback,
         )
     }

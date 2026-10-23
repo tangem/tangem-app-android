@@ -161,7 +161,7 @@ private fun ResidencyFlag(flagUrl: String, modifier: Modifier = Modifier) {
         modifier = modifier
             .size(FLAG_SIZE)
             .clip(CircleShape)
-            .background(color = TangemTheme.colors3.bg.opaque.primary),
+            .background(color = TangemTheme.colors3.bg.transparent.primary),
     )
 }
 
@@ -239,7 +239,7 @@ private fun EmptyContent(contentPadding: PaddingValues, modifier: Modifier = Mod
             modifier = Modifier
                 .size(40.dp)
                 .alpha(EMPTY_ICON_ALPHA)
-                .background(color = TangemTheme.colors3.bg.opaque.primary, shape = CircleShape),
+                .background(color = TangemTheme.colors3.bg.transparent.primary, shape = CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -45,11 +46,11 @@ fun MarketPriceBlock(state: MarketPriceBlockState, modifier: Modifier = Modifier
                 shape = TangemTheme.shapes.roundedCornersXMedium,
             )
             .fillMaxWidth()
-            .heightIn(min = TangemTheme.dimens.size72)
-            .padding(all = TangemTheme.dimens.spacing12)
+            .heightIn(min = 72.dp)
+            .padding(all = 12.dp)
             .onSizeChanged { rootWidth = it.width }
             .testTag(MarketPriceBlockTestTags.BLOCK),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
         horizontalAlignment = Alignment.Start,
     ) {
         Title(currencyName = state.currencySymbol)
@@ -60,7 +61,7 @@ fun MarketPriceBlock(state: MarketPriceBlockState, modifier: Modifier = Modifier
 @Composable
 private fun Title(currencyName: String, modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.heightIn(min = TangemTheme.dimens.size24),
+        modifier = modifier.heightIn(min = 24.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
         Text(
@@ -75,7 +76,7 @@ private fun Title(currencyName: String, modifier: Modifier = Modifier) {
 @Composable
 private fun Content(state: MarketPriceBlockState, rootWidth: Int, modifier: Modifier = Modifier) {
     AnimatedContent(
-        modifier = modifier.heightIn(min = TangemTheme.dimens.size20),
+        modifier = modifier.heightIn(min = 20.dp),
         targetState = state,
         contentAlignment = Alignment.CenterStart,
         label = "Update the content",
@@ -98,7 +99,7 @@ private fun Content(state: MarketPriceBlockState, rootWidth: Int, modifier: Modi
 private fun PriceContent(state: MarketPriceBlockState, priceWidthDp: Dp) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
+        horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
     ) {
         PriceBlock(state = state, priceWidthDp = priceWidthDp)
 
@@ -114,7 +115,7 @@ private fun PriceBlock(state: MarketPriceBlockState, priceWidthDp: Dp) {
         if (marketPriceBlockState is MarketPriceBlockState.Content) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
+                horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
             ) {
                 Price(price = marketPriceBlockState.price, modifier = priceModifier)
 
@@ -146,12 +147,12 @@ private fun Price(price: String, modifier: Modifier = Modifier) {
 private fun LoadingContent() {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
+        horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
     ) {
         RectangleShimmer(
             modifier = Modifier.size(
-                width = TangemTheme.dimens.size158,
-                height = TangemTheme.dimens.size18,
+                width = 158.dp,
+                height = 18.dp,
             ),
         )
 

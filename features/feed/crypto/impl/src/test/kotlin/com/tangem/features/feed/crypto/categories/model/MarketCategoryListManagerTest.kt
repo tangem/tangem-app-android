@@ -220,7 +220,7 @@ internal class MarketCategoryListManagerTest {
     )
 
     private fun paginating() = PaginationStatus.Paginating<List<MarketCategory>>(
-        lastResult = BatchFetchResult.Success(data = emptyList(), empty = false, last = false),
+        lastResult = BatchFetchResult.Success(data = emptyList(), isEmpty = false, isLast = false),
     )
 
     private fun createManager(

@@ -51,7 +51,7 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
 
     val uiState: StateFlow<CollectiblesMachineDetailsUM>
         field = MutableStateFlow<CollectiblesMachineDetailsUM>(
-            CollectiblesMachineDetailsUM.Loading(onBackClick = ::onBackClick),
+            CollectiblesMachineDetailsUM.Loading(onCloseClick = ::onCloseClick),
         )
 
     val bottomSheetNavigation = SlotNavigation<CollectiblesMachineDetailsBottomSheetConfig>()
@@ -91,7 +91,7 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
             if (status !is PaginationStatus.Paginating) return@launch
 
             val lastResult = status.lastResult
-            val canLoadMore = lastResult !is BatchFetchResult.Success || !lastResult.last
+            val canLoadMore = lastResult !is BatchFetchResult.Success || !lastResult.isLast
             if (canLoadMore) actionsFlow.emit(BatchAction.LoadMore())
         }
     }
@@ -117,7 +117,7 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
                 .fold(
                     ifLeft = {
                         uiState.value = CollectiblesMachineDetailsUM.Error(
-                            onBackClick = ::onBackClick,
+                            onCloseClick = ::onCloseClick,
                             message = resourceReference(R.string.collectibles_machine_load_error),
                             onReloadClick = ::reloadMachine,
                         )
@@ -126,7 +126,7 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
                         uiState.update(
                             CollectiblesUpdateMachineDetailsTransformer(
                                 machine = machine,
-                                onBackClick = ::onBackClick,
+                                onCloseClick = ::onCloseClick,
                                 onBuyClick = ::onBuyClick,
                                 onTurboCheckedChange = ::onTurboCheckedChange,
                                 onTurboInfoClick = ::onTurboInfoClick,
@@ -210,7 +210,7 @@ internal class CollectiblesMachineDetailsModel @Inject constructor(
         router.push(CollectiblesRoute.ConfirmOrder(externalId = params.externalId, isTurboEnabled = isTurboEnabled))
     }
 
-    private fun onBackClick() {
+    private fun onCloseClick() {
         router.pop()
     }
 

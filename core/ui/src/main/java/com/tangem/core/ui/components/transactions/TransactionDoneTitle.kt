@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -41,14 +42,14 @@ fun TransactionDoneTitle(title: TextReference, subtitle: TextReference, modifier
             painter = painterResource(id = R.drawable.ic_empty_in_process_64),
             contentDescription = null,
             modifier = Modifier
-                .size(TangemTheme.dimens.size64),
+                .size(64.dp),
         )
         Text(
             text = title.resolveReference(),
             style = TangemTheme.typography.h3,
             color = TangemTheme.colors.text.primary1,
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing16)
+                .padding(top = 16.dp)
                 .testTag(TransactionSuccessScreenTestTags.TITLE),
         )
         Text(
@@ -57,7 +58,7 @@ fun TransactionDoneTitle(title: TextReference, subtitle: TextReference, modifier
             color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Center,
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing4)
+                .padding(top = 4.dp)
                 .testTag(TransactionSuccessScreenTestTags.TRANSACTION_DATE),
         )
     }
@@ -74,7 +75,7 @@ private fun TransactionDoneTitlePreview() {
             subtitle = stringReference("0"),
             modifier = Modifier
                 .background(TangemTheme.colors.background.tertiary)
-                .padding(TangemTheme.dimens.spacing16),
+                .padding(16.dp),
         )
     }
 }

@@ -16,6 +16,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -64,16 +65,16 @@ private fun CardPlaceholderImages() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = TangemTheme.dimens.spacing40)
+            .padding(bottom = 40.dp)
             .testTag(DeviceSettingsScreenTestTags.IMAGE_BLOCK),
     ) {
         Image(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = TangemTheme.dimens.spacing80,
-                    end = TangemTheme.dimens.spacing80,
-                    top = TangemTheme.dimens.spacing70,
+                    start = 80.dp,
+                    end = 80.dp,
+                    top = 70.dp,
                 )
                 .rotate(CARD_PLACEHOLDER_SECONDARY_ROTATION),
             painter = painterResource(id = R.drawable.card_placeholder_secondary),
@@ -84,8 +85,8 @@ private fun CardPlaceholderImages() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = TangemTheme.dimens.spacing60,
-                    end = TangemTheme.dimens.spacing60,
+                    start = 60.dp,
+                    end = 60.dp,
                 )
                 .rotate(CARD_PLACEHOLDER_PRIMARY_ROTATION),
             painter = painterResource(id = R.drawable.card_placeholder_black),
@@ -101,9 +102,9 @@ private fun ScanCardContent(onScanCardClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
-                bottom = TangemTheme.dimens.spacing32,
+                start = 16.dp,
+                end = 16.dp,
+                bottom = 32.dp,
             ),
     ) {
         Text(
@@ -111,13 +112,13 @@ private fun ScanCardContent(onScanCardClick: () -> Unit) {
             color = TangemTheme.colors.text.primary1,
             style = TangemTheme.typography.h3,
         )
-        Spacer(modifier = Modifier.size(TangemTheme.dimens.size20))
+        Spacer(modifier = Modifier.size(20.dp))
         Text(
             text = stringResourceSafe(id = R.string.scan_card_settings_message),
             color = TangemTheme.colors.text.secondary,
             style = TangemTheme.typography.body1,
         )
-        Spacer(modifier = Modifier.size(TangemTheme.dimens.size32))
+        Spacer(modifier = Modifier.size(32.dp))
         DetailsMainButton(
             title = stringResourceSafe(id = R.string.scan_card_settings_button),
             onClick = onScanCardClick,
@@ -137,21 +138,21 @@ private fun CardSettings(state: CardSettingsScreenState) {
     ) {
         items(state.cardDetails) { cardInfo ->
             val paddingBottom = when (cardInfo) {
-                is CardInfo.CardId, is CardInfo.Issuer -> TangemTheme.dimens.spacing12
-                is CardInfo.SignedHashes -> TangemTheme.dimens.spacing14
-                is CardInfo.SecurityMode -> TangemTheme.dimens.spacing16
-                is CardInfo.ChangeAccessCode -> TangemTheme.dimens.spacing16
-                is CardInfo.AccessCodeRecovery -> TangemTheme.dimens.spacing16
-                is CardInfo.ResetToFactorySettings -> TangemTheme.dimens.spacing28
+                is CardInfo.CardId, is CardInfo.Issuer -> 12.dp
+                is CardInfo.SignedHashes -> 14.dp
+                is CardInfo.SecurityMode -> 16.dp
+                is CardInfo.ChangeAccessCode -> 16.dp
+                is CardInfo.AccessCodeRecovery -> 16.dp
+                is CardInfo.ResetToFactorySettings -> 28.dp
             }
             val paddingTop = when (cardInfo) {
-                is CardInfo.CardId -> TangemTheme.dimens.spacing0
-                is CardInfo.Issuer -> TangemTheme.dimens.spacing12
-                is CardInfo.SignedHashes -> TangemTheme.dimens.spacing12
-                is CardInfo.SecurityMode -> TangemTheme.dimens.spacing14
-                is CardInfo.ChangeAccessCode -> TangemTheme.dimens.spacing16
-                is CardInfo.AccessCodeRecovery -> TangemTheme.dimens.spacing16
-                is CardInfo.ResetToFactorySettings -> TangemTheme.dimens.spacing16
+                is CardInfo.CardId -> 0.dp
+                is CardInfo.Issuer -> 12.dp
+                is CardInfo.SignedHashes -> 12.dp
+                is CardInfo.SecurityMode -> 14.dp
+                is CardInfo.ChangeAccessCode -> 16.dp
+                is CardInfo.AccessCodeRecovery -> 16.dp
+                is CardInfo.ResetToFactorySettings -> 16.dp
             }
             Column(
                 modifier = Modifier
@@ -161,8 +162,8 @@ private fun CardSettings(state: CardSettingsScreenState) {
                         onClick = { state.onElementClick(cardInfo) },
                     )
                     .padding(
-                        start = TangemTheme.dimens.spacing20,
-                        end = TangemTheme.dimens.spacing20,
+                        start = 20.dp,
+                        end = 20.dp,
                         bottom = paddingBottom,
                         top = paddingTop,
                     ),
@@ -183,7 +184,7 @@ private fun CardSettings(state: CardSettingsScreenState) {
                     style = TangemTheme.typography.subtitle1,
                     modifier = Modifier.testTag(DeviceSettingsScreenTestTags.ITEM_TITLE),
                 )
-                Spacer(modifier = Modifier.size(TangemTheme.dimens.size4))
+                Spacer(modifier = Modifier.size(4.dp))
                 Text(
                     text = cardInfo.subtitle.resolveReference(),
                     color = subtitleColor,

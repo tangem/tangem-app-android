@@ -22,9 +22,11 @@ import com.tangem.core.ui.res.generated.icons.ic_trash_bin_24
 import com.tangem.core.ui.res.generated.icons.ic_user_plus_24
 import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.txhistory.converter.toCounterpartyUM
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.joint.operation.model.JointOperationFiat
+import com.tangem.features.txhistory.joint.operation.model.JointOperationRecipient
 import com.tangem.features.txhistory.joint.operation.model.JointOperationState
 import com.tangem.features.txhistory.joint.operation.model.JointOperationState.Role
 import com.tangem.utils.StringsSigns
@@ -50,7 +52,10 @@ internal class JointOperationUMConverter(
         val state = value.state
 
         return TxHistoryDetailsUM.SingleAsset(
-            header = header(state = state, menu = menu(state = state, canCreateContact = value.canCreateContact)),
+            header = header(
+                state = state,
+                menu = menu(state = state, canCreateContact = value.recipient.canCreateContact),
+            ),
             isBalanceHidden = value.isBalanceHidden,
             amountBlock = TxHistoryDetailsUM.AmountBlockUM(
                 icon = TxHistoryDetailsUM.AmountIconUM.Single(iconStateConverter.convert(currency)),
@@ -58,10 +63,8 @@ internal class JointOperationUMConverter(
                 fiatAmount = fiatAmountOf(state = state, fiat = value.fiat),
                 isFailed = false,
             ),
-            counterparty = TxHistoryDetailsUM.CounterpartyUM(
+            counterparty = value.recipient.owner.toCounterpartyUM(
                 label = resourceReference(R.string.send_recipient),
-                title = TxHistoryDetailsUM.CounterpartyTitle.Address(state.displayed.recipient),
-                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Address(rawAddress = state.displayed.recipient),
                 onCopyClick = onCopyRecipientClick,
             ),
             rows = listOfNotNull(feeRow(state)).toImmutableList(),
@@ -228,7 +231,7 @@ internal class JointOperationUMConverter(
         val isSigning: Boolean,
         val isRefusing: Boolean,
         val hasAnswered: Boolean,
-        val canCreateContact: Boolean,
+        val recipient: JointOperationRecipient,
         val isBalanceHidden: Boolean,
         val isColdWallet: Boolean,
         val fiat: JointOperationFiat,

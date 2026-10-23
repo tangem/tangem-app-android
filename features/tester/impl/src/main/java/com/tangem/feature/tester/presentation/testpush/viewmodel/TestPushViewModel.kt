@@ -168,18 +168,18 @@ internal class TestPushViewModel @Inject constructor(
                 TestPushMarketTokenBottomSheetTransformer(
                     item = item.data.flatMap { it.data }.toPersistentList(),
                     onDismissBottomSheet = ::dismissBottomSheet,
-                    onSearchEdit = {
+                    onSearchEdit = { searchValue ->
                         _uiState.update(
                             TestPushMarketTokenSearchBottomSheetTransformer(
-                                it,
+                                searchValue,
                             ),
                         )
-                        onMarketsBatchReload(it.text)
+                        onMarketsBatchReload(searchValue.text)
                     },
-                    onItemClick = {
+                    onItemClick = { token ->
                         _uiState.update(
                             TestPushMarketTokenClickBottomSheetTransformer(
-                                it,
+                                token,
                             ),
                         )
                         marketsJobHolder.cancel()

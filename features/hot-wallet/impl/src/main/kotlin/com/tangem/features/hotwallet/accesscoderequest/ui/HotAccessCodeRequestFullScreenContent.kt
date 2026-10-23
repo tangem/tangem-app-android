@@ -128,7 +128,7 @@ internal fun HotAccessCodeRequestFullScreenContent(state: HotAccessCodeRequestUM
                 }
 
                 AnimatedVisibility(
-                    visible = state.useBiometricVisible,
+                    visible = state.isUseBiometricVisible,
                     enter = fadeIn(),
                     exit = fadeOut(),
                 ) {

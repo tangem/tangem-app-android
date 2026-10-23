@@ -12,11 +12,11 @@ import com.tangem.utils.transformer.Transformer
  * Selected currency change from crypto currency to app currency and vice versa
  *
  * @property cryptoCurrencyStatus current cryptocurrency status
- * @property value is crypto currency or app currency
+ * @property isFiatValue is crypto currency or app currency
  */
 class AmountCurrencyTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
-    private val value: Boolean,
+    private val isFiatValue: Boolean,
 ) : Transformer<AmountState> {
 
     override fun transform(prevState: AmountState): AmountState {
@@ -26,12 +26,12 @@ class AmountCurrencyTransformer(
 
         val isValidFiatRate = cryptoCurrencyStatus.value.fiatRate.isNullOrZero()
         val isDoneActionEnabled = prevState.isPrimaryButtonEnabled
-        return if (amountTextField.isFiatValue == value && !isValidFiatRate) {
+        return if (amountTextField.isFiatValue == isFiatValue && !isValidFiatRate) {
             prevState
         } else {
             return prevState.copy(
                 amountTextField = amountTextField.copy(
-                    isFiatValue = value,
+                    isFiatValue = isFiatValue,
                     isValuePasted = true,
                     keyboardOptions = KeyboardOptions(
                         imeAction = if (isDoneActionEnabled) ImeAction.Done else ImeAction.None,

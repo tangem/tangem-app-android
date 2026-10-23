@@ -35,8 +35,8 @@ import com.tangem.feature.tester.presentation.backendauth.state.BackendAuthStatu
 import com.tangem.core.ui.R as CoreUiR
 
 /**
- * Read-only screen showing the current Backend Authentication state (toggle, environment,
- * device key, registration flag, session tokens). Keys/tokens are shown shortened with a copy
+ * Read-only screen showing the current Backend Authentication state (environment, device key,
+ * registration flag, session tokens). Keys/tokens are shown shortened with a copy
  * action; all values are also selectable.
  *
  * @param state screen state

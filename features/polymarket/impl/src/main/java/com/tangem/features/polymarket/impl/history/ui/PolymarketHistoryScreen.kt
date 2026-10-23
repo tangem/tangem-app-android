@@ -83,6 +83,7 @@ internal fun PolymarketHistoryScreen(state: PolymarketHistoryUM, modifier: Modif
                 }
             }
         }
+        PolymarketActivityDetailsSheet(state = state.details, onDismiss = state.onDismissDetails)
     }
 }
 
@@ -124,7 +125,12 @@ private fun HistoryTopBar(state: PolymarketHistoryUM) {
             fadeEnabled = false,
             endButton = {
                 val content = state.content
-                if (content is Content.Data) PolymarketHistoryMenu(onDownloadClick = content.onDownloadCsvClick)
+                if (content is Content.Data) {
+                    PolymarketHistoryMenu(
+                        onDownloadClick = content.onDownloadCsvClick,
+                        isExporting = state.isExporting,
+                    )
+                }
             },
         )
         if (state.tabs.isNotEmpty()) {
@@ -185,7 +191,7 @@ private fun EmptyHistory(onExploreEventsClick: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Box(
-            modifier = Modifier.size(40.dp).background(TangemTheme.colors3.bg.opaque.secondary, CircleShape),
+            modifier = Modifier.size(40.dp).background(TangemTheme.colors3.bg.transparent.secondary, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

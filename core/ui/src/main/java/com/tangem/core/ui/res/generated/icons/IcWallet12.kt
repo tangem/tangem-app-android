@@ -1,0 +1,47 @@
+@file:Suppress("all")
+
+package com.tangem.core.ui.res.generated.icons
+
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+/**
+ * Auto-generated from design tokens. Do not edit manually.
+ */
+
+private var _ic_wallet_12: ImageVector? = null
+
+val Icons.ic_wallet_12: ImageVector
+    get() {
+        if (_ic_wallet_12 != null) return _ic_wallet_12!!
+        _ic_wallet_12 = ImageVector.Builder(
+            name = "ic_wallet_12",
+            defaultWidth = 12.dp,
+            defaultHeight = 12.dp,
+            viewportWidth = 12f,
+            viewportHeight = 12f,
+        ).apply {
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M7.96689 2.50101C8.98578 2.53651 9.83092 3.32964 9.86923 4.3516C9.86957 4.36058 9.86907 4.38976 9.86923 4.42972C10.2562 4.55624 10.5001 4.94085 10.5001 5.33207V6.67094C10.5 7.06199 10.256 7.44567 9.86923 7.5723C9.86907 7.61126 9.86956 7.63964 9.86923 7.64847C9.83092 8.67044 8.98578 9.46356 7.96689 9.49906C7.92939 9.50037 7.88693 9.50004 7.82822 9.50004H4.35849C3.95395 9.50004 3.62155 9.4998 3.35165 9.47855C3.07631 9.45686 2.82235 9.41106 2.58408 9.29398C2.26053 9.13495 1.98768 8.89125 1.79599 8.58988L1.71884 8.45707C1.65932 8.34437 1.63125 8.21133 1.61533 8.12211C1.59649 8.01646 1.58233 7.89333 1.5704 7.76371C1.54646 7.50334 1.53075 7.1846 1.5206 6.85844C1.50315 6.29777 1.50048 5.69282 1.50009 5.28129V5.085C1.50043 4.77888 1.50302 4.51794 1.52158 4.29886C1.5444 4.02947 1.59427 3.77882 1.71884 3.54301C1.91056 3.18016 2.21429 2.88786 2.58408 2.70609C2.82235 2.58902 3.07632 2.54322 3.35165 2.52152C3.62154 2.50028 3.95396 2.50004 4.35849 2.50004H7.82822C7.88691 2.50004 7.9294 2.49971 7.96689 2.50101ZM4.35849 3.50004C3.93791 3.50004 3.65135 3.50016 3.42978 3.51761C3.21359 3.53465 3.10254 3.56571 3.02548 3.60355C2.84064 3.69438 2.69353 3.83777 2.60263 4.0098C2.5666 4.078 2.53599 4.17848 2.51865 4.38285C2.50161 4.5839 2.50019 4.84227 2.50009 5.21781C2.50022 5.62763 2.50175 6.25305 2.51962 6.82719C2.52954 7.14585 2.54432 7.44128 2.56552 7.67191C2.57616 7.78751 2.58783 7.87971 2.5997 7.94633C2.60512 7.97671 2.6099 7.99597 2.6124 8.0059C2.70384 8.17072 2.84646 8.30856 3.02548 8.39652C3.10254 8.43436 3.21359 8.46542 3.42978 8.48246C3.65135 8.49992 3.93789 8.50004 4.35849 8.50004H7.82822C7.89489 8.50004 7.91606 8.4996 7.93173 8.49906C8.45527 8.48082 8.84844 8.08226 8.86923 7.61722H8.57724C7.69718 7.61703 7.06161 6.84811 7.06161 6.00101C7.0618 5.15406 7.69731 4.38597 8.57724 4.38578H8.87021C8.85096 3.91947 8.45638 3.51929 7.93173 3.50101C7.91607 3.50048 7.89484 3.50004 7.82822 3.50004H4.35849ZM8.57724 5.38578C8.33547 5.38599 8.06179 5.61635 8.06161 6.00101C8.06161 6.38589 8.33539 6.61701 8.57724 6.61722H9.50009V5.38578H8.57724Z"),
+            )
+        }.build()
+        return _ic_wallet_12!!
+    }
+
+@Composable
+@Preview(showBackground = true)
+private fun IcWallet12Preview() {
+    Icon(
+        imageVector = Icons.ic_wallet_12,
+        contentDescription = null,
+    )
+}

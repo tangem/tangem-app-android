@@ -68,11 +68,11 @@ private fun Content(state: TangemPayCardLimitSetupUM, modifier: Modifier = Modif
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(top = TangemTheme.dimens2.x4, bottom = TangemTheme.dimens2.x3)
+            .padding(top = 16.dp, bottom = 12.dp)
             .imePadding(),
     ) {
         AmountBlock(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+            modifier = Modifier.padding(horizontal = 16.dp),
             state = state,
         )
         Spacer(modifier = Modifier.weight(1f))
@@ -80,8 +80,8 @@ private fun Content(state: TangemPayCardLimitSetupUM, modifier: Modifier = Modif
         TangemButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens2.x4)
-                .padding(top = TangemTheme.dimens2.x3)
+                .padding(horizontal = 16.dp)
+                .padding(top = 12.dp)
                 .testTag(TangemPayTestTags.DAILY_LIMIT_SET_BUTTON),
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.tangempay_daily_limit_set_button),
@@ -97,9 +97,9 @@ private fun AmountBlock(state: TangemPayCardLimitSetupUM, modifier: Modifier = M
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = TangemTheme.dimens2.x8),
+            .padding(vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
             modifier = Modifier.testTag(TangemPayTestTags.DAILY_LIMIT_HINT),
@@ -163,7 +163,7 @@ private fun PresetChip(preset: TangemPayCardLimitSetupUM.LimitPresetUM, modifier
             .background(TangemTheme.colors3.bg.tertiary)
             .clickable(onClick = preset.onClick)
             .testTag(preset.testTag)
-            .padding(horizontal = TangemTheme.dimens2.x5, vertical = TangemTheme.dimens2.x1)
+            .padding(horizontal = 20.dp, vertical = 4.dp)
             .wrapContentHeight(),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,

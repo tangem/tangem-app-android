@@ -193,7 +193,7 @@ private fun AddAddressRow(isEnabled: Boolean, onClick: () -> Unit) {
                         color = if (isEnabled) {
                             TangemTheme.colors3.bg.status.infoSubtle
                         } else {
-                            TangemTheme.colors3.bg.opaque.secondary
+                            TangemTheme.colors3.bg.transparent.secondary
                         },
                         shape = RoundedCornerShape(10.dp),
                     )

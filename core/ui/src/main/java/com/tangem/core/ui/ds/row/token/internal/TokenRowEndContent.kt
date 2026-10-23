@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.marketprice.PriceChangeState
@@ -46,7 +47,7 @@ fun TokenRowEndContent(
         TangemTokenRowUM.EndContentUM.Loading -> TextShimmer(
             style = textStyle,
             modifier = modifier.width(placeholderWidth),
-            radius = TangemTheme.dimens2.x25,
+            radius = 100.dp,
         )
         TangemTokenRowUM.EndContentUM.Placeholder -> TextPlaceholder(
             modifier = modifier,
@@ -73,13 +74,13 @@ private fun Content(
             visible = endContentUM.startIcons.isNotEmpty(),
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x1),
+                modifier = Modifier.padding(horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 endContentUM.startIcons.fastForEach { icon ->
                     Icon(
-                        modifier = Modifier.size(TangemTheme.dimens2.x3),
+                        modifier = Modifier.size(12.dp),
                         imageVector = icon.imageVector(),
                         tint = icon.tintReference(),
                         contentDescription = null,
@@ -107,13 +108,13 @@ private fun Content(
             visible = endContentUM.endIcons.isNotEmpty(),
         ) {
             Row(
-                modifier = Modifier.padding(start = TangemTheme.dimens2.x0_5),
+                modifier = Modifier.padding(start = 2.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 endContentUM.endIcons.fastForEach { icon ->
                     Icon(
-                        modifier = Modifier.size(TangemTheme.dimens2.x3),
+                        modifier = Modifier.size(12.dp),
                         imageVector = icon.imageVector(),
                         tint = icon.tintReference(),
                         contentDescription = null,
@@ -146,7 +147,7 @@ private fun TokenRowEndContent_Preview(
             isBalanceHidden = false,
             textColor = TangemTheme.colors2.text.neutral.primary,
             textStyle = TangemTheme.typography2.captionSemibold12,
-            placeholderWidth = TangemTheme.dimens2.x11,
+            placeholderWidth = 44.dp,
         )
     }
 }

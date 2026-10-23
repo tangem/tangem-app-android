@@ -734,7 +734,7 @@ internal class MarketCategorySelectorModelTest {
             mutableState.value = BatchListState(
                 data = listOf(Batch(key = 0, data = page)),
                 status = PaginationStatus.Paginating(
-                    lastResult = BatchFetchResult.Success(data = page, empty = page.isEmpty(), last = false),
+                    lastResult = BatchFetchResult.Success(data = page, isEmpty = page.isEmpty(), isLast = false),
                 ),
             )
         }

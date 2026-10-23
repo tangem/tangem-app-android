@@ -82,17 +82,17 @@ internal fun TangemPayTxHistoryDetailsContent(state: TangemPayTxHistoryDetailsUM
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TangemTheme.dimens2.x4)
-                    .padding(bottom = TangemTheme.dimens2.x4),
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 TransactionIcon(
                     iconState = state.iconState,
-                    modifier = Modifier.padding(top = TangemTheme.dimens2.x12),
+                    modifier = Modifier.padding(top = 48.dp),
                 )
                 Text(
                     modifier = Modifier
-                        .padding(top = TangemTheme.dimens2.x6)
+                        .padding(top = 24.dp)
                         .testTag(TangemPayTestTags.TRANSACTION_DETAILS_AMOUNT),
                     text = state.transactionAmount.orMaskWithStars(state.isBalanceHidden),
                     style = TangemTheme.typography3.display.medium,
@@ -106,25 +106,25 @@ internal fun TangemPayTxHistoryDetailsContent(state: TangemPayTxHistoryDetailsUM
                 )
                 TransactionSecondaryLine(
                     state = state,
-                    modifier = Modifier.padding(top = TangemTheme.dimens2.x1),
+                    modifier = Modifier.padding(top = 4.dp),
                 )
                 if (state.label != null) {
                     TransactionLabel(
                         label = state.label,
                         modifier = Modifier
-                            .padding(top = TangemTheme.dimens2.x12)
+                            .padding(top = 48.dp)
                             .fillMaxWidth(),
                     )
                 }
                 TransactionDetailsBlock(
                     state = state,
                     modifier = Modifier
-                        .padding(top = TangemTheme.dimens2.x4, bottom = TangemTheme.dimens2.x2)
+                        .padding(top = 16.dp, bottom = 8.dp)
                         .fillMaxWidth(),
                 )
                 TangemButton(
                     modifier = Modifier
-                        .padding(vertical = TangemTheme.dimens2.x4)
+                        .padding(vertical = 16.dp)
                         .fillMaxWidth(),
                     text = state.buttonState.text,
                     onClick = state.buttonState.onClick,
@@ -142,7 +142,7 @@ private fun TransactionIcon(iconState: TangemIconUM, modifier: Modifier = Modifi
             .testTag(TangemPayTestTags.TRANSACTION_DETAILS_ICON)
             .size(80.dp)
             .clip(CircleShape)
-            .background(TangemTheme.colors3.bg.opaque.primary),
+            .background(TangemTheme.colors3.bg.transparent.primary),
         contentAlignment = Alignment.Center,
     ) {
         when (iconState) {
@@ -236,13 +236,13 @@ internal fun TransactionLabel(label: TransactionLabelUM, modifier: Modifier = Mo
                 shape = RoundedCornerShape(20.dp),
             )
             .padding(
-                vertical = TangemTheme.dimens2.x3,
-                horizontal = TangemTheme.dimens2.x4,
+                vertical = 12.dp,
+                horizontal = 16.dp,
             ),
     ) {
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
                 text = label.title.resolveReference(),
@@ -259,13 +259,13 @@ internal fun TransactionLabel(label: TransactionLabelUM, modifier: Modifier = Mo
             }
         }
 
-        SpacerW(TangemTheme.dimens2.x1)
+        SpacerW(4.dp)
 
         TangemIcon(
             tangemIconUM = label.icon,
             modifier = Modifier
                 .testTag(TangemPayTestTags.TRANSACTION_DETAILS_STATUS_ICON)
-                .size(TangemTheme.dimens2.x5),
+                .size(20.dp),
         )
     }
 }

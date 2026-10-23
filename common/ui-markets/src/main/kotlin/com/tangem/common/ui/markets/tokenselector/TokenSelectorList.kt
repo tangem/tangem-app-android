@@ -44,7 +44,7 @@ fun LazyListScope.tokenSelectorSectionItems(
                 item(key = "wallet_${section.walletName}_$index") {
                     WalletHeaderSection(
                         section = section,
-                        horizontalPadding = walletHeaderHorizontalPadding ?: TangemTheme.dimens2.x3,
+                        horizontalPadding = walletHeaderHorizontalPadding ?: 12.dp,
                     )
                 }
             }
@@ -53,7 +53,7 @@ fun LazyListScope.tokenSelectorSectionItems(
 
                 if (index > 0 && sections[index - 1] is TokenSelectorSectionUM.TokenGroup) {
                     item(key = "spacer_before_group_$index") {
-                        SpacerH(TangemTheme.dimens2.x2)
+                        SpacerH(8.dp)
                     }
                 }
 
@@ -126,10 +126,10 @@ fun Modifier.tokenGroupRowDecoration(currentIndex: Int, lastIndex: Int): Modifie
 private fun WalletHeaderSection(section: TokenSelectorSectionUM.WalletHeader, horizontalPadding: Dp) {
     Row(
         modifier = Modifier
-            .padding(top = TangemTheme.dimens2.x4, bottom = TangemTheme.dimens2.x2)
+            .padding(top = 16.dp, bottom = 8.dp)
             .padding(horizontal = horizontalPadding),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
             text = section.walletName,
@@ -140,7 +140,7 @@ private fun WalletHeaderSection(section: TokenSelectorSectionUM.WalletHeader, ho
         )
         TangemDeviceIcon(
             state = section.deviceIcon,
-            modifier = Modifier.size(TangemTheme.dimens2.x5),
+            modifier = Modifier.size(20.dp),
         )
     }
 }
@@ -150,13 +150,13 @@ private fun TokenGroupAccountHeaderRow(data: AccountHeaderData, modifier: Modifi
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = TangemTheme.dimens2.x4, bottom = TangemTheme.dimens2.x2)
-            .padding(horizontal = TangemTheme.dimens2.x4),
+            .padding(top = 16.dp, bottom = 8.dp)
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens2.x4),
+            modifier = Modifier.size(16.dp),
             imageVector = ImageVector.vectorResource(data.cryptoPortfolioIcon.value.getResId()),
             tint = data.cryptoPortfolioIcon.color.getUiColor(),
             contentDescription = null,
