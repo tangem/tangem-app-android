@@ -80,7 +80,6 @@ internal class DefaultTangemPayEligibilityComponent @AssistedInject constructor(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = RegionUnavailableComponent.Params(
                 userWalletId = params.userWalletId,
-                product = params.product,
                 countryCode = route.countryCode,
                 regionCode = route.regionCode,
                 onSelectAnotherRegionClick = {
@@ -99,7 +98,6 @@ internal class DefaultTangemPayEligibilityComponent @AssistedInject constructor(
     ): ResidencyListComponent = ResidencyListComponent(
         appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
         params = ResidencyListComponent.Params(
-            product = params.product,
             userWalletId = params.userWalletId,
             step = step,
             onCloseClick = router::pop,

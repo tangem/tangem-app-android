@@ -16,7 +16,6 @@ import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerOrderRequest
-import com.tangem.domain.pay.model.CustomerSummary
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
@@ -95,9 +94,6 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     // so tests must provide the corresponding WireMock mappings.
     override suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo> =
         real.getCustomerInfo(userWalletId)
-
-    override suspend fun getCustomerSummary(userWalletId: UserWalletId): Either<VisaApiError, CustomerSummary> =
-        real.getCustomerSummary(userWalletId)
 
     override suspend fun getBankCredentials(
         userWalletId: UserWalletId,

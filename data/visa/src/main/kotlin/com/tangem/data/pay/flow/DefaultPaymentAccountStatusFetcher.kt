@@ -14,6 +14,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.pay.model.CachePolicy
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
@@ -21,10 +22,13 @@ import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
+import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
+import com.tangem.domain.pay.usecase.ResolvePaymentAccountStatusFromSummaryUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -66,6 +70,9 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val issueCardRepository: TangemPayIssueCardRepository,
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase,
     private val findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase,
+    private val resolvePaymentAccountStatusFromSummaryUseCase: ResolvePaymentAccountStatusFromSummaryUseCase,
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
+    private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
 ) : PaymentAccountStatusFetcher {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -152,23 +159,34 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             )
         }
 
-        return proceedWithOrderId(account = account)
+        return proceed(account = account)
     }
 
-    private suspend fun proceedWithOrderId(account: Account.Payment): PaymentAccountStatusValue {
+    private suspend fun proceed(account: Account.Payment): PaymentAccountStatusValue {
         val isInitial = onboardingRepository.isTangemPayInitialDataProduced(account.userWalletId)
         logger.i("proceedWithOrderId ${account.userWalletId}: isTangemPayInitialDataProduced=$isInitial")
-        return if (!isInitial) {
-            PaymentAccountStatusValue.Error.NotSynced
+        if (!isInitial) return PaymentAccountStatusValue.Error.NotSynced
+
+        resolveStatusFromSummary(account.userWalletId)?.let { return it }
+
+        val orderId = onboardingRepository.getOrderId(account.userWalletId)
+        logger.i("proceedWithOrderId ${account.userWalletId}: orderIdPresent=${orderId != null}")
+        return if (orderId != null) {
+            proceedWithOrderId(account = account, orderId = orderId)
         } else {
-            val orderId = onboardingRepository.getOrderId(account.userWalletId)
-            logger.i("proceedWithOrderId ${account.userWalletId}: orderIdPresent=${orderId != null}")
-            if (orderId != null) {
-                proceedWithOrderId(account = account, orderId = orderId)
-            } else {
-                proceedWithoutOrder(account = account)
-            }
+            proceedWithoutOrder(account = account)
         }
+    }
+
+    private suspend fun resolveStatusFromSummary(userWalletId: UserWalletId): PaymentAccountStatusValue? {
+        if (!moneyAccountFeatureToggles.isMoneyAccountsEnabled) return null
+
+        return getCustomerSummaryUseCase.invoke(userWalletId, CachePolicy.REFRESH).fold(
+            ifLeft = { error ->
+                error.toCachedStatusOrNull(userWalletId) ?: error.toStatusValueWhenHasTangemPay(userWalletId)
+            },
+            ifRight = { summary -> summary?.let { resolvePaymentAccountStatusFromSummaryUseCase(userWalletId, it) } },
+        )
     }
 
     private suspend fun proceedWithoutOrder(account: Account.Payment): PaymentAccountStatusValue {

@@ -22,8 +22,8 @@ internal class DefaultSendIntentComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val offer by model.offer.collectAsStateWithLifecycle()
-        offer?.let { SendIntentModal(state = it, onDismiss = model::onClose) }
+        val sheet by model.sheet.collectAsStateWithLifecycle()
+        sheet?.let { SendIntentModal(state = it, onDismiss = model::onClose) }
     }
 
     @AssistedFactory

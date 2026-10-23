@@ -18,11 +18,11 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.jointaccount.model.JointAccount
-import com.tangem.domain.jointaccount.model.JointAccountActivationError
+import com.tangem.domain.jointaccount.model.JointAccountConfirmationError
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
-import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
+import com.tangem.domain.jointaccount.usecase.ConfirmJointAccountUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -60,7 +60,7 @@ internal class JointAccountConfirmAddressModelTest {
     private val shareManager: ShareManager = mockk(relaxed = true)
     private val supplier: SingleJointAccountListSupplier = mockk()
     private val singleAccountSupplier: SingleAccountSupplier = mockk()
-    private val activateUseCase: ActivateJointAccountUseCase = mockk()
+    private val confirmUseCase: ConfirmJointAccountUseCase = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
@@ -76,7 +76,7 @@ internal class JointAccountConfirmAddressModelTest {
             shareManager,
             supplier,
             singleAccountSupplier,
-            activateUseCase,
+            confirmUseCase,
             userWalletsListRepository,
             getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase,
@@ -169,9 +169,31 @@ internal class JointAccountConfirmAddressModelTest {
     }
 
     @Test
-    fun `GIVEN signing succeeds WHEN confirm clicked THEN snackbar shown and the screen pops`() = runTest {
-        // Arrange
-        coEvery { activateUseCase(account = jointAccount) } returns Unit.right()
+    fun `GIVEN the last signature activates the account WHEN confirm clicked THEN snackbar shown and the screen pops`() =
+        runTest {
+            // Arrange
+            coEvery { confirmUseCase(account = jointAccount) } returns
+                confirmingAccount().copy(status = JointAccount.Status.ACTIVE).right()
+            val model = createModel()
+
+            // Act
+            model.uiState.value.onConfirmClick()
+            advanceUntilIdle()
+
+            // Assert
+            val message = slot<SnackbarMessage>()
+            verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+            assertThat(message.captured.message).isEqualTo(
+                resourceReference(CoreUiR.string.joint_account_activated_snackbar),
+            )
+            verify(exactly = 1) { router.pop() }
+            assertThat(model.uiState.value.isConfirming).isFalse()
+        }
+
+    @Test
+    fun `GIVEN others are still to confirm WHEN confirm clicked THEN the screen pops without a snackbar`() = runTest {
+        // Arrange — the members screen behind shows who is still due, a toast would only duplicate it
+        coEvery { confirmUseCase(account = jointAccount) } returns confirmingAccount().right()
         val model = createModel()
 
         // Act
@@ -179,11 +201,7 @@ internal class JointAccountConfirmAddressModelTest {
         advanceUntilIdle()
 
         // Assert
-        val message = slot<SnackbarMessage>()
-        verify(exactly = 1) { uiMessageSender.send(capture(message)) }
-        assertThat(message.captured.message).isEqualTo(
-            resourceReference(CoreUiR.string.joint_account_activated_snackbar),
-        )
+        verify(exactly = 0) { uiMessageSender.send(any()) }
         verify(exactly = 1) { router.pop() }
         assertThat(model.uiState.value.isConfirming).isFalse()
     }
@@ -192,9 +210,9 @@ internal class JointAccountConfirmAddressModelTest {
     fun `GIVEN signing in flight WHEN confirm clicked again THEN the button loads and signs once`() = runTest {
         // Arrange
         val signing = CompletableDeferred<Unit>()
-        coEvery { activateUseCase(account = jointAccount) } coAnswers {
+        coEvery { confirmUseCase(account = jointAccount) } coAnswers {
             signing.await()
-            Unit.right()
+            confirmingAccount().right()
         }
         val model = createModel()
 
@@ -205,14 +223,14 @@ internal class JointAccountConfirmAddressModelTest {
 
         // Assert
         assertThat(model.uiState.value.isConfirming).isTrue()
-        coVerify(exactly = 1) { activateUseCase(account = jointAccount) }
+        coVerify(exactly = 1) { confirmUseCase(account = jointAccount) }
         signing.complete(Unit)
     }
 
     @Test
     fun `GIVEN signing dismissed WHEN confirm clicked THEN no dialog and the loader stops`() = runTest {
         // Arrange
-        coEvery { activateUseCase(account = jointAccount) } returns JointAccountFlowError.UserCancelled.left()
+        coEvery { confirmUseCase(account = jointAccount) } returns JointAccountFlowError.UserCancelled.left()
         val model = createModel()
 
         // Act
@@ -226,9 +244,9 @@ internal class JointAccountConfirmAddressModelTest {
     }
 
     @Test
-    fun `GIVEN activation fails WHEN confirm clicked THEN error dialog is shown`() = runTest {
+    fun `GIVEN confirmation fails WHEN confirm clicked THEN error dialog is shown`() = runTest {
         // Arrange
-        coEvery { activateUseCase(account = jointAccount) } returns JointAccountActivationError.NotCreator.left()
+        coEvery { confirmUseCase(account = jointAccount) } returns JointAccountConfirmationError.NotMember.left()
         val model = createModel()
 
         // Act
@@ -252,7 +270,7 @@ internal class JointAccountConfirmAddressModelTest {
 
         // Assert
         verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
-        coVerify(exactly = 0) { activateUseCase(account = any()) }
+        coVerify(exactly = 0) { confirmUseCase(account = any()) }
     }
 
     @Test
@@ -316,7 +334,7 @@ internal class JointAccountConfirmAddressModelTest {
             shareManager = shareManager,
             jointAccountListSupplier = supplier,
             singleAccountSupplier = singleAccountSupplier,
-            activateJointAccountUseCase = activateUseCase,
+            confirmJointAccountUseCase = confirmUseCase,
             userWalletsListRepository = userWalletsListRepository,
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,

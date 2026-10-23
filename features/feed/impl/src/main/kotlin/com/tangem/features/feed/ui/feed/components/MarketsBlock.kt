@@ -5,15 +5,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -26,12 +20,8 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
-import com.tangem.core.ui.ds.tabs.TangemTab
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.feed.model.market.list.state.SortByTypeUM
-import com.tangem.features.feed.ui.feed.state.FeedListCallbacks
-import com.tangem.features.feed.ui.feed.state.MarketChartConfig
 import com.tangem.features.feed.ui.feed.state.MarketChartUM
 
 @Composable
@@ -80,65 +70,6 @@ internal fun MarketBlock(
             }
             null -> Unit
         }
-    }
-}
-
-@Suppress("LongMethod")
-@Composable
-internal fun ColumnScope.MarketPulseBlock(marketChartConfig: MarketChartConfig, feedListCallbacks: FeedListCallbacks) {
-    val onSeeAllClick by rememberUpdatedState {
-        feedListCallbacks.onMarketOpenClick(marketChartConfig.currentSortByType)
-    }
-    if (marketChartConfig.marketCharts.isNotEmpty()) {
-        Header(
-            title = {
-                Text(
-                    text = stringResourceSafe(R.string.markets_pulse_common_title),
-                    style = TangemTheme.typography3.heading.small,
-                    color = TangemTheme.colors3.text.primary,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
-                )
-            },
-            onSeeAllClick = { onSeeAllClick() },
-            shouldShowSeeAll = true,
-            isLoading = marketChartConfig.marketCharts[marketChartConfig.currentSortByType] is MarketChartUM.Loading,
-            modifier = Modifier.padding(horizontal = 20.dp),
-        )
-
-        LazyRow(
-            modifier = Modifier.padding(vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            state = rememberLazyListState(),
-        ) {
-            items(
-                items = marketChartConfig.getFilterPreset(),
-                key = SortByTypeUM::name,
-            ) { sortByTypeUM ->
-                TangemTab(
-                    text = sortByTypeUM.text,
-                    isChecked = sortByTypeUM == marketChartConfig.currentSortByType,
-                    onCheckedChange = { feedListCallbacks.onSortTypeClick(sortByTypeUM) },
-                )
-            }
-        }
-
-        AnimatedContent(
-            targetState = marketChartConfig.currentSortByType,
-            label = "MarketPulseChartAnimation",
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-        ) { currentSortType ->
-            marketChartConfig.marketCharts[currentSortType]?.let { chart ->
-                Charts(
-                    onItemClick = feedListCallbacks.onMarketItemClick,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    marketChart = chart,
-                )
-            }
-        }
-        SpacerH(32.dp)
     }
 }
 
