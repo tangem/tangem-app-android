@@ -9,6 +9,9 @@ import com.tangem.pagination.exception.EndOfPaginationException
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.NullAndEmptySource
+import org.junit.jupiter.params.provider.ValueSource
 import java.io.IOException
 
 internal class PolymarketEventsBatchFetcherTest {
@@ -33,16 +36,39 @@ internal class PolymarketEventsBatchFetcherTest {
         assertThat(success.isLast).isFalse()
     }
 
-    @Test
-    fun `GIVEN a page without a cursor WHEN fetchFirst THEN it is the last one`() = runTest {
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = [" ", "\t"])
+    fun `GIVEN a page without a usable cursor WHEN fetchNext THEN no further request is sent`(cursor: String?) = runTest {
         // Arrange
-        val fetcher = createFetcher(pages = listOf(Result.success(page(hasNext = true, cursor = null))))
+        val fetcher = createFetcher(pages = listOf(Result.success(page(hasNext = true, cursor = cursor))))
+        val first = fetcher.fetchFirst(config)
 
         // Act
-        val result = fetcher.fetchFirst(config)
+        val next = fetcher.fetchNext(overrideRequestParams = null, lastResult = first)
 
         // Assert
-        assertThat((result as BatchFetchResult.Success).isLast).isTrue()
+        assertThat((first as BatchFetchResult.Success).isLast).isTrue()
+        assertThat((next as BatchFetchResult.Error).throwable).isInstanceOf(EndOfPaginationException::class.java)
+        assertThat(requestedCursors).containsExactly(null)
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = [" ", "\t"])
+    fun `GIVEN an empty page without a usable cursor WHEN fetchFirst THEN it is not followed`(cursor: String?) = runTest {
+        // Arrange
+        val fetcher = createFetcher(
+            pages = listOf(Result.success(page(events = emptyList(), hasNext = true, cursor = cursor))),
+        )
+
+        // Act
+        val result = fetcher.fetchFirst(config) as BatchFetchResult.Success
+
+        // Assert
+        assertThat(result.isEmpty).isTrue()
+        assertThat(result.isLast).isTrue()
+        assertThat(requestedCursors).containsExactly(null)
     }
 
     @Test
