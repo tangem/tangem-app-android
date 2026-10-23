@@ -1,5 +1,6 @@
 package com.tangem.data.wallets
 
+import android.util.Base64
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.google.common.truth.Truth.assertThat
@@ -18,6 +19,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.PromoCodeActivation
 import com.tangem.domain.wallets.models.PromoPayout
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
+import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -31,6 +33,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import java.util.Base64 as JavaBase64
 
 /**
  * Tests for [DefaultWalletsRepository]
@@ -41,6 +44,7 @@ class DefaultWalletsRepositoryTest {
     private val preferencesDataStore: DataStore<Preferences> = mockk(relaxed = true)
     private val tangemTechApi: TangemTechApi = mockk()
     private val walletServerBinder: WalletServerBinder = mockk()
+    private val walletRegistrar: WalletRegistrar = mockk()
 
     private val appPreferenceStore = createAppPreferencesStore(
         moshi = Moshi.Builder().build(),
@@ -57,6 +61,7 @@ class DefaultWalletsRepositoryTest {
         userWalletsListRepository = mockk(),
         dispatchers = TestingCoroutineDispatcherProvider(),
         walletServerBinder = walletServerBinder,
+        walletRegistrar = walletRegistrar,
         moshi = mockk(),
     )
 
@@ -65,6 +70,45 @@ class DefaultWalletsRepositoryTest {
     @AfterEach
     fun tearDown() {
         clearMocks(tangemTechApi, preferencesDataStore)
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IsWalletRegistered {
+
+        @Test
+        fun `GIVEN a registered wallet WHEN isWalletRegistered THEN the id is asked for in its Base64 form`() =
+            runTest {
+                // Arrange
+                mockkStatic(Base64::class)
+                every { Base64.encodeToString(any(), any()) } answers {
+                    JavaBase64.getEncoder().encodeToString(firstArg())
+                }
+                coEvery { walletRegistrar.isRegistered(any()) } returns true
+
+                // Act
+                val actual = repository.isWalletRegistered(testWalletId)
+
+                // Assert
+                assertThat(actual).isTrue()
+                coVerify(exactly = 1) { walletRegistrar.isRegistered(walletId = "EjRWeJCrze8=") }
+                unmockkStatic(Base64::class)
+            }
+
+        @Test
+        fun `GIVEN an unregistered wallet WHEN isWalletRegistered THEN returns false`() = runTest {
+            // Arrange
+            mockkStatic(Base64::class)
+            every { Base64.encodeToString(any(), any()) } answers { JavaBase64.getEncoder().encodeToString(firstArg()) }
+            coEvery { walletRegistrar.isRegistered(any()) } returns false
+
+            // Act
+            val actual = repository.isWalletRegistered(testWalletId)
+
+            // Assert
+            assertThat(actual).isFalse()
+            unmockkStatic(Base64::class)
+        }
     }
 
     @Nested

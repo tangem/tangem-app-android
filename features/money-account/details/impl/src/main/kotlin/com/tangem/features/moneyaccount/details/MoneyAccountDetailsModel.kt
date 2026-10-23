@@ -52,6 +52,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     val txHistorySlotNavigation = SlotNavigation<CryptoCurrency.Token>()
     private val stateFactory = MoneyAccountDetailsStateFactory(
         onAddFundsClick = ::onAddFundsClick,
+        onSendClick = ::onSendClick,
         onTermsClick = ::onTermsClick,
         onSupportClick = ::onSupportClick,
         onBackClick = ::onBackClick,
@@ -97,6 +98,12 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         bottomSheetNavigation.activate(
             MoneyAccountDetailsNavigation.AddFundsOptions(depositAddress = account.balance?.depositAddress),
         )
+    }
+
+    private fun onSendClick() {
+        val account = currentState ?: return
+        if (account.balance == null) return
+        router.push(AppRoute.Send(userWalletId = params.userWalletId, currency = account.cryptoCurrency))
     }
 
     override fun onSwapClick() {
