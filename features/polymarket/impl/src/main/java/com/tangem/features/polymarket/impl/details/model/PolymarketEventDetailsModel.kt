@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.polymarket.model.PolymarketEvent
@@ -50,6 +51,7 @@ internal class PolymarketEventDetailsModel @Inject constructor(
     private val shareManager: ShareManager,
     private val messageSender: UiMessageSender,
     private val regionAccess: PredictionRegionAccess,
+    private val urlOpener: UrlOpener,
 ) : Model() {
 
     private val params = paramsContainer.require<PolymarketEventDetailsComponent.Params>()
@@ -151,6 +153,7 @@ internal class PolymarketEventDetailsModel @Inject constructor(
             onOutcomeClick = ::onOutcomeClick,
             onClosedMarketsClick = ::onClosedMarketsClick,
             onReadMoreClick = ::onReadMoreClick,
+            onResolutionSourceClick = urlOpener::openUrl,
         )
     }
 

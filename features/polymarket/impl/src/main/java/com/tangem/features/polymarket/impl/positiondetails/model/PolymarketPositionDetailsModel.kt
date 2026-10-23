@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
@@ -46,6 +47,7 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
     private val getEvent: GetPolymarketEventUseCase,
     private val messageSender: UiMessageSender,
     private val regionAccess: PredictionRegionAccess,
+    private val urlOpener: UrlOpener,
 ) : Model() {
     private val params = paramsContainer.require<PolymarketPositionDetailsComponent.Params>()
     private val converter = PolymarketPositionDetailsConverter()
@@ -153,6 +155,7 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
             state.copy(
                 content = content.copy(
                     event = content.event?.copy(onClick = loaded.eventId?.let { { openEvent() } }),
+                    information = content.information.copy(onResolutionSourceClick = urlOpener::openUrl),
                     onClosePositionClick = closePositionAction(loaded),
                     onBuyMoreClick = buyMoreAction(loaded),
                 ),

@@ -287,6 +287,7 @@
   </plurals>
   <string name="collectibles_account_collection_empty">Nenhum cartão</string>
   <string name="collectibles_account_collection_row_subtitle">Minha coleção</string>
+  <string name="collectibles_account_reconnect_subtitle">Reconectar a conta do Packs</string>
   <string name="collectibles_account_withdraw">Saque</string>
   <string name="collectibles_confirm_order_approve_button">Aprovar</string>
   <string name="collectibles_confirm_order_confirming_transaction_button">Confirmando a transação...</string>
@@ -327,6 +328,7 @@
   <string name="collectibles_main_pack_buyback_badge">Recompra de %s</string>
   <string name="collectibles_main_packs_empty">Ainda não há pacotes disponíveis aqui</string>
   <string name="collectibles_main_packs_load_error">Não foi possível carregar os pacotes. Toque para recarregar</string>
+  <string name="collectibles_main_relink_button">Vincular conta novamente</string>
   <string name="collectibles_main_search_empty">Nenhum resultado. Tente alterar os termos da busca\nou explore a partir da lista</string>
   <string name="collectibles_main_search_load_error">Não foi possível carregar a lista de cartões.</string>
   <string name="collectibles_main_title">Conta de pacotes</string>
@@ -1193,6 +1195,8 @@
   <string name="joint_account_activation_title">Você está ativando uma conta compartilhada</string>
   <string name="joint_account_coming_soon_description">Esta ação ainda não é compatível com contas conjuntas. Estamos trabalhando nisso</string>
   <string name="joint_account_coming_soon_title">Em breve nas contas conjuntas</string>
+  <string name="joint_account_compromised_message">O endereço da conta no seu dispositivo não corresponde ao registrado em nossos servidores.</string>
+  <string name="joint_account_compromised_title">Não foi possível verificar esta conta</string>
   <string name="joint_account_confirm_account_subtitle">Antes de usar sua conta conjunta, certifique-se de que todos os membros vejam exatamente o mesmo endereço.</string>
   <string name="joint_account_confirm_account_title">Confirmar a conta</string>
   <string name="joint_account_confirm_address_compare_subtitle">Entre em contato com todos os membros fora do aplicativo Tangem, por telefone, mensagem ou pessoalmente. Verifique se todos veem exatamente o mesmo endereço.</string>
