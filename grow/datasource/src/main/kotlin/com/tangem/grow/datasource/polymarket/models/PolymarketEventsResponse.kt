@@ -45,6 +45,7 @@ data class PolymarketEventDto(
     @Json(name = "ended") val isEnded: Boolean? = null,
     @Json(name = "dataFetchedAt") val dataFetchedAt: String? = null,
     @Json(name = "teams") val teams: List<PolymarketTeamDto>? = null,
+    @Json(name = "resolutionSource") val resolutionSource: String? = null,
 )
 
 /** BFF `Market`. The feed carries only the top active markets of an event, event details carry all of them. */

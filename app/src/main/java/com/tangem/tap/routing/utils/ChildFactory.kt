@@ -47,6 +47,8 @@ import com.tangem.features.tangempay.components.TangemPayDetailsContainerCompone
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
 import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
+import com.tangem.features.tangempay.components.TangemPayOnboardingSuccessComponent
+import com.tangem.features.tangempay.components.TangemPayVerifiedComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
@@ -133,6 +135,8 @@ internal class ChildFactory @Inject constructor(
     private val jointAccountMembersComponentFactory: JointAccountMembersComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
     private val tangemPayEligibilityComponentFactory: TangemPayEligibilityComponent.Factory,
+    private val tangemPayVerifiedComponentFactory: TangemPayVerifiedComponent.Factory,
+    private val tangemPayOnboardingSuccessComponentFactory: TangemPayOnboardingSuccessComponent.Factory,
     private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val polymarketComponentFactory: PolymarketComponent.Factory,
@@ -833,6 +837,20 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                     ),
                     componentFactory = tangemPayEligibilityComponentFactory,
+                )
+            }
+            is AppRoute.TangemPayVerified -> {
+                createComponentChild(
+                    context = context,
+                    params = TangemPayVerifiedComponent.Params(userWalletId = route.userWalletId),
+                    componentFactory = tangemPayVerifiedComponentFactory,
+                )
+            }
+            is AppRoute.TangemPayOnboardingSuccess -> {
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = tangemPayOnboardingSuccessComponentFactory,
                 )
             }
             is AppRoute.Survey -> {

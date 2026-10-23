@@ -4,7 +4,5 @@
   <CurrentIssues>
     <ID>CastNullableToNonNullableType:DialogFullScreen.kt$as</ID>
     <ID>CastNullableToNonNullableType:FullScreen.kt$FullScreenLayout$as</ID>
-    <ID>NestedScopeFunctions:Shadow.kt$apply { isDither = true isAntiAlias = true setShadowLayer( radiusPx, offset.x.toPx(), offset.y.toPx(), color.toArgb(), ) }</ID>
-    <ID>PropertyUsedBeforeDeclaration:InputManager.kt$InputManager$_query</ID>
   </CurrentIssues>
 </SmellBaseline>

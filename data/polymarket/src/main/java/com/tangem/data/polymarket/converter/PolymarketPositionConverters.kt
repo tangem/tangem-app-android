@@ -16,6 +16,7 @@ internal object PolymarketOpenPositionConverter : Converter<PolymarketOpenPositi
     override fun convert(value: PolymarketOpenPositionDto): PolymarketPosition.Open = PolymarketPosition.Open(
         id = PolymarketPositionId(conditionId = value.conditionId, assetId = value.assetId),
         title = value.title,
+        resolutionSource = value.resolutionSource,
         iconUrl = value.icon,
         outcome = value.outcome,
         outcomeIndex = value.outcomeIndex,
@@ -55,6 +56,7 @@ internal object PolymarketClosedPositionConverter : Converter<PolymarketClosedPo
     override fun convert(value: PolymarketClosedPositionDto): PolymarketPosition.Closed = PolymarketPosition.Closed(
         id = PolymarketPositionId(conditionId = value.conditionId, assetId = value.assetId),
         title = value.title,
+        resolutionSource = value.resolutionSource,
         iconUrl = value.icon,
         outcome = value.outcome,
         outcomeIndex = value.outcomeIndex,

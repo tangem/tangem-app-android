@@ -151,7 +151,7 @@ class CexSwapFeeCalculator(
     ): Either<GetFeeError, TransactionFeeExtended?> = either {
         if (!swapFeatureToggles.isTronGaslessSwapEnabled) return@either null
         val token = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token ?: return@either null
-        if (!isTronGaslessSupportedUseCase(userWallet.walletId, token.network, token)) return@either null
+        if (!isTronGaslessSupportedUseCase(token.network, token)) return@either null
 
         val native = estimateNativeTronFeeOrNull(userWallet, fromSwapCurrencyStatus, amount)
         if (native != null && native.fee.isPaidByOwnTronEnergy(native.status)) {
