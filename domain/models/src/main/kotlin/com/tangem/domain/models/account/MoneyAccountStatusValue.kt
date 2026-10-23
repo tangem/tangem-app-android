@@ -128,6 +128,7 @@ sealed class MoneyAccountStatusValue {
             @SerialName("balance") override val balance: Balance?,
             @SerialName("customer_id") override val customerId: String,
             @SerialName("is_bank_offramp_available") val isBankOfframpAvailable: Boolean? = null,
+            @SerialName("product_instance_id") val productInstanceId: String? = null,
         ) : Account()
 
         @Serializable
