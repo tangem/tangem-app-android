@@ -17,7 +17,6 @@ internal sealed interface TangemPayVerifiedUM {
         val moneyAccount: ProductUM,
         val visaCard: ProductUM,
         val primaryButton: ButtonUM,
-        val secondaryButton: ButtonUM?,
         override val onCloseClick: () -> Unit,
     ) : TangemPayVerifiedUM
 
