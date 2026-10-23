@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 
-internal class DefaultPaymentAccountRecentsStoreTest {
+internal class DefaultAccountRecentsStoreTest {
 
     private var nowMillis = 100L
     private val spendPreferencesKeys = SpendPreferencesKeys()
@@ -25,7 +25,7 @@ internal class DefaultPaymentAccountRecentsStoreTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = MockStateDataStore(default = emptyPreferences()),
     )
-    private val store = DefaultPaymentAccountRecentsStore(
+    private val store = DefaultAccountRecentsStore(
         prefs = prefs,
         spendPreferencesKeys = spendPreferencesKeys,
         json = NetworkJsonFactory.create(),
@@ -79,15 +79,15 @@ internal class DefaultPaymentAccountRecentsStoreTest {
         // Arrange
         nowMillis = 100L
         store.markUsed(WALLET_A, journal, accountId = ACCOUNT_1, currencyId = COIN_ID)
-        val otherJournal = TokenTransferJournal.entries.single { it != journal }
 
         // Act
-        val usage = store.getUsage(WALLET_A, journal)
-        val otherUsage = store.getUsage(WALLET_A, otherJournal)
+        val usageByJournal = TokenTransferJournal.entries.associateWith { store.getUsage(WALLET_A, it) }
 
         // Assert
-        assertThat(usage).containsExactly(ACCOUNT_1 to COIN_ID, 100L)
-        assertThat(otherUsage).isEmpty()
+        val expected = TokenTransferJournal.entries.associateWith { entry ->
+            if (entry == journal) mapOf(ACCOUNT_1 to COIN_ID to 100L) else emptyMap()
+        }
+        assertThat(usageByJournal).isEqualTo(expected)
     }
 
     @Test

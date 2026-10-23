@@ -10,7 +10,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.recents.RecentTokenTransfer
 import com.tangem.domain.pay.model.recents.TokenTransferJournal
 import com.tangem.domain.pay.model.recents.TokenTransferJournal.PAYMENT_ACCOUNT
-import com.tangem.domain.pay.repository.PaymentAccountRecentsStore
+import com.tangem.domain.pay.repository.AccountRecentsStore
 import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test
 
 internal class GetRecentTokenTransfersUseCaseTest {
 
-    private val recentsStore: PaymentAccountRecentsStore = mockk()
+    private val recentsStore: AccountRecentsStore = mockk()
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
 
     private val useCase = GetRecentTokenTransfersUseCase(
@@ -45,7 +45,7 @@ internal class GetRecentTokenTransfersUseCaseTest {
         coEvery { recentsStore.getUsage(WALLET, PAYMENT_ACCOUNT) } returns emptyMap()
 
         // Act
-        val actual = useCase(WALLET).first()
+        val actual = useCase(WALLET, PAYMENT_ACCOUNT).first()
 
         // Assert
         assertThat(actual).isEmpty()
@@ -65,7 +65,7 @@ internal class GetRecentTokenTransfersUseCaseTest {
         coEvery { recentsStore.getUsage(WALLET, PAYMENT_ACCOUNT) } returns mapOf(usage(missingAccount, currency) to 1L)
 
         // Act
-        val actual = useCase(WALLET).first()
+        val actual = useCase(WALLET, PAYMENT_ACCOUNT).first()
 
         // Assert
         assertThat(actual).isEmpty()
@@ -79,7 +79,7 @@ internal class GetRecentTokenTransfersUseCaseTest {
         coEvery { recentsStore.getUsage(WALLET, PAYMENT_ACCOUNT) } returns mapOf(usage(account, currency()) to 1L)
 
         // Act
-        val actual = useCase(WALLET).first()
+        val actual = useCase(WALLET, PAYMENT_ACCOUNT).first()
 
         // Assert
         assertThat(actual).isEmpty()
@@ -103,7 +103,7 @@ internal class GetRecentTokenTransfersUseCaseTest {
         )
 
         // Act
-        val actual = useCase(WALLET).first()
+        val actual = useCase(WALLET, PAYMENT_ACCOUNT).first()
 
         // Assert
         assertThat(actual).containsExactly(
@@ -126,7 +126,7 @@ internal class GetRecentTokenTransfersUseCaseTest {
         coEvery { recentsStore.getUsage(WALLET, PAYMENT_ACCOUNT) } returns mapOf(usage(joint, currency) to 5L)
 
         // Act
-        val actual = useCase(WALLET).first()
+        val actual = useCase(WALLET, PAYMENT_ACCOUNT).first()
 
         // Assert
         assertThat(actual).containsExactly(RecentTokenTransfer(account = joint, currency = currency))

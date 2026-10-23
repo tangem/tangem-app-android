@@ -26,6 +26,7 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.domain.pay.model.bankofframp.RecentBankAccounts
 import com.tangem.domain.pay.model.recents.RecentTokenTransfer
+import com.tangem.domain.pay.model.recents.TokenTransferJournal
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
@@ -113,7 +114,9 @@ internal class TangemPayWithdrawHubModelTest {
         coEvery { getBankOfframpOptionsUseCase(userWalletId, any()) } returns offrampOptions().right()
         every { paymentAccountStatusSupplier(userWalletId) } returns statusFlow
         every { moneyAccountStatusSupplier(userWalletId) } returns flowOf(moneyAccountStatus(userWalletId))
-        every { getRecentTokenTransfersUseCase(userWalletId) } returns tokenRecentsFlow
+        every {
+            getRecentTokenTransfersUseCase(userWalletId, TokenTransferJournal.PAYMENT_ACCOUNT)
+        } returns tokenRecentsFlow
         emitStatus()
     }
 

@@ -10,7 +10,7 @@ import com.tangem.domain.pay.model.recents.TokenTransferJournal
  * Local usage log of the account + token pairs the payment and Money accounts have exchanged with: nothing on the
  * backend records them, so the app keeps its own journal for each of them.
  */
-interface PaymentAccountRecentsStore {
+interface AccountRecentsStore {
 
     suspend fun markUsed(
         userWalletId: UserWalletId,

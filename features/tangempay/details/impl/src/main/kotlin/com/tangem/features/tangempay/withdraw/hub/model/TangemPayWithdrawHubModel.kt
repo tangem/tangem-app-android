@@ -11,6 +11,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
+import com.tangem.domain.pay.model.recents.TokenTransferJournal
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
@@ -132,7 +133,10 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     }
 
     private fun observeTokenRecents() {
-        getRecentTokenTransfersUseCase(params.userWalletId)
+        getRecentTokenTransfersUseCase(
+            userWalletId = params.userWalletId,
+            journal = TokenTransferJournal.PAYMENT_ACCOUNT,
+        )
             .onEach { transfers ->
                 state.update { it.copy(tokenRecents = TokenRecentsState.Loaded(transfers = transfers)) }
             }

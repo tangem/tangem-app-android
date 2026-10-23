@@ -4,7 +4,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.recents.TokenTransferJournal
-import com.tangem.domain.pay.repository.PaymentAccountRecentsStore
+import com.tangem.domain.pay.repository.AccountRecentsStore
 
 /**
  * Records the crypto portfolio side of an exchange with the payment or Money account, in that account's journal: a
@@ -12,7 +12,7 @@ import com.tangem.domain.pay.repository.PaymentAccountRecentsStore
  * belong to different wallets, is none of the journals' business.
  */
 class RecordTokenTransferFromSwapUseCase(
-    private val recentsStore: PaymentAccountRecentsStore,
+    private val recentsStore: AccountRecentsStore,
 ) {
 
     @Suppress("LongParameterList")
