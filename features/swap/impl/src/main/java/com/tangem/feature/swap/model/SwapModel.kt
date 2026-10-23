@@ -249,6 +249,9 @@ internal class SwapModel @Inject constructor(
     private val isMoneyTopUpFlow: Boolean
         get() = accountFlow is AccountFlow.MoneyTopUp
 
+    private val isMoneyWithdrawFlow: Boolean
+        get() = accountFlow is AccountFlow.MoneyWithdraw
+
     val isGaslessWithdrawal: Boolean
         get() = isTangemPayWithdrawal() || isPredictionWithdrawFlow
 
@@ -289,8 +292,8 @@ internal class SwapModel @Inject constructor(
     val chooseToTokenBridge: ChooseTokenBridge = chooseTokenBridgeFactory.create(
         modelScope = modelScope,
         settings = when {
-            // Withdrawing into the account the funds are leaving is not an operation the user can make.
-            isTangemPayWithdrawFlow ->
+            // Withdrawals land in the portfolio, so the payment account is never a destination.
+            isTangemPayWithdrawFlow || isMoneyWithdrawFlow ->
                 ChooseTokenBridge.Settings.SwapTo.copy(paymentAccountTokens = PaymentAccountTokens.Hidden)
             // Topping up targets the account, so its issued tokens are the destinations.
             isAccountTopUp ->
@@ -334,7 +337,12 @@ internal class SwapModel @Inject constructor(
         }
 
     private val isTargetOnlyDestination: Boolean
-        get() = dataState.toSwapCurrencyStatus?.isTargetOnly(isPredictionWithdrawFlow) == true
+        get() {
+            val toSwapCurrencyStatus = dataState.toSwapCurrencyStatus ?: return false
+            return toSwapCurrencyStatus.isTargetOnly(
+                isWithdrawSource = accountFlow.withdrawsFrom(toSwapCurrencyStatus.account),
+            )
+        }
 
     private val isReverseLocked: Boolean
         get() = isAccountFlowActive ||
@@ -603,7 +611,8 @@ internal class SwapModel @Inject constructor(
                 isPredictionTopUpFlow ||
                 isPredictionWithdrawFlow ||
                 isCollectiblesTopUpFlow ||
-                isMoneyTopUpFlow
+                isMoneyTopUpFlow ||
+                isMoneyWithdrawFlow
 
             val (resolvedFromCurrencyStatus, resolvedToCurrencyStatus) = initialCurrenciesResolver(
                 userWalletId = params.userWalletId,
@@ -1239,7 +1248,8 @@ internal class SwapModel @Inject constructor(
 
     private suspend fun updateFeePaidCryptoCurrencyFor(fromSwapCurrencyStatus: SwapCurrencyStatus) {
         val fromCryptoCurrency = fromSwapCurrencyStatus.currency
-        val feePaidCryptoCurrency = if (fromSwapCurrencyStatus.account is Account.Payment) {
+        val fromAccount = fromSwapCurrencyStatus.account
+        val feePaidCryptoCurrency = if (fromAccount is Account.Payment || fromAccount is Account.Money) {
             fromSwapCurrencyStatus.status
         } else {
             getFeePaidCryptoCurrencyStatusSyncUseCase(
@@ -3150,21 +3160,16 @@ internal class SwapModel @Inject constructor(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
     ) = map { pair ->
-        val isTangemPayWithdrawal = isTangemPayWithdrawal(
-            swapInteractor.extractFromSwapCurrencyFromPair(
-                pair = pair,
-                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                toSwapCurrencyStatus = toSwapCurrencyStatus,
-            ),
+        val pairFromSwapCurrencyStatus = swapInteractor.extractFromSwapCurrencyFromPair(
+            pair = pair,
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            toSwapCurrencyStatus = toSwapCurrencyStatus,
         )
-        val filterProviderTypes = if (isTangemPayWithdrawal) {
-            listOf(ExchangeProviderType.CEX)
-        } else {
-            emptyList()
-        }
+        val isCexOnly = isTangemPayWithdrawal(pairFromSwapCurrencyStatus) ||
+            pairFromSwapCurrencyStatus?.account is Account.Money
         pair.copy(
-            providers = pair.providers.filterIf(filterProviderTypes.isNotEmpty()) { provider ->
-                provider.type in filterProviderTypes
+            providers = pair.providers.filterIf(isCexOnly) { provider ->
+                provider.type == ExchangeProviderType.CEX
             },
         )
     }
@@ -3206,14 +3211,16 @@ internal class SwapModel @Inject constructor(
                 }
             }
         }
-        when (dataState.toSwapCurrencyStatus?.account) {
-            is Account.Collectibles -> refreshAccountWithDelay(accountName = "collectibles vault") {
+        val toAccount = dataState.toSwapCurrencyStatus?.account
+        val fromAccount = dataState.fromSwapCurrencyStatus?.account
+        when {
+            toAccount is Account.Collectibles -> refreshAccountWithDelay(accountName = "collectibles vault") {
                 collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(params.userWalletId))
             }
-            is Account.Money -> refreshAccountWithDelay(accountName = "money account") {
-                moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(params.userWalletId))
-            }
-            else -> Unit
+            toAccount is Account.Money || fromAccount is Account.Money ->
+                refreshAccountWithDelay(accountName = "money account") {
+                    moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(params.userWalletId))
+                }
         }
     }
 

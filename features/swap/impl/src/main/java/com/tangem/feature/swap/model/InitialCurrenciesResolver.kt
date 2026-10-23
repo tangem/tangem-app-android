@@ -4,6 +4,7 @@ import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -76,12 +77,13 @@ internal class InitialCurrenciesResolver @Inject constructor(
      * @param swapCurrencyPosition preferred position for the initial currency
      * @param accountFlow non-null when the swap screen was opened for an account top-up/withdraw flow;
      *  `null` for a regular swap. Determines both where [initialCryptoCurrency] is looked up
-     *  (payment, prediction or crypto portfolio accounts) and which account FROM auto-fill priority applies.
+     *  (payment, prediction, Money or crypto portfolio accounts) and which account FROM auto-fill priority applies.
      *  For [AccountFlow.TopUp]: (a) the most-funded wallet token that is one of the account's own
      *  underlying currencies ([AccountUnderlyingCurrencies]), if it has a balance — this turns the operation
      *  into a same-wallet transfer; (b) otherwise the regular most-funded wallet token; (c) otherwise `null`
      *  (falls through to "Choose token"). For [AccountFlow.Withdraw]: the account's most-funded token. For
-     *  [AccountFlow.PredictionWithdraw]: the prediction account's collateral. For [AccountFlow.PredictionTopUp]:
+     *  [AccountFlow.PredictionWithdraw]: the prediction account's collateral. For [AccountFlow.MoneyWithdraw]: the
+     *  Money account's token. For [AccountFlow.PredictionTopUp]:
      *  the most-funded wallet token the account accepts as a deposit as is, otherwise the portfolio auto-fill.
      *  For [AccountFlow.CollectiblesTopUp] and [AccountFlow.MoneyTopUp]: the most-funded wallet holding of the
      *  target account's own token, otherwise the portfolio auto-fill.
@@ -98,7 +100,8 @@ internal class InitialCurrenciesResolver @Inject constructor(
         initialToCryptoCurrency: CryptoCurrency? = null,
     ): Pair<SwapCurrencyStatus?, SwapCurrencyStatus?> {
         val isPaymentAccount = accountFlow is AccountFlow.TopUp || accountFlow is AccountFlow.Withdraw
-        val isPredictionWithdraw = accountFlow is AccountFlow.PredictionWithdraw
+        val isAccountWithdraw = accountFlow is AccountFlow.PredictionWithdraw ||
+            accountFlow is AccountFlow.MoneyWithdraw
         val walletAccountList = getWalletAccountCurrencyStatusList(userWalletId)
         val cryptoPortfolioAccounts = walletAccountList.filterKeys { accountStatus ->
             accountStatus is AccountStatus.CryptoPortfolio
@@ -106,21 +109,21 @@ internal class InitialCurrenciesResolver @Inject constructor(
         val cryptoPaymentAccounts = walletAccountList.filterKeys { accountStatus ->
             accountStatus is AccountStatus.Payment
         }
-        val predictionAccounts = walletAccountList.filterKeys { accountStatus ->
-            accountStatus is AccountStatus.Prediction
+        val withdrawSourceAccounts = walletAccountList.filterKeys { accountStatus ->
+            accountFlow.withdrawsFrom(accountStatus.account)
         }
 
         val targetOnlyAccounts = walletAccountList.filterKeys { accountStatus ->
-            accountStatus.account.isSwapTargetOnly(isPredictionWithdraw)
+            accountStatus.account.isSwapTargetOnly(isWithdrawSource = accountFlow.withdrawsFrom(accountStatus.account))
         }
 
         val fromEligibleAccounts = cryptoPortfolioAccounts.filterKeys {
-            !it.account.isSwapTargetOnly(isPredictionWithdraw)
+            !it.account.isSwapTargetOnly(isWithdrawSource = accountFlow.withdrawsFrom(it.account))
         }
         val cryptoCurrencyList = fromEligibleAccounts.values.flatten()
         val lookupAccounts = when {
             isPaymentAccount -> cryptoPaymentAccounts
-            isPredictionWithdraw -> predictionAccounts
+            isAccountWithdraw -> withdrawSourceAccounts
             else -> cryptoPortfolioAccounts
         }
 
@@ -229,7 +232,7 @@ internal class InitialCurrenciesResolver @Inject constructor(
             cryptoPortfolioAccounts = cryptoPortfolioAccounts,
             cryptoCurrencyList = cryptoPortfolioAccounts.values.flatten(),
         )
-        is AccountFlow.Withdraw, is AccountFlow.PredictionWithdraw ->
+        is AccountFlow.Withdraw, is AccountFlow.PredictionWithdraw, is AccountFlow.MoneyWithdraw ->
             mostFundedAccountCurrency(accountFlowAccounts) ?: from
         is AccountFlow.PredictionTopUp -> resolvePredictionTopUpFromPriority(
             userWalletId = userWalletId,
@@ -476,4 +479,16 @@ internal class InitialCurrenciesResolver @Inject constructor(
                 ?: cryptoPortfolioAccountsMap.entries.firstOrNull()?.value?.firstOrNull()
         }
     }
+}
+
+internal fun AccountFlow?.withdrawsFrom(account: Account): Boolean = when (this) {
+    is AccountFlow.PredictionWithdraw -> account is Account.Prediction
+    is AccountFlow.MoneyWithdraw -> account is Account.Money
+    is AccountFlow.TopUp,
+    is AccountFlow.Withdraw,
+    is AccountFlow.PredictionTopUp,
+    is AccountFlow.CollectiblesTopUp,
+    is AccountFlow.MoneyTopUp,
+    null,
+    -> false
 }
