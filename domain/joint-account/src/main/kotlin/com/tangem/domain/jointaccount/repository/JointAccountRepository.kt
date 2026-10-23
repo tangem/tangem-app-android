@@ -2,7 +2,7 @@ package com.tangem.domain.jointaccount.repository
 
 import arrow.core.Either
 import com.tangem.domain.jointaccount.model.JointAccount
-import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
+import com.tangem.domain.jointaccount.model.JointAccountConfirmationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
 import com.tangem.domain.jointaccount.model.JointAccountInvite
@@ -73,19 +73,20 @@ interface JointAccountRepository {
     ): Either<Throwable, JointAccount>
 
     /**
-     * Confirms the composition and activates the account.
+     * Records this wallet's confirmation of the composition and returns the account as the backend holds it
+     * after that.
      *
      * [payload] is the object the card signed and [signature] the EIP-191 signature over its RFC 8785 canonical
-     * form — the same wire rules as in [create]. The endpoint is idempotent — activating an already `active`
-     * account succeeds — so a request whose response was lost to a timeout is retried once here instead of
-     * reporting an error for a likely-activated account. Every other error comes back as a `Left` as it arrives
-     * from the API — the function never throws.
+     * form — the same wire rules as in [create]. The endpoint is idempotent — repeating a confirmation, or
+     * confirming an already `active` account, succeeds — so a request whose response was lost to a timeout is
+     * retried once here instead of reporting an error for a likely-recorded signature. Every other error comes
+     * back as a `Left` as it arrives from the API — the function never throws.
      */
-    suspend fun activate(
+    suspend fun confirm(
         userWalletId: UserWalletId,
-        payload: JointAccountActivationPayload,
+        payload: JointAccountConfirmationPayload,
         signature: String,
-    ): Either<Throwable, Unit>
+    ): Either<Throwable, JointAccount>
 
     /**
      * Previews the invite [inviteId] for wallet [walletId] — the configuration and who is inviting.
