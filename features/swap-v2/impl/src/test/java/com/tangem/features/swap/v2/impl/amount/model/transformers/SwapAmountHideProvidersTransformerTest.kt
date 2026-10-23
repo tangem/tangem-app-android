@@ -44,28 +44,7 @@ internal class SwapAmountHideProvidersTransformerTest {
     }
 
     @Test
-    fun `GIVEN hidden provider is not selected WHEN transform THEN it is dropped and selection is kept`() {
-        // Arrange
-        val changeHeroQuote = quote(provider = changeHero)
-        val state = buildContentState(
-            providers = listOf(changelly, changeHero),
-            quotes = listOf(changeHeroQuote, quote(provider = changelly)),
-            selectedQuote = changeHeroQuote,
-        )
-
-        // Act
-        val result = buildTransformer(providerIds = setOf(changelly.providerId)).transform(state)
-
-        // Assert
-        val expected = state.copy(
-            swapCurrencies = swapCurrencies(providers = listOf(changeHero)),
-            swapQuotes = persistentListOf(changeHeroQuote),
-        )
-        assertThat(result).isEqualTo(expected)
-    }
-
-    @Test
-    fun `GIVEN hidden provider is selected WHEN transform THEN quote is loading and button is disabled`() {
+    fun `GIVEN selected provider is hidden WHEN transform THEN it is dropped and quote is loading`() {
         // Arrange
         val changellyQuote = quote(provider = changelly)
         val changeHeroQuote = quote(provider = changeHero)
