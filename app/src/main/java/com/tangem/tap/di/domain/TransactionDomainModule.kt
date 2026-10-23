@@ -1,5 +1,7 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -288,6 +290,7 @@ internal object TransactionDomainModule {
         getDynamicReceiveAddressUseCase: GetDynamicReceiveAddressUseCase,
         dynamicAddressesRepository: DynamicAddressesRepository,
         userWalletsListRepository: UserWalletsListRepository,
+        featureTogglesManager: FeatureTogglesManager,
     ): ReceiveAddressesFactory {
         return ReceiveAddressesFactory(
             getEnsNameUseCase = getEnsNameUseCase,
@@ -295,6 +298,11 @@ internal object TransactionDomainModule {
             getDynamicReceiveAddressUseCase = getDynamicReceiveAddressUseCase,
             dynamicAddressesRepository = dynamicAddressesRepository,
             userWalletsListRepository = userWalletsListRepository,
+            isSolanaPnftAndCoreNftEnabled = {
+                featureTogglesManager.isFeatureEnabled(
+                    toggle = FeatureToggles.TWI_1822_SOLANA_PNFT_AND_METAPLEX_CORE_ENABLED,
+                )
+            },
         )
     }
 
