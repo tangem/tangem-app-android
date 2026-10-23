@@ -2,11 +2,7 @@ package com.tangem.domain.swap
 
 import com.tangem.domain.express.models.ExpressError
 
-/**
- * Some providers screen addresses and reject the swap before signing. A provider is hidden when its error means
- * such a rejection: either a dedicated one like [ExpressError.ExchangeProviderAddressBannedByAmlError] or, for
- * providers without one, any error but user-fixable ones, [ExpressError.UnknownError] included.
- */
+/** Decides whether a provider is hidden after a failed swap, when its error means it rejected the swap. */
 object SwapProviderHidingPolicy {
 
     private const val CHANGEHERO_PROVIDER_ID = "changehero"
