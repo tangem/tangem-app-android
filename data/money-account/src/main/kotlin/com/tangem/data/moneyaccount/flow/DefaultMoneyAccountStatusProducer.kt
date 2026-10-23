@@ -28,7 +28,7 @@ internal class DefaultMoneyAccountStatusProducer @AssistedInject constructor(
     private val account = Account.Money(userWalletId = params.userWalletId)
 
     override val fallback: Option<AccountStatus.Money>
-        get() = AccountStatus.Money(account = account, value = MoneyAccountStatusValue.Error.Unavailable).some()
+        get() = AccountStatus.Money(account = account, value = MoneyAccountStatusValue.Empty).some()
 
     override fun produce(): Flow<AccountStatus.Money> {
         return moneyAccountStatusesStore.get(userWalletId = params.userWalletId)
