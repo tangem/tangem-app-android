@@ -15,7 +15,7 @@ import com.tangem.data.pay.flow.DefaultPaymentAccountStatusFetcher
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusProducer
 import com.tangem.data.pay.repository.*
 import com.tangem.data.pay.store.CashbackSummaryStore
-import com.tangem.data.pay.store.DefaultPaymentAccountRecentsStore
+import com.tangem.data.pay.store.DefaultAccountRecentsStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
@@ -708,12 +708,12 @@ internal interface TangemPayDataModule {
 
         @Provides
         @Singleton
-        fun providePaymentAccountRecentsStore(
+        fun provideAccountRecentsStore(
             prefs: AppPreferencesStore,
             spendPreferencesKeys: SpendPreferencesKeys,
             @NetworkJson json: Json,
-        ): PaymentAccountRecentsStore {
-            return DefaultPaymentAccountRecentsStore(
+        ): AccountRecentsStore {
+            return DefaultAccountRecentsStore(
                 prefs = prefs,
                 spendPreferencesKeys = spendPreferencesKeys,
                 json = json,
@@ -722,7 +722,7 @@ internal interface TangemPayDataModule {
 
         @Provides
         fun provideGetRecentTokenTransfersUseCase(
-            recentsStore: PaymentAccountRecentsStore,
+            recentsStore: AccountRecentsStore,
             singleAccountListSupplier: SingleAccountListSupplier,
         ): GetRecentTokenTransfersUseCase {
             return GetRecentTokenTransfersUseCase(
@@ -733,14 +733,14 @@ internal interface TangemPayDataModule {
 
         @Provides
         fun provideRecordTokenTransferFromSwapUseCase(
-            recentsStore: PaymentAccountRecentsStore,
+            recentsStore: AccountRecentsStore,
         ): RecordTokenTransferFromSwapUseCase {
             return RecordTokenTransferFromSwapUseCase(recentsStore = recentsStore)
         }
 
         @Provides
         fun provideRecordTokenTransferFromSendUseCase(
-            recentsStore: PaymentAccountRecentsStore,
+            recentsStore: AccountRecentsStore,
             paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
         ): RecordTokenTransferFromSendUseCase {
             return RecordTokenTransferFromSendUseCase(
