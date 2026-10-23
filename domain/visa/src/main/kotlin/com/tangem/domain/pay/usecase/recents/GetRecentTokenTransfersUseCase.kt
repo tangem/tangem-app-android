@@ -6,6 +6,7 @@ import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.recents.RecentTokenTransfer
+import com.tangem.domain.pay.model.recents.TokenTransferJournal
 import com.tangem.domain.pay.repository.PaymentAccountRecentsStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -19,9 +20,12 @@ class GetRecentTokenTransfersUseCase(
     private val singleAccountListSupplier: SingleAccountListSupplier,
 ) {
 
-    operator fun invoke(userWalletId: UserWalletId): Flow<List<RecentTokenTransfer>> {
+    operator fun invoke(
+        userWalletId: UserWalletId,
+        journal: TokenTransferJournal = TokenTransferJournal.PAYMENT_ACCOUNT,
+    ): Flow<List<RecentTokenTransfer>> {
         return singleAccountListSupplier(userWalletId).map { accountList ->
-            join(usage = recentsStore.getUsage(userWalletId), accountList = accountList)
+            join(usage = recentsStore.getUsage(userWalletId, journal), accountList = accountList)
         }
     }
 
