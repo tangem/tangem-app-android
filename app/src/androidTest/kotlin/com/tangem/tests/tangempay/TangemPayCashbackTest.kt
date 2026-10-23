@@ -32,6 +32,7 @@ class TangemPayCashbackTest : BaseTestCase() {
     private val emptyState = "Empty"
     private val refundState = "Refund"
     private val altBlockState = "AltBlock"
+    private val altBlockZeroState = "AltBlockZero"
     private val fraudState = "Fraud"
     private val payoutState = "Payout"
     private val historyFailedState = "HistoryFailed"
@@ -149,7 +150,7 @@ class TangemPayCashbackTest : BaseTestCase() {
     }
 
     @AllureId("10938")
-    @DisplayName("Tangem Pay: EU layout moves cashback from the widget into the menu")
+    @DisplayName("Tangem Pay: EU layout moves zero cashback from the widget into the menu")
     @Test
     fun euLayoutShowsCashbackInMenuTest() {
         setupHooks(
@@ -159,8 +160,8 @@ class TangemPayCashbackTest : BaseTestCase() {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
             }
-            step("Set WireMock scenario '$cashbackScenario' to '$altBlockState'") {
-                setWireMockScenarioState(cashbackScenario, altBlockState)
+            step("Set WireMock scenario '$cashbackScenario' to '$altBlockZeroState'") {
+                setWireMockScenarioState(cashbackScenario, altBlockZeroState)
             }
             step("Open Tangem Pay") { openTangemPay() }
             step("Open 'More' menu") { openTangemPayMoreActionsMenu() }
@@ -172,6 +173,31 @@ class TangemPayCashbackTest : BaseTestCase() {
             step("Click on 'Back' button") { device.uiDevice.pressBack() }
             step("Assert cashback widget is not displayed") {
                 onTangemPayMainScreen { cashbackWidget.assertDoesNotExist() }
+            }
+        }
+    }
+
+    @AllureId("13248")
+    @DisplayName("Tangem Pay: EU layout keeps the cashback widget for a non-zero amount")
+    @Test
+    fun euLayoutShowsCashbackWidgetForNonZeroAmountTest() {
+        setupHooks(
+            additionalBeforeSection = { serveTangemPayCashbackFromWireMock() },
+            additionalAfterSection = { restoreTangemPayCannedCashback() },
+        ).run {
+            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+            }
+            step("Set WireMock scenario '$cashbackScenario' to '$altBlockState'") {
+                setWireMockScenarioState(cashbackScenario, altBlockState)
+            }
+            step("Open Tangem Pay") { openTangemPay() }
+            step("Assert cashback widget with '$positiveAmount' is displayed") {
+                assertTangemPayCashbackWidget(widgetTitle(positiveAmount))
+            }
+            step("Open 'More' menu") { openTangemPayMoreActionsMenu() }
+            step("Assert 'Cashback in $currentMonth' menu item is not displayed") {
+                onTangemPayMainScreen { cashbackMenuItem(currentMonth).assertDoesNotExist() }
             }
         }
     }
