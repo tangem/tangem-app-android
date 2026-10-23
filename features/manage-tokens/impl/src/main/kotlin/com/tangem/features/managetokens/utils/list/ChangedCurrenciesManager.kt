@@ -18,11 +18,21 @@ internal class ChangedCurrenciesManager {
     val currenciesToRemove: MutableStateFlow<ChangedCurrencies> = MutableStateFlow(emptyMap())
 
     fun addCurrency(currency: ManagedCryptoCurrency.Token, network: Network) {
-        updateChangedItems(currency, network, currenciesToRemove, currenciesToAdd)
+        updateChangedItems(
+            currency = currency,
+            network = network,
+            removeFromIfPresent = currenciesToRemove,
+            addToIfNotPresent = currenciesToAdd,
+        )
     }
 
     fun removeCurrency(currency: ManagedCryptoCurrency.Token, network: Network) {
-        updateChangedItems(currency, network, currenciesToAdd, currenciesToRemove)
+        updateChangedItems(
+            currency = currency,
+            network = network,
+            removeFromIfPresent = currenciesToAdd,
+            addToIfNotPresent = currenciesToRemove,
+        )
     }
 
     fun containsCurrency(currency: ManagedCryptoCurrency.Token, network: Network): Boolean {

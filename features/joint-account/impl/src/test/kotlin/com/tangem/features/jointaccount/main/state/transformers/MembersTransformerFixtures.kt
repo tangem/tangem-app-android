@@ -48,7 +48,6 @@ internal fun createMembersUM(
     joined: ImmutableList<JointAccountMembersUM.MemberUM.Joined> = persistentListOf(),
     freeSlots: ImmutableList<JointAccountMembersUM.MemberUM.FreeSlot> = persistentListOf(),
     membersLabel: TextReference? = null,
-    waitingLabel: TextReference? = null,
     footer: JointAccountMembersUM.FooterUM? = null,
 ): JointAccountMembersUM = JointAccountMembersUM(
     topBar = topBar,
@@ -57,7 +56,6 @@ internal fun createMembersUM(
     joined = joined,
     freeSlots = freeSlots,
     membersLabel = membersLabel,
-    waitingLabel = waitingLabel,
     footer = footer,
 )
 

@@ -5,12 +5,14 @@ import androidx.datastore.dataStoreFile
 import com.tangem.core.local.datastore.DeleteObsoleteFileMigration
 import com.tangem.data.moneyaccount.converter.MoneyAccountStatusValueDMConverter
 import com.tangem.data.moneyaccount.currency.DefaultMoneyAccountCurrencyFactory
+import com.tangem.data.moneyaccount.currency.MoneyAccountCurrenciesProvider
 import com.tangem.data.moneyaccount.flow.DefaultMoneyAccountStatusFetcher
 import com.tangem.data.moneyaccount.flow.DefaultMoneyAccountStatusProducer
 import com.tangem.data.moneyaccount.repository.DefaultMoneyAccountActivationRepository
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
 import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
@@ -34,10 +36,13 @@ import com.tangem.domain.moneyaccount.usecase.CreateMoneyAccountOrderUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountFeeTableUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountStatusUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountSuitableWalletsUseCase
 import com.tangem.domain.moneyaccount.usecase.RestoreMoneyAccountOrderUseCase
+import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
+import com.tangem.domain.pay.usecase.CreateOnboardingOrderUseCase
 import com.tangem.domain.moneyaccount.usecase.TrackMoneyAccountOrderUseCase
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -74,6 +79,10 @@ internal interface MoneyAccountDataModule {
     @Binds
     @Singleton
     fun bindMoneyAccountCurrencyFactory(impl: DefaultMoneyAccountCurrencyFactory): MoneyAccountCurrencyFactory
+
+    @Binds
+    @Singleton
+    fun bindNonPortfolioCurrenciesProvider(impl: MoneyAccountCurrenciesProvider): NonPortfolioCurrenciesProvider
 
     companion object {
 
@@ -122,6 +131,18 @@ internal interface MoneyAccountDataModule {
             repository: MoneyAccountActivationRepository,
         ): ActivateMoneyAccountUseCase {
             return ActivateMoneyAccountUseCase(repository = repository)
+        }
+
+        @Provides
+        @Singleton
+        fun provideStartTangemPayOnboardingUseCase(
+            activateMoneyAccountUseCase: ActivateMoneyAccountUseCase,
+            createOnboardingOrderUseCase: CreateOnboardingOrderUseCase,
+        ): StartTangemPayOnboardingUseCase {
+            return StartTangemPayOnboardingUseCase(
+                activateMoneyAccountUseCase = activateMoneyAccountUseCase,
+                createOnboardingOrderUseCase = createOnboardingOrderUseCase,
+            )
         }
 
         @Provides
@@ -201,6 +222,14 @@ internal interface MoneyAccountDataModule {
                 moneyAccountStatusFetcher = moneyAccountStatusFetcher,
                 moneyAccountStatusSupplier = moneyAccountStatusSupplier,
             )
+        }
+
+        @Provides
+        @Singleton
+        fun provideGetMoneyAccountCryptoCurrencyStatusUseCase(
+            moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
+        ): GetMoneyAccountCryptoCurrencyStatusUseCase {
+            return GetMoneyAccountCryptoCurrencyStatusUseCase(moneyAccountStatusSupplier = moneyAccountStatusSupplier)
         }
 
         @Provides

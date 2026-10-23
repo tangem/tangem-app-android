@@ -122,6 +122,7 @@ internal class DefaultWalletCardsBackupRepository(
         return when (response) {
             is ApiResponse.Success -> {
                 pendingStore.remove(pending.id)
+                TangemLogger.i("Cards backup report delivered wallet=${pending.walletId}")
                 SendResult.Delivered
             }
             is ApiResponse.Error -> {

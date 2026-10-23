@@ -1,14 +1,15 @@
 package com.tangem.domain.transaction.usecase.gasless
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -27,6 +28,7 @@ import java.math.BigDecimal
  */
 class GetFeeForGaslessUseCase(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val getFeeUseCase: GetFeeUseCase,
     private val evmGaslessFeeResolver: EvmGaslessFeeResolver,
@@ -53,9 +55,10 @@ class GetFeeForGaslessUseCase(
                     val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
                         ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
 
-                    val nativeCurrencyStatus = accountStatusList.getCoinStatus(network).getOrElse {
-                        raiseIllegalStateError("No native currency found: ${network.id}")
-                    }
+                    val nativeCurrencyStatus = accountStatusList.getCoinStatus(network).getOrNull()
+                        ?: nonPortfolioCurrenciesProvider.getStatuses(userWallet.walletId, network)
+                            .firstOrNull { it.currency is CryptoCurrency.Coin }
+                        ?: raiseIllegalStateError("No native currency found: ${network.id}")
 
                     if (currencyChecksRepository.isNetworkSupportedForGaslessTx(network)) {
                         evmGaslessFeeResolver.resolveWithAutoFeeToken(

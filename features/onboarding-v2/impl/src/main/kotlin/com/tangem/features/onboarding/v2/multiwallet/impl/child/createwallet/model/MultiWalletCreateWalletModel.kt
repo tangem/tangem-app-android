@@ -61,6 +61,8 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
     private val multiWalletState
         get() = params.multiWalletState
 
+    val onDone = MutableSharedFlow<Step>()
+
     private val _uiState = MutableStateFlow(
         MultiWalletCreateWalletUM(
             title = if (params.parentParams.isSeedPhraseFlow) {
@@ -90,7 +92,6 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
     )
 
     val uiState: StateFlow<MultiWalletCreateWalletUM> = _uiState
-    val onDone = MutableSharedFlow<Step>()
 
     init {
         analyticsHandler.send(OnboardingAnalyticsEvent.CreateWallet.ScreenOpened())
@@ -135,7 +136,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
                         ),
                     )
 
-                    val isBackupNotSupported = result.data.card.settings.isBackupAllowed.not()
+                    val isBackupNotSupported = !result.data.card.settings.isBackupAllowed
                     when {
                         isBackupNotSupported -> createWalletAndNavigateBackWithDone()
                         params.parentParams.isSeedPhraseFlow -> onDone.emit(Step.AddBackupDevice)

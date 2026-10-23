@@ -40,6 +40,7 @@ dependencies {
     api(projects.domain.visa.models)
     api(projects.domain.wallets)
     implementation(projects.domain.models)
+    implementation(projects.domain.moneyAccount)
 
     /** Libs */
     implementation(tangemDeps.hot.core)

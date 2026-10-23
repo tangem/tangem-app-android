@@ -202,7 +202,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         assertThat(result.title).isEqualTo(resRef(R.string.common_network_fee_title))
         assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_percent_20))
-        assertThat(result.amount).isEqualTo("${StringsSigns.DASH_SIGN}0.000015")
+        assertThat(result.amount).isEqualTo("${StringsSigns.MINUS_SIGN}0.000015")
         assertThat(result.subtitle).isEqualTo(
             ContentSubtitle.FeeFor(symbol = "USDT", icon = CryptoCurrencyToIconStateConverter().convert(token)),
         )
@@ -238,7 +238,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         assertThat(result.title).isEqualTo(resRef(R.string.common_network_fee_title))
         assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_percent_20))
-        assertThat(result.amount).isEqualTo("${StringsSigns.DASH_SIGN}0.000015")
+        assertThat(result.amount).isEqualTo("${StringsSigns.MINUS_SIGN}0.000015")
         assertThat(result.subtitle).isEqualTo(
             ContentSubtitle.Plain(
                 resRef(R.string.transaction_history_fee_for_operation_name, listOf("YieldSend")),
@@ -317,7 +317,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
             // Assert
             assertThat(result.title).isEqualTo(resRef(R.string.common_network_fee_title))
             assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_percent_20))
-            assertThat(result.amount).isEqualTo("${StringsSigns.DASH_SIGN}0.000015")
+            assertThat(result.amount).isEqualTo("${StringsSigns.MINUS_SIGN}0.000015")
             assertThat(result.subtitle).isEqualTo(ContentSubtitle.Plain(resRef(model.expectedSubtitle)))
         }
 
@@ -392,7 +392,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
             ContentSubtitle.Plain(resRef(R.string.transaction_history_earned_from_stake)),
         )
         assertThat(result.amount!!.startsWith(StringsSigns.PLUS)).isFalse()
-        assertThat(result.amount!!.startsWith(StringsSigns.DASH_SIGN)).isFalse()
+        assertThat(result.amount!!.startsWith(StringsSigns.MINUS_SIGN)).isFalse()
     }
 
     @Test
@@ -1142,7 +1142,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.amount!!.startsWith(StringsSigns.DASH_SIGN)).isTrue()
+        assertThat(result.amount!!.startsWith(StringsSigns.MINUS_SIGN)).isTrue()
     }
 
     @Test
@@ -1171,7 +1171,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.amount!!.startsWith(StringsSigns.DASH_SIGN)).isFalse()
+        assertThat(result.amount!!.startsWith(StringsSigns.MINUS_SIGN)).isFalse()
         assertThat(result.amount!!.startsWith(StringsSigns.PLUS)).isFalse()
     }
 
@@ -1186,7 +1186,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.amount!!.startsWith(StringsSigns.DASH_SIGN)).isFalse()
+        assertThat(result.amount!!.startsWith(StringsSigns.MINUS_SIGN)).isFalse()
         assertThat(result.amount!!.startsWith(StringsSigns.PLUS)).isFalse()
     }
 

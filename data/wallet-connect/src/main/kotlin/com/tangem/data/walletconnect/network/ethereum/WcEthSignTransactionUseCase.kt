@@ -15,10 +15,12 @@ import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.domain.transaction.usecase.PrepareForSendUseCase
+import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.domain.walletconnect.error.parseSendError
 import com.tangem.domain.walletconnect.model.WcApprovedAmount
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.usecase.method.*
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -34,10 +36,18 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
     @Assisted override val context: WcMethodUseCaseContext,
     @Assisted override val method: WcEthMethod.SignTransaction,
     blockAidDelegate: BlockAidVerificationDelegate,
+    targetValidator: WcEthTransactionTargetValidator,
 ) : BaseWcSignUseCase<WcEthTxAction, TransactionData>(),
     WcTransactionUseCase,
+    WcTransactionTargetCheck,
     WcApproval,
     WcMutableFee {
+
+    override val targetStatus: Flow<WcTransactionTargetCheck.Status> = targetValidator.validate(
+        transaction = method.transaction,
+        userWalletId = wallet.walletId,
+        network = network,
+    )
 
     private var approvalAmount: WcApprovedAmount? = null
     // in case of change TransactionExtras
@@ -60,6 +70,14 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
     }
 
     override suspend fun SignCollector<TransactionData>.onSign(state: WcSignState<TransactionData>) {
+        TangemLogger.withTag(WC_TAG).i(
+            "Signing ${rawSdkRequest.request.method} " +
+                ethTxHelper.logDescription(
+                    txParams = method.transaction,
+                    network = network,
+                    fee = (state.signModel as? TransactionData.Uncompiled)?.fee,
+                ),
+        )
         val hash = prepareForSend(state.signModel, wallet, network)
             .map { it.toHexString().formatHex() }
             .onLeft { error ->

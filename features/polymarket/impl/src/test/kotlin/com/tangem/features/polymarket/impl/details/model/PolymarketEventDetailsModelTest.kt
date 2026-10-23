@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.EventMessage
@@ -47,8 +48,53 @@ internal class PolymarketEventDetailsModelTest {
     private val getEventUseCase: GetPolymarketEventUseCase = mockk()
     private val shareManager: ShareManager = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
+    private val urlOpener: UrlOpener = mockk(relaxed = true)
 
     private var model: PolymarketEventDetailsModel? = null
+
+    @Test
+    fun `GIVEN a displayed source WHEN refresh removes it THEN the source row disappears`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+            createEvent().copy(resolutionSource = "https://www.binance.com/en/trade/BTC_USDT").right(),
+            createEvent().copy(resolutionSource = null).right(),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        assertThat((model.uiState.value as PolymarketEventDetailsUM.Content).resolutionSource).isNotNull()
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat((model.uiState.value as PolymarketEventDetailsUM.Content).resolutionSource).isNull()
+        model.onPause()
+    }
+
+    @Test
+    fun `GIVEN an updated source WHEN tapped THEN opens the full current URL`() = runTest {
+        // Arrange
+        val latestUrl = "https://www.twitch.tv/ESLCS?lang=en#live"
+        coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+            createEvent().copy(resolutionSource = "https://example.com/old").right(),
+            createEvent().copy(resolutionSource = latestUrl).right(),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onResume()
+        runCurrent()
+
+        // Act
+        val content = model.uiState.value as PolymarketEventDetailsUM.Content
+        content.onResolutionSourceClick(requireNotNull(content.resolutionSource?.url))
+
+        // Assert
+        assertThat(content.resolutionSource?.text).isEqualTo("twitch.tv")
+        verify(exactly = 1) { urlOpener.openUrl(latestUrl) }
+        verify(exactly = 0) { urlOpener.openUrl("https://example.com/old") }
+        model.onPause()
+    }
 
     @AfterEach
     fun tearDown() {
@@ -66,13 +112,66 @@ internal class PolymarketEventDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
+        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
         assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
     }
 
     @Test
-    fun `GIVEN load fails WHEN model created THEN error AND retry reloads to content`() = runTest {
+    fun `GIVEN initial load fails once WHEN two seconds pass THEN retry shows content without an error`() = runTest {
         // Arrange
         coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+            PolymarketEventError.Network.left(),
+            createEvent().right(),
+        )
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Act
+        advanceTimeBy(RETRY_DELAY_MILLIS - 1)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
+        assertThat(model.uiState.value).isEqualTo(PolymarketEventDetailsUM.Loading)
+
+        advanceTimeBy(1)
+        runCurrent()
+
+        coVerify(exactly = 2) { getEventUseCase(eventId = "event-1") }
+        assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
+        verify(exactly = 0) { messageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN initial load keeps failing WHEN silent retry fails THEN error is shown without further retries`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(eventId = "event-1") } returns PolymarketEventError.Network.left()
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Act
+        advanceTimeBy(RETRY_DELAY_MILLIS - 1)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
+        assertThat(model.uiState.value).isEqualTo(PolymarketEventDetailsUM.Loading)
+
+        advanceTimeBy(1)
+        runCurrent()
+
+        assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Error::class.java)
+        advanceUntilIdle()
+        coVerify(exactly = 2) { getEventUseCase(eventId = "event-1") }
+        verify(exactly = 0) { messageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN load and silent retry fail WHEN manual retry tapped THEN reload can retry silently to content`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+            PolymarketEventError.Network.left(),
+            PolymarketEventError.Network.left(),
             PolymarketEventError.Network.left(),
             createEvent().right(),
         )
@@ -82,10 +181,32 @@ internal class PolymarketEventDetailsModelTest {
         // Act
         val error = model.uiState.value as PolymarketEventDetailsUM.Error
         error.onRetryClick()
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 3) { getEventUseCase(eventId = "event-1") }
+        assertThat(model.uiState.value).isEqualTo(PolymarketEventDetailsUM.Loading)
+
+        advanceTimeBy(RETRY_DELAY_MILLIS)
+        runCurrent()
+
+        coVerify(exactly = 4) { getEventUseCase(eventId = "event-1") }
+        assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
+    }
+
+    @Test
+    fun `GIVEN initial retry is pending WHEN model destroyed THEN no second request is sent`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(eventId = "event-1") } returns PolymarketEventError.Network.left()
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Act
+        model.onDestroy()
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
+        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
     }
 
     @Test
@@ -265,7 +386,7 @@ internal class PolymarketEventDetailsModelTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 2) { getEventUseCase(eventId = "event-1") }
         assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Error::class.java)
         model.onDestroy()
     }
@@ -385,6 +506,7 @@ internal class PolymarketEventDetailsModelTest {
             shareManager = shareManager,
             messageSender = messageSender,
             regionAccess = regionAccess,
+            urlOpener = urlOpener,
         ).also { model = it }
     }
 

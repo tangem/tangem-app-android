@@ -140,4 +140,8 @@ internal object ExpressStatusMapper {
 
     val activeOnrampStatuses: List<String> =
         ExpressOnrampStatus.entries.filterNot { it.isTerminal }.map { it.raw }
+
+    val expiredExchangeStatus: String = ExpressExchangeStatus.Expired.raw
+
+    val expiredOnrampStatus: String = ExpressOnrampStatus.Expired.raw
 }
