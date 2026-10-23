@@ -8,31 +8,41 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
 import com.tangem.core.ui.utils.DateTimeFormatters
+import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
-import com.tangem.domain.models.account.mainImageUrl
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
+import com.tangem.domain.models.account.mainImageUrl
+import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
+import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
+import com.tangem.domain.pay.usecase.GetCurrentTariffUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanTransitionsUseCase
 import com.tangem.domain.pay.usecase.SubmitTariffTransitionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
+import com.tangem.features.tangempay.components.TangemPaySelectPlanComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.tiers.formatNextBillingDateOrNull
 import com.tangem.features.tangempay.tiers.formatRecurringFeeOrNull
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @Stable
 @ModelScoped
 internal class TangemPaySelectPlanModel @Inject constructor(
@@ -40,7 +50,9 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val getTransitions: GetTangemPayTariffPlanTransitionsUseCase,
+    private val getCurrentTariffUseCase: GetCurrentTariffUseCase,
     private val submitTariffTransitionUseCase: SubmitTariffTransitionUseCase,
+    private val startTangemPayOnboardingUseCase: StartTangemPayOnboardingUseCase,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
     private val urlOpener: UrlOpener,
@@ -48,6 +60,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
 
     private val params = paramsContainer.require<TangemPaySelectPlanComponent.Params>()
 
+    private var tariffPlan: TangemPayCustomerTariffPlan? = null
     private var transitions: List<TangemPayTariffPlanTransition> = emptyList()
 
     private val allowedTransitions: List<TangemPayTariffPlanTransition>
@@ -65,15 +78,17 @@ internal class TangemPaySelectPlanModel @Inject constructor(
 
     init {
         analytics.send(TangemPayAnalyticsEvents.Tiers.TierSelectionScreenShowed())
-        loadTransitions()
+        loadData()
     }
 
-    private fun loadTransitions() {
+    private fun loadData() {
         modelScope.launch {
-            getTransitions(params.userWalletId).onRight { result ->
-                transitions = result
-                state.update { buildState() }
-            }
+            val transitionsDeferred = async { getTransitions(params.userWalletId) }
+            val tariffPlanDeferred = async { getCurrentTariffUseCase(params.userWalletId) }
+
+            transitionsDeferred.await().onRight { transitions = it }
+            tariffPlanDeferred.await().onRight { tariffPlan = it }
+            state.update { buildState() }
         }
     }
 
@@ -90,12 +105,15 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         val tierId = transition.plan.tierId
         analytics.send(TangemPayAnalyticsEvents.Tiers.PlanSelectedClick(tierId))
 
-        when (params.source) {
-            TangemPaySelectPlanSource.TIERS_ONBOARDING -> applyTransition(transition)
-            TangemPaySelectPlanSource.CHANGE_PLAN -> {
+        when (val mode = params.mode) {
+            TangemPaySelectPlanComponent.Mode.TiersOnboarding -> applyTransition(transition)
+            TangemPaySelectPlanComponent.Mode.ChangePlan -> {
                 analytics.send(TangemPayAnalyticsEvents.Tiers.PlanChangeConfirmationScreenShowed(tierId))
                 isConfirm = true
                 state.update { buildState() }
+            }
+            is TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder -> {
+                createOnboardingOrder(transition = transition, availableProducts = mode.availableProducts)
             }
         }
     }
@@ -149,7 +167,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
                         transition.type == TangemPayTariffPlanTransition.Type.UPGRADE -> {
                             router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails)
                         }
-                        params.source == TangemPaySelectPlanSource.TIERS_ONBOARDING -> {
+                        params.mode == TangemPaySelectPlanComponent.Mode.TiersOnboarding -> {
                             router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails)
                         }
                         else -> router.pop()
@@ -161,6 +179,31 @@ internal class TangemPaySelectPlanModel @Inject constructor(
                     uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
                 },
             )
+        }
+    }
+
+    private fun createOnboardingOrder(
+        transition: TangemPayTariffPlanTransition,
+        availableProducts: Set<TangemPayProduct>,
+    ) {
+        if (isProcessing) return
+
+        isProcessing = true
+        state.update { buildState() }
+        modelScope.launch {
+            startTangemPayOnboardingUseCase(
+                userWalletId = params.userWalletId,
+                tariffPlanTransition = transition,
+                availableProducts = availableProducts,
+            ).onLeft { error ->
+                isProcessing = false
+                state.update { buildState() }
+                if (error !is StartTangemPayOnboardingError.UserCancelled) {
+                    uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
+                }
+            }.onRight {
+                // TODO v_rodiononov: #[REDACTED_TASK_KEY] Tangem Pay Onboarding Success Screen
+            }
         }
     }
 
@@ -184,12 +227,20 @@ internal class TangemPaySelectPlanModel @Inject constructor(
 
     private fun buildSelectContent() = TangemPaySelectPlanUM.Content.Select(
         isProcessing = isProcessing,
+        selectButtonIconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24)
+            .takeIf { isMoneyAccountActivationRequired() },
         onComparePlansClick = ::onComparePlansClick,
         onSelectClick = ::onSelectClick,
     )
 
+    private fun isMoneyAccountActivationRequired(): Boolean {
+        val mode = params.mode
+        return mode is TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder &&
+            TangemPayProduct.BANKING_ACCOUNT in mode.availableProducts
+    }
+
     private fun buildCompare(): TangemPaySelectPlanUM.ComparePlans {
-        val plans = listOf(params.tariffPlan.plan) + allowedTransitionsForCompare.map { it.plan }
+        val plans = listOfNotNull(tariffPlan?.plan) + allowedTransitionsForCompare.map { it.plan }
         val orderedTitles = plans
             .flatMap { plan -> plan.descriptionItems.filter { it.section in COMPARE_SECTIONS } }
             .sortedWith(compareBy({ it.section.ordinal }, { it.order }))
@@ -223,8 +274,8 @@ internal class TangemPaySelectPlanModel @Inject constructor(
                 )
                 TangemPayTariffPlanTransition.Type.DOWNGRADE -> {
                     val nextBillingDate = nextBillingDate()
-                    if (nextBillingDate != null) {
-                        val currentPlan = params.tariffPlan.plan
+                    val currentPlan = tariffPlan?.plan
+                    if (nextBillingDate != null && currentPlan != null) {
                         resourceReference(
                             R.string.tangempay_select_plan_confirm_downgrade_title,
                             wrappedList(currentPlan.name, currentPlan.programName, nextBillingDate),
@@ -281,7 +332,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
             }
             TangemPayTariffPlanTransition.Type.DOWNGRADE -> {
                 val date = nextBillingDate()
-                val currentPlan = params.tariffPlan.plan
+                val currentPlan = tariffPlan?.plan
                 buildList {
                     if (date != null) {
                         add(
@@ -291,12 +342,14 @@ internal class TangemPaySelectPlanModel @Inject constructor(
                             ),
                         )
                     }
-                    add(
-                        resourceReference(
-                            R.string.tangempay_select_plan_confirm_point_cards_closed,
-                            wrappedList(currentPlan.programName),
-                        ),
-                    )
+                    if (currentPlan != null) {
+                        add(
+                            resourceReference(
+                                R.string.tangempay_select_plan_confirm_point_cards_closed,
+                                wrappedList(currentPlan.programName),
+                            ),
+                        )
+                    }
                     if (date != null) {
                         add(
                             resourceReference(
@@ -330,7 +383,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     )
 
     private fun nextBillingDate(): String? {
-        return params.tariffPlan.formatNextBillingDateOrNull(DateTimeFormatters.dateMMMd)
+        return tariffPlan?.formatNextBillingDateOrNull(DateTimeFormatters.dateMMMd)
     }
 
     companion object {

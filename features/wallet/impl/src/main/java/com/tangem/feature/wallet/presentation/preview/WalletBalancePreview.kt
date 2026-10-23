@@ -64,7 +64,7 @@ internal object WalletBalancePreview {
         isBalanceFlickering = false,
         isZeroBalance = false,
         additionalInfo = WalletAdditionalInfo(
-            hideable = false,
+            isHideable = false,
             content = WalletAdditionalInfo.Content.SyncProgress(37),
         ),
     )

@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.tiers.select
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -8,15 +9,21 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
+import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
+import com.tangem.domain.pay.usecase.GetCurrentTariffUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanTransitionsUseCase
 import com.tangem.domain.pay.usecase.SubmitTariffTransitionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tangempay.components.TangemPaySelectPlanComponent
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -29,28 +36,33 @@ internal class TangemPaySelectPlanModelTest {
 
     private val router: Router = mockk(relaxed = true)
     private val getTransitions: GetTangemPayTariffPlanTransitionsUseCase = mockk()
+    private val getCurrentTariffUseCase: GetCurrentTariffUseCase = mockk()
     private val submitTariffTransitionUseCase: SubmitTariffTransitionUseCase = mockk()
+    private val startTangemPayOnboardingUseCase: StartTangemPayOnboardingUseCase = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
 
     private fun createModel(
-        source: TangemPaySelectPlanSource = TangemPaySelectPlanSource.CHANGE_PLAN,
+        mode: TangemPaySelectPlanComponent.Mode = TangemPaySelectPlanComponent.Mode.ChangePlan,
+        currentTariff: Either<VisaApiError, TangemPayCustomerTariffPlan?> = CUSTOMER_TARIFF.right(),
         transitions: List<TangemPayTariffPlanTransition> = DEFAULT_TRANSITIONS,
     ): TangemPaySelectPlanModel {
         coEvery { getTransitions(USER_WALLET_ID) } returns transitions.right()
+        coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns currentTariff
         return TangemPaySelectPlanModel(
             paramsContainer = MutableParamsContainer(
                 TangemPaySelectPlanComponent.Params(
                     userWalletId = USER_WALLET_ID,
-                    tariffPlan = CUSTOMER_TARIFF,
-                    source = source,
+                    mode = mode,
                 ),
             ),
             dispatchers = TestingCoroutineDispatcherProvider(),
             router = router,
             getTransitions = getTransitions,
+            getCurrentTariffUseCase = getCurrentTariffUseCase,
             submitTariffTransitionUseCase = submitTariffTransitionUseCase,
+            startTangemPayOnboardingUseCase = startTangemPayOnboardingUseCase,
             uiMessageSender = uiMessageSender,
             analytics = analytics,
             urlOpener = urlOpener,
@@ -73,20 +85,22 @@ internal class TangemPaySelectPlanModelTest {
     fun `GIVEN getTransitions fails WHEN model created THEN plans are empty`() {
         // GIVEN
         coEvery { getTransitions(USER_WALLET_ID) } returns VisaApiError.Unspecified.left()
+        coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns CUSTOMER_TARIFF.right()
 
         // WHEN
         val model = TangemPaySelectPlanModel(
             paramsContainer = MutableParamsContainer(
                 TangemPaySelectPlanComponent.Params(
                     userWalletId = USER_WALLET_ID,
-                    tariffPlan = CUSTOMER_TARIFF,
-                    source = TangemPaySelectPlanSource.CHANGE_PLAN,
+                    mode = TangemPaySelectPlanComponent.Mode.ChangePlan,
                 ),
             ),
             dispatchers = TestingCoroutineDispatcherProvider(),
             router = router,
             getTransitions = getTransitions,
+            getCurrentTariffUseCase = getCurrentTariffUseCase,
             submitTariffTransitionUseCase = submitTariffTransitionUseCase,
+            startTangemPayOnboardingUseCase = startTangemPayOnboardingUseCase,
             uiMessageSender = uiMessageSender,
             analytics = analytics,
             urlOpener = urlOpener,
@@ -135,9 +149,9 @@ internal class TangemPaySelectPlanModelTest {
     }
 
     @Test
-    fun `GIVEN change plan source WHEN onSelectClick THEN switches to confirm content`() {
+    fun `GIVEN change plan mode WHEN onSelectClick THEN switches to confirm content`() {
         // GIVEN
-        val model = createModel(source = TangemPaySelectPlanSource.CHANGE_PLAN)
+        val model = createModel(mode = TangemPaySelectPlanComponent.Mode.ChangePlan)
 
         // WHEN
         selectContent(model).onSelectClick()
@@ -151,10 +165,10 @@ internal class TangemPaySelectPlanModelTest {
     }
 
     @Test
-    fun `GIVEN onboarding source AND submit succeeds WHEN onSelectClick THEN replaces to account details`() {
+    fun `GIVEN onboarding mode AND submit succeeds WHEN onSelectClick THEN replaces to account details`() {
         // GIVEN
         coEvery { submitTariffTransitionUseCase(USER_WALLET_ID, any()) } returns Unit.right()
-        val model = createModel(source = TangemPaySelectPlanSource.TIERS_ONBOARDING)
+        val model = createModel(mode = TangemPaySelectPlanComponent.Mode.TiersOnboarding)
 
         // WHEN
         selectContent(model).onSelectClick()
@@ -162,6 +176,125 @@ internal class TangemPaySelectPlanModelTest {
         // THEN
         coVerify(exactly = 1) { submitTariffTransitionUseCase(USER_WALLET_ID, UPGRADE_TRANSITION) }
         verify(exactly = 1) { router.replaceAll(TangemPayAccountDetailsInnerRoute.AccountDetails) }
+    }
+
+    @Test
+    fun `GIVEN create onboarding order mode WHEN onSelectClick THEN starts onboarding with selected plan`() {
+        // GIVEN
+        coEvery { startTangemPayOnboardingUseCase(any(), any(), any()) } returns Unit.right()
+        val model = createModel(mode = CREATE_ONBOARDING_ORDER_MODE)
+
+        // WHEN
+        selectContent(model).onSelectClick()
+
+        // THEN
+        coVerify(exactly = 1) {
+            startTangemPayOnboardingUseCase(
+                userWalletId = USER_WALLET_ID,
+                tariffPlanTransition = UPGRADE_TRANSITION,
+                availableProducts = AVAILABLE_PRODUCTS,
+            )
+        }
+        coVerify(exactly = 0) { submitTariffTransitionUseCase(any(), any()) }
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN create onboarding order mode with money account WHEN model created THEN select button has icon`() {
+        // GIVEN + WHEN
+        val model = createModel(mode = CREATE_ONBOARDING_ORDER_MODE)
+
+        // THEN
+        assertThat(selectContent(model).selectButtonIconEnd).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN create onboarding order mode without money account WHEN model created THEN select button has no icon`() {
+        // GIVEN + WHEN
+        val model = createModel(
+            mode = TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder(
+                availableProducts = setOf(TangemPayProduct.PAYMENT_ACCOUNT),
+            ),
+        )
+
+        // THEN
+        assertThat(selectContent(model).selectButtonIconEnd).isNull()
+    }
+
+    @Test
+    fun `GIVEN change plan mode WHEN model created THEN select button has no icon`() {
+        // GIVEN + WHEN
+        val model = createModel(mode = TangemPaySelectPlanComponent.Mode.ChangePlan)
+
+        // THEN
+        assertThat(selectContent(model).selectButtonIconEnd).isNull()
+    }
+
+    @Test
+    fun `GIVEN create onboarding order mode AND onboarding fails WHEN onSelectClick THEN processing reset and error shown`() {
+        // GIVEN
+        coEvery {
+            startTangemPayOnboardingUseCase(any(), any(), any())
+        } returns StartTangemPayOnboardingError.Failed.left()
+        val model = createModel(mode = CREATE_ONBOARDING_ORDER_MODE)
+
+        // WHEN
+        selectContent(model).onSelectClick()
+
+        // THEN
+        assertThat(selectContent(model).isProcessing).isFalse()
+        verify(exactly = 1) { uiMessageSender.send(any()) }
+        verify(exactly = 0) { router.pop() }
+    }
+
+    @Test
+    fun `GIVEN create onboarding order mode AND user cancelled WHEN onSelectClick THEN processing reset without error`() {
+        // GIVEN
+        coEvery {
+            startTangemPayOnboardingUseCase(any(), any(), any())
+        } returns StartTangemPayOnboardingError.UserCancelled.left()
+        val model = createModel(mode = CREATE_ONBOARDING_ORDER_MODE)
+
+        // WHEN
+        selectContent(model).onSelectClick()
+
+        // THEN
+        assertThat(selectContent(model).isProcessing).isFalse()
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN current tariff loaded WHEN onComparePlansClick THEN compare starts with current plan`() {
+        // GIVEN
+        val model = createModel()
+
+        // WHEN
+        selectContent(model).onComparePlansClick()
+
+        // THEN
+        val compare = requireNotNull(model.state.value.compare)
+        assertThat(compare.plans.map { it.name }).containsExactly(
+            stringReference(CUSTOMER_TARIFF.plan.name),
+            stringReference(UPGRADE_TRANSITION.plan.name),
+            stringReference(DOWNGRADE_TRANSITION.plan.name),
+        ).inOrder()
+        coVerify(exactly = 1) { getCurrentTariffUseCase(USER_WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN current tariff loading fails WHEN onComparePlansClick THEN compare has only transitions`() {
+        // GIVEN
+        val model = createModel(currentTariff = VisaApiError.Unspecified.left())
+
+        // WHEN
+        selectContent(model).onComparePlansClick()
+
+        // THEN
+        val compare = requireNotNull(model.state.value.compare)
+        assertThat(compare.plans.map { it.name }).containsExactly(
+            stringReference(UPGRADE_TRANSITION.plan.name),
+            stringReference(DOWNGRADE_TRANSITION.plan.name),
+        ).inOrder()
     }
 
     @Test
@@ -221,7 +354,7 @@ internal class TangemPaySelectPlanModelTest {
     @Test
     fun `GIVEN confirm shown WHEN onBackClick THEN returns to select content without pop`() {
         // GIVEN
-        val model = createModel(source = TangemPaySelectPlanSource.CHANGE_PLAN)
+        val model = createModel(mode = TangemPaySelectPlanComponent.Mode.ChangePlan)
         selectContent(model).onSelectClick()
 
         // WHEN
@@ -261,7 +394,7 @@ internal class TangemPaySelectPlanModelTest {
     fun `GIVEN confirm AND submit fails WHEN onConfirmClick THEN processing reset and error shown`() {
         // GIVEN
         coEvery { submitTariffTransitionUseCase(USER_WALLET_ID, any()) } returns VisaApiError.Unspecified.left()
-        val model = createModel(source = TangemPaySelectPlanSource.CHANGE_PLAN)
+        val model = createModel(mode = TangemPaySelectPlanComponent.Mode.ChangePlan)
         selectContent(model).onSelectClick()
 
         // WHEN
@@ -277,7 +410,7 @@ internal class TangemPaySelectPlanModelTest {
     fun `GIVEN change plan non-upgrade AND submit succeeds WHEN onConfirmClick THEN router pops`() {
         // GIVEN
         coEvery { submitTariffTransitionUseCase(USER_WALLET_ID, any()) } returns Unit.right()
-        val model = createModel(source = TangemPaySelectPlanSource.CHANGE_PLAN)
+        val model = createModel(mode = TangemPaySelectPlanComponent.Mode.ChangePlan)
         model.state.value.onPlanSelected(ACTIVATION_INDEX)
         selectContent(model).onSelectClick()
 
@@ -293,7 +426,7 @@ internal class TangemPaySelectPlanModelTest {
     fun `GIVEN change plan upgrade AND submit succeeds WHEN onConfirmClick THEN replaces to account details`() {
         // GIVEN
         coEvery { submitTariffTransitionUseCase(USER_WALLET_ID, any()) } returns Unit.right()
-        val model = createModel(source = TangemPaySelectPlanSource.CHANGE_PLAN)
+        val model = createModel(mode = TangemPaySelectPlanComponent.Mode.ChangePlan)
         selectContent(model).onSelectClick()
 
         // WHEN
@@ -309,7 +442,7 @@ internal class TangemPaySelectPlanModelTest {
     fun `GIVEN upgrade transition WHEN applied THEN upgrade analytics sent`() {
         // GIVEN
         coEvery { submitTariffTransitionUseCase(USER_WALLET_ID, any()) } returns Unit.right()
-        val model = createModel(source = TangemPaySelectPlanSource.CHANGE_PLAN)
+        val model = createModel(mode = TangemPaySelectPlanComponent.Mode.ChangePlan)
         selectContent(model).onSelectClick()
 
         // WHEN
@@ -324,7 +457,7 @@ internal class TangemPaySelectPlanModelTest {
         // GIVEN
         val pending = CompletableDeferred<arrow.core.Either<VisaApiError, Unit>>()
         coEvery { submitTariffTransitionUseCase(USER_WALLET_ID, any()) } coAnswers { pending.await() }
-        val model = createModel(source = TangemPaySelectPlanSource.TIERS_ONBOARDING)
+        val model = createModel(mode = TangemPaySelectPlanComponent.Mode.TiersOnboarding)
 
         // WHEN
         selectContent(model).onSelectClick()
@@ -342,6 +475,11 @@ internal class TangemPaySelectPlanModelTest {
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("aabbcc112233")
+
+        val AVAILABLE_PRODUCTS = setOf(TangemPayProduct.BANKING_ACCOUNT, TangemPayProduct.PAYMENT_ACCOUNT)
+        val CREATE_ONBOARDING_ORDER_MODE = TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder(
+            availableProducts = AVAILABLE_PRODUCTS,
+        )
 
         const val ACTIVATION_INDEX = 2
         val UPGRADE_TRANSITION = transition(TangemPayTariffPlanTransition.Type.UPGRADE, "PLUS", isBasic = false)

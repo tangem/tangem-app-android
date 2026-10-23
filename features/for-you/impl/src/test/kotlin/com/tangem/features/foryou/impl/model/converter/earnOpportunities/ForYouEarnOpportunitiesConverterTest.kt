@@ -427,7 +427,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
 
     private fun validator(address: String, preferred: Boolean, rate: BigDecimal): Yield.Validator = mockk {
         every { this@mockk.address } returns address
-        every { this@mockk.preferred } returns preferred
+        every { this@mockk.isPreferred } returns preferred
         every { rewardInfo } returns RewardInfo(rate = rate, type = RewardType.APY)
     }
 

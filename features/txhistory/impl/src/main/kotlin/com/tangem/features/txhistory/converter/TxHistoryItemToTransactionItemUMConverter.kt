@@ -76,6 +76,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             is TransactionType.YieldSupply.Enter -> pillConverter.convert(PillInput(value, uiStatus, YieldEnterSpec))
             is TransactionType.YieldSupply.Exit -> pillConverter.convert(PillInput(value, uiStatus, YieldExitSpec))
             is TransactionType.YieldSupply.Topup -> pillConverter.convert(PillInput(value, uiStatus, YieldSupplySpec))
+            is TransactionType.IncentiveClaim -> incentiveClaim(value, uiStatus)
             // endregion
 
             // region Content
@@ -223,6 +224,24 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     } else {
         transferContent(tx, uiStatus)
     }
+
+    /** The reward reads as coming from Merkl rather than from the module contract that relayed it. */
+    private fun incentiveClaim(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM =
+        if (currency is CryptoCurrency.Coin) {
+            pillConverter.convert(PillInput(tx, uiStatus, IncentiveClaimSpec))
+        } else {
+            buildContent(
+                tx = tx,
+                uiStatus = uiStatus,
+                title = titleConverter.convert(tx),
+                icon = tx.directionalIcon(),
+                subtitle = ContentSubtitle.Provider(
+                    direction = if (tx.isOutgoing) ContentSubtitle.Direction.TO else ContentSubtitle.Direction.FROM,
+                    name = resourceReference(R.string.yield_module_incentives_provider),
+                    iconResId = R.drawable.img_merkl_22,
+                ),
+            )
+        }
 
     private fun unknownOperationContent(
         tx: TxInfo,
@@ -398,7 +417,7 @@ private fun TxInfo.formatContentAmount(currency: CryptoCurrency): String {
         status is TxInfo.TransactionStatus.Failed -> ""
         value.isZero() -> ""
         type is TransactionType.Staking.ClaimRewards -> ""
-        else -> if (isOutgoing) StringsSigns.MINUS else StringsSigns.PLUS
+        else -> if (isOutgoing) StringsSigns.DASH_SIGN else StringsSigns.PLUS
     }
     val approximateMark = if (showsFeeAsAmount(currency)) approximateMark() else ""
     return prefix + approximateMark + value.format { crypto(symbol = "", decimals = currency.displayDecimals) }.trim()
@@ -428,7 +447,7 @@ private fun ResolvedOwner?.isOwnPortfolio(): Boolean = when (this) {
     is ResolvedOwner.Foreign, null -> false
 }
 
-private fun ResolvedOwner.toSubtitle(direction: ContentSubtitle.Direction): ContentSubtitle = when (this) {
+internal fun ResolvedOwner.toSubtitle(direction: ContentSubtitle.Direction): ContentSubtitle = when (this) {
     is ResolvedOwner.OwnAccount -> ContentSubtitle.OwnAccount(
         direction = direction,
         accountName = account.accountName.toUM().value,
@@ -511,6 +530,7 @@ private fun TransactionType.feeSubtitleResId(): Int? = when (this) {
     TransactionType.Transfer,
     TransactionType.UnknownOperation,
     is TransactionType.YieldSupply.Send,
+    TransactionType.IncentiveClaim,
     -> null
 }
 

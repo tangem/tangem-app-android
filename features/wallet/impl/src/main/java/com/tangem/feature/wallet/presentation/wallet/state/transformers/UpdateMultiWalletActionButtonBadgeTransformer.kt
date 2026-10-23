@@ -6,13 +6,13 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.utils.showSwapBadge
 
 internal class UpdateMultiWalletActionButtonBadgeTransformer(
-    private val showSwapBadge: Boolean,
+    private val shouldShowSwapBadge: Boolean,
     userWalletId: UserWalletId,
 ) : WalletStateTransformer(userWalletId) {
     override fun transform(prevState: WalletState): WalletState {
         return when (prevState) {
             is WalletState.MultiCurrency.Content -> {
-                prevState.copy(buttons = prevState.showSwapBadge(showBadge = showSwapBadge))
+                prevState.copy(buttons = prevState.showSwapBadge(showBadge = shouldShowSwapBadge))
             }
             else -> prevState
         }

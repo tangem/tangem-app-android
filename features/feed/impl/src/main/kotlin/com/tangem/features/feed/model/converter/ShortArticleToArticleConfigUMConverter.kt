@@ -27,7 +27,7 @@ internal class ShortArticleToArticleConfigUMConverter(
                 isTrending = isTrending ?: shortArticle.isTrending,
                 tags = buildArticleTags(shortArticle),
                 createdAt = mapFormattedDate(shortArticle.createdAt),
-                isViewed = shortArticle.viewed,
+                isViewed = shortArticle.isViewed,
             )
         }.toPersistentList()
     }

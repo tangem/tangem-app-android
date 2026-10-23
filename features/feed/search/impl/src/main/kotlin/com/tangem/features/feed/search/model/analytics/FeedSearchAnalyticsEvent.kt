@@ -16,11 +16,4 @@ internal sealed class FeedSearchAnalyticsEvent(
     )
 
     class SearchStarted : FeedSearchAnalyticsEvent(event = "Search Started")
-
-    data class HintClicked(
-        private val hint: String,
-    ) : FeedSearchAnalyticsEvent(
-        event = "Hint Clicked",
-        params = mapOf("Text" to hint),
-    )
 }

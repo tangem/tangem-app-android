@@ -52,9 +52,9 @@ internal class WcPairSdkDelegate(
     ): Either<WcPairError, Pair<Wallet.Model.SessionProposal, Wallet.Model.VerifyContext>> = coroutineScope {
         val proposalCallback = async { withTimeout(CALLBACK_TIMEOUT.seconds) { proposalCallback() } }
         val pairCall = async { sdkPair(url) }
-        pairCall.await().onLeft {
+        pairCall.await().onLeft { error ->
             proposalCallback.cancel()
-            return@coroutineScope it.left()
+            return@coroutineScope error.left()
         }
         proposalCallback.await()
     }
@@ -84,9 +84,9 @@ internal class WcPairSdkDelegate(
         store.savePendingApproval(forSave)
         sdkApprove(sessionApprove).fold(
             ifRight = { Unit.right() },
-            ifLeft = {
+            ifLeft = { error ->
                 store.removePendingApproval(forSave)
-                it.left()
+                error.left()
             },
         )
     }

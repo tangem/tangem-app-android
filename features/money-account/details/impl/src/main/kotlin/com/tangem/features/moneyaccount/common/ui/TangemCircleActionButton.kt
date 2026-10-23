@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.TextReference
@@ -30,7 +31,7 @@ fun TangemCircleActionButton(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         TangemButton(

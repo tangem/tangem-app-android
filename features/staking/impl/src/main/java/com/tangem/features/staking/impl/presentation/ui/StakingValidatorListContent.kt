@@ -22,6 +22,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.*
@@ -55,7 +56,7 @@ internal fun StakingValidatorListContent(
         contentPadding = PaddingValues(bottom = bottomBarHeight),
         modifier = modifier
             .background(TangemTheme.colors.background.secondary)
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+            .padding(horizontal = 16.dp),
     ) {
         if (state is StakingStates.ValidatorState.Data) {
             val targets = state.availableTargets
@@ -90,7 +91,7 @@ private fun ValidatorListItem(
             .roundedShapeItemDecoration(
                 currentIndex = index,
                 lastIndex = lastIndex,
-                radius = TangemTheme.dimens.radius12,
+                radius = 12.dp,
                 addDefaultPadding = false,
             )
             .background(TangemTheme.colors.background.action)
@@ -99,13 +100,13 @@ private fun ValidatorListItem(
                 indication = ripple(),
                 onClick = onSelect,
             )
-            .padding(TangemTheme.dimens.spacing12),
+            .padding(12.dp),
     ) {
         StakingTargetIcon(
             image = item.image.toImageReference(),
             onImageError = { ValidatorImagePlaceholder() },
             modifier = Modifier
-                .size(TangemTheme.dimens.spacing36)
+                .size(36.dp)
                 .clip(TangemTheme.shapes.roundedCornersXLarge),
         )
         SpacerW12()
@@ -120,7 +121,7 @@ private fun ValidatorListItem(
                 text = item.getAprTextNeutral().resolveAnnotatedReference(),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing2),
+                modifier = Modifier.padding(top = 2.dp),
             )
         }
         SpacerW12()

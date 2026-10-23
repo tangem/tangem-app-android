@@ -5,13 +5,20 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
+import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketPosition
+import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
+import com.tangem.domain.polymarket.model.findMarket
+import com.tangem.domain.polymarket.model.findOutcome
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketConst
+import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
+import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.positiondetails.PolymarketPositionDetailsComponent
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM
@@ -29,6 +36,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @ModelScoped
+@Suppress("LongParameterList")
 internal class PolymarketPositionDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
@@ -36,6 +44,8 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
     private val repository: PolymarketPositionsRepository,
     private val deriveAddresses: DerivePolymarketAddressesUseCase,
     private val getEvent: GetPolymarketEventUseCase,
+    private val messageSender: UiMessageSender,
+    private val regionAccess: PredictionRegionAccess,
 ) : Model() {
     private val params = paramsContainer.require<PolymarketPositionDetailsComponent.Params>()
     private val converter = PolymarketPositionDetailsConverter()
@@ -153,12 +163,13 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
     private fun openEvent() {
         val loaded = position ?: return
         val eventId = loaded.eventId ?: return
+        val market = eventMarket(loaded)
         router.push(
             PolymarketRoute.EventDetails(
                 eventId = eventId,
                 userWalletId = params.userWalletId,
                 marketId = loaded.marketId,
-                assetId = loaded.id.assetId,
+                assetId = market?.findOutcome(loaded)?.assetId ?: loaded.id.assetId,
             ),
         )
     }
@@ -169,13 +180,20 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
         else -> ::showMarketClosedSheet
     }
 
+    /**
+     * Whether orders are accepted is read off the event's market, not the position: a position still held in a
+     * market's legacy token reports that it accepts no orders while the market itself trades on under its new
+     * token. The resolution status stays the position's.
+     */
     private fun buyMoreAction(loaded: PolymarketPosition.Open): (() -> Unit)? {
-        if (!loaded.isMarketTradable) return ::showMarketClosedSheet
-        val market = eventMarket(loaded) ?: return null
-        return if (market.isAcceptingOrders) {
-            { buyMore(market) }
-        } else {
-            ::showMarketClosedSheet
+        val market = eventMarket(loaded)
+        val outcome = market?.findOutcome(loaded)
+        return when {
+            market == null || outcome == null -> if (loaded.isMarketTradable) null else ::showMarketClosedSheet
+            market.isAcceptingOrders && loaded.resolutionStatus == PolymarketResolutionStatus.OPEN -> {
+                { buyMore(market = market, outcome = outcome) }
+            }
+            else -> ::showMarketClosedSheet
         }
     }
 
@@ -188,6 +206,8 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
     }
 
     private fun closePosition() {
+        if (regionAccess.isRestricted) return messageSender.send(regionRestrictionsMessage())
+
         val loaded = position ?: return
         val marketId = loaded.marketId ?: return
         router.push(
@@ -199,12 +219,12 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
         )
     }
 
-    private fun eventMarket(loaded: PolymarketPosition.Open): PolymarketMarket? {
-        val loadedEvent = event?.takeIf { it.id == loaded.eventId } ?: return null
-        return loadedEvent.markets.firstOrNull { market -> market.outcomes.any { it.assetId == loaded.id.assetId } }
-    }
+    private fun eventMarket(loaded: PolymarketPosition.Open): PolymarketMarket? =
+        event?.takeIf { it.id == loaded.eventId }?.findMarket(loaded)
 
-    private fun buyMore(market: PolymarketMarket) {
+    private fun buyMore(market: PolymarketMarket, outcome: PolymarketOutcome) {
+        if (regionAccess.isRestricted) return messageSender.send(regionRestrictionsMessage())
+
         val loaded = position ?: return
         val eventId = loaded.eventId ?: return
         router.push(
@@ -212,7 +232,7 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
                 userWalletId = params.userWalletId,
                 eventId = eventId,
                 marketId = market.id,
-                assetId = loaded.id.assetId,
+                assetId = outcome.assetId,
             ),
         )
     }

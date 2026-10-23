@@ -2,7 +2,6 @@ package com.tangem.domain.sociallogin.repository
 
 import arrow.core.Either
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.models.RecoveryKey
 import com.tangem.domain.sociallogin.models.SocialLoginError
@@ -42,8 +41,13 @@ interface SocialRecoveryRepository {
     suspend fun registerRestoredWallet(userWallet: UserWallet.Hot): Either<SocialLoginError, Unit>
 
     /**
-     * Drops the binding of [walletId] and the recovery key stored with it, so the identity can no longer
-     * restore this wallet. Used when the wallet is deleted. Unbinding a wallet that has no binding is a success.
+     * Drops the binding of [userWallet] and the recovery key stored with it, so the identity can no longer
+     * restore this wallet. Used when the wallet is deleted, or when its creation is given up before it is
+     * listed. Unbinding a wallet that has no binding is a success.
+     *
+     * The backend erases a binding only for a wallet registered on this device, and a register whose answer
+
+     * own key, which may ask the user to unlock it.
      */
-    suspend fun unbindWallet(walletId: UserWalletId): Either<SocialLoginError, Unit>
+    suspend fun unbindWallet(userWallet: UserWallet.Hot): Either<SocialLoginError, Unit>
 }

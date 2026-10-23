@@ -14,6 +14,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.addressbook.usecase.CheckAddressDuplicateUseCase
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.qrscanning.usecases.ExtractQrRecipientAddressUseCase
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.features.addressbook.addaddress.DefaultAddAddressComponent
 import com.tangem.features.addressbook.addaddress.state.AddAddressStateController
@@ -41,6 +42,7 @@ internal class AddAddressModelTest {
     private val memoValidator: AddressMemoValidator = mockk()
     private val clipboardManager: ClipboardManager = mockk()
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase = mockk()
+    private val extractQrRecipientAddressUseCase: ExtractQrRecipientAddressUseCase = mockk()
     private val checkAddressDuplicateUseCase: CheckAddressDuplicateUseCase = mockk()
     private val analyticsSender: AddressBookAnalyticsSender = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
@@ -55,6 +57,7 @@ internal class AddAddressModelTest {
             memoValidator,
             clipboardManager,
             listenToQrScanningUseCase,
+            extractQrRecipientAddressUseCase,
             checkAddressDuplicateUseCase,
             analyticsSender,
             router,
@@ -68,6 +71,7 @@ internal class AddAddressModelTest {
         coEvery { memoValidator.isValid(any(), any()) } returns true
         // Default: no QR results unless a test overrides it.
         every { listenToQrScanningUseCase(SourceType.ADDRESS_BOOK) } returns flowOf<String>().right()
+        every { extractQrRecipientAddressUseCase(any()) } answers { firstArg() }
     }
 
     @AfterEach
@@ -541,18 +545,21 @@ internal class AddAddressModelTest {
         }
 
         @Test
-        fun `GIVEN scanned payment URI WHEN emitted THEN scheme and query stripped`() = runTest {
-            // Arrange
-            every { listenToQrScanningUseCase(SourceType.ADDRESS_BOOK) } returns
-                flowOf("ethereum:$ADDRESS?amount=1.5").right()
-            val model = createModel(testScope = this)
+        fun `GIVEN scanned ERC-20 transfer URI WHEN emitted THEN recipient set instead of token contract`() =
+            runTest {
+                // Arrange
+                val uri = "ethereum:$TOKEN_CONTRACT@1/transfer?address=$ADDRESS&uint256=1000000"
+                every { listenToQrScanningUseCase(SourceType.ADDRESS_BOOK) } returns flowOf(uri).right()
+                every { extractQrRecipientAddressUseCase(uri) } returns ADDRESS
+                val model = createModel(testScope = this)
 
-            // Act
-            advanceUntilIdle()
+                // Act
+                advanceUntilIdle()
 
-            // Assert
-            assertThat(model.state.value.addressField.value).isEqualTo(ADDRESS)
-        }
+                // Assert
+                assertThat(model.state.value.addressField.value).isEqualTo(ADDRESS)
+                verify { extractQrRecipientAddressUseCase(uri) }
+            }
     }
 
     @Nested
@@ -756,6 +763,7 @@ internal class AddAddressModelTest {
             supportedNetworksMatcher = supportedNetworksMatcher,
             memoValidator = memoValidator,
             listenToQrScanningUseCase = listenToQrScanningUseCase,
+            extractQrRecipientAddressUseCase = extractQrRecipientAddressUseCase,
             clipboardManager = clipboardManager,
             stateController = AddAddressStateController(),
             selectNetworksResultHolder = selectNetworksResultHolder,
@@ -767,5 +775,6 @@ internal class AddAddressModelTest {
 
     private companion object {
         const val ADDRESS = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed"
+        const val TOKEN_CONTRACT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
     }
 }

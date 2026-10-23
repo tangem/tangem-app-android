@@ -36,7 +36,7 @@ internal class PreviewOnboardingManageTokensComponent(
         ),
         actionButtonConfig = OnboardingManageTokensUM.ActionButtonConfig.Later(
             onClick = {},
-            showProgress = false,
+            shouldShowProgress = false,
         ),
     )
 

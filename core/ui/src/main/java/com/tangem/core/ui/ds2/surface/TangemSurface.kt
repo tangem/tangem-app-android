@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -21,6 +22,9 @@ import androidx.compose.ui.graphics.LinearGradientShader
 import androidx.compose.ui.graphics.Shader
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -63,6 +67,9 @@ import dev.chrisbanes.haze.HazeTint
  * @param materialStyle Material token set used when [isMaterial] is `true`. `Inverted` renders the
  *   material of the opposite theme — dark in light theme and light in dark theme. Ignored in flat
  *   mode. See [TangemSurface.MaterialStyle].
+ * @param isMaterialBorderEnabled `false` drops the material gradient stroke, keeping the fill and shadow.
+ * @param materialBorderAlpha Opacity of the material gradient stroke, read at draw time so it can follow an
+ *   animated value without recomposing (e.g. fading the stroke out as a modal expands edge-to-edge).
  * @param border Optional outer stroke. Drawn underneath the material gradient stroke when both
  *   are present.
  * @param shape Shape used for clipping, background, and borders.
@@ -83,6 +90,7 @@ fun TangemSurface(
     isMaterial: Boolean = false,
     materialStyle: TangemSurface.MaterialStyle = TangemSurface.MaterialStyle.Default,
     isMaterialBorderEnabled: Boolean = true,
+    materialBorderAlpha: () -> Float = { 1f },
     border: BorderStroke? = null,
     shape: Shape = RoundedCornerShape(16.dp),
     onClick: (() -> Unit)? = null,
@@ -101,7 +109,14 @@ fun TangemSurface(
             modifier = modifier
                 .conditionalCompose(isMaterialDrawn) { materialShadow(shape, shadowRadius, materialOpacity) }
                 .conditionalCompose(border != null) { border(border!!, shape) }
-                .conditionalCompose(isBorderDrawn) { materialBorder(shape, materialStyle, materialOpacity) }
+                .conditionalCompose(isBorderDrawn) {
+                    materialBorder(
+                        shape = shape,
+                        style = materialStyle,
+                        opacity = materialOpacity,
+                        alpha = materialBorderAlpha,
+                    )
+                }
                 .clip(shape)
                 .background(if (isMaterial) Color.Transparent else color, shape)
                 .conditionalCompose(isMaterialDrawn) { materialFill(materialStyle, materialOpacity) }
@@ -207,14 +222,37 @@ private const val MATERIAL_SHADOW_ALPHA = 0.12f
 private const val MIN_SHADOW_QUANTIZATION_STEPS = 3f
 private const val MAX_CHANNEL_VALUE = 255f
 
-/** Diagonal gradient stroke that wraps the material variant, drawn at [opacity]. */
+/** Diagonal gradient stroke that wraps the material variant, drawn at [opacity] times [alpha]. */
 @Composable
-private fun Modifier.materialBorder(shape: Shape, style: TangemSurface.MaterialStyle, opacity: Float): Modifier =
-    border(
-        width = 1.dp,
-        brush = materialBorderBrush(style, opacity),
-        shape = shape,
-    )
+private fun Modifier.materialBorder(
+    shape: Shape,
+    style: TangemSurface.MaterialStyle,
+    opacity: Float,
+    alpha: () -> Float,
+): Modifier {
+    val brush = materialBorderBrush(style, opacity)
+    return drawWithCache {
+        val strokeWidth = MATERIAL_BORDER_WIDTH.toPx()
+        val inset = strokeWidth / 2f
+        val outline = shape.createOutline(
+            size = Size(width = size.width - strokeWidth, height = size.height - strokeWidth),
+            layoutDirection = layoutDirection,
+            density = this,
+        )
+        val stroke = Stroke(width = strokeWidth)
+        onDrawWithContent {
+            drawContent()
+            val borderAlpha = alpha()
+            if (borderAlpha > 0f) {
+                translate(left = inset, top = inset) {
+                    drawOutline(outline = outline, brush = brush, alpha = borderAlpha, style = stroke)
+                }
+            }
+        }
+    }
+}
+
+private val MATERIAL_BORDER_WIDTH = 1.dp
 
 /**
  * Translucent fill for the material variant, drawn at [opacity].

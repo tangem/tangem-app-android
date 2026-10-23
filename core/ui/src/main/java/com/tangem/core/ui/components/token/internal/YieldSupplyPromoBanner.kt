@@ -58,8 +58,8 @@ internal fun YieldSupplyPromoBanner(state: PromoBannerState.Content, modifier: M
                 contentDescription = null,
                 tint = TangemTheme.colors.icon.accent,
                 modifier = Modifier
-                    .padding(end = TangemTheme.dimens.spacing8)
-                    .size(TangemTheme.dimens.size16),
+                    .padding(end = 8.dp)
+                    .size(16.dp),
             )
             Text(
                 text = state.title.resolveReference(),
@@ -67,14 +67,14 @@ internal fun YieldSupplyPromoBanner(state: PromoBannerState.Content, modifier: M
                 color = TangemTheme.colors.text.secondary,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = TangemTheme.dimens.spacing8),
+                    .padding(end = 8.dp),
             )
             Icon(
                 painter = painterResource(id = R.drawable.ic_close_24),
                 contentDescription = null,
                 tint = TangemTheme.colors.text.secondary,
                 modifier = Modifier
-                    .size(TangemTheme.dimens.size16)
+                    .size(16.dp)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = ripple(bounded = false),

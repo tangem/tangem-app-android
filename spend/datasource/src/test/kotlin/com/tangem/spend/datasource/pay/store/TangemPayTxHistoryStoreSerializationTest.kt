@@ -75,6 +75,20 @@ internal class TangemPayTxHistoryStoreSerializationTest {
     }
 
     @Test
+    fun `GIVEN Collateral without transaction hash WHEN serialized and deserialized THEN hash stays null`() {
+        // Arrange
+        val original: Map<String, Map<String, List<TangemPayTxHistoryItemDM>>> = mapOf(
+            "wallet-1" to mapOf("cursor" to listOf(collateral().copy(transactionHash = null))),
+        )
+
+        // Act
+        val restored = json.decodeFromString(serializer, json.encodeToString(serializer, original))
+
+        // Assert
+        assertThat(restored).isEqualTo(original)
+    }
+
+    @Test
     fun `GIVEN tx history item WHEN serialized THEN uses stable SerialName under non-clashing discriminator`() {
         // Arrange
         val original: Map<String, Map<String, List<TangemPayTxHistoryItemDM>>> = mapOf(
