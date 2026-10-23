@@ -468,6 +468,23 @@ internal class PolymarketFeedPollerTest {
         assertThat(refreshRequests()).isEmpty()
     }
 
+    @Test
+    fun `GIVEN refresh removes all events WHEN the next interval passes THEN the first page is refreshed again`() =
+        runTest {
+            // Arrange
+            val poller = pollFeed(pages = arrayOf(page(key = 0, eventIds = arrayOf("event-1"))))
+            passPollInterval()
+            batchState.value = batchState.value.copy(data = listOf(page(key = 0, eventIds = emptyArray())))
+            poller.setVisibleEventIds(emptySet())
+            succeedRefresh(batchKey = 0)
+
+            // Act
+            passPollInterval()
+
+            // Assert
+            assertThat(refreshedKeys()).containsExactly(0, 0).inOrder()
+        }
+
     private fun TestScope.startPoller(): PolymarketFeedPoller {
         val poller = PolymarketFeedPoller(
             scope = backgroundScope,
