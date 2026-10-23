@@ -55,6 +55,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsMarketUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsOutcomeUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
+import com.tangem.features.polymarket.impl.common.toResolutionSourceUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketSubcategoryTabUM
 import kotlinx.collections.immutable.persistentListOf
 
@@ -336,6 +337,7 @@ private fun previewContent(): PolymarketEventDetailsUM.Content {
         isDescriptionExpanded = false,
         resolutionDate = stringReference("Jul 11, 2026, 6:00 PM ET"),
         marketOpenedDate = stringReference("Jul 11, 2026, 6:00 PM ET"),
+        resolutionSource = "https://www.fifa.com".toResolutionSourceUM(),
         onShareClick = {},
         onClosedMarketsClick = {},
         onReadMoreClick = {},

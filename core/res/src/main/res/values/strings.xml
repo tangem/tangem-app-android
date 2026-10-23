@@ -1961,6 +1961,7 @@
   <string name="prediction_details_market_opened">Market Opened</string>
   <string name="prediction_details_market_volume">Volume:</string>
   <string name="prediction_details_resolution_date">Resolution Date</string>
+  <string name="prediction_details_resolution_source">Resolution Source</string>
   <string name="prediction_details_total_volume">Total volume</string>
   <string name="prediction_event_live">Live</string>
   <plurals name="prediction_event_more_outcomes">
@@ -3416,7 +3417,9 @@
   <string name="transaction_history_to_inline_address">to: %%image%% %s</string>
   <string name="transaction_history_transaction_for_address">for: %s</string>
   <string name="transaction_history_transaction_from_address">from: %s</string>
+  <string name="transaction_history_transaction_from_for_address">from: %1$s for %2$s</string>
   <string name="transaction_history_transaction_to_address">to: %s</string>
+  <string name="transaction_history_transaction_to_for_address">to: %1$s for %2$s</string>
   <string name="transaction_history_transaction_validator">validator: %s</string>
   <string name="transaction_history_unlimited">Unlimited</string>
   <string name="transaction_history_unlimited_amount">Unlimited %s</string>
