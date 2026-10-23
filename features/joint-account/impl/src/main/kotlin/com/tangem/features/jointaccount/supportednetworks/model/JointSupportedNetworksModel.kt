@@ -27,7 +27,10 @@ internal class JointSupportedNetworksModel @Inject constructor(
     val uiState: StateFlow<JointSupportedNetworksUM>
         field = MutableStateFlow(
             JointSupportedNetworksUM(
-                networks = SupportedNetworkItemConverter.convert(getSupportedNetworks()).toImmutableList(),
+                networks = SupportedNetworkItemConverter
+                    .convertList(getSupportedNetworks())
+                    .filterNotNull()
+                    .toImmutableList(),
                 onDismiss = params.onDismiss,
                 onGotItClick = params.onDismiss,
             ),

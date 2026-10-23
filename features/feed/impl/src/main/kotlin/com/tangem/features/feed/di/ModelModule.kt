@@ -8,7 +8,9 @@ import com.tangem.features.feed.components.v2.blocks.model.EarnBlockModel
 import com.tangem.features.feed.components.v2.blocks.model.PredictionsBlockModel
 import com.tangem.features.feed.components.v2.blocks.model.ReferralBlockModel
 import com.tangem.features.feed.components.v2.blocks.model.TangemPayBlockModel
+import com.tangem.features.feed.components.v2.model.FeedForYouModel
 import com.tangem.features.feed.components.v2.model.FeedHomeModel
+import com.tangem.features.feed.components.v2.model.FeedTokenSummaryModel
 import com.tangem.features.feed.model.FeedEntryModel
 import com.tangem.features.feed.model.earn.EarnModel
 import com.tangem.features.feed.model.earn.filters.EarnNetworkFilterModel
@@ -28,6 +30,7 @@ import dagger.multibindings.IntoMap
 
 @Module
 @InstallIn(ModelComponent::class)
+@Suppress("TooManyFunctions")
 internal interface ModelModule {
 
     @Binds
@@ -89,6 +92,16 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(FeedHomeModel::class)
     fun provideFeedHomeModel(model: FeedHomeModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(FeedForYouModel::class)
+    fun provideFeedForYouModel(model: FeedForYouModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(FeedTokenSummaryModel::class)
+    fun provideFeedTokenSummaryModel(model: FeedTokenSummaryModel): Model
 
     @Binds
     @IntoMap

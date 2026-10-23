@@ -1,7 +1,7 @@
 package com.tangem.data.walletmanager
 
-import com.tangem.domain.models.currency.isJoint
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.right
@@ -41,6 +41,7 @@ import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.jointaccount.derivation.isJointAccountReservedPath
 import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.isJoint
@@ -556,6 +557,24 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         }
     }
 
+    override suspend fun getScaledUiAmountMultiplier(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): Either<Throwable, BigDecimal?> = withContext(dispatchers.io) {
+        val blockchain = currency.network.toBlockchain()
+        val isSolana = blockchain == Blockchain.Solana || blockchain == Blockchain.SolanaTestnet
+        if (currency !is CryptoCurrency.Token || !isSolana) return@withContext null.right()
+
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
+            ?: return@withContext IllegalStateException("No wallet manager for ${currency.network.rawId}").left()
+        if (walletManager !is ScaledUiAmountProvider) return@withContext null.right()
+
+        when (val result = walletManager.getScaledUiAmountMultiplier(sdkTokenConverter.convert(currency))) {
+            is Result.Success -> result.data.right()
+            is Result.Failure -> result.error.left()
+        }
+    }
+
     override suspend fun isSwapSpenderAllowed(
         userWalletId: UserWalletId,
         network: Network,
@@ -564,6 +583,16 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
             ?: return@withContext false
         walletManager.isSwapSpenderAllowed(spenderAddress)
+    }
+
+    override suspend fun isSwapTargetAllowed(
+        userWalletId: UserWalletId,
+        network: Network,
+        targetAddress: String,
+    ): Boolean = withContext(dispatchers.io) {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+            ?: return@withContext false
+        walletManager.isSwapTargetAllowed(targetAddress)
     }
 
     override suspend fun getDynamicAddressesReceiveAddress(userWalletId: UserWalletId, network: Network): String? {
