@@ -259,7 +259,7 @@ internal class SendWithSwapConfirmModelTest {
     inner class SendTransaction {
 
         private val changeHero = expressProvider(providerId = "changehero", name = "ChangeHero")
-        private val rejectedError = ExpressError.DataError(code = 2264, description = null)
+        private val rejectedError = ExpressError.ExchangeProviderAddressBannedByAmlError(code = 2264)
 
         @Test
         fun `GIVEN hiding enabled and provider rejected WHEN send THEN provider hidden and named in alert`() = runTest {

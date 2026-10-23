@@ -19,6 +19,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
+import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
@@ -351,7 +352,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 onExpressError = { expressError ->
                     val isHideRejectedProviderEnabled = swapV2FeatureToggles.isHideRejectedCexProviderEnabled
                     if (isHideRejectedProviderEnabled) {
-                        hideProviderIfRejected(provider = provider, errorCode = expressError.code)
+                        hideProviderIfRejected(provider = provider, error = expressError)
                     }
                     uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(false))
                     val fromCurrency = confirmData.fromCryptoCurrencyStatus?.currency
@@ -420,14 +421,14 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         }
     }
 
-    private fun hideProviderIfRejected(provider: ExpressProvider, errorCode: Int) {
-        if (!SwapProviderHidingPolicy.shouldHide(providerId = provider.providerId, errorCode = errorCode)) return
+    private fun hideProviderIfRejected(provider: ExpressProvider, error: ExpressError) {
+        if (!SwapProviderHidingPolicy.shouldHide(providerId = provider.providerId, error = error)) return
 
-        TangemLogger.i("Provider ${provider.providerId} is hidden after swap error $errorCode")
+        TangemLogger.i("Provider ${provider.providerId} is hidden after swap error ${error.code}")
         analyticsEventHandler.send(
             SendWithSwapAnalyticEvents.SwapProviderHidden(
                 providerName = provider.name,
-                errorCode = errorCode,
+                errorCode = error.code,
                 source = params.analyticsSendSource,
             ),
         )
