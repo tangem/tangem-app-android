@@ -2,7 +2,7 @@ package com.tangem.features.tangempay.withdraw.bank
 
 import com.tangem.domain.models.wallet.UserWalletId
 
-internal sealed interface BankWithdrawSourceAccount {
+sealed interface BankWithdrawSourceAccount {
 
     val userWalletId: UserWalletId
 
@@ -10,6 +10,6 @@ internal sealed interface BankWithdrawSourceAccount {
 
     data class Money(
         override val userWalletId: UserWalletId,
-        val productInstanceId: String,
+        val productInstanceId: String?,
     ) : BankWithdrawSourceAccount
 }
