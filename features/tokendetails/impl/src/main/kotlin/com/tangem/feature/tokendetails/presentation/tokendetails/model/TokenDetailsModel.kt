@@ -429,14 +429,18 @@ internal class TokenDetailsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private suspend fun getStatusWarnings(status: CryptoCurrencyStatus): Flow<StatusWarnings> {
-        return getCurrencyWarningsUseCase(
+    private fun getStatusWarnings(status: CryptoCurrencyStatus): Flow<StatusWarnings> = flow {
+        val warnings = getCurrencyWarningsUseCase(
             userWalletId = userWalletId,
             currencyStatus = status,
             derivationPath = cryptoCurrency.network.derivationPath,
         )
-            .distinctUntilChanged()
-            .map { warnings -> StatusWarnings(status = status, warnings = warnings) }
+
+        emitAll(
+            warnings
+                .distinctUntilChanged()
+                .map { StatusWarnings(status = status, warnings = it) },
+        )
     }
 
     private fun reduceDisplayedWarnings(previous: DisplayedWarnings?, current: StatusWarnings): DisplayedWarnings {
