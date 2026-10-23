@@ -19,12 +19,15 @@ class DeleteWalletCloudBackupUseCase @Inject constructor(
     private val deleteCloudBackupWithRetryUseCase: DeleteCloudBackupWithRetryUseCase,
 ) {
 
-    suspend operator fun invoke(walletId: String): Either<CloudBackupError, Unit> = either {
-        val backups = cloudBackupRepository.findBackups().bind()
-        val info = backups.firstOrNull { it.walletId == walletId }
+    suspend operator fun invoke(walletId: String): Either<CloudBackupError, Unit> =
+        cloudBackupRepository.withAccountOf(walletId) {
+            either {
+                val backups = cloudBackupRepository.findBackups().bind()
+                val info = backups.firstOrNull { it.walletId == walletId }
 
-        if (info != null) {
-            deleteCloudBackupWithRetryUseCase(info.fileId).bind()
+                if (info != null) {
+                    deleteCloudBackupWithRetryUseCase(info.fileId).bind()
+                }
+            }
         }
-    }
 }

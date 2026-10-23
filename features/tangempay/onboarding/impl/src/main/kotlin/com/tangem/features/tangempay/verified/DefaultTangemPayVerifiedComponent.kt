@@ -62,11 +62,13 @@ internal class DefaultTangemPayVerifiedComponent @AssistedInject constructor(
     private fun child(route: TangemPayVerifiedRoute, componentContext: ComponentContext): ComposableContentComponent {
         return when (route) {
             TangemPayVerifiedRoute.Verified -> verifiedContent
-            TangemPayVerifiedRoute.SelectPlan -> selectPlanComponentFactory.create(
+            is TangemPayVerifiedRoute.SelectPlan -> selectPlanComponentFactory.create(
                 context = childByContext(componentContext = componentContext, router = innerRouter),
                 params = TangemPaySelectPlanComponent.Params(
                     userWalletId = params.userWalletId,
-                    mode = TangemPaySelectPlanComponent.Mode.PickPlan(onPlanSelected = model::onPlanSelected),
+                    mode = TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder(
+                        availableProducts = route.availableProducts,
+                    ),
                 ),
             )
         }
