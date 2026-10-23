@@ -6,15 +6,12 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.R
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.ExchangeIntent
+import com.tangem.domain.swap.models.ExchangeIntentError
 import com.tangem.domain.swap.usecase.GetExchangeIntentUseCase
 import com.tangem.feature.swap.mcp.ExchangeIntentSwapRouteConverter
 import com.tangem.feature.swap.mcp.holdings.ExchangeIntentHoldings
@@ -35,19 +32,21 @@ private const val AGENT_LOOKUP_TIMEOUT_MILLIS = 3_000L
 
 /**
  * Reads the exchange intent as the selected wallet, offers it to the owner and hands it over to the Swap screen that
- * carries it out. An intent the wallet cannot act on yet closes the sheet.
+ * carries it out. Processed and unavailable intents keep a status sheet open until dismissed; only network failures
+ * and timeouts offer retry. Without a selected wallet, the queue slot is released without showing a sheet.
  */
 @Suppress("LongParameterList")
 @ModelScoped
 internal class ExchangeIntentModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val messageSender: UiMessageSender,
     private val getExchangeIntentUseCase: GetExchangeIntentUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val holdingsResolver: ExchangeIntentHoldingsResolver,
     private val mcpRepository: McpRepository,
     private val offerConverter: ExchangeIntentOfferConverter,
+    private val processedConverter: ExchangeIntentProcessedConverter,
+    private val cantReachConverter: ExchangeIntentCantReachConverter,
     private val swapRouteConverter: ExchangeIntentSwapRouteConverter,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -58,7 +57,7 @@ internal class ExchangeIntentModel @Inject constructor(
     private var loaded: LoadedExchange? = null
     private var isFinished = false
 
-    val offer: StateFlow<ExchangeIntentUM?>
+    val sheet: StateFlow<ExchangeIntentUM?>
         field = MutableStateFlow(null)
 
     init {
@@ -87,14 +86,24 @@ internal class ExchangeIntentModel @Inject constructor(
 
     private suspend fun loadIntent() {
         val walletId = userWalletsListRepository.selectedUserWalletSync()?.walletId
-            ?: return close(reason = "no wallet is selected")
+            ?: return closeWithoutSheet(reason = "no wallet is selected")
 
         val intent = getExchangeIntentUseCase(userWalletId = walletId, intentId = params.intentId)
-            .getOrElse { error -> return close(reason = "the intent cannot be read", error = error) }
-        if (intent.isHandled) return close(reason = "the intent has already been carried out")
+            .getOrElse { error ->
+                return showCantReach(
+                    reason = "the intent cannot be read",
+                    error = error,
+                    canRetry = error is ExchangeIntentError.Unreachable,
+                )
+            }
+        if (intent.isHandled) return showProcessed(walletId = walletId, intent = intent)
 
         val holdings = holdingsResolver.resolve(userWalletId = walletId, intent = intent)
-        if (holdings !is ExchangeIntentHoldings.Both) return close(reason = "the wallet lacks a token: $holdings")
+        if (holdings !is ExchangeIntentHoldings.Both) {
+            return showCantReach(
+                reason = "the wallet lacks a token: $holdings",
+            )
+        }
 
         val offer = offerConverter.convert(
             ExchangeIntentOfferConverter.Input(
@@ -104,11 +113,30 @@ internal class ExchangeIntentModel @Inject constructor(
                 agent = getAgent(intent),
                 onProceed = ::onProceed,
             ),
-        ) ?: return close(reason = "the amount of the intent is malformed")
+        ) ?: return showCantReach(reason = "the amount of the intent is malformed")
 
         currentCoroutineContext().ensureActive()
         loaded = LoadedExchange(walletId = walletId, intent = intent, holdings = holdings)
-        this.offer.value = offer
+        sheet.value = offer
+    }
+
+    private suspend fun showProcessed(walletId: UserWalletId, intent: ExchangeIntent) {
+        TangemLogger.i("Exchange intent ${params.intentId} has already been carried out")
+        val holdings = holdingsResolver.resolve(
+            userWalletId = walletId,
+            intent = intent,
+        ) as? ExchangeIntentHoldings.Both
+        val status = processedConverter.convert(
+            ExchangeIntentProcessedConverter.Input(
+                intent = intent,
+                from = holdings?.from,
+                to = holdings?.to,
+                onClose = ::onClose,
+            ),
+        )
+
+        currentCoroutineContext().ensureActive()
+        sheet.value = status
     }
 
     /** Not knowing the agent must not hold the offer back, so a slow or failed lookup gives the unknown agent. */
@@ -119,11 +147,26 @@ internal class ExchangeIntentModel @Inject constructor(
             ?: McpAgent.unknown(clientId)
     }
 
-    private fun close(reason: String, error: Throwable? = null) {
-        if (!finish()) return
+    private suspend fun showCantReach(reason: String, error: Throwable? = null, canRetry: Boolean = false) {
         TangemLogger.e("Exchange intent ${params.intentId} is not offered: $reason", error)
-        messageSender.send(ToastMessage(message = resourceReference(R.string.common_something_went_wrong)))
+        val status = cantReachConverter.convert(
+            ExchangeIntentCantReachConverter.Input(onRetry = if (canRetry) ::onRetry else null, onClose = ::onClose),
+        )
+
+        currentCoroutineContext().ensureActive()
+        sheet.value = status
+    }
+
+    private fun closeWithoutSheet(reason: String) {
+        if (!finish()) return
+        TangemLogger.i("Exchange intent ${params.intentId} is not offered: $reason")
         router.pop()
+    }
+
+    /** The sheet stays on screen until the new answer replaces it: removing it would dismiss the model. */
+    private fun onRetry() {
+        if (isFinished || loadJob?.isActive == true) return
+        loadJob = modelScope.launch { loadIntent() }
     }
 
     private fun onProceed() {

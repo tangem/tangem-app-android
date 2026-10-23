@@ -21,9 +21,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.feed.state.MarketChartUM
-import com.tangem.features.feed.ui.feed.state.SortChartConfigUM
 import com.tangem.features.feed.ui.search.SearchContent
 import com.tangem.features.feed.ui.search.state.MarketSearchResultUM
 import com.tangem.features.feed.ui.search.state.SearchCallbacks
@@ -379,10 +377,7 @@ internal object SearchContentPreviewFixtures {
         ),
     ).toImmutableList()
 
-    fun topMarketsContent(): MarketChartUM = MarketChartUM.Content(
-        items = marketListShort(),
-        sortChartConfig = SortChartConfigUM(sortByType = SortByTypeUM.Rating, isSelected = true),
-    )
+    fun topMarketsContent(): MarketChartUM = MarketChartUM.Content(items = marketListShort())
 
     fun allScenarios(): List<SearchContentPreviewScenario> = listOf(
         scenarioInitialEmpty,

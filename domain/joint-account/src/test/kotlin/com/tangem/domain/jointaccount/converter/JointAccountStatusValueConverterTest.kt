@@ -86,7 +86,12 @@ internal class JointAccountStatusValueConverterTest {
         status = status,
         members = listOf(
             JointAccount.Member(name = "Alice", address = "0x1", role = JointAccount.Role.CREATOR),
-            JointAccount.Member(name = "Bob", address = "0x2", role = JointAccount.Role.MEMBER, isVerified = isBobVerified),
+            JointAccount.Member(
+                name = "Bob",
+                address = "0x2",
+                role = JointAccount.Role.MEMBER,
+                signature = if (isBobVerified) "0xsigned" else null,
+            ),
         ),
         source = StatusSource.CACHE,
     )

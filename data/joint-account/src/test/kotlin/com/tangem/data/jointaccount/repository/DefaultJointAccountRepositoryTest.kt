@@ -24,13 +24,14 @@ import com.tangem.store.datasource.jointaccount.models.CreateJointOperationReque
 import com.tangem.store.datasource.jointaccount.models.JointOperationDto
 import org.junit.jupiter.params.provider.MethodSource
 import com.tangem.store.datasource.jointaccount.JointAccountApi
-import com.tangem.store.datasource.jointaccount.models.ActivateJointAccountRequest
+import com.tangem.store.datasource.jointaccount.models.ConfirmJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.CreateJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.JoinJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.JointAccountDto
 import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
-import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
+import com.tangem.domain.jointaccount.model.JointAccount
+import com.tangem.domain.jointaccount.model.JointAccountConfirmationPayload
 import com.tangem.domain.jointaccount.model.JointAccountInvite
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointAccountConfig
@@ -256,72 +257,83 @@ internal class DefaultJointAccountRepositoryTest {
     }
 
     @Test
-    fun `GIVEN payload WHEN activate THEN it is sent verbatim and Right returned`() = runTest {
+    fun `GIVEN payload WHEN confirm THEN it is sent verbatim and the returned account converted`() = runTest {
         // Arrange
-        val bodySlot = slot<ActivateJointAccountRequest>()
+        val bodySlot = slot<ConfirmJointAccountRequest>()
         coEvery {
-            jointAccountApi.activateJointAccount(walletId = WALLET_ID.stringValue, body = capture(bodySlot))
-        } returns ApiResponse.Success(createJointAccountDto())
+            jointAccountApi.confirmJointAccount(walletId = WALLET_ID.stringValue, body = capture(bodySlot))
+        } returns ApiResponse.Success(createJointAccountDto(status = "active", safeAddress = SAFE_ADDRESS))
 
         // Act
-        val actual = repository.activate(userWalletId = WALLET_ID, payload = activationPayload(), signature = SIGNATURE)
+        val actual = repository.confirm(userWalletId = WALLET_ID, payload = confirmationPayload(), signature = SIGNATURE)
 
         // Assert
-        assertThat(actual).isEqualTo(Unit.right())
+        val expected = createJointAccount(
+            status = JointAccount.Status.ACTIVE,
+            safeAddress = SAFE_ADDRESS.lowercase(),
+            source = StatusSource.ACTUAL,
+        )
+        assertThat(actual).isEqualTo(expected.right())
         // The signature covers the canonical form of exactly these values — trimming any of them breaks it
         val body = bodySlot.captured
         assertThat(body.signature).isEqualTo(SIGNATURE)
-        assertThat(body.payload.walletId).isEqualTo(WALLET_ID.stringValue)
-        assertThat(body.payload.cryptoAccountId).isEqualTo(FIXTURE_CRYPTO_ACCOUNT_ID)
-        assertThat(body.payload.config.name).isEqualTo(" Family ")
-        assertThat(body.payload.config.safeAddress).isEqualTo(SAFE_ADDRESS)
+        assertThat(body.payload).isEqualTo(
+            ConfirmJointAccountRequest.Payload(
+                name = " Family ",
+                icon = "Family",
+                iconColor = "Azure",
+                membersCount = 3,
+                threshold = 2,
+                safeAddress = SAFE_ADDRESS,
+            ),
+        )
     }
 
     @Test
-    fun `GIVEN timeout then success WHEN activate THEN retried once and Right returned`() = runTest {
+    fun `GIVEN timeout then success WHEN confirm THEN retried once and Right returned`() = runTest {
         // Arrange — the endpoint is idempotent, a lost response must not surface as an error
-        coEvery { jointAccountApi.activateJointAccount(any(), any()) } returnsMany listOf(
+        coEvery { jointAccountApi.confirmJointAccount(any(), any()) } returnsMany listOf(
             timeoutResponse(),
             ApiResponse.Success(createJointAccountDto()),
         )
 
         // Act
-        val actual = repository.activate(userWalletId = WALLET_ID, payload = activationPayload(), signature = SIGNATURE)
+        val actual = repository.confirm(userWalletId = WALLET_ID, payload = confirmationPayload(), signature = SIGNATURE)
 
         // Assert
-        assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 2) { jointAccountApi.activateJointAccount(any(), any()) }
+        assertThat(actual).isEqualTo(createJointAccount(source = StatusSource.ACTUAL).right())
+        coVerify(exactly = 2) { jointAccountApi.confirmJointAccount(any(), any()) }
     }
 
     @Test
-    fun `GIVEN timeout twice WHEN activate THEN Left with the retry error`() = runTest {
+    fun `GIVEN timeout twice WHEN confirm THEN Left with the retry error`() = runTest {
         // Arrange
         val retryResponse = timeoutResponse()
-        coEvery { jointAccountApi.activateJointAccount(any(), any()) } returnsMany listOf(
+        coEvery { jointAccountApi.confirmJointAccount(any(), any()) } returnsMany listOf(
             timeoutResponse(),
             retryResponse,
         )
 
         // Act
-        val actual = repository.activate(userWalletId = WALLET_ID, payload = activationPayload(), signature = SIGNATURE)
+        val actual = repository.confirm(userWalletId = WALLET_ID, payload = confirmationPayload(), signature = SIGNATURE)
 
         // Assert
         assertThat(actual).isEqualTo(Either.Left((retryResponse as ApiResponse.Error).cause))
-        coVerify(exactly = 2) { jointAccountApi.activateJointAccount(any(), any()) }
+        coVerify(exactly = 2) { jointAccountApi.confirmJointAccount(any(), any()) }
     }
 
     @Test
-    fun `GIVEN server error WHEN activate THEN Left without a retry`() = runTest {
+    fun `GIVEN server error WHEN confirm THEN Left without a retry`() = runTest {
         // Arrange
         val response = errorResponse<JointAccountDto>(code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR)
-        coEvery { jointAccountApi.activateJointAccount(any(), any()) } returns response
+        coEvery { jointAccountApi.confirmJointAccount(any(), any()) } returns response
 
         // Act
-        val actual = repository.activate(userWalletId = WALLET_ID, payload = activationPayload(), signature = SIGNATURE)
+        val actual = repository.confirm(userWalletId = WALLET_ID, payload = confirmationPayload(), signature = SIGNATURE)
 
         // Assert
         assertThat(actual).isEqualTo(Either.Left((response as ApiResponse.Error).cause))
-        coVerify(exactly = 1) { jointAccountApi.activateJointAccount(any(), any()) }
+        coVerify(exactly = 1) { jointAccountApi.confirmJointAccount(any(), any()) }
     }
 
     @Test
@@ -461,19 +473,15 @@ internal class DefaultJointAccountRepositoryTest {
         ),
     )
 
-    private fun activationPayload() = JointAccountActivationPayload(
-        walletId = WALLET_ID.stringValue,
-        cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID,
-        config = JointAccountActivationPayload.ConfirmedConfig(
-            base = JointAccountConfig(
-                name = " Family ",
-                icon = "Family",
-                iconColor = "Azure",
-                membersCount = 3,
-                threshold = 2,
-            ),
-            safeAddress = SAFE_ADDRESS,
+    private fun confirmationPayload() = JointAccountConfirmationPayload(
+        config = JointAccountConfig(
+            name = " Family ",
+            icon = "Family",
+            iconColor = "Azure",
+            membersCount = 3,
+            threshold = 2,
         ),
+        safeAddress = SAFE_ADDRESS,
     )
 
     @Suppress("UNCHECKED_CAST")
