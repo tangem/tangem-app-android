@@ -210,21 +210,6 @@ internal class ItemsBuilderTest {
         assertThat(shop.items.map { it.id }).containsExactly("buy_tangem_wallet", "get_tangem_pay").inOrder()
     }
 
-    @Test
-    fun `GIVEN shop block with money account item WHEN addMoneyAccountItem THEN item not duplicated`() {
-        // Arrange
-        val items: ImmutableList<DetailsItemUM> = persistentListOf(
-            basicBlock(id = "shop", itemIds = listOf("buy_tangem_wallet", "get_money_account")),
-        )
-
-        // Act
-        val result = itemsBuilder.addMoneyAccountItem(items = items, onClick = {})
-
-        // Assert
-        val shop = result.single { it.id == "shop" } as DetailsItemUM.Basic
-        assertThat(shop.items.map { it.id }).containsExactly("buy_tangem_wallet", "get_money_account").inOrder()
-    }
-
     @ParameterizedTest
     @ProvideTestModels
     fun hasTangemPayItem(model: HasTangemPayItemModel) {

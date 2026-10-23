@@ -254,24 +254,20 @@ internal class JointAccountDtoTest {
     }
 
     @Test
-    fun `GIVEN activate request WHEN round trip THEN object survives and field names match contract`() {
+    fun `GIVEN confirm request WHEN round trip THEN object survives and payload is flat`() {
         // Arrange
-        val request = ActivateJointAccountRequest(
-            payload = ActivateJointAccountRequest.Payload(
-                walletId = "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6",
-                cryptoAccountId = "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66",
-                config = ActivateJointAccountRequest.ConfirmedConfig(
-                    name = "Family",
-                    icon = "Family",
-                    iconColor = "Azure",
-                    membersCount = 3,
-                    threshold = 2,
-                    safeAddress = "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf",
-                ),
+        val request = ConfirmJointAccountRequest(
+            payload = ConfirmJointAccountRequest.Payload(
+                name = "Family",
+                icon = "Family",
+                iconColor = "Azure",
+                membersCount = 3,
+                threshold = 2,
+                safeAddress = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
             ),
             signature = "0x" + "ab".repeat(65),
         )
-        val adapter = moshi.adapter(ActivateJointAccountRequest::class.java)
+        val adapter = moshi.adapter(ConfirmJointAccountRequest::class.java)
 
         // Act
         val json = adapter.toJson(request)
@@ -280,9 +276,9 @@ internal class JointAccountDtoTest {
         // Assert
         assertThat(actual).isEqualTo(request)
         assertThat(json).contains("\"payload\"")
-        assertThat(json).contains("\"cryptoAccountId\"")
-        assertThat(json).contains("\"config\"")
         assertThat(json).contains("\"safeAddress\"")
+        assertThat(json).doesNotContain("\"config\"")
+        assertThat(json).doesNotContain("\"cryptoAccountId\"")
     }
 
     @Nested
