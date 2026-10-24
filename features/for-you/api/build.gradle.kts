@@ -20,5 +20,7 @@ dependencies {
     api(projects.domain.models)
     api(deps.kotlin.serialization.core)
     api(deps.kotlin.coroutines)
+    api(deps.compose.runtime)
+    api(deps.compose.ui)
     api(projects.domain.markets.models)
 }
