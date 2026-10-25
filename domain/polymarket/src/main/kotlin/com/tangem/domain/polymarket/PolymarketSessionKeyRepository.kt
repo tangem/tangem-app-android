@@ -2,8 +2,8 @@ package com.tangem.domain.polymarket
 
 import arrow.core.Either
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketAuthError
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketSessionKey
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyAuthorization
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
@@ -31,7 +31,6 @@ interface PolymarketSessionKeyRepository {
     ): Either<PolymarketSessionKeyError, PolymarketSessionKey>
 
     suspend fun getSessionSigners(
-        ownerAddress: String,
-        credentials: PolymarketApiCredentials,
+        owner: PolymarketClobIdentity.Owner,
     ): Either<PolymarketAuthError, List<PolymarketSessionSigner>>
 }

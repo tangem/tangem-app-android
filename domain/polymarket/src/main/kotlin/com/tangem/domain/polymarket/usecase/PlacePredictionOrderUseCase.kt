@@ -7,6 +7,7 @@ import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketClobAsset
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
@@ -56,8 +57,7 @@ class PlacePredictionOrderUseCase(
         }
 
         return polymarketRepository.placeOrder(
-            ownerAddress = addresses.ownerAddress,
-            credentials = credentials,
+            identity = PolymarketClobIdentity.Owner(address = addresses.ownerAddress, credentials = credentials),
             signedOrder = signedOrder,
         ).onLeft { error ->
             if (error is PredictionPlaceOrderError.Unauthorized) {

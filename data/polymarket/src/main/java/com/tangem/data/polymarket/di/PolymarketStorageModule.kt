@@ -10,6 +10,7 @@ import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.cleaner.PolymarketUserWalletDataCleaner
 import com.tangem.data.polymarket.derivation.PolymarketAddressFactory
 import com.tangem.data.polymarket.sessionkey.DefaultPolymarketDeviceIdProvider
+import com.tangem.data.polymarket.sessionkey.DefaultPolymarketSessionCredentialsProvider
 import com.tangem.data.polymarket.sessionkey.DefaultPolymarketSessionKeyStore
 import com.tangem.data.polymarket.store.DefaultPolymarketCredentialsStore
 import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
@@ -25,6 +26,7 @@ import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.sdk.storage.AndroidSecureStorageV2
@@ -177,6 +179,12 @@ internal object PolymarketStorageModule {
             dispatchers = dispatchers,
         )
     }
+
+    @Provides
+    @Singleton
+    fun providePolymarketSessionCredentialsProvider(
+        impl: DefaultPolymarketSessionCredentialsProvider,
+    ): PolymarketSessionCredentialsProvider = impl
 
     @Provides
     @IntoSet

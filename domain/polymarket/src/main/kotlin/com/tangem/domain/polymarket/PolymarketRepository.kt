@@ -6,6 +6,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketAuthError
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketClobAsset
 import com.tangem.domain.polymarket.model.PolymarketCategory
@@ -77,8 +78,7 @@ interface PolymarketRepository {
      * timer rather than caching it.
      */
     suspend fun placeOrder(
-        ownerAddress: String,
-        credentials: PolymarketApiCredentials,
+        identity: PolymarketClobIdentity,
         signedOrder: PredictionSignedOrder,
     ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult>
 
@@ -92,8 +92,7 @@ interface PolymarketRepository {
      * its matching window, so a transport failure is reported as such rather than folded into unknown.
      */
     suspend fun getOrder(
-        ownerAddress: String,
-        credentials: PolymarketApiCredentials,
+        identity: PolymarketClobIdentity,
         orderId: String,
     ): Either<PredictionOrderStateError, PredictionOrderState>
 
