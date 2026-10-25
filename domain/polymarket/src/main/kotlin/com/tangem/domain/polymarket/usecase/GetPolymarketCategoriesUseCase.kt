@@ -2,6 +2,7 @@ package com.tangem.domain.polymarket.usecase
 
 import arrow.core.Either
 import com.tangem.domain.core.error.DataError
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketCategory
 
@@ -12,7 +13,7 @@ class GetPolymarketCategoriesUseCase(
     private val polymarketRepository: PolymarketRepository,
 ) {
 
-    suspend operator fun invoke(): Either<DataError, List<PolymarketCategory>> {
-        return polymarketRepository.getCategories()
+    suspend operator fun invoke(userWalletId: UserWalletId): Either<DataError, List<PolymarketCategory>> {
+        return polymarketRepository.getCategories(userWalletId = userWalletId)
     }
 }

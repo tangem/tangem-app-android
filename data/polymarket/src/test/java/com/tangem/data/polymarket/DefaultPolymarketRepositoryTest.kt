@@ -49,6 +49,7 @@ import com.tangem.grow.datasource.polymarket.models.PolymarketWalletStatusRespon
 import com.tangem.grow.datasource.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.grow.datasource.polymarket.relayer.models.PolymarketNonceResponse
 import com.tangem.domain.core.error.DataError
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
@@ -119,6 +120,7 @@ internal class DefaultPolymarketRepositoryTest {
         override fun encode(bytes: ByteArray): String = JavaBase64.getUrlEncoder().encodeToString(bytes)
     }
     private val l2HeaderBuilder = PolymarketL2HeaderBuilder(PolymarketHmacSigner(jvmCodec))
+    private val userWalletId = UserWalletId(WALLET_ID)
 
     private val repository = DefaultPolymarketRepository(
         polymarketApi = api,
@@ -173,7 +175,7 @@ internal class DefaultPolymarketRepositoryTest {
     @Test
     fun `GIVEN categories response WHEN getCategories THEN maps to domain categories in order`() = runTest {
         // Arrange
-        coEvery { api.getCategories(locale = null) } returns ApiResponse.Success(
+        coEvery { api.getCategories(walletId = WALLET_ID, locale = null) } returns ApiResponse.Success(
             PolymarketCategoriesResponse(
                 categories = listOf(
                     PolymarketCategoryDto(id = 1, label = "Trending", icon = "trending"),
@@ -183,7 +185,7 @@ internal class DefaultPolymarketRepositoryTest {
         )
 
         // Act
-        val result = repository.getCategories()
+        val result = repository.getCategories(userWalletId = userWalletId)
 
         // Assert
         assertThat(result).isEqualTo(
@@ -203,14 +205,14 @@ internal class DefaultPolymarketRepositoryTest {
         fun `GIVEN an icon key WHEN getCategories THEN maps it to the category icon`(model: CategoryIconModel) =
             runTest {
                 // Arrange
-                coEvery { api.getCategories(locale = null) } returns ApiResponse.Success(
+                coEvery { api.getCategories(walletId = WALLET_ID, locale = null) } returns ApiResponse.Success(
                     PolymarketCategoriesResponse(
                         categories = listOf(PolymarketCategoryDto(id = 7, label = "Label", icon = model.key)),
                     ),
                 )
 
                 // Act
-                val result = repository.getCategories()
+                val result = repository.getCategories(userWalletId = userWalletId)
 
                 // Assert
                 assertThat(result).isEqualTo(
@@ -252,10 +254,10 @@ internal class DefaultPolymarketRepositoryTest {
     @Test
     fun `GIVEN network exception WHEN getCategories THEN returns left no internet`() = runTest {
         // Arrange
-        coEvery { api.getCategories(locale = null) } returns networkError()
+        coEvery { api.getCategories(walletId = WALLET_ID, locale = null) } returns networkError()
 
         // Act
-        val result = repository.getCategories()
+        val result = repository.getCategories(userWalletId = userWalletId)
 
         // Assert
         assertEitherLeft(result, DataError.NetworkError.NoInternetConnection())
@@ -264,12 +266,12 @@ internal class DefaultPolymarketRepositoryTest {
     @Test
     fun `GIVEN event response WHEN getEvent THEN converts and returns right event`() = runTest {
         // Arrange
-        coEvery { api.getEvent(eventId = "event-1") } returns ApiResponse.Success(
+        coEvery { api.getEvent(walletId = WALLET_ID, eventId = "event-1") } returns ApiResponse.Success(
             PolymarketEventResponse(event = EVENT_DTO),
         )
 
         // Act
-        val result = repository.getEvent(eventId = "event-1")
+        val result = repository.getEvent(userWalletId = userWalletId, eventId = "event-1")
 
         // Assert
         val event = result.getOrNull()
@@ -280,10 +282,10 @@ internal class DefaultPolymarketRepositoryTest {
     @Test
     fun `GIVEN network exception WHEN getEvent THEN returns left network error`() = runTest {
         // Arrange
-        coEvery { api.getEvent(eventId = "event-1") } returns networkError()
+        coEvery { api.getEvent(walletId = WALLET_ID, eventId = "event-1") } returns networkError()
 
         // Act
-        val result = repository.getEvent(eventId = "event-1")
+        val result = repository.getEvent(userWalletId = userWalletId, eventId = "event-1")
 
         // Assert
         assertThat(result).isEqualTo(PolymarketEventError.Network.left())
@@ -292,15 +294,16 @@ internal class DefaultPolymarketRepositoryTest {
     @Test
     fun `GIVEN pages WHEN batch flow reloaded and scrolled THEN the body cursor drives the next page`() = runTest {
         // Arrange
-        coEvery { api.getEvents(category = 5, limit = 20, cursor = null) } returns ApiResponse.Success(
+        coEvery { api.getEvents(walletId = WALLET_ID, category = 5, limit = 20, cursor = null) } returns ApiResponse.Success(
             PolymarketEventsResponse(events = listOf(EVENT_DTO), cursor = "cursor-1", hasNext = true),
         )
-        coEvery { api.getEvents(category = 5, limit = 20, cursor = "cursor-1") } returns ApiResponse.Success(
+        coEvery { api.getEvents(walletId = WALLET_ID, category = 5, limit = 20, cursor = "cursor-1") } returns ApiResponse.Success(
             PolymarketEventsResponse(events = listOf(EVENT_DTO), cursor = null, hasNext = false),
         )
         val actions = MutableSharedFlow<BatchAction<Int, PolymarketEventsListConfig, Nothing>>(replay = 1)
         val sourceScope = testSourceScope()
         val batchFlow = repository.getEventsBatchFlow(
+            userWalletId = userWalletId,
             context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
             batchSize = 20,
         )
@@ -314,7 +317,7 @@ internal class DefaultPolymarketRepositoryTest {
         // Assert
         val events = batchFlow.state.value.data.flatMap { batch -> batch.data.events }
         assertThat(events.map { it.id }).containsExactly("event-id", "event-id")
-        coVerify(exactly = 1) { api.getEvents(category = 5, limit = 20, cursor = "cursor-1") }
+        coVerify(exactly = 1) { api.getEvents(walletId = WALLET_ID, category = 5, limit = 20, cursor = "cursor-1") }
         sourceScope.cancel()
     }
 
@@ -322,7 +325,7 @@ internal class DefaultPolymarketRepositoryTest {
     fun `GIVEN failing first page WHEN batch flow reloaded THEN one silent retry precedes the error state`() =
         runTest {
             // Arrange
-            coEvery { api.getEvents(category = null, limit = 20, cursor = null) } returns networkError()
+            coEvery { api.getEvents(walletId = WALLET_ID, category = null, limit = 20, cursor = null) } returns networkError()
             val repository = DefaultPolymarketRepository(
                 polymarketApi = api,
                 geoApi = geoApi,
@@ -339,6 +342,7 @@ internal class DefaultPolymarketRepositoryTest {
             val actions = MutableSharedFlow<BatchAction<Int, PolymarketEventsListConfig, Nothing>>(replay = 1)
             val sourceScope = testSourceScope()
             val batchFlow = repository.getEventsBatchFlow(
+                userWalletId = userWalletId,
                 context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
                 batchSize = 20,
             )
@@ -350,22 +354,23 @@ internal class DefaultPolymarketRepositoryTest {
             // Assert
             assertThat(batchFlow.state.value.status)
                 .isInstanceOf(PaginationStatus.InitialLoadingError::class.java)
-            coVerify(exactly = 2) { api.getEvents(category = null, limit = 20, cursor = null) }
+            coVerify(exactly = 2) { api.getEvents(walletId = WALLET_ID, category = null, limit = 20, cursor = null) }
             sourceScope.cancel()
         }
 
     @Test
     fun `GIVEN result pages WHEN search flow reloaded and scrolled THEN pages are requested by number`() = runTest {
         // Arrange
-        coEvery { api.searchEvents(query = "uzb", limit = 20, page = 1) } returns ApiResponse.Success(
+        coEvery { api.searchEvents(walletId = WALLET_ID, query = "uzb", limit = 20, page = 1) } returns ApiResponse.Success(
             PolymarketSearchResponse(events = listOf(EVENT_DTO), page = 1, total = 2, hasNext = true),
         )
-        coEvery { api.searchEvents(query = "uzb", limit = 20, page = 2) } returns ApiResponse.Success(
+        coEvery { api.searchEvents(walletId = WALLET_ID, query = "uzb", limit = 20, page = 2) } returns ApiResponse.Success(
             PolymarketSearchResponse(events = listOf(EVENT_DTO), page = 2, total = 2, hasNext = false),
         )
         val actions = MutableSharedFlow<BatchAction<Int, PolymarketSearchConfig, Nothing>>(replay = 1)
         val sourceScope = testSourceScope()
         val batchFlow = repository.searchEventsBatchFlow(
+            userWalletId = userWalletId,
             context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
             batchSize = 20,
         )
@@ -379,7 +384,7 @@ internal class DefaultPolymarketRepositoryTest {
         // Assert
         val events = batchFlow.state.value.data.flatMap { batch -> batch.data }
         assertThat(events.map { it.id }).containsExactly("event-id", "event-id")
-        coVerify(exactly = 1) { api.searchEvents(query = "uzb", limit = 20, page = 2) }
+        coVerify(exactly = 1) { api.searchEvents(walletId = WALLET_ID, query = "uzb", limit = 20, page = 2) }
         sourceScope.cancel()
     }
 
@@ -387,12 +392,13 @@ internal class DefaultPolymarketRepositoryTest {
     fun `GIVEN nothing found WHEN search flow reloaded THEN an empty last page is served without an error`() =
         runTest {
             // Arrange
-            coEvery { api.searchEvents(query = "nothing", limit = 20, page = 1) } returns ApiResponse.Success(
+            coEvery { api.searchEvents(walletId = WALLET_ID, query = "nothing", limit = 20, page = 1) } returns ApiResponse.Success(
                 PolymarketSearchResponse(events = emptyList(), page = 1, total = 0, hasNext = false),
             )
             val actions = MutableSharedFlow<BatchAction<Int, PolymarketSearchConfig, Nothing>>(replay = 1)
             val sourceScope = testSourceScope()
             val batchFlow = repository.searchEventsBatchFlow(
+                userWalletId = userWalletId,
                 context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
                 batchSize = 20,
             )
@@ -411,10 +417,11 @@ internal class DefaultPolymarketRepositoryTest {
     @Test
     fun `GIVEN failing search WHEN search flow reloaded THEN the error is served without a retry`() = runTest {
         // Arrange
-        coEvery { api.searchEvents(query = "boom", limit = 20, page = 1) } returns networkError()
+        coEvery { api.searchEvents(walletId = WALLET_ID, query = "boom", limit = 20, page = 1) } returns networkError()
         val actions = MutableSharedFlow<BatchAction<Int, PolymarketSearchConfig, Nothing>>(replay = 1)
         val sourceScope = testSourceScope()
         val batchFlow = repository.searchEventsBatchFlow(
+            userWalletId = userWalletId,
             context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
             batchSize = 20,
         )
@@ -426,7 +433,7 @@ internal class DefaultPolymarketRepositoryTest {
         // Assert
         assertThat(batchFlow.state.value.status)
             .isInstanceOf(PaginationStatus.InitialLoadingError::class.java)
-        coVerify(exactly = 1) { api.searchEvents(query = "boom", limit = 20, page = 1) }
+        coVerify(exactly = 1) { api.searchEvents(walletId = WALLET_ID, query = "boom", limit = 20, page = 1) }
         sourceScope.cancel()
     }
 
@@ -440,72 +447,86 @@ internal class DefaultPolymarketRepositoryTest {
     @Test
     fun `GIVEN the event is gone WHEN getEvent THEN returns left not found`() = runTest {
         // Arrange
-        coEvery { api.getEvent(eventId = "event-1") } returns httpError(code = Code.NOT_FOUND, body = null)
+        coEvery { api.getEvent(walletId = WALLET_ID, eventId = "event-1") } returns httpError(code = Code.NOT_FOUND, body = null)
 
         // Act
-        val result = repository.getEvent(eventId = "event-1")
+        val result = repository.getEvent(userWalletId = userWalletId, eventId = "event-1")
 
         // Assert
         assertThat(result).isEqualTo(PolymarketEventError.NotFound.left())
     }
 
     @Test
-    fun `GIVEN stored wallet WHEN getWalletStatus THEN maps to domain state`() = runTest {
+    fun `GIVEN stored wallet WHEN getWalletStatusByWalletId THEN maps to domain state`() = runTest {
         // Arrange
-        coEvery { api.getWalletStatus(OWNER) } returns
+        coEvery { api.getWalletStatusByWalletId(walletIdHeader = WALLET_ID, walletId = WALLET_ID) } returns
             ApiResponse.Success(PolymarketWalletStatusResponse(depositWalletAddress = DW, status = "DEPLOYED"))
 
         // Act
-        val result = repository.getWalletStatus(OWNER)
+        val result = repository.getWalletStatusByWalletId(walletId = WALLET_ID)
 
         // Assert
         assertThat(result).isEqualTo(PolymarketWalletState(DW, PolymarketWalletStatus.DEPLOYED).right())
     }
 
     @Test
-    fun `GIVEN unknown status string WHEN getWalletStatus THEN maps to UNKNOWN`() = runTest {
+    fun `GIVEN a wallet id WHEN getWalletStatusByWalletId THEN it is both the lookup key and the wallet-id header`() =
+        runTest {
+            // Arrange
+            coEvery { api.getWalletStatusByWalletId(walletIdHeader = any(), walletId = any()) } returns
+                ApiResponse.Success(PolymarketWalletStatusResponse(depositWalletAddress = DW, status = "DEPLOYED"))
+
+            // Act
+            repository.getWalletStatusByWalletId(walletId = WALLET_ID)
+
+            // Assert
+            coVerify(exactly = 1) { api.getWalletStatusByWalletId(walletIdHeader = WALLET_ID, walletId = WALLET_ID) }
+        }
+
+    @Test
+    fun `GIVEN unknown status string WHEN getWalletStatusByWalletId THEN maps to UNKNOWN`() = runTest {
         // Arrange
-        coEvery { api.getWalletStatus(OWNER) } returns
+        coEvery { api.getWalletStatusByWalletId(walletIdHeader = WALLET_ID, walletId = WALLET_ID) } returns
             ApiResponse.Success(PolymarketWalletStatusResponse(depositWalletAddress = null, status = "SOME_FUTURE_STATE"))
 
         // Act
-        val result = repository.getWalletStatus(OWNER)
+        val result = repository.getWalletStatusByWalletId(walletId = WALLET_ID)
 
         // Assert
         assertThat(result).isEqualTo(PolymarketWalletState(null, PolymarketWalletStatus.UNKNOWN).right())
     }
 
     @Test
-    fun `GIVEN 409 WHEN getWalletStatus THEN WalletNotDeployed error (delegated to resolver)`() = runTest {
+    fun `GIVEN 409 WHEN getWalletStatusByWalletId THEN WalletNotDeployed error (delegated to resolver)`() = runTest {
         // Arrange
-        coEvery { api.getWalletStatus(OWNER) } returns httpError(Code.CONFLICT, body = null)
+        coEvery { api.getWalletStatusByWalletId(walletIdHeader = WALLET_ID, walletId = WALLET_ID) } returns httpError(Code.CONFLICT, body = null)
 
         // Act
-        val result = repository.getWalletStatus(OWNER)
+        val result = repository.getWalletStatusByWalletId(walletId = WALLET_ID)
 
         // Assert
         assertThat(result).isEqualTo(PolymarketWalletError.WalletNotDeployed.left())
     }
 
     @Test
-    fun `GIVEN network exception WHEN getWalletStatus THEN Network error`() = runTest {
+    fun `GIVEN network exception WHEN getWalletStatusByWalletId THEN Network error`() = runTest {
         // Arrange
-        coEvery { api.getWalletStatus(OWNER) } returns networkError()
+        coEvery { api.getWalletStatusByWalletId(walletIdHeader = WALLET_ID, walletId = WALLET_ID) } returns networkError()
 
         // Act
-        val result = repository.getWalletStatus(OWNER)
+        val result = repository.getWalletStatusByWalletId(walletId = WALLET_ID)
 
         // Assert
         assertThat(result).isEqualTo(PolymarketWalletError.Network.left())
     }
 
     @Test
-    fun `GIVEN cancellation WHEN getWalletStatus THEN it propagates and is not mapped to a domain error`() = runTest {
+    fun `GIVEN cancellation WHEN getWalletStatusByWalletId THEN it propagates and is not mapped to a domain error`() = runTest {
         // Arrange
-        coEvery { api.getWalletStatus(OWNER) } throws CancellationException("cancelled")
+        coEvery { api.getWalletStatusByWalletId(walletIdHeader = WALLET_ID, walletId = WALLET_ID) } throws CancellationException("cancelled")
 
         // Act
-        val thrown = runCatching { repository.getWalletStatus(OWNER) }.exceptionOrNull()
+        val thrown = runCatching { repository.getWalletStatusByWalletId(walletId = WALLET_ID) }.exceptionOrNull()
 
         // Assert
         assertThat(thrown).isInstanceOf(CancellationException::class.java)
@@ -515,7 +536,7 @@ internal class DefaultPolymarketRepositoryTest {
     fun `GIVEN accepted WHEN deployWallet THEN maps operation status`() = runTest {
         // Arrange
         val request = slot<PolymarketWalletDeployRequest>()
-        coEvery { api.deployWallet(capture(request)) } returns
+        coEvery { api.deployWallet(walletId = WALLET_ID, request = capture(request)) } returns
             ApiResponse.Success(PolymarketWalletOperationResponse(status = "DEPLOYMENT_IN_PROGRESS"))
 
         // Act
@@ -536,7 +557,7 @@ internal class DefaultPolymarketRepositoryTest {
     fun `GIVEN signed batch WHEN submitApprovals THEN sends converted request and maps status`() = runTest {
         // Arrange
         val requestSlot = slot<PolymarketWalletApprovalsRequest>()
-        coEvery { api.submitApprovals(capture(requestSlot)) } returns
+        coEvery { api.submitApprovals(walletId = WALLET_ID, request = capture(requestSlot)) } returns
             ApiResponse.Success(PolymarketWalletOperationResponse(status = "READY_TO_TRADE"))
         val batch = PolymarketApprovalsBatch(
             ownerAddress = OWNER,
@@ -548,7 +569,7 @@ internal class DefaultPolymarketRepositoryTest {
         )
 
         // Act
-        val result = repository.submitApprovals(batch)
+        val result = repository.submitApprovals(userWalletId = userWalletId, batch = batch)
 
         // Assert
         assertThat(result).isEqualTo(PolymarketWalletStatus.READY_TO_TRADE.right())
@@ -1225,10 +1246,10 @@ internal class DefaultPolymarketRepositoryTest {
     @Test
     fun `GIVEN a priced quote WHEN getOrderQuote THEN the figures arrive as the exchange stated them`() = runTest {
         // Arrange
-        coEvery { api.getOrderQuote(request = any()) } returns ApiResponse.Success(quoteResponse())
+        coEvery { api.getOrderQuote(walletId = WALLET_ID, request = any()) } returns ApiResponse.Success(quoteResponse())
 
         // Act
-        val result = repository.getOrderQuote(request = quoteRequest())
+        val result = repository.getOrderQuote(userWalletId = userWalletId, request = quoteRequest())
 
         // Assert
         val quote = result.getOrNull()!!
@@ -1244,11 +1265,11 @@ internal class DefaultPolymarketRepositoryTest {
     fun `GIVEN an unreadable amount WHEN getOrderQuote THEN it fails instead of escaping as an exception`() =
         runTest {
             // Arrange — safeApiCall recovers a raise, not a throw, so an unparsable figure would otherwise
-            coEvery { api.getOrderQuote(request = any()) } returns
+            coEvery { api.getOrderQuote(walletId = WALLET_ID, request = any()) } returns
                 ApiResponse.Success(quoteResponse(shares = "not-a-number"))
 
             // Act
-            val result = repository.getOrderQuote(request = quoteRequest())
+            val result = repository.getOrderQuote(userWalletId = userWalletId, request = quoteRequest())
 
             // Assert
             assertThat(result.leftOrNull()).isInstanceOf(PredictionOrderQuoteError.Unknown::class.java)
@@ -1258,10 +1279,10 @@ internal class DefaultPolymarketRepositoryTest {
     fun `GIVEN a quote request WHEN getOrderQuote THEN the market and the outcome are sent as asked`() = runTest {
         // Arrange
         val body = slot<PolymarketOrderQuoteRequest>()
-        coEvery { api.getOrderQuote(request = capture(body)) } returns ApiResponse.Success(quoteResponse())
+        coEvery { api.getOrderQuote(walletId = WALLET_ID, request = capture(body)) } returns ApiResponse.Success(quoteResponse())
 
         // Act
-        repository.getOrderQuote(request = quoteRequest())
+        repository.getOrderQuote(userWalletId = userWalletId, request = quoteRequest())
 
         // Assert — a swapped market and outcome would quote the opposite bet instead of failing
         assertThat(body.captured.marketId).isEqualTo("2944989")
@@ -1271,10 +1292,10 @@ internal class DefaultPolymarketRepositoryTest {
     @Test
     fun `GIVEN a refusal from the endpoint WHEN getOrderQuote THEN the status survives for the poller`() = runTest {
         // Arrange — a deterministic 400 repeats on every tick, unlike a transient 5xx
-        coEvery { api.getOrderQuote(request = any()) } returns httpError(Code.BAD_REQUEST, body = "bad amount")
+        coEvery { api.getOrderQuote(walletId = WALLET_ID, request = any()) } returns httpError(Code.BAD_REQUEST, body = "bad amount")
 
         // Act
-        val result = repository.getOrderQuote(request = quoteRequest())
+        val result = repository.getOrderQuote(userWalletId = userWalletId, request = quoteRequest())
 
         // Assert
         assertThat(result.leftOrNull())
@@ -1284,11 +1305,11 @@ internal class DefaultPolymarketRepositoryTest {
     @Test
     fun `GIVEN an unclassifiable failure WHEN getOrderQuote THEN its cause is carried`() = runTest {
         // Arrange
-        coEvery { api.getOrderQuote(request = any()) } returns
+        coEvery { api.getOrderQuote(walletId = WALLET_ID, request = any()) } returns
             (ApiResponse.Error(ApiResponseError.UnknownException(IllegalStateException("boom"))) as ApiResponse<PolymarketOrderQuoteResponse>)
 
         // Act
-        val result = repository.getOrderQuote(request = quoteRequest())
+        val result = repository.getOrderQuote(userWalletId = userWalletId, request = quoteRequest())
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(PredictionOrderQuoteError.Unknown(httpCode = null, detail = "boom"))
@@ -1297,10 +1318,10 @@ internal class DefaultPolymarketRepositoryTest {
     @Test
     fun `GIVEN no connection WHEN getOrderQuote THEN the failure keeps its kind`() = runTest {
         // Arrange
-        coEvery { api.getOrderQuote(request = any()) } returns networkError()
+        coEvery { api.getOrderQuote(walletId = WALLET_ID, request = any()) } returns networkError()
 
         // Act
-        val result = repository.getOrderQuote(request = quoteRequest())
+        val result = repository.getOrderQuote(userWalletId = userWalletId, request = quoteRequest())
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(PredictionOrderQuoteError.Network)
