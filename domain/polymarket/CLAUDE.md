@@ -114,9 +114,22 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   or an order that cannot be sent (`NotSent`) counts as a refusal too, as on iOS (a signing failure is not
   reconciled); a cancelled signing does not. On a refusal the
   key is marked refused and its stored readiness dropped before the same order is signed with the owner key, so it
-  stays out of trading until marked ready again, restarts included; the wallet is reconciled in the app scope,
+  stays out of trading until a new authorization (enable, renew, replace) marks it ready or the app restarts, as on
+  iOS — a reconciliation that finds it listed does not lift it; the wallet is reconciled in the app scope,
   after the owner result is returned. Market, liquidity and balance errors are final. The owner route maps those
   responses as before.
+- Every relayer batch takes the next deposit-wallet nonce, so claim, withdrawal confirm/resend and the session key
+  lifecycle (`ManagePolymarketSessionKeyInteractor`) share `PolymarketDepositWalletLock` from signing until the
+  relayer accepted the batch. On top of that, one lifecycle operation (enable, renew, replace, revoke)
+  runs per wallet: a second one ends at once in `OperationInProgress`, nothing signed; toggling is not guarded, as
+  on iOS. Progress is emitted
+  outside the lock. Renewal and replacement release the lock while the revocation settles and take it again to
+  send the pre-signed authorization; a claim in between takes that nonce. Nothing is signed twice without the
+  user: a batch refused for its signature (`NONCE_ALREADY_USED`, `INVALID_DEADLINE`, `INVALID_VALID_UNTIL`,
+  `RELAYER_REJECTED`) or a pre-signed authorization expired before it is sent ends in `StaleSignature`, and the
+  user starts the operation again; only an unanswered or `502` send is repeated, with the same body.
+  A withdrawal reads its nonce in `prepare`, outside the lock: a lifecycle operation in between costs it a
+  `RelayerRejected`.
 - SELL: `makerAmount = shares`, `takerAmount = collateral`; BUY the reverse.
 - A claim signs only redeem calls the BFF served, and only after `PredictionRedeemCallValidator` accepted
   them against the position: one adapter `redeemPositions` call on the root collection of the condition for
