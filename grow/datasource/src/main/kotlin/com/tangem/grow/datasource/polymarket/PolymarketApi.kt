@@ -2,6 +2,7 @@ package com.tangem.grow.datasource.polymarket
 
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketActivityPageResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketAuthorizeSessionKeyRequest
 import com.tangem.grow.datasource.polymarket.models.PolymarketCategoriesResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketConfigurationResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketDepositReconcileResponse
@@ -20,10 +21,14 @@ import com.tangem.grow.datasource.polymarket.models.PolymarketWalletStatusRespon
 import com.tangem.grow.datasource.polymarket.models.PolymarketRedeemCallResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketRelayedBatchRequest
 import com.tangem.grow.datasource.polymarket.models.PolymarketRelayedBatchResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketRevokeSessionKeyRequest
+import com.tangem.grow.datasource.polymarket.models.PolymarketSessionKeyDto
+import com.tangem.grow.datasource.polymarket.models.PolymarketSetSessionKeyEnabledRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -186,6 +191,25 @@ interface PolymarketApi {
         @Header("wallet-id") walletId: String,
         @Body request: PolymarketWalletApprovalsRequest,
     ): ApiResponse<PolymarketWalletOperationResponse>
+
+    @POST("api/predictions/v1/wallet/session-keys")
+    suspend fun authorizeSessionKey(
+        @Header("wallet-id") walletId: String,
+        @Body request: PolymarketAuthorizeSessionKeyRequest,
+    ): ApiResponse<PolymarketSessionKeyDto>
+
+    @POST("api/predictions/v1/wallet/session-keys/revocations")
+    suspend fun revokeSessionKey(
+        @Header("wallet-id") walletId: String,
+        @Body request: PolymarketRevokeSessionKeyRequest,
+    ): ApiResponse<PolymarketSessionKeyDto>
+
+    @PUT("api/predictions/v1/wallet/session-keys/{sessionKeyAddress}/enabled")
+    suspend fun setSessionKeyEnabled(
+        @Header("wallet-id") walletId: String,
+        @Path("sessionKeyAddress") sessionKeyAddress: String,
+        @Body request: PolymarketSetSessionKeyEnabledRequest,
+    ): ApiResponse<PolymarketSessionKeyDto>
 
     /**
      * Preview the execution of a fill-and-kill order against the live order book. Read-only: nothing is

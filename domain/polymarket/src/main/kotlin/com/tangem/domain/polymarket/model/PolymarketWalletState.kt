@@ -6,10 +6,13 @@ package com.tangem.domain.polymarket.model
  * @property depositWalletAddress the owner's deposit-wallet address as stored by the BFF, or `null`
  *  when there is no wallet record yet (never deployed via us).
  * @property status current onboarding [PolymarketWalletStatus].
+ * @property sessionKeys every session key of the wallet in every status, newest first; served only by the
+ *  lookup by wallet id.
  */
 data class PolymarketWalletState(
     val depositWalletAddress: String?,
     val status: PolymarketWalletStatus,
+    val sessionKeys: List<PolymarketSessionKey> = emptyList(),
 )
 
 /**
