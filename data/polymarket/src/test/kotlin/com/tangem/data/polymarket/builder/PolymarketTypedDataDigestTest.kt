@@ -3,6 +3,7 @@ package com.tangem.data.polymarket.builder
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyCalls
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.extensions.toHexString
 import org.junit.jupiter.api.TestInstance
@@ -50,6 +51,35 @@ internal class PolymarketTypedDataDigestTest {
                 ),
             ),
         ),
+        DigestModel(
+            name = "Session key authorization batch",
+            json = PolymarketTypedDataBuilder.buildApprovalsBatch(
+                depositWallet = DEPOSIT_WALLET,
+                nonce = "17",
+                deadline = "1789431000",
+                calls = listOf(
+                    PolymarketSessionKeyCalls.authorize(
+                        sessionKeyAddress = SESSION_KEY,
+                        validUntil = 1_804_982_400L,
+                        depositWalletAddress = DEPOSIT_WALLET,
+                    ).getOrNull()!!,
+                ),
+            ),
+        ),
+        DigestModel(
+            name = "Session key revocation batch",
+            json = PolymarketTypedDataBuilder.buildApprovalsBatch(
+                depositWallet = DEPOSIT_WALLET,
+                nonce = "18",
+                deadline = "1789431600",
+                calls = listOf(
+                    PolymarketSessionKeyCalls.revoke(
+                        sessionKeyAddress = SESSION_KEY,
+                        depositWalletAddress = DEPOSIT_WALLET,
+                    ).getOrNull()!!,
+                ),
+            ),
+        ),
     )
 
     private companion object {
@@ -57,5 +87,6 @@ internal class PolymarketTypedDataDigestTest {
         const val DEPOSIT_WALLET = "0xfAeA0f08159fcF2f573fE24E9E989B0d48f7651B"
         const val TOKEN = "0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB"
         const val EXCHANGE = "0xE111180000d2663C0091e4f400237545B87B996B"
+        const val SESSION_KEY = "0x5E55000000000000000000000000000000000001"
     }
 }
