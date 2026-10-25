@@ -62,6 +62,9 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
    `PolymarketOnboardedStore`, so the gate offers Reconnect, not a full onboarding. Reading, clearing and
    re-deriving one wallet's credentials share one non-reentrant `PolymarketCredentialsLock`, so a late `401`
    cannot wipe a set a Reconnect has just stored.
+   A session key's credentials (`PolymarketClobIdentity.Session`) are never stored and take no part in that
+   lock: `PolymarketSessionCredentialsProvider` derives them in memory from a ClobAuth the key signs itself, and a
+   `401` on them is answered with `invalidate`, which leaves the owner's credentials alone.
 9. **A withdrawal is persisted before it is submitted.** The relayer keys submissions on
    `(deposit wallet, nonce)`, so resending the same batch returns the same receipt. The record is cleared
    on a terminal receipt or on a rejection of the submit itself (`RelayerRejected`, `InvalidRequest` — the
