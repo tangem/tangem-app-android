@@ -85,8 +85,10 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 
 ## Signing and orders
 
-- Relayer batches (approvals, withdrawal, claim) carry `deadline = now + 600 s`. Known gap: the tracker's
-  `resend` of a persisted withdrawal skips the expiry check that `confirm` does.
+- Relayer batches (approvals, withdrawal, claim) carry `deadline = now + 600 s`. Session key batches signed
+  together take 600 s for the first one and 1200 s for each follow-up, which waits for the first one to
+  settle. Known gap: the tracker's `resend` of a persisted withdrawal skips the expiry check that `confirm`
+  does.
 - Orders use `signatureType = 3` (deposit wallet) wrapped in ERC-7739. The exchange and its domain version
   come from the quote, but only as `PolymarketExchangeDomain.of(quote.version, isNegRisk)` allows: V1 →
   CTF or neg-risk CTF exchange, domain `"2"`; V2 → ExchangeV3, domain `"3"`; unknown → never signed. Any
