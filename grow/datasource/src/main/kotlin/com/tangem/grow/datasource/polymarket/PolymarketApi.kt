@@ -144,6 +144,16 @@ interface PolymarketApi {
     ): ApiResponse<PolymarketEventResponse>
 
     /**
+     * Onboarding status of the owner's deposit wallet — the endpoint the client polls to observe
+     * deploy/approval progress. Serves the stored status; no on-chain calls on the read path.
+     */
+    @GET("api/predictions/v1/wallet")
+    suspend fun getWalletStatus(
+        @Header("wallet-id") walletId: String,
+        @Query("ownerAddress") ownerAddress: String,
+    ): ApiResponse<PolymarketWalletStatusResponse>
+
+    /**
      * The same status, looked up by the Tangem wallet id the deposit wallet was bound to on first deploy.
      * This is the only way to ask about a wallet whose owner address this device has never derived.
      */

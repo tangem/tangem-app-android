@@ -533,6 +533,21 @@ internal class DefaultPolymarketRepositoryTest {
     }
 
     @Test
+    fun `GIVEN a deployed wallet WHEN getWalletStatus by owner THEN looks up the owner with the wallet-id header`() =
+        runTest {
+            // Arrange
+            coEvery { api.getWalletStatus(walletId = WALLET_ID, ownerAddress = OWNER) } returns
+                ApiResponse.Success(PolymarketWalletStatusResponse(depositWalletAddress = DW, status = "DEPLOYED"))
+
+            // Act
+            val result = repository.getWalletStatus(userWalletId = userWalletId, ownerAddress = OWNER)
+
+            // Assert
+            assertThat(result).isEqualTo(PolymarketWalletState(DW, PolymarketWalletStatus.DEPLOYED).right())
+            coVerify(exactly = 1) { api.getWalletStatus(walletId = WALLET_ID, ownerAddress = OWNER) }
+        }
+
+    @Test
     fun `GIVEN accepted WHEN deployWallet THEN maps operation status`() = runTest {
         // Arrange
         val request = slot<PolymarketWalletDeployRequest>()

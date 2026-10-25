@@ -104,6 +104,15 @@ interface PolymarketRepository {
     suspend fun getPrice(assetId: String, side: PredictionOrderSide): Either<PredictionPriceError, BigDecimal>
 
     /**
+     * Read the owner's deposit-wallet address and onboarding status (BFF `GET /wallet`).
+     * This is the endpoint the onboarding flow polls to observe progress.
+     */
+    suspend fun getWalletStatus(
+        userWalletId: UserWalletId,
+        ownerAddress: String,
+    ): Either<PolymarketWalletError, PolymarketWalletState>
+
+    /**
      * The same read, keyed by the Tangem wallet id. Serves a wallet whose owner address this device has never
      * derived — deriving it would open a card session, which a background refresh may not ask for.
      */
