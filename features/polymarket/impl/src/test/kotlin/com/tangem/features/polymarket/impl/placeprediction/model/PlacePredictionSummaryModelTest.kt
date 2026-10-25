@@ -37,6 +37,9 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PredictionFeeSheetUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
+import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
+import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -46,6 +49,7 @@ import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -1042,5 +1046,75 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
                 model.onDestroy()
             }
+    }
+
+    @Nested
+    inner class SigningRoute {
+
+        @Test
+        fun `GIVEN session keys turned off WHEN placed THEN the owner key signs and the router is never asked`() =
+            runTest {
+                // Arrange
+                val model = createSummaryModel(testScope = this, amountModel = pricedAmountModel())
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 0) { signingRouter.route(any()) }
+                coVerify(exactly = 1) {
+                    signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner })
+                }
+                coVerify(exactly = 1) {
+                    placeOrderUseCase(any(), any(), PolymarketMarketVersion.V1, PredictionOrderSigningRoute.Owner)
+                }
+
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN session keys turned on WHEN a delayed order is placed THEN the router's route signs and reads it back`() =
+            runTest {
+                // Arrange
+                every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+                coEvery { signingRouter.route(ADDRESSES) } returns SESSION_ROUTE
+                coEvery { placeOrderUseCase(any(), any(), any(), SESSION_ROUTE) } returns
+                    createPlaceResult(status = "delayed").right()
+                coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID, route = SESSION_ROUTE) } returns
+                    DelayedPredictionOrderOutcome.Unconfirmed
+                val model = createSummaryModel(testScope = this, amountModel = pricedAmountModel())
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) { signOrderInteractor(request = match { it.route == SESSION_ROUTE }) }
+                coVerify(exactly = 1) {
+                    awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID, route = SESSION_ROUTE)
+                }
+                coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any(), PredictionOrderSigningRoute.Owner) }
+
+                model.onDestroy()
+            }
+
+        private fun TestScope.pricedAmountModel(): PlacePredictionAmountModel {
+            val amountModel = createAmountModel(testScope = this)
+            advanceUntilIdle()
+            amountModel.onResume()
+            amountModel.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            return amountModel
+        }
+    }
+
+    private companion object {
+        val SESSION_ROUTE = PredictionOrderSigningRoute.Session(
+            identity = PolymarketClobIdentity.Session(
+                address = "0x5e55000000000000000000000000000000000001",
+                credentials = PolymarketApiCredentials(apiKey = "session", secret = "c2VjcmV0", passphrase = "pass"),
+            ),
+        )
     }
 }
