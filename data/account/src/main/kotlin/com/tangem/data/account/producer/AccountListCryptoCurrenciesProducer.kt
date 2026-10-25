@@ -11,10 +11,12 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
@@ -41,7 +43,8 @@ internal class AccountListCryptoCurrenciesProducer @AssistedInject constructor(
         val userWallet = userWalletsListRepository.getSyncStrict(id = params.userWalletId)
 
         if (!userWallet.isMultiCurrency) {
-            error("${this::class.simpleName ?: this::class.toString()} supports only multi-currency wallet")
+            TangemLogger.e("${this::class.simpleName ?: this::class.toString()} supports only multi-currency wallet")
+            return flowOf(emptySet())
         }
 
         return singleAccountListSupplier.invoke(params.userWalletId)
