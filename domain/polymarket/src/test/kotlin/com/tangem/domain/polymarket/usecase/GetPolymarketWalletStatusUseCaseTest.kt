@@ -35,13 +35,13 @@ internal class GetPolymarketWalletStatusUseCaseTest {
     }
 
     @Test
-    fun `GIVEN the backend knows no wallet yet WHEN invoke THEN returns the state`() = runTest {
+    fun `GIVEN the backend knows no wallet yet WHEN invoke THEN returns the state looked up by wallet id`() = runTest {
         // Arrange
         val state = PolymarketWalletState(
             depositWalletAddress = null,
             status = PolymarketWalletStatus.NOT_CREATED,
         )
-        coEvery { polymarketRepository.getWalletStatus(OWNER) } returns state.right()
+        coEvery { polymarketRepository.getWalletStatusByWalletId("011") } returns state.right()
 
         // Act
         val actual = useCase(addresses = addresses)
@@ -57,7 +57,7 @@ internal class GetPolymarketWalletStatusUseCaseTest {
             depositWalletAddress = DEPOSIT_WALLET.lowercase(),
             status = PolymarketWalletStatus.DEPLOYED,
         )
-        coEvery { polymarketRepository.getWalletStatus(OWNER) } returns state.right()
+        coEvery { polymarketRepository.getWalletStatusByWalletId("011") } returns state.right()
 
         // Act
         val actual = useCase(addresses = addresses)
@@ -73,7 +73,7 @@ internal class GetPolymarketWalletStatusUseCaseTest {
             depositWalletAddress = OTHER_DEPOSIT_WALLET,
             status = PolymarketWalletStatus.DEPLOYED,
         )
-        coEvery { polymarketRepository.getWalletStatus(OWNER) } returns state.right()
+        coEvery { polymarketRepository.getWalletStatusByWalletId("011") } returns state.right()
 
         // Act
         val actual = useCase(addresses = addresses)
@@ -89,7 +89,7 @@ internal class GetPolymarketWalletStatusUseCaseTest {
     @Test
     fun `GIVEN the backend fails with a non-network error WHEN invoke THEN wraps the wallet error`() = runTest {
         // Arrange
-        coEvery { polymarketRepository.getWalletStatus(OWNER) } returns PolymarketWalletError.Unauthorized.left()
+        coEvery { polymarketRepository.getWalletStatusByWalletId("011") } returns PolymarketWalletError.Unauthorized.left()
 
         // Act
         val actual = useCase(addresses = addresses)
@@ -101,7 +101,7 @@ internal class GetPolymarketWalletStatusUseCaseTest {
     @Test
     fun `GIVEN the backend fails with a network error WHEN invoke THEN returns Network`() = runTest {
         // Arrange
-        coEvery { polymarketRepository.getWalletStatus(OWNER) } returns PolymarketWalletError.Network.left()
+        coEvery { polymarketRepository.getWalletStatusByWalletId("011") } returns PolymarketWalletError.Network.left()
 
         // Act
         val actual = useCase(addresses = addresses)

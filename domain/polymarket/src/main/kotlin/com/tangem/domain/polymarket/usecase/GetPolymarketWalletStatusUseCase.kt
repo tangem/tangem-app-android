@@ -21,7 +21,7 @@ class GetPolymarketWalletStatusUseCase(
     suspend operator fun invoke(
         addresses: PolymarketAddresses,
     ): Either<PolymarketOnboardingError, PolymarketWalletState> = polymarketRepository
-        .getWalletStatus(ownerAddress = addresses.ownerAddress)
+        .getWalletStatusByWalletId(walletId = addresses.userWalletId.stringValue)
         .mapLeft { it.toOnboardingError() }
         .flatMap { state -> state.ensureDepositWalletMatches(expected = addresses.depositWalletAddress) }
 
