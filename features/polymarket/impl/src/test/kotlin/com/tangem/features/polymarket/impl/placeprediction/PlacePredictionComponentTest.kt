@@ -81,11 +81,11 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         advanceTimeBy(QUOTE_POLL_INTERVAL_MILLIS * 3)
 
         // Assert
-        coVerify(exactly = 1) { getQuoteUseCase(any()) }
+        coVerify(exactly = 1) { getQuoteUseCase(any(), any()) }
         assertThat(summary.uiState.value).isEqualTo(accepted)
         backDispatcher.back()
         runCurrent()
-        coVerify(exactly = 2) { getQuoteUseCase(any()) }
+        coVerify(exactly = 2) { getQuoteUseCase(any(), any()) }
         lifecycle.destroy()
     }
 
@@ -100,7 +100,7 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         amount.onSlippageClick()
         val slippage = models.filterIsInstance<PlacePredictionSlippageModel>().single()
         advanceTimeBy(QUOTE_POLL_INTERVAL_MILLIS * 3)
-        coVerify(exactly = 1) { getQuoteUseCase(any()) }
+        coVerify(exactly = 1) { getQuoteUseCase(any(), any()) }
 
         // Act
         slippage.onSlippageValueChange("5")
@@ -109,14 +109,14 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
 
         // Assert
         assertThat(amount.uiState.value.slippage.percent).isEqualTo(BigDecimal("5"))
-        coVerify(exactly = 1) { getQuoteUseCase(match { it.slippagePercent == BigDecimal("5") }) }
+        coVerify(exactly = 1) { getQuoteUseCase(any(), match { it.slippagePercent == BigDecimal("5") }) }
         lifecycle.destroy()
     }
 
     @Test
     fun `GIVEN a submitted order WHEN status replaces the stack THEN position indexing continues without quote polling`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+        coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
         coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returnsMany listOf(
             null.right(),
             createPosition().right(),
@@ -143,7 +143,7 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         assertThat(status.viewPosition.value).isEqualTo(ViewPositionUM.Available)
         coVerify(exactly = 2) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
         coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
-        coVerify(exactly = 1) { getQuoteUseCase(any()) }
+        coVerify(exactly = 1) { getQuoteUseCase(any(), any()) }
         verify(exactly = 1) { router.pop(any()) }
         lifecycle.destroy()
     }
@@ -175,7 +175,7 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
 
         // Assert
         assertThat(summary.isSubmitting()).isFalse()
-        coVerify(exactly = 1) { getQuoteUseCase(any()) }
+        coVerify(exactly = 1) { getQuoteUseCase(any(), any()) }
         verify(exactly = 0) { router.pop(any()) }
         lifecycle.destroy()
     }

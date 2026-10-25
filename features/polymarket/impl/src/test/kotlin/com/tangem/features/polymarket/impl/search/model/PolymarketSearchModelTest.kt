@@ -350,7 +350,7 @@ internal class PolymarketSearchModelTest {
         testScope: TestScope,
         regionAccess: PredictionRegionAccess = createPredictionRegionAccess(),
     ): PolymarketSearchModel {
-        every { searchEventsUseCase(capture(contextSlot), any()) } answers {
+        every { searchEventsUseCase(any(), capture(contextSlot), any()) } answers {
             // The model owns the actions flow; collecting it here is what makes the dispatched actions assertable.
             contextSlot.captured.actionsFlow
                 .onEach { dispatchedActions += it }

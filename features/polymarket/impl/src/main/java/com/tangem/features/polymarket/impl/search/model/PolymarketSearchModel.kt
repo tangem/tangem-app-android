@@ -71,6 +71,7 @@ internal class PolymarketSearchModel @Inject constructor(
     private val actionsFlow = MutableSharedFlow<BatchAction<Int, PolymarketSearchConfig, Nothing>>(replay = 1)
 
     private val searchBatchFlow = searchPolymarketEventsUseCase(
+        userWalletId = params.userWalletId,
         context = PolymarketSearchBatchingContext(actionsFlow = actionsFlow, coroutineScope = modelScope),
     )
 
