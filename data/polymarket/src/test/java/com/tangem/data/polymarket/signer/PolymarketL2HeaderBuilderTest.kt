@@ -2,6 +2,7 @@ package com.tangem.data.polymarket.signer
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import org.junit.jupiter.api.Test
 import java.util.Base64 as JavaBase64
 
@@ -19,8 +20,7 @@ internal class PolymarketL2HeaderBuilderTest {
     fun `GIVEN GET request WHEN build THEN produces the five POLY headers with the expected signature`() {
         // Act
         val actual = builder.build(
-            ownerAddress = OWNER,
-            credentials = CREDENTIALS,
+            identity = OWNER_IDENTITY,
             timestamp = "1700000000",
             method = "GET",
             requestPath = "/order",
@@ -42,8 +42,7 @@ internal class PolymarketL2HeaderBuilderTest {
     fun `GIVEN POST request with body WHEN build THEN the signed message includes the body`() {
         // Act
         val actual = builder.build(
-            ownerAddress = OWNER,
-            credentials = CREDENTIALS,
+            identity = OWNER_IDENTITY,
             timestamp = "1700000000",
             method = "POST",
             requestPath = "/order",
@@ -58,8 +57,7 @@ internal class PolymarketL2HeaderBuilderTest {
     fun `GIVEN the balance sync path WHEN build THEN signs the path with no query string`() {
         // Act
         val actual = builder.build(
-            ownerAddress = OWNER,
-            credentials = CREDENTIALS,
+            identity = OWNER_IDENTITY,
             timestamp = "1700000000",
             method = "GET",
             requestPath = "/balance-allowance/update",
@@ -73,8 +71,7 @@ internal class PolymarketL2HeaderBuilderTest {
     fun `GIVEN credentials WHEN build THEN the secret never appears in any header value`() {
         // Act
         val actual = builder.build(
-            ownerAddress = OWNER,
-            credentials = CREDENTIALS,
+            identity = OWNER_IDENTITY,
             timestamp = "1700000000",
             method = "GET",
             requestPath = "/order",
@@ -91,8 +88,7 @@ internal class PolymarketL2HeaderBuilderTest {
 
         // Act
         val actual = builder.build(
-            ownerAddress = OWNER,
-            credentials = CREDENTIALS,
+            identity = OWNER_IDENTITY,
             requestPath = "/balance-allowance/update",
         )
 
@@ -105,12 +101,44 @@ internal class PolymarketL2HeaderBuilderTest {
         )
     }
 
+    @Test
+    fun `GIVEN a session identity WHEN build THEN POLY_ADDRESS is the session key and its own key signs`() {
+        // Act
+        val actual = builder.build(
+            identity = PolymarketClobIdentity.Session(address = SESSION_KEY, credentials = SESSION_CREDENTIALS),
+            timestamp = "1700000000",
+            method = "GET",
+            requestPath = "/order",
+        )
+
+        // Assert
+        assertThat(actual).containsExactlyEntriesIn(
+            mapOf(
+                "POLY_ADDRESS" to SESSION_KEY,
+                "POLY_SIGNATURE" to signer.sign(
+                    secret = SESSION_CREDENTIALS.secret,
+                    message = "1700000000" + "GET" + "/order",
+                ),
+                "POLY_TIMESTAMP" to "1700000000",
+                "POLY_API_KEY" to "session-k",
+                "POLY_PASSPHRASE" to "session-p",
+            ),
+        )
+    }
+
     private companion object {
         const val OWNER = "0xabc"
+        const val SESSION_KEY = "0xdef"
         val CREDENTIALS = PolymarketApiCredentials(
             apiKey = "k",
             secret = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
             passphrase = "p",
         )
+        val SESSION_CREDENTIALS = PolymarketApiCredentials(
+            apiKey = "session-k",
+            secret = "HxwdHhkaGxwVFhcYERITFA0ODxAJCgsMBQYHCAECAwQ=",
+            passphrase = "session-p",
+        )
+        val OWNER_IDENTITY = PolymarketClobIdentity.Owner(address = OWNER, credentials = CREDENTIALS)
     }
 }
