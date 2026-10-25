@@ -35,6 +35,7 @@ dependencies {
     }
     // Blockchain SDK — Blockchain.Polygon.makeAddressesFromExtendedPublicKey (ERC-55 address).
     implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.hot.core)
     // endregion
 
     // region DI
