@@ -33,6 +33,7 @@ import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.grow.datasource.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.domain.core.error.DataError
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
@@ -100,43 +101,51 @@ internal class DefaultPolymarketRepository @Inject constructor(
 
     private val builderCodeCache = AtomicReference<String?>(null)
 
-    override suspend fun getCategories(): Either<DataError, List<PolymarketCategory>> = withContext(dispatchers.io) {
-        safeApiCall(
-            call = {
-                polymarketApi.getCategories(locale = null).bind().categories
-                    .map { category ->
-                        PolymarketCategory(
-                            id = category.id,
-                            label = category.label,
-                            icon = PolymarketCategoryIcon.fromKey(category.icon),
-                        )
-                    }
-                    .right()
-            },
-            onError = { DataError.NetworkError.NoInternetConnection().left() },
-        )
-    }
+    override suspend fun getCategories(userWalletId: UserWalletId): Either<DataError, List<PolymarketCategory>> =
+        withContext(dispatchers.io) {
+            safeApiCall(
+                call = {
+                    polymarketApi.getCategories(walletId = userWalletId.stringValue, locale = null).bind().categories
+                        .map { category ->
+                            PolymarketCategory(
+                                id = category.id,
+                                label = category.label,
+                                icon = PolymarketCategoryIcon.fromKey(category.icon),
+                            )
+                        }
+                        .right()
+                },
+                onError = { DataError.NetworkError.NoInternetConnection().left() },
+            )
+        }
 
     override fun getEventsBatchFlow(
+        userWalletId: UserWalletId,
         context: PolymarketEventsBatchingContext,
         batchSize: Int,
     ): PolymarketEventsBatchFlow {
+        val fetchPage: suspend (PolymarketEventsListConfig, String?, Int) -> PolymarketEventsPage =
+            { config, cursor, limit ->
+                fetchEventsPage(userWalletId = userWalletId, config = config, cursor = cursor, limit = limit)
+            }
+
         return BatchListSource(
             fetchDispatcher = dispatchers.io,
             context = context,
             generateNewKey = { keys -> keys.lastOrNull()?.inc() ?: 0 },
             batchFetcher = PolymarketEventsBatchFetcher(
                 batchSize = batchSize,
-                fetchPage = ::fetchEventsPage,
+                fetchPage = fetchPage,
             ),
             updateFetcher = PolymarketEventsUpdateFetcher(
                 batchSize = batchSize,
-                fetchPage = ::fetchEventsPage,
+                fetchPage = fetchPage,
             ),
         ).toBatchFlow()
     }
 
     override fun searchEventsBatchFlow(
+        userWalletId: UserWalletId,
         context: PolymarketSearchBatchingContext,
         batchSize: Int,
     ): PolymarketSearchBatchFlow {
@@ -147,18 +156,18 @@ internal class DefaultPolymarketRepository @Inject constructor(
             batchFetcher = LimitOffsetBatchFetcher(
                 prefetchDistance = batchSize,
                 batchSize = batchSize,
-                subFetcher = ::fetchSearchPage,
+                subFetcher = { request, _, _ -> fetchSearchPage(userWalletId = userWalletId, request = request) },
             ),
         ).toBatchFlow()
     }
 
     /** The BFF pages search with a 1-based page number; the fetcher speaks offsets, so translate. */
     private suspend fun fetchSearchPage(
+        userWalletId: UserWalletId,
         request: LimitOffsetBatchFetcher.Request<PolymarketSearchConfig>,
-        @Suppress("UnusedParameter") lastResult: BatchFetchResult<List<PolymarketEvent>>?,
-        @Suppress("UnusedParameter") isFirstBatchFetching: Boolean,
     ): BatchFetchResult<List<PolymarketEvent>> {
         val response = polymarketApi.searchEvents(
+            walletId = userWalletId.stringValue,
             query = request.params.query,
             limit = request.limit,
             page = request.offset / request.limit + 1,
@@ -175,11 +184,17 @@ internal class DefaultPolymarketRepository @Inject constructor(
 
     /** Throws on failure: the pagination turns the throwable into a fetch error of the batch. */
     private suspend fun fetchEventsPage(
+        userWalletId: UserWalletId,
         config: PolymarketEventsListConfig,
         cursor: String?,
         limit: Int,
     ): PolymarketEventsPage {
-        val response = polymarketApi.getEvents(category = config.category, limit = limit, cursor = cursor)
+        val response = polymarketApi.getEvents(
+            walletId = userWalletId.stringValue,
+            category = config.category,
+            limit = limit,
+            cursor = cursor,
+        )
         return when (response) {
             is ApiResponse.Success -> PolymarketEventsPage(
                 events = response.data.events.map(PolymarketEventConverter::convert),
@@ -190,15 +205,18 @@ internal class DefaultPolymarketRepository @Inject constructor(
         }
     }
 
-    override suspend fun getEvent(eventId: String): Either<PolymarketEventError, PolymarketEvent> =
-        withContext(dispatchers.io) {
-            safeApiCall(
-                call = {
-                    PolymarketEventConverter.convert(polymarketApi.getEvent(eventId = eventId).bind().event).right()
-                },
-                onError = { eventErrorResolver.resolve(it).left() },
-            )
-        }
+    override suspend fun getEvent(
+        userWalletId: UserWalletId,
+        eventId: String,
+    ): Either<PolymarketEventError, PolymarketEvent> = withContext(dispatchers.io) {
+        safeApiCall(
+            call = {
+                val response = polymarketApi.getEvent(walletId = userWalletId.stringValue, eventId = eventId).bind()
+                PolymarketEventConverter.convert(response.event).right()
+            },
+            onError = { eventErrorResolver.resolve(it).left() },
+        )
+    }
 
     override suspend fun placeOrder(
         ownerAddress: String,
@@ -307,11 +325,13 @@ internal class DefaultPolymarketRepository @Inject constructor(
     }
 
     override suspend fun getOrderQuote(
+        userWalletId: UserWalletId,
         request: PredictionOrderQuoteRequest,
     ): Either<PredictionOrderQuoteError, PredictionOrderQuote> = withContext(dispatchers.io) {
         safeApiCall(
             call = {
                 val response = polymarketApi.getOrderQuote(
+                    walletId = userWalletId.stringValue,
                     request = PredictionOrderQuoteConverter.toRequestBody(request = request),
                 ).bind()
 
@@ -325,22 +345,13 @@ internal class DefaultPolymarketRepository @Inject constructor(
         )
     }
 
-    override suspend fun getWalletStatus(ownerAddress: String): Either<PolymarketWalletError, PolymarketWalletState> =
-        withContext(dispatchers.io) {
-            safeApiCall(
-                call = {
-                    PolymarketWalletConverter.toState(polymarketApi.getWalletStatus(ownerAddress).bind()).right()
-                },
-                onError = { walletErrorResolver.resolve(it).left() },
-            )
-        }
-
     override suspend fun getWalletStatusByWalletId(
         walletId: String,
     ): Either<PolymarketWalletError, PolymarketWalletState> = withContext(dispatchers.io) {
         safeApiCall(
             call = {
-                PolymarketWalletConverter.toState(polymarketApi.getWalletStatusByWalletId(walletId).bind()).right()
+                val response = polymarketApi.getWalletStatusByWalletId(walletIdHeader = walletId, walletId = walletId)
+                PolymarketWalletConverter.toState(response.bind()).right()
             },
             onError = { walletErrorResolver.resolve(it).left() },
         )
@@ -354,7 +365,8 @@ internal class DefaultPolymarketRepository @Inject constructor(
         safeApiCall(
             call = {
                 val response = polymarketApi.deployWallet(
-                    PolymarketWalletDeployRequest(
+                    walletId = walletId,
+                    request = PolymarketWalletDeployRequest(
                         ownerAddress = ownerAddress,
                         walletId = walletId,
                         depositWalletAddress = depositWalletAddress,
@@ -367,11 +379,15 @@ internal class DefaultPolymarketRepository @Inject constructor(
     }
 
     override suspend fun submitApprovals(
+        userWalletId: UserWalletId,
         batch: PolymarketApprovalsBatch,
     ): Either<PolymarketWalletError, PolymarketWalletStatus> = withContext(dispatchers.io) {
         safeApiCall(
             call = {
-                val response = polymarketApi.submitApprovals(PolymarketWalletConverter.toRequest(batch)).bind()
+                val response = polymarketApi.submitApprovals(
+                    walletId = userWalletId.stringValue,
+                    request = PolymarketWalletConverter.toRequest(batch),
+                ).bind()
                 PolymarketWalletStatus.fromRaw(response.status).right()
             },
             onError = { walletErrorResolver.resolve(it).left() },
