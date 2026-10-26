@@ -18,9 +18,9 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.eligibility.TangemPayCountrySelectorComponent
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.hub.model.TangemPayWithdrawHubModel
@@ -36,7 +36,7 @@ internal class TangemPayWithdrawHubComponent(
 
     private val model: TangemPayWithdrawHubModel = getOrCreateModel(
         params = TangemPayWithdrawHubModel.Params(
-            userWalletId = params.userWalletId,
+            sourceAccount = params.sourceAccount,
             onOpenBankWithdraw = ::openBankWithdraw,
         ),
     )
@@ -78,9 +78,11 @@ internal class TangemPayWithdrawHubComponent(
         is TangemPayWithdrawHubRoute.BankWithdraw -> TangemPayBankWithdrawComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayBankWithdrawComponent.Params(
-                userWalletId = params.userWalletId,
+                sourceAccount = params.sourceAccount,
                 entry = config.entry,
                 options = config.options,
+                onCloseFlow = router::pop,
+                onWithdrawSent = model::onWithdrawSent,
             ),
             countrySelectorFactory = countrySelectorFactory,
         )
@@ -98,5 +100,5 @@ internal class TangemPayWithdrawHubComponent(
         }
     }
 
-    data class Params(val userWalletId: UserWalletId)
+    data class Params(val sourceAccount: BankWithdrawSourceAccount)
 }

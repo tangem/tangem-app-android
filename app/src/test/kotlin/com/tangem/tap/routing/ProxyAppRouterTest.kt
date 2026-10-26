@@ -2,10 +2,8 @@ package com.tangem.tap.routing
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.core.analytics.api.AnalyticsExceptionHandler
-import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.decompose.navigation.NavigationFailureHandler
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import io.mockk.clearMocks
 import io.mockk.every
@@ -21,26 +19,23 @@ import org.junit.jupiter.api.TestInstance
 internal class ProxyAppRouterTest {
 
     private val innerRouter = mockk<Router>(relaxed = true)
-    private val snackbarHandler = mockk<SnackbarHandler>(relaxed = true)
-    private val analyticsExceptionHandler = mockk<AnalyticsExceptionHandler>(relaxed = true)
+    private val navigationFailureHandler = mockk<NavigationFailureHandler>(relaxed = true)
 
     private val config = mockk<AppRouterConfig>(relaxed = true) {
         every { componentRouter } returns innerRouter
         every { stack } returns listOf(AppRoute.Wallet)
-        every { snackbarHandler } returns this@ProxyAppRouterTest.snackbarHandler
         every { initializedState } returns MutableStateFlow(true)
     }
 
     @AfterEach
     fun tearDown() {
-        clearMocks(innerRouter, snackbarHandler, analyticsExceptionHandler, config)
+        clearMocks(innerRouter, navigationFailureHandler, config)
         every { config.componentRouter } returns innerRouter
         every { config.stack } returns listOf(AppRoute.Wallet)
-        every { config.snackbarHandler } returns snackbarHandler
         every { config.initializedState } returns MutableStateFlow(true)
     }
 
-    private fun createRouter(): ProxyAppRouter = ProxyAppRouter(config, analyticsExceptionHandler)
+    private fun createRouter(): ProxyAppRouter = ProxyAppRouter(config, navigationFailureHandler)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -158,12 +153,11 @@ internal class ProxyAppRouterTest {
             router.defaultCompletionHandler(isSuccess = true, errorMessage = "error")
 
             // Assert
-            verify(exactly = 0) { analyticsExceptionHandler.sendException(any()) }
-            verify(exactly = 0) { snackbarHandler.showSnackbar(text = any<Int>(), buttonTitle = any(), action = any()) }
+            verify(exactly = 0) { navigationFailureHandler.onNavigationFailed(any()) }
         }
 
         @Test
-        fun `sends analytics and shows snackbar on failure`() {
+        fun `reports the failure to the navigation failure handler`() {
             // Arrange
             val router = createRouter()
 
@@ -171,22 +165,7 @@ internal class ProxyAppRouterTest {
             router.defaultCompletionHandler(isSuccess = false, errorMessage = "Navigation failed")
 
             // Assert
-            verify { analyticsExceptionHandler.sendException(any<ExceptionAnalyticsEvent>()) }
-            verify { snackbarHandler.showSnackbar(text = any<Int>(), buttonTitle = any(), action = any()) }
-        }
-
-        @Test
-        fun `sends analytics without snackbar when handler is null`() {
-            // Arrange
-            every { config.snackbarHandler } returns null
-            val router = createRouter()
-
-            // Act
-            router.defaultCompletionHandler(isSuccess = false, errorMessage = "Navigation failed")
-
-            // Assert
-            verify { analyticsExceptionHandler.sendException(any<ExceptionAnalyticsEvent>()) }
-            verify(exactly = 0) { snackbarHandler.showSnackbar(text = any<Int>(), buttonTitle = any(), action = any()) }
+            verify(exactly = 1) { navigationFailureHandler.onNavigationFailed("Navigation failed") }
         }
     }
 
