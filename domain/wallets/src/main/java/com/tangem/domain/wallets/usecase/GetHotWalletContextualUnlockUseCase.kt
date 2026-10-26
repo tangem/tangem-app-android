@@ -9,7 +9,7 @@ class GetHotWalletContextualUnlockUseCase(
     private val hotWalletAccessor: HotWalletAccessor,
 ) {
 
-    suspend operator fun invoke(hotWalletId: HotWalletId): Either<Throwable, UnlockHotWallet?> {
+    operator fun invoke(hotWalletId: HotWalletId): Either<Throwable, UnlockHotWallet?> {
         return Either.catch {
             hotWalletAccessor.getContextualUnlock(hotWalletId)
         }

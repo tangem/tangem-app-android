@@ -420,6 +420,42 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
+    val lowSignaturesNotificationTitle: KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(R.string.warning_low_signatures_title))
+        useUnmergedTree = true
+    }
+
+    fun lowSignaturesNotificationMessage(remainingSignatures: Int): KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(getResourceString(R.string.warning_low_signatures_message, remainingSignatures.toString()))
+        useUnmergedTree = true
+    }
+
+    val rateAppNotificationTitle: KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(R.string.warning_rate_app_title))
+        useUnmergedTree = true
+    }
+
+    val rateAppNotificationMessage: KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(getResourceString(R.string.warning_rate_app_message))
+        useUnmergedTree = true
+    }
+
+    val rateAppCouldBeBetterButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.warning_button_could_be_better))
+        useUnmergedTree = true
+    }
+
+    val rateAppLikeItButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.warning_button_like_it))
+        useUnmergedTree = true
+    }
+
     val totalBalanceContainer: KNode = child {
         hasTestTag(MainScreenTestTags.WALLET_LIST_ITEM)
     }
@@ -615,15 +651,11 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     }
 
     /**
-     * Tap target that raises the markets sheet. The legacy sheet exposes its grabber; the DS3
-     * shtorka (TWI_1608) drags instead of clicking, so it tags the transparent overlay over the
-     * collapsed search bar. Both builds ship until the toggle is retired — match either.
+     * Tap target that raises the markets sheet. The shtorka drags instead of clicking, so it tags its
+     * search bar, which raises the sheet with the keyboard up.
      */
     val marketsSheetDragHandle: KNode = child {
-        addSemanticsMatcher(
-            withTestTag(MainScreenTestTags.MARKETS_SHEET_DRAG_HANDLE) or
-                withTestTag(MainScreenTestTags.MARKETS_SHEET_EXPAND_AREA),
-        )
+        hasTestTag(MainScreenTestTags.MARKETS_SHEET_EXPAND_AREA)
         useUnmergedTree = true
     }
 

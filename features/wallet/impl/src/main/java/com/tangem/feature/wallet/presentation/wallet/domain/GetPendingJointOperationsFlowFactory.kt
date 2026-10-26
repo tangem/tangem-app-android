@@ -7,6 +7,7 @@ import com.tangem.domain.jointaccount.model.JointPendingOperation
 import com.tangem.domain.jointaccount.usecase.GetPendingJointOperationsUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.wallet.UserWallet
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -39,6 +40,7 @@ internal class GetPendingJointOperationsFlowFactory @Inject constructor(
             .map { accountList ->
                 accountList.accountStatuses
                     .filterIsInstance<AccountStatus.Joint>()
+                    .filter { it.value is JointAccountStatusValue.Active }
                     .map(AccountStatus.Joint::account)
             }
             .distinctUntilChanged()

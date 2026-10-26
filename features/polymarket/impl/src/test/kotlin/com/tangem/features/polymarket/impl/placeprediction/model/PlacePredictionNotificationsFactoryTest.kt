@@ -505,7 +505,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         expected = expected,
         feeTotal = feeTotal,
         total = total,
-        signable = SignableQuoteUM(quote = mockk(relaxed = true), receivedAtMillis = 0),
+        signable = SignableQuoteUM(quote = mockk(relaxed = true), receivedAtMillis = 0, assetId = "asset-1"),
     )
 
     private companion object {

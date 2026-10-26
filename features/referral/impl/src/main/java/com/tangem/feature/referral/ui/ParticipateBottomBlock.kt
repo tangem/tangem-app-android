@@ -62,11 +62,11 @@ internal fun ParticipateBottomBlock(
     Column(
         modifier = Modifier
             .padding(
-                top = TangemTheme.dimens.spacing24,
-                bottom = TangemTheme.dimens.spacing16,
+                top = 24.dp,
+                bottom = 16.dp,
             )
-            .padding(horizontal = TangemTheme.dimens.spacing16),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         PersonalCodeCard(code = code, accountAward = accountAward)
         AdditionalButtons(
@@ -129,7 +129,7 @@ private fun Counter(purchasedWalletCount: Int, overallItemsLastIndex: Int) {
 @Composable
 private fun Awards(expectedAwards: ExpectedAwards, overallItemsLastIndex: Int, isExpanded: MutableState<Boolean>) {
     HorizontalDivider(
-        thickness = TangemTheme.dimens.size0_5,
+        thickness = 0.5.dp,
         color = TangemTheme.colors.stroke.primary,
     )
     RoundableCornersRow(
@@ -192,8 +192,8 @@ private fun Awards(expectedAwards: ExpectedAwards, overallItemsLastIndex: Int, i
 private fun LessMoreButton(isExpanded: MutableState<Boolean>) {
     Surface(
         shape = RoundedCornerShape(
-            bottomStart = TangemTheme.dimens.radius12,
-            bottomEnd = TangemTheme.dimens.radius12,
+            bottomStart = 12.dp,
+            bottomEnd = 12.dp,
         ),
     ) {
         Column(
@@ -202,11 +202,11 @@ private fun LessMoreButton(isExpanded: MutableState<Boolean>) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(TangemTheme.dimens.size48)
+                    .heightIn(48.dp)
                     .clickable { isExpanded.value = !isExpanded.value }
                     .padding(
-                        horizontal = TangemTheme.dimens.spacing16,
-                        vertical = TangemTheme.dimens.spacing12,
+                        horizontal = 16.dp,
+                        vertical = 12.dp,
                     ),
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically,
@@ -227,7 +227,7 @@ private fun LessMoreButton(isExpanded: MutableState<Boolean>) {
                     painterResource(id = com.tangem.core.ui.R.drawable.ic_chevron_24)
                 }
                 Icon(
-                    modifier = Modifier.size(TangemTheme.dimens.size20),
+                    modifier = Modifier.size(20.dp),
                     painter = chevronIcon,
                     tint = TangemTheme.colors.text.tertiary,
                     contentDescription = null,
@@ -260,12 +260,12 @@ private fun PersonalCodeCard(code: String, accountAward: ReferralStateHolder.Acc
     Column(
         modifier = Modifier
             .testTag(ReferralProgramScreenTestTags.PERSONAL_CODE_CARD)
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius12))
+            .clip(RoundedCornerShape(12.dp))
             .background(color = TangemTheme.colors.background.primary)
             .fillMaxWidth()
-            .padding(top = TangemTheme.dimens.spacing12),
+            .padding(top = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
             text = stringResourceSafe(id = R.string.referral_promo_code_title),
@@ -357,7 +357,7 @@ private fun AdditionalButtons(
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         PrimaryButtonIconStart(
             text = stringResourceSafe(id = R.string.common_copy),

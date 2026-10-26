@@ -2,9 +2,11 @@ package com.tangem.data.staking
 
 import android.util.Base64
 import com.squareup.moshi.Moshi
+import com.tangem.blockchain.blockchains.solana.SolanaTransactionExtras
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchainsdk.utils.fromNetworkId
@@ -48,7 +50,6 @@ import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakeKitRepository
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -64,7 +65,6 @@ internal class DefaultStakeKitRepository(
     private val stakeKitApi: StakeKitApi,
     private val stakingYieldsStore: StakingYieldsStore,
     private val stakingValidatorDao: StakingValidatorDao,
-    private val txHistoryFeatureToggle: TxHistoryFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
     moshi: Moshi,
@@ -105,12 +105,10 @@ internal class DefaultStakeKitRepository(
             val shouldRewriteCache = yieldsResponses.all { it is ApiResponse.Success }
             stakingYieldsStore.store(yields, shouldRewriteCache)
 
-            if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
-                val validatorEntities = yields
-                    .flatMap { it.validators.orEmpty() }
-                    .mapNotNull(StakingValidatorEntityConverter::convert)
-                stakingValidatorDao.upsert(validatorEntities)
-            }
+            val validatorEntities = yields
+                .flatMap { it.validators.orEmpty() }
+                .mapNotNull(StakingValidatorEntityConverter::convert)
+            stakingValidatorDao.upsert(validatorEntities)
         }
     }
 
@@ -282,6 +280,7 @@ internal class DefaultStakeKitRepository(
                 fee = fee,
                 amount = amount,
                 status = TransactionStatus.Unconfirmed,
+                extras = getTransactionExtras(networkId),
             )
 
             transaction to transactionData
@@ -335,6 +334,15 @@ internal class DefaultStakeKitRepository(
                     /* flags = */ Base64.NO_WRAP,
                 ),
             )
+            else -> null
+        }
+    }
+
+    // StakeKit mints the Solana blockhash when it builds the transaction, long before the user signs, so the SDK
+    // is asked to replace it with a fresh one right before signing.
+    private fun getTransactionExtras(networkId: Network.RawID): TransactionExtras? {
+        return when (networkId.toBlockchain()) {
+            Blockchain.Solana -> SolanaTransactionExtras(shouldRefreshRecentBlockhash = true)
             else -> null
         }
     }

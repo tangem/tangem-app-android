@@ -13,6 +13,7 @@ import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController
@@ -47,6 +48,7 @@ internal class TangemPayCardPageModelTest {
     private val statusFlow = MutableSharedFlow<AccountStatus.Payment>(replay = 1)
     private val supplier: PaymentAccountStatusSupplier = mockk()
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk(relaxed = true)
+    private val getBankCredentialsUseCase: GetBankCredentialsUseCase = mockk()
     private val controllerFactory: TangemPayCardDetailsController.Factory = mockk()
     private val googleWalletController: TangemPayAddToGoogleWalletController = mockk(relaxed = true) {
         every { entry } returns MutableStateFlow(TangemPayAddToGoogleWalletController.Entry.ManualGuide)
@@ -155,12 +157,23 @@ internal class TangemPayCardPageModelTest {
 
         // Assert
         assertThat(openedSheets.filterIsInstance<TangemPayCardNavigation.VaBankingDetailsError>()).containsExactly(
-            TangemPayCardNavigation.VaBankingDetailsError(
-                userWalletId = userWalletId,
-                productInstanceId = PRODUCT_INSTANCE_ID,
-            ),
+            TangemPayCardNavigation.VaBankingDetailsError(productInstanceId = PRODUCT_INSTANCE_ID),
         )
     }
+
+    @Test
+    fun `GIVEN banking details error sheet WHEN retry loads credentials THEN product instance credentials returned`() =
+        runTest {
+            // Arrange
+            coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns BANK_CREDENTIALS.right()
+            val model = createModel()
+
+            // Act
+            val actual = model.loadBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(BANK_CREDENTIALS.right())
+        }
 
     @Test
     fun `GIVEN v2 enabled WHEN banking details resolved on retry THEN account details screen opens`() = runTest {
@@ -368,6 +381,7 @@ internal class TangemPayCardPageModelTest {
         biometricAuthManager = mockk(relaxed = true),
         settingsManager = mockk(relaxed = true),
         onboardingRepository = mockk(relaxed = true),
+        getBankCredentialsUseCase = getBankCredentialsUseCase,
         tangemPayFeatureToggles = tangemPayFeatureToggles,
         googleWalletControllerFactory = googleWalletControllerFactory,
     )

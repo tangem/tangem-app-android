@@ -7,7 +7,6 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
@@ -21,12 +20,10 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.TotalFiatBalance
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.extension.isAccountsSupported
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
@@ -34,6 +31,7 @@ import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM.Footer.AddAccountUM
 import com.tangem.feature.walletsettings.impl.R
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
+import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
@@ -43,7 +41,6 @@ import javax.inject.Inject
 @ModelScoped
 internal class AccountItemsDelegate @Inject constructor(
     paramsContainer: ParamsContainer,
-    private val router: Router,
     private val messageSender: UiMessageSender,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
@@ -51,6 +48,7 @@ internal class AccountItemsDelegate @Inject constructor(
     private val accountListSortingSaver: AccountListSortingSaver,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
+    private val jointAccountCompromisedAlert: JointAccountCompromisedAlert,
 ) {
 
     private val userWalletId = paramsContainer.require<WalletSettingsComponent.Params>().userWalletId
@@ -60,6 +58,7 @@ internal class AccountItemsDelegate @Inject constructor(
     fun loadAccount(
         wallet: UserWallet,
         onAddAccountClick: (isAddCryptoAccountEnabled: Boolean, isAddJointAccountEnabled: Boolean) -> Unit,
+        pushRoute: (AppRoute) -> Unit,
     ): Flow<List<WalletSettingsAccountsUM>> {
         if (!isAccountsSupported(wallet)) return flowOf(emptyList())
 
@@ -75,6 +74,7 @@ internal class AccountItemsDelegate @Inject constructor(
                 isBalanceHidden = isBalanceHidden,
                 accountsOrder = accountsOrder,
                 onAddAccountClick = onAddAccountClick,
+                pushRoute = pushRoute,
             )
         }
     }
@@ -85,12 +85,13 @@ internal class AccountItemsDelegate @Inject constructor(
         isBalanceHidden: Boolean,
         accountsOrder: List<AccountId>?,
         onAddAccountClick: (isAddCryptoAccountEnabled: Boolean, isAddJointAccountEnabled: Boolean) -> Unit,
+        pushRoute: (AppRoute) -> Unit,
     ): List<WalletSettingsAccountsUM> = buildList {
         fun AccountStatus.CryptoPortfolio.mapCryptoPortfolio(): WalletSettingsAccountsUM {
             val accountItemUM = AccountPortfolioItemUMConverter(
                 onClick = {
                     analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonOpenExistingAccount())
-                    openAccountDetails(this.account)
+                    pushRoute(AppRoute.AccountDetails(this.account))
                 },
                 appCurrency = appCurrency,
                 accountBalance = this.tokenList.totalFiatBalance,
@@ -102,8 +103,12 @@ internal class AccountItemsDelegate @Inject constructor(
         fun AccountStatus.Joint.mapJoint(): WalletSettingsAccountsUM {
             val accountItemUM = AccountJointItemUMConverter(
                 onClick = {
-                    analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonOpenExistingAccount())
-                    openAccountDetails(this.account)
+                    if (value is JointAccountStatusValue.Error.Compromised) {
+                        jointAccountCompromisedAlert.show(userWalletId = userWalletId)
+                    } else {
+                        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonOpenExistingAccount())
+                        pushRoute(AppRoute.AccountDetails(this.account))
+                    }
                 },
                 appCurrency = appCurrency,
                 accountBalance = jointBalance(),
@@ -157,7 +162,7 @@ internal class AccountItemsDelegate @Inject constructor(
                     iconRes = R.drawable.ic_archive_24,
                     onClick = {
                         analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonArchivedAccounts())
-                        openArchivedAccounts(userWalletId)
+                        pushRoute(AppRoute.ArchivedAccountList(userWalletId))
                     },
                 )
             } else {
@@ -179,18 +184,11 @@ internal class AccountItemsDelegate @Inject constructor(
         return this.sortedBy { positionByAccountId[it.id] ?: Int.MAX_VALUE }
     }
 
-    private fun AccountStatus.Joint.jointBalance(): TotalFiatBalance = when (value) {
+    private fun AccountStatus.Joint.jointBalance(): TotalFiatBalance = when (val status = value) {
         is JointAccountStatusValue.Loading -> TotalFiatBalance.Loading
+        is JointAccountStatusValue.Error.Compromised -> status.fiatBalance
         is JointAccountStatusValue.Error -> TotalFiatBalance.Failed
         else -> tokenList.totalFiatBalance
-    }
-
-    private fun openAccountDetails(account: Account.CryptoPortfolio) {
-        router.push(AppRoute.AccountDetails(account))
-    }
-
-    private fun openArchivedAccounts(userWalletId: UserWalletId) {
-        router.push(AppRoute.ArchivedAccountList(userWalletId))
     }
 
     fun canNotAddAccountDialog() {

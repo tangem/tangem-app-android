@@ -72,8 +72,8 @@ internal class PreviewUserWalletListComponent : UserWalletListComponent {
             delay(timeMillis = 2_000)
 
             previewState.value = state.copy(
-                userWallets = state.userWallets.map {
-                    it.copy(
+                userWallets = state.userWallets.map { userWallet ->
+                    userWallet.copy(
                         balance = UserWalletItemUM.Balance.Loaded(
                             value = "1.000 BTC",
                             isFlickering = true,

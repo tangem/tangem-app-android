@@ -18,4 +18,6 @@ dependencies {
     /** Domain */
     api(projects.domain.feedback.models)
 
+    /** Other */
+    api(deps.kotlin.coroutines)
 }

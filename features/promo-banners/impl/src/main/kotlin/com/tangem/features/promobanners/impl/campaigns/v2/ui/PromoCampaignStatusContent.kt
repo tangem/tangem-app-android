@@ -34,19 +34,15 @@ import com.tangem.features.promobanners.impl.R
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoCampaignStatusUM
 
 @Composable
-internal fun PromoCampaignStatusContent(
-    state: PromoCampaignStatusUM,
-    modifier: Modifier = Modifier,
-    animated: Boolean = true,
-) {
+internal fun PromoCampaignStatusContent(state: PromoCampaignStatusUM, modifier: Modifier = Modifier) {
     TangemStatusScreen(
         modifier = modifier,
         variant = state.variant,
         title = state.title,
         description = state.description,
-        animated = animated,
+        animated = false,
         asset = {
-            TangemStatusIcon(kind = state.icon, modifier = Modifier.size(40.dp), animated = animated)
+            TangemStatusIcon(kind = state.icon, modifier = Modifier.size(40.dp), animated = false)
         },
         details = when (val details = state.details) {
             is PromoCampaignStatusUM.Details.EnrolledWallets -> {
@@ -85,7 +81,7 @@ private fun EnrolledWalletsDetails(details: PromoCampaignStatusUM.Details.Enroll
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = 280.dp)
-                .background(color = TangemTheme.colors3.bg.opaque.primary, shape = RoundedCornerShape(20.dp))
+                .background(color = TangemTheme.colors3.bg.transparent.primary, shape = RoundedCornerShape(20.dp))
                 .verticalScroll(rememberScrollState())
                 .padding(vertical = 8.dp),
         ) {
@@ -106,7 +102,7 @@ private fun RecipientDetails(details: PromoCampaignStatusUM.Details.Recipient) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = TangemTheme.colors3.bg.opaque.primary, shape = RoundedCornerShape(24.dp)),
+            .background(color = TangemTheme.colors3.bg.transparent.primary, shape = RoundedCornerShape(24.dp)),
     ) {
         Text(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -152,7 +148,7 @@ private fun Preview_PromoCampaignStatusContent(
     @PreviewParameter(PromoCampaignStatusProvider::class) state: PromoCampaignStatusUM,
 ) {
     TangemThemePreviewRedesign {
-        PromoCampaignStatusContent(state = state, animated = false)
+        PromoCampaignStatusContent(state = state)
     }
 }
 

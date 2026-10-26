@@ -13,6 +13,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.text.applyBladeBrush
@@ -32,13 +33,13 @@ internal fun TokenRowSubtitle(subtitleUM: TangemTokenRowUM.SubtitleUM, modifier:
         )
         TangemTokenRowUM.SubtitleUM.Loading -> TextShimmer(
             style = TangemTheme.typography2.captionSemibold12,
-            modifier = modifier.width(TangemTheme.dimens2.x11),
-            radius = TangemTheme.dimens2.x25,
+            modifier = modifier.width(44.dp),
+            radius = 100.dp,
         )
         TangemTokenRowUM.SubtitleUM.Placeholder -> TextPlaceholder(
             modifier = modifier,
             textStyle = TangemTheme.typography2.captionSemibold12,
-            width = TangemTheme.dimens2.x11,
+            width = 44.dp,
         )
         TangemTokenRowUM.SubtitleUM.Empty -> Unit
     }

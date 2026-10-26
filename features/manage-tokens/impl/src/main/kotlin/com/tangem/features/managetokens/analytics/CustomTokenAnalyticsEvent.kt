@@ -6,7 +6,7 @@ import com.tangem.features.managetokens.component.ManageTokensSource
 
 internal sealed class CustomTokenAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(
     category = "Manage Tokens / Custom Token",
     event = event,

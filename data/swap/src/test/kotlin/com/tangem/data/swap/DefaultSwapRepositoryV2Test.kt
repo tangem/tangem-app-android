@@ -5,8 +5,6 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.models.*
@@ -45,7 +43,6 @@ internal class DefaultSwapRepositoryV2Test {
     private val dataSignatureVerifier: DataSignatureVerifier = mockk()
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier = mockk()
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher = mockk()
-    private val featureTogglesManager: FeatureTogglesManager = mockk()
     private val walletManagersFacade: WalletManagersFacade = mockk()
     private val moshi: Moshi = Moshi.Builder().build()
 
@@ -57,7 +54,6 @@ internal class DefaultSwapRepositoryV2Test {
         dataSignatureVerifier = dataSignatureVerifier,
         singleQuoteStatusSupplier = singleQuoteStatusSupplier,
         singleQuoteStatusFetcher = singleQuoteStatusFetcher,
-        featureTogglesManager = featureTogglesManager,
         walletManagersFacade = walletManagersFacade,
         moshi = moshi,
     )
@@ -71,7 +67,6 @@ internal class DefaultSwapRepositoryV2Test {
             dataSignatureVerifier,
             singleQuoteStatusSupplier,
             singleQuoteStatusFetcher,
-            featureTogglesManager,
             walletManagersFacade,
         )
         coEvery { walletManagersFacade.getScaledUiAmountMultiplier(any(), any()) } returns null.right()
@@ -362,12 +357,6 @@ internal class DefaultSwapRepositoryV2Test {
                 )
             } returns ApiResponse.Success(quoteResponse)
 
-            every {
-                featureTogglesManager.isFeatureEnabled(
-                    FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED,
-                )
-            } returns true
-
             // Act
             val result = repository.getSwapQuote(
                 userWallet = userWallet,
@@ -382,61 +371,6 @@ internal class DefaultSwapRepositoryV2Test {
             // Assert — the quote still loads with amounts, restriction is a flag, not a failure
             assertThat(result.isRestricted).isTrue()
             assertThat(result.toTokenAmount).isEqualTo(BigDecimal("1.00000000"))
-        }
-
-    @Test
-    fun `GIVEN geo blocking toggle disabled WHEN getSwapQuote THEN restricted response is not propagated`() =
-        runTest {
-            // Arrange
-            val quoteResponse = ExchangeQuoteResponse(
-                fromAmount = "1000000000000000000",
-                fromDecimals = 18,
-                toAmount = "100000000",
-                toDecimals = 8,
-                allowanceContract = null,
-                minAmount = BigDecimal.ONE,
-                quoteId = "quote-123",
-                isRestricted = true,
-            )
-
-            coEvery {
-                tangemExpressApi.getExchangeQuote(
-                    fromAmount = any(),
-                    toAmount = any(),
-                    fromNetwork = any(),
-                    fromContractAddress = any(),
-                    fromDecimals = any(),
-                    toNetwork = any(),
-                    toContractAddress = any(),
-                    toDecimals = any(),
-                    providerId = any(),
-                    rateType = any(),
-                    userWalletId = any(),
-                    refCode = any(),
-                )
-            } returns ApiResponse.Success(quoteResponse)
-
-            every {
-                featureTogglesManager.isFeatureEnabled(
-                    FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED,
-                )
-            } returns false
-
-            // Act
-            val result = repository.getSwapQuote(
-                userWallet = userWallet,
-                fromCryptoCurrency = primaryCoin,
-                toCryptoCurrency = secondaryCoin,
-                amount = BigDecimal.ONE,
-                amountType = SwapAmountType.From,
-                provider = expressProvider,
-                rateType = ExpressRateType.Float,
-            )
-
-            // Assert — pre-geo-blocking behaviour: the flag is dropped, the quote is unchanged otherwise
-            assertThat(result.isRestricted).isFalse()
-            assertThat(result.toTokenAmount).isEqualTo(BigDecimal("1.00000000"))
-            assertThat(result.quoteId).isEqualTo("quote-123")
         }
 
     @Test

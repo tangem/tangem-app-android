@@ -116,7 +116,7 @@ private fun WcSelectNetworksBS(
                     .fillMaxWidth(),
                 text = stringResourceSafe(R.string.common_done),
                 onClick = state.onDone,
-                enabled = state.doneButtonEnabled,
+                enabled = state.isDoneButtonEnabled,
             )
         },
     )
@@ -125,7 +125,7 @@ private fun WcSelectNetworksBS(
 @Composable
 private fun WcSelectNetworksContent(state: WcSelectNetworksUM, modifier: Modifier = Modifier) {
     val blocksModifier = Modifier
-        .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+        .clip(RoundedCornerShape(14.dp))
         .background(color = TangemTheme.colors.background.action)
         .fillMaxWidth()
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -160,7 +160,7 @@ private fun MissingRequiredBlock(missingNetworks: ImmutableList<WcNetworkInfoIte
             iconTint = TangemTheme.colors.icon.attention,
         )
         HorizontalDivider(
-            modifier = modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             thickness = 1.dp,
             color = TangemTheme.colors.stroke.primary,
         )
@@ -247,10 +247,10 @@ private fun NetworkItems(networkItem: WcNetworkInfoItem, modifier: Modifier = Mo
         )
         when (networkItem) {
             is WcNetworkInfoItem.Checkable -> {
-                if (networkItem.enabled) {
+                if (networkItem.isEnabled) {
                     TangemSwitch(
                         onCheckedChange = networkItem.onCheckedChange,
-                        checked = networkItem.checked,
+                        checked = networkItem.isChecked,
                     )
                 }
             }
@@ -260,7 +260,7 @@ private fun NetworkItems(networkItem: WcNetworkInfoItem, modifier: Modifier = Mo
                 color = TangemTheme.colors.text.tertiary,
             )
             is WcNetworkInfoItem.Checked -> {
-                if (networkItem.enabled) {
+                if (networkItem.isEnabled) {
                     TangemSwitch(
                         onCheckedChange = {},
                         enabled = false,
@@ -335,7 +335,7 @@ private class WcSelectNetworksProvider : CollectionPreviewParameterProvider<WcSe
                     name = "Cardano",
                     symbol = "ADA",
                     icon = R.drawable.img_cardano_22,
-                    checked = false,
+                    isChecked = false,
                     onCheckedChange = {},
                 ),
                 WcNetworkInfoItem.Checkable(
@@ -343,7 +343,7 @@ private class WcSelectNetworksProvider : CollectionPreviewParameterProvider<WcSe
                     name = "Polygon",
                     symbol = "MATIC",
                     icon = R.drawable.img_polygon_22,
-                    checked = true,
+                    isChecked = true,
                     onCheckedChange = {},
                 ),
             ),
@@ -362,7 +362,7 @@ private class WcSelectNetworksProvider : CollectionPreviewParameterProvider<WcSe
                 ),
             ),
             onDone = {},
-            doneButtonEnabled = false,
+            isDoneButtonEnabled = false,
         ),
         WcSelectNetworksUM(
             missing = persistentListOf(),
@@ -380,7 +380,7 @@ private class WcSelectNetworksProvider : CollectionPreviewParameterProvider<WcSe
                     name = "Cardano",
                     symbol = "ADA",
                     icon = R.drawable.img_cardano_22,
-                    checked = false,
+                    isChecked = false,
                     onCheckedChange = {},
                 ),
                 WcNetworkInfoItem.Checkable(
@@ -388,7 +388,7 @@ private class WcSelectNetworksProvider : CollectionPreviewParameterProvider<WcSe
                     name = "Polygon",
                     symbol = "MATIC",
                     icon = R.drawable.img_polygon_22,
-                    checked = true,
+                    isChecked = true,
                     onCheckedChange = {},
                 ),
             ),
@@ -407,7 +407,7 @@ private class WcSelectNetworksProvider : CollectionPreviewParameterProvider<WcSe
                 ),
             ),
             onDone = {},
-            doneButtonEnabled = true,
+            isDoneButtonEnabled = true,
         ),
     ),
 )

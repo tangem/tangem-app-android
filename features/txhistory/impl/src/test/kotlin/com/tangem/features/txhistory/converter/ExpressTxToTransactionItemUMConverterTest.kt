@@ -34,6 +34,7 @@ import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.features.txhistory.model.WalletInfo
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.test.mock.MockAccounts
+import com.tangem.utils.StringsSigns
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
@@ -125,7 +126,7 @@ internal class ExpressTxToTransactionItemUMConverterTest {
         ) as TransactionItemUM.Content
 
         assertThat(result.direction).isEqualTo(TransactionItemUM.Content.Direction.OUTGOING)
-        assertThat(result.amount).startsWith("-")
+        assertThat(result.amount).startsWith(StringsSigns.MINUS_SIGN)
         assertThat(result.amount).contains("1.5")
     }
 

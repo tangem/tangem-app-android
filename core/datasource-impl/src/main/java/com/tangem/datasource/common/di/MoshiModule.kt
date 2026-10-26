@@ -6,6 +6,7 @@ import com.tangem.core.local.moshi.SdkMoshi
 import com.tangem.core.local.moshi.SdkMoshiConfigurer
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
+import com.tangem.core.remote.moshi.SkipMalformedElementsAdapterFactory
 import com.tangem.datasource.common.*
 import dagger.Module
 import dagger.Provides
@@ -25,6 +26,7 @@ class MoshiModule {
             .add(SerializeNullsFactory)
             .apply { commonAdapters().forEach(::add) }
             .add(LocalDateAdapter())
+            .add(SkipMalformedElementsAdapterFactory)
             .addLast(KotlinJsonAdapterFactory())
 
         // Enum-fallback (and future) adapters are contributed via @IntoSet so stream modules can register

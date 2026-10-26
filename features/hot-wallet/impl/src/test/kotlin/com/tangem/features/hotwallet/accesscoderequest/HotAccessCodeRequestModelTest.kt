@@ -51,11 +51,11 @@ internal class HotAccessCodeRequestModelTest {
         every { walletId } returns walletIdB
     }
 
-    private val requestA = AttemptRequest(hotWalletId = hotWalletIdA, authMode = true, hasBiometry = false)
-    private val requestB = AttemptRequest(hotWalletId = hotWalletIdB, authMode = true, hasBiometry = false)
+    private val requestA = AttemptRequest(hotWalletId = hotWalletIdA, isAuthMode = true, hasBiometry = false)
+    private val requestB = AttemptRequest(hotWalletId = hotWalletIdB, isAuthMode = true, hasBiometry = false)
 
-    private val attemptIdA = AttemptId(hotWalletId = hotWalletIdA, auth = true)
-    private val attemptIdB = AttemptId(hotWalletId = hotWalletIdB, auth = true)
+    private val attemptIdA = AttemptId(hotWalletId = hotWalletIdA, isAuth = true)
+    private val attemptIdB = AttemptId(hotWalletId = hotWalletIdB, isAuth = true)
 
     @BeforeEach
     fun setUp() {

@@ -26,9 +26,33 @@ internal class GetCloudBackupStatusUseCaseTest {
 
     private val useCase = GetCloudBackupStatusUseCase(cloudBackupRepository)
 
+    private var pinnedWalletId: String? = null
+
     @BeforeEach
     fun resetMocks() {
         clearMocks(cloudBackupRepository)
+        pinnedWalletId = null
+        coEvery { cloudBackupRepository.withAccountOf<Any?>(any(), any()) } coAnswers {
+            pinnedWalletId = firstArg()
+            secondArg<suspend () -> Any?>().invoke().also { pinnedWalletId = null }
+        }
+    }
+
+    @Test
+    fun `GIVEN a backed up wallet WHEN invoke THEN the backups are listed in its account`() = runTest {
+        // Arrange
+        var listedFor: String? = null
+        coEvery { cloudBackupRepository.isBackedUp(WALLET_ID) } returns true
+        coEvery { cloudBackupRepository.findBackups(any(), any()) } answers {
+            listedFor = pinnedWalletId
+            emptyList<CloudBackupInfo>().right()
+        }
+
+        // Act
+        useCase(WALLET_ID)
+
+        // Assert
+        assertThat(listedFor).isEqualTo(WALLET_ID)
     }
 
     @Test

@@ -93,7 +93,7 @@ fun TangemSegmentedPicker(
     val selectedIndex = remember { mutableIntStateOf(items.indexOfFirstOrNull { it == initialSelectedItem } ?: 0) }
     val segmentHeight = remember { mutableStateOf(0.dp) }
 
-    val shape = RoundedCornerShape(TangemTheme.dimens2.x25)
+    val shape = RoundedCornerShape(100.dp)
 
     Box(
         modifier = modifier
@@ -105,7 +105,7 @@ fun TangemSegmentedPicker(
                     TangemTheme.colors2.tabs.backgroundSecondary
                 },
             )
-            .padding(TangemTheme.dimens2.x0_5),
+            .padding(2.dp),
     ) {
         SegmentSelection(
             itemsWidths = itemsWidths,
@@ -268,8 +268,8 @@ private fun SegmentSelection(
             }
             .size(width = indicatorWidth, height = segmentHeight)
             .shadow(
-                elevation = TangemTheme.dimens2.x1,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x25),
+                elevation = 4.dp,
+                shape = RoundedCornerShape(100.dp),
             )
             .background(
                 color = TangemTheme.colors2.tabs.backgroundTertiary,
@@ -316,8 +316,8 @@ private fun Segment(
             modifier = Modifier
                 .align(Alignment.Center)
                 .padding(
-                    horizontal = TangemTheme.dimens2.x3,
-                    vertical = TangemTheme.dimens2.x2,
+                    horizontal = 12.dp,
+                    vertical = 8.dp,
                 ),
         )
     }
@@ -334,7 +334,7 @@ private fun TangemSegmentedPicker_Preview(@PreviewParameter(PreviewProvider::cla
             modifier = Modifier
                 .fillMaxWidth()
                 .background(TangemTheme.colors2.surface.level1)
-                .padding(TangemTheme.dimens2.x4),
+                .padding(16.dp),
         ) {
             TangemSegmentedPicker(
                 isFixed = params.isFixed,
