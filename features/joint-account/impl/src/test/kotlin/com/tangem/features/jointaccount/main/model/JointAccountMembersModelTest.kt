@@ -16,6 +16,7 @@ import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
+import com.tangem.domain.jointaccount.model.JointAccountInvite
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
@@ -25,6 +26,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatcher
 import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
+import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.entity.JointAccountMembersSheetConfig
 import com.tangem.features.jointaccount.main.navigation.JointAccountMembersRoute
 import com.tangem.features.jointaccount.main.state.JointAccountMembersStateController
@@ -47,6 +49,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -363,6 +366,27 @@ internal class JointAccountMembersModelTest {
         verify(exactly = 1) { router.push(JointAccountMembersRoute.ConfirmAddress(cryptoAccountId = ACCOUNT_ID)) }
     }
 
+    @Test
+    fun `GIVEN a live invite WHEN its deadline passes while the screen is on top THEN the slot reads Expired`() =
+        runTest {
+            // Arrange
+            val invite = JointAccountInvite(slot = 1, expiresAtMillis = System.currentTimeMillis() + EXPIRES_IN_MILLIS)
+            stub(account = pendingAccount(members = listOf(creator)).copy(invites = listOf(invite)))
+            val model = createModel()
+            model.onResume()
+            runCurrent()
+            val before = model.uiState.value.freeSlots.first().status
+
+            // Act
+            Thread.sleep(EXPIRES_IN_MILLIS + 10)
+            advanceTimeBy(EXPIRES_IN_MILLIS + 10)
+            runCurrent()
+
+            // Assert
+            assertThat(before).isInstanceOf(JointAccountMembersUM.SlotStatusUM.Invited::class.java)
+            assertThat(model.uiState.value.freeSlots.first().status).isEqualTo(JointAccountMembersUM.SlotStatusUM.Expired)
+        }
+
     private fun <C : Any> SlotNavigation<C>.trackSlot(): List<C?> {
         val tracked = mutableListOf<C?>()
         subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
@@ -516,6 +540,7 @@ internal class JointAccountMembersModelTest {
         val ACCOUNT_ID = "a1".repeat(n = 32)
         val OTHER_ACCOUNT_ID = "b2".repeat(n = 32)
         const val THREE_SLOTS = 3
+        const val EXPIRES_IN_MILLIS = 50L
         const val INVITE_MESSAGE = "Join my joint account “Family savings” in Tangem\n" +
             "https://tangem.com/joint-account/join/invite-a"
         const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
