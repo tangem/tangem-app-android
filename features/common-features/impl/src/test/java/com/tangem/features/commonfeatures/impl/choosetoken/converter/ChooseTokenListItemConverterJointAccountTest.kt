@@ -71,7 +71,12 @@ internal class ChooseTokenListItemConverterJointAccountTest {
         // Arrange
         val converter = createConverter(
             jointStatus = jointStatus(
-                value = JointAccountStatusValue.Pending(StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 3),
+                value = JointAccountStatusValue.Pending(
+                    StatusSource.ACTUAL,
+                    joinedMembers = 1,
+                    totalMembers = 3,
+                    threshold = 2,
+                ),
                 tokenList = TokenList.Empty,
             ),
             isJointAccountsShown = true,
@@ -85,7 +90,7 @@ internal class ChooseTokenListItemConverterJointAccountTest {
     }
 
     private fun activeValue(): JointAccountStatusValue.Active =
-        JointAccountStatusValue.Active(StatusSource.ACTUAL, totalMembers = 3, safeAddress = SAFE)
+        JointAccountStatusValue.Active(StatusSource.ACTUAL, totalMembers = 3, safeAddress = SAFE, threshold = 2)
 
     private fun jointStatus(
         value: JointAccountStatusValue,

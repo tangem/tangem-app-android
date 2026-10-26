@@ -12,6 +12,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -32,6 +33,7 @@ import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.account.analytics.AccountSettingsAnalyticEvents
 import com.tangem.features.account.details.entity.AccountDetailsUM
 import com.tangem.features.account.details.entity.AccountDetailsUM.ArchiveMode
+import com.tangem.features.account.details.entity.AccountDetailsSheetConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -59,7 +61,7 @@ internal class AccountDetailsModel @Inject constructor(
 
     private val accountId = params.account.accountId
 
-    val jointSupportedNetworksNavigation: SlotNavigation<Unit> = SlotNavigation()
+    val bottomSheetNavigation: SlotNavigation<AccountDetailsSheetConfig> = SlotNavigation()
 
     val uiState: StateFlow<AccountDetailsUM>
         field = MutableStateFlow(
@@ -195,6 +197,7 @@ internal class AccountDetailsModel @Inject constructor(
         return AccountDetailsUM(
             title = resourceReference(R.string.account_details_title),
             accountName = account.accountName.toUM().value,
+            accountSubtitle = resourceReference(R.string.account_form_name),
             accountIcon = CryptoPortfolioIconConverter.convert(account.icon),
             onCloseClick = { router.pop() },
             onAccountEditClick = { onEditAccountClick(account) },
@@ -205,10 +208,12 @@ internal class AccountDetailsModel @Inject constructor(
     }
 
     private fun buildJointUI(account: Account.Joint, status: AccountStatus.Joint?): AccountDetailsUM {
-        val isActive = status?.value is JointAccountStatusValue.Active
+        val value = status?.value
+        val isActive = value is JointAccountStatusValue.Active
         return AccountDetailsUM(
             title = resourceReference(R.string.common_joint_account),
             accountName = account.accountName.toUM().value,
+            accountSubtitle = value.membersCount() ?: resourceReference(R.string.common_joint_account),
             accountIcon = CryptoPortfolioIconConverter.convert(account.icon),
             onCloseClick = { router.pop() },
             onAccountEditClick = null,
@@ -218,13 +223,13 @@ internal class AccountDetailsModel @Inject constructor(
                 isLoading = false,
             ),
             isManageTokensAvailable = isActive && isMultiCurrency,
-            isPendingActivation = !isActive,
-            members = status?.value?.toMembersRowUM(onClick = { onMembersClick() }),
+            requiredApprovals = value.toRequiredApprovalsUM(),
+            members = value?.toMembersRowUM(onClick = { onMembersClick() }),
             networksInfo = if (isActive) {
                 AccountDetailsUM.NetworksInfoUM(
                     text = resourceReference(R.string.account_details_joint_networks_info),
                     linkText = resourceReference(R.string.common_more_info),
-                    onLinkClick = { jointSupportedNetworksNavigation.activate(Unit) },
+                    onLinkClick = { bottomSheetNavigation.activate(AccountDetailsSheetConfig.SupportedNetworks) },
                 )
             } else {
                 null
@@ -232,29 +237,63 @@ internal class AccountDetailsModel @Inject constructor(
         )
     }
 
+    private fun JointAccountStatusValue?.membersCount(): TextReference? {
+        val total = when (this) {
+            is JointAccountStatusValue.Pending -> totalMembers
+            is JointAccountStatusValue.Confirming -> totalMembers
+            is JointAccountStatusValue.Active -> totalMembers
+            is JointAccountStatusValue.Error.Compromised -> totalMembers
+            JointAccountStatusValue.Loading,
+            JointAccountStatusValue.Error.Unavailable,
+            null,
+            -> return null
+        }
+        return pluralReference(
+            id = R.plurals.joint_account_members_count,
+            count = total,
+            formatArgs = wrappedList(total),
+        )
+    }
+
+    private fun JointAccountStatusValue?.toRequiredApprovalsUM(): AccountDetailsUM.RequiredApprovalsUM? {
+        val (threshold, total) = when (this) {
+            is JointAccountStatusValue.Pending -> threshold to totalMembers
+            is JointAccountStatusValue.Confirming -> threshold to totalMembers
+            is JointAccountStatusValue.Active -> threshold to totalMembers
+            JointAccountStatusValue.Loading,
+            is JointAccountStatusValue.Error,
+            null,
+            -> return null
+        }
+        return AccountDetailsUM.RequiredApprovalsUM(
+            value = resourceReference(
+                id = R.string.joint_account_invite_members_approvals_value,
+                formatArgs = wrappedList(threshold, total),
+            ),
+            onInfoClick = {
+                bottomSheetNavigation.activate(AccountDetailsSheetConfig.AboutSignatures(threshold, total))
+            },
+        )
+    }
+
     private fun JointAccountStatusValue.toMembersRowUM(onClick: () -> Unit): AccountDetailsUM.MembersRowUM? {
-        val membersCount = when (this) {
+        val progress = when (this) {
             is JointAccountStatusValue.Pending -> resourceReference(
-                id = R.string.account_details_joint_members_progress,
+                id = R.string.account_details_joint_members_joined,
                 formatArgs = wrappedList(joinedMembers, totalMembers),
             )
-            is JointAccountStatusValue.Confirming -> pluralReference(
-                id = R.plurals.account_details_joint_members_count,
-                count = totalMembers,
-                formatArgs = wrappedList(totalMembers),
+            is JointAccountStatusValue.Confirming -> resourceReference(
+                id = R.string.account_details_joint_members_confirmed,
+                formatArgs = wrappedList(verifiedMembers, totalMembers),
             )
-            is JointAccountStatusValue.Active -> pluralReference(
-                id = R.plurals.account_details_joint_members_count,
-                count = totalMembers,
-                formatArgs = wrappedList(totalMembers),
-            )
+            is JointAccountStatusValue.Active -> null
             JointAccountStatusValue.Loading,
             is JointAccountStatusValue.Error,
             -> return null
         }
         return AccountDetailsUM.MembersRowUM(
             title = resourceReference(R.string.joint_account_members_title),
-            membersCount = membersCount,
+            progress = progress,
             onClick = onClick,
         )
     }
