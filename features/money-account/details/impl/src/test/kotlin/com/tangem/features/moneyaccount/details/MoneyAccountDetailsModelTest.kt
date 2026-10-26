@@ -316,6 +316,31 @@ internal class MoneyAccountDetailsModelTest {
             model.onDestroy()
         }
 
+    @Test
+    fun `GIVEN account status WHEN model created THEN tx history currency is the account token`() = runTest {
+        // Act
+        val model = createModel(activeAccount(balance = null))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.txHistoryCurrency).isEqualTo(token)
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideNonAccountStatuses")
+    fun `GIVEN non account status WHEN model created THEN tx history currency is absent`(
+        status: MoneyAccountStatusValue,
+    ) = runTest {
+        // Act
+        val model = createModel(status)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.txHistoryCurrency).isNull()
+        model.onDestroy()
+    }
+
     private fun TestScope.createModel(status: MoneyAccountStatusValue) = createModel(flowOf(status))
 
     private fun TestScope.createModel(statuses: Flow<MoneyAccountStatusValue>): MoneyAccountDetailsModel {
