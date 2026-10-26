@@ -134,5 +134,9 @@
     {
         "name": "TWI_1728_PAY_BUNDLE_INTRODUCTION_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED",
+        "version": "undefined"
     }
 ]

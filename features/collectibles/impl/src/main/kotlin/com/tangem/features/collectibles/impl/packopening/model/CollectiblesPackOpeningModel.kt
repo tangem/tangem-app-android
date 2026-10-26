@@ -43,7 +43,7 @@ import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPa
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.Stage
 import com.tangem.features.collectibles.impl.packopening.ui.state.RewardCardUM
 import com.tangem.features.collectibles.impl.packopening.video.PackRevealVideoPlayer
-import com.tangem.features.collectibles.impl.packopening.video.PackRevealVideoPlayer.VideoLoadState
+import com.tangem.core.media.VideoLoadState
 import com.tangem.features.collectibles.impl.packopening.video.source.PackRevealAsset
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.PeriodicTask
@@ -109,12 +109,9 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
     private val isDarkTheme = MutableStateFlow<Boolean?>(null)
 
     private val player = playerFactory.create(
+        scope = modelScope,
         listener = object : PackRevealVideoPlayer.Listener {
             override fun onCardRevealReached() = onCardReveal()
-
-            override fun onError(error: Throwable) {
-                TangemLogger.e("Pack reveal video failed", error)
-            }
         },
     )
 
@@ -145,10 +142,12 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
 
     fun onResume() {
         isComponentResumed.value = true
+        player.setRunning(isRunning = true)
     }
 
     fun onPause() {
         isComponentResumed.value = false
+        player.setRunning(isRunning = false)
     }
 
     fun onThemeChanged(isDarkTheme: Boolean) {
