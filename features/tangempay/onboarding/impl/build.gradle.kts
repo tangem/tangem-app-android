@@ -18,6 +18,8 @@ dependencies {
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
     implementation(projects.core.error)
+    implementation(projects.core.media)
+    implementation(projects.core.media.ui)
     implementation(projects.core.ui)
 
     /** Common */
