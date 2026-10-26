@@ -16,13 +16,17 @@ import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM.Content.DifferencePercent
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SwapAmountHideProvidersTransformerTest {
 
     private val changelly = provider(id = "changelly")
@@ -94,29 +98,94 @@ internal class SwapAmountHideProvidersTransformerTest {
         assertThat(result.swapCurrencies).isEqualTo(SwapCurrencies(fromGroup = expectedGroup, toGroup = expectedGroup))
     }
 
-    @Test
-    fun `GIVEN last fixed rate provider is hidden WHEN transform THEN rate mode becomes float only`() {
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN remaining providers WHEN transform THEN input is aligned to their rate mode`(model: AlignModel) {
         // Arrange
         val fixedAndFloat = changelly.copy(rateTypes = listOf(ExpressRateType.Fixed, ExpressRateType.Float))
-        val floatOnly = changeHero.copy(rateTypes = listOf(ExpressRateType.Float))
+        val remaining = changeHero.copy(rateTypes = model.remainingRateTypes)
         val state = buildContentState(
-            providers = listOf(fixedAndFloat, floatOnly),
+            providers = listOf(fixedAndFloat, remaining),
             quotes = emptyList(),
             selectedQuote = SwapQuoteUM.Empty,
         ).copy(
             secondaryCryptoCurrencyStatus = currencyStatus,
             swapRateMode = SwapRateMode.FLOAT_AND_FIXED,
+            selectedAmountType = model.amountType,
+            swapRateType = model.rateType,
         )
 
         // Act
         val result = buildTransformer(providerIds = setOf(changelly.providerId)).transform(state)
 
         // Assert
-        result as SwapAmountUM.Content
-        assertThat(result.swapRateMode).isEqualTo(SwapRateMode.FLOAT_ONLY)
+        val expected = state.copy(
+            swapCurrencies = swapCurrencies(providers = listOf(remaining)),
+            selectedQuote = SwapQuoteUM.Loading,
+            isPrimaryButtonEnabled = false,
+            swapRateMode = model.expectedMode,
+            selectedAmountType = model.expectedAmountType,
+            swapRateType = model.expectedRateType,
+        )
+        assertThat(result).isEqualTo(expected)
     }
 
-    private fun buildTransformer(providerIds: Set<String>) = SwapAmountHideProvidersTransformer(providerIds)
+    private fun provideTestModels() = listOf(
+        AlignModel(
+            remainingRateTypes = listOf(ExpressRateType.Float),
+            amountType = SwapAmountType.To,
+            rateType = ExpressRateType.Fixed,
+            expectedMode = SwapRateMode.FLOAT_ONLY,
+            expectedAmountType = SwapAmountType.From,
+            expectedRateType = ExpressRateType.Float,
+        ),
+        AlignModel(
+            remainingRateTypes = listOf(ExpressRateType.Float),
+            amountType = SwapAmountType.From,
+            rateType = ExpressRateType.Float,
+            expectedMode = SwapRateMode.FLOAT_ONLY,
+            expectedAmountType = SwapAmountType.From,
+            expectedRateType = ExpressRateType.Float,
+        ),
+        AlignModel(
+            remainingRateTypes = listOf(ExpressRateType.Fixed),
+            amountType = SwapAmountType.From,
+            rateType = ExpressRateType.Float,
+            expectedMode = SwapRateMode.FIXED_ONLY,
+            expectedAmountType = SwapAmountType.From,
+            expectedRateType = ExpressRateType.Fixed,
+        ),
+        AlignModel(
+            remainingRateTypes = listOf(ExpressRateType.Fixed),
+            amountType = SwapAmountType.To,
+            rateType = ExpressRateType.Fixed,
+            expectedMode = SwapRateMode.FIXED_ONLY,
+            expectedAmountType = SwapAmountType.To,
+            expectedRateType = ExpressRateType.Fixed,
+        ),
+        AlignModel(
+            remainingRateTypes = listOf(ExpressRateType.Fixed, ExpressRateType.Float),
+            amountType = SwapAmountType.From,
+            rateType = ExpressRateType.Float,
+            expectedMode = SwapRateMode.FLOAT_AND_FIXED,
+            expectedAmountType = SwapAmountType.From,
+            expectedRateType = ExpressRateType.Float,
+        ),
+    )
+
+    data class AlignModel(
+        val remainingRateTypes: List<ExpressRateType>,
+        val amountType: SwapAmountType,
+        val rateType: ExpressRateType,
+        val expectedMode: SwapRateMode,
+        val expectedAmountType: SwapAmountType,
+        val expectedRateType: ExpressRateType,
+    )
+
+    private fun buildTransformer(providerIds: Set<String>) = SwapAmountHideProvidersTransformer(
+        providerIds = providerIds,
+        isBalanceHidden = false,
+    )
 
     private fun provider(id: String) = ExpressProvider(
         providerId = id,
