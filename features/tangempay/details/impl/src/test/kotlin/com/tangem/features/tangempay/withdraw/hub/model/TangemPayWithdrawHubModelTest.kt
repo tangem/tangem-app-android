@@ -651,7 +651,7 @@ internal class TangemPayWithdrawHubModelTest {
         // Assert
         assertThat(model.uiState.value.swapSection).isNull()
         verify(exactly = 0) { analytics.send(any()) }
-        verify(exactly = 0) { getRecentTokenTransfersUseCase(any()) }
+        verify(exactly = 0) { getRecentTokenTransfersUseCase(any(), any()) }
         model.onDestroy()
     }
 
