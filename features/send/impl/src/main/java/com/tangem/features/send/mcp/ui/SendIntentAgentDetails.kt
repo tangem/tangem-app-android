@@ -22,6 +22,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -90,9 +91,7 @@ private fun SendIntentAgentDetailsPreview() {
     TangemThemePreviewRedesign {
         SendIntentAgentDetails(
             agent = SendIntentAgentUM.Verified(iconUrl = null, label = stringReference("mcp.claude.com")),
-            description = stringReference(
-                "The agent is asking to send from your account. You’ll review the details next.",
-            ),
+            description = resourceReference(R.string.mcp_send_intent_offer_description),
             modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )
     }
@@ -104,10 +103,8 @@ private fun SendIntentAgentDetailsPreview() {
 private fun SendIntentUnknownAgentDetailsPreview() {
     TangemThemePreviewRedesign {
         SendIntentAgentDetails(
-            agent = SendIntentAgentUM.Unknown(iconUrl = null, label = stringReference("Unknown")),
-            description = stringReference(
-                "The agent is asking to send from your account. You’ll review the details next.",
-            ),
+            agent = SendIntentAgentUM.Unknown(iconUrl = null, label = resourceReference(R.string.mcp_intent_host)),
+            description = resourceReference(R.string.mcp_send_intent_offer_description),
             modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )
     }
