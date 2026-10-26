@@ -5,6 +5,7 @@ import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.utils.converter.Converter
 
 /**
@@ -28,7 +29,12 @@ internal object SaveWalletAccountsResponseConverter : Converter<AccountList, Sav
                         derivationIndex = account.ownerKeyIndex.value,
                         type = WalletAccountDTO.Type.JOINT,
                     )
-                    // The special accounts are the app's own: the backend neither stores nor counts them
+                    is Account.Collectibles -> account.toDTO(
+                        icon = account.icon,
+                        derivationIndex = DerivationIndex.Collectibles.value,
+                        type = WalletAccountDTO.Type.COLLECTIBLES,
+                    )
+                    // The other special accounts are the app's own: the backend neither stores nor counts them
                     else -> null
                 }
             },

@@ -7,6 +7,7 @@ import arrow.core.toNonEmptyListOrNull
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.core.utils.eitherOn
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -48,9 +49,11 @@ class ApplyAccountListSortingUseCase(
             ensure(accountList.activeAccounts > 1) { Error.UnableToSortSingleAccount }
 
             val positionByAccountId = nonEmptyIds.withIndex().associate { it.value to it.index }
-            val sortedAccounts = accountList.accounts.sortedBy {
+            // Only portfolios are listed in the settings to be reordered; other accounts keep their place
+            val (portfolios, otherAccounts) = accountList.accounts.partition { it is Account.CryptoPortfolio }
+            val sortedAccounts = portfolios.sortedBy {
                 positionByAccountId[it.accountId] ?: raise(Error.SomeAccountsNotFound)
-            }
+            } + otherAccounts
 
             val updatedAccountList = withError(
                 transform = { Error.DataOperationFailed("Unable to create AccountList: $it") },
