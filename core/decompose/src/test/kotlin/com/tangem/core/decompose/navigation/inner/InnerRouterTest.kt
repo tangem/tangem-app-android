@@ -118,6 +118,19 @@ internal class InnerRouterTest {
         verify(exactly = 1) { fallBackRouter.popToMatching(OuterRoute::class, predicate, any()) }
     }
 
+    @Test
+    fun `GIVEN failed operation WHEN default completion handler is called THEN fallback router handles it`() {
+        // Arrange
+        every { fallBackRouter.defaultCompletionHandler(any(), any()) } returns Unit
+        val router = context.InnerRouter(stackNavigation = stackNavigation, fallBackRouter = fallBackRouter)
+
+        // Act
+        router.defaultCompletionHandler(isSuccess = false, errorMessage = "Unable to pop route")
+
+        // Assert
+        verify(exactly = 1) { fallBackRouter.defaultCompletionHandler(false, "Unable to pop route") }
+    }
+
     private sealed interface InnerRoute : Route {
         data object First : InnerRoute
         data object Second : InnerRoute

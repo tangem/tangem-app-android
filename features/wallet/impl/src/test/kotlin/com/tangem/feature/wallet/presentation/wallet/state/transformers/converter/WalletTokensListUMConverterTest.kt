@@ -2,6 +2,8 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.stringReference
@@ -76,6 +78,7 @@ internal class WalletTokensListUMConverterTest {
         selectedWallet: UserWallet,
         clickIntents: WalletClickIntents = mockk(relaxed = true),
         isAccountsModeEnabled: Boolean = false,
+        isRedesignedAccountRowsEnabled: Boolean = false,
     ): WalletTokensListUMConverter = WalletTokensListUMConverter(
         appCurrency = AppCurrency.Default,
         selectedWallet = selectedWallet,
@@ -86,6 +89,7 @@ internal class WalletTokensListUMConverterTest {
         expandedAccounts = emptySet(),
         stakingAvailabilityMap = emptyMap(),
         shouldShowMainPromo = false,
+        isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
     )
 
     private fun mockColdWallet(isSingleCurrency: Boolean, isSingleWalletWithToken: Boolean): UserWallet.Cold {
@@ -147,6 +151,58 @@ internal class WalletTokensListUMConverterTest {
             ),
         )
     }
+
+    @Test
+    fun `GIVEN redesigned account rows enabled WHEN convert THEN accounts and their tokens use DS3 items`() {
+        // Arrange
+        val converter = createConverter(
+            selectedWallet = mockColdWallet(false, false),
+            isAccountsModeEnabled = true,
+            isRedesignedAccountRowsEnabled = true,
+        )
+        val personal = AccountStatus.Personal(
+            account = createMainAccount(userWalletId),
+            tokenList = ungroupedTokenList(),
+            priceChangeLce = Unit.lceError(),
+        )
+
+        // Act
+        val result = converter.convert(accountListOf(personal, activeJointStatus()))
+
+        // Assert
+        val content = result as WalletTokensListUM.Content
+        val accounts = content.tokenList.map { it as TokensListItemUM2.AccountV2 }
+        assertThat(accounts.map { it.state.label }).containsExactly(
+            pluralReference(R.plurals.common_tokens_count, 0, wrappedList(0)),
+            pluralReference(R.plurals.common_tokens_count, 1, wrappedList(1)),
+        ).inOrder()
+        assertThat(accounts[1].state.description).isEqualTo(
+            pluralReference(R.plurals.joint_account_members_count, 3, wrappedList(3)),
+        )
+        assertThat(accounts.flatMap { it.tokenList }.all { it is TokensListItemUM2.TokenV2 }).isTrue()
+    }
+
+    @Test
+    fun `GIVEN redesigned account rows enabled AND accounts mode off WHEN convert THEN legacy token rows are kept`() {
+        // Arrange
+        val converter = createConverter(
+            selectedWallet = mockColdWallet(false, false),
+            isRedesignedAccountRowsEnabled = true,
+        )
+
+        // Act
+        val result = converter.convert(nonEmptyAccountList())
+
+        // Assert
+        val content = result as WalletTokensListUM.Content
+        assertThat(content.tokenList.single()).isInstanceOf(TokensListItemUM2.Token::class.java)
+    }
+
+    private val TangemAccountRow.State.label: TextReference?
+        get() = (this as TangemAccountRow.State.Content).label
+
+    private val TangemAccountRow.State.description: TextReference?
+        get() = (this as TangemAccountRow.State.Content).description
 
     private fun jointAccount() = MockAccounts.createJointAccount(
         ownerKeyIndex = 0,

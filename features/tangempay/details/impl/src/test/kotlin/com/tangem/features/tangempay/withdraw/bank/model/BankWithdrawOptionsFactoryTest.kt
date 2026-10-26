@@ -1,23 +1,24 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.account.PaymentNetworkStatus
+import com.tangem.domain.pay.model.bankofframp.OfframpDestination
 import com.tangem.features.tangempay.withdraw.bank.BASE_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.BSC_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.USDC_BASE
 import com.tangem.features.tangempay.withdraw.bank.USDC_BSC
-import com.tangem.features.tangempay.withdraw.bank.availableNetwork
+import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
-import com.tangem.features.tangempay.withdraw.bank.currencyStatus
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
-import com.tangem.features.tangempay.withdraw.bank.offrampOptions
-import com.tangem.features.tangempay.withdraw.bank.offrampSource
 import com.tangem.features.tangempay.withdraw.bank.paymentToken
-import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.NullSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
-import java.util.Currency
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class BankWithdrawOptionsFactoryTest {
 
     private val usdcPolygon = paymentToken()
@@ -35,283 +36,142 @@ internal class BankWithdrawOptionsFactoryTest {
         symbol = "DAI",
     )
 
-    private val bothSources = offrampOptions(
-        sources = listOf(offrampSource(), offrampSource("Base", BASE_CHAIN_ID, USDC_BASE)),
+    private val destinations = bankWithdrawOptions().destinations
+
+    @Test
+    fun `GIVEN available sources WHEN create THEN they come with the rails, the bounds and the account currency`() {
+        // Arrange
+        val sources = listOf(
+            bankWithdrawSource(token = usdcPolygon, fiatBalance = BigDecimal("2325.55")),
+            bankWithdrawSource(token = usdcBase, chainId = BASE_CHAIN_ID, fiatBalance = BigDecimal("12325.55")),
+        )
+
+        // Act
+        val actual = BankWithdrawOptionsFactory.create(destinations, sources, balanceCurrencyCode = "USD")
+
+        // Assert
+        assertThat(actual).isEqualTo(bankWithdrawOptions(sources = sources))
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideSortModels")
+    fun `GIVEN sources WHEN create THEN available ones lead and each part is grouped by symbol with USDC first`(
+        model: SortModel,
+    ) {
+        // Act
+        val actual = BankWithdrawOptionsFactory.create(destinations, model.sources, balanceCurrencyCode = "USD")
+
+        // Assert
+        assertThat(actual).isEqualTo(bankWithdrawOptions(sources = model.expected))
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideNoOptionsModels")
+    fun `GIVEN no rail or no available source WHEN create THEN null`(model: NoOptionsModel) {
+        // Act
+        val actual = BankWithdrawOptionsFactory.create(model.destinations, model.sources, balanceCurrencyCode = "USD")
+
+        // Assert
+        assertThat(actual).isNull()
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = ["XXXX"])
+    fun `GIVEN account currency the platform does not know WHEN create THEN the rail fee currency is used`(
+        balanceCurrencyCode: String?,
+    ) {
+        // Arrange
+        val sources = listOf(bankWithdrawSource(token = usdcPolygon))
+        val rails = listOf(offrampDestination())
+
+        // Act
+        val actual = BankWithdrawOptionsFactory.create(rails, sources, balanceCurrencyCode)
+
+        // Assert
+        assertThat(actual).isEqualTo(bankWithdrawOptions(sources = sources, destinations = rails))
+    }
+
+    private fun provideSortModels(): List<SortModel> {
+        val usdcPolygonAvailable = bankWithdrawSource(token = usdcPolygon, fiatBalance = BigDecimal("100"))
+        val usdtPolygonUnavailable = bankWithdrawSource(
+            token = usdtPolygon,
+            fiatBalance = BigDecimal("5"),
+            isAvailable = false,
+        )
+        val usdcBaseUnavailable = bankWithdrawSource(
+            token = usdcBase,
+            chainId = BASE_CHAIN_ID,
+            fiatBalance = BigDecimal("40"),
+            isAvailable = false,
+        )
+        val usdcBaseAvailable = bankWithdrawSource(token = usdcBase, chainId = BASE_CHAIN_ID)
+        val usdcBscUnavailable = bankWithdrawSource(token = usdcBsc, chainId = BSC_CHAIN_ID, isAvailable = false)
+        val usdtPolygonAvailable = bankWithdrawSource(token = usdtPolygon)
+        val usdtBaseAvailable = bankWithdrawSource(token = usdtBase, chainId = BASE_CHAIN_ID)
+        val daiPolygonAvailable = bankWithdrawSource(token = daiPolygon)
+        val usdcPolygonDefault = bankWithdrawSource(token = usdcPolygon)
+        return listOf(
+            SortModel(
+                description = "unavailable sources follow the available one, USDC first among them",
+                sources = listOf(usdtPolygonUnavailable, usdcPolygonAvailable, usdcBaseUnavailable),
+                expected = listOf(usdcPolygonAvailable, usdcBaseUnavailable, usdtPolygonUnavailable),
+            ),
+            SortModel(
+                description = "an unavailable source between available ones moves after them",
+                sources = listOf(usdcPolygonDefault, usdcBscUnavailable, usdcBaseAvailable),
+                expected = listOf(usdcPolygonDefault, usdcBaseAvailable, usdcBscUnavailable),
+            ),
+            SortModel(
+                description = "an available USDT comes before an unavailable USDC",
+                sources = listOf(usdcBaseUnavailable, usdtPolygonAvailable),
+                expected = listOf(usdtPolygonAvailable, usdcBaseUnavailable),
+            ),
+            SortModel(
+                description = "USDC comes first",
+                sources = listOf(usdtPolygonAvailable, usdcPolygonDefault),
+                expected = listOf(usdcPolygonDefault, usdtPolygonAvailable),
+            ),
+            SortModel(
+                description = "other symbols keep the order they first appear in",
+                sources = listOf(usdtPolygonAvailable, daiPolygonAvailable, usdtBaseAvailable),
+                expected = listOf(usdtPolygonAvailable, usdtBaseAvailable, daiPolygonAvailable),
+            ),
+            SortModel(
+                description = "one symbol on several networks keeps the given order",
+                sources = listOf(usdcBaseAvailable, usdcPolygonDefault),
+                expected = listOf(usdcBaseAvailable, usdcPolygonDefault),
+            ),
+        )
+    }
+
+    private fun provideNoOptionsModels(): List<NoOptionsModel> = listOf(
+        NoOptionsModel(
+            description = "no rail",
+            destinations = emptyList(),
+            sources = listOf(bankWithdrawSource(token = usdcPolygon)),
+        ),
+        NoOptionsModel(
+            description = "no source",
+            destinations = destinations,
+            sources = emptyList(),
+        ),
+        NoOptionsModel(
+            description = "only sources the off-ramp does not accept",
+            destinations = destinations,
+            sources = listOf(bankWithdrawSource(token = usdtPolygon, isAvailable = false)),
+        ),
     )
 
-    @Test
-    fun `GIVEN accepted tokens with balance WHEN create THEN kept in the account's network order`() {
-        // Arrange
-        val networks = listOf(
-            availableNetwork(token = usdcPolygon, fiatBalance = BigDecimal("2325.55")),
-            availableNetwork(token = usdcBase, chainId = BASE_CHAIN_ID, fiatBalance = BigDecimal("12325.55")),
-        )
+    internal data class SortModel(
+        val description: String,
+        val sources: List<BankWithdrawSource>,
+        val expected: List<BankWithdrawSource>,
+    )
 
-        // Act
-        val actual = BankWithdrawOptionsFactory.create(bothSources, networks, balanceCurrencyCode = "USD")
-
-        // Assert
-        assertThat(actual?.sources?.map { it.token }).containsExactly(usdcPolygon, usdcBase).inOrder()
-        assertThat(actual?.currency).isEqualTo(Currency.getInstance("USD"))
-        assertThat(actual?.minAmount).isEqualTo(BigDecimal("1.00"))
-        assertThat(actual?.maxAmount).isEqualTo(BigDecimal("10000.00"))
-    }
-
-    @Test
-    fun `GIVEN tokens without balance WHEN create THEN dropped whether accepted or not`() {
-        // Arrange
-        val networks = listOf(
-            availableNetwork(
-                token = usdtPolygon,
-                fiatBalance = BigDecimal.ZERO,
-                extraStatuses = listOf(currencyStatus(usdcPolygon, fiatBalance = BigDecimal("100"))),
-            ),
-            availableNetwork(token = usdcBase, chainId = BASE_CHAIN_ID, fiatBalance = BigDecimal.ZERO),
-        )
-
-        // Act
-        val actual = BankWithdrawOptionsFactory.create(bothSources, networks, balanceCurrencyCode = "USD")
-
-        // Assert
-        assertThat(actual?.sources).containsExactly(
-            bankWithdrawSource(token = usdcPolygon, fiatBalance = BigDecimal("100")),
-        )
-    }
-
-    @Test
-    fun `GIVEN tokens not accepted with balance WHEN create THEN listed unavailable with USDC first among them`() {
-        // Arrange
-        val networks = listOf(
-            availableNetwork(
-                token = usdtPolygon,
-                fiatBalance = BigDecimal("5"),
-                extraStatuses = listOf(currencyStatus(usdcPolygon, fiatBalance = BigDecimal("100"))),
-            ),
-            availableNetwork(token = usdcBase, chainId = BASE_CHAIN_ID, fiatBalance = BigDecimal("40")),
-        )
-
-        // Act
-        val actual = BankWithdrawOptionsFactory.create(offrampOptions(), networks, balanceCurrencyCode = "USD")
-
-        // Assert
-        assertThat(actual?.sources).containsExactly(
-            bankWithdrawSource(token = usdcPolygon, fiatBalance = BigDecimal("100")),
-            bankWithdrawSource(
-                token = usdcBase,
-                chainId = BASE_CHAIN_ID,
-                fiatBalance = BigDecimal("40"),
-                isAvailable = false,
-            ),
-            bankWithdrawSource(token = usdtPolygon, fiatBalance = BigDecimal("5"), isAvailable = false),
-        ).inOrder()
-    }
-
-    @Test
-    fun `GIVEN unavailable token between available ones WHEN create THEN listed after them`() {
-        // Arrange
-        val networks = listOf(
-            availableNetwork(token = usdcPolygon, fiatBalance = BigDecimal("25.94")),
-            availableNetwork(token = usdcBsc, chainId = BSC_CHAIN_ID, fiatBalance = BigDecimal("15")),
-            availableNetwork(token = usdcBase, chainId = BASE_CHAIN_ID, fiatBalance = BigDecimal("9.80")),
-        )
-
-        // Act
-        val actual = BankWithdrawOptionsFactory.create(bothSources, networks, balanceCurrencyCode = "USD")
-
-        // Assert
-        assertThat(actual?.sources).containsExactly(
-            bankWithdrawSource(token = usdcPolygon, fiatBalance = BigDecimal("25.94")),
-            bankWithdrawSource(token = usdcBase, chainId = BASE_CHAIN_ID, fiatBalance = BigDecimal("9.80")),
-            bankWithdrawSource(
-                token = usdcBsc,
-                chainId = BSC_CHAIN_ID,
-                fiatBalance = BigDecimal("15"),
-                isAvailable = false,
-            ),
-        ).inOrder()
-    }
-
-    @Test
-    fun `GIVEN unavailable USDC and available USDT WHEN create THEN available USDT comes first`() {
-        // Arrange
-        val networks = listOf(
-            availableNetwork(token = usdcBase, chainId = BASE_CHAIN_ID, fiatBalance = BigDecimal("40")),
-            availableNetwork(token = usdtPolygon, fiatBalance = BigDecimal("5")),
-        )
-        val options = offrampOptions(sources = listOf(offrampSource(contractAddress = usdtPolygon.contractAddress)))
-
-        // Act
-        val actual = BankWithdrawOptionsFactory.create(options, networks, balanceCurrencyCode = "USD")
-
-        // Assert
-        assertThat(actual?.sources).containsExactly(
-            bankWithdrawSource(token = usdtPolygon, fiatBalance = BigDecimal("5")),
-            bankWithdrawSource(
-                token = usdcBase,
-                chainId = BASE_CHAIN_ID,
-                fiatBalance = BigDecimal("40"),
-                isAvailable = false,
-            ),
-        ).inOrder()
-    }
-
-    @Test
-    fun `GIVEN only tokens the off-ramp does not accept WHEN create THEN null`() {
-        // Arrange
-        val networks = listOf(availableNetwork(token = usdtPolygon, fiatBalance = BigDecimal("5")))
-
-        // Act
-        val actual = BankWithdrawOptionsFactory.create(offrampOptions(), networks, balanceCurrencyCode = "USD")
-
-        // Assert
-        assertThat(actual).isNull()
-    }
-
-    @Test
-    fun `GIVEN contract address in different case WHEN create THEN still accepted`() {
-        // Arrange
-        val token = paymentToken(contractAddress = "0x3C499C542CEF5E3811E1192CE70D8CC03D5C3359")
-        val networks = listOf(availableNetwork(token = token))
-
-        // Act
-        val actual = BankWithdrawOptionsFactory.create(offrampOptions(), networks, balanceCurrencyCode = "USD")
-
-        // Assert
-        assertThat(actual?.sources?.single()?.token).isEqualTo(token)
-    }
-
-    @Test
-    fun `GIVEN every token without balance WHEN create THEN null`() {
-        // Arrange
-        val networks = listOf(availableNetwork(token = usdcPolygon, fiatBalance = BigDecimal.ZERO))
-
-        // Act
-        val actual = BankWithdrawOptionsFactory.create(offrampOptions(), networks, balanceCurrencyCode = "USD")
-
-        // Assert
-        assertThat(actual).isNull()
-    }
-
-    @Test
-    fun `GIVEN no destination WHEN create THEN null`() {
-        // Arrange
-        val networks = listOf(availableNetwork(token = usdcPolygon))
-
-        // Act
-        val actual = BankWithdrawOptionsFactory.create(
-            options = offrampOptions(destinations = emptyList()),
-            networks = networks,
-            balanceCurrencyCode = "USD",
-        )
-
-        // Assert
-        assertThat(actual).isNull()
-    }
-
-    @Test
-    fun `GIVEN disabled and not issued networks WHEN create THEN null`() {
-        // Arrange
-        val networks: List<PaymentNetworkStatus> = listOf(
-            PaymentNetworkStatus.Disabled(
-                network = usdcBase.network,
-                chainId = BASE_CHAIN_ID,
-                cryptoCurrencies = listOf(usdcBase),
-            ),
-            PaymentNetworkStatus.NotIssued(network = mockk(), chainId = BASE_CHAIN_ID),
-        )
-
-        // Act
-        val actual = BankWithdrawOptionsFactory.create(offrampOptions(), networks, balanceCurrencyCode = "USD")
-
-        // Assert
-        assertThat(actual).isNull()
-    }
-
-    @Test
-    fun `GIVEN account without currency WHEN create THEN the rail fee currency is used`() {
-        // Arrange
-        val networks = listOf(availableNetwork(token = usdcPolygon))
-
-        // Act
-        val actual = BankWithdrawOptionsFactory.create(
-            options = offrampOptions(destinations = listOf(offrampDestination())),
-            networks = networks,
-            balanceCurrencyCode = null,
-        )
-
-        // Assert
-        assertThat(actual?.currency).isEqualTo(Currency.getInstance("USD"))
-    }
-
-    @Test
-    fun `GIVEN sources where USDC is not first WHEN resolved THEN USDC comes first`() {
-        // Arrange
-        val networks = listOf(
-            availableNetwork(
-                token = usdtPolygon,
-                extraStatuses = listOf(currencyStatus(usdcPolygon, fiatBalance = BigDecimal("100"))),
-            ),
-        )
-        val options = offrampOptions(
-            sources = listOf(offrampSource(contractAddress = usdtPolygon.contractAddress), offrampSource()),
-        )
-
-        // Act
-        val actual = BankWithdrawOptionsFactory.create(options, networks, balanceCurrencyCode = "USD")
-
-        // Assert
-        assertThat(actual?.sources?.map { it.token }).containsExactly(usdcPolygon, usdtPolygon).inOrder()
-    }
-
-    @Test
-    fun `GIVEN several symbols WHEN resolved THEN symbols keep first-seen order`() {
-        // Arrange
-        val networks = listOf(
-            availableNetwork(
-                token = usdtPolygon,
-                extraStatuses = listOf(currencyStatus(daiPolygon, fiatBalance = BigDecimal("100"))),
-            ),
-            availableNetwork(token = usdtBase, chainId = BASE_CHAIN_ID),
-        )
-        val options = offrampOptions(
-            sources = listOf(
-                offrampSource(contractAddress = usdtPolygon.contractAddress),
-                offrampSource(contractAddress = daiPolygon.contractAddress),
-                offrampSource("Base", BASE_CHAIN_ID, usdtBase.contractAddress),
-            ),
-        )
-
-        // Act
-        val actual = BankWithdrawOptionsFactory.create(options, networks, balanceCurrencyCode = "USD")
-
-        // Assert
-        assertThat(actual?.sources?.map { it.token }).containsExactly(usdtPolygon, usdtBase, daiPolygon).inOrder()
-    }
-
-    @Test
-    fun `GIVEN one symbol on several networks WHEN resolved THEN backend order kept`() {
-        // Arrange
-        val networks = listOf(
-            availableNetwork(token = usdcBase, chainId = BASE_CHAIN_ID),
-            availableNetwork(token = usdcPolygon),
-        )
-
-        // Act
-        val actual = BankWithdrawOptionsFactory.create(bothSources, networks, balanceCurrencyCode = "USD")
-
-        // Assert
-        assertThat(actual?.sources?.map { it.token }).containsExactly(usdcBase, usdcPolygon).inOrder()
-    }
-
-    @Test
-    fun `GIVEN unknown account currency WHEN create THEN the rail fee currency is used`() {
-        // Arrange
-        val networks = listOf(availableNetwork(token = usdcPolygon))
-
-        // Act
-        val actual = BankWithdrawOptionsFactory.create(offrampOptions(), networks, balanceCurrencyCode = "XXXX")
-
-        // Assert
-        assertThat(actual?.currency).isEqualTo(Currency.getInstance("USD"))
-    }
+    internal data class NoOptionsModel(
+        val description: String,
+        val destinations: List<OfframpDestination>,
+        val sources: List<BankWithdrawSource>,
+    )
 }
