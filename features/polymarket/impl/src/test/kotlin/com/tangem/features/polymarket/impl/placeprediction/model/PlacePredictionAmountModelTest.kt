@@ -27,6 +27,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceeds
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -36,6 +37,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -805,6 +807,55 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             assertThat(model.uiState.value.slippage.isDefault).isFalse()
 
             model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a minimum raised by a wider slippage WHEN slippage narrowed back THEN the lower minimum applies`() =
+            runTest {
+                // Arrange
+                coEvery { getQuoteUseCase(request = any()) } answers {
+                    val request = firstArg<PredictionOrderQuoteRequest>()
+                    if (request.slippagePercent == BigDecimal("10")) {
+                        createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_AMOUNT)
+                            .copy(worstCasePrice = BigDecimal("0.82"))
+                            .right()
+                    } else {
+                        createQuote().copy(worstCasePrice = BigDecimal("0.77")).right()
+                    }
+                }
+                val route = slot<PlacePredictionRoute.Slippage>()
+                every { router.push(capture(route), any()) } returns Unit
+                val model = createAmountModel(testScope = this)
+                advanceUntilIdle()
+                model.onResume()
+                model.onAmountChange(value = "3.85")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                applySlippage(model = model, route = route, percent = BigDecimal("10"))
+                assertThat(model.uiState.value.amountCaption)
+                    .isEqualTo(AmountCaptionUM.BelowMinimum(minAmount = BigDecimal("4.10")))
+
+                // Act
+                applySlippage(model = model, route = route, percent = DEFAULT_SLIPPAGE_PERCENT)
+
+                // Assert
+                assertThat(model.uiState.value.minAmount).isEqualTo(BigDecimal("3.85"))
+                assertThat(model.uiState.value.amountCaption)
+                    .isNotInstanceOf(AmountCaptionUM.BelowMinimum::class.java)
+                assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
+
+                model.onDestroy()
+            }
+
+        private fun TestScope.applySlippage(
+            model: PlacePredictionAmountModel,
+            route: CapturingSlot<PlacePredictionRoute.Slippage>,
+            percent: BigDecimal,
+        ) {
+            model.onSlippageClick()
+            model.onPause()
+            route.captured.onConfirm(percent)
+            model.onResume()
+            advanceTimeBy(delayTimeMillis = 1)
         }
 
         @Test
