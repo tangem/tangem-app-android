@@ -189,6 +189,10 @@ internal class DeepLinkFactoryTest {
         every { isEnabled } returns true
         every { isOpenableFromPush } returns true
     }
+    private val registeredTangemPayMainHandler = mockk<DeepLinkHandler>(relaxed = true) {
+        every { isEnabled } returns true
+        every { isOpenableFromPush } returns true
+    }
 
     private val mockedUri = mockk<Uri>(relaxed = true)
     private val isFromOnNewIntent: Boolean = false
@@ -235,6 +239,7 @@ internal class DeepLinkFactoryTest {
             "tangem://main" to registeredWalletHandler,
             "https://tangem.com/joint-account/join" to registeredJointAccountInviteHandler,
             "wc:" to registeredWalletConnectHandler,
+            "tangem://pay-app-main" to registeredTangemPayMainHandler,
         ),
     )
 
@@ -472,7 +477,7 @@ internal class DeepLinkFactoryTest {
         every { mockedUri.host } returns "pay-app-main"
         every { mockedUri.queryParameterNames } returns setOf("param")
         every { mockedUri.getQueryParameter("param") } returns "value"
-        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, DeeplinkSource.Push)
         advanceUntilIdle()
         verify { tangemPayMainDeepLink.create(eq(testScope), any()) }
 
@@ -1090,6 +1095,87 @@ internal class DeepLinkFactoryTest {
         verify(inverse = true) { urlOpener.openUrl(any()) }
     }
 
+    @ParameterizedTest
+    @MethodSource("providePayAppMainModels")
+    fun `GIVEN pay-app-main link WHEN handleDeeplink THEN Tangem Pay handler is created only from push`(
+        model: PayAppMainModel,
+    ) = runTest {
+        // Arrange
+        every { mockedUri.scheme } returns model.scheme
+        every { mockedUri.host } returns model.host
+        every { mockedUri.path } returns model.path
+        every { mockedUri.queryParameterNames } returns emptySet()
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, model.source)
+        advanceUntilIdle()
+
+        // Assert
+        if (model.isHandled) {
+            verify { tangemPayMainDeepLink.create(eq(testScope), eq(emptyMap())) }
+        } else {
+            verify(inverse = true) { tangemPayMainDeepLink.create(any(), any()) }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideRegisteredPayAppMainModels")
+    fun `GIVEN registry enabled and pay-app-main link WHEN handleDeeplink THEN handled only from push`(
+        model: RegisteredPayAppMainModel,
+    ) = runTest {
+        // Arrange
+        every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "pay-app-main"
+        every { mockedUri.queryParameterNames } returns emptySet()
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, model.source)
+        advanceUntilIdle()
+
+        // Assert
+        if (model.isHandled) {
+            verify { registeredTangemPayMainHandler.handle(any()) }
+        } else {
+            verify(inverse = true) { registeredTangemPayMainHandler.handle(any()) }
+        }
+    }
+
+    @Test
+    fun `GIVEN parked push deep link WHEN external pay-app-main link arrives THEN parked one is still routed`() =
+        runTest {
+            // Arrange
+            val pushUri = mockk<Uri>(relaxed = true) {
+                every { scheme } returns "tangem"
+                every { host } returns "main"
+                every { queryParameterNames } returns emptySet()
+            }
+            every { mockedUri.scheme } returns "tangem"
+            every { mockedUri.host } returns "pay-app-main"
+            deepLinkFactory.handleDeeplink(pushUri, testScope, isFromOnNewIntent, DeeplinkSource.Push)
+
+            // Act
+            deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, DeeplinkSource.External)
+            deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+            advanceUntilIdle()
+
+            // Assert
+            verify { walletDeepLinkFactory.create() }
+            verify(inverse = true) { tangemPayMainDeepLink.create(any(), any()) }
+        }
+
+    data class PayAppMainModel(
+        val scheme: String,
+        val host: String,
+        val path: String,
+        val source: DeeplinkSource,
+        val isHandled: Boolean,
+    )
+
+    data class RegisteredPayAppMainModel(val source: DeeplinkSource, val isHandled: Boolean)
+
     data class WebFallbackModel(
         val scheme: String,
         val host: String,
@@ -1101,6 +1187,51 @@ internal class DeepLinkFactoryTest {
     )
 
     private companion object {
+
+        @JvmStatic
+        fun providePayAppMainModels(): List<PayAppMainModel> = listOf(
+            PayAppMainModel(
+                scheme = "tangem",
+                host = "pay-app-main",
+                path = "",
+                source = DeeplinkSource.Push,
+                isHandled = true,
+            ),
+            PayAppMainModel(
+                scheme = "tangem",
+                host = "pay-app-main",
+                path = "",
+                source = DeeplinkSource.External,
+                isHandled = false,
+            ),
+            PayAppMainModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pay-app-main",
+                source = DeeplinkSource.Push,
+                isHandled = true,
+            ),
+            PayAppMainModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pay-app-main",
+                source = DeeplinkSource.External,
+                isHandled = false,
+            ),
+            PayAppMainModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pay-app-main/details",
+                source = DeeplinkSource.External,
+                isHandled = false,
+            ),
+        )
+
+        @JvmStatic
+        fun provideRegisteredPayAppMainModels(): List<RegisteredPayAppMainModel> = listOf(
+            RegisteredPayAppMainModel(source = DeeplinkSource.Push, isHandled = true),
+            RegisteredPayAppMainModel(source = DeeplinkSource.External, isHandled = false),
+        )
 
         @JvmStatic
         fun provideNewsPathsWithoutArticleId(): List<String> = listOf(
