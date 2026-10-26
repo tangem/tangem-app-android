@@ -9,6 +9,7 @@ import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.tap.routing.DefaultNavigationFailureHandler
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -29,6 +30,7 @@ internal object RootAppComponentContextModule {
         dispatchers: CoroutineDispatcherProvider,
         componentBuilder: ModelComponent.Builder,
         @GlobalUiMessageSender messageSender: UiMessageSender,
+        navigationFailureHandler: DefaultNavigationFailureHandler,
     ): AppComponentContext {
         val activity = context as AppCompatActivity
         return DefaultAppComponentContext(
@@ -37,6 +39,7 @@ internal object RootAppComponentContextModule {
             dispatchers = dispatchers,
             hiltComponentBuilder = componentBuilder,
             messageSender = messageSender,
+            navigationFailureHandler = navigationFailureHandler,
         )
     }
 }
