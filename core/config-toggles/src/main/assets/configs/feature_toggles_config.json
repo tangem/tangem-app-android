@@ -44,6 +44,14 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1858_TRON_CLIENT_ENERGY_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_17201_TRON_LOWER_FEE_TYPE_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE",
         "version": "6.6"
     },
