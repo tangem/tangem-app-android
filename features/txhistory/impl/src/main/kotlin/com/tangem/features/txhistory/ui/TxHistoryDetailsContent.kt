@@ -144,7 +144,7 @@ private fun TwoAssetsContent(
                 isBalanceHidden = state.isBalanceHidden,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp),
+                    .padding(start = 16.dp, end = 16.dp, top = 16.dp),
             )
         } else {
             // Safety fallback for a future express variant that yields no asset legs — render the header-only card.
