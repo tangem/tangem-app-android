@@ -32,7 +32,7 @@ internal fun TangemLoaderStory(state: TangemLoaderStory, modifier: Modifier = Mo
         modifier = modifier
             .statusBarsPadding()
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level1),
+            .background(TangemTheme.colors3.bg.primary),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         ComponentPreview(size = state.selectedSize)
@@ -52,7 +52,7 @@ private fun ComponentPreview(size: TangemLoaderSize) {
             .height(160.dp)
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(TangemTheme.colors2.surface.level2),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         TangemLoader(size = size)
     }
@@ -69,17 +69,17 @@ private fun SizeSelector(selected: TangemLoaderSize, onSelect: (TangemLoaderSize
         Text(
             text = "Size",
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         val shape = RoundedCornerShape(50)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(shape)
-                .background(TangemTheme.colors2.surface.level2)
+                .background(TangemTheme.colors3.bg.primary)
                 .border(
                     width = 1.dp,
-                    color = TangemTheme.colors2.border.neutral.secondary,
+                    color = TangemTheme.colors3.border.tertiary,
                     shape = shape,
                 )
                 .padding(4.dp),
@@ -105,7 +105,7 @@ private fun SizeChip(label: String, selected: Boolean, onClick: () -> Unit, modi
         modifier = modifier
             .clip(chipShape)
             .background(
-                if (selected) TangemTheme.colors2.surface.level3 else TangemTheme.colors2.surface.level2,
+                if (selected) TangemTheme.colors3.bg.secondary else TangemTheme.colors3.bg.primary,
             )
             .clickable(onClick = onClick)
             .padding(vertical = 8.dp, horizontal = 4.dp),
@@ -113,7 +113,7 @@ private fun SizeChip(label: String, selected: Boolean, onClick: () -> Unit, modi
         Text(
             text = label,
             style = TangemTheme.typography.caption2,
-            color = if (selected) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary,
+            color = if (selected) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
         )
     }
 }

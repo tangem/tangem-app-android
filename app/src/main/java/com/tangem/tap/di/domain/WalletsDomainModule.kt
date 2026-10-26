@@ -323,6 +323,18 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
+    fun providesEnableAddressesSharingUseCase(
+        walletsRepository: WalletsRepository,
+        accountsCRUDRepository: AccountsCRUDRepository,
+    ): EnableAddressesSharingUseCase {
+        return EnableAddressesSharingUseCase(
+            walletsRepository = walletsRepository,
+            accountsCRUDRepository = accountsCRUDRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun providesGetWalletNotificationsEnabledUseCase(
         walletsRepository: WalletsRepository,
     ): GetWalletNotificationsEnabledUseCase {

@@ -4,13 +4,16 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.domain.pay.model.recents.RecentTokenTransfer
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.features.tangempay.withdraw.hub.model.OptionsState
@@ -30,6 +33,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayWithdrawHubUMFactoryTest {
@@ -43,17 +47,15 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     private val onRetryRecentsClick: () -> Unit = mockk(relaxed = true)
     private val onRecentTokenClick: (String) -> Unit = mockk(relaxed = true)
 
-    private val factory = TangemPayWithdrawHubUMFactory(
-        callbacks = TangemPayWithdrawHubUMFactory.Callbacks(
-            onBackClick = onBackClick,
-            onWithinPortfolioClick = onWithinPortfolioClick,
-            onToPersonalAccountClick = onToPersonalAccountClick,
-            onToBusinessAccountClick = onToBusinessAccountClick,
-            onRecentRecipientClick = onRecentRecipientClick,
-            onSeeAllClick = onSeeAllClick,
-            onRetryRecentsClick = onRetryRecentsClick,
-            onRecentTokenClick = onRecentTokenClick,
-        ),
+    private val callbacks = TangemPayWithdrawHubUMFactory.Callbacks(
+        onBackClick = onBackClick,
+        onWithinPortfolioClick = onWithinPortfolioClick,
+        onToPersonalAccountClick = onToPersonalAccountClick,
+        onToBusinessAccountClick = onToBusinessAccountClick,
+        onRecentRecipientClick = onRecentRecipientClick,
+        onSeeAllClick = onSeeAllClick,
+        onRetryRecentsClick = onRetryRecentsClick,
+        onRecentTokenClick = onRecentTokenClick,
     )
 
     @BeforeEach
@@ -76,7 +78,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         val actual = create()
 
         // Assert
-        assertThat(actual.swapSection.withinPortfolio.title)
+        assertThat(actual.swapSection?.withinPortfolio?.title)
             .isEqualTo(resourceReference(R.string.tangempay_withdraw_hub_within_portfolio))
     }
 
@@ -99,7 +101,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         val state = create()
 
         // Act
-        state.swapSection.withinPortfolio.onClick()
+        checkNotNull(state.swapSection).withinPortfolio.onClick()
 
         // Assert
         verify(exactly = 1) { onWithinPortfolioClick() }
@@ -230,13 +232,16 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         verify(exactly = 1) { onRetryRecentsClick() }
     }
 
-    @Test
-    fun `GIVEN options loading WHEN create THEN bank section loading`() {
+    @ParameterizedTest
+    @MethodSource("provideBankSectionModels")
+    fun `GIVEN options loading or not offered WHEN create THEN bank section loading or absent`(
+        model: BankSectionModel,
+    ) {
         // Act
-        val actual = create(options = OptionsState.Loading)
+        val actual = create(options = model.options, sourceAccount = model.sourceAccount)
 
         // Assert
-        assertThat(actual.bankSection).isEqualTo(BankSectionUM.Loading)
+        assertThat(actual.bankSection).isEqualTo(model.expectedBankSection)
     }
 
     @Test
@@ -267,7 +272,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         val actual = create()
 
         // Assert
-        assertThat(actual.swapSection.recents).isEqualTo(TokenRecentsUM.Loading)
+        assertThat(actual.swapSection?.recents).isEqualTo(TokenRecentsUM.Loading)
     }
 
     @Test
@@ -276,7 +281,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         val actual = create(tokenRecents = TokenRecentsState.Loaded(transfers = emptyList()))
 
         // Assert
-        assertThat(actual.swapSection.recents).isEqualTo(TokenRecentsUM.Empty)
+        assertThat(actual.swapSection?.recents).isEqualTo(TokenRecentsUM.Empty)
     }
 
     @Test
@@ -294,7 +299,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         )
 
         // Act
-        val actual = create(tokenRecents = state).swapSection.recents as TokenRecentsUM.Content
+        val actual = create(tokenRecents = state).swapSection?.recents as TokenRecentsUM.Content
 
         // Assert
         assertThat(actual.tokens.single()).isEqualTo(
@@ -308,13 +313,31 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         )
     }
 
+    @ParameterizedTest
+    @MethodSource("provideSourceModels")
+    fun `GIVEN source account WHEN bank unavailable THEN title, swap section and subtitle follow the source`(
+        model: SourceModel,
+    ) {
+        // Act
+        val actual = create(options = OptionsState.Unavailable, sourceAccount = model.sourceAccount)
+
+        // Assert
+        assertThat(
+            Triple(
+                actual.title,
+                actual.swapSection != null,
+                (actual.bankSection as BankSectionUM.Content).unavailableSubtitle,
+            ),
+        ).isEqualTo(Triple(model.expectedTitle, model.hasSwapSection, model.expectedUnavailableSubtitle))
+    }
+
     private fun create(
         options: OptionsState = OptionsState.Ready(bankWithdrawOptions()),
         recents: RecentsState = RecentsState.Loading,
         tokenRecents: TokenRecentsState = TokenRecentsState.Loading,
-    ): TangemPayWithdrawHubUM = factory.create(
-        WithdrawHubState(options = options, recents = recents, tokenRecents = tokenRecents),
-    )
+        sourceAccount: BankWithdrawSourceAccount = BankWithdrawSourceAccount.Payment(USER_WALLET_ID),
+    ): TangemPayWithdrawHubUM = TangemPayWithdrawHubUMFactory(sourceAccount = sourceAccount, callbacks = callbacks)
+        .create(WithdrawHubState(options = options, recents = recents, tokenRecents = tokenRecents))
 
     private fun createRecents(
         accounts: List<BankAccount> = emptyList(),
@@ -347,6 +370,49 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         isCustom = false,
     )
 
+    data class SourceModel(
+        val sourceAccount: BankWithdrawSourceAccount,
+        val expectedTitle: TextReference,
+        val hasSwapSection: Boolean,
+        val expectedUnavailableSubtitle: TextReference,
+    )
+
+    private fun provideSourceModels() = listOf(
+        SourceModel(
+            sourceAccount = BankWithdrawSourceAccount.Payment(USER_WALLET_ID),
+            expectedTitle = resourceReference(R.string.tangempay_card_details_withdraw),
+            hasSwapSection = true,
+            expectedUnavailableSubtitle = resourceReference(
+                R.string.tangempay_withdraw_hub_bank_section_subtitle_unavailable,
+            ),
+        ),
+        SourceModel(
+            sourceAccount = BankWithdrawSourceAccount.Money(USER_WALLET_ID, productInstanceId = "instance-1"),
+            expectedTitle = resourceReference(R.string.common_send),
+            hasSwapSection = false,
+            expectedUnavailableSubtitle = resourceReference(R.string.money_account_send_bank_transfer_unavailable),
+        ),
+    )
+
+    data class BankSectionModel(
+        val options: OptionsState,
+        val sourceAccount: BankWithdrawSourceAccount,
+        val expectedBankSection: BankSectionUM?,
+    )
+
+    private fun provideBankSectionModels() = listOf(
+        BankSectionModel(
+            options = OptionsState.Loading,
+            sourceAccount = BankWithdrawSourceAccount.Payment(USER_WALLET_ID),
+            expectedBankSection = BankSectionUM.Loading,
+        ),
+        BankSectionModel(
+            options = OptionsState.NotOffered,
+            sourceAccount = BankWithdrawSourceAccount.Money(USER_WALLET_ID, productInstanceId = null),
+            expectedBankSection = null,
+        ),
+    )
+
     data class NameModel(
         val beneficiary: Beneficiary,
         val expectedName: String,
@@ -375,4 +441,8 @@ internal class TangemPayWithdrawHubUMFactoryTest {
             expectedInitial = "R",
         ),
     )
+
+    private companion object {
+        val USER_WALLET_ID = UserWalletId("011")
+    }
 }

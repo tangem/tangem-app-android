@@ -23,7 +23,7 @@ internal fun TangemTabStory(state: TangemTabStory, modifier: Modifier = Modifier
         modifier = modifier
             .statusBarsPadding()
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level1),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         item("interactive") {
             TabSection(title = "Interactive") {
@@ -116,12 +116,12 @@ private fun TabSection(title: String, content: @Composable () -> Unit) {
         Text(
             text = title,
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         content()
     }
     HorizontalDivider(
-        color = TangemTheme.colors2.border.neutral.secondary,
+        color = TangemTheme.colors3.border.tertiary,
         modifier = Modifier.padding(horizontal = 16.dp),
     )
 }
