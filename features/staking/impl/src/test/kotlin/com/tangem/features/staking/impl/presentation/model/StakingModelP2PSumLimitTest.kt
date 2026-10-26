@@ -8,6 +8,8 @@ import com.tangem.domain.staking.model.ethpool.VaultLimitInfo
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
+import com.tangem.features.staking.impl.presentation.state.amountData
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -18,6 +20,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 /**
@@ -89,43 +92,83 @@ internal class StakingModelP2PSumLimitTest : StakingModelTestBase() {
         return uiStateFlow
     }
 
-    // ----- Test A ---------------------------------------------------------------
-
     @Test
     fun `GIVEN P2P vault max=5 WHEN amount 6 entered THEN SumLimitError analytics sent`() = runTest {
+        // Arrange
         stubUiStateWithCryptoAmount(BigDecimal("6"))
 
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
+        // Act
         model.onAmountValueChange("6")
 
+        // Assert
         verify {
             analyticsEventHandler.send(
-                match { it is StakingAnalyticsEvent.SumLimitError }
+                match { it is StakingAnalyticsEvent.SumLimitError },
             )
         }
 
         model.onDestroy()
     }
 
-    // ----- Test B ---------------------------------------------------------------
-
     @Test
     fun `GIVEN P2P vault max=5 WHEN amount 4 entered THEN SumLimitError analytics NOT sent`() = runTest {
+        // Arrange
         stubUiStateWithCryptoAmount(BigDecimal("4"))
 
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
+        // Act
         model.onAmountValueChange("4")
 
+        // Assert
         verify(exactly = 0) {
             analyticsEventHandler.send(
-                match { it is StakingAnalyticsEvent.SumLimitError }
+                match { it is StakingAnalyticsEvent.SumLimitError },
             )
         }
 
         model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN P2P vault limit WHEN amount entered at or under limit THEN SumLimitError analytics NOT sent`(
+        model: NoSumLimitErrorModel,
+    ) = runTest {
+        // Arrange
+        coEvery { p2pEthPoolRepository.getVaultLimitsSyncOrNull() } returns mapOf(
+            vaultAddress to VaultLimitInfo(limit = model.limit, coefficient = null),
+        )
+        every { stateController.uiState } returns MutableStateFlow(
+            mockk<StakingUiState>(relaxed = true) {
+                every { currentStep } returns StakingStep.InitialInfo
+                every { amountState } returns model.amountState
+            },
+        )
+        val stakingModel = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        stakingModel.onAmountValueChange("6")
+
+        // Assert
+        verify(exactly = 0) { analyticsEventHandler.send(match { it is StakingAnalyticsEvent.SumLimitError }) }
+
+        stakingModel.onDestroy()
+    }
+
+    data class NoSumLimitErrorModel(val limit: BigDecimal, val amountState: AmountState)
+
+    companion object {
+        @JvmStatic
+        fun provideTestModels() = listOf(
+            NoSumLimitErrorModel(limit = BigDecimal("10"), amountState = amountData(cryptoAmount = BigDecimal("5"))),
+            NoSumLimitErrorModel(limit = BigDecimal("10"), amountState = AmountState.Empty),
+            NoSumLimitErrorModel(limit = BigDecimal("5"), amountState = amountData(cryptoAmount = BigDecimal("6"))),
+        )
     }
 }
