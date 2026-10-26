@@ -44,7 +44,7 @@ internal class YieldSupplyNotificationsComponent(
                     modifier = Modifier.conditional(index == 0) {
                         Modifier.padding(top = 16.dp)
                     },
-                    containerColor = TangemTheme.colors.background.action,
+                    containerColor = TangemTheme.colors3.bg.secondary,
                 )
             }
         }

@@ -190,7 +190,7 @@ private fun ModalAmountTextFieldPreview() {
                 decimals = 6,
                 onValueChange = { text = it },
                 textStyle = TangemTheme.typography.h2.copy(
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     textAlign = TextAlign.Center,
                 ),
                 isAutoResize = true,

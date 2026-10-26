@@ -86,6 +86,7 @@ sealed class MoneyAccountStatusValue {
             @SerialName("crypto_currency") override val cryptoCurrency: CryptoCurrency.Token,
             @SerialName("balance") override val balance: Balance?,
             @SerialName("customer_id") override val customerId: String,
+            @SerialName("product_instance_id") val productInstanceId: String,
             @SerialName("is_bank_offramp_available") val isBankOfframpAvailable: Boolean? = null,
         ) : Account()
 

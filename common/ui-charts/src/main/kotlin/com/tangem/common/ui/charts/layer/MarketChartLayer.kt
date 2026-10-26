@@ -154,7 +154,7 @@ private fun LayerChartPreview(
 
     TangemThemePreview {
         Column(
-            modifier = Modifier.background(TangemTheme.colors.background.primary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
             verticalArrangement = Arrangement.spacedBy(48.dp),
         ) {
             CartesianChartHost(

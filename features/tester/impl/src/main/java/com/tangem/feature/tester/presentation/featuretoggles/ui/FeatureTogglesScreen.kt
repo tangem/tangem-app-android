@@ -50,14 +50,14 @@ internal fun FeatureTogglesScreen(state: FeatureTogglesScreenUM) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.secondary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = RESTART_BUTTON_OVERLAY_HEIGHT),
         ) {
             stickyHeader {
-                Column(modifier = Modifier.background(TangemTheme.colors.background.secondary)) {
+                Column(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
                     TopBarWithRefresh(state = state.topBar)
                     TangemSearch(
                         state = state.searchBar,
@@ -116,7 +116,7 @@ private fun LazyListScope.emptySearch(featureToggleGroups: List<FeatureToggleGro
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.body2,
             )
         }
@@ -130,7 +130,7 @@ private fun RestartButton(onRestartAppClick: () -> Unit, modifier: Modifier = Mo
         onClick = onRestartAppClick,
         modifier = modifier
             .fillMaxWidth()
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(16.dp),
     )
 }
@@ -173,7 +173,7 @@ private fun GroupHeader(title: String) {
                 horizontal = 18.dp,
                 vertical = 8.dp,
             ),
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         style = TangemTheme.typography.h3,
     )
 }
@@ -193,7 +193,7 @@ private fun FeatureToggleItem(toggle: TesterFeatureToggleUM, onCheckedChange: (B
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = toggle.name,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
                 style = TangemTheme.typography.body2,
@@ -204,7 +204,7 @@ private fun FeatureToggleItem(toggle: TesterFeatureToggleUM, onCheckedChange: (B
             ) {
                 Text(
                     text = toggle.version,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                     style = TangemTheme.typography.caption2,
@@ -212,7 +212,7 @@ private fun FeatureToggleItem(toggle: TesterFeatureToggleUM, onCheckedChange: (B
                 if (toggle.status == TesterFeatureToggleUM.Status.RELEASED && !toggle.isEnabled) {
                     Text(
                         text = "Disabled",
-                        color = TangemTheme.colors.text.warning,
+                        color = TangemTheme.colors3.text.accent.red,
                         maxLines = 1,
                         style = TangemTheme.typography.caption2,
                     )

@@ -48,8 +48,8 @@ fun TangemPullToRefreshContainer(
                 modifier = indicatorModifier.align(Alignment.TopCenter),
                 isRefreshing = config.isRefreshing,
                 state = state,
-                containerColor = TangemTheme.colors.background.tertiary,
-                color = TangemTheme.colors.text.primary1,
+                containerColor = TangemTheme.colors3.bg.primary,
+                color = TangemTheme.colors3.text.primary,
             )
         },
     ) {
@@ -114,7 +114,7 @@ fun TangemPullToRefreshSlidingContainer(
                         // Indeterminate spinner while refreshing
                         CircularProgressIndicator(
                             modifier = Modifier.size(indicatorSize),
-                            color = TangemTheme.colors2.graphic.neutral.primary,
+                            color = TangemTheme.colors3.icon.primary,
                             strokeWidth = 2.dp,
                         )
                     } else {
@@ -122,7 +122,7 @@ fun TangemPullToRefreshSlidingContainer(
                         CircularProgressIndicator(
                             progress = { state.distanceFraction.coerceAtLeast(0f).coerceIn(0f, 1f) },
                             modifier = Modifier.size(indicatorSize),
-                            color = TangemTheme.colors2.graphic.neutral.primary,
+                            color = TangemTheme.colors3.icon.primary,
                             trackColor = Color.Transparent,
                             strokeWidth = 2.dp,
                         )
@@ -177,7 +177,7 @@ private fun TangemPullToRefreshContainer_Preview() {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(TangemTheme.colors.background.secondary),
+                    .background(TangemTheme.colors3.bg.primary),
             )
         }
     }
@@ -197,7 +197,7 @@ private fun TangemPullToRefreshSlidingContainer_Preview() {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(TangemTheme.colors2.surface.level1),
+                    .background(TangemTheme.colors3.bg.primary),
             )
         }
     }
