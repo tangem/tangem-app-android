@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay
 
 import androidx.annotation.VisibleForTesting
+import com.tangem.utils.withCacheBypass
 
 object TangemPayConstants {
 
@@ -10,7 +11,7 @@ object TangemPayConstants {
     @VisibleForTesting
     const val TERMS_AND_LIMITS_URL = "https://tangem.com/docs/en/tangem-visa-tariffs.pdf"
 
-    fun privacyPolicyLink(): String = "$PRIVACY_POLICY_URL?t=${System.currentTimeMillis()}"
+    fun privacyPolicyLink(): String = PRIVACY_POLICY_URL.withCacheBypass()
 
-    fun termsAndLimitsLink(): String = "$TERMS_AND_LIMITS_URL?t=${System.currentTimeMillis()}"
+    fun termsAndLimitsLink(): String = TERMS_AND_LIMITS_URL.withCacheBypass()
 }

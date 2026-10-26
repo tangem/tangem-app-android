@@ -1,6 +1,9 @@
 package com.tangem.screens
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasAnyDescendant as withAnyDescendant
 import com.tangem.common.BaseTestCase
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R
@@ -52,6 +55,17 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    fun swapModeMenuRow(title: String): KNode = child {
+        addSemanticsMatcher(SemanticsMatcher.keyIsDefined(SemanticsProperties.Selected))
+        hasAnyDescendant(withText(title))
+        useUnmergedTree = true
+    }
+
+    val providerIcon: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.PROVIDER_ICON)
+        useUnmergedTree = true
+    }
+
     val textInput: KNode = child {
         hasParent(withTestTag(SwapTokenScreenTestTags.SWAP_TEXT_FIELD))
         useUnmergedTree = true
@@ -75,6 +89,11 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
 
     val feeAmount: KNode = child {
         hasParent(withTestTag(FeeSelectorBlockTestTags.FEE_AMOUNT))
+        useUnmergedTree = true
+    }
+
+    val feeLoader: KNode = child {
+        hasTestTag(FeeSelectorBlockTestTags.FEE_LOADING)
         useUnmergedTree = true
     }
 
@@ -104,6 +123,21 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
 
     val simpleProvidersBlock: KNode = child {
         hasTestTag(SwapTokenScreenTestTags.PROVIDERS_BLOCK_SIMPLE)
+        useUnmergedTree = true
+    }
+
+    val providerNameText: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.PROVIDER_NAME)
+        useUnmergedTree = true
+    }
+
+    val providerTypeText: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.PROVIDER_TYPE)
+        useUnmergedTree = true
+    }
+
+    val providerRateText: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.PROVIDER_RATE)
         useUnmergedTree = true
     }
 
@@ -199,6 +233,13 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasText(getResourceString(R.string.common_swap))
     }
 
+    // Disabled buttons don't merge their label into BASE_BUTTON, so match through the label.
+    val swapButtonWithLabel: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(R.string.common_swap)))
+        useUnmergedTree = true
+    }
+
     val transferButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.swapping_transfer_action))
@@ -265,8 +306,46 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    val slippageRow: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.SLIPPAGE_ROW)
+    }
+
+    val slippageValue: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.SLIPPAGE_VALUE)
+        useUnmergedTree = true
+    }
+
     val swapFiatAmount: KNode = child {
         hasTestTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT)
+        useUnmergedTree = true
+    }
+
+    val sendFiatAmount: KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.SWAP_CARD))
+        hasTestTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT)
+        useUnmergedTree = true
+    }
+
+    // Until a receive token is chosen, the receive card renders the send card's tags with placeholder zeros.
+    val emptyReceiveAmount: KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD))
+        hasTestTag(SwapTokenScreenTestTags.SWAP_TEXT_FIELD)
+        useUnmergedTree = true
+    }
+
+    val emptyReceiveFiatAmount: KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD))
+        hasTestTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT)
+        useUnmergedTree = true
+    }
+
+    // Add funds renders both cards read-only, so the source card is told apart by its 'You send' header.
+    val sourceSelectTokenIcon: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.SELECT_TOKEN_ICON)
+        hasAnyAncestor(
+            withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD) and
+                withAnyDescendant(withText(getResourceString(R.string.swapping_from_title_v2), substring = true)),
+        )
         useUnmergedTree = true
     }
 

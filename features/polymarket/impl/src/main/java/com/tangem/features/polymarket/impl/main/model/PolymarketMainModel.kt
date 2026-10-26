@@ -11,29 +11,28 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchAction
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
-import com.tangem.domain.polymarket.model.PolymarketPositionsTab
-import com.tangem.domain.polymarket.model.PolymarketPosition
-import com.tangem.features.polymarket.impl.positionresult.model.canOpenPositionResult
-import com.tangem.features.polymarket.impl.positiondetails.model.canOpenPositionDetails
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.features.polymarket.impl.common.funding.PredictionFundingRequisites
 import com.tangem.features.polymarket.impl.common.funding.RequisitesState
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
+import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveConfigFactory
+import com.tangem.features.polymarket.impl.main.addfunds.dismissIfShown
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketCategoryTabUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PredictionBalanceUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
@@ -46,15 +45,21 @@ import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.flow.PredictionPositionsValueFetcher
+import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
+import com.tangem.domain.polymarket.model.PredictionPositionsValue
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -66,6 +71,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -85,9 +91,12 @@ internal class PolymarketMainModel @Inject constructor(
     private val refreshPredictionDepositRequisitesInteractor: RefreshPredictionDepositRequisitesInteractor,
     private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
-    private val positionsPreviewLoader: PolymarketPositionsPreviewLoader,
+    private val predictionPositionsValueSupplier: PredictionPositionsValueSupplier,
+    private val predictionPositionsValueFetcher: PredictionPositionsValueFetcher,
     private val predictionBalancePoller: PredictionBalancePoller,
     private val predictionFundingWindow: PredictionFundingWindow,
+    private val observePolymarketCredentialsPresenceUseCase: ObservePolymarketCredentialsPresenceUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
 ) : Model(), PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PolymarketMainParams>()
@@ -115,9 +124,9 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val refreshJobHolder = JobHolder()
 
-    val addFundsNavigation = SlotNavigation<Unit>()
+    val blocksRefresh = PolymarketMainBlocksRefresh()
 
-    val receiveNavigation = SlotNavigation<TokenReceiveConfig>()
+    val fundingSheetNavigation = SlotNavigation<PolymarketFundingSheetConfig>()
 
     val uiState: StateFlow<PolymarketMainUM>
         field = MutableStateFlow(
@@ -125,6 +134,7 @@ internal class PolymarketMainModel @Inject constructor(
                 balance = balanceConverter.convert(
                     PredictionBalanceUMConverter.Input(
                         status = PredictionAccountStatusValue.Loading,
+                        positions = PredictionPositionsValue.Unknown,
                         requisites = RequisitesState.Loading,
                         isTradingAllowed = false,
                         mode = PredictionBalanceMode.AVAILABLE,
@@ -133,8 +143,6 @@ internal class PolymarketMainModel @Inject constructor(
                 categories = persistentListOf(),
                 content = PolymarketMainUM.ContentUM.Loading,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }),
-                onActivePositionsClick = { openPositions(PolymarketPositionsTab.ACTIVE) },
-                onFinishedPositionsClick = { openPositions(PolymarketPositionsTab.FINISHED) },
             ),
         )
 
@@ -150,15 +158,17 @@ internal class PolymarketMainModel @Inject constructor(
     init {
         combine(
             flow = predictionAccountStatusSupplier(userWalletId = params.userWalletId),
-            flow2 = fundingRequisites.state,
-            flow3 = tradingAllowance.isAllowed,
-            flow4 = balanceMode,
-            transform = { status, requisites, isTradingAllowed, mode ->
+            flow2 = predictionPositionsValueSupplier(userWalletId = params.userWalletId),
+            flow3 = fundingRequisites.state,
+            flow4 = tradingAllowance.isAllowed,
+            flow5 = balanceMode,
+            transform = { status, positions, requisites, isTradingAllowed, mode ->
                 activeStatus.value = status as? PredictionAccountStatusValue.Active
 
                 balanceConverter.convert(
                     PredictionBalanceUMConverter.Input(
                         status = status,
+                        positions = positions,
                         requisites = requisites,
                         isTradingAllowed = isTradingAllowed,
                         mode = mode,
@@ -181,8 +191,10 @@ internal class PolymarketMainModel @Inject constructor(
             .onEach { fundingRequisites.prefetchOnce() }
             .launchIn(modelScope)
 
-        positionsPreviewLoader.state
-            .onEach { positions -> uiState.update { it.copy(positions = positions) } }
+        observePolymarketCredentialsPresenceUseCase(userWalletId = params.userWalletId)
+            .filter { hasCredentials -> !hasCredentials }
+            .take(count = 1)
+            .onEach { returnToGate() }
             .launchIn(modelScope)
     }
 
@@ -217,16 +229,18 @@ internal class PolymarketMainModel @Inject constructor(
         router.push(PolymarketRoute.History(userWalletId = params.userWalletId))
     }
 
-    private fun openPositions(tab: PolymarketPositionsTab) {
-        router.push(PolymarketRoute.Positions(userWalletId = params.userWalletId, initialTab = tab))
-    }
-
-    private fun openPosition(position: PolymarketPosition.Open) {
-        when {
-            position.canOpenPositionResult -> router.push(PolymarketRoute.PositionResult(params.userWalletId, position))
-            position.canOpenPositionDetails -> router.push(
-                PolymarketRoute.PositionDetails(params.userWalletId, position.id),
-            )
+    fun onSupportChatClick() {
+        modelScope.launch {
+            getWalletMetaInfoUseCase(params.userWalletId)
+                .onRight { metaInfo ->
+                    router.push(
+                        AppRoute.Usedesk(
+                            walletMetaInfo = metaInfo,
+                            source = AnalyticsParam.ScreensSources.Predictions,
+                        ),
+                    )
+                }
+                .onLeft { TangemLogger.e("Failed to open the support chat from Predictions", it) }
         }
     }
 
@@ -262,7 +276,6 @@ internal class PolymarketMainModel @Inject constructor(
 
     fun onResume() {
         isScreenResumed = true
-        positionsPreviewLoader.resume(modelScope, params.userWalletId, ::openPosition)
         activeFeed.value?.poller?.resume()
         fundingRequisites.retryIfFailed()
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
@@ -270,21 +283,26 @@ internal class PolymarketMainModel @Inject constructor(
             .saveIn(balancePollJobHolder)
     }
 
+    private fun returnToGate() {
+        TangemLogger.i("Main: no credentials to sign with, returning to the gate")
+        router.replaceAll(PolymarketRoute.Onboarding(userWalletId = params.userWalletId))
+    }
+
     fun onPause() {
         isScreenResumed = false
-        positionsPreviewLoader.pause()
         activeFeed.value?.poller?.pause()
         balancePollJobHolder.cancel()
     }
 
     private fun loadCategories() {
+        uiState.update { it.copy(isCategoriesLoading = true) }
         modelScope.launch {
             val result = withContext(dispatchers.default) { getPolymarketCategoriesUseCase() }
             val loadedCategories = result.getOrNull().orEmpty()
 
             categories = loadedCategories
             selectedCategoryId = loadedCategories.firstOrNull()?.id
-            uiState.update { it.copy(categories = buildTabs()) }
+            uiState.update { it.copy(categories = buildTabs(), isCategoriesLoading = false) }
 
             selectFeed(categoryId = selectedCategoryId, reloadVisited = true)
         }.saveIn(categoriesJob)
@@ -334,6 +352,7 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun reload() {
+        uiState.update { it.copy(content = PolymarketMainUM.ContentUM.Loading) }
         if (categories.isEmpty()) loadCategories() else activeFeed.value?.let(::reloadEvents)
     }
 
@@ -379,24 +398,34 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun onRefresh() {
+        if (uiState.value.pullToRefreshConfig.isRefreshing) return
         setRefreshing(isRefreshing = true)
 
         modelScope.launch {
-            listOf(
-                async { tradingAllowance.refresh() },
-                async {
-                    predictionAccountStatusFetcher(
-                        PredictionAccountStatusFetcher.Params(
-                            userWalletId = params.userWalletId,
-                            mode = PredictionAccountStatusFetcher.Mode.FULL,
-                        ),
-                    )
-                },
-            ).awaitAll()
-            fundingRequisites.refresh()
-
+            runSuspendCatching {
+                coroutineScope {
+                    listOf(
+                        async { tradingAllowance.refresh() },
+                        async { blocksRefresh.refreshAll() },
+                        async {
+                            predictionAccountStatusFetcher(
+                                PredictionAccountStatusFetcher.Params(userWalletId = params.userWalletId),
+                            )
+                        },
+                        async {
+                            predictionPositionsValueFetcher(
+                                PredictionPositionsValueFetcher.Params(userWalletId = params.userWalletId),
+                            )
+                        },
+                    ).awaitAll()
+                }
+                fundingRequisites.refresh()
+            }.onFailure { error ->
+                TangemLogger.e("Failed to refresh Polymarket main screen", error)
+            }
+        }.saveIn(refreshJobHolder).invokeOnCompletion {
             setRefreshing(isRefreshing = false)
-        }.saveIn(refreshJobHolder)
+        }
     }
 
     private fun setRefreshing(isRefreshing: Boolean) {
@@ -422,7 +451,7 @@ internal class PolymarketMainModel @Inject constructor(
     private fun openAddFunds() {
         if (activeStatus.value?.cryptoCurrencyStatus == null) return reportUnconfirmedAddress()
 
-        addFundsNavigation.activate(Unit)
+        fundingSheetNavigation.activate(PolymarketFundingSheetConfig.AddFunds)
     }
 
     private fun onWithdrawClick() {
@@ -444,7 +473,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     override fun onSwapClick() {
         val collateral = activeStatus.value?.cryptoCurrencyStatus?.currency ?: return
-        addFundsNavigation.dismiss()
+        fundingSheetNavigation.dismiss()
         router.push(
             AppRoute.Swap(
                 userWalletId = params.userWalletId,
@@ -459,22 +488,24 @@ internal class PolymarketMainModel @Inject constructor(
     override fun onReceiveClick() {
         val collateral = activeStatus.value?.cryptoCurrencyStatus?.currency ?: return
         val target = fundingRequisites.target ?: return
-        receiveNavigation.activate(
-            PolymarketReceiveConfigFactory.create(
-                cryptoCurrency = collateral,
-                userWalletId = params.userWalletId,
-                target = target,
+        fundingSheetNavigation.activate(
+            PolymarketFundingSheetConfig.Receive(
+                config = PolymarketReceiveConfigFactory.create(
+                    cryptoCurrency = collateral,
+                    userWalletId = params.userWalletId,
+                    target = target,
+                ),
             ),
         )
     }
 
     override fun onDismissAddFunds() {
-        addFundsNavigation.dismiss()
+        fundingSheetNavigation.dismissIfShown(PolymarketFundingSheetConfig.AddFunds)
     }
 
     private fun onOutcomeClick(eventId: String, marketId: String, assetId: String) {
         router.push(
-            PolymarketRoute.EventDetails(
+            PolymarketRoute.PlacePrediction(
                 eventId = eventId,
                 userWalletId = params.userWalletId,
                 marketId = marketId,

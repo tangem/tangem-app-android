@@ -26,6 +26,7 @@ import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
@@ -63,7 +64,9 @@ internal class YieldSupplyModelTest {
     private val activateUseCase: YieldSupplyActivateUseCase = mockk()
     private val deactivateUseCase: YieldSupplyDeactivateUseCase = mockk()
     private val enterStatusUseCase: YieldSupplyEnterStatusUseCase = mockk()
+    private val yieldSupplyRepository: YieldSupplyRepository = mockk(relaxed = true)
     private val enterStatusFlowUseCase: YieldSupplyEnterStatusFlowUseCase = mockk()
+    private val pendingTracker: YieldSupplyPendingTracker = mockk()
     private val minAmountUseCase: YieldSupplyMinAmountUseCase = mockk()
     private val getDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase = mockk()
     private val isBoostPromoEnabledUseCase: IsYieldBoostPromoEnabledForTokenUseCase = mockk()
@@ -92,6 +95,8 @@ internal class YieldSupplyModelTest {
         coEvery { deactivateUseCase(any(), any()) } returns true.right()
         coEvery { minAmountUseCase(any(), any()) } returns BigDecimal("5").right()
         every { getDustMinAmountUseCase(any(), any(), any()) } returns BigDecimal("0.1")
+        every { yieldSupplyRepository.getTokenProtocolPendingStatus(any(), any()) } returns null
+        every { pendingTracker.hasPendingDeposit(any(), any()) } returns false
         stubStatus(status(isActive = false).some())
     }
 
@@ -459,6 +464,53 @@ internal class YieldSupplyModelTest {
     }
 
     @Test
+    fun `GIVEN pending yield operation WHEN status emitted THEN protocol status not sent`() = runTest {
+        // Arrange
+        stubStatus(status(isActive = true, effectiveProtocolBalance = BigDecimal.TEN).some())
+        every {
+            yieldSupplyRepository.getTokenProtocolPendingStatus(any(), any())
+        } returns YieldSupplyPendingStatus.Enter(txIds = listOf("0xenter"))
+
+        // Act
+        createModel()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { activateUseCase(any(), any(), any()) }
+        coVerify(exactly = 0) { deactivateUseCase(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN deposit settling after pending marker cleared WHEN active status emitted THEN not activated`() =
+        runTest {
+            // Arrange
+            stubStatus(status(isActive = true, effectiveProtocolBalance = BigDecimal.TEN).some())
+            every { pendingTracker.hasPendingDeposit(userWalletId, token.id) } returns true
+
+            // Act
+            createModel()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { activateUseCase(any(), any(), any()) }
+            coVerify(exactly = 0) { deactivateUseCase(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN cached status WHEN status emitted THEN protocol status not sent`() = runTest {
+        // Arrange
+        stubStatus(status(isActive = true, networkSource = StatusSource.CACHE).some())
+
+        // Act
+        createModel()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { activateUseCase(any(), any(), any()) }
+        coVerify(exactly = 0) { deactivateUseCase(any(), any()) }
+    }
+
+    @Test
     fun `GIVEN missing network address WHEN status emitted THEN protocol status not sent`() = runTest {
         // Arrange — a Loading value carries no network address, so the side-effect must short-circuit
         stubStatus(CryptoCurrencyStatus(currency = token, value = CryptoCurrencyStatus.Loading).some())
@@ -560,7 +612,9 @@ internal class YieldSupplyModelTest {
         yieldSupplyActivateUseCase = activateUseCase,
         yieldSupplyDeactivateUseCase = deactivateUseCase,
         yieldSupplyEnterStatusUseCase = enterStatusUseCase,
+        yieldSupplyRepository = yieldSupplyRepository,
         yieldSupplyEnterStatusFlowUseCase = enterStatusFlowUseCase,
+        yieldSupplyPendingTracker = pendingTracker,
         yieldSupplyMinAmountUseCase = minAmountUseCase,
         yieldSupplyGetDustMinAmountUseCase = getDustMinAmountUseCase,
         isYieldBoostPromoEnabledForTokenUseCase = isBoostPromoEnabledUseCase,
@@ -595,7 +649,6 @@ internal class YieldSupplyModelTest {
             fiatAmount = amount,
             fiatRate = fiatRate,
             priceChange = BigDecimal.ZERO,
-            stakingBalance = null,
             yieldSupplyStatus = YieldSupplyStatus(
                 isActive = isActive,
                 isInitialized = true,

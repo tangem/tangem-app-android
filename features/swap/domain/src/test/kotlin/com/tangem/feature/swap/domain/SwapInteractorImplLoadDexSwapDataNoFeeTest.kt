@@ -2,6 +2,7 @@ package com.tangem.feature.swap.domain
 
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.blockchains.ethereum.tokenmethods.TransferERC20TokenCallData
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.tokens.model.FeePaidCurrency
@@ -14,6 +15,7 @@ import com.tangem.feature.swap.domain.models.domain.SwapBalanceStatus
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.domain.models.ui.SwapState
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -21,6 +23,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -265,6 +268,163 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
 
     // endregion
 
+    // region MCP intent
+
+    @Test
+    fun `GIVEN intent WHEN findBestQuote with DEX provider THEN exchange data is requested for the intent`() = runTest {
+        // Arrange
+        val dexProvider = stubDexQuoteAndExchangeData()
+
+        // Act
+        invokeFindBestQuote(dexProvider, intentId = INTENT_ID)
+
+        // Assert
+        verifyExchangeDataRequestedForIntent(INTENT_ID)
+    }
+
+    @Test
+    fun `GIVEN no intent WHEN findBestQuote with DEX provider THEN exchange data is requested without an intent`() =
+        runTest {
+            // Arrange
+            val dexProvider = stubDexQuoteAndExchangeData()
+
+            // Act
+            invokeFindBestQuote(dexProvider)
+
+            // Assert
+            verifyExchangeDataRequestedForIntent(null)
+        }
+
+    private fun verifyExchangeDataRequestedForIntent(intentId: String?) {
+        coVerify(exactly = 1) {
+            repository.getExchangeData(
+                userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                toContractAddress = any(), fromAddress = any(), toNetwork = any(),
+                fromAmount = any(), fromDecimals = any(), toDecimals = any(),
+                providerId = any(), rateType = any(), toAddress = any(),
+                expressOperationType = any(), refundAddress = any(), intentId = intentId,
+            )
+        }
+    }
+
+    // endregion
+
+    // region yield swap registry gate
+
+    @Test
+    fun `GIVEN router quote AND transfer payload WHEN findBestQuote THEN provider kept without a registry check`() =
+        runTest {
+            // Arrange
+            stubYieldSwapWithTransferDetection()
+            val dexProvider = stubDexQuoteAndExchangeData(
+                quoteAllowanceContract = "0xRouterQuotedOnly",
+                txTo = YIELD_TOKEN,
+                txData = TRANSFER_TX_DATA,
+                dataAllowanceContract = null,
+            )
+
+            // Act
+            val result = invokeFindBestQuote(dexProvider, yieldSupplyActive = true)
+
+            // Assert
+            assertThat(result[dexProvider]).isInstanceOf(SwapState.QuotesLoadedState::class.java)
+            coVerify(exactly = 0) { walletManagersFacade.isSwapSpenderAllowed(any(), any(), any()) }
+            coVerify(exactly = 0) { walletManagersFacade.isSwapTargetAllowed(any(), any(), any()) }
+        }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN router swap payload WHEN findBestQuote THEN provider kept only if registry allows spender and target`(
+        model: RegistryGateModel,
+    ) = runTest {
+        // Arrange
+        stubYieldSwapWithTransferDetection()
+        coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), model.router) } returns model.isSpenderAllowed
+        coEvery { walletManagersFacade.isSwapTargetAllowed(any(), any(), model.router) } returns model.isTargetAllowed
+        val dexProvider = stubDexQuoteAndExchangeData(
+            quoteAllowanceContract = model.quoteAllowanceContract,
+            txTo = model.router,
+            txData = SWAP_TX_DATA,
+            dataAllowanceContract = model.router,
+        )
+
+        // Act
+        val result = invokeFindBestQuote(dexProvider, yieldSupplyActive = true)
+
+        // Assert
+        assertThat(result.containsKey(dexProvider)).isEqualTo(model.isProviderKept)
+    }
+
+    @Test
+    fun `GIVEN toggle off AND router quote outside registry WHEN findBestQuote THEN skipped before exchange data`() =
+        runTest {
+            // Arrange
+            coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns YIELD_PROXY
+            every { swapFeatureToggles.isYieldDexTransferEnabled } returns false
+            coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), any()) } returns false
+            val dexProvider = stubDexQuoteAndExchangeData(
+                quoteAllowanceContract = "0xUnregisteredRouter",
+                txTo = YIELD_TOKEN,
+                txData = TRANSFER_TX_DATA,
+                dataAllowanceContract = null,
+            )
+
+            // Act
+            val result = invokeFindBestQuote(dexProvider, yieldSupplyActive = true)
+
+            // Assert
+            assertThat(result).doesNotContainKey(dexProvider)
+            coVerify(exactly = 0) {
+                repository.getExchangeData(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), fromAddress = any(), toNetwork = any(),
+                    fromAmount = any(), fromDecimals = any(), toDecimals = any(),
+                    providerId = any(), rateType = any(), toAddress = any(),
+                    expressOperationType = any(), refundAddress = any(), intentId = any(),
+                )
+            }
+        }
+
+    data class RegistryGateModel(
+        val router: String,
+        val quoteAllowanceContract: String?,
+        val isSpenderAllowed: Boolean,
+        val isTargetAllowed: Boolean,
+        val isProviderKept: Boolean,
+    )
+
+    // Each case uses its own router: the interactor caches allowed addresses for the session.
+    private fun provideTestModels() = listOf(
+        RegistryGateModel(
+            router = "0xRouterAllowed",
+            quoteAllowanceContract = "0xRouterAllowed",
+            isSpenderAllowed = true,
+            isTargetAllowed = true,
+            isProviderKept = true,
+        ),
+        RegistryGateModel(
+            router = "0xRouterTargetDenied",
+            quoteAllowanceContract = "0xRouterTargetDenied",
+            isSpenderAllowed = true,
+            isTargetAllowed = false,
+            isProviderKept = false,
+        ),
+        RegistryGateModel(
+            router = "0xRouterUnquoted",
+            quoteAllowanceContract = null,
+            isSpenderAllowed = false,
+            isTargetAllowed = false,
+            isProviderKept = false,
+        ),
+    )
+
+    private fun stubYieldSwapWithTransferDetection() {
+        coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns YIELD_PROXY
+        every { swapFeatureToggles.isYieldDexTransferEnabled } returns true
+    }
+
+    // endregion
+
     private fun stubAllowance(info: AllowanceInfo) {
         coEvery {
             getAllowanceInfoUseCase.invoke(
@@ -283,9 +443,14 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
         return result[dexProvider] as SwapState.QuotesLoadedState
     }
 
-    private fun stubDexQuoteAndExchangeData(): com.tangem.feature.swap.domain.models.domain.SwapProvider {
+    private fun stubDexQuoteAndExchangeData(
+        quoteAllowanceContract: String? = SPENDER,
+        txTo: String = "0xToAddress",
+        txData: String = "0xdata",
+        dataAllowanceContract: String? = SPENDER,
+    ): com.tangem.feature.swap.domain.models.domain.SwapProvider {
         val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
-        val quoteModel = buildQuoteModel(allowanceContract = SPENDER)
+        val quoteModel = buildQuoteModel(allowanceContract = quoteAllowanceContract)
         val swapDataModel = SwapDataModel(
             toTokenAmount = SwapAmount(BigDecimal("0.5"), 18),
             transaction = ExpressTransactionModel.DEX(
@@ -293,13 +458,13 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
                 toAmount = SwapAmount(BigDecimal("0.5"), 18),
                 txValue = "1000000000000000000",
                 txId = "tx-id",
-                txTo = "0xToAddress",
+                txTo = txTo,
                 txExtraId = null,
                 txFrom = "0xFromAddress",
-                txData = "0xdata",
+                txData = txData,
                 otherNativeFeeWei = null,
                 gas = BigInteger.valueOf(21_000L),
-                allowanceContract = SPENDER,
+                allowanceContract = dataAllowanceContract,
             ),
         )
         coEvery {
@@ -316,7 +481,7 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
                 toContractAddress = any(), fromAddress = any(), toNetwork = any(),
                 fromAmount = any(), fromDecimals = any(), toDecimals = any(),
                 providerId = dexProvider.providerId, rateType = any(), toAddress = any(),
-                expressOperationType = any(), refundAddress = any(),
+                expressOperationType = any(), refundAddress = any(), intentId = any(),
             )
         } returns swapDataModel.right()
         return dexProvider
@@ -325,11 +490,12 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
     private suspend fun invokeFindBestQuote(
         dexProvider: com.tangem.feature.swap.domain.models.domain.SwapProvider,
         yieldSupplyActive: Boolean = false,
+        intentId: String? = null,
     ) = sut.findBestQuote(
         fromSwapCurrencyStatus = buildSwapCurrencyStatus(
             networkRawId = ethNetwork,
             isCoin = false,
-            contractAddress = "0xToken",
+            contractAddress = YIELD_TOKEN,
             amount = BigDecimal("10"),
             yieldSupplyActive = yieldSupplyActive,
         ),
@@ -337,11 +503,21 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
         providers = listOf(dexProvider),
         amountToSwap = "1.0",
         reduceBalanceBy = BigDecimal.ZERO,
+        intentId = intentId,
     )
 
     private companion object {
         const val SPENDER = "0xSpender"
         const val YIELD_PROXY = "0xYieldProxy"
         const val WALLET_ADDRESS = "0xTestAddress"
+        const val INTENT_ID = "intent-id"
+        const val YIELD_TOKEN = "0xToken"
+        const val WORD_HEX_LENGTH = 64
+
+        private val RECIPIENT_WORD = "742d35cc6634c0532925a3b844bc454e4438f44e".padStart(WORD_HEX_LENGTH, '0')
+        private val AMOUNT_WORD = BigInteger.valueOf(1_000_000L).toString(16).padStart(WORD_HEX_LENGTH, '0')
+
+        val TRANSFER_TX_DATA = TransferERC20TokenCallData.METHOD_ID + RECIPIENT_WORD + AMOUNT_WORD
+        val SWAP_TX_DATA = "0x12aa3caf$RECIPIENT_WORD$AMOUNT_WORD"
     }
 }

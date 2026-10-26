@@ -34,7 +34,11 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import com.tangem.test.core.ProvideTestModels
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -44,17 +48,17 @@ internal class StakingModelInitTest : StakingModelTestBase() {
     fun `GIVEN currency status emitted WHEN model created THEN analytics sent and fee status fetched`() = runTest {
         val (testCryptoCurrencyStatus, testAccountCurrencyStatus) = createMockedAccountCurrencyStatus()
         every { testCryptoCurrencyStatus.value } returns mockk {
-            // The staking accessor reads contributions first; empty is the toggle-off shape under test here.
-            every { contributions } returns emptyList()
-            every { stakingBalance } returns mockk<StakingBalance.Data.StakeKit> {
-                every { balance } returns YieldBalanceItem(
-                    items = listOf(
-                        mockk { every { validatorAddress } returns "address1" },
-                        mockk { every { validatorAddress } returns "address2" },
-                    ),
-                    integrationId = "test"
-                )
-            }
+            every { contributions } returns listOf(
+                mockk<StakingBalance.Data.StakeKit> {
+                    every { balance } returns YieldBalanceItem(
+                        items = listOf(
+                            mockk { every { validatorAddress } returns "address1" },
+                            mockk { every { validatorAddress } returns "address2" },
+                        ),
+                        integrationId = "test",
+                    )
+                },
+            )
         }
         every {
             getAccountCurrencyStatusUseCase(testUserWalletId, testCryptoCurrency)
@@ -87,48 +91,6 @@ internal class StakingModelInitTest : StakingModelTestBase() {
 
         model.onDestroy()
     }
-
-    @Test
-    fun `GIVEN the staking balance arrives as a contribution WHEN model created THEN validators are still counted`() =
-        runTest {
-            // Arrange — toggle-on shape: the typed field is null and the balance is in `contributions`
-            val (testCryptoCurrencyStatus, testAccountCurrencyStatus) = createMockedAccountCurrencyStatus()
-            val stakeKit = mockk<StakingBalance.Data.StakeKit> {
-                every { balance } returns YieldBalanceItem(
-                    items = listOf(
-                        mockk { every { validatorAddress } returns "address1" },
-                        mockk { every { validatorAddress } returns "address2" },
-                    ),
-                    integrationId = "test",
-                )
-            }
-            every { testCryptoCurrencyStatus.value } returns mockk {
-                every { contributions } returns listOf(stakeKit)
-                every { stakingBalance } returns null
-            }
-            every {
-                getAccountCurrencyStatusUseCase(testUserWalletId, testCryptoCurrency)
-            } returns flowOf(testAccountCurrencyStatus)
-            coEvery {
-                getFeePaidCryptoCurrencyStatusSyncUseCase(testUserWalletId, testCryptoCurrencyStatus)
-            } returns Either.Right(mockk(relaxed = true))
-            coEvery {
-                getMinimumTransactionAmountSyncUseCase(testUserWalletId, testCryptoCurrencyStatus)
-            } returns Either.Left(mockk())
-
-            // Act
-            val model = createModel(testScope = this)
-            advanceUntilIdle()
-
-            // Assert — a reader stuck on the typed field would report zero validators
-            verify {
-                analyticsEventHandler.send(
-                    StakingAnalyticsEvent.StakingInfoScreenOpened(validatorsCount = 2),
-                )
-            }
-
-            model.onDestroy()
-        }
 
     @Test
     fun `GIVEN currency status emitted twice WHEN model created THEN analytics sent only once`() = runTest {
@@ -492,6 +454,60 @@ internal class StakingModelInitTest : StakingModelTestBase() {
             }
         }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class RefreshedStatusBeforeConfirmation {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN step before confirmation WHEN refreshed status emitted THEN notifications recomputed`(
+            model: StepModel,
+        ) = runTest {
+            // Arrange
+            val statusFlow = MutableSharedFlow<AccountCryptoCurrencyStatus>()
+            val uiStateFlow = MutableStateFlow(initialUiState)
+            val (cachedStatus, cachedAccountStatus) = createMockedAccountCurrencyStatus()
+            val (refreshedStatus, refreshedAccountStatus) = createMockedAccountCurrencyStatus()
+            arrangeStatusRefreshOnConfirmation(statusFlow, uiStateFlow, cachedStatus)
+
+            val stakingModel = createModel(testScope = this)
+            statusFlow.emit(cachedAccountStatus)
+            advanceUntilIdle()
+            uiStateFlow.value = createUiStateOnStep(model.step)
+            advanceUntilIdle()
+
+            // Act
+            statusFlow.emit(refreshedAccountStatus)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = model.expectedRecomputations) {
+                getCurrencyCheckUseCase(
+                    userWalletId = any(),
+                    currencyStatus = refreshedStatus,
+                    feeCurrencyStatus = any(),
+                    amount = any(),
+                    fee = any(),
+                    feeCurrencyBalanceAfterTransaction = any(),
+                    recipientAddress = any(),
+                )
+            }
+            coVerify(exactly = 0) { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), refreshedStatus) }
+
+            stakingModel.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            StepModel(step = StakingStep.Amount, expectedRecomputations = 1),
+            StepModel(step = StakingStep.RewardsValidators, expectedRecomputations = 1),
+            StepModel(step = StakingStep.RestakeValidator, expectedRecomputations = 1),
+            StepModel(step = StakingStep.Validators, expectedRecomputations = 1),
+            StepModel(step = StakingStep.Success, expectedRecomputations = 0),
+        )
+    }
+
+    internal data class StepModel(val step: StakingStep, val expectedRecomputations: Int)
+
     private fun arrangeStatusRefreshOnConfirmation(
         statusFlow: MutableSharedFlow<AccountCryptoCurrencyStatus>,
         uiStateFlow: MutableStateFlow<StakingUiState>,
@@ -529,6 +545,10 @@ internal class StakingModelInitTest : StakingModelTestBase() {
         } returns mockk<StakingFeeLoader> {
             coEvery { getFee(any(), any(), any(), any()) } just Runs
         }
+    }
+
+    private fun createUiStateOnStep(step: StakingStep): StakingUiState = mockk(relaxed = true) {
+        every { currentStep } returns step
     }
 
     private fun createConfirmationUiState(confirmationInnerState: InnerConfirmationStakingState): StakingUiState =

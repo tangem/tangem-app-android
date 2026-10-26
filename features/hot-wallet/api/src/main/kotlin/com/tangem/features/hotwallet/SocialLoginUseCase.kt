@@ -1,0 +1,59 @@
+package com.tangem.features.hotwallet
+
+import arrow.core.Either
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.sociallogin.models.SocialLoginError
+import com.tangem.domain.sociallogin.models.SocialLoginProvider
+
+/**
+ * Social login behind one call: sign in, then create a wallet or restore the existing one.
+ *
+ * The backend decides which, not the caller — the same entry point serves both "Create wallet" and
+ * "I have a wallet".
+ */
+interface SocialLoginUseCase {
+
+    /**
+     * @param onStageChanged called on the calling coroutine, never after signIn returns
+     * @param requestBackupRetry asked when a new wallet is bound but its cloud file could not be written: `true`
+     * repeats only the write, `false` releases the binding and drops the wallet
+     * @param requestConsent asked before the backend lookup when the cloud holds no backup of this identity; `null`
+     * aborts the sign-in
+     */
+    suspend fun signIn(
+        provider: SocialLoginProvider,
+        onStageChanged: (SocialLoginStage) -> Unit = {},
+        requestBackupRetry: suspend () -> Boolean = { false },
+        requestConsent: suspend () -> SocialLoginConsent?,
+    ): Either<SocialLoginError, SocialLoginOutcome>
+
+    /** Forgets the picked account, so the next [signIn] shows the chooser again ("switch account") */
+    suspend fun signOut(provider: SocialLoginProvider)
+}
+
+enum class SocialLoginStage {
+
+    /** The provider owns the screen here — its account chooser and grant sheet */
+    SigningIn,
+
+    /** Asking the backend whether this identity already owns a wallet */
+    VerifyingAccount,
+
+    /** The backup is being downloaded and decrypted */
+    PreparingWallet,
+
+    CreatingWallet,
+
+    RestoringWallet,
+}
+
+data class SocialLoginConsent(val isEmailSharingAllowed: Boolean)
+
+sealed interface SocialLoginOutcome {
+
+    val userWalletId: UserWalletId
+
+    data class WalletCreated(override val userWalletId: UserWalletId) : SocialLoginOutcome
+
+    data class WalletRestored(override val userWalletId: UserWalletId) : SocialLoginOutcome
+}

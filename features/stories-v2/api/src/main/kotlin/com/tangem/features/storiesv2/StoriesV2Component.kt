@@ -4,8 +4,9 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 
 /**
- * Full-screen story player. Owns playback, progress, pause, haptics and analytics; performs no network requests and
- * reads no feature flags. Every decision that leaves the player goes back to the host: action taps through
+ * Full-screen story player. Owns playback, progress, pause, haptics and analytics, and reads no feature flags. A remote
+ * story still downloading is waited for on a loading screen, with a retry if the delivery fails unless the host skips
+ * it. Every decision that leaves the player goes back to the host: action taps through
  * [Params.onAction], terminal outcomes through [Params.onResult].
  */
 interface StoriesV2Component : ComposableContentComponent {
@@ -19,12 +20,15 @@ interface StoriesV2Component : ComposableContentComponent {
      *   into [StoriesV2Result.Dismissed].
      * @property onResult invoked exactly once, when the story ends. An action tap alone does not end it — see
      *   [onAction].
+     * @property shouldSkipOnDeliveryFailure whether a failed delivery goes straight to [onResult] with
+     *   [StoriesV2Result.Unavailable] instead of offering a retry
      */
     data class Params(
         val type: StoryV2Type,
         val source: StoryV2Source,
         val onAction: (StoriesV2PendingAction) -> Unit,
         val onResult: (StoriesV2Result) -> Unit,
+        val shouldSkipOnDeliveryFailure: Boolean = false,
     )
 
     interface Factory : ComponentFactory<Params, StoriesV2Component>

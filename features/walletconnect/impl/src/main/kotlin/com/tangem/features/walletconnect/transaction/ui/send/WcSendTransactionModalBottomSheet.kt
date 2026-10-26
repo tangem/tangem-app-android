@@ -29,6 +29,7 @@ import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
@@ -129,6 +130,15 @@ internal fun WcSendTransactionModalBottomSheet(
                             config = state.feeErrorNotification.config,
                             iconTint = TangemTheme.colors.icon.warning,
                             containerColor = TangemTheme.colors.background.action,
+                        )
+                    }
+                    if (state.targetNotification != null) {
+                        Notification(
+                            modifier = Modifier.padding(top = 14.dp),
+                            config = state.targetNotification.config,
+                            titleColor = TangemTheme.colors.text.warning,
+                            iconTint = TangemTheme.colors.icon.warning,
+                            containerColor = TangemColorPalette.Amaranth.copy(alpha = CRITICAL_BACKGROUND_ALPHA),
                         )
                     }
                 }
@@ -352,3 +362,5 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
         ),
     ),
 )
+
+private const val CRITICAL_BACKGROUND_ALPHA = 0.1f

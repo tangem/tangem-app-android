@@ -18,6 +18,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.res.getStringSafe
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.domain.jointaccount.model.JointAccountSignResult
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
@@ -36,6 +37,7 @@ import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import com.tangem.tap.domain.sdk.mocks.showMockCardPicker
+import com.tangem.tap.domain.tasks.jointaccount.JointAccountSignTask
 import com.tangem.tap.foregroundActivityObserver
 
 @Suppress("TooManyFunctions")
@@ -167,7 +169,22 @@ class MockTangemSdkManager(
         accessCode: String?,
         @DrawableRes iconScanRes: Int?,
         registerColdWallet: Boolean,
-    ): CompletionResult<T> = error("This method is deprecated")
+    ): CompletionResult<T> = when (runnable) {
+        // The cold-wallet joint account signer runs this NFC task; there is no card in tests, so return a
+        // canned result — the backend mock accepts any signature, and the owner key is not persisted.
+        is JointAccountSignTask -> {
+            @Suppress("UNCHECKED_CAST")
+            CompletionResult.Success(mockJointAccountSignResult() as T)
+        }
+        else -> error("This method is deprecated")
+    }
+
+    private fun mockJointAccountSignResult(): JointAccountSignResult = JointAccountSignResult(
+        ownerAddress = "0x6095a44f1336c715F5E52F427d6cc79dA5aB5603",
+        canonicalPayload = ByteArray(size = 0),
+        signature = "0x" + "12".repeat(n = 64) + "1b",
+        derivedKeys = emptyMap(),
+    )
 
     override fun <T> withColdWalletRegistration(
         runnable: CardSessionRunnable<T>,
