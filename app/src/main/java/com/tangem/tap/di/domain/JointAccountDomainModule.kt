@@ -24,6 +24,7 @@ import com.tangem.domain.jointaccount.usecase.ConfirmJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.CreateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
+import com.tangem.domain.jointaccount.usecase.IssueJointAccountInviteUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointOperationSlotUseCase
 import com.tangem.domain.jointaccount.usecase.GetMissingJointOwnerKeysCountUseCase
@@ -51,6 +52,15 @@ internal object JointAccountDomainModule {
         repository: JointAccountSupportedNetworksRepository,
     ): GetJointAccountSupportedNetworksUseCase {
         return GetJointAccountSupportedNetworksUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIssueJointAccountInviteUseCase(
+        repository: JointAccountRepository,
+        fetcher: SingleJointAccountListFetcher,
+    ): IssueJointAccountInviteUseCase {
+        return IssueJointAccountInviteUseCase(repository = repository, fetcher = fetcher)
     }
 
     @Provides

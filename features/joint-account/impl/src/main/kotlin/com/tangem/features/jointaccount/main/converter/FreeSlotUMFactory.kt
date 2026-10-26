@@ -7,19 +7,25 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.jointaccount.model.JointAccountInvite
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
+import com.tangem.features.jointaccount.main.JointAccountMembersUM.SlotActionUM
 import com.tangem.features.jointaccount.main.JointAccountMembersUM.SlotStatusUM
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.format.DateTimeFormatter
 import java.util.Locale
 
-/** Builds the free-slot rows; no row offers a button yet, a code can only come from issuing one */
-internal class FreeSlotUMFactory {
+/** Builds the free-slot rows; an expired invite offers Re-invite like a live one */
+internal class FreeSlotUMFactory(
+    private val onInviteClick: (slot: Int, accountName: TextReference) -> Unit,
+) {
 
+    /** @property issuingSlot the slot whose invite is being issued */
     data class Input(
         val slots: List<Int>,
         val invites: List<JointAccountInvite>,
         val canInvite: Boolean,
+        val accountName: TextReference?,
+        val issuingSlot: Int?,
         val nowMillis: Long,
     )
 
@@ -38,7 +44,7 @@ internal class FreeSlotUMFactory {
                 formatArgs = wrappedList(slot),
             ),
             status = status,
-            action = null,
+            action = slotAction(slot = slot, status = status, input = input),
         )
     }
 
@@ -65,6 +71,19 @@ internal class FreeSlotUMFactory {
                 id = CoreUiR.string.joint_account_invite_members_until,
                 formatArgs = wrappedList(dateTimeFormatter().print(expiresAt)),
             )
+        }
+    }
+
+    private fun slotAction(slot: Int, status: SlotStatusUM, input: Input): SlotActionUM? {
+        val accountName = input.accountName
+        if (!input.canInvite || accountName == null) return null
+
+        val isLoading = input.issuingSlot == slot
+        val onClick = { onInviteClick(slot, accountName) }
+        return if (status is SlotStatusUM.NotInvited) {
+            SlotActionUM.Invite(onClick = onClick, isLoading = isLoading)
+        } else {
+            SlotActionUM.ReInvite(onClick = onClick, isLoading = isLoading)
         }
     }
 
