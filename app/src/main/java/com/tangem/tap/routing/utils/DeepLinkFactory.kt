@@ -305,9 +305,13 @@ internal class DeepLinkFactory @Inject constructor(
 
     private fun Uri.isTangemPayMainLink(): Boolean = when (scheme) {
         DeepLinkScheme.Tangem.scheme -> host == DeepLinkRoute.PayAppMain.host
-        DeepLinkScheme.Https.scheme -> host == DeepLinkRoute.PayApp.host &&
-            path.orEmpty().matchesPathSegment(PAY_APP_MAIN_PATH)
+        DeepLinkScheme.Https.scheme -> host == DeepLinkRoute.PayApp.host && isPayAppMainPath()
         else -> false
+    }
+
+    private fun Uri.isPayAppMainPath(): Boolean {
+        return path.orEmpty().matchesPathSegment(PAY_APP_MAIN_PATH) ||
+            pathSegments.firstOrNull() == PAY_APP_MAIN_SEGMENT
     }
 
     @Suppress("CyclomaticComplexMethod")
@@ -406,6 +410,7 @@ internal class DeepLinkFactory @Inject constructor(
          */
         val APPSFLYER_ONELINK_HOSTS = setOf("tangem.onelink.me", "join.tangem.com")
 
-        const val PAY_APP_MAIN_PATH = "/pay-app-main"
+        const val PAY_APP_MAIN_SEGMENT = "pay-app-main"
+        const val PAY_APP_MAIN_PATH = "/$PAY_APP_MAIN_SEGMENT"
     }
 }

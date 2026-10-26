@@ -240,6 +240,7 @@ internal class DeepLinkFactoryTest {
             "https://tangem.com/joint-account/join" to registeredJointAccountInviteHandler,
             "wc:" to registeredWalletConnectHandler,
             "tangem://pay-app-main" to registeredTangemPayMainHandler,
+            "https://tangem.com/pay-app-main" to registeredTangemPayMainHandler,
         ),
     )
 
@@ -1104,6 +1105,7 @@ internal class DeepLinkFactoryTest {
         every { mockedUri.scheme } returns model.scheme
         every { mockedUri.host } returns model.host
         every { mockedUri.path } returns model.path
+        every { mockedUri.pathSegments } returns model.pathSegments
         every { mockedUri.queryParameterNames } returns emptySet()
 
         // Act
@@ -1126,8 +1128,10 @@ internal class DeepLinkFactoryTest {
     ) = runTest {
         // Arrange
         every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
-        every { mockedUri.scheme } returns "tangem"
-        every { mockedUri.host } returns "pay-app-main"
+        every { mockedUri.scheme } returns model.scheme
+        every { mockedUri.host } returns model.host
+        every { mockedUri.path } returns model.path
+        every { mockedUri.pathSegments } returns model.pathSegments
         every { mockedUri.queryParameterNames } returns emptySet()
 
         // Act
@@ -1172,9 +1176,17 @@ internal class DeepLinkFactoryTest {
         val path: String,
         val source: DeeplinkSource,
         val isHandled: Boolean,
+        val pathSegments: List<String> = emptyList(),
     )
 
-    data class RegisteredPayAppMainModel(val source: DeeplinkSource, val isHandled: Boolean)
+    data class RegisteredPayAppMainModel(
+        val scheme: String,
+        val host: String,
+        val path: String,
+        val pathSegments: List<String>,
+        val source: DeeplinkSource,
+        val isHandled: Boolean,
+    )
 
     data class WebFallbackModel(
         val scheme: String,
@@ -1225,12 +1237,58 @@ internal class DeepLinkFactoryTest {
                 source = DeeplinkSource.External,
                 isHandled = false,
             ),
+            PayAppMainModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pay-app-main/x",
+                pathSegments = listOf("pay-app-main/x"),
+                source = DeeplinkSource.Push,
+                isHandled = true,
+            ),
+            PayAppMainModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pay-app-main/x",
+                pathSegments = listOf("pay-app-main/x"),
+                source = DeeplinkSource.External,
+                isHandled = false,
+            ),
         )
 
         @JvmStatic
         fun provideRegisteredPayAppMainModels(): List<RegisteredPayAppMainModel> = listOf(
-            RegisteredPayAppMainModel(source = DeeplinkSource.Push, isHandled = true),
-            RegisteredPayAppMainModel(source = DeeplinkSource.External, isHandled = false),
+            RegisteredPayAppMainModel(
+                scheme = "tangem",
+                host = "pay-app-main",
+                path = "",
+                pathSegments = emptyList(),
+                source = DeeplinkSource.Push,
+                isHandled = true,
+            ),
+            RegisteredPayAppMainModel(
+                scheme = "tangem",
+                host = "pay-app-main",
+                path = "",
+                pathSegments = emptyList(),
+                source = DeeplinkSource.External,
+                isHandled = false,
+            ),
+            RegisteredPayAppMainModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "//pay-app-main",
+                pathSegments = listOf("pay-app-main"),
+                source = DeeplinkSource.Push,
+                isHandled = true,
+            ),
+            RegisteredPayAppMainModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "//pay-app-main",
+                pathSegments = listOf("pay-app-main"),
+                source = DeeplinkSource.External,
+                isHandled = false,
+            ),
         )
 
         @JvmStatic
