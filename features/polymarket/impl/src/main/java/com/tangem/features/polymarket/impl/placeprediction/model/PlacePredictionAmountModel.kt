@@ -228,7 +228,7 @@ internal class PlacePredictionAmountModel @Inject constructor(
 
         uiState.update { state ->
             SetAmountTransformer(value = state.amountValue)
-                .transform(state.copy(slippage = SlippageUM.of(percent = percent)))
+                .transform(state.copy(slippage = SlippageUM.of(percent = percent), minAmount = null))
         }
         restartQuoteLoop(withDebounce = false)
     }
