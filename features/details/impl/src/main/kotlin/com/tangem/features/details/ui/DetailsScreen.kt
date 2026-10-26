@@ -57,7 +57,7 @@ internal fun DetailsScreen(
     userWalletListBlockContent: ComposableContentComponent,
     modifier: Modifier = Modifier,
 ) {
-    val backgroundColor = TangemTheme.colors.background.secondary
+    val backgroundColor = TangemTheme.colors3.bg.primary
 
     Scaffold(
         modifier = modifier,
@@ -99,7 +99,7 @@ private fun Content(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 text = stringResourceSafe(R.string.details_title),
                 style = TangemTheme.typography.h1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
         }
         items(
@@ -144,7 +144,7 @@ private fun Block(
             .fillMaxWidth()
             .background(
                 shape = TangemTheme.shapes.roundedCornersXMedium,
-                color = TangemTheme.colors.background.primary,
+                color = TangemTheme.colors3.bg.secondary,
             ),
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top,
@@ -305,7 +305,7 @@ private fun UnderSectionTextBlock(text: TextReference, modifier: Modifier = Modi
         modifier = modifier.padding(horizontal = 30.dp, vertical = 8.dp),
         text = text.resolveReference(),
         style = TangemTheme.typography.body2,
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
     )
 }
 
@@ -339,7 +339,7 @@ private fun Footer(model: DetailsFooterUM, modifier: Modifier = Modifier) {
                         Icon(
                             modifier = Modifier.size(24.dp),
                             painter = painterResource(id = social.iconResId),
-                            tint = TangemTheme.colors.icon.informative,
+                            tint = TangemTheme.colors3.icon.secondary,
                             contentDescription = null,
                         )
                     }
@@ -353,7 +353,7 @@ private fun Footer(model: DetailsFooterUM, modifier: Modifier = Modifier) {
                 .testTag(DetailsScreenTestTags.VERSION_NAME),
             text = model.appVersion,
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }

@@ -3,7 +3,10 @@ package com.tangem.feature.swap.mcp.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -15,6 +18,7 @@ import com.tangem.feature.swap.mcp.createCoin
 import com.tangem.feature.swap.mcp.createExchangeIntent
 import com.tangem.feature.swap.mcp.createNetwork
 import com.tangem.feature.swap.mcp.createToken
+import com.tangem.feature.swap.presentation.R
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -70,7 +74,12 @@ internal class ExchangeIntentOfferConverterTest {
             val actual = convert(intent = intent)
 
             // Assert
-            assertThat(actual?.title).isEqualTo(stringReference(model.expectedTitle))
+            assertThat(actual?.title).isEqualTo(
+                resourceReference(
+                    R.string.mcp_swap_intent_offer_title,
+                    wrappedList(stringReference("mcp.claude.com"), model.expectedFrom, model.expectedTo),
+                ),
+            )
         }
 
         private fun provideTestModels() = listOf(
@@ -78,55 +87,64 @@ internal class ExchangeIntentOfferConverterTest {
                 Locale.US,
                 SwapAmountType.From,
                 "42000000",
-                "mcp.claude.com Agent wants to swap 42.00\u00a0USDT to POL",
+                "42.00\u00a0USDT",
+                "POL",
             ),
             TitleModel(
                 Locale.GERMANY,
                 SwapAmountType.From,
                 "42000000",
-                "mcp.claude.com Agent wants to swap 42,00\u00a0USDT to POL",
+                "42,00\u00a0USDT",
+                "POL",
             ),
             TitleModel(
                 Locale.US,
                 SwapAmountType.To,
                 "2500000000000000000",
-                "mcp.claude.com Agent wants to swap USDT to 2.50\u00a0POL",
+                "USDT",
+                "2.50\u00a0POL",
             ),
             TitleModel(
                 Locale.GERMANY,
                 SwapAmountType.To,
                 "2500000000000000000",
-                "mcp.claude.com Agent wants to swap USDT to 2,50\u00a0POL",
+                "USDT",
+                "2,50\u00a0POL",
             ),
             TitleModel(
                 Locale.US,
                 SwapAmountType.From,
                 "1234567890",
-                "mcp.claude.com Agent wants to swap 1,234.56789\u00a0USDT to POL",
+                "1,234.56789\u00a0USDT",
+                "POL",
             ),
             TitleModel(
                 Locale.GERMANY,
                 SwapAmountType.From,
                 "1234567890",
-                "mcp.claude.com Agent wants to swap 1.234,56789\u00a0USDT to POL",
+                "1.234,56789\u00a0USDT",
+                "POL",
             ),
             TitleModel(
                 Locale.FRANCE,
                 SwapAmountType.From,
                 "1234567890",
-                "mcp.claude.com Agent wants to swap 1\u202f234,56789\u00a0USDT to POL",
+                "1\u202f234,56789\u00a0USDT",
+                "POL",
             ),
             TitleModel(
                 Locale.US,
                 SwapAmountType.To,
                 "1234567890000000000000",
-                "mcp.claude.com Agent wants to swap USDT to 1,234.56789\u00a0POL",
+                "USDT",
+                "1,234.56789\u00a0POL",
             ),
             TitleModel(
                 Locale.GERMANY,
                 SwapAmountType.To,
                 "1234567890000000000000",
-                "mcp.claude.com Agent wants to swap USDT to 1.234,56789\u00a0POL",
+                "USDT",
+                "1.234,56789\u00a0POL",
             ),
         )
     }
@@ -145,14 +163,20 @@ internal class ExchangeIntentOfferConverterTest {
                 amountType = model.amountType,
                 amount = if (model.amountType == SwapAmountType.From) "42000000" else "2500000000000000000",
             )
-            val swap = when (model.amountType) {
-                SwapAmountType.From -> "42.00\u00a0USDT to POL"
-                SwapAmountType.To -> "USDT to 2.50\u00a0POL"
+            val (expectedFrom, expectedTo) = when (model.amountType) {
+                SwapAmountType.From -> "42.00\u00a0USDT" to "POL"
+                SwapAmountType.To -> "USDT" to "2.50\u00a0POL"
             }
-            val expectedTitle = stringReference("${model.expectedIdentity} Agent wants to swap $swap")
+            val expectedTitle = resourceReference(
+                R.string.mcp_swap_intent_offer_title,
+                wrappedList(model.expectedIdentity, expectedFrom, expectedTo),
+            )
             val expected = model.agent.origin
                 ?.let { ExchangeIntentAgentUM.Verified(iconUrl = model.agent.iconUrl, label = stringReference(it)) }
-                ?: ExchangeIntentAgentUM.Unknown(iconUrl = model.agent.iconUrl, label = stringReference("Unknown"))
+                ?: ExchangeIntentAgentUM.Unknown(
+                    iconUrl = model.agent.iconUrl,
+                    label = resourceReference(R.string.mcp_intent_host),
+                )
 
             // Act
             val actual = convert(intent = intent, agent = model.agent)
@@ -163,17 +187,24 @@ internal class ExchangeIntentOfferConverterTest {
         }
 
         private fun provideTestModels() = listOf(
-            AgentModel(claude, expectedIdentity = "mcp.claude.com"),
-            AgentModel(claude.copy(iconUrl = null), expectedIdentity = "mcp.claude.com"),
-            AgentModel(claude.copy(name = null), expectedIdentity = "mcp.claude.com"),
+            AgentModel(claude, expectedIdentity = stringReference("mcp.claude.com")),
+            AgentModel(claude.copy(iconUrl = null), expectedIdentity = stringReference("mcp.claude.com")),
+            AgentModel(claude.copy(name = null), expectedIdentity = stringReference("mcp.claude.com")),
             AgentModel(
                 claude.copy(name = "Tangem", origin = "agent.example.com"),
-                expectedIdentity = "agent.example.com",
+                expectedIdentity = stringReference("agent.example.com"),
             ),
-            AgentModel(claude.copy(origin = null), expectedIdentity = "Claude"),
-            AgentModel(claude.copy(origin = null, iconUrl = null), expectedIdentity = "Claude"),
-            AgentModel(claude.copy(origin = null, name = null), expectedIdentity = "Unknown"),
-            AgentModel(McpAgent.unknown(clientId = "client"), expectedIdentity = "Unknown"),
+            AgentModel(claude.copy(origin = null), expectedIdentity = stringReference("Claude")),
+            AgentModel(claude.copy(origin = null, iconUrl = null), expectedIdentity = stringReference("Claude")),
+            AgentModel(
+                claude.copy(origin = null, name = null),
+                expectedIdentity = resourceReference(R.string.mcp_intent_unknown_agent_name),
+            ),
+            AgentModel(
+                McpAgent.unknown(clientId = "client"),
+                expectedIdentity = resourceReference(R.string.mcp_intent_unknown_agent_name),
+            ),
+            AgentModel(claude.copy(origin = null, name = "AI"), expectedIdentity = stringReference("AI")),
         ).flatMap { model ->
             SwapAmountType.entries.map { side -> model.copy(amountType = side) }
         }
@@ -183,7 +214,10 @@ internal class ExchangeIntentOfferConverterTest {
     fun `GIVEN unknown agent WHEN convert THEN title uses generic name without inventing a host`() {
         // Arrange
         val intent = createExchangeIntent(amountType = SwapAmountType.From, amount = "42000000")
-        val expected = stringReference("Unknown Agent wants to swap 42.00\u00a0USDT to POL")
+        val expected = resourceReference(
+            R.string.mcp_swap_intent_offer_title,
+            wrappedList(resourceReference(R.string.mcp_intent_unknown_agent_name), "42.00\u00a0USDT", "POL"),
+        )
 
         // Act
         val actual = convert(intent = intent, agent = McpAgent.unknown(clientId = "client"))
@@ -196,13 +230,21 @@ internal class ExchangeIntentOfferConverterTest {
     fun `GIVEN unverified name without origin WHEN convert THEN title keeps the name and card uses generic fallback`() {
         // Arrange
         val intent = createExchangeIntent(amountType = SwapAmountType.From, amount = "42000000")
-        val expected = ExchangeIntentAgentUM.Unknown(iconUrl = claude.iconUrl, label = stringReference("Unknown"))
+        val expected = ExchangeIntentAgentUM.Unknown(
+            iconUrl = claude.iconUrl,
+            label = resourceReference(R.string.mcp_intent_host),
+        )
 
         // Act
         val actual = convert(intent = intent, agent = claude.copy(origin = null))
 
         // Assert
-        assertThat(actual?.title).isEqualTo(stringReference("Claude Agent wants to swap 42.00\u00a0USDT to POL"))
+        assertThat(actual?.title).isEqualTo(
+            resourceReference(
+                R.string.mcp_swap_intent_offer_title,
+                wrappedList(stringReference("Claude"), "42.00\u00a0USDT", "POL"),
+            ),
+        )
         assertThat(actual?.agent).isEqualTo(expected)
     }
 
@@ -270,7 +312,12 @@ internal class ExchangeIntentOfferConverterTest {
             actual.primaryButton.onClick()
 
             // Assert
-            assertThat(actual.title).isEqualTo(stringReference(model.expectedTitle))
+            assertThat(actual.title).isEqualTo(
+                resourceReference(
+                    R.string.mcp_swap_intent_offer_title,
+                    wrappedList(stringReference("mcp.claude.com"), model.expectedFrom, model.expectedTo),
+                ),
+            )
             assertThat(proceeded).isTrue()
         }
 
@@ -279,85 +326,99 @@ internal class ExchangeIntentOfferConverterTest {
                 Locale.US,
                 SwapAmountType.From,
                 "1",
-                "mcp.claude.com Agent wants to swap 0.000001\u00a0USDT to POL",
+                "0.000001\u00a0USDT",
+                "POL",
             ),
             TitleModel(
                 Locale.GERMANY,
                 SwapAmountType.From,
                 "1",
-                "mcp.claude.com Agent wants to swap 0,000001\u00a0USDT to POL",
+                "0,000001\u00a0USDT",
+                "POL",
             ),
             TitleModel(
                 Locale.US,
                 SwapAmountType.From,
                 "2",
-                "mcp.claude.com Agent wants to swap 0.000002\u00a0USDT to POL",
+                "0.000002\u00a0USDT",
+                "POL",
             ),
             TitleModel(
                 Locale.GERMANY,
                 SwapAmountType.From,
                 "2",
-                "mcp.claude.com Agent wants to swap 0,000002\u00a0USDT to POL",
+                "0,000002\u00a0USDT",
+                "POL",
             ),
             TitleModel(
                 Locale.US,
                 SwapAmountType.To,
                 "1",
-                "mcp.claude.com Agent wants to swap USDT to <0.00000001\u00a0POL",
+                "USDT",
+                "<0.00000001\u00a0POL",
             ),
             TitleModel(
                 Locale.GERMANY,
                 SwapAmountType.To,
                 "1",
-                "mcp.claude.com Agent wants to swap USDT to <0,00000001\u00a0POL",
+                "USDT",
+                "<0,00000001\u00a0POL",
             ),
             TitleModel(
                 Locale.US,
                 SwapAmountType.To,
                 "9999999999",
-                "mcp.claude.com Agent wants to swap USDT to <0.00000001\u00a0POL",
+                "USDT",
+                "<0.00000001\u00a0POL",
             ),
             TitleModel(
                 Locale.GERMANY,
                 SwapAmountType.To,
                 "9999999999",
-                "mcp.claude.com Agent wants to swap USDT to <0,00000001\u00a0POL",
+                "USDT",
+                "<0,00000001\u00a0POL",
             ),
             TitleModel(
                 Locale.US,
                 SwapAmountType.To,
                 "10000000000",
-                "mcp.claude.com Agent wants to swap USDT to 0.00000001\u00a0POL",
+                "USDT",
+                "0.00000001\u00a0POL",
             ),
             TitleModel(
                 Locale.GERMANY,
                 SwapAmountType.To,
                 "10000000000",
-                "mcp.claude.com Agent wants to swap USDT to 0,00000001\u00a0POL",
+                "USDT",
+                "0,00000001\u00a0POL",
             ),
             TitleModel(
                 Locale.US,
                 SwapAmountType.To,
                 "10000000001",
-                "mcp.claude.com Agent wants to swap USDT to 0.00000001\u00a0POL",
+                "USDT",
+                "0.00000001\u00a0POL",
             ),
             TitleModel(
                 Locale.GERMANY,
                 SwapAmountType.To,
                 "10000000001",
-                "mcp.claude.com Agent wants to swap USDT to 0,00000001\u00a0POL",
+                "USDT",
+                "0,00000001\u00a0POL",
             ),
             TitleModel(
                 Locale.US,
                 SwapAmountType.To,
                 "19999999999",
-                "mcp.claude.com Agent wants to swap USDT to 0.00000001\u00a0POL",
+                "USDT",
+                "0.00000001\u00a0POL",
             ),
             TitleModel(
                 Locale.GERMANY,
                 SwapAmountType.To,
                 "19999999999",
-                "mcp.claude.com Agent wants to swap USDT to 0,00000001\u00a0POL",
+                "USDT",
+                "0,00000001\u00a0POL",
             ),
         )
     }
@@ -386,9 +447,9 @@ internal class ExchangeIntentOfferConverterTest {
             } else {
                 model.expectedAmount
             }
-            val swap = when (model.amountType) {
-                SwapAmountType.From -> "$localizedAmount\u00a0POL to USDT"
-                SwapAmountType.To -> "USDT to $localizedAmount\u00a0POL"
+            val (expectedFrom, expectedTo) = when (model.amountType) {
+                SwapAmountType.From -> "$localizedAmount\u00a0POL" to "USDT"
+                SwapAmountType.To -> "USDT" to "$localizedAmount\u00a0POL"
             }
             var proceeded = false
             val expectedAmount = when (model.amountType) {
@@ -410,7 +471,12 @@ internal class ExchangeIntentOfferConverterTest {
             actual.primaryButton.onClick()
 
             // Assert
-            assertThat(actual.title).isEqualTo(stringReference("mcp.claude.com Agent wants to swap $swap"))
+            assertThat(actual.title).isEqualTo(
+                resourceReference(
+                    R.string.mcp_swap_intent_offer_title,
+                    wrappedList(stringReference("mcp.claude.com"), expectedFrom, expectedTo),
+                ),
+            )
             assertThat(proceeded).isTrue()
             assertThat(route.fromAmount).isEqualTo(expectedAmount)
         }
@@ -489,7 +555,8 @@ internal class ExchangeIntentOfferConverterTest {
         val locale: Locale,
         val amountType: SwapAmountType,
         val amount: String,
-        val expectedTitle: String,
+        val expectedFrom: String,
+        val expectedTo: String,
     )
 
     data class RoundingBoundary(
@@ -509,7 +576,7 @@ internal class ExchangeIntentOfferConverterTest {
 
     data class AgentModel(
         val agent: McpAgent,
-        val expectedIdentity: String,
+        val expectedIdentity: TextReference,
         val amountType: SwapAmountType = SwapAmountType.From,
     )
 

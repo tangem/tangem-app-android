@@ -19,7 +19,7 @@ internal fun NFTSalePrice(state: NFTSalePriceUM, modifier: Modifier = Modifier) 
                 modifier = modifier,
                 text = state.price.resolveReference(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

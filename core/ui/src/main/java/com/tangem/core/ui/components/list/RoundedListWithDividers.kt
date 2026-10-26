@@ -67,9 +67,9 @@ fun LazyListScope.roundedListWithDividersItems(
             lastIndex = rows.lastIndex,
             iconClick = row.iconClick,
             endTextColor = if (row.isEndTextHighlighted) {
-                TangemTheme.colors.text.accent
+                TangemTheme.colors3.text.accent.blue
             } else {
-                TangemTheme.colors.text.tertiary
+                TangemTheme.colors3.text.secondary
             },
             showDivider = index < rows.lastIndex,
         )
@@ -89,13 +89,13 @@ private fun InitialInfoContentRow(
     currentIndex: Int,
     lastIndex: Int,
     showDivider: Boolean,
-    endTextColor: Color = TangemTheme.colors.text.tertiary,
+    endTextColor: Color = TangemTheme.colors3.text.secondary,
     iconClick: (() -> Unit)? = null,
 ) {
     Box {
         RoundableCornersRow(
             startText = startText,
-            startTextColor = TangemTheme.colors.text.primary1,
+            startTextColor = TangemTheme.colors3.text.primary,
             startTextStyle = TangemTheme.typography.body2,
             endText = endText,
             endTextColor = endTextColor,
@@ -120,7 +120,7 @@ fun RoundedListDivider(modifier: Modifier = Modifier) {
             .padding(start = 16.dp)
             .fillMaxWidth()
             .height(0.5.dp)
-            .background(TangemTheme.colors.stroke.primary),
+            .background(TangemTheme.colors3.border.secondary),
     )
 }
 

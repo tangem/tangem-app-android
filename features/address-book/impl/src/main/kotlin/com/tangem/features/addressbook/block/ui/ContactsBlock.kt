@@ -31,7 +31,7 @@ internal fun ContactsBlock(state: ContactsBlockUM, modifier: Modifier = Modifier
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(TangemTheme.colors.background.action),
+            .background(TangemTheme.colors3.bg.secondary),
     ) {
         Header(onSeeAllClick = state.onSeeAllClick, shouldShowSeeAll = state.shouldShowSeeAll)
         state.contacts.forEach { contact ->

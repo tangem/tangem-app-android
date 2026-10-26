@@ -50,14 +50,14 @@ private fun CloreMigrationBottomSheetContent(content: CloreMigrationBottomSheetC
     ) {
         Text(
             text = stringResourceSafe(R.string.warning_clore_migration_sheet_title),
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
             style = TangemTheme.typography.h3,
         )
 
         Text(
             text = stringResourceSafe(R.string.warning_clore_migration_sheet_description),
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
             style = TangemTheme.typography.body2,
             modifier = Modifier.padding(horizontal = 8.dp),
@@ -107,7 +107,7 @@ private fun MessageField(
             .fillMaxWidth()
             .border(
                 width = 1.dp,
-                color = TangemTheme.colors.stroke.primary,
+                color = TangemTheme.colors3.border.secondary,
                 shape = TangemTheme.shapes.roundedCornersSmall,
             )
             .heightIn(min = 56.dp)
@@ -143,7 +143,7 @@ private fun SignatureField(placeholder: String, value: String, onCopyClick: () -
             .fillMaxWidth()
             .border(
                 width = 1.dp,
-                color = TangemTheme.colors.stroke.primary,
+                color = TangemTheme.colors3.border.secondary,
                 shape = TangemTheme.shapes.roundedCornersSmall,
             )
             .heightIn(min = 56.dp)

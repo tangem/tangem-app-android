@@ -35,7 +35,7 @@ internal fun OnboardingManageTokensContent(state: OnboardingManageTokensUM, modi
 
     Scaffold(
         modifier = modifier.nestedScroll(nestedScrollConnection),
-        containerColor = TangemTheme.colors.background.primary,
+        containerColor = TangemTheme.colors3.bg.primary,
         contentWindowInsets = WindowInsetsZero,
         topBar = {
             SearchBar(

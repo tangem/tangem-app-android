@@ -50,14 +50,14 @@ internal fun TokenMarketBlock(tokenMarketBlockUM: TokenMarketBlockUM, modifier: 
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(TangemTheme.colors2.surface.level3)
+            .background(TangemTheme.colors3.bg.secondary)
             .clickable(onClick = tokenMarketBlockUM.onClick)
             .testTag(TokenMarketBlockTestTags.BLOCK),
     ) {
         Text(
             text = stringResourceSafe(id = R.string.markets_common_market_price),
             style = TangemTheme.typography2.bodySemibold16,
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.START_TOP)
                 .testTag(TokenMarketBlockTestTags.TITLE),
@@ -72,7 +72,7 @@ internal fun TokenMarketBlock(tokenMarketBlockUM: TokenMarketBlockUM, modifier: 
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = TangemTheme.typography2.captionMedium12,
-                color = TangemTheme.colors2.text.neutral.primary,
+                color = TangemTheme.colors3.text.primary,
                 modifier = Modifier.testTag(TokenMarketBlockTestTags.PRICE),
             )
             TokenRowPriceChangeContent(
@@ -126,7 +126,7 @@ private fun TokenMarketBlock_Preview(
     TangemThemePreviewRedesign {
         TokenMarketBlock(
             tokenMarketBlockUM = params,
-            modifier = Modifier.background(TangemTheme.colors2.surface.level3),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )
     }
 }

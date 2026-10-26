@@ -74,7 +74,7 @@ internal class TesterActivity : ComposeActivity() {
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
-        val systemBarsColor = TangemTheme.colors.background.secondary
+        val systemBarsColor = TangemTheme.colors3.bg.primary
         val systemUiController = rememberSystemUiController()
         systemUiController.setSystemBarsColor(systemBarsColor)
 
