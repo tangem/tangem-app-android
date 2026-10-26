@@ -40,21 +40,21 @@ internal fun WcSendingProcessModalBottomSheet(config: TangemBottomSheetConfig) {
                 CircularProgressIndicator(
                     modifier = Modifier
                         .size(32.dp),
-                    color = TangemTheme.colors.text.accent,
+                    color = TangemTheme.colors3.text.accent.blue,
                     strokeWidth = 2.dp,
                 )
                 SpacerH(32.dp)
                 Text(
                     text = stringResourceSafe(R.string.wallet_connect_sending_multiple_tx),
                     style = TangemTheme.typography.h3,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     textAlign = TextAlign.Center,
                 )
                 SpacerH8()
                 Text(
                     text = stringResourceSafe(R.string.wallet_connect_sending_multiple_explanation),
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                     textAlign = TextAlign.Center,
                 )
                 SpacerH(56.dp)

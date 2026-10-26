@@ -95,7 +95,7 @@ private fun Content(
                 stringResourceSafe(R.string.onboarding_access_code_intro_title)
             },
             style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
         )
 
@@ -106,7 +106,7 @@ private fun Content(
                 .padding(horizontal = 32.dp),
             text = stringResourceSafe(R.string.visa_onboarding_access_code_description),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
 
@@ -124,7 +124,7 @@ private fun Content(
             } else {
                 R.drawable.ic_eye_off_outline_24
             },
-            iconColor = TangemTheme.colors.icon.primary1,
+            iconColor = TangemTheme.colors3.icon.primary,
             onIconClick = state.onAccessCodeHideClick,
             value = if (reEnterAccessCodeState) {
                 state.accessCodeSecond

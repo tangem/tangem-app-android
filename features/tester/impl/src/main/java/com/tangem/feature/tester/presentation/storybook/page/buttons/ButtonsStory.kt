@@ -29,7 +29,7 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
         modifier = modifier
             .statusBarsPadding()
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level1),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         item("primary") {
             ButtonSection(title = "Primary") { isEnabled, isLoading, text, shape, iconPosition ->
@@ -40,9 +40,9 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                         iconRes = R.drawable.ic_tangem_24,
                         tintReference = {
                             if (isEnabled) {
-                                TangemTheme.colors2.graphic.neutral.primaryInverted
+                                TangemTheme.colors3.icon.inverse
                             } else {
-                                TangemTheme.colors2.graphic.neutral.quaternary
+                                TangemTheme.colors3.icon.tertiary
                             }
                         },
                     ),
@@ -63,9 +63,9 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                         iconRes = R.drawable.ic_tangem_24,
                         tintReference = {
                             if (isEnabled) {
-                                TangemTheme.colors2.graphic.neutral.primary
+                                TangemTheme.colors3.icon.primary
                             } else {
-                                TangemTheme.colors2.graphic.neutral.quaternary
+                                TangemTheme.colors3.icon.tertiary
                             }
                         },
                     ),
@@ -80,7 +80,7 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
         item("primary_inverse") {
             ButtonSection(
                 title = "PrimaryInverse",
-                background = TangemTheme.colors2.surface.level2,
+                background = TangemTheme.colors3.bg.primary,
             ) { isEnabled, isLoading, text, shape, iconPosition ->
                 PrimaryInverseTangemButton(
                     onClick = {},
@@ -89,9 +89,9 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                         iconRes = R.drawable.ic_tangem_24,
                         tintReference = {
                             if (isEnabled) {
-                                TangemTheme.colors2.graphic.neutral.primary
+                                TangemTheme.colors3.icon.primary
                             } else {
-                                TangemTheme.colors2.graphic.neutral.quaternary
+                                TangemTheme.colors3.icon.tertiary
                             }
                         },
                     ),
@@ -112,9 +112,9 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                         iconRes = R.drawable.ic_tangem_24,
                         tintReference = {
                             if (isEnabled) {
-                                TangemTheme.colors2.graphic.neutral.primary
+                                TangemTheme.colors3.icon.primary
                             } else {
-                                TangemTheme.colors2.graphic.neutral.quaternary
+                                TangemTheme.colors3.icon.tertiary
                             }
                         },
                     ),
@@ -135,9 +135,9 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                         iconRes = R.drawable.ic_tangem_24,
                         tintReference = {
                             if (isEnabled) {
-                                TangemTheme.colors2.graphic.neutral.primaryInvertedConstant
+                                TangemTheme.colors3.icon.staticDark
                             } else {
-                                TangemTheme.colors2.graphic.neutral.quaternary
+                                TangemTheme.colors3.icon.tertiary
                             }
                         },
                     ),
@@ -158,9 +158,9 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                         iconRes = R.drawable.ic_tangem_24,
                         tintReference = {
                             if (isEnabled) {
-                                TangemTheme.colors2.graphic.neutral.primaryInverted
+                                TangemTheme.colors3.icon.inverse
                             } else {
-                                TangemTheme.colors2.graphic.neutral.quaternary
+                                TangemTheme.colors3.icon.tertiary
                             }
                         },
                     ),
@@ -182,9 +182,9 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                         iconRes = R.drawable.ic_tangem_24,
                         tintReference = {
                             if (isEnabled) {
-                                TangemTheme.colors2.graphic.neutral.primary
+                                TangemTheme.colors3.icon.primary
                             } else {
-                                TangemTheme.colors2.graphic.neutral.quaternary
+                                TangemTheme.colors3.icon.tertiary
                             }
                         },
                     ),
@@ -213,7 +213,7 @@ private fun SizeShowcase() {
         Text(
             text = "Sizes",
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         TangemButtonSize.entries.forEach { size ->
             Row(
@@ -223,7 +223,7 @@ private fun SizeShowcase() {
                 Text(
                     text = size.name,
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     modifier = Modifier.width(STATE_LABEL_WIDTH.dp),
                 )
                 PrimaryTangemButton(
@@ -231,7 +231,7 @@ private fun SizeShowcase() {
                     text = stringReference("Button"),
                     tangemIconUM = TangemIconUM.Icon(
                         iconRes = R.drawable.ic_tangem_24,
-                        tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
+                        tintReference = { TangemTheme.colors3.icon.inverse },
                     ),
                     size = size,
                 )
@@ -239,7 +239,7 @@ private fun SizeShowcase() {
         }
     }
     HorizontalDivider(
-        color = TangemTheme.colors2.border.neutral.secondary,
+        color = TangemTheme.colors3.border.tertiary,
         modifier = Modifier.padding(horizontal = 16.dp),
     )
 }
@@ -247,7 +247,7 @@ private fun SizeShowcase() {
 @Composable
 private fun ButtonSection(
     title: String,
-    background: Color = TangemTheme.colors2.surface.level1,
+    background: Color = TangemTheme.colors3.bg.primary,
     shapes: List<TangemButtonShape> = TangemButtonShape.entries,
     button: @Composable (
         isEnabled: Boolean,
@@ -267,7 +267,7 @@ private fun ButtonSection(
         Text(
             text = title,
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         shapes.forEach { shape ->
             TangemButtonIconPosition.entries.forEach { iconPosition ->
@@ -276,7 +276,7 @@ private fun ButtonSection(
         }
     }
     HorizontalDivider(
-        color = TangemTheme.colors2.border.neutral.secondary,
+        color = TangemTheme.colors3.border.tertiary,
         modifier = Modifier.padding(horizontal = 16.dp),
     )
 }
@@ -297,7 +297,7 @@ private fun ShapeGroup(
         Text(
             text = "${shape.name} / Icon ${iconPosition.name}",
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
         ColumnHeaderRow()
         StateRow(
@@ -337,13 +337,13 @@ private fun ColumnHeaderRow() {
         Text(
             text = "Text + Icon",
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.weight(1f),
         )
         Text(
             text = "Icon only",
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.weight(1f),
         )
     }
@@ -372,7 +372,7 @@ private fun StateRow(
         Text(
             text = label,
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.width(STATE_LABEL_WIDTH.dp),
         )
         Box(modifier = Modifier.weight(1f)) {

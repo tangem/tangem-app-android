@@ -29,7 +29,7 @@ internal fun HotCrypto(state: State<HotCryptoUM>, modifier: Modifier = Modifier)
                         currentIndex = index,
                         lastIndex = state.value.items.lastIndex,
                         addDefaultPadding = false,
-                        backgroundColor = TangemTheme.colors.background.primary,
+                        backgroundColor = TangemTheme.colors3.bg.secondary,
                     ),
                 )
             }

@@ -41,7 +41,7 @@ internal class TransferBottomSheetComponent(
 
         TangemModalBottomSheet<TransferUM>(
             config = config,
-            containerColor = TangemTheme.colors2.surface.level2,
+            containerColor = TangemTheme.colors3.bg.primary,
             title = {
                 TangemTopNavigation(
                     title = resourceReference(CoreR.string.common_transfer),

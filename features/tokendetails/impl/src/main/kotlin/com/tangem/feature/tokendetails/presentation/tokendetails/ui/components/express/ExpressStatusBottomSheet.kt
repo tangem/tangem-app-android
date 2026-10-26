@@ -25,7 +25,7 @@ internal fun ExpressStatusBottomSheet(
 ) {
     TangemBottomSheet(
         config = config,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
     ) { content: ExpressStatusBottomSheetConfig ->
         Box {
             when (val state = content.value) {
@@ -39,7 +39,7 @@ internal fun ExpressStatusBottomSheet(
                 )
             }
             BottomFade(
-                backgroundColor = TangemTheme.colors.background.tertiary,
+                backgroundColor = TangemTheme.colors3.bg.primary,
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
             ExpressShareContent(state = content.value)

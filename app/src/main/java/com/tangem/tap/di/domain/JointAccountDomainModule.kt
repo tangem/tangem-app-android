@@ -18,6 +18,7 @@ import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
+import com.tangem.domain.jointaccount.signing.JointSignatureRecoverer
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ConfirmJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.CreateJointAccountUseCase
@@ -198,9 +199,11 @@ internal object JointAccountDomainModule {
     fun provideJointAccountCompositionVerifier(
         ownerAddressResolver: JointOwnerAddressResolver,
         safeAddressCalculator: SafeAddressCalculator,
+        signatureRecoverer: JointSignatureRecoverer,
     ): JointAccountCompositionVerifier = JointAccountCompositionVerifier(
         ownerAddressResolver = ownerAddressResolver,
         safeAddressCalculator = safeAddressCalculator,
+        signatureRecoverer = signatureRecoverer,
     )
 
     @Provides
@@ -208,9 +211,11 @@ internal object JointAccountDomainModule {
     fun provideJointOperationVerifier(
         payloadCodec: JointTransferPayloadCodec,
         safeAddressCalculator: SafeAddressCalculator,
+        signatureRecoverer: JointSignatureRecoverer,
     ): JointOperationVerifier = JointOperationVerifier(
         payloadCodec = payloadCodec,
         safeAddressCalculator = safeAddressCalculator,
+        signatureRecoverer = signatureRecoverer,
     )
 
     @Provides

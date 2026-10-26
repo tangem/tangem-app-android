@@ -111,14 +111,14 @@ private fun CounterAndAwards(purchasedWalletCount: Int, expectedAwards: Expected
 private fun Counter(purchasedWalletCount: Int, overallItemsLastIndex: Int) {
     RoundableCornersRow(
         startText = stringResourceSafe(id = R.string.referral_friends_bought_title),
-        startTextColor = TangemTheme.colors.text.tertiary,
+        startTextColor = TangemTheme.colors3.text.secondary,
         startTextStyle = TangemTheme.typography.subtitle2,
         endText = pluralStringResourceSafe(
             id = R.plurals.referral_wallets_purchased_count,
             count = purchasedWalletCount,
             purchasedWalletCount,
         ),
-        endTextColor = TangemTheme.colors.text.primary1,
+        endTextColor = TangemTheme.colors3.text.primary,
         endTextStyle = TangemTheme.typography.body2,
         currentIndex = 0,
         lastIndex = overallItemsLastIndex,
@@ -130,7 +130,7 @@ private fun Counter(purchasedWalletCount: Int, overallItemsLastIndex: Int) {
 private fun Awards(expectedAwards: ExpectedAwards, overallItemsLastIndex: Int, isExpanded: MutableState<Boolean>) {
     HorizontalDivider(
         thickness = 0.5.dp,
-        color = TangemTheme.colors.stroke.primary,
+        color = TangemTheme.colors3.border.secondary,
     )
     RoundableCornersRow(
         startText = if (expectedAwards.expectedAwards.isNotEmpty()) {
@@ -138,7 +138,7 @@ private fun Awards(expectedAwards: ExpectedAwards, overallItemsLastIndex: Int, i
         } else {
             stringResourceSafe(id = R.string.referral_no_expected_awards)
         },
-        startTextColor = TangemTheme.colors.text.tertiary,
+        startTextColor = TangemTheme.colors3.text.secondary,
         startTextStyle = TangemTheme.typography.subtitle2,
         endText = if (expectedAwards.expectedAwards.isNotEmpty()) {
             pluralStringResourceSafe(
@@ -149,7 +149,7 @@ private fun Awards(expectedAwards: ExpectedAwards, overallItemsLastIndex: Int, i
         } else {
             ""
         },
-        endTextColor = TangemTheme.colors.text.tertiary,
+        endTextColor = TangemTheme.colors3.text.secondary,
         endTextStyle = TangemTheme.typography.body2,
         currentIndex = 1,
         lastIndex = overallItemsLastIndex,
@@ -161,10 +161,10 @@ private fun Awards(expectedAwards: ExpectedAwards, overallItemsLastIndex: Int, i
     initialVisibleAwards.forEachIndexed { index, expectedAward ->
         RoundableCornersRow(
             startText = expectedAward.paymentDate,
-            startTextColor = TangemTheme.colors.text.primary1,
+            startTextColor = TangemTheme.colors3.text.primary,
             startTextStyle = TangemTheme.typography.subtitle2,
             endText = expectedAward.amount,
-            endTextColor = TangemTheme.colors.text.primary1,
+            endTextColor = TangemTheme.colors3.text.primary,
             endTextStyle = TangemTheme.typography.subtitle2,
             currentIndex = index + 2,
             lastIndex = overallItemsLastIndex,
@@ -197,7 +197,7 @@ private fun LessMoreButton(isExpanded: MutableState<Boolean>) {
         ),
     ) {
         Column(
-            modifier = Modifier.background(TangemTheme.colors.background.primary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         ) {
             Row(
                 modifier = Modifier
@@ -217,7 +217,7 @@ private fun LessMoreButton(isExpanded: MutableState<Boolean>) {
                     } else {
                         stringResourceSafe(id = R.string.referral_more)
                     },
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     style = TangemTheme.typography.subtitle2,
                 )
 
@@ -229,7 +229,7 @@ private fun LessMoreButton(isExpanded: MutableState<Boolean>) {
                 Icon(
                     modifier = Modifier.size(20.dp),
                     painter = chevronIcon,
-                    tint = TangemTheme.colors.text.tertiary,
+                    tint = TangemTheme.colors3.text.secondary,
                     contentDescription = null,
                 )
             }
@@ -243,10 +243,10 @@ private fun ExtraItems(extraItems: List<ExpectedAward>, overallItemsLastIndex: I
         extraItems.forEachIndexed { index, expectedAward ->
             RoundableCornersRow(
                 startText = expectedAward.paymentDate,
-                startTextColor = TangemTheme.colors.text.primary1,
+                startTextColor = TangemTheme.colors3.text.primary,
                 startTextStyle = TangemTheme.typography.subtitle2,
                 endText = expectedAward.amount,
-                endTextColor = TangemTheme.colors.text.primary1,
+                endTextColor = TangemTheme.colors3.text.primary,
                 endTextStyle = TangemTheme.typography.subtitle2,
                 currentIndex = index + startIndex,
                 lastIndex = overallItemsLastIndex,
@@ -261,7 +261,7 @@ private fun PersonalCodeCard(code: String, accountAward: ReferralStateHolder.Acc
         modifier = Modifier
             .testTag(ReferralProgramScreenTestTags.PERSONAL_CODE_CARD)
             .clip(RoundedCornerShape(12.dp))
-            .background(color = TangemTheme.colors.background.primary)
+            .background(color = TangemTheme.colors3.bg.secondary)
             .fillMaxWidth()
             .padding(top = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -269,13 +269,13 @@ private fun PersonalCodeCard(code: String, accountAward: ReferralStateHolder.Acc
     ) {
         Text(
             text = stringResourceSafe(id = R.string.referral_promo_code_title),
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
             style = TangemTheme.typography.subtitle2,
         )
         Text(
             text = code,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             style = TangemTheme.typography.h2,
         )
@@ -293,7 +293,7 @@ private fun AwardAccount(accountAward: ReferralStateHolder.AccountAward) {
     Column {
         HorizontalDivider(
             thickness = 0.5.dp,
-            color = TangemTheme.colors.stroke.primary,
+            color = TangemTheme.colors3.border.secondary,
             modifier = Modifier.padding(horizontal = 12.dp),
         )
 
@@ -306,7 +306,7 @@ private fun AwardAccount(accountAward: ReferralStateHolder.AccountAward) {
         ) {
             Text(
                 text = stringResourceSafe(R.string.account_for_rewards),
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 maxLines = 1,
                 style = TangemTheme.typography.body1,
             )
@@ -328,7 +328,7 @@ private fun AwardAccount(accountAward: ReferralStateHolder.AccountAward) {
                 Text(
                     text = accountAward.accountSelectUM.name.resolveReference(),
                     modifier = Modifier.padding(horizontal = 4.dp),
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     autoSize = TextAutoSize.StepBased(
                         minFontSize = 12.sp,
                         maxFontSize = TangemTheme.typography.body1.fontSize,
@@ -415,7 +415,7 @@ private fun ParticipateBottomBlockPreview(
     @PreviewParameter(ParticipateBottomBlockDataProvider::class) data: ParticipateBottomBlockData,
 ) {
     TangemThemePreview {
-        Column(Modifier.background(TangemTheme.colors.background.secondary)) {
+        Column(Modifier.background(TangemTheme.colors3.bg.primary)) {
             ParticipateBottomBlock(
                 purchasedWalletCount = data.purchasedWalletCount,
                 code = data.code,
