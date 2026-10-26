@@ -14,6 +14,7 @@ internal class UpdateMembersAccountTransformer(
     private val accountName: AccountName? = null,
     private val accountIcon: CryptoPortfolioIcon? = null,
     private val nowMillis: Long = System.currentTimeMillis(),
+    private val issuingSlot: Int? = null,
 ) : Transformer<JointAccountMembersUM> {
     override fun transform(prevState: JointAccountMembersUM): JointAccountMembersUM =
         JointAccountToMembersUMConverter(callbacks = callbacks).convert(
@@ -23,6 +24,7 @@ internal class UpdateMembersAccountTransformer(
                 accountName = accountName,
                 accountIcon = accountIcon,
                 nowMillis = nowMillis,
+                issuingSlot = issuingSlot,
             ),
         )
 }
