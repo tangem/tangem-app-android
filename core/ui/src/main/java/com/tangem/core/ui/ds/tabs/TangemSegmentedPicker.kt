@@ -102,7 +102,7 @@ fun TangemSegmentedPicker(
                 color = if (isAltSurface) {
                     TangemTheme.colors2.tabs.backgroundQuaternary
                 } else {
-                    TangemTheme.colors2.tabs.backgroundSecondary
+                    TangemTheme.colors3.bg.transparent.secondary
                 },
             )
             .padding(2.dp),
@@ -223,7 +223,7 @@ private fun Separator(index: Int, selectedIndex: MutableState<Int>) {
             .width(SEPARATOR_WIDTH)
             .height(20.dp)
             .background(
-                color = TangemTheme.colors2.border.neutral.tertiary.copy(alpha = 0.1f),
+                color = TangemTheme.colors3.border.secondary.copy(alpha = 0.1f),
             ),
     )
 }
@@ -307,9 +307,9 @@ private fun Segment(
             text = item.title.resolveReference().capitalize(),
             style = TangemTheme.typography2.bodySemibold15,
             color = if (selectedIndex.value == index) {
-                TangemTheme.colors2.tabs.textTertiary
+                TangemTheme.colors3.text.tertiary
             } else {
-                TangemTheme.colors2.tabs.textSecondary
+                TangemTheme.colors3.text.secondary
             },
             maxLines = 1,
             textAlign = TextAlign.Center,
@@ -333,7 +333,7 @@ private fun TangemSegmentedPicker_Preview(@PreviewParameter(PreviewProvider::cla
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(TangemTheme.colors2.surface.level1)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(16.dp),
         ) {
             TangemSegmentedPicker(

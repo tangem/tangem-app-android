@@ -233,7 +233,7 @@ private fun PromoSelectedTokenItem(
                         .padding(vertical = 2.dp)
                         .alignByBaseline(),
                     text = selectedAccount.name.resolveReference(),
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                     style = TangemTheme.typography.caption1,

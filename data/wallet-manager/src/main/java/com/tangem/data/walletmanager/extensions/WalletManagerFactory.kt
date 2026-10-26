@@ -36,15 +36,16 @@ fun WalletManagerFactory.makeWalletManagerForApp(
     ) ?: return null
 
     val environmentBlockchain =
-        if (card.isTestCard) blockchain.getTestnetVersion()!! else blockchain
+        if (card.isTestCard) requireNotNull(blockchain.getTestnetVersion()) else blockchain
 
     val seedKey = wallet.extendedPublicKey
+    val secondTwinPublicKey = scanResponse.secondTwinPublicKey
     return when {
-        scanResponse.cardTypesResolver.isTangemTwins() && scanResponse.secondTwinPublicKey != null -> {
+        scanResponse.cardTypesResolver.isTangemTwins() && secondTwinPublicKey != null -> {
             val twinWalletPublicKey = wallet.publicKey ?: error("Wallet public key should not be null for twins")
             createTwinWalletManager(
                 walletPublicKey = twinWalletPublicKey,
-                pairPublicKey = scanResponse.secondTwinPublicKey!!.hexToBytes(),
+                pairPublicKey = secondTwinPublicKey.hexToBytes(),
                 blockchain = environmentBlockchain,
                 curve = wallet.curve,
             )

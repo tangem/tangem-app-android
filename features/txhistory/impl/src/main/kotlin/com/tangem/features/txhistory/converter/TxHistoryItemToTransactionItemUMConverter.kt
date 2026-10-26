@@ -63,7 +63,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
 
     @Suppress("CyclomaticComplexMethod")
     override fun convert(value: TxInfo): TransactionItemUM {
-        val uiStatus = value.status.toUiStatus()
+        val uiStatus = value.displayedStatus(currency).toUiStatus()
         if (value.isFeeOnlyOperation(currency)) return feeOnlyOperationContent(value, uiStatus)
         return when (val type = value.type) {
             // region Pill
@@ -414,7 +414,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
 private fun TxInfo.formatContentAmount(currency: CryptoCurrency): String {
     val value = amountOrFee(currency)
     val prefix = when {
-        status is TxInfo.TransactionStatus.Failed -> ""
+        readsFailed(currency) -> ""
         value.isZero() -> ""
         type is TransactionType.Staking.ClaimRewards -> ""
         else -> if (isOutgoing) StringsSigns.MINUS_SIGN else StringsSigns.PLUS

@@ -24,12 +24,12 @@ internal fun StakingTemporaryUnavailableBlock(modifier: Modifier = Modifier) {
         Text(
             text = stringResourceSafe(R.string.staking_native),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
         Text(
             text = stringResourceSafe(R.string.staking_notification_network_error_text),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }

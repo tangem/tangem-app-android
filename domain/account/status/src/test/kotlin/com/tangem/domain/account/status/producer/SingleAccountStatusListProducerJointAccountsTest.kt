@@ -57,7 +57,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 internal class SingleAccountStatusListProducerJointAccountsTest {
 
     private val jointAccountCompositionVerifier: JointAccountCompositionVerifier = mockk {
-        coEvery { isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any()) } returns true
+        coEvery { isVerified(account = any(), jointAccount = any()) } returns true
         coEvery { ownerAddress(userWalletId = any(), ownerKeyIndex = any()) } returns null
     }
 
@@ -96,7 +96,7 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
     @BeforeEach
     fun resetVerifier() {
         coEvery {
-            jointAccountCompositionVerifier.isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any())
+            jointAccountCompositionVerifier.isVerified(account = any(), jointAccount = any())
         } returns true
     }
 
@@ -105,11 +105,7 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
         runTest {
             // Arrange
             coEvery {
-                jointAccountCompositionVerifier.isVerified(
-                    userWalletId = any(),
-                    ownerKeyIndex = any(),
-                    jointAccount = any(),
-                )
+                jointAccountCompositionVerifier.isVerified(account = any(), jointAccount = any())
             } returns false
             val producer = createProducer(jointAccounts = flowOf(listOf(jointRecord(JointAccount.Status.ACTIVE))))
 

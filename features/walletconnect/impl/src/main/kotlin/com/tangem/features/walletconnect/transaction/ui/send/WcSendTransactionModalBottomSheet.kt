@@ -75,7 +75,7 @@ internal fun WcSendTransactionModalBottomSheet(
             content = TangemBottomSheetConfigContent.Empty,
         ),
         onBack = onBack,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         title = { config ->
             TangemModalBottomSheetTitle(
                 title = resourceReference(R.string.wc_transaction_flow_title),
@@ -91,7 +91,7 @@ internal fun WcSendTransactionModalBottomSheet(
                 Column(
                     modifier = Modifier
                         .clip(RoundedCornerShape(14.dp))
-                        .background(color = TangemTheme.colors.background.action)
+                        .background(color = TangemTheme.colors3.bg.secondary)
                         .fillMaxWidth()
                         .animateContentSize(),
                 ) {
@@ -128,16 +128,16 @@ internal fun WcSendTransactionModalBottomSheet(
                         Notification(
                             modifier = Modifier.padding(top = 14.dp),
                             config = state.feeErrorNotification.config,
-                            iconTint = TangemTheme.colors.icon.warning,
-                            containerColor = TangemTheme.colors.background.action,
+                            iconTint = TangemTheme.colors3.icon.accent.red,
+                            containerColor = TangemTheme.colors3.bg.secondary,
                         )
                     }
                     if (state.targetNotification != null) {
                         Notification(
                             modifier = Modifier.padding(top = 14.dp),
                             config = state.targetNotification.config,
-                            titleColor = TangemTheme.colors.text.warning,
-                            iconTint = TangemTheme.colors.icon.warning,
+                            titleColor = TangemTheme.colors3.text.accent.red,
+                            iconTint = TangemTheme.colors3.icon.accent.red,
                             containerColor = TangemColorPalette.Amaranth.copy(alpha = CRITICAL_BACKGROUND_ALPHA),
                         )
                     }
@@ -173,7 +173,7 @@ private fun WcSendTransactionBottomSheetPreview(
                 onDismissRequest = {},
                 content = state,
             ),
-            containerColor = TangemTheme.colors.background.tertiary,
+            containerColor = TangemTheme.colors3.bg.primary,
             title = {
                 TangemModalBottomSheetTitle(
                     title = resourceReference(R.string.wallet_connect_title),

@@ -109,7 +109,7 @@ fun TangemButton(
                             .fillMaxWidth(),
                         text = additionalText,
                         style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.disabled,
+                        color = TangemTheme.colors3.text.tertiary,
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,

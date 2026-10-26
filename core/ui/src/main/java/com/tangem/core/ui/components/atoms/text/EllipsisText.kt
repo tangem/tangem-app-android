@@ -222,7 +222,7 @@ private fun EllipsisTexPreview(@PreviewParameter(EllipsisTexPreviewParameterProv
             text = "11111111111111111111111111111111111111111111111111 END",
             ellipsis = ellipsis,
             modifier = Modifier
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.primary)
                 .fillMaxWidth(),
         )
     }

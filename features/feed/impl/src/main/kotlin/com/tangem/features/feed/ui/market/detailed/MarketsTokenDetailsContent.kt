@@ -359,7 +359,7 @@ private fun MarketsTokenDetailsContent_Preview(
     TangemThemePreview {
         MarketsTokenDetailsContent(
             state = params,
-            backgroundColor = TangemTheme.colors.background.tertiary,
+            backgroundColor = TangemTheme.colors3.bg.primary,
             portfolioFloatingBlock = null,
             marketingBanner = {},
             contentPadding = PaddingValues(),

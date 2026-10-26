@@ -108,7 +108,7 @@ internal class WalletTokenAccountItemConverter(
                     fiat(
                         fiatCurrencyCode = appCurrency.code,
                         fiatCurrencySymbol = appCurrency.symbol,
-                        spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                        spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.secondary) },
                     )
                 },
             )
@@ -124,12 +124,12 @@ internal class WalletTokenAccountItemConverter(
             TotalFiatBalance.Failed -> TangemTokenRowUM.EndContentUM.Content(
                 text = styledResourceReference(
                     id = R.string.common_unreachable,
-                    spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.status.attention) },
+                    spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.accent.yellow) },
                 ),
                 endIcons = persistentListOf(
                     TangemIconUM.Icon(
                         iconRes = R.drawable.ic_attention_default_24,
-                        tintReference = { TangemTheme.colors2.graphic.status.attention },
+                        tintReference = { TangemTheme.colors3.icon.accent.yellow },
                     ),
                 ),
             )

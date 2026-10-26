@@ -128,7 +128,7 @@ private fun BoxScope.BackgroundLayer(icon: TangemIconUM, blurRadius: Dp = 26.dp)
                 ResBackground(icon.fallbackRes, blurRadius)
             }
         }
-        TangemIconUM.Empty -> SolidColorBackground(TangemTheme.colors2.skeleton.backgroundPrimary, blurRadius)
+        TangemIconUM.Empty -> SolidColorBackground(TangemTheme.colors3.bg.transparent.secondary, blurRadius)
     }
 }
 
@@ -244,7 +244,7 @@ private fun BoxScope.UrlColorBackground(url: String, blurRadius: Dp) {
             Box(
                 modifier = Modifier
                     .background(
-                        color = TangemTheme.colors2.surface.level3,
+                        color = TangemTheme.colors3.bg.secondary,
                         shape = CircleShape,
                     ),
             )

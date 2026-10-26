@@ -25,7 +25,7 @@ internal fun NotificationsBlock(notifications: ImmutableList<NotificationUM>) {
                     icon = {
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
-                            color = TangemTheme.colors.icon.primary1,
+                            color = TangemTheme.colors3.icon.primary,
                             strokeWidth = 2.dp,
                         )
                     },
@@ -36,7 +36,7 @@ internal fun NotificationsBlock(notifications: ImmutableList<NotificationUM>) {
                     iconTint = when (notification) {
                         is StakingNotification.Info,
                         is NotificationUM.Info,
-                        -> TangemTheme.colors.icon.accent
+                        -> TangemTheme.colors3.icon.accent.blue
 
                         is StakingNotification.Warning,
                         is NotificationUM.Error.TokenExceedsBalance,
@@ -46,7 +46,7 @@ internal fun NotificationsBlock(notifications: ImmutableList<NotificationUM>) {
 
                         is StakingNotification.Error,
                         is NotificationUM.Error,
-                        -> TangemTheme.colors.icon.warning
+                        -> TangemTheme.colors3.icon.accent.red
                     },
                 )
             }

@@ -154,7 +154,7 @@ internal class OnrampStateFactory(
         messageEffect = TangemMessageEffect.None,
         iconUM = TangemIconUM.Icon(
             iconRes = CoreUiR.drawable.ic_attention_default_24,
-            tintReference = { TangemTheme.colors2.graphic.status.attention },
+            tintReference = { TangemTheme.colors3.icon.accent.yellow },
         ),
         iconPosition = TangemMessageIconPosition.Leading,
     )

@@ -96,7 +96,7 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
         val uncompiled = signModel.requireUncompiled()
         val newState = when (action) {
             is WcEthTxAction.UpdateApprovalAmount -> {
-                val extras = uncompiled.extras as EthereumTransactionExtras
+                val extras = uncompiled.extras as? EthereumTransactionExtras ?: return
                 val compiledData = extras.callData?.data ?: return
                 val approvalCallData = ApprovalERC20TokenCallData(compiledData) ?: return
                 val newApprovalCallData = approvalCallData.copy(
@@ -129,7 +129,7 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
 
     override suspend fun dAppFee(): Fee? {
         if (isIgnoreDAppFee) return null
-        if (dAppFee != null) return dAppFee
+        dAppFee?.let { return it }
         return ethTxHelper.getDAppFee(method.transaction, wallet, network)
             .also { dAppFee = it }
     }

@@ -25,7 +25,7 @@ import kotlinx.collections.immutable.toImmutableList
 internal fun ManualBackupPhraseContent(state: ManualBackupPhraseUM, modifier: Modifier = Modifier) {
     Column(
         modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .fillMaxSize(),
     ) {
         Column(
@@ -50,7 +50,7 @@ internal fun ManualBackupPhraseContent(state: ManualBackupPhraseUM, modifier: Mo
         Text(
             text = stringResourceSafe(R.string.backup_seed_responsibility),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
@@ -78,7 +78,7 @@ private fun TitleBlock(state: ManualBackupPhraseUM, modifier: Modifier = Modifie
         Text(
             text = stringResourceSafe(R.string.backup_seed_title),
             style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -88,7 +88,7 @@ private fun TitleBlock(state: ManualBackupPhraseUM, modifier: Modifier = Modifie
                 state.words.size,
             ),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )

@@ -48,7 +48,7 @@ fun RoundableCornersRow(
                 lastIndex = lastIndex,
                 addDefaultPadding = false,
             ),
-        color = TangemTheme.colors.background.action,
+        color = TangemTheme.colors3.bg.secondary,
     ) {
         Row(
             modifier = Modifier
@@ -81,7 +81,7 @@ fun RoundableCornersRow(
                         ),
                     painter = painterResource(id = R.drawable.ic_alert_24),
                     contentDescription = null,
-                    tint = TangemTheme.colors.text.tertiary,
+                    tint = TangemTheme.colors3.text.secondary,
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
@@ -103,13 +103,13 @@ private fun Preview_RoundableCornersRow(
     @PreviewParameter(RoundableCornersRowDataProvider::class) previewData: RoundableCornersRowPreviewData,
 ) {
     TangemThemePreview {
-        Box(modifier = Modifier.background(color = TangemTheme.colors.icon.attention)) {
+        Box(modifier = Modifier.background(color = TangemTheme.colors3.bg.accent.yellow)) {
             RoundableCornersRow(
                 startText = previewData.startText,
-                startTextColor = TangemTheme.colors.text.tertiary,
+                startTextColor = TangemTheme.colors3.text.secondary,
                 startTextStyle = TangemTheme.typography.subtitle2,
                 endText = previewData.endText,
-                endTextColor = TangemTheme.colors.text.primary1,
+                endTextColor = TangemTheme.colors3.text.primary,
                 endTextStyle = TangemTheme.typography.subtitle2,
                 currentIndex = previewData.currentIndex,
                 lastIndex = previewData.lastIndex,
