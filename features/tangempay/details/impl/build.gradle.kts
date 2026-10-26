@@ -45,6 +45,7 @@ dependencies {
     api(projects.domain.visa)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.feedback.models)
+    implementation(projects.domain.moneyAccount)
     implementation(projects.domain.visa.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)

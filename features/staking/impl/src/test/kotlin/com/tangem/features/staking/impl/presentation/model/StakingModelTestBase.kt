@@ -41,6 +41,7 @@ import com.tangem.features.staking.impl.presentation.state.helpers.GetEffectiveS
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingBalanceUpdater
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingOperationsFactory
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.transformer.Transformer
 import io.mockk.*
@@ -69,9 +70,9 @@ internal abstract class StakingModelTestBase {
         every { currentStep } returns StakingStep.InitialInfo
     }
 
-    private lateinit var testCryptoCurrencyStatus: CryptoCurrencyStatus
-    private lateinit var testAccountCurrencyStatus: AccountCryptoCurrencyStatus
-    protected lateinit var mockBalanceUpdater: StakingBalanceUpdater
+    private val testCryptoCurrencyStatus: CryptoCurrencyStatus = mockk(relaxed = true)
+    private val testAccountCurrencyStatus: AccountCryptoCurrencyStatus = mockk()
+    protected val mockBalanceUpdater: StakingBalanceUpdater = mockk()
 
     protected val stateController: StakingStateController = mockk()
     private val getYieldUseCase: GetYieldUseCase = mockk()
@@ -94,7 +95,7 @@ internal abstract class StakingModelTestBase {
     protected val getEffectiveStakingFee: GetEffectiveStakingFee = mockk()
     protected val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase = mockk()
     protected val isAnyTokenStakedUseCase: IsAnyTokenStakedUseCase = mockk()
-    private val invalidatePendingTransactionsUseCase: InvalidatePendingTransactionsUseCase = mockk()
+    protected val invalidatePendingTransactionsUseCase: InvalidatePendingTransactionsUseCase = mockk()
     protected val stakingOperationsFactory: StakingOperationsFactory = mockk()
     protected val stakingBalanceUpdater: StakingBalanceUpdater.Factory = mockk()
     protected val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk()
@@ -105,7 +106,7 @@ internal abstract class StakingModelTestBase {
     protected val getFeeUseCase: GetFeeUseCase = mockk()
     protected val getNetworkAddressesUseCase: GetNetworkAddressesUseCase = mockk()
     protected val getActionRequirementAmountUseCase: GetActionRequirementAmountUseCase = mockk()
-    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk()
+    protected val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk()
     protected val paramsInterceptorHolder: ParamsInterceptorHolder = mockk(relaxed = true)
     protected val shareManager: ShareManager = mockk()
     protected val urlOpener: UrlOpener = mockk()
@@ -115,11 +116,9 @@ internal abstract class StakingModelTestBase {
 
     @BeforeEach
     fun setUp() {
-        MockKAnnotations.init(this)
-
-        val (status, accountStatus) = createMockedAccountCurrencyStatus()
-        testCryptoCurrencyStatus = status
-        testAccountCurrencyStatus = accountStatus
+        clearMocks(testCryptoCurrencyStatus, testAccountCurrencyStatus, mockBalanceUpdater)
+        every { testAccountCurrencyStatus.component1() } returns mockk(relaxed = true)
+        every { testAccountCurrencyStatus.component2() } returns testCryptoCurrencyStatus
 
         coEvery { getYieldUseCase(testIntegrationId.value) } returns Either.Right(testYield)
         every { getSelectedAppCurrencyUseCase() } returns flowOf(Either.Right(AppCurrency.Default))
@@ -149,9 +148,7 @@ internal abstract class StakingModelTestBase {
         } answers { firstArg() }
         every { getActionsUseCase(testUserWalletId, any()) } returns emptyFlow()
         every { getBalanceHidingSettingsUseCase() } returns emptyFlow()
-        mockBalanceUpdater = mockk {
-            coEvery { partialUpdate() } just Runs
-        }
+        coEvery { mockBalanceUpdater.partialUpdate() } just Runs
         every {
             stakingBalanceUpdater.create(any(), any(), any())
         } returns mockBalanceUpdater
@@ -205,6 +202,22 @@ internal abstract class StakingModelTestBase {
             messageSender = messageSender,
             router = router,
         )
+    }
+
+    protected fun accountCurrencyStatusOf(status: CryptoCurrencyStatus): AccountCryptoCurrencyStatus {
+        coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(testUserWalletId, status) } returns Either.Right(status)
+        coEvery { getMinimumTransactionAmountSyncUseCase(testUserWalletId, status) } returns Either.Left(mockk())
+        return AccountCryptoCurrencyStatus(
+            account = MockAccounts.createAccount(derivationIndex = 1, cryptoCurrencies = listOf(status.currency)),
+            status = status,
+        )
+    }
+
+    protected fun stubNotificationUseCases() {
+        coEvery { getBalanceNotEnoughForFeeWarningUseCase(any(), any(), any(), any()) } returns Either.Right(null)
+        coEvery {
+            getCurrencyCheckUseCase(any(), any(), any(), any(), any(), any(), any())
+        } returns mockk(relaxed = true)
     }
 
     protected fun createMockedAccountCurrencyStatus(): Pair<CryptoCurrencyStatus, AccountCryptoCurrencyStatus> {
