@@ -828,7 +828,7 @@ internal class SwapModel @Inject constructor(
 
     @Suppress("LongMethod")
     private fun onChangeCardsClicked() {
-        if (isReverseLocked) return
+        if (isReverseLocked || uiState.swapButton.isInProgress) return
         modelScope.launch {
             singleTaskScheduler.cancelTask()
 
@@ -2752,6 +2752,7 @@ internal class SwapModel @Inject constructor(
             },
             onLinkClick = urlOpener::openUrl,
             onSelectTokenClick = { direction ->
+                if (uiState.swapButton.isInProgress) return@UiActions
                 singleTaskScheduler.cancelTask() // Need to stop auto quotes fetching
                 router.push(
                     SwapRoute.SelectToken(isFromDirection = direction == TokenSelectionDirection.FROM),
