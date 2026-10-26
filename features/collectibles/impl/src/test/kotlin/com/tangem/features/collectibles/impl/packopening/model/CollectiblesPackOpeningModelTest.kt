@@ -44,7 +44,7 @@ import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPa
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.SellBackButtonUM
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.Stage
 import com.tangem.features.collectibles.impl.packopening.video.PackRevealVideoPlayer
-import com.tangem.features.collectibles.impl.packopening.video.PackRevealVideoPlayer.VideoLoadState
+import com.tangem.core.media.VideoLoadState
 import com.tangem.features.collectibles.impl.packopening.video.source.PackRevealAsset
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -56,6 +56,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
@@ -115,7 +116,7 @@ internal class CollectiblesPackOpeningModelTest {
         every { openCollectiblePackUseCase(any(), any()) } returns flowOf(OpenPackStep.Opened(PACK))
         statusFlow.value = onboarded(usdcAmount = "1000")
         videoLoadState.value = VideoLoadState.Loading
-        every { playerFactory.create(capture(playerListener)) } returns player
+        every { playerFactory.create(any(), capture(playerListener)) } returns player
         stubCardImages(CompletableDeferred(mockk<ImageResult>()))
         every { player.videoLoadState } returns videoLoadState
         coEvery { getMachineUseCase(any(), any()) } returns createMachine().right()
@@ -842,6 +843,23 @@ internal class CollectiblesPackOpeningModelTest {
             // Assert
             verify(exactly = 0) { player.skipToReveal() }
         }
+
+        @Test
+        fun `GIVEN the screen WHEN it goes to the background and comes back THEN the video pauses and goes on`() =
+            runTest {
+                // Arrange
+                val model = startModel()
+
+                // Act
+                model.onPause()
+                model.onResume()
+
+                // Assert
+                verifyOrder {
+                    player.setRunning(isRunning = false)
+                    player.setRunning(isRunning = true)
+                }
+            }
 
         @Test
         fun `GIVEN the model WHEN destroyed THEN the player is released`() = runTest {
