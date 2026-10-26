@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.ui
 
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.extensions.resourceReference
@@ -7,6 +8,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromUM
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.AmountCardUM
@@ -27,6 +29,10 @@ internal object TangemPayBankWithdrawPreviewData {
 
     private val transfer = TransferUM(
         amount = AmountCardUM(
+            from = BankWithdrawFromUM(
+                title = resourceReference(R.string.tangempay_payment_account),
+                icon = AccountIconUM.Payment,
+            ),
             balance = "$2,130.88",
             amount = "$500",
             icon = CurrencyIconState.Loading,

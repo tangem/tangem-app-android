@@ -11,6 +11,7 @@ import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
@@ -63,6 +64,13 @@ internal interface WalletContentClickIntents {
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         offset: Offset,
         tokenRowUM: TangemTokenRowUM,
+    )
+
+    fun onTokenRowLongClick(
+        accountId: AccountId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        offset: Offset,
+        tokenRowState: TangemTokenRow.State,
     )
 
     fun onYieldPromoCloseClick()
@@ -182,6 +190,37 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         offset: Offset,
         tokenRowUM: TangemTokenRowUM,
     ) {
+        openTokenActions(
+            accountId = accountId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            offset = offset,
+            tokenRowUM = tokenRowUM,
+            tokenRowState = null,
+        )
+    }
+
+    override fun onTokenRowLongClick(
+        accountId: AccountId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        offset: Offset,
+        tokenRowState: TangemTokenRow.State,
+    ) {
+        openTokenActions(
+            accountId = accountId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            offset = offset,
+            tokenRowUM = null,
+            tokenRowState = tokenRowState,
+        )
+    }
+
+    private fun openTokenActions(
+        accountId: AccountId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        offset: Offset,
+        tokenRowUM: TangemTokenRowUM?,
+        tokenRowState: TangemTokenRow.State?,
+    ) {
         modelScope.launch {
             val userWalletId = accountId.userWalletId
             val userWallet = getUserWalletUseCase(userWalletId).getOrElse { exception ->
@@ -210,6 +249,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                             .toPersistentList(),
                         offset = offset,
                         tokenRowUM = tokenRowUM,
+                        tokenRowState = tokenRowState,
                     )
                 }
         }
