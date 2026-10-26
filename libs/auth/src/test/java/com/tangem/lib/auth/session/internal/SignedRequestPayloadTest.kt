@@ -4,11 +4,13 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.lib.auth.api.models.request.AuthenticationPayload
 import com.tangem.lib.auth.api.models.request.DeviceMetadata
 import com.tangem.lib.auth.api.models.request.RegisterPayload
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.info.AppInfoProvider
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SignedRequestPayloadTest {
@@ -22,7 +24,7 @@ class SignedRequestPayloadTest {
         every { timezone } returns "Europe/Moscow"
     }
 
-    private val signedRequestPayload = SignedRequestPayload(appInfoProvider)
+    private val signedRequestPayload = SignedRequestPayload(appInfoProvider, buildType = "release")
 
     @Test
     fun `deviceMetadata wires AppInfoProvider fields, builds userAgent, lowercases platform`() {
@@ -40,6 +42,21 @@ class SignedRequestPayloadTest {
                 timezone = "Europe/Moscow",
             ),
         )
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN build type WHEN deviceMetadata THEN appVersion carries the build type suffix`(model: AppVersionModel) {
+        // Arrange
+        val appInfoProvider: AppInfoProvider = mockk(relaxed = true) {
+            every { appVersion } returns model.versionName
+        }
+
+        // Act
+        val metadata = SignedRequestPayload(appInfoProvider, model.buildType).deviceMetadata
+
+        // Assert
+        assertThat(metadata.appVersion).isEqualTo(model.expected)
     }
 
     @Test
@@ -125,4 +142,15 @@ class SignedRequestPayloadTest {
 
         assertThat(authBytes).isEqualTo(registerBytes)
     }
+
+    data class AppVersionModel(val buildType: String, val versionName: String, val expected: String)
+
+    private fun provideTestModels() = listOf(
+        AppVersionModel(buildType = "release", versionName = "5.40.0", expected = "5.40.0"),
+        AppVersionModel(buildType = "debug", versionName = "5.40.0", expected = "5.40.0-debug"),
+        AppVersionModel(buildType = "internal", versionName = "5.40.0-internal", expected = "5.40.0-internal"),
+        AppVersionModel(buildType = "external", versionName = "5.40.0-external", expected = "5.40.0-external"),
+        AppVersionModel(buildType = "mocked", versionName = "5.40.0-mocked", expected = "5.40.0-mocked"),
+        AppVersionModel(buildType = "debug", versionName = "1.0.0-SNAPSHOT", expected = "1.0.0-SNAPSHOT-debug"),
+    )
 }
