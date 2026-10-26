@@ -31,7 +31,7 @@ fun Placeholder(modifier: Modifier = Modifier, size: DpSize = DpSize(40.dp, 8.dp
         modifier = modifier
             .size(size)
             .background(
-                color = TangemTheme.colors2.skeleton.backgroundPrimary,
+                color = TangemTheme.colors3.bg.transparent.secondary,
                 shape = RoundedCornerShape(radius),
             ),
     )
@@ -52,7 +52,7 @@ fun TextPlaceholder(textStyle: TextStyle, modifier: Modifier = Modifier, width: 
         modifier = modifier
             .size(width = width, height = lineHeight)
             .background(
-                color = TangemTheme.colors2.skeleton.backgroundPrimary,
+                color = TangemTheme.colors3.bg.transparent.secondary,
                 shape = RoundedCornerShape(radius),
             ),
     )

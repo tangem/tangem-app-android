@@ -55,7 +55,7 @@ object TangemTokenRowPreviewData {
                 stringReference("$ 500"),
                 styledStringReference(".17", {
                     SpanStyle(
-                        color = TangemTheme.colors2.text.neutral.secondary,
+                        color = TangemTheme.colors3.text.secondary,
                         fontWeight = TangemTheme.typography2.bodyRegular16.fontWeight,
                     )
                 }),
@@ -140,7 +140,7 @@ object TangemTokenRowPreviewData {
                     stringReference("$ 500"),
                     styledStringReference(".11232131237", {
                         SpanStyle(
-                            color = TangemTheme.colors2.text.neutral.secondary,
+                            color = TangemTheme.colors3.text.secondary,
                             fontWeight = TangemTheme.typography2.bodyRegular16.fontWeight,
                         )
                     }),
@@ -229,7 +229,7 @@ object TangemTokenRowPreviewData {
             bottomEndContentUM = TangemTokenRowUM.EndContentUM.Content(
                 text = styledResourceReference(
                     id = R.string.common_unreachable,
-                    spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.status.attention) },
+                    spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.accent.yellow) },
                 ),
             ),
         )

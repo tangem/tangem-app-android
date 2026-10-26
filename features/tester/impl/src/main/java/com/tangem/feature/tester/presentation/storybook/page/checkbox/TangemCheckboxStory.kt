@@ -23,7 +23,7 @@ internal fun TangemCheckboxStory(state: TangemCheckboxStory, modifier: Modifier 
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level1),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         item("grid") {
             CheckboxGrid(state = state)
@@ -37,7 +37,7 @@ private fun CheckboxGrid(state: TangemCheckboxStory) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .background(TangemTheme.colors2.surface.level1)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         ColumnHeaderRow()
@@ -55,7 +55,7 @@ private fun CheckboxGrid(state: TangemCheckboxStory) {
         )
     }
     HorizontalDivider(
-        color = TangemTheme.colors2.border.neutral.secondary,
+        color = TangemTheme.colors3.border.tertiary,
         modifier = Modifier.padding(horizontal = 16.dp),
     )
 }
@@ -70,19 +70,19 @@ private fun ColumnHeaderRow() {
         Text(
             text = "Enabled",
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.weight(1f),
         )
         Text(
             text = "Disabled",
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.weight(1f),
         )
         Text(
             text = "Disabled (on)",
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.weight(1f),
         )
     }
@@ -97,7 +97,7 @@ private fun CheckboxRow(label: String, isChecked: Boolean, onCheckedChange: (Boo
         Text(
             text = label,
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.width(STATE_LABEL_WIDTH.dp),
         )
         Box(

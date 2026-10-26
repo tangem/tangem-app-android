@@ -67,18 +67,18 @@ fun CreatePaymentAccountNotification(
                 modifier = Modifier.padding(end = 32.dp),
                 text = title.resolveReference(),
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.constantWhite,
+                color = TangemTheme.colors3.text.staticDark.primary,
             )
             Text(
                 text = subtitle.resolveReference(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
         CloseableIconButton(
             onClick = onCloseClick,
             modifier = Modifier.align(alignment = Alignment.TopEnd),
-            iconTint = TangemTheme.colors.icon.inactive,
+            iconTint = TangemTheme.colors3.icon.tertiary,
         )
     }
 }

@@ -42,7 +42,7 @@ internal fun NFTLogo(imageUrl: String?, @DrawableRes networkIconId: Int, backgro
                 Box(
                     modifier = Modifier
                         .clip(shape = TangemTheme.shapes.roundedCorners8)
-                        .background(TangemTheme.colors.field.primary),
+                        .background(TangemTheme.colors3.bg.tertiary),
                 )
             },
             contentScale = ContentScale.Crop,

@@ -49,7 +49,7 @@ internal fun WcConnectedAppInfoBS(state: WcConnectedAppInfoUM) {
             onDismissRequest = state.onDismiss,
             content = state,
         ),
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         title = {
             TangemModalBottomSheetTitle(
                 title = resourceReference(R.string.wc_connected_app_title),
@@ -82,7 +82,7 @@ private fun WcConnectedAppInfoBSContent(state: WcConnectedAppInfoUM, modifier: M
     Column(modifier = modifier) {
         val blocksModifier = Modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(color = TangemTheme.colors.background.action)
+            .background(color = TangemTheme.colors3.bg.secondary)
             .fillMaxWidth()
         AppInfoFirstBlock(
             state = state,
@@ -94,13 +94,13 @@ private fun WcConnectedAppInfoBSContent(state: WcConnectedAppInfoUM, modifier: M
             val (containerColor, titleColor, iconTint) = when (notification) {
                 WcAppInfoSecurityNotification.SecurityRisk -> Triple(
                     TangemColorPalette.Amaranth.copy(alpha = 0.1F),
-                    TangemTheme.colors.text.warning,
-                    TangemTheme.colors.icon.warning,
+                    TangemTheme.colors3.text.accent.red,
+                    TangemTheme.colors3.icon.accent.red,
                 )
                 WcAppInfoSecurityNotification.UnknownDomain -> Triple(
                     null,
-                    TangemTheme.colors.text.primary1,
-                    TangemTheme.colors.icon.attention,
+                    TangemTheme.colors3.text.primary,
+                    TangemTheme.colors3.icon.accent.yellow,
                 )
             }
             Notification(
@@ -108,7 +108,7 @@ private fun WcConnectedAppInfoBSContent(state: WcConnectedAppInfoUM, modifier: M
                 config = notification.config,
                 containerColor = containerColor,
                 titleColor = titleColor,
-                subtitleColor = TangemTheme.colors.text.primary1,
+                subtitleColor = TangemTheme.colors3.text.primary,
                 iconTint = iconTint,
             )
         }
@@ -141,7 +141,7 @@ private fun AppInfoFirstBlock(state: WcConnectedAppInfoUM, modifier: Modifier = 
             verifiedDAppState = state.verifiedDAppState,
         )
         if (state.portfolioName != null) {
-            HorizontalDivider(thickness = 0.5.dp, color = TangemTheme.colors.stroke.primary)
+            HorizontalDivider(thickness = 0.5.dp, color = TangemTheme.colors3.border.secondary)
             PortfolioName(state.portfolioName)
         }
     }
@@ -161,7 +161,7 @@ private fun PortfolioName(portfolioName: AccountTitleUM, modifier: Modifier = Mo
                 .testTag(WalletConnectDetailsBottomSheetTestTags.WALLET_ICON),
             painter = painterResource(R.drawable.ic_wallet_new_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
         )
         val leftText: String = when (portfolioName) {
             is AccountTitleUM.Account -> stringResourceSafe(R.string.common_account)
@@ -174,7 +174,7 @@ private fun PortfolioName(portfolioName: AccountTitleUM, modifier: Modifier = Mo
                 .testTag(WalletConnectDetailsBottomSheetTestTags.WALLET_TITLE),
             text = leftText,
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         AccountTitle(
             modifier = Modifier
@@ -182,7 +182,7 @@ private fun PortfolioName(portfolioName: AccountTitleUM, modifier: Modifier = Mo
                 .testTag(WalletConnectDetailsBottomSheetTestTags.WALLET_NAME),
             accountTitleUM = portfolioName,
             textStyle = TangemTheme.typography.body1,
-            textColor = TangemTheme.colors.text.tertiary,
+            textColor = TangemTheme.colors3.text.secondary,
             iconSize = AccountIconSize.Small,
         )
     }
@@ -198,7 +198,7 @@ private fun NetworksBlock(networks: ImmutableList<WcNetworkInfoItem.Required>, m
                 .testTag(WalletConnectDetailsBottomSheetTestTags.NETWORKS_TITLE),
             text = stringResourceSafe(R.string.wc_connected_networks),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
         networks.fastForEach { network ->
             key(network.id) { WcNetworkInfoItem(icon = network.icon, name = network.name, symbol = network.symbol) }

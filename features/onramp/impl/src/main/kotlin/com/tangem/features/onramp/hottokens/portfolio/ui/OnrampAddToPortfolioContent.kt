@@ -79,7 +79,7 @@ private fun TopAppBar(text: TextReference, subtitle: TextReference) {
     TangemTopAppBar(
         title = text.resolveReference(),
         subtitle = subtitle.resolveReference(),
-        iconTint = TangemTheme.colors.icon.informative,
+        iconTint = TangemTheme.colors3.icon.secondary,
         titleAlignment = Alignment.CenterHorizontally,
         height = TangemTopAppBarHeight.BOTTOM_SHEET,
     )
@@ -90,7 +90,7 @@ private fun CurrencyName(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
         modifier = modifier,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         maxLines = 1,
         style = TangemTheme.typography.subtitle1,
     )
@@ -101,7 +101,7 @@ private fun CurrencyNetworkName(text: TextReference, modifier: Modifier = Modifi
     Text(
         text = text.resolveReference(),
         modifier = modifier,
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
         maxLines = 1,
         style = TangemTheme.typography.body2,
     )

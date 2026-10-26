@@ -56,7 +56,7 @@ internal fun NetworkSelectionScreen(state: NetworkSelectionUM, onDismiss: () -> 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(TangemTheme.colors.background.tertiary)
+                .background(TangemTheme.colors3.bg.primary)
                 .systemBarsPadding()
                 .imePadding(),
         ) {
@@ -92,7 +92,7 @@ private fun NetworkSelectionEmpty(modifier: Modifier = Modifier) {
         Text(
             text = stringResourceSafe(R.string.common_no_results),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
     }
@@ -138,7 +138,7 @@ private fun LazyListScope.accountGroupItems(
                     currentIndex = 0,
                     lastIndex = lastIndex,
                     radius = 14.dp,
-                    backgroundColor = TangemTheme.colors.background.action,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
                 ),
             )
         }
@@ -161,7 +161,7 @@ private fun LazyListScope.accountGroupItems(
                     currentIndex = indexWithHeader,
                     lastIndex = lastIndex,
                     radius = 14.dp,
-                    backgroundColor = TangemTheme.colors.background.action,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
                 ),
             )
         }
@@ -181,7 +181,7 @@ private fun LazyListScope.accountGroupItems(
                         currentIndex = lastIndex,
                         lastIndex = lastIndex,
                         radius = 14.dp,
-                        backgroundColor = TangemTheme.colors.background.action,
+                        backgroundColor = TangemTheme.colors3.bg.secondary,
                     ),
                 )
             }
@@ -208,7 +208,7 @@ private fun WalletHeader(walletGroup: WalletGroupUM) {
         Text(
             text = walletGroup.walletName,
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier.weight(1f),
         )
         Box(
@@ -216,14 +216,14 @@ private fun WalletHeader(walletGroup: WalletGroupUM) {
             modifier = Modifier
                 .size(24.dp)
                 .background(
-                    color = TangemTheme.colors.button.secondary,
+                    color = TangemTheme.colors3.bg.transparent.secondary,
                     shape = CircleShape,
                 ),
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_chevron_up_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
                 modifier = Modifier
                     .size(16.dp)
                     .rotate(chevronRotation),
@@ -255,7 +255,7 @@ private fun AccountHeader(accountGroup: AccountGroupUM, modifier: Modifier = Mod
         Text(
             text = accountGroup.accountName.resolveReference(),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }
@@ -265,7 +265,7 @@ private fun HiddenTokensFooter(count: Int, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         HorizontalDivider(
             thickness = 0.5.dp,
-            color = TangemTheme.colors.stroke.primary,
+            color = TangemTheme.colors3.border.secondary,
             modifier = Modifier.padding(horizontal = 14.dp),
         )
         Row(
@@ -282,7 +282,7 @@ private fun HiddenTokensFooter(count: Int, modifier: Modifier = Modifier) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_eye_off_outline_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
                 modifier = Modifier.size(16.dp),
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -293,7 +293,7 @@ private fun HiddenTokensFooter(count: Int, modifier: Modifier = Modifier) {
                     count,
                 ),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }

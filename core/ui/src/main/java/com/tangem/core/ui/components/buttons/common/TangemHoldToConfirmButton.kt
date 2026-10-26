@@ -134,7 +134,7 @@ internal fun TangemHoldToConfirmButton(
         isPreviousLoading = isLoading
     }
 
-    val fillColor = TangemTheme.colors.icon.inactive.copy(alpha = 0.15f)
+    val fillColor = TangemTheme.colors3.icon.tertiary.copy(alpha = 0.15f)
     val buttonHeight = size.toHeightDp()
     val contentPadding = size.toContentPadding(icon = TangemButtonIconPosition.None)
 
@@ -473,7 +473,7 @@ private fun HoldToConfirmButtonPreview() {
 
         Column(
             modifier = Modifier
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(16.dp),
         ) {
             TangemHoldToConfirmButton(
@@ -497,7 +497,7 @@ private fun HoldToConfirmButtonPreview() {
             Text(
                 text = "isLoading: $isLoading",
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }

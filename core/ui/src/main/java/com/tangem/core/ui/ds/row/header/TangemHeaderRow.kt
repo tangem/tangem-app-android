@@ -100,7 +100,7 @@ fun TangemHeaderRow(
                 Text(
                     text = subtitle.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
                     style = TangemTheme.typography2.captionSemibold12,
-                    color = TangemTheme.colors2.text.neutral.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                     maxLines = 1,
                     modifier = Modifier
                         .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT)
@@ -161,7 +161,7 @@ fun TangemHeaderRow(
         Text(
             text = title.resolveAnnotatedReference(),
             style = TangemTheme.typography2.captionSemibold12,
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             modifier = Modifier.testTag(tag = TokenElementsTestTags.TOKEN_TITLE),
         )
@@ -172,7 +172,7 @@ fun TangemHeaderRow(
                 Text(
                     text = subtitle.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
                     style = TangemTheme.typography2.captionSemibold12,
-                    color = TangemTheme.colors2.text.neutral.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                     maxLines = 1,
                     modifier = Modifier
                         .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT)
@@ -196,7 +196,7 @@ private fun TangemHeaderRow_Preview(@PreviewParameter(PreviewProvider::class) pa
     TangemThemePreviewRedesign {
         TangemHeaderRow(
             headerRowUM = params,
-            modifier = Modifier.background(TangemTheme.colors2.surface.level3),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )
     }
 }
