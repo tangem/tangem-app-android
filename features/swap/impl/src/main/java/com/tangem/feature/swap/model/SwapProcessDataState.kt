@@ -34,6 +34,7 @@ data class SwapProcessDataState(
     // Amount from input
     val amount: String? = null,
     val reduceBalanceBy: BigDecimal = BigDecimal.ZERO,
+    val slippage: SwapSlippageState = SwapSlippageState.Default(),
 ) {
 
     fun getCurrentLoadedSwapState(): SwapState.QuotesLoadedState? {

@@ -25,12 +25,13 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.feature.swap.component.SwapBottomSheetComponent
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
+import com.tangem.feature.swap.model.SwapBottomSheetRoute
 import com.tangem.feature.swap.model.SwapModel
 import com.tangem.feature.swap.router.SwapRoute
 import com.tangem.feature.swap.ui.SwapScreen
 import com.tangem.feature.swap.ui.SwapSuccessScreen
-import com.tangem.features.approval.api.GiveApprovalEntryComponent
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
@@ -46,7 +47,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: SwapComponent.Params,
     private val swapFeeSelectorBlockComponentFactory: SwapFeeSelectorBlockComponent.Factory,
-    private val giveApprovalEntryComponentFactory: GiveApprovalEntryComponent.Factory,
+    private val swapBottomSheetComponentFactory: SwapBottomSheetComponent.Factory,
     private val chooseTokenComponentFactory: ChooseTokenComponent.Factory,
     private val marketingBannerComponentFactory: MarketingBannerComponent.Factory,
 ) : SwapComponent, AppComponentContext by appComponentContext {
@@ -78,15 +79,30 @@ internal class DefaultSwapComponent @AssistedInject constructor(
         },
     )
 
-    private val approvalSlot = childSlot(
-        key = APPROVAL_SLOT_KEY,
-        source = model.approvalSlotNavigation,
+    private val flatSheetSlot = childSlot(
+        key = FLAT_SHEET_SLOT_KEY,
+        source = model.flatSheetSlotNavigation,
         serializer = null,
-        handleBackButton = true,
-        childFactory = { params, factoryContext ->
-            giveApprovalEntryComponentFactory.create(
-                context = childByContext(factoryContext),
-                params = GiveApprovalEntryComponent.Params(params),
+        handleBackButton = false,
+        childFactory = { route, factoryContext ->
+            createSheet(
+                route = route,
+                factoryContext = childByContext(factoryContext),
+                onDismiss = model::dismissFlatSheet,
+            )
+        },
+    )
+
+    private val glassSheetSlot = childSlot(
+        key = GLASS_SHEET_SLOT_KEY,
+        source = model.glassSheetSlotNavigation,
+        serializer = null,
+        handleBackButton = false,
+        childFactory = { route, factoryContext ->
+            createSheet(
+                route = route,
+                factoryContext = childByContext(factoryContext),
+                onDismiss = model::dismissGlassSheet,
             )
         },
     )
@@ -110,6 +126,16 @@ internal class DefaultSwapComponent @AssistedInject constructor(
             )
         },
     )
+
+    private fun createSheet(route: SwapBottomSheetRoute, factoryContext: AppComponentContext, onDismiss: () -> Unit) =
+        swapBottomSheetComponentFactory.create(
+            context = factoryContext,
+            params = SwapBottomSheetComponent.Params(
+                route = route,
+                providersSheetSource = model.providersSheetSource,
+                onDismiss = onDismiss,
+            ),
+        )
 
     private fun createSwapFeeSelectorBlockComponent(
         context: AppComponentContext,
@@ -214,8 +240,11 @@ internal class DefaultSwapComponent @AssistedInject constructor(
             child.instance.Content(Modifier)
         }
 
-        val approvalSlotState by approvalSlot.subscribeAsState()
-        approvalSlotState.child?.instance?.BottomSheet()
+        val flatSheetState by flatSheetSlot.subscribeAsState()
+        flatSheetState.child?.instance?.BottomSheet()
+        // Glass sheets (approvals) open above the flat provider sheet.
+        val glassSheetState by glassSheetSlot.subscribeAsState()
+        glassSheetState.child?.instance?.BottomSheet()
     }
 
     private inner class SwapMainChild : ComposableContentComponent {
@@ -273,6 +302,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
     private companion object {
         const val STACK_KEY = "swapStack"
         const val FEE_SELECTOR_SLOT_KEY = "feeSelectorSlot"
-        const val APPROVAL_SLOT_KEY = "approvalSlot"
+        const val FLAT_SHEET_SLOT_KEY = "flatSheetSlot"
+        const val GLASS_SHEET_SLOT_KEY = "glassSheetSlot"
     }
 }

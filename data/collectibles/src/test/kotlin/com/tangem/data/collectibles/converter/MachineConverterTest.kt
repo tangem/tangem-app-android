@@ -71,21 +71,7 @@ internal class MachineConverterTest {
     }
 
     @Test
-    fun `GIVEN a high precision expected value WHEN convert THEN the scale is preserved`() {
-        // Arrange
-        val expectedValue = BigDecimal("54.578583779326468")
-        val dto = MachineFactory.createDto(expectedValue = expectedValue)
-
-        // Act
-        val actual = MachineConverter.convert(dto)
-
-        // Assert
-        assertThat(actual.expectedValue).isEqualTo(expectedValue)
-        assertThat(actual.expectedValue.scale()).isEqualTo(expectedValue.scale())
-    }
-
-    @Test
-    fun `GIVEN money in cents WHEN convert THEN only the price and fee fields become whole units`() {
+    fun `GIVEN money in cents WHEN convert THEN the price fee and expected value become whole units`() {
         // Arrange
         val dto = MachineFactory.createDto()
 
@@ -96,7 +82,7 @@ internal class MachineConverterTest {
         assertThat(actual.price).isEqualTo(BigDecimal("50.00"))
         assertThat(actual.fee).isEqualTo(BigDecimal("2.00"))
         assertThat(actual.feeAmount).isEqualTo(BigDecimal("1.00"))
-        assertThat(actual.expectedValue).isEqualTo(dto.expectedValue)
+        assertThat(actual.expectedValue).isEqualTo(BigDecimal("54.85"))
     }
 
     @Test
@@ -116,10 +102,10 @@ internal class MachineConverterTest {
         )
         assertThat(actual.tierRanges).isEqualTo(
             CollectibleGachaMachine.TierRanges(
-                common = CollectibleGachaMachine.TierRange(start = 30, end = 60),
-                uncommon = CollectibleGachaMachine.TierRange(start = 60, end = 110),
-                rare = CollectibleGachaMachine.TierRange(start = 110, end = 250),
-                epic = CollectibleGachaMachine.TierRange(start = 250, end = 5001),
+                common = CollectibleGachaMachine.TierRange(start = BigDecimal("30.00"), end = BigDecimal("60.00")),
+                uncommon = CollectibleGachaMachine.TierRange(start = BigDecimal("60.00"), end = BigDecimal("110.00")),
+                rare = CollectibleGachaMachine.TierRange(start = BigDecimal("110.00"), end = BigDecimal("250.00")),
+                epic = CollectibleGachaMachine.TierRange(start = BigDecimal("250.00"), end = BigDecimal("5001.00")),
             ),
         )
     }

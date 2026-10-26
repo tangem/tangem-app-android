@@ -66,7 +66,7 @@ internal class RefactoredTxHistoryRepositoryTest {
         clearMocks(walletManagersFacade, expressHistoryDao, historyIndexDao, expressTransactionAssetFactory)
         coEvery { walletManagersFacade.getAddresses(any(), any()) } returns setOf(defaultAddress())
         coEvery { walletManagersFacade.usedDynamicAddresses(any(), any()) } returns null
-        coEvery { expressTransactionAssetFactory.create(any(), any(), any(), any()) } returns emptyMap()
+        coEvery { expressTransactionAssetFactory.create(any(), any(), any(), any(), any()) } returns emptyMap()
         every { expressHistoryDao.getProvidersById() } returns flowOf(emptyMap())
         every { expressHistoryDao.getCurrenciesByCode() } returns flowOf(emptyMap())
     }

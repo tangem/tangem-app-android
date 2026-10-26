@@ -15,7 +15,6 @@ import com.tangem.screens.tangempay.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -176,7 +175,7 @@ class TangemPayTest : BaseTestCase() {
     }
 
     @AllureId("4971")
-    @DisplayName("Tangem Pay: freeze card via confirmation sheet")
+    @DisplayName("Tangem Pay: a frozen card locks Details and PIN until it is unfrozen")
     @Test
     fun freezeUnfreezeCardTogglesCardStateTest() {
         val freezeScenario = "tangem_pay_card_freeze"
@@ -189,28 +188,26 @@ class TangemPayTest : BaseTestCase() {
                 setWireMockScenarioState(freezeScenario, startedState)
             }
         ).run {
-            openTangemPay()
-            step("Click on card button") {
-                onTangemPayMainScreen { cardButton.clickWithAssertion() }
+            step("Open Tangem Pay card page") { openTangemPayCardPage() }
+            step("Assert card is active (Freeze row is displayed)") {
+                awaitSuccess { onTangemPayCardPageScreen { freezeCardRowActive.assertIsDisplayed() } }
             }
-            step("Click on freeze card row (card is active)") {
-                onTangemPayCardPageScreen { freezeCardRow.clickWithAssertion() }
-            }
-            step("Assert freeze confirmation sheet is displayed") {
-                onTangemPayFreezeConfirmation { freezeTitle.assertIsDisplayed() }
-            }
-            step("Click on 'Submit' button (confirm freeze)") {
-                onTangemPayFreezeConfirmation { submitButton.clickWithAssertion() }
-            }
-            // CARD_FROZEN_BADGE marks the Pending spinner only; a frozen card is shown by the row
-            // title flipping to 'Unfreeze card'.
+            step("Assert card actions are enabled") { assertTangemPayCardActionsEnabled() }
+            step("Freeze card via confirmation sheet") { freezeCardFromCardPage() }
             step("Assert card is frozen (Unfreeze row is displayed)") {
                 awaitSuccess { onTangemPayCardPageScreen { unfreezeCardRow.assertIsDisplayed() } }
             }
+            step("Assert 'Details' and 'PIN code' are disabled while the card is frozen") {
+                assertTangemPayCardActionsLockedWhileFrozen()
+            }
+            step("Unfreeze card via confirmation sheet") { unfreezeCardFromCardPage() }
+            step("Assert card is active (Freeze row is displayed)") {
+                awaitSuccess { onTangemPayCardPageScreen { freezeCardRowActive.assertIsDisplayed() } }
+            }
+            step("Assert card actions are enabled") { assertTangemPayCardActionsEnabled() }
         }
     }
 
-    @Ignore("[REDACTED_JIRA]")
     @AllureId("9557")
     @DisplayName("Tangem Pay: without a deposit address Add funds is disabled and Withdraw shows the service error")
     @Test

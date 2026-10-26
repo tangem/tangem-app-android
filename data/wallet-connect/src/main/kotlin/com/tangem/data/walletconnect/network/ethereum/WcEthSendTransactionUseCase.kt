@@ -18,12 +18,13 @@ import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.domain.core.lce.LceFlow
-import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.domain.walletconnect.error.parseSendError
 import com.tangem.domain.walletconnect.model.WcApprovedAmount
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.usecase.method.*
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -39,10 +40,18 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
     private val sendTransaction: SendTransactionUseCase,
     private val ethTxHelper: WcEthTxHelper,
     blockAidDelegate: BlockAidVerificationDelegate,
+    targetValidator: WcEthTransactionTargetValidator,
 ) : BaseWcSignUseCase<WcEthTxAction, TransactionData>(),
     WcTransactionUseCase,
+    WcTransactionTargetCheck,
     WcApproval,
     WcMutableFee {
+
+    override val targetStatus: Flow<WcTransactionTargetCheck.Status> = targetValidator.validate(
+        transaction = method.transaction,
+        userWalletId = wallet.walletId,
+        network = network,
+    )
 
     private var approvalAmount: WcApprovedAmount? = null
     // in case of change TransactionExtras
@@ -59,32 +68,27 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
             accountAddress = context.accountAddress,
         ).map { lce ->
             lce.map { result ->
-                val amount = ethTxHelper.getApprovedAmount(method.transaction.data, result)
+                approvalAmount = ethTxHelper.getApprovedAmount(method.transaction.data, result)
                     ?: return@map BlockAidTransactionCheck.Result.Plain(result)
-                val tokenInfo = amount.tokenInfo
-                this@WcEthSendTransactionUseCase.approvalAmount = WcApprovedAmount(
-                    amount = if (!amount.isUnlimited) {
-                        Amount(
-                            currencySymbol = tokenInfo.symbol,
-                            decimals = tokenInfo.decimals,
-                            value = amount.approvedAmount,
-                        )
-                    } else {
-                        null
-                    },
-                    logoUrl = tokenInfo.logoUrl,
-                    chainId = tokenInfo.chainId,
-                )
                 BlockAidTransactionCheck.Result.Approval(result = result)
             }
         }
 
     override suspend fun SignCollector<TransactionData>.onSign(state: WcSignState<TransactionData>) {
+        TangemLogger.withTag(WC_TAG).i(
+            "Sending ${rawSdkRequest.request.method} " +
+                ethTxHelper.logDescription(
+                    txParams = method.transaction,
+                    network = network,
+                    fee = (state.signModel as? TransactionData.Uncompiled)?.fee,
+                ),
+        )
         val hash = sendTransaction(state.signModel, wallet, network)
             .onLeft { error ->
                 emit(state.toResult(parseSendError(error).left()))
             }
             .getOrNull() ?: return
+        TangemLogger.withTag(WC_TAG).i("Sent ${rawSdkRequest.request.method} on ${network.name}: ${hash.formatHex()}")
         analytics.send(
             Basic.TransactionSent(
                 sentFrom = TxSentFrom.WalletConnect(

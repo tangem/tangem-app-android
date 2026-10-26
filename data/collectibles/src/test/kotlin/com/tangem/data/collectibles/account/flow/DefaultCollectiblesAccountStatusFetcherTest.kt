@@ -40,18 +40,18 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
     fun `GIVEN the vault answers WHEN invoke THEN the amount is recorded as actual`() = runTest {
         // Arrange
         coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
-        coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED.usdcToken) } returns READ.right()
+        coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED) } returns READ.right()
         val store = createStore(testScope = this, recorded = ONBOARDED.copy(vaultBalance = CACHED))
 
         // Act
         val actual = createFetcher(store).invoke(PARAMS)
 
-        // Assert — the cached token goes with the request: working it out again costs two requests
+        // Assert
         assertThat(actual).isEqualTo(Unit.right())
         assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
             CollectiblesAccountStatusValue.Onboarded(source = StatusSource.ACTUAL, vaultBalance = READ),
         )
-        coVerify(exactly = 1) { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED.usdcToken) }
+        coVerify(exactly = 1) { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED) }
     }
 
     @Test
@@ -59,7 +59,7 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
         runTest {
             // Arrange
             coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
-            coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED.usdcToken) } returns UNREADABLE.left()
+            coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED) } returns UNREADABLE.left()
             val store = createStore(testScope = this, recorded = ONBOARDED.copy(vaultBalance = CACHED))
 
             // Act

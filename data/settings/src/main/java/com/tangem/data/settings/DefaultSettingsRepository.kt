@@ -156,10 +156,7 @@ internal class DefaultSettingsRepository(
                 ?.takeIf(String::isNotBlank)
 
             val country = if (geoCode == null) {
-                appPreferencesStore.getSyncOrNull(key = storePreferencesKeys.geoUserCountryCodeKey)
-                    ?.takeIf(String::isNotBlank)
-                    ?.let(UserCountry::from)
-                    ?: UserCountry.fromDeviceLocale()
+                getCachedUserCountry() ?: UserCountry.fromDeviceLocale()
             } else {
                 UserCountry.from(code = geoCode)
             }
@@ -170,6 +167,17 @@ internal class DefaultSettingsRepository(
 
             if (geoCode != null) cacheUserCountryCode(country)
         }
+    }
+
+    /** Consumers wait for a published country, so a failed read must fall through to the device region */
+    private suspend fun getCachedUserCountry(): UserCountry? {
+        return runSuspendCatching {
+            appPreferencesStore.getSyncOrNull(key = storePreferencesKeys.geoUserCountryCodeKey)
+        }
+            .onFailure { TangemLogger.e("Unable to read the cached user country code", it) }
+            .getOrNull()
+            ?.takeIf(String::isNotBlank)
+            ?.let(UserCountry::from)
     }
 
     /** Caching must not discard an already resolved country, so a failed write is only reported */

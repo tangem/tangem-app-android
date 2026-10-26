@@ -12,8 +12,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,7 +41,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
-import com.tangem.core.ui.res.generated.icons.ic_search_24
+import com.tangem.core.ui.res.generated.icons.ic_binoculars_20
+import com.tangem.core.ui.test.TangemPayTestTags
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
@@ -129,6 +132,7 @@ private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
 @Composable
 private fun ResidencyRow(item: ResidencyListUM.ItemUM) {
     TangemRow(
+        modifier = Modifier.testTag(TangemPayTestTags.RESIDENCY_ROW),
         verticalAlignment = TangemRowVerticalAlignment.Center,
         onClick = item.onClick,
         startSlot = item.flagUrl?.let { url -> { ResidencyFlag(flagUrl = url) } },
@@ -225,26 +229,28 @@ private fun EmptyContent(contentPadding: PaddingValues, modifier: Modifier = Mod
         modifier = modifier
             .fillMaxSize()
             .padding(contentPadding)
-            .imePadding(),
-        verticalArrangement = Arrangement.Center,
+            .imePadding()
+            .padding(horizontal = 48.dp)
+            .testTag(TangemPayTestTags.RESIDENCY_EMPTY),
+        verticalArrangement = Arrangement.spacedBy(space = 12.dp, alignment = Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
             modifier = Modifier
-                .size(48.dp)
+                .size(40.dp)
+                .alpha(EMPTY_ICON_ALPHA)
                 .background(color = TangemTheme.colors3.bg.opaque.primary, shape = CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.ic_search_24,
+                imageVector = Icons.ic_binoculars_20,
                 contentDescription = null,
-                tint = TangemTheme.colors3.icon.secondary,
-                modifier = Modifier.size(24.dp),
+                tint = TangemTheme.colors3.icon.primary,
+                modifier = Modifier.size(20.dp),
             )
         }
         Text(
-            modifier = Modifier.padding(top = 32.dp),
-            text = stringResourceSafe(R.string.common_no_results),
+            text = stringResourceSafe(R.string.tangempay_residency_search_empty),
             textAlign = TextAlign.Center,
             color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography3.caption.medium,
@@ -258,6 +264,7 @@ private val ResidencyListUM.Content.isSearchVisible: Boolean
 private val FLAG_SIZE = 40.dp
 private val FOOTER_INSET = 88.dp
 private const val LOADING_ITEMS_COUNT = 5
+private const val EMPTY_ICON_ALPHA = 0.9f
 
 @Preview(widthDp = 402, heightDp = 874, showBackground = true)
 @Preview(widthDp = 402, heightDp = 874, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -273,6 +280,15 @@ private fun Preview_ResidencyListScreen_Countries() {
 private fun Preview_ResidencyListScreen_Loading() {
     TangemThemePreviewRedesign {
         ResidencyListScreen(state = previewState(content = ResidencyListUM.Content.Loading))
+    }
+}
+
+@Preview(widthDp = 402, heightDp = 874, showBackground = true)
+@Preview(widthDp = 402, heightDp = 874, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_ResidencyListScreen_Empty() {
+    TangemThemePreviewRedesign {
+        ResidencyListScreen(state = previewState(content = ResidencyListUM.Content.Empty))
     }
 }
 

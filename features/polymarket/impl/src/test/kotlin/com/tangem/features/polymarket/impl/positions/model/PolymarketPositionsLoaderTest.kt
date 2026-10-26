@@ -39,6 +39,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketPositionsLoaderTest {
@@ -407,6 +409,102 @@ internal class PolymarketPositionsLoaderTest {
         assertThat(requests).containsExactly(PolymarketPositionsListConfig(addresses, PolymarketPositionsTab.FINISHED) to 0)
         coVerify(exactly = 1) { deriveAddresses.stored(wallet) }
         coVerify(exactly = 0) { deriveAddresses.invoke(any()) }
+    }
+
+    @ParameterizedTest
+    @EnumSource(PolymarketPositionsTab::class)
+    fun `GIVEN visible cards WHEN refreshed THEN retains them and exposes progress until completion`(
+        tab: PolymarketPositionsTab,
+    ) = runTest {
+        // Arrange
+        val feed = createLoader().createFeed(wallet, tab)
+        feed.resume(backgroundScope)
+        runCurrent()
+        val before = data(feed)
+        val response = CompletableDeferred<BatchFetchResult<List<PolymarketPosition>>>()
+        fetch = { _, _ -> response.await() }
+
+        // Act
+        feed.refresh()
+        runCurrent()
+
+        // Assert
+        assertThat(feed.state.value.isRefreshing).isTrue()
+        assertThat(data(feed).positions).isEqualTo(before.positions)
+        assertThat(data(feed).nextPage).isEqualTo(NextPage.End)
+
+        // Act
+        response.complete(page("new"))
+        runCurrent()
+
+        // Assert
+        assertThat(ids(feed)).containsExactly("condition:new")
+        assertThat(feed.state.value.isRefreshing).isFalse()
+        assertThat(feed.state.value.onRefreshRetry).isNull()
+    }
+
+    @ParameterizedTest
+    @EnumSource(PolymarketPositionsTab::class)
+    fun `GIVEN visible cards WHEN refreshing fails THEN exposes retry and preserves cards`(tab: PolymarketPositionsTab) =
+        runTest {
+            // Arrange
+            val feed = createLoader().createFeed(wallet, tab)
+            feed.resume(backgroundScope)
+            runCurrent()
+            val before = data(feed)
+            fetch = { _, _ -> error() }
+
+            // Act
+            feed.refresh()
+            runCurrent()
+            val failed = feed.state.value
+
+            // Assert
+            assertThat(failed.isRefreshing).isFalse()
+            assertThat((failed.content as Content.Data).positions).isEqualTo(before.positions)
+            assertThat(failed.onRefreshRetry).isNotNull()
+
+            // Act
+            fetch = { _, _ -> BatchFetchResult.Success(emptyList(), empty = true, last = true) }
+            requireNotNull(failed.onRefreshRetry).invoke()
+            runCurrent()
+
+            // Assert
+            assertThat(feed.state.value.content).isEqualTo(Content.Empty)
+            assertThat(feed.state.value.onRefreshRetry).isNull()
+            assertThat(requests.map { it.second }).containsExactly(0, 0, 0).inOrder()
+        }
+
+    @ParameterizedTest
+    @EnumSource(PolymarketPositionsTab::class)
+    fun `GIVEN an empty list WHEN refreshing fails THEN keeps the empty state and offers retry`(
+        tab: PolymarketPositionsTab,
+    ) = runTest {
+        // Arrange
+        val feed = createLoader().createFeed(wallet, tab)
+        fetch = { _, _ -> BatchFetchResult.Success(emptyList(), empty = true, last = true) }
+        feed.resume(backgroundScope)
+        runCurrent()
+        fetch = { _, _ -> error() }
+
+        // Act
+        feed.refresh()
+        runCurrent()
+        val failed = feed.state.value
+
+        // Assert
+        assertThat(failed.content).isEqualTo(Content.Empty)
+        assertThat(failed.isRefreshing).isFalse()
+        assertThat(failed.onRefreshRetry).isNotNull()
+
+        // Act
+        fetch = { _, _ -> page("first") }
+        requireNotNull(failed.onRefreshRetry).invoke()
+        runCurrent()
+
+        // Assert
+        assertThat(ids(feed)).containsExactly("condition:first")
+        assertThat(feed.state.value.onRefreshRetry).isNull()
     }
 
     private suspend fun TestScope.twoPages(): PolymarketPositionsLoader.Feed {

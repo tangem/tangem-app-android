@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.common
 
 import android.content.res.Configuration
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -11,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.TextReference
@@ -19,11 +17,13 @@ import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 
 @Composable
 internal fun TangemPayActionButton(
     title: TextReference,
-    @DrawableRes iconRes: Int,
+    icon: TangemIconUM,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
@@ -38,7 +38,7 @@ internal fun TangemPayActionButton(
             variant = TangemButton.Variant.Material,
             size = TangemButton.Size.X14,
             onClick = onClick,
-            iconStart = TangemIconUM.Icon(iconRes),
+            iconStart = icon,
             isLoading = isLoading,
             isEnabled = isEnabled,
         )
@@ -60,21 +60,22 @@ internal fun TangemPayActionButton(
 @Composable
 private fun Preview() {
     TangemThemePreviewRedesign {
+        val icon = TangemIconUM.Icon(imageVector = Icons.ic_arrow_down_24)
         Column {
             TangemPayActionButton(
                 title = stringReference("Action"),
-                iconRes = R.drawable.ic_arrow_down_24,
+                icon = icon,
                 onClick = {},
             )
             TangemPayActionButton(
                 title = stringReference("Action"),
-                iconRes = R.drawable.ic_arrow_down_24,
+                icon = icon,
                 onClick = {},
                 isEnabled = false,
             )
             TangemPayActionButton(
                 title = stringReference("Action"),
-                iconRes = R.drawable.ic_arrow_down_24,
+                icon = icon,
                 onClick = {},
                 isEnabled = true,
                 isLoading = true,

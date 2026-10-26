@@ -16,14 +16,10 @@ internal class DefaultOnboardMoneyAccountDeepLinkHandler @AssistedInject constru
 ) : OnboardMoneyAccountDeepLinkHandler {
 
     init {
-        val userWalletId = userWalletsListRepository.selectedUserWallet.value?.walletId
-        if (userWalletId == null) {
+        if (userWalletsListRepository.selectedUserWallet.value == null) {
             TangemLogger.e("Can not open money account onboarding deeplink: no selected wallet")
         } else {
-            val mode = AppRoute.MoneyAccountOnboarding.Mode.Deeplink(
-                userWalletId = userWalletId,
-                deeplink = uri.toString(),
-            )
+            val mode = AppRoute.MoneyAccountOnboarding.Mode.Deeplink(deeplink = uri.toString())
             appRouter.push(AppRoute.MoneyAccountOnboarding(mode))
         }
     }
@@ -31,5 +27,9 @@ internal class DefaultOnboardMoneyAccountDeepLinkHandler @AssistedInject constru
     @AssistedFactory
     interface Factory : OnboardMoneyAccountDeepLinkHandler.Factory {
         override fun create(uri: Uri): DefaultOnboardMoneyAccountDeepLinkHandler
+    }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://onboard-virtual-account"
     }
 }

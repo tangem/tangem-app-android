@@ -7,11 +7,14 @@ import com.squareup.moshi.adapter
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.local.assets.AssetLoader
+import com.tangem.core.remote.json.NetworkJson
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.json.Json
 import java.lang.reflect.Type
 import javax.inject.Inject
 import kotlin.reflect.KType
@@ -19,16 +22,25 @@ import kotlin.reflect.KType
 internal class DefaultAssetLoader @Inject constructor(
     private val assetReader: AssetReader,
     @NetworkMoshi private val moshi: Moshi,
+    @NetworkJson private val json: Json,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : AssetLoader {
 
+    override suspend fun <T> load(fileName: String, type: KType): T? {
+        return loadObject(fileName) { content -> moshi.adapter<T>(type).fromJson(content) }
+    }
+
+    override suspend fun <T> load(fileName: String, deserializer: DeserializationStrategy<T>): T? {
+        return loadObject(fileName) { content -> json.decodeFromString(deserializer, content) }
+    }
+
     @Suppress("SuspendFunSwallowedCancellation")
-    override suspend fun <T> load(fileName: String, type: KType): T? = withContext(dispatchers.io) {
-        val json = runCatching { assetReader.read(fullFileName = "$fileName.json") }.getOrNull()
+    private suspend fun <T> loadObject(fileName: String, parse: (String) -> T?): T? = withContext(dispatchers.io) {
+        val content = runCatching { assetReader.read(fullFileName = "$fileName.json") }.getOrNull()
 
         runCatching {
-            moshi.adapter<T>(type).fromJson(json)
+            parse(requireNotNull(content) { "Asset [$fileName] is not read" })
         }
             .fold(
                 onSuccess = { parsedConfig ->
@@ -36,7 +48,7 @@ internal class DefaultAssetLoader @Inject constructor(
                         sendException(
                             fileName = fileName,
                             isParsingSuccess = true,
-                            json = json,
+                            json = content,
                         )
 
                         TangemLogger.e(
@@ -51,7 +63,7 @@ internal class DefaultAssetLoader @Inject constructor(
                     sendException(
                         fileName = fileName,
                         isParsingSuccess = false,
-                        json = json,
+                        json = content,
                     )
 
                     TangemLogger.e("Failed to load config [$fileName] from assets", throwable)

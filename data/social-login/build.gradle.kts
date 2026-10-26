@@ -13,9 +13,9 @@ android {
 
 dependencies {
     implementation(projects.core.configToggles)
-    implementation(projects.core.local)
     implementation(projects.core.utils)
     implementation(projects.common.google)
+    implementation(projects.domain.common)
     implementation(projects.domain.models)
     implementation(projects.libs.auth)
 
@@ -25,12 +25,12 @@ dependencies {
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
-    implementation(deps.androidx.datastore)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.serialization)
     implementation(deps.kotlin.datetime)
     implementation(deps.okHttp)
     implementation(deps.retrofit)
+    implementation(tangemDeps.hot.core)
 
     testImplementation(projects.test.core)
     testImplementation(deps.okio)

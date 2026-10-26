@@ -2,6 +2,7 @@ package com.tangem.data.pay.repository
 
 import arrow.core.left
 import arrow.core.right
+import com.tangem.common.extensions.toHexString
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.core.remote.response.ApiResponse
@@ -27,6 +28,7 @@ import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.MockAccounts
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -41,6 +43,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.web3j.crypto.StructuredDataEncoder
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -101,9 +105,7 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
         }
 
         coEvery { tangemPayApi.getWithdrawData(any(), any()) } returns ApiResponse.Success(
-            WithdrawDataResponse(
-                result = WithdrawDataResponse.Result(hash = "hash", salt = "salt", senderAddress = "sender"),
-            ),
+            WithdrawDataResponse(result = withdrawData()),
         )
         coEvery { tangemPayApi.withdraw(any(), any()) } returns ApiResponse.Success(
             WithdrawResponse(
@@ -254,6 +256,51 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
         coVerify { tangemPayApi.withdraw(any(), any()) }
     }
 
+    @Test
+    fun `GIVEN withdraw data describing the request WHEN withdraw THEN its hash is signed`() = runTest {
+        // Act
+        createRepository().withdraw()
+
+        // Assert
+        coVerify(exactly = 1) { authDataSource.getWithdrawalSignature(userWallet, withdrawData().hash) }
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN withdraw data not describing the request WHEN withdraw THEN WithdrawalDataError and nothing signed`(
+        data: WithdrawDataResponse.Result,
+    ) = runTest {
+        // Arrange
+        coEvery { tangemPayApi.getWithdrawData(any(), any()) } returns ApiResponse.Success(
+            WithdrawDataResponse(result = data),
+        )
+
+        // Act
+        val result = createRepository().withdraw()
+
+        // Assert
+        Assertions.assertEquals(VisaApiError.WithdrawalDataError.left(), result)
+        coVerify(exactly = 0) { authDataSource.getWithdrawalSignature(any(), any()) }
+        coVerify(exactly = 0) { tangemPayApi.withdraw(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN withdraw data to another recipient WHEN withdrawWithSwap THEN WithdrawalDataError and nothing signed`() =
+        runTest {
+            // Arrange
+            coEvery { tangemPayApi.getWithdrawData(any(), any()) } returns ApiResponse.Success(
+                WithdrawDataResponse(result = withdrawData(recipient = OTHER_ADDRESS)),
+            )
+
+            // Act
+            val result = createRepository().withdrawWithSwap()
+
+            // Assert
+            Assertions.assertEquals(VisaApiError.WithdrawalDataError.left(), result)
+            coVerify(exactly = 0) { authDataSource.getWithdrawalSignature(any(), any()) }
+            coVerify(exactly = 0) { tangemPayApi.withdraw(any(), any()) }
+        }
+
     // endregion
 
     // region hasWithdrawOrder
@@ -384,9 +431,7 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
             val dataRequest = slot<WithdrawDataRequest>()
             val withdrawRequest = slot<WithdrawRequest>()
             coEvery { tangemPayApi.getWithdrawData(any(), capture(dataRequest)) } returns ApiResponse.Success(
-                WithdrawDataResponse(
-                    result = WithdrawDataResponse.Result(hash = "hash", salt = "salt", senderAddress = "sender"),
-                ),
+                WithdrawDataResponse(result = withdrawData()),
             )
             coEvery { tangemPayApi.withdraw(any(), capture(withdrawRequest)) } returns ApiResponse.Success(
                 WithdrawResponse(
@@ -440,9 +485,7 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
             val dataRequest = slot<WithdrawDataRequest>()
             val withdrawRequest = slot<WithdrawRequest>()
             coEvery { tangemPayApi.getWithdrawData(any(), capture(dataRequest)) } returns ApiResponse.Success(
-                WithdrawDataResponse(
-                    result = WithdrawDataResponse.Result(hash = "hash", salt = "salt", senderAddress = "sender"),
-                ),
+                WithdrawDataResponse(result = withdrawData()),
             )
             coEvery { tangemPayApi.withdraw(any(), capture(withdrawRequest)) } returns ApiResponse.Success(
                 WithdrawResponse(
@@ -475,9 +518,7 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
             )
             val dataRequest = slot<WithdrawDataRequest>()
             coEvery { tangemPayApi.getWithdrawData(any(), capture(dataRequest)) } returns ApiResponse.Success(
-                WithdrawDataResponse(
-                    result = WithdrawDataResponse.Result(hash = "hash", salt = "salt", senderAddress = "sender"),
-                ),
+                WithdrawDataResponse(result = withdrawData()),
             )
             coEvery { orderRepository.getOrderData(any(), any()) } returns orderWithHash.right()
 
@@ -545,14 +586,58 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
         withdrawPollingScope = TestAppCoroutineScope(this),
     )
 
-    private companion object {
-        const val CURRENCY_ID = "ethereum"
-        const val ORDER_ID = "order-1"
-        const val TX_HASH = "0xTxHash"
-        const val SIGNATURE = "0xSignature"
-        const val AUTH_HEADER = "auth-header"
-        const val RECEIVER_ADDRESS = "0xReceiver"
-        const val CONTRACT_ADDRESS = "0xContract"
-        const val CHAIN_ID = 137L
+    companion object {
+        private const val CURRENCY_ID = "ethereum"
+        private const val ORDER_ID = "order-1"
+        private const val TX_HASH = "0xTxHash"
+        private const val SIGNATURE = "0xSignature"
+        private const val AUTH_HEADER = "auth-header"
+        private const val RECEIVER_ADDRESS = "0x059dbd5f24a000d28f83268db1c85c9c3ab6a123"
+        private const val CONTRACT_ADDRESS = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        private const val OTHER_ADDRESS = "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2"
+        private const val CHAIN_ID = 137L
+        private const val TOKEN_AMOUNT = "1500000"
+
+        @JvmStatic
+        fun provideTestModels() = listOf(
+            withdrawData(amount = "1600000"),
+            withdrawData(recipient = OTHER_ADDRESS),
+            withdrawData(chainId = 1L),
+            withdrawData(asset = OTHER_ADDRESS),
+            withdrawData().copy(hash = "0xdeadbeef"),
+            withdrawData().copy(structuredData = null),
+        )
+
+        private fun withdrawData(
+            chainId: Long = CHAIN_ID,
+            asset: String = CONTRACT_ADDRESS,
+            recipient: String = RECEIVER_ADDRESS,
+            amount: String = TOKEN_AMOUNT,
+        ): WithdrawDataResponse.Result {
+            val structuredData = """
+                {
+                  "types": {
+                    "EIP712Domain": [
+                      {"name": "name", "type": "string"},
+                      {"name": "chainId", "type": "uint256"}
+                    ],
+                    "Withdraw": [
+                      {"name": "asset", "type": "address"},
+                      {"name": "recipient", "type": "address"},
+                      {"name": "amount", "type": "uint256"}
+                    ]
+                  },
+                  "primaryType": "Withdraw",
+                  "domain": {"name": "Collateral", "chainId": $chainId},
+                  "message": {"asset": "$asset", "recipient": "$recipient", "amount": "$amount"}
+                }
+            """.trimIndent()
+            return WithdrawDataResponse.Result(
+                hash = "0x" + StructuredDataEncoder(structuredData).hashStructuredData().toHexString(),
+                salt = "salt",
+                senderAddress = "sender",
+                structuredData = structuredData,
+            )
+        }
     }
 }

@@ -13,13 +13,13 @@ class TangemPayHotWalletOnboardingPageObject(semanticsProvider: SemanticsNodeInt
     ComposeScreen<TangemPayHotWalletOnboardingPageObject>(semanticsProvider = semanticsProvider) {
 
     val title: KNode = child {
-        hasText(getResourceString(CoreResR.string.tangempay_onboarding_title))
+        hasText(getResourceString(CoreResR.string.tangempay_newonboard_title))
         useUnmergedTree = true
     }
 
     // The Tangem Pay onboarding screen carries the same title and CTA — only this block is unique here.
-    val setupWalletBlockTitle: KNode = child {
-        hasText(getResourceString(CoreResR.string.tangempay_onboarding_setup_wallet_title))
+    val legalCaption: KNode = child {
+        hasText(getResourceString(CoreResR.string.common_privacy_policy), substring = true)
         useUnmergedTree = true
     }
 

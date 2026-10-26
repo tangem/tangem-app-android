@@ -1,14 +1,12 @@
 package com.tangem.domain.pay.repository
 
 import arrow.core.Either
-import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.CardActivationOrder
+import com.tangem.domain.pay.model.CustomerOrderRequest
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderType
-import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.visa.error.VisaApiError
 
 interface CustomerOrderRepository {
@@ -33,38 +31,10 @@ interface CustomerOrderRepository {
     /**
      * Create a new order via `POST /v1/order` with a per-attempt idempotency key.
      * The caller is responsible for finding an existing active order before creating a new one.
-     *
-     * @param chainId EVM chain id for [OrderType.SMART_CONTRACT_ISSUE_RAIN] (network contract-creation)
-     * orders; `null` for every other order type.
      */
     suspend fun createOrder(
         userWalletId: UserWalletId,
-        type: OrderType,
-        specificationName: String?,
-        idempotencyKey: String,
-        targetTariffPlanId: String? = null,
-        transitionType: TangemPayTariffPlanTransition.Type? = null,
-        chainId: Int? = null,
-        deeplinkValue: String? = null,
-    ): Either<VisaApiError, Order>
-
-    suspend fun createPlasticIssueOrder(
-        userWalletId: UserWalletId,
-        specificationName: String,
-        order: PlasticCardOrder,
-        idempotencyKey: String,
-    ): Either<VisaApiError, Order>
-
-    suspend fun createPlasticReissueOrder(
-        userWalletId: UserWalletId,
-        sourceProductInstanceId: String,
-        order: PlasticCardOrder,
-        idempotencyKey: String,
-    ): Either<VisaApiError, Order>
-
-    suspend fun createCardActivationOrder(
-        userWalletId: UserWalletId,
-        order: CardActivationOrder,
+        request: CustomerOrderRequest,
         idempotencyKey: String,
     ): Either<VisaApiError, Order>
 

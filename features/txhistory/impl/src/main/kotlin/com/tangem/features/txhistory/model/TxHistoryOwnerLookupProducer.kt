@@ -5,6 +5,7 @@ import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.addressbook.usecase.GetContactAddressLookupUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.dynamicaddresses.GetUsedDynamicAddressesUseCase
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,7 @@ import javax.inject.Inject
  * @param userWalletId the wallet whose history is being viewed — the priority wallet when one address is saved as a
  * contact in several address books.
  */
+@Suppress("LongParameterList")
 internal class TxHistoryOwnerLookupProducer @Inject constructor(
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
@@ -29,11 +31,17 @@ internal class TxHistoryOwnerLookupProducer @Inject constructor(
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val walletIconUMConverter: WalletIconUMConverter,
     private val getContactAddressLookupUseCase: GetContactAddressLookupUseCase,
+    private val getUsedDynamicAddressesUseCase: GetUsedDynamicAddressesUseCase,
 ) {
 
     operator fun invoke(userWalletId: UserWalletId): Flow<TxHistoryLookupContext> {
         val ownAccountByNetwork = multiAccountStatusListSupplier()
-            .map(::buildOwnAccountAddressMapAllNetworks)
+            .map { lists ->
+                buildOwnAccountAddressMapAllNetworks(
+                    lists = lists,
+                    usedDynamicAddresses = getUsedDynamicAddressesUseCase::invoke,
+                )
+            }
             .distinctUntilChanged()
 
         val walletInfoById = userWalletsListRepository.userWallets
