@@ -63,6 +63,8 @@ internal class SwapInteractorImplOnSwapCexSendTest : SwapInteractorImplTestBase(
         } returns TransactionFee.Single(normal = trxFee(QUOTED_FEE)).right()
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns trxStatus(balance = "50").right()
         every { isDemoCardUseCase(any()) } returns false
+        every { swapFeatureToggles.isTronClientEnergyEnabled } returns true
+        every { swapFeatureToggles.isTronLowerFeeTypeEnabled } returns true
         coEvery {
             repository.getExchangeData(
                 userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
@@ -198,6 +200,30 @@ internal class SwapInteractorImplOnSwapCexSendTest : SwapInteractorImplTestBase(
                 ),
             )
             coVerify(exactly = 0) { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) }
+        }
+
+    @Test
+    fun `GIVEN Tron TRX fee toggles off and TRX short WHEN onSwap CEX THEN sent without re-estimation`() =
+        runTest {
+            // Arrange
+            val fromStatus = hotTronTokenStatus()
+            every { swapFeatureToggles.isTronClientEnergyEnabled } returns false
+            every { swapFeatureToggles.isTronLowerFeeTypeEnabled } returns false
+            stubReestimatedFee(REESTIMATED_FEE)
+            coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns
+                trxStatus(balance = "5").right()
+
+            // Act
+            val result = onSwapCex(fromStatus, nativeSwapFee())
+
+            // Assert
+            assertThat(result).isInstanceOf(SwapTransactionState.TxSent::class.java)
+            coVerify(exactly = 0) {
+                getFeeUseCase(
+                    userWallet = any(), network = any(), transactionData = any(),
+                    spenderAddress = any(), isSimulateEstimation = any(),
+                )
+            }
         }
 
     @Test

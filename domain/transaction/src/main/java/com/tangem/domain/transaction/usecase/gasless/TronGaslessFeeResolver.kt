@@ -10,6 +10,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.transaction.TransactionFeatureToggles
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.isTronActivationRefusal
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -26,6 +27,7 @@ import java.math.BigDecimal
 class TronGaslessFeeResolver(
     private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
+    private val transactionFeatureToggles: TransactionFeatureToggles,
 ) {
 
     /**
@@ -34,7 +36,9 @@ class TronGaslessFeeResolver(
      *
      * @return `null` when Tron gasless does not apply and the caller's native fee stands. Otherwise
      * [loadNativeFee]'s when TRX is payable and either own energy covers the transfer or it costs no more in
-     * fiat than the gasless compensation, else the gasless fee unless only TRX can pay. A refused account
+     * fiat than the gasless compensation, else the gasless fee unless only TRX can pay. Each TRX
+     * preference is gated by [TransactionFeatureToggles]; with both off, TRX is weighed only when the gasless
+     * quote fails or the token cannot cover it. A refused account
      * activation is returned as is: an account that must be activated first cannot pay in TRX either,
      * so falling back would replace an actionable message with an unpayable fee.
      *
@@ -64,31 +68,36 @@ class TronGaslessFeeResolver(
         // Not cached: the supported-token check reports a transport failure as "unsupported"
         if (!isTronGaslessSupportedUseCase(network, sentToken)) return null
 
-        val nativeFeeResult = loadNativeFee()
-        nativeFeeResult.onRight { nativeFee ->
-            // Not reported as preferred: a later destination may need more energy than the account holds.
-            if (nativeFee.transactionFee.isPaidByOwnTronEnergy(nativeCurrencyStatus)) return nativeFee.right()
+        val isLowerFeeTypeEnabled = transactionFeatureToggles.isTronLowerFeeTypeEnabled
+        val eagerNativeFee = if (isNativeFeeAutoPicked()) loadNativeFee() else null
+        if (transactionFeatureToggles.isTronClientEnergyEnabled) {
+            eagerNativeFee?.onRight { nativeFee ->
+                // Not reported as preferred: a later destination may need more energy than the account holds.
+                if (nativeFee.transactionFee.isPaidByOwnTronEnergy(nativeCurrencyStatus)) return nativeFee.right()
+            }
         }
 
         val gaslessFee = getTronGaslessFeeUseCase(userWalletId, transactionData, sentToken).getOrElse { error ->
             if (error.isTronActivationRefusal()) return error.left()
             TangemLogger.i("Tron gasless quote unavailable ($error), falling back to the native fee")
-            return nativeFeeResult.onRight { nativeFee ->
+            return (eagerNativeFee ?: loadNativeFee()).onRight { nativeFee ->
                 if (isPayableInNative(nativeCurrencyStatus, nativeFee)) onNativeFeePreferred()
             }
         }
 
-        val nativeFee = nativeFeeResult.getOrElse { return gaslessFee.right() }
-        val isNativeCheaper = nativeFee.transactionFee.isPreferredOverTronGasless(
-            gaslessFee = gaslessFee.transactionFee,
-            nativeStatus = nativeCurrencyStatus,
-            gaslessTokenStatus = sentStatus,
-        )
+        val cheaperNativeFee = eagerNativeFee?.getOrNull()?.takeIf { nativeFee ->
+            isLowerFeeTypeEnabled && nativeFee.transactionFee.isPreferredOverTronGasless(
+                gaslessFee = gaslessFee.transactionFee,
+                nativeStatus = nativeCurrencyStatus,
+                gaslessTokenStatus = sentStatus,
+            )
+        }
         // Not reported as preferred: another amount or destination may change which fee is cheaper.
-        if (isNativeCheaper) return nativeFee.right()
+        if (cheaperNativeFee != null) return cheaperNativeFee.right()
 
         if (coversGaslessFee(sentStatus, gaslessFee)) return gaslessFee.right()
 
+        val nativeFee = (eagerNativeFee ?: loadNativeFee()).getOrElse { return gaslessFee.right() }
         if (!isPayableInNative(nativeCurrencyStatus, nativeFee)) return gaslessFee.right()
 
         onNativeFeePreferred()
@@ -129,6 +138,9 @@ class TronGaslessFeeResolver(
         val sentBalance = sentStatus.value.amount ?: return true
         return sentBalance > compensation
     }
+
+    private fun isNativeFeeAutoPicked(): Boolean =
+        transactionFeatureToggles.isTronClientEnergyEnabled || transactionFeatureToggles.isTronLowerFeeTypeEnabled
 
     private fun isPayableInNative(nativeStatus: CryptoCurrencyStatus, nativeFee: TransactionFeeExtended): Boolean {
         val feeValue = nativeFee.feeValue() ?: return false
