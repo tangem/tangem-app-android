@@ -119,12 +119,10 @@ internal object MarketingDataModule {
         tangemTechApi: TangemTechApi,
         userWalletsListRepository: UserWalletsListRepository,
         featureToggles: MarketingFeatureToggles,
-        dispatchers: CoroutineDispatcherProvider,
     ): MarketingUidBindingRepository = DefaultMarketingUidBindingRepository(
         tangemTechApi = tangemTechApi,
         userWalletsListRepository = userWalletsListRepository,
         featureToggles = featureToggles,
-        dispatchers = dispatchers,
     )
 
     @Provides
