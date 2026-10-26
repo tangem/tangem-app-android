@@ -60,20 +60,20 @@ internal fun TangemSegmentedPickerStory(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level1),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         item("default_surface") {
             PickerSection(
                 title = "Default surface",
                 isAltSurface = false,
-                background = TangemTheme.colors2.surface.level1,
+                background = TangemTheme.colors3.bg.primary,
             )
         }
         item("alt_surface") {
             PickerSection(
                 title = "Alt surface",
                 isAltSurface = true,
-                background = TangemTheme.colors2.surface.level2,
+                background = TangemTheme.colors3.bg.primary,
             )
         }
         item("segment_count") {
@@ -94,14 +94,14 @@ private fun PickerSection(title: String, isAltSurface: Boolean, background: Colo
         Text(
             text = title,
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         configs.forEach { config ->
             PickerRow(config = config, isAltSurface = isAltSurface)
         }
     }
     HorizontalDivider(
-        color = TangemTheme.colors2.border.neutral.secondary,
+        color = TangemTheme.colors3.border.tertiary,
         modifier = Modifier.padding(horizontal = 16.dp),
     )
 }
@@ -112,7 +112,7 @@ private fun PickerRow(config: PickerConfig, isAltSurface: Boolean) {
         Text(
             text = config.label,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
         TangemSegmentedPicker(
             items = items4,
@@ -130,13 +130,13 @@ private fun SegmentCountSection() {
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .background(TangemTheme.colors2.surface.level1)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         Text(
             text = "Segment count",
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         SegmentCountRow(label = "2 segments", items = items2)
         SegmentCountRow(label = "3 segments", items = items3)
@@ -144,7 +144,7 @@ private fun SegmentCountSection() {
         SegmentCountRow(label = "5 segments", items = items5)
     }
     HorizontalDivider(
-        color = TangemTheme.colors2.border.neutral.secondary,
+        color = TangemTheme.colors3.border.tertiary,
         modifier = Modifier.padding(horizontal = 16.dp),
     )
 }
@@ -155,7 +155,7 @@ private fun SegmentCountRow(label: String, items: ImmutableList<TangemSegmentUM>
         Text(
             text = label,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
         TangemSegmentedPicker(
             items = items,

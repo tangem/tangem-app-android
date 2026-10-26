@@ -80,7 +80,7 @@ internal object WalletScreenPreviewData {
             onClick = {},
             tangemIconUM = TangemIconUM.Icon(
                 iconRes = R.drawable.ic_filter_default_24,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
+                tintReference = { TangemTheme.colors3.icon.inverse },
             ),
             size = TangemButtonSize.X9,
             shape = TangemButtonShape.Rounded,
@@ -116,7 +116,7 @@ internal object WalletScreenPreviewData {
             onClick = {},
             tangemIconUM = TangemIconUM.Icon(
                 iconRes = R.drawable.ic_filter_default_24,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
+                tintReference = { TangemTheme.colors3.icon.inverse },
             ),
             size = TangemButtonSize.X9,
             shape = TangemButtonShape.Rounded,
@@ -146,7 +146,7 @@ internal object WalletScreenPreviewData {
             onClick = {},
             tangemIconUM = TangemIconUM.Icon(
                 iconRes = R.drawable.ic_filter_default_24,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
+                tintReference = { TangemTheme.colors3.icon.inverse },
             ),
             size = TangemButtonSize.X9,
             shape = TangemButtonShape.Rounded,

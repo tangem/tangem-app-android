@@ -53,7 +53,7 @@ internal fun OnboardingNoteCreateWallet(state: OnboardingNoteCreateWalletUM, mod
             Text(
                 text = stringResourceSafe(R.string.onboarding_create_wallet_header),
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 16.dp),
             )
@@ -61,7 +61,7 @@ internal fun OnboardingNoteCreateWallet(state: OnboardingNoteCreateWalletUM, mod
             Text(
                 text = stringResourceSafe(R.string.onboarding_create_wallet_body),
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 12.dp),
             )

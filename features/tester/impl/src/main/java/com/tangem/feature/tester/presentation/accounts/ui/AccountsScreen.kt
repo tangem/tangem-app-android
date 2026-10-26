@@ -50,7 +50,7 @@ internal fun AccountsScreen(state: AccountsUM, modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.primary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         stickyHeader { AppBar(onBackClick = state.onBackClick) }
 
@@ -92,7 +92,7 @@ private fun AppBar(onBackClick: () -> Unit) {
     AppBarWithBackButton(
         onBackClick = onBackClick,
         text = stringResourceSafe(id = R.string.accounts),
-        containerColor = TangemTheme.colors.background.primary,
+        containerColor = TangemTheme.colors3.bg.primary,
     )
 }
 
@@ -103,7 +103,7 @@ private fun WalletInfoBlock(walletName: String?, onClick: () -> Unit) {
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .fillMaxWidth()
             .heightIn(min = 48.dp)
-            .background(color = TangemTheme.colors.background.secondary, shape = RoundedCornerShape(16.dp))
+            .background(color = TangemTheme.colors3.bg.primary, shape = RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
             .padding(vertical = 12.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -112,20 +112,20 @@ private fun WalletInfoBlock(walletName: String?, onClick: () -> Unit) {
         Icon(
             painter = painterResource(R.drawable.ic_wallet_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
         )
 
         val text by remember(walletName) { mutableStateOf(walletName ?: "Choose wallet") }
         Text(
             text = text,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
 
         Icon(
             painter = painterResource(R.drawable.ic_chevron_right_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.secondary,
+            tint = TangemTheme.colors3.icon.secondary,
         )
     }
 }
@@ -155,14 +155,14 @@ private fun WalletSelector(isShown: Boolean, onDismissRequest: () -> Unit, conte
                 Text(
                     text = wallet.name,
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
 
                 if (wallet.walletId == walletSelector.selected?.walletId) {
                     Icon(
                         painter = painterResource(R.drawable.ic_check_24),
                         contentDescription = null,
-                        tint = TangemTheme.colors.icon.accent,
+                        tint = TangemTheme.colors3.icon.accent.blue,
                     )
                 }
             }
@@ -199,7 +199,7 @@ private fun AccountList(
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp, vertical = 12.dp),
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
 
                 if (index == accountList.accounts.lastIndex) {
@@ -245,14 +245,14 @@ private fun WalletIdRow(title: String, value: String, onCopyClick: () -> Unit) {
                     append(": $value")
                 },
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
         IconButton(onClick = onCopyClick) {
             Icon(
                 painter = painterResource(R.drawable.ic_copy_24),
                 contentDescription = "Copy $title",
-                tint = TangemTheme.colors.icon.primary1,
+                tint = TangemTheme.colors3.icon.primary,
             )
         }
     }

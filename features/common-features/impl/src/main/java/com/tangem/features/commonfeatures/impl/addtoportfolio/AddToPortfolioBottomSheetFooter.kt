@@ -89,7 +89,7 @@ private fun UserPortfolioAddFooter(isEnabled: Boolean, isAddedEverywhere: Boolea
                 stringResourceSafe(R.string.common_add_token)
             },
             style = TangemTheme.typography2.bodyMedium16,
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -102,7 +102,7 @@ private fun UserPortfolioAddFooter(isEnabled: Boolean, isAddedEverywhere: Boolea
                 stringResourceSafe(R.string.markets_token_add_subtitle)
             },
             style = TangemTheme.typography2.captionMedium12,
-            color = TangemTheme.colors2.text.neutral.secondary,
+            color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )

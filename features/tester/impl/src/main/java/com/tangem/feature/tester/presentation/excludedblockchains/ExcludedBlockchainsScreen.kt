@@ -41,7 +41,7 @@ import kotlinx.collections.immutable.toPersistentList
 internal fun ExcludedBlockchainsScreen(state: ExcludedBlockchainsScreenUM, modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier,
-        containerColor = TangemTheme.colors.background.primary,
+        containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
             TangemTopAppBar(
                 title = resourceReference(R.string.excluded_blockchains),

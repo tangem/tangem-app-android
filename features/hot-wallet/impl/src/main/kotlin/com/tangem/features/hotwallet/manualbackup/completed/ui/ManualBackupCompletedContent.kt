@@ -26,7 +26,7 @@ import com.tangem.features.hotwallet.manualbackup.completed.entity.ManualBackupC
 internal fun ManualBackupCompletedContent(state: ManualBackupCompletedUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -46,7 +46,7 @@ internal fun ManualBackupCompletedContent(state: ManualBackupCompletedUM, modifi
                 ),
             text = state.title.resolveReference(),
             style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
         )
         Text(
@@ -59,7 +59,7 @@ internal fun ManualBackupCompletedContent(state: ManualBackupCompletedUM, modifi
                 ),
             text = state.description.resolveReference(),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.weight(2f))

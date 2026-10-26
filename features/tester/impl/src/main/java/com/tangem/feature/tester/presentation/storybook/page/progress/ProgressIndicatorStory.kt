@@ -21,7 +21,7 @@ internal fun ProgressIndicatorStory(modifier: Modifier = Modifier) {
         modifier = modifier
             .statusBarsPadding()
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level1),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         item("section_progress") {
             SectionTitle(text = "Progress values")
@@ -51,8 +51,8 @@ internal fun ProgressIndicatorStory(modifier: Modifier = Modifier) {
             ProgressRowWithColors(
                 label = "Accent",
                 progress = 0.6f,
-                dotColor = TangemTheme.colors2.fill.status.accent,
-                bgColor = TangemTheme.colors2.graphic.neutral.primaryInvertedConstant,
+                dotColor = TangemTheme.colors3.bg.accent.blue,
+                bgColor = TangemTheme.colors3.icon.staticDark,
             )
         }
 
@@ -60,8 +60,8 @@ internal fun ProgressIndicatorStory(modifier: Modifier = Modifier) {
             ProgressRowWithColors(
                 label = "Warning",
                 progress = 0.4f,
-                dotColor = TangemTheme.colors2.fill.status.warning,
-                bgColor = TangemTheme.colors2.graphic.neutral.primaryInvertedConstant,
+                dotColor = TangemTheme.colors3.bg.accent.red,
+                bgColor = TangemTheme.colors3.icon.staticDark,
             )
         }
 
@@ -69,8 +69,8 @@ internal fun ProgressIndicatorStory(modifier: Modifier = Modifier) {
             ProgressRowWithColors(
                 label = "Attention",
                 progress = 0.8f,
-                dotColor = TangemTheme.colors2.fill.status.attention,
-                bgColor = TangemTheme.colors2.graphic.neutral.primaryInvertedConstant,
+                dotColor = TangemTheme.colors3.bg.accent.yellow,
+                bgColor = TangemTheme.colors3.icon.staticDark,
             )
         }
     }
@@ -81,11 +81,11 @@ private fun SectionTitle(text: String) {
     Text(
         text = text,
         style = TangemTheme.typography.subtitle1,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
     )
     HorizontalDivider(
-        color = TangemTheme.colors2.border.neutral.secondary,
+        color = TangemTheme.colors3.border.tertiary,
         modifier = Modifier.padding(horizontal = 16.dp),
     )
 }
@@ -96,8 +96,8 @@ private fun ProgressRow(label: String, progress: Float, height: Int = 6) {
         label = label,
         progress = progress,
         height = height,
-        dotColor = TangemTheme.colors2.fill.status.accent,
-        bgColor = TangemTheme.colors2.graphic.neutral.primaryInvertedConstant,
+        dotColor = TangemTheme.colors3.bg.accent.blue,
+        bgColor = TangemTheme.colors3.icon.staticDark,
     )
 }
 
@@ -118,7 +118,7 @@ private fun ProgressRowWithColors(
         Text(
             text = label,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
         TangemLinearProgressIndicatorWithDot(
             progress = { progress },

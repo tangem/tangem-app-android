@@ -49,7 +49,7 @@ internal fun TangemButtonGroupStory(state: TangemButtonGroupStory, modifier: Mod
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -184,7 +184,7 @@ private fun Hint() {
             "equally when horizontal. Turn \"fill max width\" off to see the group hug its content, " +
             "where every button keeps its own width.",
         style = TangemTheme.typography.caption2,
-        color = TangemTheme.colors.text.secondary,
+        color = TangemTheme.colors3.text.secondary,
     )
 }
 
@@ -195,7 +195,7 @@ private fun Section(label: String, content: @Composable () -> Unit) {
             modifier = Modifier.padding(horizontal = 16.dp),
             text = label,
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         content()
     }
@@ -209,7 +209,7 @@ private fun Chip(label: String, selected: Boolean, onClick: () -> Unit, modifier
         modifier = modifier
             .clip(chipShape)
             .background(
-                if (selected) TangemTheme.colors2.surface.level3 else TangemTheme.colors2.surface.level2,
+                if (selected) TangemTheme.colors3.bg.secondary else TangemTheme.colors3.bg.primary,
             )
             .clickable(onClick = onClick)
             .padding(vertical = 8.dp, horizontal = 12.dp),
@@ -218,7 +218,7 @@ private fun Chip(label: String, selected: Boolean, onClick: () -> Unit, modifier
             text = label,
             maxLines = 1,
             style = TangemTheme.typography.caption2,
-            color = if (selected) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary,
+            color = if (selected) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
         )
     }
 }
@@ -229,7 +229,7 @@ private fun ToggleRow(label: String, checked: Boolean, onToggle: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(TangemTheme.colors2.surface.level2)
+            .background(TangemTheme.colors3.bg.primary)
             .clickable(onClick = onToggle)
             .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -238,12 +238,12 @@ private fun ToggleRow(label: String, checked: Boolean, onToggle: () -> Unit) {
         Text(
             text = label,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         Text(
             text = if (checked) "ON" else "OFF",
             style = TangemTheme.typography.caption2,
-            color = if (checked) TangemTheme.colors.text.accent else TangemTheme.colors.text.secondary,
+            color = if (checked) TangemTheme.colors3.text.accent.blue else TangemTheme.colors3.text.secondary,
         )
     }
 }

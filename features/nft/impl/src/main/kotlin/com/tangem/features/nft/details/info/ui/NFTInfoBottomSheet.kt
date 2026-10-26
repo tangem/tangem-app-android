@@ -40,7 +40,7 @@ internal fun NFTInfoBottomSheetContent(text: TextReference, modifier: Modifier =
     ) {
         Text(
             text = text.resolveReference(),
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography.body2,
             modifier = Modifier.padding(
                 start = 16.dp,
