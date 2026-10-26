@@ -174,7 +174,7 @@ internal class DefaultJointOperationHistoryRepositoryTest {
         }
 
         @Test
-        fun `GIVEN refused cursor WHEN fetchHistoryDelta THEN drops the sync state and fails`() = runTest {
+        fun `GIVEN refused cursor WHEN fetchHistoryDelta THEN drops the sync state and returns null`() = runTest {
             // Arrange
             stubSyncState(syncState(isInitialCompleted = true, afterCursor = "end", deltaCursor = "stale"))
             coEvery {
@@ -182,24 +182,24 @@ internal class DefaultJointOperationHistoryRepositoryTest {
             } returns badRequest()
 
             // Act
-            val actual = runCatching { repository.fetchHistoryDelta(WALLET_ID) }.exceptionOrNull()
+            val actual = repository.fetchHistoryDelta(WALLET_ID)
 
             // Assert
-            assertThat(actual).isNotNull()
+            assertThat(actual).isNull()
             coVerify(exactly = 1) { historySyncStateDao.delete(SYNC_TYPE, WALLET_ID.stringValue) }
             coVerify(exactly = 0) { historySyncStateDao.updateDeltaCursor(any(), any(), any()) }
         }
 
         @Test
-        fun `GIVEN no sync state WHEN fetchHistoryDelta THEN fails without asking the backend`() = runTest {
+        fun `GIVEN no sync state WHEN fetchHistoryDelta THEN returns null without asking the backend`() = runTest {
             // Arrange
             stubSyncState(state = null)
 
             // Act
-            val actual = runCatching { repository.fetchHistoryDelta(WALLET_ID) }.exceptionOrNull()
+            val actual = repository.fetchHistoryDelta(WALLET_ID)
 
             // Assert
-            assertThat(actual).isInstanceOf(IllegalStateException::class.java)
+            assertThat(actual).isNull()
             coVerify(exactly = 0) { jointAccountApi.getJointOperationHistoryDelta(any(), any(), any()) }
         }
 
