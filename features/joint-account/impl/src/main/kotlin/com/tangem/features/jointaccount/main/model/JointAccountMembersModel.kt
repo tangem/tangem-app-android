@@ -35,13 +35,16 @@ import com.tangem.features.jointaccount.main.state.transformers.UpdateMembersIni
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -122,7 +125,10 @@ internal class JointAccountMembersModel @Inject constructor(
             .flatMapLatest { account ->
                 if (account == null) return@flatMapLatest flowOf(null)
 
-                ownJointAccountFlow(cryptoAccountId = account.cryptoAccountId).map { ownAccount ->
+                combine(
+                    flow = ownJointAccountFlow(cryptoAccountId = account.cryptoAccountId),
+                    flow2 = expiryTicks(account = account),
+                ) { ownAccount, _ ->
                     ResolvedAccount(
                         account = account,
                         ownAddress = ownAccount?.ownAddress,
@@ -156,6 +162,22 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private fun JointAccountMembersUM.memberStatuses(): List<Pair<String, JointAccountMembersUM.MemberStatusUM>> =
         joined.map { member -> member.id to member.status }
+
+    /**
+     * An expiring invite changes nothing in the account, so the screen re-renders by itself: on every resume and
+     * once the nearest deadline passes while it is on top.
+     */
+    private fun expiryTicks(account: JointAccount): Flow<Unit> = isResumed.flatMapLatest { resumed ->
+        flow {
+            emit(Unit)
+            if (!resumed) return@flow
+
+            val now = System.currentTimeMillis()
+            val nextDeadline = account.invites.map { it.expiresAtMillis }.filter { it > now }.minOrNull() ?: return@flow
+            delay(timeMillis = nextDeadline - now)
+            emit(Unit)
+        }
+    }
 
     /**
      * The account's `/accounts` record as this wallet sees it. Starts with `null` so the screen renders before the
