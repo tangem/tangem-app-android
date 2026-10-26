@@ -2324,6 +2324,7 @@ internal class DefaultInitialCurrenciesResolverTest {
             fiatRate = BigDecimal.ONE,
         ),
         customerId = "customer",
+        productInstanceId = "instance",
     )
 
     private fun createCollectiblesAccountStatus(vaultStatus: CryptoCurrencyStatus?): AccountStatus.Collectibles {

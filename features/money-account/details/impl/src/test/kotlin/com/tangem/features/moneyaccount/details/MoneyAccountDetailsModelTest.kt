@@ -360,19 +360,15 @@ internal class MoneyAccountDetailsModelTest {
 
     private fun provideSendClickModels() = listOf(
         SendClickModel(
-            status = activeAccount(balance(), isBankOfframpAvailable = true, productInstanceId = PRODUCT_INSTANCE_ID),
+            status = activeAccount(balance(), isBankOfframpAvailable = true),
             expectedRoute = MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = PRODUCT_INSTANCE_ID),
         ),
         SendClickModel(
-            status = activeAccount(balance(), isBankOfframpAvailable = false, productInstanceId = PRODUCT_INSTANCE_ID),
+            status = activeAccount(balance(), isBankOfframpAvailable = false),
             expectedRoute = MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = null),
         ),
         SendClickModel(
-            status = activeAccount(balance(), isBankOfframpAvailable = null, productInstanceId = PRODUCT_INSTANCE_ID),
-            expectedRoute = MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = null),
-        ),
-        SendClickModel(
-            status = activeAccount(balance(), isBankOfframpAvailable = true, productInstanceId = null),
+            status = activeAccount(balance(), isBankOfframpAvailable = null),
             expectedRoute = MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = null),
         ),
         SendClickModel(
@@ -385,11 +381,7 @@ internal class MoneyAccountDetailsModelTest {
             expectedRoute = MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = null),
         ),
         SendClickModel(
-            status = activeAccount(
-                balance = null,
-                isBankOfframpAvailable = true,
-                productInstanceId = PRODUCT_INSTANCE_ID,
-            ),
+            status = activeAccount(balance = null, isBankOfframpAvailable = true),
         ),
     )
 
@@ -410,14 +402,13 @@ internal class MoneyAccountDetailsModelTest {
     private fun activeAccount(
         balance: MoneyAccountStatusValue.Balance?,
         isBankOfframpAvailable: Boolean? = null,
-        productInstanceId: String? = null,
     ) = MoneyAccountStatusValue.Account.Active(
         source = StatusSource.ACTUAL,
         cryptoCurrency = token,
         balance = balance,
         customerId = CUSTOMER_ID,
+        productInstanceId = PRODUCT_INSTANCE_ID,
         isBankOfframpAvailable = isBankOfframpAvailable,
-        productInstanceId = productInstanceId,
     )
 
     private fun balance() = MoneyAccountStatusValue.Balance(
