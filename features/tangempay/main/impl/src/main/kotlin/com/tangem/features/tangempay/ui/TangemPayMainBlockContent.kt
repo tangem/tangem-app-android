@@ -103,7 +103,7 @@ private fun TangemPayMainContent(
     TangemRowContainer(
         modifier = modifier
             .clip(RoundedCornerShape(size = 18.dp))
-            .background(TangemTheme.colors2.surface.level3)
+            .background(TangemTheme.colors3.bg.secondary)
             .clickableSingle(onClick = payMainUM.onClick)
             .testTag(TangemPayTestTags.MAIN_SCREEN_TILE),
     ) {
@@ -117,13 +117,13 @@ private fun TangemPayMainContent(
         )
         Text(
             text = stringResourceSafe(R.string.tangempay_payment_account),
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography2.bodySemibold16,
             modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
         )
         Text(
             text = payMainUM.subtitle.resolveReference(),
-            color = TangemTheme.colors2.text.neutral.secondary,
+            color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography2.captionSemibold12,
             modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
         )
@@ -135,7 +135,7 @@ private fun TangemPayMainContent(
         )
         Text(
             text = payMainUM.balanceSubtitle.orMaskWithStars(isBalanceHidden).resolveReference(),
-            color = TangemTheme.colors2.text.neutral.secondary,
+            color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography2.captionSemibold12,
             modifier = Modifier.layoutId(TangemRowLayoutId.END_BOTTOM),
         )
@@ -154,7 +154,7 @@ private fun TangemPayStateRow(
     TangemRowContainer(
         modifier = modifier
             .clip(RoundedCornerShape(size = 18.dp))
-            .background(TangemTheme.colors2.surface.level3)
+            .background(TangemTheme.colors3.bg.secondary)
             .conditional(onClick != null && isEnabled) { clickableSingle(onClick = requireNotNull(onClick)) }
             .testTag(TangemPayTestTags.MAIN_SCREEN_TILE),
     ) {
@@ -172,9 +172,9 @@ private fun TangemPayStateRow(
         Text(
             text = stringResourceSafe(R.string.tangempay_payment_account),
             color = if (isEnabled) {
-                TangemTheme.colors2.text.neutral.primary
+                TangemTheme.colors3.text.primary
             } else {
-                TangemTheme.colors2.text.status.disabled
+                TangemTheme.colors3.text.tertiary
             },
             style = TangemTheme.typography2.bodySemibold16,
             modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
@@ -182,9 +182,9 @@ private fun TangemPayStateRow(
         Text(
             text = subtitle.resolveReference(),
             color = when {
-                !isEnabled -> TangemTheme.colors2.text.status.disabled
+                !isEnabled -> TangemTheme.colors3.text.tertiary
                 isSubtitleWarning -> TangemTheme.colors3.text.status.warning
-                else -> TangemTheme.colors2.text.neutral.secondary
+                else -> TangemTheme.colors3.text.secondary
             },
             style = TangemTheme.typography2.captionSemibold12,
             modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
@@ -200,7 +200,7 @@ private fun TangemPayStateRow(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_alert_24),
-                tint = TangemTheme.colors2.graphic.status.warning,
+                tint = TangemTheme.colors3.icon.accent.red,
                 contentDescription = null,
             )
         }
@@ -229,7 +229,7 @@ private fun TangemPayFiatAmount(
                         .size(12.dp)
                         .testTag(TangemPayTestTags.MAIN_SCREEN_TILE_CACHE_ICON),
                     painter = painterResource(R.drawable.ic_error_sync_24),
-                    tint = TangemTheme.colors2.graphic.neutral.secondary,
+                    tint = TangemTheme.colors3.icon.secondary,
                     contentDescription = null,
                 )
             }
@@ -239,7 +239,7 @@ private fun TangemPayFiatAmount(
             text = text,
             style = TangemTheme.typography2.bodySemibold16.applyBladeBrush(
                 isEnabled = isBalanceFlickering,
-                textColor = TangemTheme.colors2.text.neutral.primary,
+                textColor = TangemTheme.colors3.text.primary,
             ),
             textAlign = TextAlign.End,
             modifier = Modifier.testTag(TangemPayTestTags.MAIN_SCREEN_TILE_BALANCE),
@@ -252,7 +252,7 @@ private fun TangemPayMainLoading(modifier: Modifier = Modifier) {
     TangemRowContainer(
         modifier = modifier
             .clip(RoundedCornerShape(size = 18.dp))
-            .background(TangemTheme.colors2.surface.level3),
+            .background(TangemTheme.colors3.bg.secondary),
     ) {
         CircleShimmer(
             modifier = Modifier

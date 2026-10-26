@@ -51,7 +51,7 @@ import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 fun RoundedActionButton(
     config: ActionButtonConfig,
     modifier: Modifier = Modifier,
-    color: Color = TangemTheme.colors.button.secondary,
+    color: Color = TangemTheme.colors3.bg.transparent.secondary,
 ) {
     ActionBaseButton(
         config = config,
@@ -85,8 +85,8 @@ fun RoundedActionButton(
 fun ActionButton(
     config: ActionButtonConfig,
     modifier: Modifier = Modifier,
-    color: Color = TangemTheme.colors.button.secondary,
-    containerColor: Color = TangemTheme.colors.background.secondary,
+    color: Color = TangemTheme.colors3.bg.transparent.secondary,
+    containerColor: Color = TangemTheme.colors3.bg.primary,
 ) {
     ActionBaseButton(
         config = config,
@@ -113,13 +113,13 @@ fun ActionBaseButton(
     config: ActionButtonConfig,
     shape: RoundedCornerShape,
     modifier: Modifier = Modifier,
-    color: Color = TangemTheme.colors.button.secondary,
-    containerColor: Color = TangemTheme.colors.background.secondary,
+    color: Color = TangemTheme.colors3.bg.transparent.secondary,
+    containerColor: Color = TangemTheme.colors3.bg.primary,
     content: @Composable (modifier: Modifier) -> Unit,
 ) {
     val context = LocalContext.current
     val backgroundColor by animateColorAsState(
-        targetValue = if (config.isEnabled) color else TangemTheme.colors.button.disabled,
+        targetValue = if (config.isEnabled) color else TangemTheme.colors3.bg.disabled,
         label = "Update background color",
     )
 
@@ -184,9 +184,9 @@ fun ActionButtonContent(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val iconTint = when {
-            !config.isEnabled -> TangemTheme.colors.icon.informative
-            config.shouldDimContent -> TangemTheme.colors.icon.informative
-            else -> TangemTheme.colors.icon.primary1
+            !config.isEnabled -> TangemTheme.colors3.icon.secondary
+            config.shouldDimContent -> TangemTheme.colors3.icon.secondary
+            else -> TangemTheme.colors3.icon.primary
         }
         Icon(
             modifier = Modifier.size(size = 20.dp),
@@ -220,7 +220,7 @@ private fun Loading(backgroundColor: Color, modifier: Modifier = Modifier) {
     ) {
         CircularProgressIndicator(
             modifier = Modifier.size(24.dp),
-            color = TangemTheme.colors.icon.accent,
+            color = TangemTheme.colors3.icon.accent.blue,
         )
     }
 }
@@ -229,9 +229,9 @@ private fun Loading(backgroundColor: Color, modifier: Modifier = Modifier) {
 @ReadOnlyComposable
 fun getTextColor(config: ActionButtonConfig): Color {
     return when {
-        !config.isEnabled -> TangemTheme.colors.text.disabled
-        config.shouldDimContent -> TangemTheme.colors.text.tertiary
-        else -> TangemTheme.colors.text.primary1
+        !config.isEnabled -> TangemTheme.colors3.text.tertiary
+        config.shouldDimContent -> TangemTheme.colors3.text.secondary
+        else -> TangemTheme.colors3.text.primary
     }
 }
 

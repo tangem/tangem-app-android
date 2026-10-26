@@ -65,9 +65,9 @@ private fun SubtitleContent(subtitleUM: TangemTokenRowUM.SubtitleUM.Content, mod
             style = TangemTheme.typography2.captionSemibold12.applyBladeBrush(
                 isEnabled = subtitleUM.isFlickering,
                 textColor = if (subtitleUM.isAvailable) {
-                    TangemTheme.colors2.text.neutral.secondary
+                    TangemTheme.colors3.text.secondary
                 } else {
-                    TangemTheme.colors2.text.status.disabled
+                    TangemTheme.colors3.text.tertiary
                 },
             ),
         )

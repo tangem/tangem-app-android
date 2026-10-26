@@ -62,7 +62,7 @@ internal class OrganizeTokenItemConverter(
                         fiat(
                             fiatCurrencyCode = appCurrency.code,
                             fiatCurrencySymbol = appCurrency.symbol,
-                            spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                            spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.secondary) },
                         )
                     },
                 ),
@@ -70,7 +70,7 @@ internal class OrganizeTokenItemConverter(
                     text = currencyStatus.getTotalCryptoAmount().formatStyled {
                         cryptoStyled(
                             cryptoCurrency = currency,
-                            spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                            spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.secondary) },
                         )
                     },
                 ),

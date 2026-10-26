@@ -40,7 +40,7 @@ internal fun YieldSupplyDepositedWarningContent(warningUM: YieldSupplyDepositedW
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         onBack = null,
         title = {
             TangemModalBottomSheetTitle(
@@ -92,7 +92,7 @@ private fun Content(warningUM: YieldSupplyDepositedWarningUM) {
                 modifier = Modifier
                     .size(54.dp)
                     .align(Alignment.CenterEnd)
-                    .background(TangemTheme.colors.background.primary, CircleShape),
+                    .background(TangemTheme.colors3.bg.primary, CircleShape),
             )
             Image(
                 painter = painterResource(id = CoreUiR.drawable.img_aave_22),
@@ -110,7 +110,7 @@ private fun Content(warningUM: YieldSupplyDepositedWarningUM) {
             textAlign = TextAlign.Center,
             text = stringResourceSafe(R.string.yield_module_balance_info_sheet_title, warningUM.network),
             style = TangemTheme.typography.h3,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
 
         SpacerH8()
@@ -119,7 +119,7 @@ private fun Content(warningUM: YieldSupplyDepositedWarningUM) {
             textAlign = TextAlign.Center,
             text = stringResourceSafe(R.string.yield_module_balance_info_sheet_subtitle),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
 
         SpacerH(8.dp)

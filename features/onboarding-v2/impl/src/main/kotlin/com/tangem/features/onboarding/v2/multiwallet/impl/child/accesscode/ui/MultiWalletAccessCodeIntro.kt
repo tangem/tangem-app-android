@@ -28,11 +28,11 @@ internal fun MultiWalletAccessCodeIntro(modifier: Modifier = Modifier) {
         Text(
             text = stringResourceSafe(R.string.onboarding_access_code_intro_title),
             style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.ic_access_code_119),
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
         Column(
@@ -65,7 +65,7 @@ private fun DescriptionItem(title: String, body: String, @DrawableRes iconRes: I
     Row(modifier) {
         Icon(
             imageVector = ImageVector.vectorResource(iconRes),
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
             contentDescription = null,
         )
         SpacerW(20.dp)
@@ -73,13 +73,13 @@ private fun DescriptionItem(title: String, body: String, @DrawableRes iconRes: I
             Text(
                 text = title,
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             SpacerH(3.dp)
             Text(
                 text = body,
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }

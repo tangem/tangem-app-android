@@ -53,14 +53,19 @@ internal class DefaultJointOperationHistoryRepository @Inject constructor(
     suspend fun fetchHistoryDelta(
         userWalletId: UserWalletId,
         limit: Int = DEFAULT_LIMIT,
-    ): JointOperationHistoryDeltaResponse {
-        val state = checkNotNull(syncState(userWalletId)) { "The joint operation history walk has not started yet" }
+    ): JointOperationHistoryDeltaResponse? {
+        val state = syncState(userWalletId) ?: return null
 
-        val response = jointAccountApi.getJointOperationHistoryDelta(
+        val apiResponse = jointAccountApi.getJointOperationHistoryDelta(
             walletId = userWalletId.stringValue,
             beforeCursor = state.deltaCursor,
             limit = limit,
-        ).getOrResetSyncState(userWalletId)
+        )
+        apiResponse.refusedCursorCause()?.let { cause ->
+            resetSyncState(userWalletId, cause)
+            return null
+        }
+        val response = apiResponse.getOrThrow()
 
         store(userWalletId, response.items)
         response.pagination.startCursor?.let { cursor ->
@@ -110,13 +115,20 @@ internal class DefaultJointOperationHistoryRepository @Inject constructor(
      * the history from the start instead of failing on that cursor forever.
      */
     private suspend fun <T : Any> ApiResponse<T>.getOrResetSyncState(userWalletId: UserWalletId): T {
-        if (this is ApiResponse.Error &&
-            (cause as? ApiResponseError.HttpException)?.code == ApiResponseError.HttpException.Code.BAD_REQUEST
-        ) {
-            TangemLogger.e("Joint operation history refused the cursor, the sync starts over", cause)
-            historySyncStateDao.delete(type = SYNC_TYPE.name, userWalletId = userWalletId.stringValue)
-        }
+        refusedCursorCause()?.let { cause -> resetSyncState(userWalletId, cause) }
         return getOrThrow()
+    }
+
+    private fun ApiResponse<*>.refusedCursorCause(): ApiResponseError? {
+        val cause = (this as? ApiResponse.Error)?.cause
+        val isBadRequest = (cause as? ApiResponseError.HttpException)?.code ==
+            ApiResponseError.HttpException.Code.BAD_REQUEST
+        return cause.takeIf { isBadRequest }
+    }
+
+    private suspend fun resetSyncState(userWalletId: UserWalletId, cause: ApiResponseError) {
+        TangemLogger.e("Joint operation history refused the cursor, the sync starts over", cause)
+        historySyncStateDao.delete(type = SYNC_TYPE.name, userWalletId = userWalletId.stringValue)
     }
 
     private suspend fun store(userWalletId: UserWalletId, items: List<JointOperationHistoryItemDto>) {

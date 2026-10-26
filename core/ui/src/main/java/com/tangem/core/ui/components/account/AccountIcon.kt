@@ -58,7 +58,7 @@ enum class AccountIconSize {
 fun AccountResIcon(@DrawableRes resId: Int, color: Color, size: AccountIconSize, modifier: Modifier = Modifier) {
     AccountGlyphIcon(
         imageVector = ImageVector.vectorResource(id = resId),
-        glyphTint = TangemTheme.colors.text.constantWhite,
+        glyphTint = TangemTheme.colors3.text.staticDark.primary,
         color = color,
         size = size,
         modifier = modifier,
@@ -79,7 +79,7 @@ fun AccountResIcon(@DrawableRes resId: Int, color: Color, size: AccountIconSize,
 fun AccountResIcon(imageVector: ImageVector, color: Color, size: AccountIconSize, modifier: Modifier = Modifier) {
     AccountGlyphIcon(
         imageVector = imageVector,
-        glyphTint = TangemTheme.colors.text.constantWhite.copy(alpha = ACCOUNT_GLYPH_ALPHA),
+        glyphTint = TangemTheme.colors3.text.staticDark.primary.copy(alpha = ACCOUNT_GLYPH_ALPHA),
         color = color,
         size = size,
         modifier = modifier,
@@ -199,7 +199,7 @@ fun AccountCharIcon(char: Char, color: Color, size: AccountIconSize, modifier: M
             modifier = Modifier.animateContentSize(animationSpec = animation()),
             text = char.uppercase(),
             style = textStyle.copy(fontSize = textSize.sp),
-            color = TangemTheme.colors.text.constantWhite,
+            color = TangemTheme.colors3.text.staticDark.primary,
             textAlign = TextAlign.Center,
         )
     }
@@ -281,7 +281,7 @@ private fun AccountIconSize.boxShapeSizeInDp(): Dp = when (this) {
 private fun Preview() {
     TangemThemePreview {
         Row(
-            modifier = Modifier.background(TangemTheme.colors.background.primary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         ) {
             Sample()
         }
@@ -294,7 +294,7 @@ private fun Preview() {
 private fun PreviewRedesigned() {
     TangemThemePreviewRedesign {
         Row(
-            modifier = Modifier.background(TangemTheme.colors.background.primary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         ) {
             Sample()
         }
