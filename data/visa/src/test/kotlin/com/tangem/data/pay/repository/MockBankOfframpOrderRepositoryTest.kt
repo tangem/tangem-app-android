@@ -11,8 +11,11 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderState
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
+import com.tangem.domain.pay.model.bankofframp.BankOfframpRoute
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
+import com.tangem.domain.pay.model.bankofframp.OfframpEta
+import com.tangem.domain.pay.model.bankofframp.OfframpFee
 import com.tangem.domain.pay.model.bankofframp.PostalAddress
 import com.tangem.test.core.ProvideTestModels
 import kotlinx.coroutines.test.runTest
@@ -20,6 +23,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class MockBankOfframpOrderRepositoryTest {
@@ -175,8 +180,77 @@ internal class MockBankOfframpOrderRepositoryTest {
             .isEqualTo(BankOfframpOrderState.Completed.right())
     }
 
+    @Test
+    fun `GIVEN saved recipient WHEN createRoute THEN route to that recipient with the fee and eta of the rail`() =
+        runTest {
+            // Act
+            val actual = repository.createRoute(
+                userWalletId = WALLET_ID,
+                productInstanceId = PRODUCT_INSTANCE_ID,
+                rail = BankRail.WIRE,
+                recipient = BankOfframpRecipient.Saved("mock-bank-account-1"),
+                idempotencyKey = KEY,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                BankOfframpRoute(
+                    depositAddress = "0x0000000000000000000000000000000000000003",
+                    fee = OfframpFee(
+                        name = "FedWire",
+                        amount = BigDecimal("15.00"),
+                        currency = "USD",
+                        description = null,
+                    ),
+                    eta = OfframpEta(minDays = 0, maxDays = 1),
+                    bankAccountId = "mock-bank-account-1",
+                ).right(),
+            )
+        }
+
+    @Test
+    fun `GIVEN new recipient WHEN createRoute is retried with the same key THEN the same route returned`() = runTest {
+        // Arrange
+        val recipient = BankOfframpRecipient.New(details())
+        val created = repository.createRoute(WALLET_ID, PRODUCT_INSTANCE_ID, BankRail.ACH, recipient, KEY)
+
+        // Act
+        val retried = repository.createRoute(WALLET_ID, PRODUCT_INSTANCE_ID, BankRail.ACH, recipient, KEY)
+
+        // Assert
+        assertThat(created).isEqualTo(
+            BankOfframpRoute(
+                depositAddress = "0x0000000000000000000000000000000000000003",
+                fee = OfframpFee(name = "ACH", amount = BigDecimal("1.50"), currency = "USD", description = null),
+                eta = OfframpEta(minDays = 1, maxDays = 3),
+                bankAccountId = "mock-bank-account-new-1",
+            ).right(),
+        )
+        assertThat(retried).isEqualTo(created)
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideRecipientTriggerModels")
+    fun `GIVEN recipient error trigger WHEN createRoute THEN mapped error`(model: TriggerModel) = runTest {
+        // Act
+        val actual = repository.createRoute(
+            userWalletId = WALLET_ID,
+            productInstanceId = PRODUCT_INSTANCE_ID,
+            rail = model.request.rail,
+            recipient = model.request.recipient,
+            idempotencyKey = KEY,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected.left())
+    }
+
     private suspend fun createOrderId(): String {
         return requireNotNull(repository.createOrder(WALLET_ID, request(), KEY).getOrNull()).orderId
+    }
+
+    private fun provideRecipientTriggerModels() = provideTestModels().filter { model ->
+        model.request.recipient is BankOfframpRecipient.New
     }
 
     private fun provideTestModels() = listOf(
@@ -250,5 +324,6 @@ internal class MockBankOfframpOrderRepositoryTest {
     private companion object {
         val WALLET_ID = UserWalletId("0123456789abcdef")
         const val KEY = "idempotency-key"
+        const val PRODUCT_INSTANCE_ID = "123e4567-e89b-12d3-a456-426614174000"
     }
 }
