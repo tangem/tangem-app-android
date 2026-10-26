@@ -72,6 +72,8 @@ internal class CexSwapFeeCalculatorTest {
     @BeforeEach
     fun setUp() {
         every { swapFeatureToggles.isTronGaslessSwapEnabled } returns true
+        every { swapFeatureToggles.isTronClientEnergyEnabled } returns true
+        every { swapFeatureToggles.isTronLowerFeeTypeEnabled } returns true
         // estimateFeeUseCase is relaxed and would otherwise return a non-Right/Left stub.
         coEvery { estimateFeeUseCase(any(), any(), any()) } returns GetFeeError.UnknownError.left()
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns null.right()
@@ -707,6 +709,30 @@ internal class CexSwapFeeCalculatorTest {
         val loaded = result.getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended
         assertThat(loaded?.fee).isSameInstanceAs(gasless)
     }
+
+    @Test
+    fun `GIVEN Tron TRX fee toggles off and own energy covers the fee WHEN calculate THEN Tron gasless fee is returned`() =
+        runTest {
+            // Arrange
+            val fromStatus = tronUsdtStatus()
+            val gasless = tronGaslessFee(fromStatus)
+            every { swapFeatureToggles.isTronClientEnergyEnabled } returns false
+            every { swapFeatureToggles.isTronLowerFeeTypeEnabled } returns false
+            coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
+            stubTronTransferTransaction()
+            coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns gasless.right()
+            coEvery { estimateFeeUseCase(any(), any(), any()) } returns
+                tronEnergyFee(remainingEnergy = 70_000, feeEnergy = 65_000).right()
+            givenTrxBalance(balance = "50")
+
+            // Act
+            val result = calculateDefaultFee(fromStatus)
+
+            // Assert
+            val loaded = result.getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended
+            assertThat(loaded?.fee).isSameInstanceAs(gasless)
+            coVerify(exactly = 0) { estimateFeeUseCase(any(), any(), any()) }
+        }
 
     @Test
     fun `GIVEN TRX fee cheaper in fiat and TRX short WHEN calculate THEN Tron gasless fee is returned`() = runTest {
