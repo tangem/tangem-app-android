@@ -11,7 +11,7 @@ import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.api.ApiResponseRaise
 import com.tangem.data.common.api.safeApiCall
-import com.tangem.data.jointaccount.converter.ActivateJointAccountRequestConverter
+import com.tangem.data.jointaccount.converter.ConfirmJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.CreateJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.JoinJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
@@ -26,7 +26,7 @@ import com.tangem.store.datasource.jointaccount.models.CreateJointOperationReque
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
 import com.tangem.store.datasource.jointaccount.JointAccountApi
 import com.tangem.domain.jointaccount.model.JointAccount
-import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
+import com.tangem.domain.jointaccount.model.JointAccountConfirmationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
 import com.tangem.domain.jointaccount.model.JointAccountInvite
@@ -142,23 +142,30 @@ internal class DefaultJointAccountRepository @Inject constructor(
         }
     }
 
-    override suspend fun activate(
+    override suspend fun confirm(
         userWalletId: UserWalletId,
-        payload: JointAccountActivationPayload,
+        payload: JointAccountConfirmationPayload,
         signature: String,
-    ): Either<Throwable, Unit> = withContext(dispatchers.io) {
+    ): Either<Throwable, JointAccount> = withContext(dispatchers.io) {
         safeApiCall(
             call = {
-                activateOnce(userWalletId = userWalletId, payload = payload, signature = signature)
-                Unit.right()
+                val confirmed = confirmOnce(userWalletId = userWalletId, payload = payload, signature = signature)
+                confirmed.right()
             },
             onError = { error ->
                 if (error is ApiResponseError.TimeoutException) {
-                    logger.e(messageString = "Activation timed out, retrying once — the endpoint is idempotent", error)
+                    logger.e(
+                        messageString = "Confirmation timed out, retrying once — the endpoint is idempotent",
+                        error,
+                    )
                     safeApiCall(
                         call = {
-                            activateOnce(userWalletId = userWalletId, payload = payload, signature = signature)
-                            Unit.right()
+                            val confirmed = confirmOnce(
+                                userWalletId = userWalletId,
+                                payload = payload,
+                                signature = signature,
+                            )
+                            confirmed.right()
                         },
                         onError = { retryError -> retryError.left() },
                     )
@@ -169,15 +176,17 @@ internal class DefaultJointAccountRepository @Inject constructor(
         )
     }
 
-    private suspend fun ApiResponseRaise.activateOnce(
+    private suspend fun ApiResponseRaise.confirmOnce(
         userWalletId: UserWalletId,
-        payload: JointAccountActivationPayload,
+        payload: JointAccountConfirmationPayload,
         signature: String,
-    ) {
-        jointAccountApi.activateJointAccount(
+    ): JointAccount {
+        val response = jointAccountApi.confirmJointAccount(
             walletId = userWalletId.stringValue,
-            body = ActivateJointAccountRequestConverter(signature = signature).convert(value = payload),
+            body = ConfirmJointAccountRequestConverter(signature = signature).convert(value = payload),
         ).bind()
+
+        return converter.convert(value = response)
     }
 
     override suspend fun getInvitePreview(

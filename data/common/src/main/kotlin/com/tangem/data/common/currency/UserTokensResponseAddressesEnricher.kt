@@ -24,8 +24,11 @@ class UserTokensResponseAddressesEnricher @Inject constructor(
     suspend operator fun invoke(userWalletId: UserWalletId, response: UserTokensResponse): UserTokensResponse {
         val isNotificationsEnabled = walletsRepository.isNotificationsEnabled(userWalletId)
 
+        val shouldSendAddresses = isNotificationsEnabled ||
+            walletsRepository.isAddressesSharingRequired(userWalletId)
+
         return withContext(dispatchers.default) {
-            val addressByToken = if (isNotificationsEnabled) {
+            val addressByToken = if (shouldSendAddresses) {
                 val safeAddressByOwnerPath = jointSafeAddresses(userWalletId, response.tokens)
 
                 response.tokens.associateWith { token ->
@@ -49,7 +52,7 @@ class UserTokensResponseAddressesEnricher @Inject constructor(
             }
 
             val enrichedTokens = response.tokens.map { token ->
-                if (isNotificationsEnabled) {
+                if (shouldSendAddresses) {
                     val addresses = addressByToken[token] ?: return@map token
 
                     token.copy(addresses = addresses)

@@ -92,6 +92,7 @@ dependencies {
 
     // region Project - Features
     api(projects.features.swap.domain)
+    implementation(projects.features.moneyAccount.details.api)
     // endregion
 
     // region Project - Libs

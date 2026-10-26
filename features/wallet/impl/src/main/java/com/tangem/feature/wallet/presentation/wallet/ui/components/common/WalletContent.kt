@@ -36,6 +36,7 @@ import kotlinx.collections.immutable.toPersistentList
 internal fun WalletListContent(
     currentWallet: WalletUM,
     isBalanceHidden: Boolean,
+    isRedesignedAccountRowsEnabled: Boolean,
     listState: LazyListState,
     tangemPayComponent: TangemPayMainBlockComponent,
     moneyAccountComponent: MoneyAccountMainBlockComponent,
@@ -109,6 +110,7 @@ internal fun WalletListContent(
                 jointAccountComponent = jointAccountComponent,
                 modifier = movableItemModifier,
                 isBalanceHidden = isBalanceHidden,
+                isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
             )
 
             collectiblesWalletBlock(
