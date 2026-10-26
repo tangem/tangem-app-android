@@ -37,7 +37,7 @@ fun FooterContainer(
             Text(
                 text = footerWrapped.resolveAnnotatedReference(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier
                     .padding(paddingValues)
                     .testTag(FooterTestTags.FOOTER_TEXT),

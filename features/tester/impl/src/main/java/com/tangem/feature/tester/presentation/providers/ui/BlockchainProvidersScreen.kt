@@ -58,7 +58,7 @@ internal fun BlockchainProvidersScreen(state: BlockchainProvidersUM) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.primary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         LazyColumn(contentPadding = PaddingValues(bottom = 64.dp)) {
             stickyHeader {
@@ -101,7 +101,7 @@ internal fun BlockchainProvidersScreen(state: BlockchainProvidersUM) {
 @Composable
 private fun Header(topBar: TopBarWithRefreshUM, searchBar: SearchBarUM) {
     Column(
-        modifier = Modifier.background(TangemTheme.colors.background.primary),
+        modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         TopBarWithRefresh(state = topBar)
@@ -179,7 +179,7 @@ private fun BlockchainRow(state: ProvidersUM, onExpandStateChange: () -> Unit) {
                 .rotate(rotation)
                 .size(24.dp),
             painter = painterResource(id = R.drawable.ic_chevron_24),
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
     }
@@ -219,9 +219,9 @@ private fun ProviderItem(index: Int, state: ProviderUM, onDrop: (Int, Int) -> Un
     var isActive by remember(index) { mutableStateOf(false) }
     val color by animateColorAsState(
         targetValue = if (isActive) {
-            TangemTheme.colors.icon.accent
+            TangemTheme.colors3.icon.accent.blue
         } else {
-            TangemTheme.colors.icon.inactive
+            TangemTheme.colors3.icon.tertiary
         },
         label = "provider_name_background_color",
     )
@@ -258,7 +258,7 @@ private fun ProviderItem(index: Int, state: ProviderUM, onDrop: (Int, Int) -> Un
         ) {
             Text(
                 text = state.name,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
                 style = TangemTheme.typography.body2,
@@ -271,7 +271,7 @@ private fun ProviderItem(index: Int, state: ProviderUM, onDrop: (Int, Int) -> Un
 private fun ProviderIndex(index: Int) {
     Text(
         text = "${index + 1}.",
-        color = TangemTheme.colors.text.accent,
+        color = TangemTheme.colors3.text.accent.blue,
         overflow = TextOverflow.Ellipsis,
         maxLines = 1,
         style = TangemTheme.typography.body2,
@@ -289,7 +289,7 @@ private fun AddProviderButton(state: BlockchainProvidersUM.AddPublicProviderDial
                 .clickable(onClick = { isDialogVisible = true })
                 .weight(1f)
                 .border(
-                    border = BorderStroke(width = 2.dp, color = TangemTheme.colors.icon.accent),
+                    border = BorderStroke(width = 2.dp, color = TangemTheme.colors3.icon.accent.blue),
                     shape = RoundedCornerShape(16.dp),
                 )
                 .padding(horizontal = 8.dp, vertical = 2.dp),
@@ -298,7 +298,7 @@ private fun AddProviderButton(state: BlockchainProvidersUM.AddPublicProviderDial
             Icon(
                 painter = painterResource(id = R.drawable.ic_plus_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.accent,
+                tint = TangemTheme.colors3.icon.accent.blue,
             )
         }
     }

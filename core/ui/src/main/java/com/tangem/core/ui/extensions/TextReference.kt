@@ -528,31 +528,31 @@ private fun TextReference_Preview(@PreviewParameter(TextReferencePreviewProvider
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.secondary)
                 .padding(4.dp),
         ) {
             Text(
                 text = params.resolveAnnotatedReference(),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             Text(
                 text = styledResourceReference(
                     id = R.string.common_read_more,
                     spanStyleReference = {
-                        TangemTheme.typography.body1.copy(TangemTheme.colors.text.accent).toSpanStyle()
+                        TangemTheme.typography.body1.copy(TangemTheme.colors3.text.accent.blue).toSpanStyle()
                     },
                     onClick = {
                         uriHandler.openUri("https://tangem.com")
                     },
                 ).resolveAnnotatedReference(),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             Text(
                 text = stringReference("To be masked").orMaskWithStars(true).resolveAnnotatedReference(),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
         }
     }
@@ -571,13 +571,13 @@ private class TextReferencePreviewProvider : PreviewParameterProvider<TextRefere
             styledStringReference(
                 value = "Styled string",
                 spanStyleReference = {
-                    TangemTheme.typography.subtitle2.copy(TangemTheme.colors.text.accent).toSpanStyle()
+                    TangemTheme.typography.subtitle2.copy(TangemTheme.colors3.text.accent.blue).toSpanStyle()
                 },
             ),
             styledResourceReference(
                 id = R.string.common_tangem,
                 spanStyleReference = {
-                    TangemTheme.typography.caption1.copy(TangemTheme.colors.text.accent).toSpanStyle()
+                    TangemTheme.typography.caption1.copy(TangemTheme.colors3.text.accent.blue).toSpanStyle()
                 },
             ),
             combinedReference(
@@ -591,13 +591,13 @@ private class TextReferencePreviewProvider : PreviewParameterProvider<TextRefere
                 styledStringReference(
                     value = "Styled string",
                     spanStyleReference = {
-                        TangemTheme.typography.subtitle2.copy(TangemTheme.colors.text.accent).toSpanStyle()
+                        TangemTheme.typography.subtitle2.copy(TangemTheme.colors3.text.accent.blue).toSpanStyle()
                     },
                 ),
                 styledResourceReference(
                     id = R.string.common_tangem,
                     spanStyleReference = {
-                        TangemTheme.typography.caption1.copy(TangemTheme.colors.text.warning).toSpanStyle()
+                        TangemTheme.typography.caption1.copy(TangemTheme.colors3.text.accent.red).toSpanStyle()
                     },
                 ),
             ),

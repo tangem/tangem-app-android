@@ -52,7 +52,7 @@ internal fun YieldSupplyPromoContent(
 ) {
     Column(
         modifier = modifier
-            .background(color = TangemTheme.colors.background.tertiary)
+            .background(color = TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .imePadding()
             .systemBarsPadding(),
@@ -100,10 +100,10 @@ private fun ColumnScope.Content(yieldSupplyPromoUM: YieldSupplyPromoUM, clickInt
             ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_analytics_up_24),
-                    tint = TangemTheme.colors.icon.accent,
+                    tint = TangemTheme.colors3.icon.accent.blue,
                     contentDescription = null,
                     modifier = Modifier
-                        .background(TangemTheme.colors.icon.accent.copy(0.1f), CircleShape)
+                        .background(TangemTheme.colors3.bg.accent.blue.copy(0.1f), CircleShape)
                         .padding(12.dp)
                         .size(32.dp),
                 )
@@ -121,7 +121,7 @@ private fun ColumnScope.Content(yieldSupplyPromoUM: YieldSupplyPromoUM, clickInt
                         text = yieldSupplyPromoUM.title.resolveReference(),
                         style = TangemTheme.typography.h2,
                         textAlign = TextAlign.Center,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                     )
                 }
                 SpacerH8()
@@ -151,7 +151,7 @@ private fun ColumnScope.Content(yieldSupplyPromoUM: YieldSupplyPromoUM, clickInt
             SpacerH32()
         }
         Fade(
-            backgroundColor = TangemTheme.colors.background.tertiary,
+            backgroundColor = TangemTheme.colors3.bg.primary,
             modifier = Modifier.align(Alignment.BottomCenter),
         )
     }
@@ -166,7 +166,7 @@ private fun YieldStatusAppBar(onBackClick: () -> Unit, onHowItWorksClick: () -> 
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.ic_back_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
             modifier = Modifier.clickable(
                 onClick = onBackClick,
                 interactionSource = remember { MutableInteractionSource() },
@@ -177,7 +177,7 @@ private fun YieldStatusAppBar(onBackClick: () -> Unit, onHowItWorksClick: () -> 
         Text(
             text = stringResourceSafe(R.string.yield_module_promo_screen_how_it_works_button_title),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier.clickable(onClick = onHowItWorksClick),
         )
     }
@@ -210,8 +210,8 @@ private fun PromoItems(tokenSymbol: String) {
 @Suppress("MagicNumber")
 @Composable
 private fun BoostPromoTitle(baseApy: String, boostedApy: String) {
-    val accent = TangemTheme.colors.text.accent
-    val primary = TangemTheme.colors.text.primary1
+    val accent = TangemTheme.colors3.text.accent.blue
+    val primary = TangemTheme.colors3.text.primary
     // Pass `%1$s` back as the argument so the placeholder survives formatting (`%%` → `%`).
     val raw = stringResourceSafe(R.string.yield_module_promo_screen_title_v2, "%1\$s")
     val (head, rest) = raw.split("%1\$s", limit = 2)
@@ -242,9 +242,9 @@ private fun BoostPromoTitle(baseApy: String, boostedApy: String) {
 
 @Composable
 private fun PromoBoostCard(baseApy: String, boostedApy: String, onLearnMoreClick: () -> Unit) {
-    val accent = TangemTheme.colors.text.accent
-    val primary = TangemTheme.colors.text.primary1
-    val tertiary = TangemTheme.colors.text.tertiary
+    val accent = TangemTheme.colors3.text.accent.blue
+    val primary = TangemTheme.colors3.text.primary
+    val tertiary = TangemTheme.colors3.text.secondary
     val titleAnnotated = buildAnnotatedString {
         withStyle(SpanStyle(color = primary)) {
             append(stringResourceSafe(R.string.common_yield_mode))
@@ -281,13 +281,13 @@ private fun PromoBoostCard(baseApy: String, boostedApy: String, onLearnMoreClick
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(12.dp),
     ) {
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.ic_gift_promo_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
         )
         Column(
             modifier = Modifier.padding(start = 12.dp),
@@ -311,18 +311,18 @@ private fun PromoItem(@DrawableRes icon: Int, title: TextReference, subtitle: Te
         Icon(
             imageVector = ImageVector.vectorResource(icon),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
         )
         Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(
                 text = title.resolveReference(),
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             Text(
                 text = subtitle.resolveReference(),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }
@@ -353,7 +353,7 @@ private fun YieldSupplyTosText(
                 block = {
                     appendColored(
                         text = fullString.substring(tosIndex, tosIndex + tosTitle.length),
-                        color = TangemTheme.colors.text.accent,
+                        color = TangemTheme.colors3.text.accent.blue,
                     )
                 },
             )
@@ -366,14 +366,14 @@ private fun YieldSupplyTosText(
                 block = {
                     appendColored(
                         text = fullString.substring(policyIndex, policyIndex + policyTitle.length),
-                        color = TangemTheme.colors.text.accent,
+                        color = TangemTheme.colors3.text.accent.blue,
                     )
                 },
             )
         },
         textAlign = TextAlign.Center,
         style = TangemTheme.typography.caption2,
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
         modifier = modifier
             .fillMaxWidth()
             .padding(16.dp),

@@ -15,7 +15,7 @@ data class ExpressStatusBottomSheetConfig(
 fun ExpressStatusBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet(
         config = config,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
     ) { content: ExpressStatusBottomSheetConfig ->
         when (val state = content.value) {
             is ExpressTransactionStateUM.OnrampUM -> OnrampStatusBottomSheetContent(state, false)

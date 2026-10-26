@@ -216,9 +216,9 @@ internal class WalletTokensListUMConverter(
                     iconRes = iconRes,
                     tintReference = {
                         if (accountList.totalFiatBalance !is TotalFiatBalance.Loading) {
-                            TangemTheme.colors2.graphic.neutral.primary
+                            TangemTheme.colors3.icon.primary
                         } else {
-                            TangemTheme.colors2.graphic.neutral.quaternary
+                            TangemTheme.colors3.icon.tertiary
                         }
                     },
                 ),

@@ -29,7 +29,7 @@ internal fun OnrampRedirectContent(state: OnrampRedirectUM, modifier: Modifier =
     Scaffold(
         modifier = modifier.imePadding(),
         contentWindowInsets = WindowInsetsZero,
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
             TangemTopAppBar(
                 modifier = Modifier.statusBarsPadding(),
@@ -61,13 +61,13 @@ private fun Content(state: OnrampRedirectUM, modifier: Modifier = Modifier) {
             modifier = Modifier.padding(top = 24.dp),
             text = state.title.resolveReference(),
             style = TangemTheme.typography.h3,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         Text(
             modifier = Modifier.padding(top = 12.dp),
             text = state.subtitle.resolveReference(),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
     }
@@ -84,10 +84,10 @@ private fun LogoBlock(providerImageUrl: String, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .size(64.dp)
                 .clip(TangemTheme.shapes.roundedCorners8)
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.secondary)
                 .padding(vertical = 8.dp, horizontal = 12.dp),
             painter = painterResource(id = R.drawable.ic_tangem_24),
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
             contentDescription = null,
         )
         LoadingDots()
@@ -117,19 +117,19 @@ private fun LoadingDots(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .size(6.dp)
                 .clip(CircleShape)
-                .background(color = TangemTheme.colors.icon.accent.copy(alpha = 0.75F)),
+                .background(color = TangemTheme.colors3.bg.accent.blue.copy(alpha = 0.75F)),
         )
         Box(
             modifier = Modifier
                 .size(6.dp)
                 .clip(CircleShape)
-                .background(color = TangemTheme.colors.icon.accent.copy(alpha = 0.45F)),
+                .background(color = TangemTheme.colors3.bg.accent.blue.copy(alpha = 0.45F)),
         )
         Box(
             modifier = Modifier
                 .size(8.dp)
                 .clip(CircleShape)
-                .background(color = TangemTheme.colors.icon.accent),
+                .background(color = TangemTheme.colors3.bg.accent.blue),
         )
     }
 }

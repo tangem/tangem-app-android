@@ -24,7 +24,7 @@ fun Modifier.edgeFade(
     size: Dp,
     isVisible: Boolean = true,
     animationSpec: AnimationSpec<Dp>? = null,
-    color: Color = TangemTheme.colors.background.secondary,
+    color: Color = TangemTheme.colors3.bg.primary,
     solidStop: Float = 0f,
 ): Modifier = composed {
     val animatedSize = animationSpec?.let { spec ->
@@ -67,7 +67,7 @@ fun Modifier.edgeFade(
 @Composable
 fun Modifier.bottomFade(
     height: Dp = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() } + 96.dp,
-    color: Color = TangemTheme.colors.background.secondary,
+    color: Color = TangemTheme.colors3.bg.primary,
 ): Modifier = edgeFade(
     FadePosition.BOTTOM,
     size = height,
@@ -82,16 +82,13 @@ fun Modifier.bottomFade(
  * @param solidStop fraction (0..1) of [height] kept fully [color] before the fade starts
  */
 @Composable
-fun Modifier.topFade(
-    height: Dp,
-    color: Color = TangemTheme.colors.background.secondary,
-    solidStop: Float = 0f,
-): Modifier = edgeFade(
-    FadePosition.TOP,
-    size = height,
-    color = color,
-    solidStop = solidStop,
-)
+fun Modifier.topFade(height: Dp, color: Color = TangemTheme.colors3.bg.primary, solidStop: Float = 0f): Modifier =
+    edgeFade(
+        FadePosition.TOP,
+        size = height,
+        color = color,
+        solidStop = solidStop,
+    )
 
 /**
  * Draws a vertical gradient fade over the top edge with custom [colorStops].

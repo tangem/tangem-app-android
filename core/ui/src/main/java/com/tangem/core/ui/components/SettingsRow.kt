@@ -79,18 +79,18 @@ fun SimpleSettingsRow(
 
 @Composable
 fun getWarningRowColors(): RowColors = DefaultRowColors(
-    titleColor = TangemTheme.colors.text.warning,
-    iconColor = TangemTheme.colors.text.warning,
-    disabledTitleColor = TangemTheme.colors.text.secondary,
-    disabledIconColor = TangemTheme.colors.text.secondary,
+    titleColor = TangemTheme.colors3.text.accent.red,
+    iconColor = TangemTheme.colors3.text.accent.red,
+    disabledTitleColor = TangemTheme.colors3.text.secondary,
+    disabledIconColor = TangemTheme.colors3.text.secondary,
 )
 
 @Composable
 fun getDefaultRowColors(): RowColors = DefaultRowColors(
-    titleColor = TangemTheme.colors.text.primary1,
-    iconColor = TangemTheme.colors.text.primary1,
-    disabledTitleColor = TangemTheme.colors.text.secondary,
-    disabledIconColor = TangemTheme.colors.text.secondary,
+    titleColor = TangemTheme.colors3.text.primary,
+    iconColor = TangemTheme.colors3.text.primary,
+    disabledTitleColor = TangemTheme.colors3.text.secondary,
+    disabledIconColor = TangemTheme.colors3.text.secondary,
 )
 
 @Immutable
@@ -113,7 +113,7 @@ private class DefaultRowColors(
 
     @Composable
     override fun subtitleColor(enabled: Boolean): State<Color> {
-        return rememberUpdatedState(newValue = TangemTheme.colors.text.secondary)
+        return rememberUpdatedState(newValue = TangemTheme.colors3.text.secondary)
     }
 
     @Composable

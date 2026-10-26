@@ -11,7 +11,7 @@ internal fun OnrampAddToPortfolioBottomSheet(config: TangemBottomSheetConfig, co
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = config,
         addBottomInsets = true,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         content = { content() },
     )
 }
