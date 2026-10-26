@@ -34,17 +34,17 @@ internal fun LazyListScope.swapNotifications(
                     is NotificationUM.Error.TokenExceedsBalance,
                     is NotificationUM.Warning.NetworkFeeUnreachable,
                     is NotificationUM.Warning.HighFeeError,
-                    -> TangemTheme.colors.background.action
-                    else -> TangemTheme.colors.button.disabled
+                    -> TangemTheme.colors3.bg.secondary
+                    else -> TangemTheme.colors3.bg.disabled
                 },
                 iconTint = when (item) {
-                    is SwapNotificationUM.Warning.TradeTooHigh -> TangemTheme.colors.icon.warning
+                    is SwapNotificationUM.Warning.TradeTooHigh -> TangemTheme.colors3.icon.accent.red
                     is SwapNotificationUM.Error,
                     is NotificationUM.Error.TokenExceedsBalance,
                     is NotificationUM.Warning,
                     -> null
-                    is NotificationUM.Error -> TangemTheme.colors.icon.warning
-                    is NotificationUM.Info -> TangemTheme.colors.icon.accent
+                    is NotificationUM.Error -> TangemTheme.colors3.icon.accent.red
+                    is NotificationUM.Info -> TangemTheme.colors3.icon.accent.blue
                 },
                 isEnabled = !isClickDisabled,
             )

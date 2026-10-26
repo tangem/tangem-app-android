@@ -25,7 +25,7 @@ internal fun PlaceholderStory(modifier: Modifier = Modifier) {
         modifier = modifier
             .statusBarsPadding()
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level1),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         item("section_rectangle") {
             SectionTitle(text = "RectangleShimmer")
@@ -171,7 +171,7 @@ internal fun PlaceholderStory(modifier: Modifier = Modifier) {
                 Text(
                     text = "Typical card loading state",
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     CircleShimmer(modifier = Modifier.size(40.dp))
@@ -197,7 +197,7 @@ internal fun PlaceholderStory(modifier: Modifier = Modifier) {
                 Text(
                     text = "List loading state",
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
                 repeat(3) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -227,11 +227,11 @@ private fun SectionTitle(text: String) {
     Text(
         text = text,
         style = TangemTheme.typography.subtitle1,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
     )
     HorizontalDivider(
-        color = TangemTheme.colors2.border.neutral.secondary,
+        color = TangemTheme.colors3.border.tertiary,
         modifier = Modifier.padding(horizontal = 16.dp),
     )
 }
@@ -247,7 +247,7 @@ private fun ShimmerRow(label: String, content: @Composable () -> Unit) {
         Text(
             text = label,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
         content()
     }

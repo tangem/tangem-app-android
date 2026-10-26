@@ -44,7 +44,7 @@ internal fun TangemTokenRowStory(state: TangemTokenRowStory, modifier: Modifier 
         modifier = modifier
             .statusBarsPadding()
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level1),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         stickyHeader("balance_toggle") {
             BalanceToggle(
@@ -52,7 +52,7 @@ internal fun TangemTokenRowStory(state: TangemTokenRowStory, modifier: Modifier 
                 onToggle = state.onBalanceHiddenToggle,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(TangemTheme.colors2.surface.level1)
+                    .background(TangemTheme.colors3.bg.primary)
                     .padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
@@ -61,10 +61,10 @@ internal fun TangemTokenRowStory(state: TangemTokenRowStory, modifier: Modifier 
             TangemTokenRow(
                 tokenRowUM = um,
                 isBalanceHidden = state.isBalanceHidden,
-                modifier = Modifier.background(TangemTheme.colors2.surface.level1),
+                modifier = Modifier.background(TangemTheme.colors3.bg.primary),
             )
             HorizontalDivider(
-                color = TangemTheme.colors2.border.neutral.secondary,
+                color = TangemTheme.colors3.border.tertiary,
                 modifier = Modifier.padding(start = 16.dp),
             )
         }
@@ -81,7 +81,7 @@ private fun BalanceToggle(isHidden: Boolean, onToggle: () -> Unit, modifier: Mod
         Text(
             text = "isBalanceHidden",
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
         Switch(checked = isHidden, onCheckedChange = { onToggle() })
     }

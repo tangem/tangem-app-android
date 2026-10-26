@@ -66,7 +66,7 @@ private fun Preview_FlickerText() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(color = TangemTheme.colors.background.primary)
+                .background(color = TangemTheme.colors3.bg.primary)
                 .clickable {
                     isFlickering = !isFlickering
                 },
@@ -74,7 +74,7 @@ private fun Preview_FlickerText() {
             Text(
                 modifier = Modifier.flicker(isFlickering),
                 text = "Flicker text",
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 style = TangemTheme.typography.body1,
             )
         }

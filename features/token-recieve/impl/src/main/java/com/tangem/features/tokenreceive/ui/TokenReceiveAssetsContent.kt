@@ -427,7 +427,7 @@ private fun Info(
                                 )
                                 Image(
                                     modifier = Modifier
-                                        .background(TangemTheme.colors.background.tertiary, RoundedCornerShape(15.dp))
+                                        .background(TangemTheme.colors3.bg.primary, RoundedCornerShape(15.dp))
                                         .padding(1.dp)
                                         .size(15.dp)
                                         .align(Alignment.BottomEnd),

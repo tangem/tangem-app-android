@@ -49,26 +49,26 @@ internal fun WcSendMultipleTransactionsModalBottomSheet(
                     modifier = Modifier
                         .size(56.dp)
                         .clip(RoundedCornerShape(percent = 100))
-                        .background(TangemTheme.colors.icon.informative.copy(alpha = 0.1f))
+                        .background(TangemTheme.colors3.icon.secondary.copy(alpha = 0.1f))
                         .padding(12.dp),
                     painter = rememberVectorPainter(
                         ImageVector.vectorResource(R.drawable.ic_alert_24),
                     ),
-                    tint = TangemTheme.colors.icon.attention,
+                    tint = TangemTheme.colors3.icon.accent.yellow,
                     contentDescription = null,
                 )
                 SpacerH24()
                 Text(
                     text = stringResourceSafe(R.string.wallet_connect_multiple_transactions),
                     style = TangemTheme.typography.h3,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     textAlign = TextAlign.Center,
                 )
                 SpacerH8()
                 Text(
                     text = stringResourceSafe(R.string.wallet_connect_multiple_transactions_description),
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                     textAlign = TextAlign.Center,
                 )
                 SpacerH(48.dp)

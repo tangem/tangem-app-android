@@ -32,8 +32,8 @@ val TangemBlockCardColors: CardColors
     @Composable
     @ReadOnlyComposable
     get() = CardColors(
-        containerColor = TangemTheme.colors.background.primary,
-        contentColor = TangemTheme.colors.text.primary1,
-        disabledContainerColor = TangemTheme.colors.background.primary,
-        disabledContentColor = TangemTheme.colors.text.primary1,
+        containerColor = TangemTheme.colors3.bg.secondary,
+        contentColor = TangemTheme.colors3.text.primary,
+        disabledContainerColor = TangemTheme.colors3.bg.secondary,
+        disabledContentColor = TangemTheme.colors3.text.primary,
     )

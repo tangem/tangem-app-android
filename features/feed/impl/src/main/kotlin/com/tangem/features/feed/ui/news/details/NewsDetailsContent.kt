@@ -135,7 +135,7 @@ private fun Content(contentPadding: PaddingValues, state: NewsDetailsUM, backgro
 @Composable
 private fun PreviewNewsDetailsContent() {
     TangemThemePreviewRedesign {
-        val background = TangemTheme.colors.background.tertiary
+        val background = TangemTheme.colors3.bg.primary
         CompositionLocalProvider(
             LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
         ) {

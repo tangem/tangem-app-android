@@ -28,7 +28,7 @@ internal fun SettingsScreensScaffold(
     content: @Composable () -> Unit,
     fab: @Composable () -> Unit = {},
 ) {
-    val backgroundColor = TangemTheme.colors.background.secondary
+    val backgroundColor = TangemTheme.colors3.bg.primary
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -68,7 +68,7 @@ internal fun SettingsScreensScaffold(
                             .padding(horizontal = 20.dp)
                             .padding(bottom = 36.dp),
                         style = TangemTheme.typography.h1,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                     )
                 }
 
@@ -84,7 +84,7 @@ internal fun ScreenTitle(titleRes: Int, modifier: Modifier = Modifier) {
         text = stringResourceSafe(id = titleRes),
         modifier = modifier.padding(start = 20.dp, end = 20.dp),
         style = TangemTheme.typography.h1,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
     )
 }
 
@@ -93,7 +93,7 @@ internal fun ScreenTitle(titleRes: Int, modifier: Modifier = Modifier) {
 internal fun EmptyTopBarWithNavigation(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = TangemTheme.colors.background.primary,
+    backgroundColor: Color = TangemTheme.colors3.bg.primary,
     backButtonTestTag: String? = null,
 ) {
     TopAppBar(
@@ -108,7 +108,7 @@ internal fun EmptyTopBarWithNavigation(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_back_24),
                     contentDescription = null,
-                    tint = TangemTheme.colors.icon.primary1,
+                    tint = TangemTheme.colors3.icon.primary,
                 )
             }
         },
@@ -151,8 +151,8 @@ internal fun DetailsRadioButtonElement(title: String, subtitle: String, isSelect
             onClick = null,
             modifier = Modifier.padding(end = 20.dp),
             colors = RadioButtonDefaults.colors(
-                unselectedColor = TangemTheme.colors.icon.secondary,
-                selectedColor = TangemTheme.colors.icon.accent,
+                unselectedColor = TangemTheme.colors3.icon.secondary,
+                selectedColor = TangemTheme.colors3.icon.accent.blue,
             ),
         )
 
@@ -160,13 +160,13 @@ internal fun DetailsRadioButtonElement(title: String, subtitle: String, isSelect
             Text(
                 text = title,
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             Spacer(modifier = Modifier.size(4.dp))
             Text(
                 text = subtitle,
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }

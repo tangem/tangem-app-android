@@ -40,7 +40,7 @@ import java.math.BigDecimal
 internal fun TonInitializeAccountBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet<TonInitializeAccountBottomSheetConfig>(
         config = config,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
     ) { content ->
         Column(
             modifier = Modifier
@@ -67,7 +67,7 @@ internal fun TonInitializeAccountBottomSheet(config: TangemBottomSheetConfig) {
                     .padding(horizontal = 16.dp),
                 text = content.title.resolveReference(),
                 style = TangemTheme.typography.h3,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
             )
 
@@ -79,7 +79,7 @@ internal fun TonInitializeAccountBottomSheet(config: TangemBottomSheetConfig) {
                     .padding(horizontal = 16.dp),
                 text = content.message.resolveReference(),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
             )
 
@@ -95,7 +95,7 @@ internal fun TonInitializeAccountBottomSheet(config: TangemBottomSheetConfig) {
                     .padding(horizontal = 16.dp),
                 text = content.footer.resolveReference(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
             )
 
