@@ -254,11 +254,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         val loadedAccounts = jointAccounts ?: return account.loadingJointAccountStatus
         val jointAccount = loadedAccounts[account.accountId.value] ?: return account.errorJointAccountStatus
 
-        val isVerified = jointAccountCompositionVerifier.isVerified(
-            userWalletId = account.userWalletId,
-            ownerKeyIndex = account.ownerKeyIndex,
-            jointAccount = jointAccount,
-        )
+        val isVerified = jointAccountCompositionVerifier.isVerified(account = account, jointAccount = jointAccount)
         if (!isVerified) {
             logger.e("Joint account ${account.accountId.value} does not verify, it is shown as compromised")
             return buildCompromisedJointStatus(
