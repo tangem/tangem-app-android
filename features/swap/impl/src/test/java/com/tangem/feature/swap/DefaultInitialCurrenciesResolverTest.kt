@@ -2401,6 +2401,7 @@ internal class DefaultInitialCurrenciesResolverTest {
                 source = StatusSource.ACTUAL,
                 totalMembers = 2,
                 safeAddress = "0x5afe000000000000000000000000000000000002",
+                threshold = 2,
             ),
             tokenList = TokenList.Ungrouped(
                 totalFiatBalance = TotalFiatBalance.Loaded(

@@ -63,7 +63,7 @@ internal class WalletJointAccountItemConverterTest {
     fun `GIVEN pending status WHEN convert THEN members count, zero balance and a waiting banner for a member`() {
         // Arrange
         val status = createStatus(
-            JointAccountStatusValue.Pending(StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 3),
+            JointAccountStatusValue.Pending(StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 3, threshold = 2),
         )
 
         // Act
@@ -93,7 +93,7 @@ internal class WalletJointAccountItemConverterTest {
     fun `GIVEN invites on this device WHEN convert pending with free slots THEN the invite banner is offered`() {
         // Arrange
         val inviting = createConverter(accountIdsWithInvites = setOf(account.accountId.value))
-        val status = createStatus(JointAccountStatusValue.Pending(StatusSource.ACTUAL, 1, 2))
+        val status = createStatus(JointAccountStatusValue.Pending(StatusSource.ACTUAL, 1, 2, threshold = 2))
 
         // Act
         val state = inviting.convert(status).state as JointAccountMainUM.WaitingMembers
@@ -114,7 +114,12 @@ internal class WalletJointAccountItemConverterTest {
     fun `GIVEN invites on this device WHEN convert pending with every slot taken THEN no banner is offered`() {
         // Arrange
         val inviting = createConverter(accountIdsWithInvites = setOf(account.accountId.value))
-        val status = createStatus(JointAccountStatusValue.Pending(StatusSource.ACTUAL, joinedMembers = 3, totalMembers = 3))
+        val status = createStatus(JointAccountStatusValue.Pending(
+            StatusSource.ACTUAL,
+            joinedMembers = 3,
+            totalMembers = 3,
+            threshold = 2,
+        ))
 
         // Act
         val state = inviting.convert(status).state as JointAccountMainUM.WaitingMembers
@@ -126,7 +131,11 @@ internal class WalletJointAccountItemConverterTest {
     @Test
     fun `GIVEN confirming status not confirmed by this wallet WHEN convert THEN the confirm banner for everyone`() {
         // Arrange
-        val status = createStatus(JointAccountStatusValue.Confirming(StatusSource.ACTUAL, totalMembers = 3))
+        val status = createStatus(JointAccountStatusValue.Confirming(
+            StatusSource.ACTUAL,
+            totalMembers = 3,
+            threshold = 2,
+        ))
         val inviting = createConverter(accountIdsWithInvites = setOf(account.accountId.value))
 
         // Act
@@ -157,6 +166,7 @@ internal class WalletJointAccountItemConverterTest {
                 totalMembers = 3,
                 verifiedMembers = 1,
                 isOwnVerified = true,
+                threshold = 2,
             ),
         )
 
@@ -225,7 +235,7 @@ internal class WalletJointAccountItemConverterTest {
     @Test
     fun `GIVEN pending status WHEN row tapped THEN the members screen of the wallet is requested`() {
         // Arrange
-        val status = createStatus(JointAccountStatusValue.Pending(StatusSource.ACTUAL, 1, 3))
+        val status = createStatus(JointAccountStatusValue.Pending(StatusSource.ACTUAL, 1, 3, threshold = 2))
 
         // Act
         (converter.convert(status).state as JointAccountMainUM.WaitingMembers).onClick()
@@ -238,7 +248,12 @@ internal class WalletJointAccountItemConverterTest {
     fun `GIVEN active status WHEN convert THEN refused - the caller renders it as a regular portfolio`() {
         // Arrange
         val status = createStatus(
-            JointAccountStatusValue.Active(StatusSource.ACTUAL, totalMembers = 3, safeAddress = "0x5afe"),
+            JointAccountStatusValue.Active(
+                StatusSource.ACTUAL,
+                totalMembers = 3,
+                safeAddress = "0x5afe",
+                threshold = 2,
+            ),
         )
 
         // Act
