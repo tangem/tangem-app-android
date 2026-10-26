@@ -34,7 +34,7 @@ import com.tangem.features.hotwallet.forgetwallet.entity.ForgetWalletUM
 internal fun ForgetWalletContent(state: ForgetWalletUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .systemBarsPadding(),
     ) {
@@ -54,20 +54,20 @@ internal fun ForgetWalletContent(state: ForgetWalletUM, modifier: Modifier = Mod
             Icon(
                 painter = painterResource(R.drawable.ic_attention_72),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.warning,
+                tint = TangemTheme.colors3.icon.accent.red,
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = stringResourceSafe(R.string.common_attention),
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = state.description.resolveReference(),
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -125,7 +125,7 @@ private fun CheckboxItem(checked: Boolean, onCheckedChange: () -> Unit, text: St
                     tint = if (isChecked) {
                         TangemTheme.colors.control.checked
                     } else {
-                        TangemTheme.colors.icon.secondary
+                        TangemTheme.colors3.icon.secondary
                     },
                 )
             }
@@ -134,7 +134,7 @@ private fun CheckboxItem(checked: Boolean, onCheckedChange: () -> Unit, text: St
         Text(
             text = text,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
     }
 }

@@ -30,6 +30,7 @@ import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.EventMessageHandler
 import com.tangem.core.ui.res.generated.TangemColors3
 import com.tangem.core.ui.res.generated.TangemTypography3
+import com.tangem.core.ui.res.generated.darkColors3
 import com.tangem.core.ui.res.generated.lightColors3
 import com.tangem.core.ui.windowsize.WindowSize
 import com.tangem.core.ui.windowsize.rememberWindowSize
@@ -140,11 +141,13 @@ fun TangemTheme(
 fun ForceDarkTheme(content: @Composable () -> Unit) {
     CompositionLocalProvider(
         LocalTangemColors provides darkThemeColors(),
+        LocalTangemColors3 provides darkColors3(),
         content = content,
     )
 }
 
 object TangemTheme {
+    @Deprecated("Use colors3 instead", ReplaceWith("TangemTheme.colors3"))
     val colors: TangemColors
         @Composable
         @ReadOnlyComposable
@@ -344,8 +347,8 @@ private val TangemTextSelectionColors: TextSelectionColors
     @Composable
     @ReadOnlyComposable
     get() = TextSelectionColors(
-        handleColor = TangemTheme.colors.text.accent,
-        backgroundColor = TangemTheme.colors.text.accent.copy(alpha = 0.3f),
+        handleColor = TangemTheme.colors3.text.accent.blue,
+        backgroundColor = TangemTheme.colors3.text.accent.blue.copy(alpha = 0.3f),
     )
 
 internal val LocalTangemColors = staticCompositionLocalOf<TangemColors> {

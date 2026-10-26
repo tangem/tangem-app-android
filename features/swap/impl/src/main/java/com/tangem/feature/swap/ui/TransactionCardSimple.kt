@@ -173,7 +173,7 @@ private fun SimpleTransactionCardEmpty(
             ) {
                 Text(
                     text = cardState.amountField?.value.orEmpty(),
-                    color = TangemTheme.colors.text.disabled,
+                    color = TangemTheme.colors3.text.tertiary,
                     style = TangemTheme.typography.h2,
                     autoSize = TextAutoSize.StepBased(
                         minFontSize = 16.sp,
@@ -184,7 +184,7 @@ private fun SimpleTransactionCardEmpty(
                 )
                 Text(
                     text = cardState.amountEquivalent.resolveAnnotatedReference(),
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     style = TangemTheme.typography.body2,
                     modifier = Modifier
                         .defaultMinSize(minHeight = 20.dp)
@@ -280,9 +280,9 @@ private fun SimpleHeader(
             .testTag(SwapTokenScreenTestTags.SWAP_BLOCK_HEADER),
     ) {
         val titleColor = if (type.inputError is TransactionCardType.InputError.Empty) {
-            TangemTheme.colors.text.tertiary
+            TangemTheme.colors3.text.secondary
         } else {
-            TangemTheme.colors.text.warning
+            TangemTheme.colors3.text.accent.red
         }
         AccountTitle(
             accountTitleUM = type.accountTitleUM,
@@ -293,7 +293,7 @@ private fun SimpleHeader(
             AnimatedContent(targetState = balance, label = "") { balanceText ->
                 Text(
                     text = balanceText.resolveReference().orMaskWithStars(isBalanceHidden),
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     style = TangemTheme.typography.body2,
                     modifier = Modifier.testTag(SwapTokenScreenTestTags.BALANCE),
                 )
@@ -338,7 +338,7 @@ private fun SimpleContent(
                     if (value != null) {
                         Text(
                             text = value,
-                            color = TangemTheme.colors.text.primary1,
+                            color = TangemTheme.colors3.text.primary,
                             style = TangemTheme.typography.h2,
                             autoSize = TextAutoSize.StepBased(
                                 minFontSize = 16.sp,
@@ -391,13 +391,13 @@ private fun SlippageLink(slippageUM: SwapSlippageUM.Content) {
         Icon(
             imageVector = Icons.ic_edit_16,
             contentDescription = null,
-            tint = TangemTheme.colors.icon.secondary,
+            tint = TangemTheme.colors3.icon.secondary,
             modifier = Modifier.size(16.dp),
         )
         Text(
             text = stringResourceSafe(R.string.common_slippage),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
         )
     }
@@ -413,9 +413,9 @@ private fun WarningIcon(priceImpact: PriceImpact, onClick: (() -> Unit)?) {
             painter = painterResource(id = R.drawable.ic_information_24),
             contentDescription = null,
             tint = when (priceImpact.type) {
-                PriceImpact.Type.HIGH -> TangemTheme.colors.text.warning
-                PriceImpact.Type.MEDIUM -> TangemTheme.colors.text.attention
-                else -> TangemTheme.colors.text.tertiary
+                PriceImpact.Type.HIGH -> TangemTheme.colors3.text.accent.red
+                PriceImpact.Type.MEDIUM -> TangemTheme.colors3.text.accent.yellow
+                else -> TangemTheme.colors3.text.secondary
             },
             modifier = Modifier.testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT_INFORMATION_ICON),
         )

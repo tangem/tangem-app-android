@@ -42,7 +42,7 @@ internal fun WcEstimatedWalletChangesItem(item: WcEstimatedWalletChangesUM, modi
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(color = TangemTheme.colors.background.action)
+            .background(color = TangemTheme.colors3.bg.secondary)
             .fillMaxWidth()
             .animateContentSize(),
     ) {
@@ -83,13 +83,13 @@ internal fun WcEstimatedWalletChangesItem(item: WcEstimatedWalletChangesUM, modi
                 Text(
                     text = stringResourceSafe(if (isExpanded) R.string.common_show_less else R.string.common_show_more),
                     style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
                 Icon(
                     painter = rememberVectorPainter(
                         image = ImageVector.vectorResource(id = R.drawable.ic_chevron_24),
                     ),
-                    tint = TangemTheme.colors.icon.informative,
+                    tint = TangemTheme.colors3.icon.secondary,
                     modifier = Modifier
                         .size(20.dp)
                         .padding(start = 2.dp),
@@ -109,7 +109,7 @@ private fun EstimatedWalletChangesPreviewTwoItems(
     TangemThemePreview {
         Box(
             modifier = Modifier
-                .background(TangemTheme.colors.background.tertiary),
+                .background(TangemTheme.colors3.bg.primary),
         ) {
             WcEstimatedWalletChangesItem(item = item)
         }
@@ -125,7 +125,7 @@ private fun EstimatedWalletChangesPreviewMoreThanFour(
     TangemThemePreview {
         Box(
             modifier = Modifier
-                .background(TangemTheme.colors.background.tertiary),
+                .background(TangemTheme.colors3.bg.primary),
         ) {
             WcEstimatedWalletChangesItem(item = item)
         }

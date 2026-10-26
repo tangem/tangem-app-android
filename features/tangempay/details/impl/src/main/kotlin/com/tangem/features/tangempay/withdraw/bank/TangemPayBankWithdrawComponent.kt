@@ -20,7 +20,6 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankAccount
-import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.eligibility.TangemPayCountrySelectorComponent
 import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawAmountComponent
 import com.tangem.features.tangempay.withdraw.bank.choice.TangemPayBankWithdrawChoiceComponent
@@ -85,7 +84,7 @@ internal class TangemPayBankWithdrawComponent(
                     model.onRecipientSelected(account)
                     pushNext(from = config)
                 },
-                onCloseFlow = ::closeFlow,
+                onCloseFlow = params.onCloseFlow,
             ),
         )
         TangemPayBankWithdrawInnerRoute.Amount -> amountChild(
@@ -126,13 +125,14 @@ internal class TangemPayBankWithdrawComponent(
                 draft = model.draft,
                 onOrderCreated = model::onOrderCreated,
                 onCompleted = ::onOrderSigned,
+                onCloseFlow = params.onCloseFlow,
             ),
         )
         TangemPayBankWithdrawInnerRoute.Success -> TangemPayBankWithdrawSuccessComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayBankWithdrawSuccessComponent.Params(
                 draft = model.draft,
-                onDoneClick = ::closeFlow,
+                onDoneClick = params.onCloseFlow,
             ),
         )
         is TangemPayBankWithdrawInnerRoute.Edit -> editChild(step = config, componentContext = componentContext)
@@ -168,6 +168,7 @@ internal class TangemPayBankWithdrawComponent(
     ): ComposableContentComponent = TangemPayBankWithdrawAmountComponent(
         appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
         params = TangemPayBankWithdrawAmountComponent.Params(
+            sourceAccount = params.sourceAccount,
             draft = model.draft,
             options = params.options,
             step = step,
@@ -175,7 +176,7 @@ internal class TangemPayBankWithdrawComponent(
                 model.onAmountConfirmed(result)
                 onStepConfirmed(step = step, returnToPreview = returnToPreview)
             },
-            onCloseFlow = ::closeFlow,
+            onCloseFlow = params.onCloseFlow,
         ),
     )
 
@@ -194,7 +195,7 @@ internal class TangemPayBankWithdrawComponent(
                 onSelected(selectedId)
                 pushNext(from = step)
             },
-            onCloseFlow = ::closeFlow,
+            onCloseFlow = params.onCloseFlow,
         ),
     )
 
@@ -216,7 +217,7 @@ internal class TangemPayBankWithdrawComponent(
                 onStepConfirmed(step = step, returnToPreview = returnToPreview)
             },
             onSavedRecipientSelected = ::onSavedRecipientSelected,
-            onCloseFlow = ::closeFlow,
+            onCloseFlow = params.onCloseFlow,
         ),
         countrySelectorFactory = countrySelectorFactory,
     )
@@ -233,10 +234,6 @@ internal class TangemPayBankWithdrawComponent(
     private fun onOrderSigned() {
         model.onOrderSigned()
         stackNavigation.pushNew(TangemPayBankWithdrawInnerRoute.Success)
-    }
-
-    private fun closeFlow() {
-        router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails)
     }
 
     private fun onStepConfirmed(step: TangemPayBankWithdrawInnerRoute, returnToPreview: Boolean) {
@@ -264,6 +261,8 @@ internal class TangemPayBankWithdrawComponent(
         val sourceAccount: BankWithdrawSourceAccount,
         val entry: BankWithdrawEntry,
         val options: StateFlow<BankWithdrawOptions>,
+        val onCloseFlow: () -> Unit,
+        val onWithdrawSent: () -> Unit,
     ) {
         val userWalletId: UserWalletId get() = sourceAccount.userWalletId
     }

@@ -49,7 +49,7 @@ internal fun OnrampSuccessComponentContent(
     modifier: Modifier = Modifier,
 ) {
     if (state !is OnrampSuccessComponentUM.Content) {
-        Box(modifier.background(TangemTheme.colors.background.secondary))
+        Box(modifier.background(TangemTheme.colors3.bg.primary))
     } else {
         Content(
             state = state,
@@ -63,7 +63,7 @@ internal fun OnrampSuccessComponentContent(
 private fun Content(state: OnrampSuccessComponentUM.Content, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors3.bg.primary)
             .systemBarsPadding(),
         topBar = {
             TangemTopAppBar(
@@ -85,7 +85,7 @@ private fun Content(state: OnrampSuccessComponentUM.Content, onBackClick: () -> 
     ) { scaffoldPaddings ->
         Column(
             modifier = Modifier
-                .background(TangemTheme.colors.background.secondary)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(scaffoldPaddings)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
@@ -122,7 +122,7 @@ private fun AmountBlock(state: OnrampSuccessComponentUM.Content) {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(16.dp),
     ) {
         val iconModifier = Modifier.size(size = 40.dp)
@@ -140,7 +140,7 @@ private fun AmountBlock(state: OnrampSuccessComponentUM.Content) {
         Text(
             text = state.fromAmount.resolveReference(),
             style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
             autoSize = TextAutoSize.StepBased(
                 maxFontSize = TangemTheme.typography.h2.fontSize,
@@ -153,7 +153,7 @@ private fun AmountBlock(state: OnrampSuccessComponentUM.Content) {
         Text(
             text = state.toAmount.resolveReference(),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
@@ -177,7 +177,7 @@ private fun AmountProviderBlock(providerName: TextReference, providerImageUrl: S
         Text(
             text = stringResourceSafe(R.string.common_with),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
         SubcomposeAsyncImage(
             modifier = Modifier
@@ -195,7 +195,7 @@ private fun AmountProviderBlock(providerName: TextReference, providerImageUrl: S
         Text(
             text = providerName.resolveReference(),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
     }
 }

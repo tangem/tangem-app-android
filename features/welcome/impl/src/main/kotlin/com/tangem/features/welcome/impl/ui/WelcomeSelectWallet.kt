@@ -71,7 +71,7 @@ internal fun AnimatedContentScope.WelcomeSelectWallet(state: WelcomeUM.SelectWal
                             .fillMaxWidth(),
                         state = walletState,
                         blockColors = TangemBlockCardColors.copy(
-                            containerColor = TangemTheme.colors.background.primary,
+                            containerColor = TangemTheme.colors3.bg.secondary,
                         ),
                     )
                 }
@@ -130,7 +130,7 @@ private fun AnimatedContentScope.TopBar(state: WelcomeUM.SelectWallet, modifier:
     ) {
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.img_tangem_logo_90_24),
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
             contentDescription = null,
         )
 
@@ -138,7 +138,7 @@ private fun AnimatedContentScope.TopBar(state: WelcomeUM.SelectWallet, modifier:
             modifier = Modifier.clip(TangemTheme.shapes.roundedCornersLarge),
             text = stringResourceSafe(R.string.auth_info_add_wallet_title),
             colors = TangemButtonsDefaults.defaultTextButtonColors.copy(
-                contentColor = TangemTheme.colors.text.primary1,
+                contentColor = TangemTheme.colors3.text.primary,
             ),
             textStyle = TangemTheme.typography.body1,
             onClick = state.addWalletClick,
@@ -162,7 +162,7 @@ private fun AnimatedContentScope.TitleText(modifier: Modifier = Modifier) {
             ),
             text = stringResourceSafe(R.string.auth_info_title),
             style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
 
         SpacerH8()
@@ -177,7 +177,7 @@ private fun AnimatedContentScope.TitleText(modifier: Modifier = Modifier) {
             ),
             text = stringResourceSafe(R.string.auth_info_subtitle),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }
@@ -187,6 +187,6 @@ fun AddWalletBottomSheet(config: TangemBottomSheetConfig) {
     OptionsBottomSheet(
         config = config,
         title = resourceReference(string.auth_info_add_wallet_title),
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
     )
 }

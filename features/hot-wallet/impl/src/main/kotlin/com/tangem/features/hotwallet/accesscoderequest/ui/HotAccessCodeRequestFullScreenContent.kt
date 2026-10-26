@@ -50,7 +50,7 @@ internal fun HotAccessCodeRequestFullScreenContent(state: HotAccessCodeRequestUM
             Column(
                 Modifier
                     .fillMaxSize()
-                    .background(TangemTheme.colors.background.primary),
+                    .background(TangemTheme.colors3.bg.primary),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 TangemTopAppBar(
@@ -77,7 +77,7 @@ internal fun HotAccessCodeRequestFullScreenContent(state: HotAccessCodeRequestUM
                         ),
                         text = stringResourceSafe(R.string.access_code_check_title),
                         style = TangemTheme.typography.h2,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                     )
 
                     SpacerH24()
@@ -122,7 +122,7 @@ internal fun HotAccessCodeRequestFullScreenContent(state: HotAccessCodeRequestUM
                             style = TangemTheme.typography.caption2.copy(
                                 lineBreak = LineBreak.Heading,
                             ),
-                            color = TangemTheme.colors.text.warning,
+                            color = TangemTheme.colors3.text.accent.red,
                         )
                     }
                 }
@@ -171,7 +171,7 @@ private fun Preview() {
         Box(
             Modifier
                 .fillMaxSize()
-                .background(TangemTheme.colors.background.secondary),
+                .background(TangemTheme.colors3.bg.primary),
         ) {
             var isShown by remember { mutableStateOf(true) }
 
