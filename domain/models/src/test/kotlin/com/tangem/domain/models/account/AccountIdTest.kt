@@ -32,8 +32,11 @@ class AccountIdTest {
         val actual = AccountId.forCollectiblesAccount(userWalletId = userWalletId)
 
         // Assert
-        Truth.assertThat(actual.value).isEqualTo("collectibles_UserWalletId(271...C8F)")
-        Truth.assertThat(actual.userWalletId).isEqualTo(userWalletId)
+        val expected = AccountId.forCryptoPortfolio(
+            userWalletId = userWalletId,
+            derivationIndex = DerivationIndex(999799).getOrNull()!!,
+        )
+        Truth.assertThat(actual).isEqualTo(expected)
     }
 
     private fun provideTestModels() = listOf(

@@ -51,6 +51,16 @@ internal class CollectiblesWalletBlockConverterTest {
         verify(exactly = 1) { clickIntents.onCollectiblesAccountClick(userWalletId) }
     }
 
+    /** The backend lists the account but no vault stands behind it: the wallet is offered onboarding instead */
+    @Test
+    fun `GIVEN a wallet not onboarded WHEN convert THEN the row is hidden`() {
+        // Act
+        val actual = converter.convert(value = CollectiblesAccountStatusValue.NotOnboarded.toAccountStatus())
+
+        // Assert
+        assertThat(actual).isEqualTo(CollectiblesWalletBlockUM.Hidden)
+    }
+
     @Test
     fun `GIVEN a missed derivation WHEN convert THEN the row shows a dash and does not open`() {
         // Act
@@ -76,7 +86,6 @@ internal class CollectiblesWalletBlockConverterTest {
     private fun provideTestModels() = listOf(
         // loading shimmers like the wallet's own account rows; everything else unknown is a dash
         BalanceModel(status = CollectiblesAccountStatusValue.Loading, expected = loading),
-        BalanceModel(status = CollectiblesAccountStatusValue.NotOnboarded, expected = unknown),
         BalanceModel(status = CollectiblesAccountStatusValue.Error.Unavailable, expected = unknown),
         BalanceModel(status = CollectiblesAccountStatusValue.MissedDerivation, expected = unknown),
         // the vault exists but has not been read on this device, so there is no amount to show
