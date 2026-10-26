@@ -1,9 +1,5 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
   <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>SuspendFunSwallowedCancellation:RenameWalletUseCase.kt$RenameWalletUseCase$runCatching</ID>
-    <ID>UnsafeCallOnNullableType:GetWalletsUseCase.kt$GetWalletsUseCase$userWalletsListRepository.userWallets.value!!</ID>
-    <ID>UnsafeCallOnNullableType:UserWalletIdBuilder.kt$UserWalletIdBuilder.Companion$UserWalletIdBuilder( publicKey = publicKey, ).build()!!</ID>
-  </CurrentIssues>
+  <CurrentIssues/>
 </SmellBaseline>
