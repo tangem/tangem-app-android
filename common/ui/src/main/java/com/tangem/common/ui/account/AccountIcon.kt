@@ -11,6 +11,8 @@ import com.tangem.core.ui.components.account.AccountResIcon
 import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.generated.assets.il_account_safe
+import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.CryptoPortfolioIcon.Color
 
@@ -69,8 +71,8 @@ fun AccountIcon(name: TextReference, icon: AccountIconUM, size: AccountIconSize,
     when (icon) {
         is AccountIconUM.Payment -> PaymentAccountIcon(size = size, modifier = modifier)
         is AccountIconUM.Money -> AccountResIcon(
-            resId = icon.icon.getResId(),
-            color = icon.color.getUiColor(),
+            imageVector = Icons.il_account_safe,
+            color = Color.VitalGreen.getUiColor(),
             size = size,
             modifier = modifier,
         )
