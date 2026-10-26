@@ -67,8 +67,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.common.Wallet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletPagerIndicator
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletTopBar
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.lazyListStateMapSaver
-import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
-import com.tangem.features.jointaccount.main.JointAccountMainUM
 import com.tangem.features.feed.v2.FeedV2Component
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockComponent
@@ -97,7 +95,6 @@ internal fun WalletScreen(
     moneyAccountComponent: MoneyAccountMainBlockComponent,
     polymarketComponent: PolymarketWalletBlockComponent,
     collectiblesComponent: CollectiblesWalletBlockComponent,
-    jointAccountComponent: JointAccountMainBlockComponent,
     modifier: Modifier = Modifier,
     @RemoveWithToggle("TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED")
     isHideMarketingWhileSystemEnabled: Boolean = false,
@@ -154,7 +151,6 @@ internal fun WalletScreen(
         moneyAccountComponent = moneyAccountComponent,
         polymarketComponent = polymarketComponent,
         collectiblesComponent = collectiblesComponent,
-        jointAccountComponent = jointAccountComponent,
         behavior = behavior,
         isHideMarketingWhileSystemEnabled = isHideMarketingWhileSystemEnabled,
         isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
@@ -189,7 +185,6 @@ private fun WalletContent(
     moneyAccountComponent: MoneyAccountMainBlockComponent,
     polymarketComponent: PolymarketWalletBlockComponent,
     collectiblesComponent: CollectiblesWalletBlockComponent,
-    jointAccountComponent: JointAccountMainBlockComponent,
     behavior: TangemCollapsingAppBarBehavior,
     listStates: ImmutableMap<Int, LazyListState>,
     modifier: Modifier = Modifier,
@@ -394,7 +389,6 @@ private fun WalletContent(
                                         moneyAccountComponent = moneyAccountComponent,
                                         polymarketComponent = polymarketComponent,
                                         collectiblesComponent = collectiblesComponent,
-                                        jointAccountComponent = jointAccountComponent,
                                         onOrganizeButtonBoundsChange = remember(currentWalletIndex) {
                                             { bounds ->
                                                 if (bounds != null) {
@@ -692,15 +686,6 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
             collectiblesComponent = object : CollectiblesWalletBlockComponent {
                 override fun LazyListScope.collectiblesWalletBlockContent(
                     state: CollectiblesWalletBlockUM,
-                    isBalanceHidden: Boolean,
-                    modifier: Modifier,
-                ) {
-                }
-            },
-            jointAccountComponent = object : JointAccountMainBlockComponent {
-                override fun LazyListScope.jointAccountMainContent(
-                    key: String,
-                    state: JointAccountMainUM,
                     isBalanceHidden: Boolean,
                     modifier: Modifier,
                 ) {
