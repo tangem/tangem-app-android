@@ -5,12 +5,12 @@ import arrow.core.left
 import arrow.core.right
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.Wallet.Model
-import com.reown.walletkit.client.WalletKit
 import com.tangem.blockchain.extensions.hexToInt
 import com.tangem.data.walletconnect.model.CAIP10
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork.NamespaceConverter.Companion.ETH_NAMESPACE_KEY
 import com.tangem.data.walletconnect.respond.WcRespondService
+import com.tangem.data.walletconnect.sdk.WcSdk
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.domain.models.network.Network
@@ -25,12 +25,13 @@ import com.tangem.domain.walletconnect.usecase.method.WcNetworkDerivationState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 
+@Suppress("LongParameterList")
 internal class WcEthAddNetworkUseCase @AssistedInject constructor(
     private val respondService: WcRespondService,
+    private val wcSdk: WcSdk,
     private val networksConverter: WcNetworksConverter,
+    private val chainChangedEmitter: WcEthChainChangedEmitter,
     addSwitchCommonDelegateFactory: WcEthAddSwitchCommonDelegate.Factory,
     @Assisted val context: WcMethodUseCaseContext,
     @Assisted override val method: WcEthMethod.AddEthereumChain,
@@ -90,19 +91,19 @@ internal class WcEthAddNetworkUseCase @AssistedInject constructor(
             sessionTopic = context.session.sdkModel.topic,
             namespaces = sdkNewNamespaces,
         )
-        sdkUpdateSession(sessionUpdate) // ignore result for now
-        return respondService.respond(rawSdkRequest, "")
+        val isSessionUpdated = sdkUpdateSession(sessionUpdate).isRight()
+        val respondResult = respondService.respond(rawSdkRequest, response = null)
+
+        // Only a session that really carries the network can carry the event; without the update there is
+        // nothing to wait for, and waiting would hold the sheet open for the whole timeout for nothing.
+        if (isSessionUpdated) {
+            chainChangedEmitter.emit(topic = context.session.sdkModel.topic, chainId = networkToAddCAIP2)
+        }
+        return respondResult
     }
 
-    private suspend fun sdkUpdateSession(sessionUpdate: Wallet.Params.SessionUpdate): Either<Throwable, Unit> {
-        return suspendCancellableCoroutine { continuation ->
-            WalletKit.updateSession(
-                params = sessionUpdate,
-                onSuccess = { if (continuation.isActive) continuation.resume(Unit.right()) },
-                onError = { if (continuation.isActive) continuation.resume(it.throwable.left()) },
-            )
-        }
-    }
+    private suspend fun sdkUpdateSession(sessionUpdate: Wallet.Params.SessionUpdate) =
+        wcSdk.updateSession(sessionUpdate)
 
     override fun reject() {
         respondService.rejectRequestNonBlock(rawSdkRequest)

@@ -12,8 +12,11 @@ sealed interface PolymarketOnboardingProgress {
     /** The backend is executing [status]. */
     data class Working(val status: PolymarketWalletStatus) : PolymarketOnboardingProgress
 
-    /** Terminal: the wallet is onboarded and the credentials are stored. */
-    data object Ready : PolymarketOnboardingProgress
+    /**
+     * Terminal: the wallet is onboarded and the credentials are stored.
+     * [isNewAccount] is false when the backend already reported READY_TO_TRADE at the start of this run.
+     */
+    data class Ready(val isNewAccount: Boolean) : PolymarketOnboardingProgress
 
     /**
      * Terminal: [isRetryable] tells whether starting another run can plausibly succeed.

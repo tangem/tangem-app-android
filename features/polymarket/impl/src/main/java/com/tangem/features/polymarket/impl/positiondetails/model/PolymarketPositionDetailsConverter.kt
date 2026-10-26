@@ -5,13 +5,12 @@ import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketPosition
+import com.tangem.domain.polymarket.model.PolymarketPositionResult
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
-import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
+import com.tangem.features.polymarket.impl.common.formatPolymarketPrice
 import com.tangem.features.polymarket.impl.common.formatPolymarketShares
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
@@ -32,6 +31,9 @@ internal class PolymarketPositionDetailsConverter :
 
     override fun convert(value: Input): Content.Data {
         val position = value.position
+        val isResolved = position.resolutionStatus == PolymarketResolutionStatus.RESOLVED
+        val entryPrice = position.avgPrice.formatPolymarketPrice(isResolved = isResolved)
+        val currentPrice = position.curPrice.formatPolymarketPrice(isResolved = isResolved)
 
         return Content.Data(
             summary = PolymarketPositionDetailsUM.Summary(
@@ -54,19 +56,19 @@ internal class PolymarketPositionDetailsConverter :
                 currentValue = stringReference(position.currentValue.formatPolymarketMoney()),
                 outcomeLabel = stringReference(position.outcome),
                 outcomeVariant = position.outcomeAccent.toBubbleVariant(),
-                payout = position.size.takeIf { position.canOpenPositionDetails }
+                payout = position.size.takeIf { position.hasPayoutEstimate }
                     ?.let { stringReference(it.formatPolymarketMoney()) },
             ),
             event = event(position, value.event),
             metrics = PolymarketPositionDetailsUM.Metrics(
                 quantity = stringReference(position.size.formatPolymarketShares()),
-                priceChanges = stringReference("${position.avgPrice.cents()} → ${position.curPrice.cents()}"),
+                priceChanges = stringReference("$entryPrice → $currentPrice"),
                 unrealizedPnl = stringReference(position.cashPnl.signedMoney()),
                 realizedPnl = stringReference(position.realizedPnl.signedMoney()),
             ),
             information = PolymarketPositionDetailsUM.Information(
                 invested = stringReference(position.initialValue.formatPolymarketMoney()),
-                status = resourceReference(statusLabel(position.resolutionStatus)),
+                status = resourceReference(statusLabel(position)),
                 endDate = position.endDate?.let {
                     stringReference(it.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)))
                 },
@@ -79,15 +81,21 @@ internal class PolymarketPositionDetailsConverter :
         )
     }
 
-    private fun statusLabel(status: PolymarketResolutionStatus): Int = when (status) {
+    private fun statusLabel(position: PolymarketPosition.Open): Int = when (position.resolutionStatus) {
         PolymarketResolutionStatus.OPEN -> R.string.prediction_positions_open
         PolymarketResolutionStatus.PENDING_RESOLUTION,
         PolymarketResolutionStatus.PROPOSED,
+        PolymarketResolutionStatus.UNKNOWN,
         -> R.string.prediction_positions_pending
         PolymarketResolutionStatus.DISPUTED -> R.string.prediction_positions_disputed
-        PolymarketResolutionStatus.RESOLVED,
-        PolymarketResolutionStatus.UNKNOWN,
-        -> R.string.prediction_positions_unknown
+        PolymarketResolutionStatus.RESOLVED -> settlementLabel(position.result)
+    }
+
+    private fun settlementLabel(result: PolymarketPositionResult?): Int = when (result) {
+        PolymarketPositionResult.WON -> R.string.prediction_positions_won
+        PolymarketPositionResult.LOST -> R.string.prediction_positions_lost
+        PolymarketPositionResult.SPLIT -> R.string.prediction_positions_split
+        PolymarketPositionResult.UNKNOWN, null -> R.string.prediction_positions_unknown
     }
 
     private fun event(position: PolymarketPosition.Open, event: PolymarketEvent?): PolymarketPositionDetailsUM.Event? {
@@ -100,9 +108,6 @@ internal class PolymarketPositionDetailsConverter :
         )
     }
 
-    private fun BigDecimal.cents(): String =
-        "${movePointRight(2).format { simple(decimals = 2) }}${PolymarketConst.CENT_SIGN}"
-
     private fun BigDecimal.signedMoney(): String {
         val prefix = if (setScale(2, RoundingMode.HALF_UP).signum() > 0) PLUS else ""
         return prefix + formatPolymarketMoney()
@@ -114,8 +119,11 @@ internal class PolymarketPositionDetailsConverter :
     )
 }
 
-internal val PolymarketPosition.Open.canOpenPositionDetails: Boolean
+private val PolymarketPosition.Open.hasPayoutEstimate: Boolean
     get() = resolutionStatus != PolymarketResolutionStatus.RESOLVED && result == null && !isRedeemable
 
+internal val PolymarketPosition.Open.isMarketTradable: Boolean
+    get() = resolutionStatus == PolymarketResolutionStatus.OPEN && isAcceptingOrders
+
 internal val PolymarketPosition.Open.canClosePosition: Boolean
-    get() = canOpenPositionDetails && marketId != null && isAcceptingOrders && size.signum() > 0
+    get() = marketId != null && size.signum() > 0

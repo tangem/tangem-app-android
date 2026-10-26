@@ -9,6 +9,7 @@ android {
     namespace = "com.tangem.data.common"
 }
 dependencies {
+    implementation(projects.core.remote)
 
     // region Kotlin
     api(deps.kotlin.coroutines)

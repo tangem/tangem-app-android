@@ -5,7 +5,9 @@ import com.squareup.moshi.JsonClass
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse.GroupType
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse.SortType
+import kotlinx.serialization.Serializable
 
+@Serializable
 @JsonClass(generateAdapter = true)
 data class GetWalletAccountsResponse(
     @Json(name = "wallet") val wallet: Wallet,
@@ -13,6 +15,7 @@ data class GetWalletAccountsResponse(
     @Json(name = "unassignedTokens") val unassignedTokens: List<UserTokensResponse.Token>,
 ) {
 
+    @Serializable
     @JsonClass(generateAdapter = true)
     data class Wallet(
         @Json(name = "version") val version: Int? = 0,

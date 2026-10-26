@@ -2,7 +2,9 @@ package com.tangem.features.tangempay.eligibility.waitlist
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -13,7 +15,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.input.ImeAction
@@ -38,32 +43,66 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cross_circle_24_filled
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 internal fun TangemPayWaitlistBottomSheet(state: TangemPayWaitlistUM) {
+    val windowHeight = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
+    val onDismiss = rememberDismissAfterKeyboardHidden(onDismiss = state.onDismiss)
     TangemModal<TangemPayWaitlistUM>(
         config = TangemBottomSheetConfig(
             isShown = true,
-            onDismissRequest = state.onDismiss,
+            onDismissRequest = onDismiss,
             content = state,
         ),
-        scrollableContent = true,
+        scrollableContent = false,
         title = {
             TangemModal.TopNavigation(
-                endButton = { TangemButton.Close(onClick = state.onDismiss) },
+                endButton = { TangemButton.Close(onClick = onDismiss) },
             )
         },
-        content = { content -> Content(state = content) },
+        content = { content -> Content(state = content, modifier = Modifier.height(windowHeight)) },
     )
 }
 
 @Composable
-private fun Content(state: TangemPayWaitlistUM, modifier: Modifier = Modifier) {
-    Column(modifier = modifier.imePadding()) {
-        Header()
+private fun rememberDismissAfterKeyboardHidden(onDismiss: () -> Unit): () -> Unit {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val density = LocalDensity.current
+    val ime = WindowInsets.ime
+    val scope = rememberCoroutineScope()
+    val currentOnDismiss by rememberUpdatedState(onDismiss)
 
-        EmailField(state = state)
+    return remember(focusManager, keyboardController, density, ime, scope) {
+        {
+            focusManager.clearFocus()
+            keyboardController?.hide()
+            scope.launch {
+                withTimeoutOrNull(KEYBOARD_HIDE_TIMEOUT) {
+                    snapshotFlow { ime.getBottom(density) }.first { it == 0 }
+                }
+                currentOnDismiss()
+            }
+        }
+    }
+}
+
+@Composable
+private fun Content(state: TangemPayWaitlistUM, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            Header()
+            EmailField(state = state)
+        }
 
         MarketingConsent(state = state)
 
@@ -246,6 +285,8 @@ private fun MarketingConsentText(onPrivacyPolicyClick: () -> Unit, modifier: Mod
         color = TangemTheme.colors3.text.secondary,
     )
 }
+
+private val KEYBOARD_HIDE_TIMEOUT = 500.milliseconds
 
 @Preview(widthDp = 402, heightDp = 874, showBackground = true)
 @Preview(widthDp = 402, heightDp = 874, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)

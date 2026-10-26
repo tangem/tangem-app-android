@@ -25,7 +25,7 @@ import javax.crypto.spec.SecretKeySpec
  * GCM is authenticated, so a wrong password or a tampered file is detected by the tag check during
  * decryption — no separate MAC is stored. Argon2id is a standard, so a matching iOS side (e.g. libsodium
  * `crypto_pwhash`) interoperates given identical parameters (type=id, version=0x13, parallelism=1,
- * memory in KiB) and the same NFC password normalization (CPR-06). The result is wrapped by [CloudBackupFileData] into a small JSON keystore whose
+ * memory in KiB) and the same NFC password normalization. The result is wrapped by [CloudBackupFileData] into a small JSON keystore whose
  * metadata (wallet name, date) stays readable without the password.
  */
 internal class CloudBackupCipher(
@@ -265,7 +265,7 @@ internal class CloudBackupCipher(
     }
 
     /**
-     * NFC-normalizes (CPR-06) then UTF-8 encodes the password so a passphrase entered in a different
+     * NFC-normalizes then UTF-8 encodes the password so a passphrase entered in a different
      * Unicode form (e.g. "é" as U+00E9 vs "e" + combining U+0301) derives the same key across platforms.
      *
      * Fast path avoids materializing a String: for already-NFC input (all ASCII passwords) we encode the

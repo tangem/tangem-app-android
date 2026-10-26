@@ -9,6 +9,8 @@ import com.tangem.domain.qrscanning.models.ClassifiedQrContent
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 internal class QrContentClassifierTest {
@@ -73,6 +75,52 @@ internal class QrContentClassifierTest {
 
         val result = classifier.parse(url, listOf(bitcoinCoin))
 
+        assertThat(result).isInstanceOf(ClassifiedQrContent.Error.Unrecognized::class.java)
+    }
+
+    // endregion
+
+    // region MCP
+
+    @Test
+    fun `GIVEN MCP authorization URI WHEN parse THEN classified with its user code`() {
+        // Arrange
+        val uri = "tangem://mcp.authorization?user_code=WDJB-MJHT"
+
+        // Act
+        val result = classifier.parse(uri, listOf(bitcoinCoin))
+
+        // Assert
+        assertThat(result).isEqualTo(ClassifiedQrContent.McpAuthorization(userCode = "WDJB-MJHT"))
+    }
+
+    @Test
+    fun `GIVEN percent encoded user code WHEN parse THEN it is decoded`() {
+        // Arrange
+        val uri = "tangem://mcp.authorization?user_code=WDJB%20MJHT"
+
+        // Act
+        val result = classifier.parse(uri, listOf(bitcoinCoin))
+
+        // Assert
+        assertThat(result).isEqualTo(ClassifiedQrContent.McpAuthorization(userCode = "WDJB MJHT"))
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "tangem://mcp.authorization?foo=bar",
+            "tangem://mcp.authorization?user_code=",
+            "tangem://main?user_code=WDJB-MJHT",
+            "tangem://mcp.authorization.evil?user_code=WDJB-MJHT",
+            "tangem://mcp.authorizationfoo?user_code=WDJB-MJHT",
+        ],
+    )
+    fun `GIVEN URI that is not an MCP authorization link WHEN parse THEN unrecognized`(uri: String) {
+        // Act
+        val result = classifier.parse(uri, listOf(bitcoinCoin))
+
+        // Assert
         assertThat(result).isInstanceOf(ClassifiedQrContent.Error.Unrecognized::class.java)
     }
 

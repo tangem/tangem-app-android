@@ -8,6 +8,7 @@ import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.data.walletconnect.DefaultWalletConnectRepository
 import com.tangem.data.walletconnect.initialize.DefaultWcInitializeUseCase
 import com.tangem.data.walletconnect.network.bitcoin.WcBitcoinNetwork
+import com.tangem.data.walletconnect.network.ethereum.WcEthChainRequestResolver
 import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork
 import com.tangem.data.walletconnect.network.solana.WcSolanaNetwork
 import com.tangem.data.walletconnect.pair.*
@@ -16,6 +17,7 @@ import com.tangem.data.walletconnect.request.DefaultWcRequestUseCaseFactory
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.respond.DefaultWcRespondService
 import com.tangem.data.walletconnect.respond.WcRespondService
+import com.tangem.data.walletconnect.sdk.WcSdk
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
@@ -24,6 +26,7 @@ import com.tangem.data.walletconnect.store.WalletConnectStore
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.walletconnect.config.WalletConnectConfig
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
@@ -43,6 +46,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -61,15 +65,36 @@ internal object WalletConnectDataModule {
     @Provides
     @Singleton
     fun wcInitializeUseCase(
-        application: Application,
-        sessionsManager: DefaultWcSessionsManager,
-        networkService: DefaultWcRequestService,
-        pairSdkDelegate: WcPairSdkDelegate,
+        wcSdk: WcSdk,
+        store: WalletConnectStore,
+        featureToggles: WalletConnectFeatureToggles,
+        appScope: AppCoroutineScope,
+        dispatchers: CoroutineDispatcherProvider,
     ): WcInitializeUseCase = DefaultWcInitializeUseCase(
+        wcSdk = wcSdk,
+        store = store,
+        featureToggles = featureToggles,
+        scope = appScope,
+        dispatchers = dispatchers,
+    )
+
+    @Provides
+    @Singleton
+    fun wcSdk(
+        application: Application,
+        config: WalletConnectConfig,
+        // Providers break the cycle: these observers are the very classes that call back into the SDK.
+        sessionsManager: Provider<DefaultWcSessionsManager>,
+        networkService: Provider<DefaultWcRequestService>,
+        pairSdkDelegate: Provider<WcPairSdkDelegate>,
+        appScope: AppCoroutineScope,
+        dispatchers: CoroutineDispatcherProvider,
+    ): WcSdk = WcSdk(
         application = application,
-        sessionsManager = sessionsManager,
-        networkService = networkService,
-        pairSdkDelegate = pairSdkDelegate,
+        config = config,
+        observers = { setOf(sessionsManager.get(), networkService.get(), pairSdkDelegate.get()) },
+        scope = appScope,
+        dispatchers = dispatchers,
     )
 
     @Provides
@@ -84,9 +109,16 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun sdkDelegate(appScope: AppCoroutineScope, store: WalletConnectStore): WcPairSdkDelegate = WcPairSdkDelegate(
+    fun sdkDelegate(
+        appScope: AppCoroutineScope,
+        store: WalletConnectStore,
+        wcSdk: WcSdk,
+        featureToggles: WalletConnectFeatureToggles,
+    ): WcPairSdkDelegate = WcPairSdkDelegate(
         scope = appScope,
         store = store,
+        wcSdk = wcSdk,
+        featureToggles = featureToggles,
     )
 
     @Provides
@@ -99,6 +131,8 @@ internal object WalletConnectDataModule {
         multiAccountListSupplier: MultiAccountListSupplier,
         analytics: AnalyticsEventHandler,
         appScope: AppCoroutineScope,
+        wcSdk: WcSdk,
+        featureToggles: WalletConnectFeatureToggles,
     ): DefaultWcSessionsManager {
         return DefaultWcSessionsManager(
             store = store,
@@ -108,6 +142,8 @@ internal object WalletConnectDataModule {
             analytics = analytics,
             scope = appScope,
             multiAccountListSupplier = multiAccountListSupplier,
+            wcSdk = wcSdk,
+            featureToggles = featureToggles,
         )
     }
 
@@ -133,7 +169,7 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun wcDefaultWcRespondService(): DefaultWcRespondService = DefaultWcRespondService()
+    fun wcDefaultWcRespondService(wcSdk: WcSdk): DefaultWcRespondService = DefaultWcRespondService(wcSdk)
 
     @Provides
     @Singleton
@@ -147,12 +183,14 @@ internal object WalletConnectDataModule {
         factories: WcEthNetwork.Factories,
         wcNetworksConverter: WcNetworksConverter,
         analyticsExceptionHandler: AnalyticsExceptionHandler,
+        chainRequestResolver: WcEthChainRequestResolver,
     ): WcEthNetwork = WcEthNetwork(
         moshi = moshi,
         networksConverter = wcNetworksConverter,
         sessionsManager = sessionsManager,
         factories = factories,
         analyticsExceptionHandler = analyticsExceptionHandler,
+        chainRequestResolver = chainRequestResolver,
     )
 
     @Provides

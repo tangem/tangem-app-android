@@ -24,12 +24,15 @@ import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithd
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.bank.paymentToken
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
+import com.tangem.utils.StringsSigns.THREE_STARS
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -254,6 +257,25 @@ internal class TangemPayBankWithdrawAmountModelTest {
     }
 
     @Test
+    fun `GIVEN balance below fee WHEN max clicked THEN whole balance with range error`() {
+        // Arrange
+        val options = bankWithdrawOptions(sources = listOf(bankWithdrawSource(fiatBalance = BigDecimal("0.65"))))
+        val model = createModel(options = options)
+
+        // Act
+        model.uiState.value.source.onMaxClick()
+
+        // Assert
+        val state = model.uiState.value
+        assertThat(state.amount.value).isEqualTo("0.65")
+        assertThat(state.amount.error).isEqualTo(
+            resourceReference(R.string.tangempay_withdraw_bank_amount_error_range, wrappedList("$1", "$10,000")),
+        )
+        assertThat(state.isContinueEnabled).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN valid amount WHEN continue clicked THEN result passed to container`() {
         // Arrange
         val model = createModel()
@@ -367,6 +389,39 @@ internal class TangemPayBankWithdrawAmountModelTest {
                 ),
                 false,
                 false,
+            ),
+        ).inOrder()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN balance hidden WHEN model created THEN source balance masked`() {
+        // Act
+        val model = createModel(isBalanceHidden = true)
+
+        // Assert
+        assertThat(model.uiState.value.source.subtitle).isEqualTo(
+            resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", THREE_STARS)),
+        )
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN balance hidden WHEN token sheet opened THEN balances masked and unavailable token still labelled`() {
+        // Arrange
+        val options = bankWithdrawOptions(sources = listOf(bankWithdrawSource(), baseSource.copy(isAvailable = false)))
+        val model = createModel(options = options, isBalanceHidden = true)
+
+        // Act
+        model.uiState.value.source.onClick()
+
+        // Assert
+        val sheet = model.uiState.value.sheet as SheetUM.Tokens
+        assertThat(sheet.items.map { it.subtitle }).containsExactly(
+            resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", THREE_STARS)),
+            resourceReference(
+                R.string.tangempay_withdraw_bank_source_subtitle,
+                wrappedList("Base", resourceReference(R.string.tangempay_withdraw_bank_offramp_unavailable)),
             ),
         ).inOrder()
         model.onDestroy()
@@ -830,6 +885,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         draft: BankWithdrawDraft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal),
         step: TangemPayBankWithdrawInnerRoute = TangemPayBankWithdrawInnerRoute.Amount,
         options: BankWithdrawOptions = twoSourceOptions,
+        isBalanceHidden: Boolean = false,
     ): TangemPayBankWithdrawAmountModel {
         draftFlow = MutableStateFlow(draft)
         optionsFlow = MutableStateFlow(options)
@@ -846,6 +902,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
             dispatchers = dispatchers,
             router = router,
             analytics = analytics,
+            getBalanceHidingSettingsUseCase = mockk { every { isBalanceHidden() } returns flowOf(isBalanceHidden) },
         )
     }
 }

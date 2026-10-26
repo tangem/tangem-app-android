@@ -1,6 +1,7 @@
 package com.tangem.data.promo.di
 
 import com.squareup.moshi.Moshi
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.promo.DefaultPromoRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.core.remote.moshi.NetworkMoshi
@@ -29,6 +30,7 @@ object PromoDataModule {
             promotionsSupplier = promotionsSupplier,
             tangemApi = tangemApi,
             moshi = moshi,
+            campaignsStore = RuntimeSharedStore(),
             dispatchers = dispatchers,
         )
     }

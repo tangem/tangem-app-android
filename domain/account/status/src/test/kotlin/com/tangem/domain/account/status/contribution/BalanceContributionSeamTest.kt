@@ -98,7 +98,6 @@ internal class BalanceContributionSeamTest {
         // Assert — only Data balances ever reach a status
         assertThat(status.value.contributions).isEmpty()
         assertThat(status.getExtraBalanceOrNull()).isNull()
-        assertThat(status.value.stakingBalance).isNull()
     }
 
     @Test
@@ -274,7 +273,7 @@ internal class BalanceContributionSeamTest {
                     integration = StakingIntegrationID.P2PEthPool,
                     currency = ethereum,
                     balance = p2pEthPoolFor(staked = 5, unstaking = 2, withdrawable = 1, rewards = 3),
-                    expectedExtraBalance = BigDecimal(11),
+                    expectedExtraBalance = BigDecimal(8),
                 ),
             )
         }

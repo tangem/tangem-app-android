@@ -6,6 +6,7 @@ import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.get
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.tokens.model.warnings.DynamicAddressesWarnings
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -86,7 +87,7 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
     ): Flow<List<CryptoCurrencyWarning>> {
         // A joint currency lives on a Safe: the wallet pays no fee of its own, so the coin pairing and the fee
         // warnings do not apply, and a joint portfolio without the network coin is not an outage
-        if (currency.network.derivationPath is Network.DerivationPath.Joint) {
+        if (currency.isJoint) {
             return singleAccountStatusListSupplier(userWalletId)
                 .map { accountStatusList -> accountStatusList.getCryptoCurrencyStatus(currency).getOrNull() }
                 .distinctUntilChanged()

@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -24,6 +25,8 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * Design-system v2 button group — a slot container that lays out one or more [TangemButton]s with
  * the design-system spacing and equalizes their size, so the buttons themselves are passed as
  * plain content without any sizing modifier.
+ *
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=9202-4539)
  *
@@ -110,6 +113,8 @@ private fun MeasureScope.measureHorizontally(
 }
 
 object TangemButtonGroup {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
 
     /**
      * Layout direction of the buttons.

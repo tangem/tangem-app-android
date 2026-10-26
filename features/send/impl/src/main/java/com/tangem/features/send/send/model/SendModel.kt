@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
+import arrow.core.right
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -68,6 +69,7 @@ import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -104,6 +106,7 @@ internal class SendModel @Inject constructor(
     private val getFeeForTokenUseCase: GetFeeForTokenUseCase,
     private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
     private val tronDefaultFeeLoader: TronDefaultFeeLoader,
+    private val tronGaslessSentAmountQuoter: TronGaslessSentAmountQuoter,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val sendAmountUpdateTrigger: SendAmountUpdateTrigger,
@@ -360,11 +363,74 @@ internal class SendModel @Inject constructor(
     }
 
     suspend fun loadFeeExtended(maybeToken: CryptoCurrencyStatus?): Either<GetFeeError, TransactionFeeExtended> {
+        val account = accountFlow.value
+        if (account is Account.Joint) {
+            return jointSendDelegate.loadFeeExtended(
+                userWalletId = userWallet.walletId,
+                account = account,
+                currency = cryptoCurrency,
+                feeCoinStatus = feeCryptoCurrencyStatusFlow.value,
+                feeCurrencyStatus = maybeToken,
+                amountUM = uiState.value.amountUM,
+                destinationUM = uiState.value.destinationUM,
+            )
+        }
+
         val transferTransaction = prepareTransferTransaction()
             .getOrElse { return GetFeeError.DataError(it).left() }
         // A yield-supply send zeroes the amount inside TransactionData, so pass it explicitly.
         val sentAmount = currentSentAmount()
 
+        val fee = loadFeeExtended(maybeToken, transferTransaction, sentAmount)
+            .getOrElse { return it.left() }
+
+        return if (fee.tronGaslessQuote != null) {
+            quoteTronGaslessForSentAmount(
+                fee = fee,
+                maybeToken = maybeToken,
+                transferTransaction = transferTransaction,
+                sentAmount = sentAmount,
+            )
+        } else {
+            fee.right()
+        }
+    }
+
+    private suspend fun quoteTronGaslessForSentAmount(
+        fee: TransactionFeeExtended,
+        maybeToken: CryptoCurrencyStatus?,
+        transferTransaction: TransactionData,
+        sentAmount: BigDecimal?,
+    ): Either<GetFeeError, TransactionFeeExtended> {
+        val uncompiledTransaction = transferTransaction as? TransactionData.Uncompiled ?: return fee.right()
+        val enteredAmount = sentAmount ?: return fee.right()
+        val gaslessFeeToken = (maybeToken ?: cryptoCurrencyStatusFlow.value).currency as? CryptoCurrency.Token
+            ?: return fee.right()
+
+        return tronGaslessSentAmountQuoter.quoteForSentAmount(
+            fee = fee,
+            userWalletId = userWallet.walletId,
+            sentCurrencyStatus = cryptoCurrencyStatusFlow.value,
+            enteredAmount = enteredAmount,
+            reduceAmountBy = (uiState.value.amountUM as? AmountState.Data)?.reduceAmountBy.orZero(),
+            requote = { reducedAmount ->
+                val reducedTransaction = uncompiledTransaction.copy(
+                    amount = uncompiledTransaction.amount.copy(value = reducedAmount),
+                )
+                getTronGaslessFeeUseCase(
+                    userWalletId = userWallet.walletId,
+                    transactionData = reducedTransaction,
+                    feeToken = gaslessFeeToken,
+                )
+            },
+        )
+    }
+
+    private suspend fun loadFeeExtended(
+        maybeToken: CryptoCurrencyStatus?,
+        transferTransaction: TransactionData,
+        sentAmount: BigDecimal?,
+    ): Either<GetFeeError, TransactionFeeExtended> {
         val feeToken = maybeToken?.currency
         return when {
             feeToken is CryptoCurrency.Token &&

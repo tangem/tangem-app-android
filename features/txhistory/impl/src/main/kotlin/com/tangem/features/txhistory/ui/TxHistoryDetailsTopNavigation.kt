@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -24,6 +25,8 @@ import com.tangem.core.ui.ds.contextmenu.TangemContextMenu
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -34,6 +37,7 @@ import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.*
+import com.tangem.core.ui.test.TxHistoryDetailsTestTags
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.HeaderUM.StatusStyle
@@ -43,7 +47,7 @@ import kotlinx.collections.immutable.persistentListOf
 /**
  * Shared top navigation ("Nav bar") for the transaction details bottom sheet, common to all transaction types.
  *
- * Built on the redesigned [TangemTopNavigation]: a leading status-tinted action icon ([StatusActionIcon]) in the start
+ * Built on the [TangemModal.TopNavigation] preset: a leading status-tinted action icon ([StatusActionIcon]) in the start
  * slot, a status-colored [title][TxHistoryDetailsUM.HeaderUM.title] over a date subtitle in the center slot, and the
  * trailing overflow context-menu (grouped in a Material pill) + close buttons in the end slots.
  *
@@ -52,8 +56,7 @@ import kotlinx.collections.immutable.persistentListOf
  * [statusStyle][TxHistoryDetailsUM.HeaderUM.statusStyle] overrides all three with the amber alert look. The icon
  * glyph itself is kept as-is on failure — only recolored.
  *
- * Hosted inside a modal bottom sheet, so [WindowInsets] is zeroed (no status-bar reservation) and the background blur
- * is disabled.
+ * Hosted inside a [TangemModal], whose preset zeroes the window insets and disables the background blur.
  */
 @Composable
 internal fun TxHistoryDetailsTopNavigation(
@@ -62,11 +65,9 @@ internal fun TxHistoryDetailsTopNavigation(
     modifier: Modifier = Modifier,
 ) {
     val palette = header.palette()
-    TangemTopNavigation(
+    TangemModal.TopNavigation(
         modifier = modifier,
-        windowInsets = WindowInsets(0),
-        contentPadding = PaddingValues(16.dp),
-        blurBackground = false,
+        contentAlign = TangemTopNavigation.ContentAlign.Start,
         startButton = { StatusActionIcon(icon = header.icon, palette = palette) },
         endButtonsGroup = {
             if (header.menu.isNotEmpty() || header.debugModel != null) {
@@ -81,11 +82,15 @@ internal fun TxHistoryDetailsTopNavigation(
                 style = TangemTheme.typography3.body.medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.testTag(TxHistoryDetailsTestTags.HEADER_TITLE),
             )
             Text(
                 text = header.subtitle.resolveReference(),
                 style = TangemTheme.typography3.caption.medium,
                 color = header.subtitleStyle.color,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.testTag(TxHistoryDetailsTestTags.HEADER_SUBTITLE),
             )
         },
     )

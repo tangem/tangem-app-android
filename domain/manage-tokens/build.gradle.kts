@@ -28,6 +28,7 @@ dependencies {
 
     // region Domain models
     api(projects.domain.manageTokens.models)
+    implementation(projects.domain.moneyAccount.models)
     // endregion
 
     // region Runtime

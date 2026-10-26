@@ -9,6 +9,7 @@ import com.tangem.domain.walletconnect.usecase.method.BlockAidTransactionCheck
 import com.tangem.domain.walletconnect.usecase.method.WcMethodContext
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
+import com.tangem.domain.walletconnect.usecase.method.WcTransactionTargetCheck
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
@@ -38,6 +39,7 @@ internal class WcSendTransactionUMConverter @Inject constructor(
             feeSelectorUM = value.feeSelectorUM,
             onFeeReload = value.onFeeReload,
         )
+        val targetNotification = notificationsFactory.createTargetNotification(value.targetStatus)
         return when (value.context.method) {
             is WcEthMethod.SendTransaction,
             is WcEthMethod.SignTransaction,
@@ -64,13 +66,14 @@ internal class WcSendTransactionUMConverter @Inject constructor(
                     isLoading = value.signState.domainStep == WcSignStep.Signing,
                     address = WcAddressConverter.convert(value.context.derivationState),
                     transactionValidationResult = value.securityCheck?.result?.validation,
-                    sendEnabled = when (value.feeState) {
+                    sendEnabled = !value.targetStatus.isSigningBlocked && when (value.feeState) {
                         WcTransactionFeeState.None -> feeErrorNotification == null
                         is WcTransactionFeeState.Success -> {
                             value.feeSelectorUM is FeeSelectorUM.Content && feeErrorNotification == null
                         }
                     },
                     feeErrorNotification = feeErrorNotification,
+                    targetNotification = targetNotification,
                     walletInteractionIcon = walletInterationIcon(value.context.session.wallet),
                     isHoldToConfirmEnabled = value.context.session.wallet.isHotWallet,
                 ),
@@ -134,6 +137,7 @@ internal class WcSendTransactionUMConverter @Inject constructor(
         val feeSelectorUM: FeeSelectorUM?,
         val cryptoCurrencyStatus: CryptoCurrencyStatus,
         val securityCheck: BlockAidTransactionCheck.Result?,
+        val targetStatus: WcTransactionTargetCheck.Status,
         val psbtOutputs: List<WcPsbtOutput>?,
         val onFeeReload: () -> Unit,
     )

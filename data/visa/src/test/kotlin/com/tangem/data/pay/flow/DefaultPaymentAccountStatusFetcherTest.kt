@@ -25,6 +25,7 @@ import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.models.pay.TangemPayEligibilityType
+import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
@@ -37,6 +38,7 @@ import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.*
+import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
@@ -72,6 +74,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk()
     private val issueCardRepository: TangemPayIssueCardRepository = mockk()
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase = mockk()
+    private val findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase = mockk()
 
     private val fetcher = DefaultPaymentAccountStatusFetcher(
         paymentAccountStatusesStore = paymentAccountStatusesStore,
@@ -87,6 +90,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         cardDetailsRepository = cardDetailsRepository,
         issueCardRepository = issueCardRepository,
         getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
+        findMoneyAccountCreationOrderUseCase = findMoneyAccountCreationOrderUseCase,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -94,6 +98,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
     private companion object {
         const val STALE_ORDER_ID = "order-gone"
+        val RESIDENCY = TangemPayCustomerResidency(countryCode = "US", regionCode = "TX")
     }
 
     private val cardProductInstance = CustomerInfo.ProductInstance(
@@ -105,6 +110,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         adminCardLimit = null,
         status = CustomerInfo.ProductInstance.Status.ACTIVE,
         specificationDataType = CustomerInfo.ProductInstance.SpecificationDataType.CARD,
+        paymentAccountType = CustomerInfo.ProductInstance.PaymentAccountType.COLLATERAL_CARD,
     )
 
     private val accountProductInstance = CustomerInfo.ProductInstance(
@@ -116,6 +122,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         adminCardLimit = null,
         status = CustomerInfo.ProductInstance.Status.ACTIVE,
         specificationDataType = CustomerInfo.ProductInstance.SpecificationDataType.ACCOUNT,
+        paymentAccountType = CustomerInfo.ProductInstance.PaymentAccountType.COLLATERAL_VIRTUAL_ACCOUNT,
     )
 
     private val cardInfo = createCardInfo()
@@ -234,11 +241,13 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             cardDetailsRepository,
             issueCardRepository,
             getTangemPayTariffPlanStateUseCase,
+            findMoneyAccountCreationOrderUseCase,
         )
         // Relaxed mocks don't need clearing — deviceSecurity, eligibilityManager, paymentAccountStatusesStore
         // are relaxed and consistent with their relaxed defaults (false, empty, etc.)
         clearMocks(paymentAccountStatusesStore, answers = false)
         every { tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any()) } returns emptyList()
+        coEvery { findMoneyAccountCreationOrderUseCase(userWalletId) } returns null.right()
     }
 
     /**
@@ -253,6 +262,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         coEvery { onboardingRepository.isTangemPayInitialDataProduced(userWalletId) } returns true
         coEvery { onboardingRepository.getOrderId(userWalletId) } returns null
         coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns Either.Right(customerInfo)
+        coEvery { onboardingRepository.getCustomerResidency(userWalletId) } returns null
 
         coEvery { paymentAccountStatusesStore.getSyncOrNull(userWalletId) } returns null
         coEvery { paymentAccountStatusesStore.store(any(), any()) } just Runs
@@ -279,6 +289,8 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         } returns Either.Right(emptyList())
 
         coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
+        coEvery { onboardingRepository.hasVirtualAccountOrderFailed(userWalletId) } returns false
+        coEvery { onboardingRepository.storeVirtualAccountOrderFailed(userWalletId, any()) } just Runs
         coEvery { onboardingRepository.fetchCustomerEligibility(userWalletId) } returns Either.Right(emptyList())
     }
 
@@ -347,6 +359,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     VirtualAccountOnramp.Available(productInstanceId = "pi_account"),
                 )
                 coVerify(exactly = 1) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
+                coVerify(exactly = 1) { onboardingRepository.storeVirtualAccountOrderFailed(userWalletId, false) }
                 coVerify(exactly = 0) { onboardingRepository.getBankCredentials(any(), any()) }
             }
 
@@ -564,7 +577,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         }
 
         @Test
-        fun `GIVEN no instance and va order CANCELED WHEN invoke THEN id cleared and falls back to eligibility`() =
+        fun `GIVEN no instance and va order CANCELED WHEN invoke THEN id cleared and failure remembered`() =
             runTest {
                 // Arrange
                 val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
@@ -584,8 +597,47 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
                 // Assert
                 coVerify(exactly = 1) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
-                assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Eligible)
+                coVerify(exactly = 1) { onboardingRepository.storeVirtualAccountOrderFailed(userWalletId, true) }
+                assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Failed)
             }
+
+        @Test
+        fun `GIVEN no instance and va order CANCELED for an ineligible wallet WHEN invoke THEN virtualAccount is null`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
+                stubHappyPath(customerInfo)
+                coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns "va-1"
+                coEvery {
+                    customerOrderRepository.getOrderData(userWalletId, "va-1")
+                } returns OrderData(customerId = "c1", status = OrderStatus.CANCELED, withdrawTxHash = null).right()
+                coEvery { onboardingRepository.clearVirtualAccountOrderId(userWalletId) } just Runs
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                assertThat(storedStatuses.lastLoaded().virtualAccount).isNull()
+            }
+
+        @Test
+        fun `GIVEN no instance and remembered va order failure WHEN invoke THEN virtualAccount is Failed`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
+            stubHappyPath(customerInfo)
+            coEvery { onboardingRepository.hasVirtualAccountOrderFailed(userWalletId) } returns true
+            coEvery {
+                onboardingRepository.fetchCustomerEligibility(userWalletId)
+            } returns Either.Right(listOf(TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT))
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Failed)
+        }
 
         @Test
         fun `GIVEN no instance and va order is gone on backend WHEN invoke THEN id cleared and falls back to eligibility`() =
@@ -610,6 +662,76 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 coVerify(exactly = 1) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
                 assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Eligible)
             }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ResidencyStepNotPassed {
+
+        @Test
+        fun `GIVEN KYC required AND customer residency WHEN invoke THEN KycRequired with it stored`() = runTest {
+            // Arrange
+            stubHappyPath(buildCustomerInfo(customerId = "cust_1").copy(kycStatus = KycStatus.REQUIRED))
+            coEvery { onboardingRepository.getCustomerResidency(userWalletId) } returns RESIDENCY
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.map { it.value }.last()).isEqualTo(
+                PaymentAccountStatusValue.KycRequired(
+                    source = StatusSource.ACTUAL,
+                    customerId = "cust_1",
+                    customerResidency = RESIDENCY,
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN KYC required AND active money account order WHEN invoke THEN NotCreated stored`() = runTest {
+            // Arrange
+            stubHappyPath(buildCustomerInfo(customerId = "cust_1").copy(kycStatus = KycStatus.REQUIRED))
+            coEvery {
+                findMoneyAccountCreationOrderUseCase(userWalletId)
+            } returns activeOrder(id = "ma_order", type = OrderType.ACCOUNT_ISSUE_BANKING_RAIN).right()
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.map { it.value }.last()).isEqualTo(PaymentAccountStatusValue.NotCreated)
+        }
+
+        @Test
+        fun `GIVEN KYC required AND money account order lookup fails WHEN invoke THEN Unavailable stored`() =
+            runTest {
+                // Arrange
+                stubHappyPath(buildCustomerInfo(customerId = "cust_1").copy(kycStatus = KycStatus.REQUIRED))
+                coEvery {
+                    findMoneyAccountCreationOrderUseCase(userWalletId)
+                } returns VisaApiError.Unspecified.left()
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                assertThat(storedStatuses.map { it.value }.last()).isEqualTo(PaymentAccountStatusValue.Error.Unavailable)
+            }
+
+        @Test
+        fun `GIVEN KYC approved WHEN invoke THEN money account order is not looked up`() = runTest {
+            // Arrange
+            stubHappyPath(buildCustomerInfo(customerId = "cust_1"))
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            coVerify(exactly = 0) { findMoneyAccountCreationOrderUseCase(any()) }
+        }
     }
 
     /**
@@ -700,6 +822,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             cardDetailsRepository = cardDetailsRepository,
             issueCardRepository = issueCardRepository,
             getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
+            findMoneyAccountCreationOrderUseCase = findMoneyAccountCreationOrderUseCase,
         )
 
         private val account = Account.Payment(userWalletId = userWalletId)
@@ -739,6 +862,35 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             // Assert
             assertThat(realStore.getSyncOrNull(userWalletId)?.value).isEqualTo(issuingCard)
         }
+
+        @Test
+        fun `GIVEN cached Loaded with failed onramp WHEN mark eligible THEN virtualAccount becomes Eligible`() =
+            runTest {
+                // Arrange
+                val loaded = loadedFixture(virtualAccount = VirtualAccountOnramp.Failed)
+                realStore.store(userWalletId, AccountStatus.Payment(account = account, value = loaded))
+
+                // Act
+                realFetcher.markVirtualAccountEligible(userWalletId)
+
+                // Assert
+                val updated = realStore.getSyncOrNull(userWalletId)?.value
+                assertThat(updated).isEqualTo(loaded.copy(virtualAccount = VirtualAccountOnramp.Eligible))
+            }
+
+        @Test
+        fun `GIVEN cached Loaded with processing onramp WHEN mark eligible THEN virtualAccount stays Processing`() =
+            runTest {
+                // Arrange
+                val loaded = loadedFixture(virtualAccount = VirtualAccountOnramp.Processing)
+                realStore.store(userWalletId, AccountStatus.Payment(account = account, value = loaded))
+
+                // Act
+                realFetcher.markVirtualAccountEligible(userWalletId)
+
+                // Assert
+                assertThat(realStore.getSyncOrNull(userWalletId)?.value).isEqualTo(loaded)
+            }
     }
 
     @Nested
@@ -1692,6 +1844,151 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             // Assert
             assertThat(storedStatuses.last().value).isInstanceOf(PaymentAccountStatusValue.Inactive::class.java)
         }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CachedStatusOnFailedRefresh {
+
+        private val cachedKycInProgress = PaymentAccountStatusValue.UnderReview(
+            source = StatusSource.CACHE,
+            kycStatus = KycStatus.PENDING,
+            customerId = "cust_1",
+        )
+
+        private val cachedKycRejected = cachedKycInProgress.copy(kycStatus = KycStatus.REJECTED)
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN cached KYC status WHEN refresh request fails THEN cached status is kept as ONLY_CACHE`(
+            model: CachedStatusModel,
+        ) = runTest {
+            // Arrange
+            stubFailedRefresh(cached = model.cached, failingRequest = model.failingRequest, error = model.error)
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value).isEqualTo(model.expected)
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideNotKeptCaches")
+        fun `GIVEN no KYC or account data cached WHEN customer info fails THEN Unavailable stored`(
+            cached: PaymentAccountStatusValue?,
+        ) = runTest {
+            // Arrange
+            stubFailedRefresh(
+                cached = cached,
+                failingRequest = FailingRequest.CUSTOMER_INFO,
+                error = VisaApiError.ServerUnavailable,
+            )
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value).isEqualTo(PaymentAccountStatusValue.Error.Unavailable)
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideCustomerInfoRequests")
+        fun `GIVEN cached KYC status WHEN customer info session expired THEN NotSynced stored`(
+            failingRequest: FailingRequest,
+        ) = runTest {
+            // Arrange
+            stubFailedRefresh(
+                cached = cachedKycInProgress,
+                failingRequest = failingRequest,
+                error = VisaApiError.RefreshTokenExpired,
+            )
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value).isEqualTo(PaymentAccountStatusValue.Error.NotSynced)
+        }
+
+        private suspend fun stubFailedRefresh(
+            cached: PaymentAccountStatusValue?,
+            failingRequest: FailingRequest,
+            error: VisaApiError,
+        ) {
+            stubHappyPath(buildCustomerInfo())
+            coEvery { paymentAccountStatusesStore.getSyncOrNull(userWalletId) } returns cached?.let { value ->
+                AccountStatus.Payment(account = Account.Payment(userWalletId = userWalletId), value = value)
+            }
+            when (failingRequest) {
+                FailingRequest.WALLET_CHECK -> {
+                    coEvery { onboardingRepository.hasTangemPayInWallet(userWalletId) } returns error.left()
+                }
+                FailingRequest.CUSTOMER_INFO -> {
+                    coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns error.left()
+                }
+                FailingRequest.CUSTOMER_INFO_WITH_ORDER -> {
+                    coEvery { onboardingRepository.getOrderId(userWalletId) } returns "order_1"
+                    coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns error.left()
+                }
+            }
+        }
+
+        private fun provideTestModels() = listOf(
+            CachedStatusModel(
+                name = "KYC in progress, customer/me unavailable",
+                cached = cachedKycInProgress,
+                failingRequest = FailingRequest.CUSTOMER_INFO,
+                error = VisaApiError.ServerUnavailable,
+                expected = cachedKycInProgress.copy(source = StatusSource.ONLY_CACHE),
+            ),
+            CachedStatusModel(
+                name = "KYC rejected, customer/me unavailable",
+                cached = cachedKycRejected,
+                failingRequest = FailingRequest.CUSTOMER_INFO,
+                error = VisaApiError.ServerUnavailable,
+                expected = cachedKycRejected.copy(source = StatusSource.ONLY_CACHE),
+            ),
+            CachedStatusModel(
+                name = "KYC in progress with a stored order, customer/me unavailable",
+                cached = cachedKycInProgress,
+                failingRequest = FailingRequest.CUSTOMER_INFO_WITH_ORDER,
+                error = VisaApiError.ServerUnavailable,
+                expected = cachedKycInProgress.copy(source = StatusSource.ONLY_CACHE),
+            ),
+            CachedStatusModel(
+                name = "KYC in progress, wallet check unavailable",
+                cached = cachedKycInProgress,
+                failingRequest = FailingRequest.WALLET_CHECK,
+                error = VisaApiError.ServerUnavailable,
+                expected = cachedKycInProgress.copy(source = StatusSource.ONLY_CACHE),
+            ),
+        )
+
+        private fun provideNotKeptCaches() = listOf(
+            null,
+            PaymentAccountStatusValue.IssuingCard(source = StatusSource.CACHE),
+        )
+
+        private fun provideCustomerInfoRequests() = listOf(
+            FailingRequest.CUSTOMER_INFO,
+            FailingRequest.CUSTOMER_INFO_WITH_ORDER,
+        )
+    }
+
+    internal enum class FailingRequest { WALLET_CHECK, CUSTOMER_INFO, CUSTOMER_INFO_WITH_ORDER }
+
+    internal data class CachedStatusModel(
+        val name: String,
+        val cached: PaymentAccountStatusValue,
+        val failingRequest: FailingRequest,
+        val error: VisaApiError,
+        val expected: PaymentAccountStatusValue,
+    ) {
+        override fun toString(): String = name
     }
 
     internal data class OrderStateModel(

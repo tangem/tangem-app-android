@@ -3,6 +3,7 @@ package com.tangem.features.approval.api
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.decompose.ComposableModularContentComponent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
@@ -18,7 +19,7 @@ import com.tangem.domain.models.wallet.UserWalletId
  * Intended for flows where the approval-type choice has to be collected separately from the
  * actual fee selection / transaction submission step.
  */
-interface SelectApprovalTypeComponent : ComposableBottomSheetComponent {
+interface SelectApprovalTypeComponent : ComposableBottomSheetComponent, ComposableModularContentComponent {
 
     data class Params(
         val userWalletId: UserWalletId,

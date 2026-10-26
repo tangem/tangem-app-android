@@ -12,7 +12,4 @@ dependencies {
     /** Core */
     api(projects.core.decompose)
     api(projects.core.ui)
-
-    /** Domain */
-    api(projects.domain.models)
 }

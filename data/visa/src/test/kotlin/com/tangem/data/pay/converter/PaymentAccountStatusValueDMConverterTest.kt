@@ -9,6 +9,7 @@ import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.TangemPayCardType
+import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.test.core.ProvideTestModels
@@ -231,9 +232,31 @@ internal class PaymentAccountStatusValueDMConverterTest {
         }
 
         @Test
+        fun `GIVEN KYC required WHEN round tripped THEN it restores from cache`() {
+            // Arrange
+            val domain = PaymentAccountStatusValue.KycRequired(
+                source = StatusSource.ACTUAL,
+                customerId = "customer-id",
+                customerResidency = TangemPayCustomerResidency(countryCode = "US", regionCode = "TX"),
+            )
+
+            // Act
+            val restored = converter.convertBack(userWalletId, converter.convert(domain))
+
+            // Assert
+            assertThat(restored).isEqualTo(
+                PaymentAccountStatusValue.KycRequired(
+                    source = StatusSource.CACHE,
+                    customerId = "customer-id",
+                    customerResidency = null,
+                ),
+            )
+        }
+
+        @Test
         fun `GIVEN DM Empty WHEN convertBack THEN returns domain Empty`() {
             // GIVEN
-            val dm = PaymentAccountStatusValueDM.Empty()
+            val dm = PaymentAccountStatusValueDM.Empty
 
             // WHEN
             val result = converter.convertBack(userWalletId, dm)
@@ -301,7 +324,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
         @Test
         fun `GIVEN DM NotCreated WHEN convertBack THEN returns domain NotCreated`() {
             // GIVEN
-            val dm = PaymentAccountStatusValueDM.NotCreated()
+            val dm = PaymentAccountStatusValueDM.NotCreated
 
             // WHEN
             val result = converter.convertBack(userWalletId, dm)

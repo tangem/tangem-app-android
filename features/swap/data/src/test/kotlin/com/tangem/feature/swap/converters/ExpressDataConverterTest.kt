@@ -6,8 +6,10 @@ import com.tangem.grow.datasource.express.models.response.ExchangeDataResponseWi
 import com.tangem.grow.datasource.express.models.response.TxDetails
 import com.tangem.grow.datasource.express.models.response.TxType
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -20,6 +22,7 @@ import java.math.BigInteger
  *  - SWAP with allowanceContract null -> DEX with allowanceContract null.
  *  - otherNativeFee "0" -> BigDecimal.ZERO parse path.
  *  - SEND -> CEX with externalTxId/externalTxUrl preserved.
+ *  - slippage converted from percent × 100 to percent, null when the response omits it.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ExpressDataConverterTest {
@@ -114,6 +117,27 @@ internal class ExpressDataConverterTest {
         assertThat(cex.txExtraId).isEqualTo("12345")
     }
 
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN response slippage WHEN convert THEN SwapDataModel carries it as percent`(model: SlippageModel) {
+        // Arrange
+        val dataResponse = buildDataResponse(slippage = model.responseSlippage)
+
+        // Act
+        val result = sut.convert(ExchangeDataResponseWithTxDetails(dataResponse, buildTxDetails()))
+
+        // Assert
+        assertThat(result.slippage).isEqualTo(model.expected)
+    }
+
+    private fun provideTestModels() = listOf(
+        SlippageModel(responseSlippage = BigDecimal("50"), expected = BigDecimal("0.50")),
+        SlippageModel(responseSlippage = BigDecimal("5"), expected = BigDecimal("0.05")),
+        SlippageModel(responseSlippage = null, expected = null),
+    )
+
+    data class SlippageModel(val responseSlippage: BigDecimal?, val expected: BigDecimal?)
+
     // -------------------------------------------------------------------------
     // Builders
     // -------------------------------------------------------------------------
@@ -124,6 +148,7 @@ internal class ExpressDataConverterTest {
         toAmount: String = "500000",
         toDecimals: Int = 6,
         txId: String = "inner-tx-id",
+        slippage: BigDecimal? = null,
     ): ExchangeDataResponse = ExchangeDataResponse(
         fromAmount = fromAmount,
         fromDecimals = fromDecimals,
@@ -132,6 +157,7 @@ internal class ExpressDataConverterTest {
         txId = txId,
         txDetailsJson = "{}",
         signature = "sig",
+        slippage = slippage,
     )
 
     @Suppress("LongParameterList")

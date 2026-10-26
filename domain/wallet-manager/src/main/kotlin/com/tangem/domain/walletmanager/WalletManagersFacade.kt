@@ -279,10 +279,33 @@ interface WalletManagersFacade {
         signer: TransactionSigner,
     ): List<String>?
 
+    /**
+     * Returns the multiplier between the [currency] amount shown to the user and its on-chain amount, or `null` when
+     * the two coincide. Only Solana Token-2022 mints with `scaledUiAmountConfig` declare one.
+     *
+     * A failure means the mint may be scaled but the multiplier could not be trusted, so the amount must not reach
+     * a transaction unscaled.
+     */
+    suspend fun getScaledUiAmountMultiplier(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): Either<Throwable, BigDecimal?>
+
     @RemoveWithToggle("TWI_1783_TRON_GASLESS_ACCOUNT_ACTIVATION_ENABLED")
     suspend fun isTronAccountActivated(userWalletId: UserWalletId, network: Network): Boolean
 
     suspend fun isSwapSpenderAllowed(userWalletId: UserWalletId, network: Network, spenderAddress: String): Boolean
+
+    suspend fun isSwapTargetAllowed(userWalletId: UserWalletId, network: Network, targetAddress: String): Boolean
+
+    /**
+     * Whether a contract is deployed at [address] in [network] — what tells a contract apart from a plain
+     * wallet, since only a contract can run the call data a transaction carries.
+     *
+     * `null` when the question could not be answered: [network] is not EVM, or the node did not reply. A
+     * caller must not read that as "no contract".
+     */
+    suspend fun hasContractCode(userWalletId: UserWalletId, network: Network, address: String): Boolean?
 
     /**
      * Get requirements for asset(currency)

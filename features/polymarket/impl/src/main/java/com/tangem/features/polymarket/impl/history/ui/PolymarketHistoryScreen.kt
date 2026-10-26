@@ -14,16 +14,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
+import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -37,11 +42,13 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_globe_20
 import com.tangem.core.ui.res.generated.icons.ic_info_20
-import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadingState
+import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
+import com.tangem.features.polymarket.impl.common.ui.PolymarketNextPageLoader
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBarClearance
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM.Content
+import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM.NextPage
 
 @Composable
 internal fun PolymarketHistoryScreen(state: PolymarketHistoryUM, modifier: Modifier = Modifier) {
@@ -67,22 +74,40 @@ internal fun PolymarketHistoryScreen(state: PolymarketHistoryUM, modifier: Modif
                 }
             },
         ) { contentPadding ->
-            when (val content = state.content) {
-                is Content.Data -> HistoryList(content, contentPadding)
-                else -> Box(
-                    modifier = Modifier.fillMaxSize().padding(contentPadding).padding(horizontal = 16.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    when (content) {
-                        Content.Loading -> PolymarketLoadingState()
-                        is Content.Empty -> EmptyHistory(content.onExploreEventsClick)
-                        is Content.Error -> PolymarketReloadPrompt(
-                            text = resourceReference(R.string.common_something_went_wrong),
-                            onReloadClick = content.onRetry,
-                        )
-                        is Content.Data -> Unit
-                    }
+            TangemPullToRefreshSlidingContainer(
+                config = state.pullToRefreshConfig,
+                indicatorOffset = contentPadding.calculateTopPadding(),
+            ) {
+                key(state.filterKey) {
+                    HistoryContent(state.content, contentPadding)
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryContent(content: Content, contentPadding: PaddingValues) {
+    when (content) {
+        is Content.Data -> HistoryList(content, contentPadding)
+        Content.Loading -> PolymarketHistorySkeleton(contentPadding = contentPadding)
+        else -> Box(
+            modifier = Modifier.fillMaxSize().padding(contentPadding).padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState()),
+            contentAlignment = Alignment.Center,
+        ) {
+            when (content) {
+                Content.NoResults -> Text(
+                    text = stringResourceSafe(R.string.common_no_results),
+                    color = TangemTheme.colors3.text.secondary,
+                    style = TangemTheme.typography3.subheading.medium,
+                )
+                is Content.Empty -> EmptyHistory(content.onExploreEventsClick)
+                is Content.Error -> PolymarketReloadPrompt(
+                    text = resourceReference(R.string.common_something_went_wrong),
+                    onReloadClick = content.onRetry,
+                )
+                is Content.Data, Content.Loading -> Unit
             }
         }
     }
@@ -102,10 +127,9 @@ private fun HistoryTopBar(state: PolymarketHistoryUM) {
                 if (content is Content.Data) PolymarketHistoryMenu(onDownloadClick = content.onDownloadCsvClick)
             },
         )
-        val content = state.content
-        if (content is Content.Data) {
+        if (state.tabs.isNotEmpty()) {
             TangemTabNavigation(
-                tabs = content.tabs,
+                tabs = state.tabs,
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
             )
         }
@@ -115,8 +139,16 @@ private fun HistoryTopBar(state: PolymarketHistoryUM) {
 @Composable
 private fun HistoryList(content: Content.Data, contentPadding: PaddingValues) {
     val layoutDirection = LocalLayoutDirection.current
+    val listState = rememberLazyListState()
+    val nextPage = content.nextPage
+    if (nextPage is NextPage.Ready) {
+        key(content.groups.sumOf { it.activities.size }) {
+            PolymarketLoadMoreEffect(listState, nextPage.onLoadMore)
+        }
+    }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
+        state = listState,
         contentPadding = PaddingValues(
             top = contentPadding.calculateTopPadding(),
             bottom = contentPadding.calculateBottomPadding() + PolymarketSearchBarClearance,
@@ -131,6 +163,16 @@ private fun HistoryList(content: Content.Data, contentPadding: PaddingValues) {
             items(group.activities, key = { "activity:${it.id}" }, contentType = { "activity" }) { activity ->
                 PolymarketActivityRow(state = activity)
             }
+        }
+        when (nextPage) {
+            NextPage.Loading -> item(key = "next_page", contentType = "loader") { PolymarketNextPageLoader() }
+            is NextPage.Error -> item(key = "next_page", contentType = "retry") {
+                PolymarketReloadPrompt(
+                    text = resourceReference(R.string.common_something_went_wrong),
+                    onReloadClick = nextPage.onRetry,
+                )
+            }
+            NextPage.End, is NextPage.Ready -> Unit
         }
     }
 }

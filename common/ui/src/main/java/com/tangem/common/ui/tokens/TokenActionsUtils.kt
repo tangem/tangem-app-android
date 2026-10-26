@@ -24,6 +24,10 @@ fun ScenarioUnavailabilityReason.rendersActionAsEnabled(): Boolean {
     return this == ScenarioUnavailabilityReason.None || this == ScenarioUnavailabilityReason.JointAccount
 }
 
+fun ScenarioUnavailabilityReason.rendersSwapAsEnabled(): Boolean {
+    return rendersActionAsEnabled() || this is ScenarioUnavailabilityReason.ExpressUnreachable
+}
+
 @Suppress("CyclomaticComplexMethod", "LongMethod")
 fun ScenarioUnavailabilityReason.getUnavailabilityReasonText(): TextReference {
     return when (val unavailabilityReason = this) {

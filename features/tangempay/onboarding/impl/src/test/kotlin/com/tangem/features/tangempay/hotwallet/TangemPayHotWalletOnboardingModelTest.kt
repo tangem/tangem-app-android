@@ -6,22 +6,28 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
+import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class TangemPayHotWalletOnboardingModelTest {
@@ -31,6 +37,7 @@ internal class TangemPayHotWalletOnboardingModelTest {
         every { getLeastVersionName() } returns "Android 10"
     }
     private val router: Router = mockk(relaxed = true)
+    private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
     private val testUserWalletId = UserWalletId("1234567890ABCDEF")
@@ -39,22 +46,53 @@ internal class TangemPayHotWalletOnboardingModelTest {
     }
 
     @Nested
-    inner class OnTermsClick {
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class OnLegalLinkClick {
 
-        @Test
-        fun `WHEN onTermsClick THEN navigate to Disclaimer`() = runTest {
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(urlOpener)
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN legal link WHEN clicked THEN its url opened`(testModel: LegalLinkTestModel) = runTest {
             // Arrange
             val model = createModel(testScope = this)
 
             // Act
-            model.uiState.value.onTermsClick.invoke()
+            testModel.click(model.uiState.value)
             advanceUntilIdle()
 
             // Assert
-            verify { router.push(AppRoute.Disclaimer(isTosAccepted = true)) }
+            verify(exactly = 1) { urlOpener.openUrl(match { it.startsWith(testModel.expectedUrl) }) }
             model.onDestroy()
         }
+
+        private fun provideTestModels() = listOf(
+            LegalLinkTestModel(
+                link = "terms, fees and limits",
+                click = { it.onTermsClick() },
+                expectedUrl = TangemPayConstants.TERMS_AND_LIMITS_URL,
+            ),
+            LegalLinkTestModel(
+                link = "terms of service",
+                click = { it.onTermsOfServiceClick() },
+                expectedUrl = "https://www.paera.com/tangempay",
+            ),
+            LegalLinkTestModel(
+                link = "privacy policy",
+                click = { it.onPrivacyPolicyClick() },
+                expectedUrl = "https://tangem.com/docs/en/pay-privacy-policy.pdf",
+            ),
+        )
     }
+
+    data class LegalLinkTestModel(
+        val link: String,
+        val click: (TangemPayHotWalletOnboardingUM) -> Unit,
+        val expectedUrl: String,
+    )
 
     @Nested
     inner class OnGetCardClick {
@@ -126,6 +164,7 @@ internal class TangemPayHotWalletOnboardingModelTest {
         return TangemPayHotWalletOnboardingModel(
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             router = router,
+            urlOpener = urlOpener,
             onboardingStarter = TangemPayOnboardingStarter(
                 router = router,
                 uiMessageSender = uiMessageSender,

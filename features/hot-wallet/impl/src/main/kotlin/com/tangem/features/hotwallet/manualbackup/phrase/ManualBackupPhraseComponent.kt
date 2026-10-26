@@ -7,7 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
+import com.tangem.core.ui.security.SensitiveContentEffect
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.hotwallet.manualbackup.phrase.model.ManualBackupPhraseModel
 import com.tangem.features.hotwallet.manualbackup.phrase.ui.ManualBackupPhraseContent
@@ -23,7 +23,7 @@ internal class ManualBackupPhraseComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
-        DisableScreenshotsDisposableEffect()
+        SensitiveContentEffect()
         ManualBackupPhraseContent(
             state = state,
             modifier = modifier,

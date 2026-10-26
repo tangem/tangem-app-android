@@ -1,5 +1,6 @@
 package com.tangem.data.pay.store
 
+import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawState
 import com.tangem.domain.visa.model.TangemPayAuthTokens
@@ -28,6 +29,10 @@ interface TangemPayStorage {
     suspend fun getVirtualAccountOrderId(customerWalletAddress: String): String?
 
     suspend fun clearVirtualAccountOrderId(customerWalletAddress: String)
+
+    suspend fun getVirtualAccountOrderFailed(customerWalletAddress: String): Boolean
+
+    suspend fun storeVirtualAccountOrderFailed(customerWalletAddress: String, isFailed: Boolean)
 
     suspend fun getAddToWalletDone(customerWalletAddress: String): Boolean
 
@@ -64,6 +69,9 @@ interface TangemPayStorage {
     fun isMainOnboardingBannerHidden(userWalletId: UserWalletId): Flow<Boolean>
 
     suspend fun storeHideOnboardingBanner(userWalletId: UserWalletId, hide: Boolean)
+    suspend fun storeCustomerResidency(userWalletId: UserWalletId, residency: TangemPayCustomerResidency)
+    suspend fun getCustomerResidency(userWalletId: UserWalletId): TangemPayCustomerResidency?
+    suspend fun clearCustomerResidency(userWalletId: UserWalletId)
     suspend fun storeTangemPayEligibility(eligibility: Set<String>)
     suspend fun getTangemPayEligibility(): Set<String>?
 

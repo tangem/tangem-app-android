@@ -17,7 +17,9 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
+import com.tangem.feature.swap.models.PredictionTopUpLimits
 import com.tangem.feature.swap.models.UiActions
+import com.tangem.feature.swap.models.warningFor
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils
@@ -41,12 +43,14 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         actions: UiActions,
         isHighNetworkFee: Boolean = false,
+        predictionTopUpLimits: PredictionTopUpLimits? = null,
     ): ImmutableList<NotificationUM> {
         // The fee selector exposes a single sealed state; narrow it here so call sites pass the raw
         // FeeSelectorUM and this factory owns the Content/Error/Loading discrimination.
         val feeContent = feeSelectorUM
         val getFeeError = (feeSelectorUM as? FeeSelectorUM.Error)?.error
         return buildList {
+            maybeAddPredictionTopUpLimitWarning(transferState, predictionTopUpLimits)
             addRentExemptionNotification(transferState.currencyCheck?.rentWarning)
             maybeAddDomainWarnings(
                 state = transferState,
@@ -74,6 +78,15 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
             )
             maybeAddHighNetworkFeeWarning(isHighNetworkFee)
         }.toPersistentList()
+    }
+
+    private fun MutableList<NotificationUM>.maybeAddPredictionTopUpLimitWarning(
+        transferState: SwapState.Transfer,
+        limits: PredictionTopUpLimits?,
+    ) {
+        if (limits == null || transferState.isSendingAmountLoading) return
+        val warning = limits.warningFor(transferState.sendingAmount)
+        if (warning != null) add(warning)
     }
 
     private fun MutableList<NotificationUM>.maybeAddHighNetworkFeeWarning(isHighNetworkFee: Boolean) {

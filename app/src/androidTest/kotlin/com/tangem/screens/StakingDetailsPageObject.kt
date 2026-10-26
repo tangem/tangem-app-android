@@ -1,6 +1,10 @@
 package com.tangem.screens
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasAnyDescendant
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.*
 import com.tangem.features.tokendetails.impl.R
@@ -11,6 +15,7 @@ import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import com.tangem.features.staking.impl.R as StakingImplR
 import androidx.compose.ui.test.hasTestTag as withTestTag
+import androidx.compose.ui.test.hasText as withText
 
 class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<StakingDetailsPageObject>(semanticsProvider = semanticsProvider) {
@@ -91,6 +96,11 @@ class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         useUnmergedTree = true
     }
 
+    val autoClaimedRewardsText: KNode = child {
+        hasText(getResourceString(CoreResR.string.staking_solana_details_auto_claiming_rewards_daily_text))
+        useUnmergedTree = true
+    }
+
     val yourStakesTitle: KNode = child {
         hasText(getResourceString(StakingImplR.string.staking_your_stakes))
         useUnmergedTree = true
@@ -106,8 +116,49 @@ class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         useUnmergedTree = true
     }
 
+    fun rewardsClaimAmount(amount: String): KNode = child {
+        addSemanticsMatcher(cryptoAmountMatcher(amount))
+        hasAnyAncestor(withTestTag(StakingDetailsScreenTestTags.REWARDS_BLOCK))
+        useUnmergedTree = true
+    }
+
+    fun activeStakingAmount(amount: String): KNode = child {
+        addSemanticsMatcher(cryptoAmountMatcher(amount))
+        hasAnyAncestor(stakedRowMatcher)
+        useUnmergedTree = true
+    }
+
     val activeStakingPendingIcon: KNode = child {
         hasTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_PENDING_ICON)
+        useUnmergedTree = true
+    }
+
+    fun activeStakingBlockOfValidator(validatorName: String): KNode = child {
+        addSemanticsMatcher(activeStakingRowMatcher(validatorName))
+        useUnmergedTree = true
+    }
+
+    fun activeStakingAmountOfValidator(validatorName: String, amount: String): KNode = child {
+        hasText(amount, substring = true)
+        hasAnyAncestor(activeStakingRowMatcher(validatorName))
+        useUnmergedTree = true
+    }
+
+    fun activeStakingPendingIconOfValidator(validatorName: String): KNode = child {
+        hasTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_PENDING_ICON)
+        hasAnyAncestor(activeStakingRowMatcher(validatorName))
+        useUnmergedTree = true
+    }
+
+    fun pendingStakeAmountOfValidator(validatorName: String, amount: String): KNode = child {
+        addSemanticsMatcher(cryptoAmountMatcher(amount))
+        hasAnyAncestor(pendingStakingRowMatcher(validatorName))
+        useUnmergedTree = true
+    }
+
+    fun settledStakeAmountOfValidator(validatorName: String, amount: String): KNode = child {
+        addSemanticsMatcher(cryptoAmountMatcher(amount))
+        hasAnyAncestor(settledStakingRowMatcher(validatorName))
         useUnmergedTree = true
     }
 
@@ -134,6 +185,17 @@ class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         useUnmergedTree = true
     }
 
+    val stakedEntry: KNode = child {
+        addSemanticsMatcher(stakedRowMatcher)
+        useUnmergedTree = true
+    }
+
+    fun unstakingEntryAmount(amount: String): KNode = child {
+        addSemanticsMatcher(cryptoAmountMatcher(amount))
+        hasAnyAncestor(unstakingRowMatcher)
+        useUnmergedTree = true
+    }
+
     val unstakingEntryDate: KNode = child {
         hasTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_SUBTITLE)
         hasText(getResourceString(R.string.common_today))
@@ -153,6 +215,36 @@ class StakingDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
     }
 
 }
+
+private val unstakingTitleMatcher: SemanticsMatcher =
+    withTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_TITLE) and
+        withText(getResourceString(StakingImplR.string.staking_unstaking))
+
+private val unstakingRowMatcher: SemanticsMatcher =
+    withTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_BLOCK) and hasAnyDescendant(unstakingTitleMatcher)
+
+private val stakedRowMatcher: SemanticsMatcher =
+    withTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_BLOCK) and hasAnyDescendant(unstakingTitleMatcher).not()
+
+private val pendingIconMatcher: SemanticsMatcher = withTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_PENDING_ICON)
+
+private fun cryptoAmountMatcher(amount: String): SemanticsMatcher {
+    val amountAtEnd = Regex("(^|\\s)${Regex.escape(amount)}$")
+    return SemanticsMatcher("text ends with crypto amount '$amount'") { node ->
+        val text = node.config.getOrNull(SemanticsProperties.Text)?.joinToString("").orEmpty()
+        amountAtEnd.containsMatchIn(text.replace('\u00A0', ' '))
+    }
+}
+
+private fun pendingStakingRowMatcher(validatorName: String): SemanticsMatcher =
+    activeStakingRowMatcher(validatorName) and hasAnyDescendant(pendingIconMatcher)
+
+private fun settledStakingRowMatcher(validatorName: String): SemanticsMatcher =
+    activeStakingRowMatcher(validatorName) and hasAnyDescendant(pendingIconMatcher).not()
+
+private fun activeStakingRowMatcher(validatorName: String): SemanticsMatcher =
+    withTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_BLOCK) and
+        hasAnyDescendant(withTestTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_TITLE) and withText(validatorName))
 
 internal fun BaseTestCase.onStakingDetailsScreen(function: StakingDetailsPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)

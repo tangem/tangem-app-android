@@ -34,6 +34,7 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.cloudBackup)
     implementation(projects.domain.common)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.hotWallet)
     implementation(projects.domain.models)
     implementation(projects.domain.settings)
@@ -42,6 +43,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
 
     /** Compose */
+    implementation(deps.androidx.activity.compose)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)

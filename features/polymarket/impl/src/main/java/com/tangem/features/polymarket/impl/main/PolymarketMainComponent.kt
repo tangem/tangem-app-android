@@ -6,18 +6,13 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.essenty.lifecycle.doOnPause
 import com.arkivanov.essenty.lifecycle.doOnResume
-import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.arkivanov.decompose.router.slot.childSlot
-import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.decompose.context.childByContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
+import com.tangem.features.polymarket.impl.main.addfunds.polymarketFundingSheetSlot
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainParams
 import com.tangem.features.polymarket.impl.main.ui.PolymarketMainScreen
@@ -43,20 +38,18 @@ internal class PolymarketMainComponent(
         params = PolymarketMainParams(userWalletId = userWalletId),
     )
 
-    private val addFundsSlot = childSlot(
-        source = model.addFundsNavigation,
-        serializer = null,
-        key = "addFunds",
-        handleBackButton = false,
-        childFactory = { _, componentContext -> addFundsChild(componentContext) },
+    private val positionsPreview = PolymarketPositionsPreviewComponent(
+        context = child(key = PolymarketPositionsPreviewComponent.KEY),
+        params = PolymarketPositionsPreviewComponent.Params(
+            userWalletId = userWalletId,
+            blocksRefresh = model.blocksRefresh,
+        ),
     )
 
-    private val receiveSlot = childSlot(
-        source = model.receiveNavigation,
-        serializer = null,
-        key = "receive",
-        handleBackButton = false,
-        childFactory = ::receiveChild,
+    private val fundingSheetSlot = polymarketFundingSheetSlot(
+        navigation = model.fundingSheetNavigation,
+        callback = model,
+        tokenReceiveComponentFactory = tokenReceiveComponentFactory,
     )
 
     init {
@@ -69,14 +62,15 @@ internal class PolymarketMainComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
-        val addFunds by addFundsSlot.subscribeAsState()
-        val receive by receiveSlot.subscribeAsState()
+        val fundingSheet by fundingSheetSlot.subscribeAsState()
 
         PolymarketMainScreen(
             state = state,
+            positions = { positionsModifier -> positionsPreview.Content(modifier = positionsModifier) },
             onBackClick = model::onBackClick,
             onSearchClick = model::onSearchClick,
             onHistoryClick = model::onHistoryClick,
+            onSupportChatClick = model::onSupportChatClick,
             onLoadMore = model::onLoadMore,
             onVisibleEventsChange = model::onVisibleEventsChange,
             onScrollIdle = model::onScrollIdle,
@@ -84,24 +78,6 @@ internal class PolymarketMainComponent(
             modifier = modifier,
         )
 
-        addFunds.child?.instance?.BottomSheet()
-        receive.child?.instance?.BottomSheet()
+        fundingSheet.child?.instance?.BottomSheet()
     }
-
-    private fun addFundsChild(componentContext: ComponentContext): ComposableBottomSheetComponent =
-        PolymarketAddFundsComponent(
-            appComponentContext = childByContext(componentContext),
-            params = PolymarketAddFundsComponent.Params(callback = model),
-        )
-
-    private fun receiveChild(
-        config: TokenReceiveConfig,
-        componentContext: ComponentContext,
-    ): ComposableBottomSheetComponent = tokenReceiveComponentFactory.create(
-        context = childByContext(componentContext),
-        params = TokenReceiveComponent.Params(
-            config = config,
-            onDismiss = model.receiveNavigation::dismiss,
-        ),
-    )
 }

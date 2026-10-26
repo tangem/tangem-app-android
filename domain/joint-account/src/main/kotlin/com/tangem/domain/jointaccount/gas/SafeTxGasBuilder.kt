@@ -3,6 +3,7 @@ package com.tangem.domain.jointaccount.gas
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.SafeInnerCall
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.network.JointNetworkReader
@@ -20,50 +21,54 @@ class SafeTxGasBuilder(
     private val refundReceiverProvider: JointRefundReceiverProvider,
 ) {
 
-    suspend fun build(userWalletId: UserWalletId, network: Network, call: SafeInnerCall): Either<Throwable, SafeTx> =
-        either {
-            val refundReceiver = Either
-                .catch { refundReceiverProvider.refundReceiver() }
-                .bind()
-                .lowercase()
-            ensure(EVM_ADDRESS.matches(refundReceiver)) {
-                IllegalStateException("The fee recipient is not an EVM address: $refundReceiver")
-            }
+    suspend fun build(
+        userWalletId: UserWalletId,
+        network: Network,
+        call: SafeInnerCall,
+        gasToken: SafeGasToken,
+    ): Either<Throwable, SafeTx> = either {
+        val refundReceiver = Either
+            .catch { refundReceiverProvider.refundReceiver() }
+            .bind()
+            .lowercase()
+        ensure(EVM_ADDRESS.matches(refundReceiver)) {
+            IllegalStateException("The fee recipient is not an EVM address: $refundReceiver")
+        }
 
-            val code = networkReader.getCode(userWalletId = userWalletId, network = network).bind()
-            val isDeployed = code.length > EMPTY_CODE.length
+        val code = networkReader.getCode(userWalletId = userWalletId, network = network).bind()
+        val isDeployed = code.length > EMPTY_CODE.length
 
-            val nonce = if (isDeployed) {
-                networkReader.getContractNonce(userWalletId = userWalletId, network = network).bind()
-            } else {
-                BigInteger.ZERO
-            }
+        val nonce = if (isDeployed) {
+            networkReader.getContractNonce(userWalletId = userWalletId, network = network).bind()
+        } else {
+            BigInteger.ZERO
+        }
 
-            val estimate = networkReader
-                .estimateGasLimit(
-                    userWalletId = userWalletId,
-                    network = network,
-                    to = call.to,
-                    value = call.value,
-                    data = call.data,
-                )
-                .bind()
-
-            val gasPrice = networkReader.getGasPrice(userWalletId = userWalletId, network = network).bind()
-
-            SafeTx(
+        val estimate = networkReader
+            .estimateGasLimit(
+                userWalletId = userWalletId,
+                network = network,
                 to = call.to,
                 value = call.value,
                 data = call.data,
-                operation = SafeTx.OPERATION_CALL,
-                safeTxGas = estimate.withSafeTxGasMargin(),
-                baseGas = if (isDeployed) SAFE_BASE_GAS else SAFE_BASE_GAS + DEPLOY_GAS,
-                gasPrice = gasPrice.withGasPriceMargin(),
-                gasToken = NATIVE_GAS_TOKEN,
-                refundReceiver = refundReceiver,
-                nonce = nonce,
             )
-        }
+            .bind()
+
+        val gasPrice = networkReader.getGasPrice(userWalletId = userWalletId, network = network).bind()
+
+        SafeTx(
+            to = call.to,
+            value = call.value,
+            data = call.data,
+            operation = SafeTx.OPERATION_CALL,
+            safeTxGas = estimate.withSafeTxGasMargin(),
+            baseGas = if (isDeployed) SAFE_BASE_GAS else SAFE_BASE_GAS + DEPLOY_GAS,
+            gasPrice = gasToken.gasPriceInTokenCurrency(coinGasPrice = gasPrice.withGasPriceMargin()),
+            gasToken = gasToken.address,
+            refundReceiver = refundReceiver,
+            nonce = nonce,
+        )
+    }
 
     /** Rounded up, so an odd estimate never lands below the margin */
     private fun BigInteger.withSafeTxGasMargin(): BigInteger =
@@ -87,10 +92,7 @@ class SafeTxGasBuilder(
         /** Added to `baseGas` when the first operation in the network also deploys the Safe */
         val DEPLOY_GAS: BigInteger = BigInteger.valueOf(300_000)
 
-        /**
-         * `address(0)` — the refund is paid in the native coin regardless of what is being sent.
-         * Payment in an arbitrary token (as in gasless) is a later phase.
-         */
+        /** `address(0)`: the refund is paid in the network's coin */
         const val NATIVE_GAS_TOKEN = "0x0000000000000000000000000000000000000000"
 
         /** +50 % over the estimate: the inner call must not run out of gas mid-execution */

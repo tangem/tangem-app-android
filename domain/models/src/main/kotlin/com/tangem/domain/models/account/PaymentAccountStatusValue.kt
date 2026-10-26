@@ -6,7 +6,9 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.serialization.SerializedBigDecimal
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.math.BigDecimal
 
@@ -33,6 +35,7 @@ sealed class PaymentAccountStatusValue {
             is Inactive,
             is Empty,
             is NotCreated,
+            is KycRequired,
             is UnderReview,
             -> TotalFiatBalance.Loaded(amount = SerializedBigDecimal.ZERO, source = source)
             is Loading -> TotalFiatBalance.Loading
@@ -50,6 +53,7 @@ sealed class PaymentAccountStatusValue {
             is Error.CardIssueFailed -> copy(source = source)
             is IssuingCard -> copy(source = source)
             is Loaded -> copy(source = source, error = error ?: this.error)
+            is KycRequired -> copy(source = source)
             is UnderReview -> copy(source = source)
             is Deactivated -> copy(source = source, error = error ?: this.error)
             is Loading,
@@ -79,6 +83,20 @@ sealed class PaymentAccountStatusValue {
     data object NotCreated : PaymentAccountStatusValue() {
         override val source: StatusSource = StatusSource.ACTUAL
     }
+
+    /**
+
+     *
+     * @property source The source of the status information.
+     * @property customerId The unique identifier of the customer, or `null` if the backend has not provided it.
+     * @property customerResidency The country and region the customer picked on the residency step.
+     */
+    @Serializable
+    data class KycRequired(
+        @SerialName("source") override val source: StatusSource,
+        @SerialName("customer_id") val customerId: String?,
+        @SerialName("customer_residency") val customerResidency: TangemPayCustomerResidency?,
+    ) : PaymentAccountStatusValue()
 
     /**
      * Represents a state where the payment account is under review (KYC).
@@ -305,6 +323,7 @@ val PaymentAccountStatusValue.tariffPlan: TangemPayCustomerTariffPlan?
         is PaymentAccountStatusValue.IssuingCard,
         is PaymentAccountStatusValue.Empty,
         is PaymentAccountStatusValue.NotCreated,
+        is PaymentAccountStatusValue.KycRequired,
         is PaymentAccountStatusValue.UnderReview,
         is PaymentAccountStatusValue.Loading,
         is PaymentAccountStatusValue.Deactivated,
@@ -335,6 +354,7 @@ val PaymentAccountStatusValue.isCreated: Boolean
         is PaymentAccountStatusValue.Inactive,
         is PaymentAccountStatusValue.Loaded,
         is PaymentAccountStatusValue.Loading,
+        is PaymentAccountStatusValue.KycRequired,
         is PaymentAccountStatusValue.UnderReview,
         is PaymentAccountStatusValue.Deactivated,
         -> true

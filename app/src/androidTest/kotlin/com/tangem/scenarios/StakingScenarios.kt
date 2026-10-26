@@ -1,13 +1,17 @@
 package com.tangem.scenarios
 
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performTouchInput
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
+import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
+import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.screens.onStakingConfirmScreen
 import com.tangem.screens.onStakingDetailsScreen
@@ -179,17 +183,35 @@ fun BaseTestCase.confirmStakingByHolding() {
     // Hold-to-confirm needs a SINGLE stable SemanticsNodeInteraction for a continuous down→up gesture.
     // A KNode / semanticsProvider.onNode re-resolves the node on each performTouchInput, which splits
     // the press from the release; onAllNodes(...)[i] after fetchSemanticsNodes pins one node. The
-    // confirm screen has exactly one BASE_BUTTON (the hold button); its 'Stake' label disappears once
-    // the loader spins, so match by tag only. onConfirm fires only when the fill animation (~1.5s,
-    // frame clock) completes — hold until the success 'Explore' button appears, then release.
-    val buttons = composeTestRule.onAllNodes(hasTestTag(BaseButtonTestTags.BUTTON))
-    val stakeButton = buttons[buttons.fetchSemanticsNodes().lastIndex]
+    // 'Stake' label is matched only to pick the node — it disappears once the loader spins. onConfirm
+    // fires only when the fill animation (~1.5s, frame clock) completes — hold until the success
+    // 'Explore' button appears, then release.
+    val stakeLabel = getResourceString(CommonR.string.common_stake)
     val exploreButton = hasText(getResourceString(CommonR.string.common_explore))
+    // Re-validation after a fee, validator or allowance change disables and may recreate the button.
+    lateinit var stakeButton: SemanticsNodeInteraction
+    awaitSuccess(WAIT_UNTIL_TIMEOUT_LONG) {
+        val labelledButtons = composeTestRule.onAllNodes(
+            hasTestTag(BaseButtonTestTags.BUTTON) and hasAnyDescendant(hasText(stakeLabel)),
+            useUnmergedTree = true,
+        )
+        stakeButton = if (labelledButtons.fetchSemanticsNodes().isNotEmpty()) {
+            labelledButtons[0]
+        } else {
+            val buttons = composeTestRule.onAllNodes(hasTestTag(BaseButtonTestTags.BUTTON))
+            buttons[buttons.fetchSemanticsNodes().lastIndex]
+        }
+        stakeButton.assertIsEnabled()
+    }
     stakeButton.performTouchInput { down(center) }
     composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
         composeTestRule.onAllNodes(exploreButton, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
     }
-    stakeButton.performTouchInput { up() }
+    // The success screen has replaced the 'Stake' button by now, so release on whichever button is left.
+    runCatching { stakeButton.performTouchInput { up() } }.onFailure {
+        val buttons = composeTestRule.onAllNodes(hasTestTag(BaseButtonTestTags.BUTTON))
+        buttons[buttons.fetchSemanticsNodes().lastIndex].performTouchInput { up() }
+    }
 }
 
 fun BaseTestCase.checkStakingSuccessScreen() {
@@ -239,14 +261,14 @@ fun BaseTestCase.confirmStakingActionByHolding() {
     unstakeButton.performTouchInput { up() }
 }
 
-fun BaseTestCase.checkUnstakeScreen() {
+fun BaseTestCase.checkUnstakeScreen(isAmountEditable: Boolean = false) {
     step("Assert 'Unstake' screen title is displayed") {
         onStakingConfirmScreen { title.assertIsDisplayed() }
     }
-    step("Assert 'Amount' block is displayed and not editable") {
+    step("Assert 'Amount' block is displayed and ${if (isAmountEditable) "editable" else "not editable"}") {
         onStakingConfirmScreen {
             amountBlock.assertIsDisplayed()
-            amountBlock.assertIsNotEnabled()
+            if (isAmountEditable) amountBlock.assertIsEnabled() else amountBlock.assertIsNotEnabled()
         }
     }
     step("Assert 'Network Fee' block is displayed and not clickable") {
@@ -398,5 +420,63 @@ fun BaseTestCase.checkStakingDetailsAfterInitialStake() {
     }
     step("Assert 'Rewards' block shows no accrued rewards yet") {
         awaitSuccess { onStakingDetailsScreen { rewardsBlockText.assertIsDisplayed() } }
+    }
+}
+
+fun BaseTestCase.reopenStakingDetails() {
+    runCatching {
+        onSendScreen { closeButton.performClick() }
+        awaitSuccess {
+            onTokenDetailsScreen {
+                if (!stakingBlock.isDisplayedSafely()) availableStakingBlock.assertIsDisplayed()
+            }
+        }
+        onTokenDetailsScreen {
+            if (stakingBlock.isDisplayedSafely()) stakingBlock.clickWithAssertion() else availableStakingBlock.clickWithAssertion()
+        }
+    }
+}
+
+fun BaseTestCase.enterUnstakeAmount(amount: String) {
+    step("Assert amount input text field is displayed") {
+        awaitSuccess { onSendScreen { amountInputTextField.assertIsDisplayed() } }
+    }
+    step("Type '$amount' in input text field") {
+        onSendScreen {
+            amountInputTextField.performClick()
+            amountInputTextField.performTextReplacement(amount)
+        }
+    }
+    step("Assert input text field has value: '$amount'") {
+        onSendScreen { amountInputTextField.assertTextContains(value = amount, substring = true) }
+    }
+    step("Assert 'Next' button is enabled") {
+        awaitSuccess { onSendScreen { nextButton.assertIsEnabled() } }
+    }
+}
+
+fun BaseTestCase.readTotalAndAvailableBalance(): Pair<String, String> {
+    var total = ""
+    var available = ""
+    step("Read 'Total' balance") {
+        onTokenDetailsScreen { totalBalanceSwitcher.performClick() }
+        awaitSuccess { onTokenDetailsScreen { total = fiatBalance.extractText() } }
+    }
+    step("Read 'Available' balance") {
+        onTokenDetailsScreen { availableBalanceSwitcher.performClick() }
+        awaitSuccess { onTokenDetailsScreen { available = fiatBalance.extractText() } }
+    }
+    return total to available
+}
+
+fun BaseTestCase.selectMaxUnstakeAmount() {
+    step("Assert amount input text field is displayed") {
+        awaitSuccess { onSendScreen { amountInputTextField.assertIsDisplayed() } }
+    }
+    step("Click on 'Max' button") {
+        onSendScreen { maxButton.performClick() }
+    }
+    step("Assert 'Next' button is enabled") {
+        awaitSuccess { onSendScreen { nextButton.assertIsEnabled() } }
     }
 }

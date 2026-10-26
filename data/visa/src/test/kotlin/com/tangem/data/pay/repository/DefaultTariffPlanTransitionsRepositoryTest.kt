@@ -132,7 +132,7 @@ internal class DefaultTariffPlanTransitionsRepositoryTest {
         val bodySlot = slot<SetPendingTariffPlanTransitionRequest>()
         coEvery {
             tangemPayApi.setPendingTariffPlanTransition(any(), capture(bodySlot))
-        } returns ApiResponse.Success(Unit) as ApiResponse<Any>
+        } returns ApiResponse.Success(Unit)
 
         // WHEN
         val result = repository.setPendingTransition(USER_WALLET_ID, PENDING_PLAN_ID)
@@ -147,7 +147,7 @@ internal class DefaultTariffPlanTransitionsRepositoryTest {
         // GIVEN
         coEvery {
             tangemPayApi.setPendingTariffPlanTransition(any(), any())
-        } returns ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<Any>
+        } returns ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<Unit>
 
         // WHEN
         val result = repository.setPendingTransition(USER_WALLET_ID, PENDING_PLAN_ID)
@@ -161,7 +161,7 @@ internal class DefaultTariffPlanTransitionsRepositoryTest {
         // GIVEN
         coEvery {
             tangemPayApi.cancelPendingTariffPlanTransition(any())
-        } returns ApiResponse.Success(Unit) as ApiResponse<Any>
+        } returns ApiResponse.Success(Unit)
 
         // WHEN
         val result = repository.cancelPendingTransition(USER_WALLET_ID)
@@ -176,7 +176,7 @@ internal class DefaultTariffPlanTransitionsRepositoryTest {
         // GIVEN
         coEvery {
             tangemPayApi.cancelPendingTariffPlanTransition(any())
-        } returns ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<Any>
+        } returns ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<Unit>
 
         // WHEN
         val result = repository.cancelPendingTransition(USER_WALLET_ID)

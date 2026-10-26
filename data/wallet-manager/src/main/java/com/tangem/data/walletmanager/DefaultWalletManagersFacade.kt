@@ -1,9 +1,12 @@
 package com.tangem.data.walletmanager
 
+import com.tangem.domain.models.currency.isJoint
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
+import arrow.core.left
 import arrow.core.right
+import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.blockchains.tron.TronAccountActivationProvider
 import com.tangem.blockchain.blockchains.tron.gasless.TronGaslessTransactionSigner
@@ -39,9 +42,11 @@ import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.jointaccount.derivation.isJointAccountReservedPath
+import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.network.isJoint
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.GaslessTransactionRepository
@@ -80,6 +85,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val jointAccountSafeAddressResolver: Lazy<JointAccountSafeAddressResolver>,
     private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
+    private val jointRefundReceiverProvider: JointRefundReceiverProvider,
     blockchainSDKFactory: BlockchainSDKFactory,
 ) : WalletManagersFacade {
 
@@ -250,6 +256,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         val transactionHistoryState = source.provider.getTransactionHistoryState(
             address = source.address,
             filterType = currency.toTransactionHistoryFilterType(),
+            shouldIncludeInternalTransfers = currency.isSafeCoin(),
         )
 
         return txHistoryStateConverter.convert(transactionHistoryState)
@@ -281,6 +288,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 page = page,
                 pageSize = pageSize,
                 filterType = currency.toTransactionHistoryFilterType(),
+                shouldIncludeInternalTransfers = currency.isSafeCoin(),
                 gaslessFeeAddresses = gaslessFeeAddresses,
             ),
         )
@@ -293,6 +301,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     smartContractMethods = readSmartContractMethods(),
                     yieldSupplyAddresses = YIELD_SUPPLY_ADDRESSES,
                     gaslessFeeAddresses = gaslessFeeAddresses,
+                    jointRefundReceiver = jointRefundReceiver(currency.network),
                     currency = currency,
                     currencyAddresses = getAddresses(userWalletId, currency.network),
                     txHistoryFeatureToggles = txHistoryFeatureToggles,
@@ -305,6 +314,11 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             )
             is Result.Failure -> throw TxHistoryLoadException(currency, itemsResult.error)
         }
+    }
+
+    private suspend fun jointRefundReceiver(network: Network): String? {
+        if (!network.isJoint) return null
+        return jointRefundReceiverProvider.refundReceiver()
     }
 
     private fun getUserWallet(userWalletId: UserWalletId): UserWallet? =
@@ -320,7 +334,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
      * once the account is active. For any other network the absence is a defect and stays loud.
      */
     private fun requireJointNetwork(network: Network) {
-        require(network.derivationPath is Network.DerivationPath.Joint) {
+        require(network.isJoint) {
             "Unable to get a transaction history source for blockchain: $network"
         }
     }
@@ -337,6 +351,9 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 )
             }
     }
+
+    /** A joint account's coin moves only in the Safe's internal calls: the relayer sends the transaction */
+    private fun CryptoCurrency.isSafeCoin(): Boolean = this is CryptoCurrency.Coin && isJoint
 
     private fun CryptoCurrency.toTransactionHistoryFilterType(): TransactionHistoryRequest.FilterType {
         return when (this) {
@@ -546,6 +563,24 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         }
     }
 
+    override suspend fun getScaledUiAmountMultiplier(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): Either<Throwable, BigDecimal?> = withContext(dispatchers.io) {
+        val blockchain = currency.network.toBlockchain()
+        val isSolana = blockchain == Blockchain.Solana || blockchain == Blockchain.SolanaTestnet
+        if (currency !is CryptoCurrency.Token || !isSolana) return@withContext null.right()
+
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
+            ?: return@withContext IllegalStateException("No wallet manager for ${currency.network.rawId}").left()
+        if (walletManager !is ScaledUiAmountProvider) return@withContext null.right()
+
+        when (val result = walletManager.getScaledUiAmountMultiplier(sdkTokenConverter.convert(currency))) {
+            is Result.Success -> result.data.right()
+            is Result.Failure -> result.error.left()
+        }
+    }
+
     @RemoveWithToggle("TWI_1783_TRON_GASLESS_ACCOUNT_ACTIVATION_ENABLED")
     override suspend fun isTronAccountActivated(userWalletId: UserWalletId, network: Network): Boolean =
         withContext(dispatchers.io) {
@@ -569,6 +604,31 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             ?: return@withContext false
         walletManager.isSwapSpenderAllowed(spenderAddress)
     }
+
+    override suspend fun isSwapTargetAllowed(
+        userWalletId: UserWalletId,
+        network: Network,
+        targetAddress: String,
+    ): Boolean = withContext(dispatchers.io) {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+            ?: return@withContext false
+        walletManager.isSwapTargetAllowed(targetAddress)
+    }
+
+    override suspend fun hasContractCode(userWalletId: UserWalletId, network: Network, address: String): Boolean? =
+        withContext(dispatchers.io) {
+            val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+                as? EthereumWalletManager
+                ?: return@withContext null
+
+            when (val result = walletManager.getCode(address = address)) {
+                is Result.Success -> result.data.removePrefix(HEX_PREFIX).isNotEmpty()
+                is Result.Failure -> {
+                    TangemLogger.e("Failed to read the contract code at $address in ${network.name}", result.error)
+                    null
+                }
+            }
+        }
 
     override suspend fun getDynamicAddressesReceiveAddress(userWalletId: UserWalletId, network: Network): String? {
         val dynamicAddressesManager = getEnabledDynamicAddressesManagerOrNull(userWalletId, network) ?: return null

@@ -8,4 +8,7 @@ import com.squareup.moshi.JsonClass
 data class RefreshApiRequest(
     /** Refresh token from a previous token response. */
     @Json(name = "refreshToken") val refreshToken: String,
-)
+) {
+
+    override fun toString(): String = "RefreshApiRequest(***)"
+}

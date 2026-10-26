@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain
 
+import arrow.core.right
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
@@ -46,10 +47,12 @@ import com.tangem.feature.swap.domain.models.ui.AmountFormatter
 import com.tangem.feature.swap.domain.models.ui.SwapFee
 import com.tangem.features.swap.SwapFeatureToggles
 import io.mockk.clearAllMocks
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
 
 /**
@@ -135,6 +138,11 @@ internal open class SwapInteractorImplTestBase {
             createApprovalTransactionUseCase = createApprovalTransactionUseCase,
             getFeeUseCase = getFeeUseCase,
         )
+    }
+
+    @BeforeEach
+    fun stubUnscaledSourceAmounts() {
+        coEvery { walletManagersFacade.getScaledUiAmountMultiplier(any(), any()) } returns null.right()
     }
 
     /**
@@ -280,6 +288,8 @@ internal fun buildCoinCurrency(
 internal fun buildSwapProvider(
     type: ExchangeProviderType = ExchangeProviderType.DEX,
     providerId: String = "test-provider-${type.name}",
+    isCustomSlippageSupported: Boolean = false,
+    slippage: BigDecimal? = null,
 ): SwapProvider = SwapProvider(
     providerId = providerId,
     rateTypes = listOf(RateType.FLOAT),
@@ -289,8 +299,9 @@ internal fun buildSwapProvider(
     termsOfUse = null,
     privacyPolicy = null,
     isRecommended = false,
-    slippage = null,
+    slippage = slippage,
     isExtraIdSupported = false,
+    isCustomSlippageSupported = isCustomSlippageSupported,
 )
 
 /**
@@ -344,11 +355,13 @@ internal fun buildQuoteModel(
     allowanceContract: String? = null,
     txType: ExpressTxType? = null,
     isRestricted: Boolean = false,
+    slippage: BigDecimal? = null,
 ): QuoteModel = QuoteModel(
     toTokenAmount = SwapAmount(toAmount, decimals),
     allowanceContract = allowanceContract,
     txType = txType,
     isRestricted = isRestricted,
+    slippage = slippage,
 )
 
 /**

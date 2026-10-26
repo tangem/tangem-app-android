@@ -9,6 +9,8 @@ internal fun findCurrencyByNumericCode(code: Int) =
 
 private val usdCurrency: Currency by lazy { Currency.getInstance(Locale.US) }
 
+internal fun getJavaCurrencyOrNull(code: String): Currency? = runCatching { Currency.getInstance(code) }.getOrNull()
+
 internal fun getJavaCurrencyByCode(code: String): Currency {
     return runCatching { Currency.getInstance(code) }
         .getOrElse { e ->

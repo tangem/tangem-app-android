@@ -130,8 +130,8 @@ private fun ColumnScope.Content(yieldSupplyPromoUM: YieldSupplyPromoUM, clickInt
                         text = yieldSupplyPromoUM.subtitle,
                         style = LabelStyle.REGULAR,
                         icon = R.drawable.ic_information_24,
-                        onClick = clickIntents::onApyInfoClick,
-                        onIconClick = clickIntents::onApyInfoClick,
+                        onClick = clickIntents::onVariableRateInfoClick,
+                        onIconClick = clickIntents::onVariableRateInfoClick,
                     ),
                 )
                 SpacerH32()
@@ -398,7 +398,8 @@ private fun YieldSupplyPromoContent_Preview() {
             ),
             clickIntents = object : YieldSupplyPromoClickIntents {
                 override fun onBackClick() {}
-                override fun onApyInfoClick() {}
+                override fun onVariableRateInfoClick() {}
+                override fun onIncentiveRateInfoClick() {}
                 override fun onHowItWorksClick() {}
                 override fun onStartEarningClick() {}
                 override fun onUrlClick(url: String) {}

@@ -4,7 +4,9 @@ import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.squareup.moshi.JsonClass
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.serialization.Serializable
 
+@Serializable
 @JsonClass(generateAdapter = true)
 data class WcSessionDTO(
     val topic: String,
@@ -19,6 +21,7 @@ data class WcSessionDTO(
  * keep in mind that [WcSessionDTO.topic] will be empty
  * you must associate it with SdkSession by [pairingTopic]
  */
+@Serializable
 @JsonClass(generateAdapter = true)
 data class WcPendingApprovalSessionDTO(
     val pairingTopic: String,

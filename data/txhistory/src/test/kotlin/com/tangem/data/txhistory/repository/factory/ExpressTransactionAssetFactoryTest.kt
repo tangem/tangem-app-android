@@ -33,6 +33,12 @@ internal class ExpressTransactionAssetFactoryTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val userWallet = MockUserWalletFactory.create()
     private val mockCurrencyFactory = MockCryptoCurrencyFactory()
+    private val ethereum = mockCurrencyFactory.ethereum
+    private val cachedToken = mockCurrencyFactory.createToken(
+        blockchain = Blockchain.Ethereum,
+        id = "tether",
+        contractAddress = TOKEN_CONTRACT,
+    )
 
     private val factory = ExpressTransactionAssetFactory(
         multiAccountStatusListSupplier = multiAccountStatusListSupplier,
@@ -53,15 +59,10 @@ internal class ExpressTransactionAssetFactoryTest {
     fun `GIVEN token only in cache WHEN create THEN builds token from cache`() = runTest {
         // Arrange
         val id = ExpressAsset.ID(networkId = "ethereum", contractAddress = TOKEN_CONTRACT)
-        val cachedToken = mockCurrencyFactory.createToken(
-            blockchain = Blockchain.Ethereum,
-            id = "tether",
-            contractAddress = TOKEN_CONTRACT,
-        )
         coEvery { tokenInfoRepository.getCachedTokens(userWallet.walletId, any()) } returns mapOf(id to cachedToken)
 
         // Act
-        val result = factory.create(userWallet.walletId, listOf(coinToTokenSwap()), emptyList(), emptyList())
+        val result = factory.create(userWallet.walletId, ethereum, listOf(coinToTokenSwap()), emptyList(), emptyList())
 
         // Assert
         assertThat(result[ExpressLegKey(id, PAYOUT_ADDRESS)]).isEqualTo(cachedToken)
@@ -70,7 +71,13 @@ internal class ExpressTransactionAssetFactoryTest {
     @Test
     fun `GIVEN coin asset WHEN create THEN builds coin`() = runTest {
         // Act
-        val result = factory.create(userWallet.walletId, listOf(coinToTokenSwap()), emptyList(), emptyList())
+        val result = factory.create(
+            userWalletId = userWallet.walletId,
+            historyCurrency = cachedToken,
+            outgoingSwaps = listOf(coinToTokenSwap()),
+            incomingSwaps = emptyList(),
+            onramps = emptyList(),
+        )
 
         // Assert
         assertThat(result[ExpressLegKey(COIN_ASSET_ID, FROM_ADDRESS)]).isInstanceOf(CryptoCurrency.Coin::class.java)
@@ -79,7 +86,7 @@ internal class ExpressTransactionAssetFactoryTest {
     @Test
     fun `GIVEN token absent from portfolio and cache WHEN create THEN omits it`() = runTest {
         // Act
-        val result = factory.create(userWallet.walletId, listOf(coinToTokenSwap()), emptyList(), emptyList())
+        val result = factory.create(userWallet.walletId, ethereum, listOf(coinToTokenSwap()), emptyList(), emptyList())
 
         // Assert
         val tokenId = ExpressAsset.ID(networkId = "ethereum", contractAddress = TOKEN_CONTRACT)
@@ -98,7 +105,7 @@ internal class ExpressTransactionAssetFactoryTest {
             )
 
             // Act
-            val result = factory.create(userWallet.walletId, listOf(coinToTokenSwap()), emptyList(), emptyList())
+            val result = factory.create(userWallet.walletId, cachedToken, listOf(coinToTokenSwap()), emptyList(), emptyList())
 
             // Assert
             assertThat(result[ExpressLegKey(COIN_ASSET_ID, FROM_ADDRESS)]).isEqualTo(regular)
@@ -111,7 +118,7 @@ internal class ExpressTransactionAssetFactoryTest {
         givenPortfolio(statusAt(regular, address = FROM_ADDRESS.uppercase()))
 
         // Act
-        val result = factory.create(userWallet.walletId, listOf(coinToTokenSwap()), emptyList(), emptyList())
+        val result = factory.create(userWallet.walletId, cachedToken, listOf(coinToTokenSwap()), emptyList(), emptyList())
 
         // Assert
         assertThat(result[ExpressLegKey(COIN_ASSET_ID, FROM_ADDRESS)]).isEqualTo(regular)
@@ -124,7 +131,7 @@ internal class ExpressTransactionAssetFactoryTest {
         givenPortfolio(statusAt(custom, address = "some-other-address"))
 
         // Act
-        val result = factory.create(userWallet.walletId, listOf(coinToTokenSwap()), emptyList(), emptyList())
+        val result = factory.create(userWallet.walletId, cachedToken, listOf(coinToTokenSwap()), emptyList(), emptyList())
 
         // Assert
         assertThat(result[ExpressLegKey(COIN_ASSET_ID, FROM_ADDRESS)]).isEqualTo(custom)
@@ -158,6 +165,60 @@ internal class ExpressTransactionAssetFactoryTest {
                 derivationPath = derivationPath,
             ),
             isCustom = true,
+        )
+    }
+
+    @Test
+    fun `GIVEN joint history currency beside a personal twin WHEN create THEN its asset resolves to the joint one`() =
+        runTest {
+            // Arrange
+            val jointEthereum = ethereum.onJointPath()
+            givenPortfolio(statusAt(ethereum, address = "personal-account-address"))
+
+            // Act
+            val result = factory.create(
+                userWalletId = userWallet.walletId,
+                historyCurrency = jointEthereum,
+                outgoingSwaps = listOf(coinToTokenSwap()),
+                incomingSwaps = emptyList(),
+                onramps = emptyList(),
+            )
+
+            // Assert
+            assertThat(result[ExpressLegKey(COIN_ASSET_ID, FROM_ADDRESS)]).isEqualTo(jointEthereum)
+        }
+
+    @Test
+    fun `GIVEN personal history currency WHEN create THEN joint twin is never a candidate`() = runTest {
+        // Arrange
+        val jointTwin = statusAt(ethereum.onJointPath(), address = FROM_ADDRESS)
+        val accountStatusList = mockk<AccountStatusList> {
+            every { flattenCurrencies() } returns listOf(jointTwin)
+            every { flattenPersonalCurrencies() } returns emptyList()
+        }
+        every { multiAccountStatusListSupplier.invoke() } returns flowOf(listOf(accountStatusList))
+
+        // Act
+        val result = factory.create(
+            userWalletId = userWallet.walletId,
+            historyCurrency = ethereum,
+            outgoingSwaps = listOf(coinToTokenSwap()),
+            incomingSwaps = emptyList(),
+            onramps = emptyList(),
+        )
+
+        // Assert
+        assertThat(result[ExpressLegKey(COIN_ASSET_ID, FROM_ADDRESS)]).isEqualTo(ethereum)
+    }
+
+    private fun CryptoCurrency.Coin.onJointPath(): CryptoCurrency.Coin {
+        val jointPath = Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/0")
+
+        return copy(
+            network = network.copy(
+                id = network.id.copy(derivationPath = jointPath),
+                derivationPath = jointPath,
+            ),
         )
     }
 

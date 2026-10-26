@@ -13,9 +13,11 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.search.TangemSearch
+import com.tangem.core.ui.test.TangemPayTestTags
 
 @Composable
 internal fun BankWithdrawSearchFooter(state: TangemSearch.State, modifier: Modifier = Modifier) {
@@ -41,7 +43,8 @@ internal fun BankWithdrawSearchFooter(state: TangemSearch.State, modifier: Modif
             state = state,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .padding(bottom = 16.dp + navigationBarInset),
+                .padding(bottom = 16.dp + navigationBarInset)
+                .testTag(TangemPayTestTags.BANK_WITHDRAW_RECIPIENTS_SEARCH),
         )
     }
 }

@@ -84,6 +84,7 @@ internal class DefaultTangemPayAccountDeepLinkHandler @AssistedInject constructo
         PaymentAccountStatusValue.Empty,
         PaymentAccountStatusValue.NotCreated,
         is PaymentAccountStatusValue.Error,
+        is PaymentAccountStatusValue.KycRequired,
         is PaymentAccountStatusValue.UnderReview,
         is PaymentAccountStatusValue.IssuingCard,
         -> false
@@ -103,11 +104,13 @@ internal class DefaultTangemPayAccountDeepLinkHandler @AssistedInject constructo
         ): DefaultTangemPayAccountDeepLinkHandler
     }
 
-    private companion object {
+    companion object {
 
-        const val TAG = "TangemPayAccountDeepLink"
+        const val DEEPLINK_KEY = "tangem://pay-account"
 
-        val SCREEN_ROUTES = mapOf(
+        private const val TAG = "TangemPayAccountDeepLink"
+
+        private val SCREEN_ROUTES = mapOf(
             "add_funds" to TangemPayDetailsInitialRoute.ADD_FUNDS,
             "va_onramp" to TangemPayDetailsInitialRoute.VA_ONRAMP,
             "va_onramp_details" to TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS,

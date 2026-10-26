@@ -110,13 +110,11 @@ private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boole
             StatusIcon(
                 icon = state.icon,
                 status = state.status,
-                isPendingSignature = state.isPendingSignature,
                 modifier = Modifier.layoutId(TangemRowLayoutId.HEAD).padding(end = 12.dp),
             )
             TitleRow(
                 title = state.title,
                 status = state.status,
-                isPendingSignature = state.isPendingSignature,
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.START_TOP)
                     .testTag(TransactionHistoryItemTestTags.TITLE),
@@ -133,7 +131,6 @@ private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boole
                     amount = amount,
                     status = state.status,
                     isBalanceHidden = isBalanceHidden,
-                    isPendingSignature = state.isPendingSignature,
                     modifier = Modifier
                         .layoutId(TangemRowLayoutId.END_TOP)
                         .testTag(TransactionHistoryItemTestTags.AMOUNT),
@@ -186,7 +183,7 @@ private fun WarningLine(warning: TextReference, modifier: Modifier = Modifier) {
 // region Status circle
 
 @Composable
-private fun StatusIcon(icon: TxIcon, status: Status, isPendingSignature: Boolean, modifier: Modifier = Modifier) {
+private fun StatusIcon(icon: TxIcon, status: Status, modifier: Modifier = Modifier) {
     Box(modifier = modifier.size(40.dp)) {
         StatusCircle(
             icon = icon,
@@ -195,7 +192,7 @@ private fun StatusIcon(icon: TxIcon, status: Status, isPendingSignature: Boolean
                 .fillMaxSize()
                 .testTag(TransactionHistoryItemTestTags.STATUS_PREFIX + status.testTagSuffix),
         )
-        if (isPendingSignature) {
+        if (status is Status.PendingSignature) {
             PendingSignatureBadge(modifier = Modifier.align(Alignment.BottomEnd))
         }
     }
@@ -266,12 +263,7 @@ private val Status.testTagSuffix: String
 // region Title / Subtitle
 
 @Composable
-private fun TitleRow(
-    title: TextReference,
-    status: Status,
-    isPendingSignature: Boolean,
-    modifier: Modifier = Modifier,
-) {
+private fun TitleRow(title: TextReference, status: Status, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -281,7 +273,7 @@ private fun TitleRow(
         if (status is Status.Unconfirmed) {
             TokenRowPendingDots(color = status.titleColor)
         }
-        if (isPendingSignature) {
+        if (status is Status.PendingSignature) {
             TangemBadge(
                 text = resourceReference(R.string.transaction_history_pending),
                 variant = TangemBadge.Variant.Tinted,
@@ -694,17 +686,11 @@ private fun ContentSubtitle.Direction.plainTemplateResId(): Int = when (this) {
 // region Amount
 
 @Composable
-private fun AmountText(
-    amount: String,
-    status: Status,
-    isBalanceHidden: Boolean,
-    modifier: Modifier = Modifier,
-    isPendingSignature: Boolean = false,
-) {
+private fun AmountText(amount: String, status: Status, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     val display = if (status is Status.Failed) amount.stripLeadingSign() else amount
     Text(
         text = display.orMaskWithStars(isBalanceHidden),
-        color = if (status is Status.Confirmed && !isPendingSignature) {
+        color = if (status is Status.Confirmed) {
             TangemTheme.colors3.text.primary
         } else {
             TangemTheme.colors3.text.secondary
@@ -747,7 +733,6 @@ private fun previewContent(
     subtitle: String,
     amount: String,
     currencySymbol: String = "USDT",
-    isPendingSignature: Boolean = false,
 ): TransactionItemUM.Content = TransactionItemUM.Content(
     txHash = txHash,
     amount = amount,
@@ -760,7 +745,6 @@ private fun previewContent(
     title = stringReference(title),
     subtitle = ContentSubtitle.Plain(stringReference(subtitle)),
     timestamp = 0L,
-    isPendingSignature = isPendingSignature,
 )
 
 @Composable
@@ -922,7 +906,6 @@ private fun Preview_TransactionItem_PendingSignature() {
                     subtitle = "to: 33BdfS...ga2B",
                     amount = "-0.3212",
                     currencySymbol = "ETH",
-                    isPendingSignature = true,
                 ),
             ),
         )

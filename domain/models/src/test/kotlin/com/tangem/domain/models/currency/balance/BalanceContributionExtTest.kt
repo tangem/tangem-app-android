@@ -139,7 +139,6 @@ internal class BalanceContributionExtTest {
         fun value(contributions: List<BalanceContribution>): CryptoCurrencyStatus.Value {
             return CryptoCurrencyStatus.NoQuote(
                 amount = BigDecimal.TEN,
-                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),

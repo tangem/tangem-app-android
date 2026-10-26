@@ -1290,6 +1290,7 @@ internal class DefaultPolymarketRepositoryTest {
             volume24hr = null,
             liquidity = null,
             totalMarketsCount = 0,
+            isLive = false,
             displayMode = "plain_markets",
             markets = emptyList(),
             isNegRisk = false,

@@ -45,12 +45,19 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnaly
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
+import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
+import com.tangem.features.hotwallet.HardwareUpgradeLauncher
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -129,6 +136,8 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val closeHotWalletUpgradeBannerUseCase: CloseHotWalletUpgradeBannerUseCase,
     private val acknowledgeAssetsDiscoveryCompletionUseCase: AcknowledgeAssetsDiscoveryCompletionUseCase,
     private val yieldSupplySetShouldShowMainPromoUseCase: YieldSupplySetShouldShowMainPromoUseCase,
+    private val hardwareUpgradeLauncher: HardwareUpgradeLauncher,
+    private val screenLifecycleProvider: ScreenLifecycleProvider,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -385,11 +394,13 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onUpgradeHotWalletClick(userWalletId: UserWalletId) {
+        analyticsEventHandler.send(MainScreen.ButtonUpgrade())
         modelScope.launch(dispatchers.main) {
-            val userWallet = getUserWalletUseCase(userWalletId).getOrNull()
-            if (userWallet is UserWallet.Hot) {
-                appRouter.push(UpgradeWallet(userWalletId))
-            }
+            // Whichever ends first: a slow experiment fetch must not navigate once the user has left the screen.
+            merge(
+                flow { emit(hardwareUpgradeLauncher.launch(userWalletId, HardwareUpgradeStories.Source.MAIN)) },
+                screenLifecycleProvider.isBackgroundState.filter { isBackground -> isBackground }.map { },
+            ).first()
         }
     }
 

@@ -4,6 +4,7 @@ import com.tangem.spend.datasource.config.TangemPay
 
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.managers.ApiConfigsManager
+import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawState
 import com.tangem.domain.visa.model.TangemPayAuthTokens
@@ -117,6 +118,12 @@ internal class MockAwareTangemPayStorage @Inject constructor(
     override suspend fun clearVirtualAccountOrderId(customerWalletAddress: String) =
         real.clearVirtualAccountOrderId(customerWalletAddress)
 
+    override suspend fun getVirtualAccountOrderFailed(customerWalletAddress: String): Boolean =
+        real.getVirtualAccountOrderFailed(customerWalletAddress)
+
+    override suspend fun storeVirtualAccountOrderFailed(customerWalletAddress: String, isFailed: Boolean) =
+        real.storeVirtualAccountOrderFailed(customerWalletAddress, isFailed)
+
     override suspend fun storeCheckCustomerWalletResult(userWalletId: UserWalletId, isPaeraCustomer: Boolean) =
         real.storeCheckCustomerWalletResult(userWalletId, isPaeraCustomer)
 
@@ -149,6 +156,15 @@ internal class MockAwareTangemPayStorage @Inject constructor(
 
     override fun isMainOnboardingBannerHidden(userWalletId: UserWalletId): Flow<Boolean> =
         real.isMainOnboardingBannerHidden(userWalletId)
+
+    override suspend fun storeCustomerResidency(userWalletId: UserWalletId, residency: TangemPayCustomerResidency) =
+        real.storeCustomerResidency(userWalletId, residency)
+
+    override suspend fun getCustomerResidency(userWalletId: UserWalletId): TangemPayCustomerResidency? =
+        real.getCustomerResidency(userWalletId)
+
+    override suspend fun clearCustomerResidency(userWalletId: UserWalletId) =
+        real.clearCustomerResidency(userWalletId)
 
     override suspend fun storeTangemPayEligibility(eligibility: Set<String>) =
         real.storeTangemPayEligibility(eligibility)

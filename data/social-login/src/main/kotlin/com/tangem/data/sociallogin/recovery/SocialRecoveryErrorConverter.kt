@@ -7,6 +7,8 @@ import com.tangem.lib.auth.social.SocialRecoveryError
 internal fun SocialRecoveryError.toDomainError(): SocialLoginError = when (this) {
     SocialRecoveryError.BindingNotFound -> SocialLoginError.BindingNotFound
     SocialRecoveryError.BindingConflict -> SocialLoginError.BindingConflict
+    // the backend has no dedicated code for an expired nonce, so it reads as any other server failure
+    SocialRecoveryError.NonceExpired,
     SocialRecoveryError.NoActiveSession,
     SocialRecoveryError.DeviceKeyUnavailable,
     -> SocialLoginError.ServerError()

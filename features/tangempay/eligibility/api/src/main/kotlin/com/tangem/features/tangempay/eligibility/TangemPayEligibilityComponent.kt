@@ -7,7 +7,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 
 interface TangemPayEligibilityComponent : ComposableContentComponent {
 
-    data class Params(val product: TangemPayProduct, val userWalletId: UserWalletId?)
+    data class Params(val product: TangemPayProduct, val userWalletId: UserWalletId)
 
     interface Factory : ComponentFactory<Params, TangemPayEligibilityComponent>
 }

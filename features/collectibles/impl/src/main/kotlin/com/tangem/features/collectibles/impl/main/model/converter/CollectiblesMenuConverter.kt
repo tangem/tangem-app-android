@@ -13,26 +13,29 @@ import com.tangem.core.ui.res.generated.icons.ic_trash_bin_20
 import com.tangem.features.collectibles.impl.R
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
 import com.tangem.utils.converter.Converter
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 
 internal enum class CollectiblesMenuItem(val id: String) {
     ACTIVITY_LOG("activity_log"),
     DELIVERIES("deliveries"),
     HOW_IT_WORKS("how_it_works"),
     GET_ASSISTANCE("get_assistance"),
-    COPY_TOP_UP_ADDRESS("copy_top_up_address"),
+    HOT_DELEGATE("hot_delegate"),
     CLOSE_ACCOUNT("close_account"),
 }
 
-/** Builds the top bar menu closed; opening and dismissing it is a state update. */
+/**
+ * Builds the top bar menu closed; opening and dismissing it is a state update. The input is the base58 address of
+ * the vault's `hot_delegate`, null until it is read.
+ */
 internal class CollectiblesMenuConverter(
     private val onMenuClick: () -> Unit,
     private val onDismiss: () -> Unit,
     private val onItemClick: (CollectiblesMenuItem) -> Unit,
-) : Converter<Unit, CollectiblesMainUM.MenuUM> {
+) : Converter<String?, CollectiblesMainUM.MenuUM> {
 
-    override fun convert(value: Unit): CollectiblesMainUM.MenuUM = CollectiblesMainUM.MenuUM(
-        items = persistentListOf(
+    override fun convert(value: String?): CollectiblesMainUM.MenuUM = CollectiblesMainUM.MenuUM(
+        items = listOfNotNull(
             item(
                 item = CollectiblesMenuItem.ACTIVITY_LOG,
                 icon = Icons.ic_clock_20,
@@ -55,19 +58,24 @@ internal class CollectiblesMenuConverter(
                 titleRef = TextReference.Res(R.string.collectibles_main_menu_get_assistance),
             ),
 
-            // TODO move both to test menu
-            item(
-                item = CollectiblesMenuItem.COPY_TOP_UP_ADDRESS,
-                icon = Icons.ic_copy_20,
-                titleRef = stringReference("Copy USDC address"),
-                hasDividerAbove = true,
-            ),
+            // TODO testing only, remove once Gasless pays the spin fee: until then the hot delegate is topped up by hand
+            value?.let {
+                item(
+                    item = CollectiblesMenuItem.HOT_DELEGATE,
+                    icon = Icons.ic_copy_20,
+                    titleRef = stringReference("Session key address"),
+                    hasDividerAbove = true,
+                )
+            },
+
+            // TODO move to test menu
             item(
                 item = CollectiblesMenuItem.CLOSE_ACCOUNT,
                 icon = Icons.ic_trash_bin_20,
                 titleRef = stringReference("Close account"),
+                hasDividerAbove = value == null,
             ),
-        ),
+        ).toPersistentList(),
         isShown = false,
         onMenuClick = onMenuClick,
         onDismiss = onDismiss,

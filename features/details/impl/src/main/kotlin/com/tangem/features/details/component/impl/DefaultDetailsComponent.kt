@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -22,6 +23,10 @@ internal class DefaultDetailsComponent @AssistedInject constructor(
 ) : DetailsComponent, AppComponentContext by context {
 
     private val model: DetailsModel = getOrCreateModel(params)
+
+    init {
+        lifecycle.doOnResume(block = model::onResume)
+    }
 
     private val userWalletListComponent = userWalletListComponentFactory.create(
         context = child(key = "user_wallet_list_component"),

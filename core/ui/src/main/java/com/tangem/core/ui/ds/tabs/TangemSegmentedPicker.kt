@@ -18,6 +18,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -297,7 +299,8 @@ private fun Segment(
                 }
                 selectedIndex.value = index
                 onClick()
-            },
+            }
+            .semantics { selected = selectedIndex.value == index },
         contentAlignment = Alignment.Center,
     ) {
         Text(

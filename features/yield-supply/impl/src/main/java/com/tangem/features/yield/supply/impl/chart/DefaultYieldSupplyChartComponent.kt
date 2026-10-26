@@ -5,9 +5,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartIncentiveUM
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
 import com.tangem.features.yield.supply.impl.chart.model.YieldSupplyChartModel
 import com.tangem.features.yield.supply.impl.chart.ui.YieldSupplyChartContent
 import dagger.assisted.Assisted
@@ -35,8 +38,15 @@ internal class DefaultYieldSupplyChartComponent @AssistedInject constructor(
         fun create(context: AppComponentContext, params: Params): DefaultYieldSupplyChartComponent
     }
 
+    /**
+     * @property isPlainRate keeps the chart on the Aave supply history even while a campaign is running
+     * @property initialPeriod history the incentivised chart opens on; the inline chart has no period picker, so
+     * whatever it is given is what it stays on
+     */
     internal data class Params(
         val cryptoCurrency: CryptoCurrency.Token,
+        val isPlainRate: Boolean = false,
+        val initialPeriod: YieldSupplyChartPeriod = YieldSupplyChartPeriod.Week,
         val callback: ModelCallback? = null,
     )
 
@@ -44,5 +54,11 @@ internal class DefaultYieldSupplyChartComponent @AssistedInject constructor(
         fun onStartLoading()
         fun onSuccessLoad()
         fun onLoadFail()
+
+        /** Null once the token has no running campaign, so the host sheet can fall back to its plain rate copy. */
+        fun onIncentiveChanged(incentive: YieldSupplyChartIncentiveUM?)
+
+        /** The rate this sheet heads with, once the market says what the chart below is actually plotting. */
+        fun onRateResolved(apy: TextReference)
     }
 }

@@ -9,7 +9,6 @@ import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
@@ -24,7 +23,6 @@ internal class DefaultCardSdkConfigRepository(
     private val transactionSignerFactory: TransactionSignerFactory,
 ) : CardSdkConfigRepository {
 
-    @Deprecated("Use CardSdkConfigRepository's methods instead of this property")
     override val sdk: TangemSdk
         get() = cardSdkProvider.sdk
 
@@ -34,9 +32,17 @@ internal class DefaultCardSdkConfigRepository(
             sdk.config.userCodeRequestPolicy = value.toUserCodeRequestPolicy()
         }
 
+    override val cardIdDisplayFormat: CardIdDisplayFormat
+        get() = sdk.config.cardIdDisplayFormat
+
     override fun restoreAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean) {
         val config = cardSdkProvider.sdkOrNull?.config ?: return
         config.userCodeRequestPolicy = isBiometricsRequestPolicy.toUserCodeRequestPolicy()
+    }
+
+    override fun restoreCardIdDisplayFormat(format: CardIdDisplayFormat) {
+        val config = cardSdkProvider.sdkOrNull?.config ?: return
+        config.cardIdDisplayFormat = format
     }
 
     override fun setAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean) {
@@ -47,23 +53,6 @@ internal class DefaultCardSdkConfigRepository(
         UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
     } else {
         UserCodeRequestPolicy.Default
-    }
-
-    override fun resetCardIdDisplayFormat() {
-        sdk.config.cardIdDisplayFormat = CardIdDisplayFormat.Full
-    }
-
-    override fun updateCardIdDisplayFormat(productType: ProductType) {
-        sdk.config.cardIdDisplayFormat = when (productType) {
-            ProductType.Twins -> CardIdDisplayFormat.LastLuhn(numbers = 4)
-            ProductType.Note,
-            ProductType.Wallet,
-            ProductType.Wallet2,
-            ProductType.Start2Coin,
-            ProductType.Ring,
-            ProductType.Visa,
-            -> CardIdDisplayFormat.Full
-        }
     }
 
     override fun getCommonSigner(

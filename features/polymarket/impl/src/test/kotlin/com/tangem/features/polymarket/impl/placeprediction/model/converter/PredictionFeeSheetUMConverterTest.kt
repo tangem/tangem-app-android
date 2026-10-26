@@ -46,8 +46,19 @@ internal class PredictionFeeSheetUMConverterTest {
             ),
         ),
         ConvertCase(
+            quote = createQuote().copy(averagePrice = BigDecimal("0.7455")),
+            slippage = SlippageUM.of(BigDecimal("0.25")),
+            tokenSymbol = "USDC",
+            expected = createFeeSheet(
+                amounts = listOf("$12.00", "$0.00", "$0.30", "$12.30"),
+                descriptionRes = R.string.prediction_fee_sheet_buy_description,
+                descriptionArgs = wrappedList("20", "74.6", "USDC", "0.25%"),
+            ),
+        ),
+        ConvertCase(
             quote = createQuote().copy(
                 side = PredictionOrderSide.SELL,
+                averagePrice = BigDecimal("0.9995"),
                 shares = BigDecimal("20"),
                 expectedExecutionAmount = BigDecimal("12"),
                 notional = BigDecimal("11.80"),
@@ -63,7 +74,7 @@ internal class PredictionFeeSheetUMConverterTest {
             expected = createFeeSheet(
                 amounts = listOf("$11.80", "$0.20", "$0.30", "$11.30"),
                 descriptionRes = R.string.prediction_fee_sheet_sell_description,
-                descriptionArgs = wrappedList("20", "60", "pUSD", "2%"),
+                descriptionArgs = wrappedList("20", "99.9", "pUSD", "2%"),
             ),
         ),
     )

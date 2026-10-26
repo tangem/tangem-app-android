@@ -170,16 +170,43 @@ fun findWireMockRequestBodies(
     method: String,
     urlPath: String,
     baseUrl: String = getWireMockBaseUrl(),
-): List<String> {
-    val json = JSONObject()
+): List<String> = findWireMockRequestBodies(
+    requestPattern = JSONObject().put("method", method).put("urlPath", urlPath),
+    baseUrl = baseUrl,
+)
+
+fun findWireMockRequestBodiesByPathPattern(
+    method: String,
+    urlPathPattern: String,
+    baseUrl: String = getWireMockBaseUrl(),
+): List<String> = findWireMockRequestBodies(
+    requestPattern = JSONObject().put("method", method).put("urlPathPattern", urlPathPattern),
+    baseUrl = baseUrl,
+)
+
+fun findWireMockRequestTimestampsByQueryParam(
+    method: String,
+    urlPath: String,
+    queryParam: String,
+    queryValue: String,
+    baseUrl: String = getWireMockBaseUrl(),
+): List<Long> = findWireMockRequests(
+    requestPattern = JSONObject()
         .put("method", method)
         .put("urlPath", urlPath)
-        .toString()
+        .put("queryParameters", JSONObject().put(queryParam, JSONObject().put("equalTo", queryValue))),
+    baseUrl = baseUrl,
+).map { request -> request.getLong("loggedDate") }.sorted()
+
+private fun findWireMockRequestBodies(requestPattern: JSONObject, baseUrl: String): List<String> =
+    findWireMockRequests(requestPattern, baseUrl).map { request -> request.optString("body") }
+
+private fun findWireMockRequests(requestPattern: JSONObject, baseUrl: String): List<JSONObject> {
     val mediaType = "application/json".toMediaType()
 
     val request = Request.Builder()
         .url("$baseUrl/__admin/requests/find")
-        .post(json.toRequestBody(mediaType))
+        .post(requestPattern.toString().toRequestBody(mediaType))
         .build()
 
     return try {
@@ -188,7 +215,7 @@ fun findWireMockRequestBodies(
             TangemLogger.d("WireMock request find response: ${response.code}")
             if (!response.isSuccessful) return emptyList()
             val requests = JSONObject(body).getJSONArray("requests")
-            List(requests.length()) { index -> requests.getJSONObject(index).optString("body") }
+            List(requests.length()) { index -> requests.getJSONObject(index) }
         }
     } catch (e: IOException) {
         TangemLogger.e("WireMock request find error", e)

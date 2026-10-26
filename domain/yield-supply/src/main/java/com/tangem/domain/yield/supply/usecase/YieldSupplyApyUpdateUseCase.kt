@@ -2,14 +2,15 @@ package com.tangem.domain.yield.supply.usecase
 
 import arrow.core.Either
 import com.tangem.domain.yield.supply.YieldSupplyRepository
+import com.tangem.domain.yield.supply.models.YieldMarketToken
 import kotlin.collections.filter
 
 /**
- * Updates and returns a map of APY values per token.
+ * Refreshes the yield markets and returns the same map [YieldSupplyApyFlowUseCase] then emits.
  *
  * Return map:
- * - key: token contract address
- * - value: APY as string
+ * - key: [YieldMarketToken.yieldSupplyKey]
+ * - value: effective APY, in percent
  */
 class YieldSupplyApyUpdateUseCase(
     private val yieldSupplyRepository: YieldSupplyRepository,
@@ -19,7 +20,7 @@ class YieldSupplyApyUpdateUseCase(
         yieldSupplyRepository.updateMarkets()
             .filter { it.isActive }
             .associate {
-                it.tokenAddress to it.apy.toString()
+                it.yieldSupplyKey to it.effectiveApy.toString()
             }
     }
 }

@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.txhistory.details
 
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -29,17 +30,18 @@ internal object TangemPayCashbackDetailUmConverter {
         transaction: TangemPayTxHistoryItem,
         cashback: TangemPayTxHistoryItem.Cashback?,
         loadState: TransactionLoadState,
+        isBalanceHidden: Boolean,
         onRefreshClick: () -> Unit,
     ): CashbackDetailUM? {
         if (transaction !is TangemPayTxHistoryItem.Spend) return null
         return when (loadState) {
             TransactionLoadState.Loading -> CashbackDetailUM.Loading
             TransactionLoadState.Error -> CashbackDetailUM.Error(onRefreshClick = onRefreshClick)
-            TransactionLoadState.Loaded -> cashback?.toUm()
+            TransactionLoadState.Loaded -> cashback?.toUm(isBalanceHidden)
         }
     }
 
-    private fun TangemPayTxHistoryItem.Cashback.toUm(): CashbackDetailUM? {
+    private fun TangemPayTxHistoryItem.Cashback.toUm(isBalanceHidden: Boolean): CashbackDetailUM? {
         return when (status) {
             Status.AWAITING_CALCULATION -> CashbackDetailUM.AwaitingCalculation
             Status.CONFIRMED,
@@ -47,7 +49,7 @@ internal object TangemPayCashbackDetailUmConverter {
             -> {
                 val amount = amount ?: return null
                 CashbackDetailUM.Content(
-                    value = stringReference(formatAmount(amount, currency)),
+                    value = stringReference(formatAmount(amount, currency).orMaskWithStars(isBalanceHidden)),
                     subvalue = earned(amount),
                 )
             }

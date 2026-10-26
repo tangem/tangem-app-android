@@ -67,6 +67,7 @@ dependencies {
 
     // region AndroidX
     implementation(deps.androidx.core)
+    implementation(deps.lifecycle.process)
     api(deps.androidx.datastore)
     // endregion
 
@@ -79,6 +80,7 @@ dependencies {
     implementation(deps.okio)
     api(deps.retrofit)
     api(deps.retrofit.moshi)
+    implementation(deps.retrofit.kotlinxSerialization)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
 
@@ -101,10 +103,12 @@ dependencies {
 
     // region Core modules
     api(projects.core.analytics)
+    implementation(projects.core.configToggles)
     api(projects.core.local)
     implementation(projects.core.analytics.models)
     api(projects.core.utils)
     api(projects.core.remote)
+    api(projects.core.socket)
     // endregion
 
     // region Tests

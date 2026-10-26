@@ -8,6 +8,7 @@ import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.utils.WcSdkSessionRequestConverter
 import com.tangem.data.walletconnect.utils.getDappOriginUrl
 import com.tangem.domain.walletconnect.WcRequestService
+import com.tangem.domain.walletconnect.model.WcJsonRpcError
 import com.tangem.domain.walletconnect.model.WcMethodName
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.utils.logging.TangemLogger
@@ -22,6 +23,7 @@ internal class DefaultWcRequestService(
 
     private val _wcRequest: Channel<Pair<WcMethodName, WcSdkSessionRequest>> = Channel(Channel.BUFFERED)
     override val wcRequest: Flow<Pair<WcMethodName, WcSdkSessionRequest>> = _wcRequest.receiveAsFlow()
+        .filterNot { respondWithoutUi(request = it.second) }
         .filter { filterDuplicateRequest(request = it.second) }
         .onEach { saveRequest(request = it.second) }
 
@@ -41,11 +43,19 @@ internal class DefaultWcRequestService(
             ?: WcMethodName.Unsupported(sr.request.method)
         TangemLogger.withTag(WC_TAG).i("handle request name $name")
         if (name is WcMethodName.Unsupported) {
-            respondService.rejectRequestNonBlock(sr)
+            respondService.rejectRequestNonBlock(sr, WcJsonRpcError.UnsupportedMethod)
             if (name.raw.startsWith("wallet_")) return
         }
 
         _wcRequest.trySend(name to sr)
+    }
+
+    /**
+     * Requests answered here are deliberately left out of [saveRequest]: a silent answer is not something
+     * the user saw, so a dApp repeating the request must get an answer again rather than silence.
+     */
+    private suspend fun respondWithoutUi(request: WcSdkSessionRequest): Boolean {
+        return requestConverters.any { converter -> converter.respondWithoutUi(request) }
     }
 
     private fun filterDuplicateRequest(request: WcSdkSessionRequest): Boolean {

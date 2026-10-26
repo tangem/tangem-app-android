@@ -6,6 +6,7 @@ import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.features.collectibles.impl.R
 import com.tangem.features.collectibles.impl.discovery.model.converter.CollectiblesDiscoveryPackConverter
 import com.tangem.features.collectibles.impl.discovery.ui.state.CollectiblesDiscoveryUM
+import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toImmutableList
@@ -15,17 +16,19 @@ import kotlinx.collections.immutable.toImmutableList
  * state stay as they are.
  *
  * Pages accumulate: every loaded batch stays on the screen, so a status carrying pages renders them all and only
- * the footer loader tells whether one more is on its way. A first page that never arrived is the one failure the
- * user sees — the design shows the same reload prompt for a failed request and for an empty category alike.
+ * the footer tells whether one more is on its way or failed to arrive. A first page that never arrived replaces the
+ * whole content area — the design shows the same reload prompt for a failed request and for an empty category alike.
  *
  * @property batchListState pagination state to render
  * @property packConverter converts the machines of the loaded pages into pack cards
  * @property onReloadClick retries the catalogue from its first page
+ * @property onNextPageRetryClick retries the page that failed to load
  */
 internal class CollectiblesDiscoveryContentTransformer(
     private val batchListState: CollectibleGachaMachinesBatchListState,
     private val packConverter: CollectiblesDiscoveryPackConverter,
     private val onReloadClick: () -> Unit,
+    private val onNextPageRetryClick: () -> Unit,
 ) : Transformer<CollectiblesDiscoveryUM> {
 
     override fun transform(prevState: CollectiblesDiscoveryUM): CollectiblesDiscoveryUM {
@@ -33,26 +36,37 @@ internal class CollectiblesDiscoveryContentTransformer(
     }
 
     private fun transformContent(prev: CollectiblesDiscoveryUM.ContentUM): CollectiblesDiscoveryUM.ContentUM {
-        return when (batchListState.status) {
+        return when (val status = batchListState.status) {
             is PaginationStatus.None,
             is PaginationStatus.InitialLoading,
-            -> if (prev is CollectiblesDiscoveryUM.ContentUM.Content) {
-                prev.copy(isReloading = true)
-            } else {
-                CollectiblesDiscoveryUM.ContentUM.Loading
+            -> when (prev) {
+                is CollectiblesDiscoveryUM.ContentUM.Content -> prev.copy(isReloading = true)
+                is CollectiblesDiscoveryUM.ContentUM.Empty -> prev
+                is CollectiblesDiscoveryUM.ContentUM.Loading,
+                is CollectiblesDiscoveryUM.ContentUM.Error,
+                -> CollectiblesDiscoveryUM.ContentUM.Loading
             }
             is PaginationStatus.InitialLoadingError -> CollectiblesDiscoveryUM.ContentUM.Error(
                 message = TextReference.Res(R.string.collectibles_main_search_load_error),
                 onReloadClick = onReloadClick,
             )
-            is PaginationStatus.NextBatchLoading -> toContent(isLoadingNextPage = true)
-            is PaginationStatus.Paginating,
-            is PaginationStatus.EndOfPagination,
-            -> toContent(isLoadingNextPage = false)
+            is PaginationStatus.NextBatchLoading -> toContent(nextPage = CollectiblesDiscoveryUM.NextPageUM.Loading)
+            is PaginationStatus.Paginating -> toContent(nextPage = status.toNextPage())
+            is PaginationStatus.EndOfPagination -> toContent(nextPage = CollectiblesDiscoveryUM.NextPageUM.Idle)
         }
     }
 
-    private fun toContent(isLoadingNextPage: Boolean): CollectiblesDiscoveryUM.ContentUM {
+    private fun PaginationStatus.Paginating<*>.toNextPage(): CollectiblesDiscoveryUM.NextPageUM {
+        return when (lastResult) {
+            is BatchFetchResult.Error -> CollectiblesDiscoveryUM.NextPageUM.Error(
+                message = TextReference.Res(R.string.common_unable_to_load),
+                onRetryClick = onNextPageRetryClick,
+            )
+            is BatchFetchResult.Success -> CollectiblesDiscoveryUM.NextPageUM.Idle
+        }
+    }
+
+    private fun toContent(nextPage: CollectiblesDiscoveryUM.NextPageUM): CollectiblesDiscoveryUM.ContentUM {
         // The backend pages with a keyset cursor over a shifting order, so a machine that moved between two
         // page requests arrives twice; the copies would collide as lazy-list keys and crash the list.
         val machines = batchListState.data
@@ -72,7 +86,7 @@ internal class CollectiblesDiscoveryContentTransformer(
 
         return CollectiblesDiscoveryUM.ContentUM.Content(
             rows = rows,
-            isLoadingNextPage = isLoadingNextPage,
+            nextPage = nextPage,
             isReloading = false,
         )
     }
