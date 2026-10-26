@@ -33,6 +33,7 @@ import com.tangem.features.jointaccount.main.state.transformers.ClearMembersAcco
 import com.tangem.features.jointaccount.main.state.transformers.UpdateMembersAccountTransformer
 import com.tangem.features.jointaccount.main.state.transformers.UpdateMembersInitialStateTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.time.CurrentTimeProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -72,6 +73,7 @@ internal class JointAccountMembersModel @Inject constructor(
     private val ownerAddressResolver: JointOwnerAddressResolver,
     private val stateController: JointAccountMembersStateController,
     private val inviteSharing: JointAccountInviteSharing,
+    private val currentTimeProvider: CurrentTimeProvider,
 ) : Model() {
 
     private val params = paramsContainer.require<JointAccountMembersListParams>()
@@ -157,6 +159,7 @@ internal class JointAccountMembersModel @Inject constructor(
             callbacks = converterCallbacks,
             accountName = name,
             accountIcon = icon,
+            nowMillis = currentTimeProvider.nowMillis(),
         )
     }
 
@@ -165,17 +168,20 @@ internal class JointAccountMembersModel @Inject constructor(
 
     /**
      * An expiring invite changes nothing in the account, so the screen re-renders by itself: on every resume and
-     * once the nearest deadline passes while it is on top.
+     * each time a deadline passes while it is on top.
      */
     private fun expiryTicks(account: JointAccount): Flow<Unit> = isResumed.flatMapLatest { resumed ->
         flow {
             emit(Unit)
             if (!resumed) return@flow
 
-            val now = System.currentTimeMillis()
-            val nextDeadline = account.invites.map { it.expiresAtMillis }.filter { it > now }.minOrNull() ?: return@flow
-            delay(timeMillis = nextDeadline - now)
-            emit(Unit)
+            val deadlines = account.invites.map { it.expiresAtMillis }.sorted()
+            for (deadline in deadlines) {
+                val wait = deadline - currentTimeProvider.nowMillis()
+                if (wait <= 0) continue
+                delay(timeMillis = wait)
+                emit(Unit)
+            }
         }
     }
 
