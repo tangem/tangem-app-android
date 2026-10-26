@@ -276,6 +276,7 @@ private fun RequiredApprovalsRow(state: AccountDetailsUM.RequiredApprovalsUM) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = state.onInfoClick)
             .padding(all = 12.dp)
             .testTag(AccountDetailsScreenTestTags.REQUIRED_APPROVALS_ROW),
         verticalAlignment = Alignment.CenterVertically,
@@ -296,9 +297,7 @@ private fun RequiredApprovalsRow(state: AccountDetailsUM.RequiredApprovalsUM) {
             maxLines = 1,
         )
         Icon(
-            modifier = Modifier
-                .size(20.dp)
-                .clickable(onClick = state.onInfoClick),
+            modifier = Modifier.size(20.dp),
             imageVector = Icons.ic_info_20,
             tint = TangemTheme.colors3.icon.tertiary,
             contentDescription = null,
