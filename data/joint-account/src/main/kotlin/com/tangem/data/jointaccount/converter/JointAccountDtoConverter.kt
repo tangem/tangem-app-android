@@ -11,10 +11,7 @@ import java.time.format.DateTimeParseException
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Network DTO → domain. Freshly fetched data is always [StatusSource.ACTUAL]. An invite whose expiry cannot be read
- * is dropped alone: its slot then reads as free and offers a reissue, which is the recovery anyway.
- */
+/** Network DTO → domain, always [StatusSource.ACTUAL]; an invite with an unreadable expiry is dropped alone */
 @Singleton
 internal class JointAccountDtoConverter @Inject constructor(
     private val operationConverter: JointOperationConverter,
