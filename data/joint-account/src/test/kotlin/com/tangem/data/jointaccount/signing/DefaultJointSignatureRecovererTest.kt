@@ -128,7 +128,27 @@ internal class DefaultJointSignatureRecovererTest {
             MalformedModel(signature = valid.dropLast(n = 2) + "00"),
             MalformedModel(signature = valid.dropLast(n = 2) + "1d"),
             MalformedModel(signature = valid.dropLast(n = 4) + "zz1b"),
+            MalformedModel(signature = valid.withR(BigInteger.ZERO)),
+            MalformedModel(signature = valid.withS(BigInteger.ZERO)),
+            MalformedModel(signature = valid.withR(CURVE_ORDER)),
+            MalformedModel(signature = valid.withS(CURVE_ORDER)),
+            MalformedModel(signature = valid.withS(CURVE_ORDER + BigInteger.ONE)),
         )
+    }
+
+    @Test
+    fun `GIVEN a high-s signature WHEN recoverPayloadSigner THEN alice`() {
+        // Arrange
+        val signature = Sign.signPrefixedMessage(CanonicalJson.canonicalize(PAYLOAD.toCanonicalMap()), ALICE_KEY)
+        val s = BigInteger(1, signature.s)
+        val flippedV = if (signature.v[0].toInt() == V_27) V_28 else V_27
+        val highS = signature.toRsvHex().withS(CURVE_ORDER - s).dropLast(n = 2) + "%02x".format(flippedV)
+
+        // Act
+        val actual = recoverer.recoverPayloadSigner(payload = PAYLOAD, signature = highS)
+
+        // Assert
+        assertThat(actual.getOrNull()).isEqualTo(ALICE)
     }
 
     data class MalformedModel(val signature: String)
@@ -136,6 +156,12 @@ internal class DefaultJointSignatureRecovererTest {
     private fun Sign.SignatureData.toRsvHex(): String {
         return "0x" + (r + s + v).joinToString(separator = "") { "%02x".format(it) }
     }
+
+    private fun String.withR(r: BigInteger): String = replaceRange(2, 2 + WORD_HEX, r.toWordHex())
+
+    private fun String.withS(s: BigInteger): String = replaceRange(2 + WORD_HEX, 2 + WORD_HEX * 2, s.toWordHex())
+
+    private fun BigInteger.toWordHex(): String = toString(16).padStart(WORD_HEX, '0')
 
     private companion object {
         val ALICE_KEY: ECKeyPair = ECKeyPair.create(BigInteger.ONE)
@@ -146,6 +172,10 @@ internal class DefaultJointSignatureRecovererTest {
         const val BOB = "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf"
         const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
         const val CHAIN_ID = 137L
+        const val WORD_HEX = 64
+        const val V_27 = 27
+        const val V_28 = 28
+        val CURVE_ORDER: BigInteger = Sign.CURVE_PARAMS.n
 
         val PAYLOAD = JointAccountConfirmationPayload(
             config = JointAccountConfig(

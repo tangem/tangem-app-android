@@ -14,6 +14,7 @@ import com.tangem.domain.jointaccount.signing.JointSignatureRecoverer
 import org.web3j.crypto.ECDSASignature
 import org.web3j.crypto.Keys
 import org.web3j.crypto.Sign
+import org.web3j.crypto.Sign.CURVE_PARAMS
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -48,6 +49,7 @@ internal class DefaultJointSignatureRecoverer @Inject constructor() : JointSigna
         val r = BigInteger(1, bytes.copyOfRange(0, WORD_BYTES))
         val s = BigInteger(1, bytes.copyOfRange(WORD_BYTES, WORD_BYTES * 2))
         val v = bytes[SIGNATURE_BYTES - 1].toInt() and BYTE_MASK
+        require(r.isScalar() && s.isScalar()) { "The signature r and s must lie in (0, n)" }
         require(v == V_BASE || v == V_BASE + 1) { "The signature v must be 27 or 28, got $v" }
 
         val publicKey = Sign.recoverFromSignature(v - V_BASE, ECDSASignature(r, s), digest)
@@ -55,6 +57,9 @@ internal class DefaultJointSignatureRecoverer @Inject constructor() : JointSigna
 
         return HEX_PREFIX + Keys.getAddress(publicKey).lowercase()
     }
+
+    /** `ecrecover` returns the zero address outside this range, while web3j still recovers a point for `s = 0` */
+    private fun BigInteger.isScalar(): Boolean = signum() > 0 && this < CURVE_PARAMS.n
 
     private companion object {
         const val SIGNATURE_BYTES = 65
