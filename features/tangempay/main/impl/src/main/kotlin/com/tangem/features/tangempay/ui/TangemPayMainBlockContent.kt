@@ -27,6 +27,8 @@ import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.assets.il_account_visa
+import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.tangempay.main.impl.R
@@ -171,7 +173,10 @@ private fun TangemPayUnavailable(subtitle: TextReference, modifier: Modifier = M
 @Composable
 private fun TangemPayIcon() {
     TangemAvatar(
-        state = TangemAvatar.UiState.Account(iconRes = R.drawable.ic_visa_24, color = TangemAvatar.FillColor.PayVisa),
+        state = TangemAvatar.UiState.Account(
+            imageVector = Icons.il_account_visa,
+            color = TangemAvatar.FillColor.PayVisa
+        ),
         size = TangemAvatar.Size.X40,
     )
 }
@@ -179,7 +184,10 @@ private fun TangemPayIcon() {
 @Composable
 private fun TangemPayIssuedIcon() {
     TangemAvatar(
-        state = TangemAvatar.UiState.Account(iconRes = R.drawable.ic_visa_24, color = TangemAvatar.FillColor.PayVisa),
+        state = TangemAvatar.UiState.Account(
+            imageVector = Icons.il_account_visa,
+            color = TangemAvatar.FillColor.PayVisa
+        ),
         size = TangemAvatar.Size.X40,
     )
 }
