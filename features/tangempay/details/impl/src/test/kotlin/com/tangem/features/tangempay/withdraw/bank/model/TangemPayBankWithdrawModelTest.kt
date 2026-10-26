@@ -15,7 +15,6 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
 import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
@@ -52,29 +51,28 @@ internal class TangemPayBankWithdrawModelTest {
 
     private val userWalletId = UserWalletId("011")
     private val getBankAccountsUseCase: GetBankAccountsUseCase = mockk()
-    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk(relaxed = true)
     private val getTangemPayCountriesUseCase: GetTangemPayCountriesUseCase = mockk()
     private val getTangemPayRegionsUseCase: GetTangemPayRegionsUseCase = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
+    private val onWithdrawSent: () -> Unit = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(
             getBankAccountsUseCase,
-            paymentAccountStatusFetcher,
             getTangemPayCountriesUseCase,
             getTangemPayRegionsUseCase,
             analytics,
+            onWithdrawSent,
         )
-        coEvery { paymentAccountStatusFetcher(userWalletId) } returns Unit.right()
         coEvery { getBankAccountsUseCase(userWalletId) } returns emptyList<BankAccount>().right()
         coEvery { getTangemPayCountriesUseCase() } returns emptyList<TangemPayCountry>().right()
         coEvery { getTangemPayRegionsUseCase(any()) } returns emptyList<TangemPayRegion>().right()
     }
 
     @Test
-    fun `GIVEN signed order WHEN reported THEN payment account refreshed`() {
+    fun `GIVEN signed order WHEN reported THEN withdraw reported as sent`() {
         // Arrange
         val model = createModel(entry = BankWithdrawEntry.NewPersonal)
         model.onAmountConfirmed(
@@ -90,7 +88,7 @@ internal class TangemPayBankWithdrawModelTest {
         model.onOrderSigned()
 
         // Assert
-        coVerify(exactly = 1) { paymentAccountStatusFetcher(userWalletId) }
+        verify(exactly = 1) { onWithdrawSent() }
         model.onDestroy()
     }
 
@@ -516,11 +514,12 @@ internal class TangemPayBankWithdrawModelTest {
                 sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
                 entry = entry,
                 options = MutableStateFlow(bankWithdrawOptions()),
+                onCloseFlow = {},
+                onWithdrawSent = onWithdrawSent,
             ),
         ),
         dispatchers = dispatchers,
         getBankAccountsUseCase = getBankAccountsUseCase,
-        paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         getTangemPayCountriesUseCase = getTangemPayCountriesUseCase,
         getTangemPayRegionsUseCase = getTangemPayRegionsUseCase,
         analytics = analytics,
