@@ -28,6 +28,7 @@ import com.tangem.core.ui.ds.contextmenu.TangemContextMenu
 import com.tangem.core.ui.ds.row.token.TangemTokenRow
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.row.token.internal.TangemTokenRowPreviewData
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow as TangemTokenRowV2
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -39,11 +40,12 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun TokenActionContent(
-    tokenRowUM: TangemTokenRowUM,
+    tokenRowUM: TangemTokenRowUM?,
     isBalanceHidden: Boolean,
     offset: DpOffset,
     actions: ImmutableList<TokenActionButtonUM>,
     modifier: Modifier = Modifier,
+    tokenRowState: TangemTokenRowV2.State? = null,
     onDismiss: () -> Unit,
 ) {
     val density = LocalDensity.current
@@ -57,14 +59,23 @@ internal fun TokenActionContent(
 
     Box(modifier.fillMaxSize()) {
         Box(modifier = Modifier.offset(y = offset.y - animatedShift)) {
-            TangemTokenRow(
-                tokenRowUM = tokenRowUM,
-                isBalanceHidden = isBalanceHidden,
-                modifier = Modifier
-                    .padding(horizontal = 12.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(TangemTheme.colors3.bg.secondary),
-            )
+            val rowModifier = Modifier
+                .padding(horizontal = 12.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(TangemTheme.colors3.bg.secondary)
+            if (tokenRowState != null) {
+                TangemTokenRowV2(
+                    state = tokenRowState,
+                    isBalanceHidden = isBalanceHidden,
+                    modifier = rowModifier,
+                )
+            } else if (tokenRowUM != null) {
+                TangemTokenRow(
+                    tokenRowUM = tokenRowUM,
+                    isBalanceHidden = isBalanceHidden,
+                    modifier = rowModifier,
+                )
+            }
             TangemContextMenu(
                 expanded = true,
                 onDismissRequest = onDismiss,
