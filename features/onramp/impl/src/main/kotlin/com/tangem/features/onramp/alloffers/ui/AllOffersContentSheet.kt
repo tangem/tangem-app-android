@@ -69,7 +69,7 @@ internal fun AllOffersContentSheet(
             content = TangemBottomSheetConfigContent.Empty,
         ),
         onBack = onBack,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         title = {
             if (state is AllOffersStateUM.Content && state.currentMethod != null) {
                 ProviderTitle(
@@ -196,7 +196,7 @@ private fun AllOffersContentLoading() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(TangemTheme.colors.background.tertiary)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

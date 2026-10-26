@@ -24,7 +24,7 @@ internal fun WelcomePlain(modifier: Modifier = Modifier) {
         Icon(
             modifier = Modifier.size(82.dp + 11.dp),
             imageVector = ImageVector.vectorResource(R.drawable.splash_logo),
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
             contentDescription = null,
         )
     }

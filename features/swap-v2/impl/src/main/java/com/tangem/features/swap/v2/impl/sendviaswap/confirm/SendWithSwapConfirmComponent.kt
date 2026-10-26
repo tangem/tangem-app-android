@@ -198,7 +198,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             text = stringResourceSafe(R.string.send_with_swap_confirm_title),
             onBackClick = router::pop,
             backIconRes = R.drawable.ic_back_24,
-            backgroundColor = TangemTheme.colors.background.tertiary,
+            backgroundColor = TangemTheme.colors3.bg.primary,
             modifier = Modifier.height(56.dp),
         )
     }
@@ -288,7 +288,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
                     block = {
                         appendColored(
                             text = fullString.substring(tosIndex, tosIndex + tosTitle.length),
-                            color = TangemTheme.colors.text.accent,
+                            color = TangemTheme.colors3.text.accent.blue,
                         )
                     },
                 )
@@ -301,7 +301,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
                     block = {
                         appendColored(
                             text = fullString.substring(policyIndex, policyIndex + policyTitle.length),
-                            color = TangemTheme.colors.text.accent,
+                            color = TangemTheme.colors3.text.accent.blue,
                         )
                     },
                 )
@@ -322,7 +322,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
                     block = {
                         appendColored(
                             text = fullString.substring(legalIndex, legalIndex + legalTitle.length),
-                            color = TangemTheme.colors.text.accent,
+                            color = TangemTheme.colors3.text.accent.blue,
                         )
                     },
                 )

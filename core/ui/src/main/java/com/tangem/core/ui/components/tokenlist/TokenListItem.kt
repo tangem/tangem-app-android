@@ -68,7 +68,7 @@ fun TokenListItem(state: TokensListItemUM, isBalanceHidden: Boolean, modifier: M
             Text(
                 text = state.text.resolveReference(),
                 modifier = modifier.padding(all = 12.dp),
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.body2,
             )
         }
@@ -266,7 +266,7 @@ fun ExpandedPortfolioHeader(
                             .padding(vertical = 2.dp)
                             .alignByBaseline(),
                         text = titleState.text.resolveReference(),
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
                         style = TangemTheme.typography.caption1,
@@ -300,7 +300,7 @@ fun ExpandedPortfolioHeader(
             Icon(
                 modifier = Modifier.size(16.dp),
                 painter = painterResource(id = R.drawable.ic_minimize_24),
-                tint = TangemTheme.colors.icon.inactive,
+                tint = TangemTheme.colors3.icon.tertiary,
                 contentDescription = null,
             )
         }
@@ -314,7 +314,7 @@ private fun RowScope.FiatAmount(text: String, isBalanceHidden: Boolean, modifier
         modifier = modifier
             .alignByBaseline()
             .padding(horizontal = 4.dp),
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
         style = TangemTheme.typography.caption1,
         overflow = TextOverflow.Ellipsis,
         maxLines = 1,
