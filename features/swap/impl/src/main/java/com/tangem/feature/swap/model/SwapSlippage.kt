@@ -28,8 +28,8 @@ internal object SwapSlippage {
             .distinctBy(BigDecimal::toPlainString)
     }
 
-    fun parseValid(value: String, provider: SwapProvider): BigDecimal? {
-        return provider.acceptedSlippageOrNull(value.parseBigDecimalOrNull())
+    fun parseValid(value: String, provider: SwapProvider, defaultPercent: BigDecimal): BigDecimal? {
+        return provider.acceptedSlippageOrNull(percent = value.parseBigDecimalOrNull(), defaultPercent = defaultPercent)
     }
 
     /** Below half the default the swap is likely to fail on price movement; the half preset itself is not low. */
@@ -70,6 +70,15 @@ data class SlippageQuoteKey(
         amount = amount,
     )
 }
+
+/**
+ * Slippage of the quotes loaded without a custom one, keyed by provider id: the per-pair default. Kept apart from the
+ * live quotes because a quote for a custom slippage echoes the custom value back.
+ */
+data class QuoteDefaultSlippages(
+    val quoteKey: SlippageQuoteKey,
+    val byProviderId: Map<String, BigDecimal>,
+)
 
 internal fun BigDecimal.formatSlippagePercent(): String = movePointLeft(2).format {
     percent(minFractionDigits = 0)
