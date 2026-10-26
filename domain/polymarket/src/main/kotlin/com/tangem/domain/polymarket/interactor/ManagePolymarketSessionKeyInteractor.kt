@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.flow
 import java.time.Clock
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LongParameterList")
 class ManagePolymarketSessionKeyInteractor(
@@ -161,23 +162,36 @@ class ManagePolymarketSessionKeyInteractor(
         }
         awaitRevoked(userWalletId, revoking)
         val (sent, pending) = depositWalletLock.withLock(userWalletId) {
-            sendAuthorization(userWalletId = userWalletId, signed = signedBoth)
+            sendAuthorization(
+                userWalletId = userWalletId,
+                signed = signedBoth,
+                relayerRejectionRetries = FOLLOW_UP_REJECTION_RETRIES,
+            )
         }
         emit(PolymarketSessionKeyProgress.Authorizing(pending))
         return awaitActive(userWalletId, sent.ownerAddress, pending)
     }
 
+    /** @param relayerRejectionRetries resends of an authorization the relayer rejected while an action is in flight */
     private suspend fun Operation.sendAuthorization(
         userWalletId: UserWalletId,
         signed: PolymarketSignedSessionKeyBatches,
+        relayerRejectionRetries: Int = 0,
     ): Pair<PolymarketSessionKeyAuthorization, PolymarketSessionKey> {
         val authorization = authorizationOf(signed)
-        ensure(!authorization.isExpired()) {
-            TangemLogger.i("Polymarket session key authorization expired before it was sent")
-            PolymarketSessionKeyLifecycleError.StaleSignature(cause = null)
+        var retriesLeft = relayerRejectionRetries
+        while (true) {
+            ensure(!authorization.isExpired()) {
+                TangemLogger.i("Polymarket session key authorization expired before it was sent")
+                PolymarketSessionKeyLifecycleError.StaleSignature(cause = null)
+            }
+            val result = relay.authorize(userWalletId, authorization)
+            val rejection = result.leftOrNull() as? PolymarketSessionKeyError.RelayerRejected
+            if (rejection == null || retriesLeft == 0) return authorization to send { result }
+            retriesLeft--
+            TangemLogger.i("Polymarket session key authorization rejected by the relayer, sending it again: $rejection")
+            delay(RELAYER_REJECTION_RETRY_DELAY)
         }
-        val pending = send { relay.authorize(userWalletId, authorization) }
-        return authorization to pending
     }
 
     private suspend fun Operation.send(
@@ -331,6 +345,8 @@ class ManagePolymarketSessionKeyInteractor(
     private companion object {
         const val BUSY_ATTEMPTS = 4
         const val DEADLINE_MARGIN_MILLIS = 30_000L
+        const val FOLLOW_UP_REJECTION_RETRIES = 5
         val BUSY_RETRY_DELAY = 1_500.milliseconds
+        val RELAYER_REJECTION_RETRY_DELAY = 3.seconds
     }
 }
