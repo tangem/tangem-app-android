@@ -175,7 +175,7 @@ private fun TangemPayIcon() {
     TangemAvatar(
         state = TangemAvatar.UiState.Account(
             imageVector = Icons.il_account_visa,
-            color = TangemAvatar.FillColor.PayVisa
+            color = TangemAvatar.FillColor.PayVisa,
         ),
         size = TangemAvatar.Size.X40,
     )
@@ -186,7 +186,7 @@ private fun TangemPayIssuedIcon() {
     TangemAvatar(
         state = TangemAvatar.UiState.Account(
             imageVector = Icons.il_account_visa,
-            color = TangemAvatar.FillColor.PayVisa
+            color = TangemAvatar.FillColor.PayVisa,
         ),
         size = TangemAvatar.Size.X40,
     )
