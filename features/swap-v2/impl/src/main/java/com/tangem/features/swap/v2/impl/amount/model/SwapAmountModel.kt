@@ -119,6 +119,7 @@ internal class SwapAmountModel @Inject constructor(
     private val amountAnalyticsSender = SwapAmountAnalyticsSender(analyticsEventHandler)
 
     private var autoUpdateSubscriberJob: Job? = null
+    private var hiddenProvidersSubscriberJob: Job? = null
     private var quotesLoadingJob: Job? = null
 
     val uiState: StateFlow<SwapAmountUM>
@@ -140,7 +141,6 @@ internal class SwapAmountModel @Inject constructor(
         subscribeOnAmountReduceByTriggerUpdates()
         subscribeOnAmountIgnoreReduceTriggerUpdates()
         subscribeOnReloadQuotesTriggerUpdates()
-        subscribeOnHiddenProvidersUpdates()
         subscribeOnBalanceHiddenUpdates()
     }
 
@@ -155,11 +155,13 @@ internal class SwapAmountModel @Inject constructor(
             task = loadQuotesTask(initialDelay = initialDelay),
         )
         subscribeOnAutoupdateEnabling()
+        subscribeOnHiddenProvidersUpdates()
     }
 
     fun onStop() {
         cancelQuotesLoading()
         autoUpdateSubscriberJob?.cancel()
+        hiddenProvidersSubscriberJob?.cancel()
     }
 
     override fun onDestroy() {
@@ -539,17 +541,18 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     private fun subscribeOnHiddenProvidersUpdates() {
-        params.hiddenProviderIdsFlow
-            // Skips the initial replay: params.amountUM already has these providers filtered out,
+        hiddenProvidersSubscriberJob = params.hiddenProviderIdsFlow
+            // Skips the replay on start: the state pushed from the parent already has these providers filtered out,
             // and the immediate quotes reload would race with initCurrencies() (uninitialized boundaries)
             .drop(1)
             .filter { hiddenProviderIds -> hiddenProviderIds.isNotEmpty() }
             .onEach { hiddenProviderIds ->
-                uiState.transformerUpdate(SwapAmountHideProvidersTransformer(providerIds = hiddenProviderIds))
-                val state = uiState.value as? SwapAmountUM.Content ?: return@onEach
-                if (shouldSwitchToFloat(state)) {
-                    uiState.transformerUpdate(SwapAmountSwitchToFloatTransformer(params.isBalanceHidingFlow.value))
-                }
+                uiState.transformerUpdate(
+                    SwapAmountHideProvidersTransformer(
+                        providerIds = hiddenProviderIds,
+                        isBalanceHidden = params.isBalanceHidingFlow.value,
+                    ),
+                )
                 startLoadingQuotesTask(isSilentReload = false)
             }
             .launchIn(modelScope)
@@ -888,19 +891,6 @@ internal class SwapAmountModel @Inject constructor(
                 isBalanceHidden = params.isBalanceHidingFlow.value,
             ),
         )
-    }
-
-    private fun shouldSwitchToFloat(state: SwapAmountUM.Content): Boolean {
-        if (state.selectedAmountType != SwapAmountType.To) return false
-        val toCurrency = state.swapDirection.withSwapDirection(
-            onDirect = { state.secondaryCryptoCurrencyStatus?.currency },
-            onReverse = { state.primaryCryptoCurrencyStatus.currency },
-        ) ?: return false
-
-        val providers = state.swapCurrencies.getGroupWithDirection(state.swapDirection).available
-            .filter { swapCurrencyStatus -> swapCurrencyStatus.currencyStatus.currency.id == toCurrency.id }
-            .flatMap(SwapCryptoCurrency::providers)
-        return providers.isNotEmpty() && providers.getSwapRateMode() == SwapRateMode.FLOAT_ONLY
     }
 
     private fun cancelQuotesLoading() {
