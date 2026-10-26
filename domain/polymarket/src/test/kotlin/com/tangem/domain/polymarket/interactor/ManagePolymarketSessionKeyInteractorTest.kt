@@ -571,6 +571,66 @@ internal class ManagePolymarketSessionKeyInteractorTest {
         }
 
         @Test
+        fun `GIVEN the relayer rejects the authorization once WHEN renew THEN the same authorization is sent again`() =
+            runTest {
+                // Arrange
+                val revocation = revocation(nonce = "7")
+                val authorization = authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE)
+                givenSigned(
+                    nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                    signed(revocation, authorization),
+                )
+                coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) } returns
+                    key(status = PolymarketSessionKeyStatus.REVOKING).right()
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) } returnsMany listOf(
+                    PolymarketSessionKeyError.RelayerRejected(detail = "wallet has in-flight action").left(),
+                    key(status = PolymarketSessionKeyStatus.PENDING).right(),
+                )
+                givenWalletReads(
+                    listOf(key(status = PolymarketSessionKeyStatus.REVOKED)),
+                    listOf(key()),
+                )
+
+                // Act
+                val actual = createInteractor().renew(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(PolymarketSessionKeyProgress.Finished(key().right()))
+                coVerify(exactly = 1) { signBatches(any(), any()) }
+                coVerify(exactly = 2) { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) }
+            }
+
+        @Test
+        fun `GIVEN the relayer keeps rejecting the authorization WHEN renew THEN it ends stale after bounded resends`() =
+            runTest {
+                // Arrange
+                val revocation = revocation(nonce = "7")
+                val authorization = authorization(nonce = "8", deadline = FOLLOW_UP_DEADLINE)
+                val rejection = PolymarketSessionKeyError.RelayerRejected(detail = "wallet has in-flight action")
+                givenSigned(
+                    nonEmptyListOf(PolymarketSessionKeyBatch.Revoke(KEY), authorize()),
+                    signed(revocation, authorization),
+                )
+                coEvery { sessionKeyRepository.revokeSessionKey(USER_WALLET_ID, revocation) } returns
+                    key(status = PolymarketSessionKeyStatus.REVOKING).right()
+                coEvery { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) } returns
+                    rejection.left()
+                givenWalletReads(listOf(key(status = PolymarketSessionKeyStatus.REVOKED)))
+
+                // Act
+                val actual = createInteractor().renew(USER_WALLET_ID).toList().last()
+
+                // Assert
+                assertThat(actual).isEqualTo(
+                    PolymarketSessionKeyProgress.Finished(
+                        PolymarketSessionKeyLifecycleError.StaleSignature(cause = rejection).left(),
+                    ),
+                )
+                coVerify(exactly = 1) { signBatches(any(), any()) }
+                coVerify(exactly = 6) { sessionKeyRepository.authorizeSessionKey(USER_WALLET_ID, authorization) }
+            }
+
+        @Test
         fun `GIVEN the revocation is settling WHEN another deposit wallet operation starts THEN it does not wait`() =
             runTest {
                 // Arrange

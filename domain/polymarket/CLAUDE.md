@@ -127,7 +127,10 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   send the pre-signed authorization; a claim in between takes that nonce. Nothing is signed twice without the
   user: a batch refused for its signature (`NONCE_ALREADY_USED`, `INVALID_DEADLINE`, `INVALID_VALID_UNTIL`,
   `RELAYER_REJECTED`) or a pre-signed authorization expired before it is sent ends in `StaleSignature`, and the
-  user starts the operation again; only an unanswered or `502` send is repeated, with the same body.
+  user starts the operation again; only an unanswered or `502` send is repeated, with the same body. The one
+  exception: the authorization sent after a revocation is resent up to 5 times, 3 s apart, on `RELAYER_REJECTED`
+  — the BFF reports the key `REVOKED` while the revocation is still in flight and rejects the next batch with
+  "wallet has in-flight action" (seen on prod 26.10.2026; iOS does not resend).
   A withdrawal reads its nonce in `prepare`, outside the lock: a lifecycle operation in between costs it a
   `RelayerRejected`.
 - SELL: `makerAmount = shares`, `takerAmount = collateral`; BUY the reverse.
