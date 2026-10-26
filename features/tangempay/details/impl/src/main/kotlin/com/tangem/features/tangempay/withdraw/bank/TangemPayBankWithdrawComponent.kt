@@ -122,10 +122,10 @@ internal class TangemPayBankWithdrawComponent(
         TangemPayBankWithdrawInnerRoute.Preview -> TangemPayBankWithdrawPreviewComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayBankWithdrawPreviewComponent.Params(
-                userWalletId = params.userWalletId,
+                sourceAccount = params.sourceAccount,
                 draft = model.draft,
                 onOrderCreated = model::onOrderCreated,
-                onOrderSigned = ::onOrderSigned,
+                onCompleted = ::onOrderSigned,
             ),
         )
         TangemPayBankWithdrawInnerRoute.Success -> TangemPayBankWithdrawSuccessComponent(

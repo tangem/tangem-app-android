@@ -18,9 +18,9 @@ import com.tangem.features.tangempay.withdraw.bank.model.toFormValues
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.bank.personalFormValues
+import com.tangem.features.tangempay.withdraw.bank.preview.completion.CompletionState
 import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewFailure
 import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewState
-import com.tangem.features.tangempay.withdraw.bank.preview.model.SendState
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.DetailRowUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.Failed
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.RecipientCardUM
@@ -243,8 +243,11 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
 
     @Test
     fun `GIVEN sending WHEN create THEN summary is sending and send still enabled`() {
+        // Arrange
+        val state = PreviewState(completion = CompletionState.Sending)
+
         // Act
-        val actual = factory.create(draft = savedDraft(), state = PreviewState(send = SendState.CreatingOrder)) as Summary
+        val actual = factory.create(draft = savedDraft(), state = state) as Summary
 
         // Assert
         assertThat(actual.isSending).isTrue()
@@ -253,8 +256,11 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
 
     @Test
     fun `GIVEN general failure WHEN create THEN error result with retry`() {
+        // Arrange
+        val state = PreviewState(completion = CompletionState.Failed(PreviewFailure.General))
+
         // Act
-        val actual = factory.create(draft = savedDraft(), state = PreviewState(failure = PreviewFailure.General))
+        val actual = factory.create(draft = savedDraft(), state = state)
 
         // Assert
         assertThat(actual).isEqualTo(
@@ -270,8 +276,11 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN unsupported failure WHEN create THEN unavailable result without retry`(model: UnavailableModel) {
+        // Arrange
+        val state = PreviewState(completion = CompletionState.Failed(model.failure))
+
         // Act
-        val actual = factory.create(draft = savedDraft(), state = PreviewState(failure = model.failure))
+        val actual = factory.create(draft = savedDraft(), state = state)
 
         // Assert
         assertThat(actual).isEqualTo(
@@ -340,7 +349,7 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
     @Test
     fun `GIVEN sending WHEN create THEN the rail row is read-only`() {
         // Arrange
-        val state = PreviewState(send = SendState.CreatingOrder)
+        val state = PreviewState(completion = CompletionState.Sending)
 
         // Act
         val actual = factory.create(draft = newRecipientDraft(), state = state) as Summary
@@ -370,8 +379,11 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
 
     @Test
     fun `GIVEN sending WHEN create THEN amount and every recipient card is read-only`() {
+        // Arrange
+        val state = PreviewState(completion = CompletionState.Sending)
+
         // Act
-        val actual = factory.create(draft = newRecipientDraft(), state = PreviewState(send = SendState.CreatingOrder)) as Summary
+        val actual = factory.create(draft = newRecipientDraft(), state = state) as Summary
 
         // Assert
         assertThat(actual.transfer?.amount?.onClick).isNull()
