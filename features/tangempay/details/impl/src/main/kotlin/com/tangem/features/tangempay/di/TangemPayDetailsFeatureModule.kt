@@ -14,10 +14,12 @@ import com.tangem.features.tangempay.components.TangemPayCampaignIssueCardCompon
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPaySelectPlanComponent
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
+import com.tangem.features.tangempay.components.TangemPayWithdrawHubComponent
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
 import com.tangem.features.tangempay.orderCard.impl.DefaultTangemPayOrderCardComponent
 import com.tangem.features.tangempay.tiers.select.DefaultTangemPaySelectPlanComponent
 import com.tangem.features.tangempay.txhistory.details.TangemPayTxHistoryDetailsComponent
+import com.tangem.features.tangempay.withdraw.hub.DefaultTangemPayWithdrawHubComponent
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -79,4 +81,10 @@ internal interface TangemPayDetailsFeatureModule {
     fun bindTangemPayBankingDetailsErrorComponentFactory(
         factory: DefaultTangemPayBankingDetailsErrorComponent.Factory,
     ): TangemPayBankingDetailsErrorComponent.Factory
+
+    @Binds
+    @Singleton
+    fun bindTangemPayWithdrawHubComponentFactory(
+        factory: DefaultTangemPayWithdrawHubComponent.Factory,
+    ): TangemPayWithdrawHubComponent.Factory
 }

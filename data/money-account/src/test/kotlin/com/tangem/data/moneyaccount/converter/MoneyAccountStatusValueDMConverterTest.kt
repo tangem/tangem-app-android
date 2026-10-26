@@ -6,6 +6,7 @@ import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
+import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
@@ -21,7 +22,7 @@ internal class MoneyAccountStatusValueDMConverterTest {
     private val converter = MoneyAccountStatusValueDMConverter(moneyAccountCurrencyFactory)
 
     @Test
-    fun `GIVEN active account with known bank off-ramp WHEN cached and restored THEN availability is unknown`() {
+    fun `GIVEN active account WHEN cached and restored THEN product instance kept and bank off-ramp unknown`() {
         // Arrange
         val active = MoneyAccountStatusValue.Account.Active(
             source = StatusSource.ACTUAL,
@@ -33,6 +34,7 @@ internal class MoneyAccountStatusValueDMConverterTest {
                 fiatRate = BigDecimal.ONE,
             ),
             customerId = "customer-1",
+            productInstanceId = "instance-1",
             isBankOfframpAvailable = true,
         )
 
@@ -41,6 +43,18 @@ internal class MoneyAccountStatusValueDMConverterTest {
 
         // Assert
         assertThat(restored).isEqualTo(active.copy(source = StatusSource.CACHE, isBankOfframpAvailable = null))
+    }
+
+    @Test
+    fun `GIVEN active account cached without product instance WHEN restored THEN status unavailable`() {
+        // Arrange
+        val cached = MoneyAccountStatusValueDM.ActiveAccount(customerId = "customer-1", balance = null)
+
+        // Act
+        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = cached)
+
+        // Assert
+        assertThat(restored).isEqualTo(MoneyAccountStatusValue.Error.Unavailable)
     }
 
     private companion object {
