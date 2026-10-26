@@ -10,6 +10,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_SHORT
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.scenarios.assertTangemPayWalletSelectorListsWallets
 import com.tangem.scenarios.clickGetCardOnTangemPayOnboarding
 import com.tangem.scenarios.openMainScreenWithExistingHotWallet
@@ -22,6 +23,7 @@ import com.tangem.screens.tangempay.onTangemPayKycSheet
 import com.tangem.screens.tangempay.onTangemPayMainScreen
 import com.tangem.screens.tangempay.onTangemPayOnboardingScreen
 import com.tangem.core.res.R as CoreResR
+import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
@@ -30,6 +32,15 @@ import org.junit.Test
 
 @HiltAndroidTest
 class TangemPayOnboardingKycTest : BaseTestCase() {
+
+    // These tests cover Tangem Pay onboarding: under TWI_1841 the Main promo gives way to the wallet's system cards
+    @RemoveWithToggle(
+        toggleName = "TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED",
+        description = "Move the test to a wallet without system cards, where the Main promo is shown",
+    )
+    override val featureToggleOverrides = mapOf(
+        FeatureToggles.TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED.rawName to false,
+    )
 
     @AllureId("9630")
     @DisplayName("Tangem Pay: existing customer authorization shows the tile on Main")
@@ -78,18 +89,14 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
     }
 
     @AllureId("9673")
-    @DisplayName("Tangem Pay: onboarding opens from app Details for the DETAILS channel")
+    @DisplayName("Tangem Pay: onboarding opens from Get Tangem Pay in app Details")
     @Test
     fun onboardingOpensFromAppDetailsWhenDetailsChannelReceivedTest() {
         val eligibilityStartedState = "Started"
-        val channelsBannerAndDetailsState = "BannerAndDetails"
 
         setupHooks().run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityStartedState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityStartedState)
-            }
-            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO' to '$channelsBannerAndDetailsState'") {
-                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsBannerAndDetailsState)
             }
             step("Open 'Main' screen with existing hot wallet") {
                 openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
@@ -202,16 +209,12 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
     @Test
     fun getTangemPayFromAppDetailsListsWalletsWithoutTangemPayTest() {
         val eligibilityStartedState = "Started"
-        val channelsBannerAndDetailsState = "BannerAndDetails"
         val hotWalletName = "Wallet"
         val cardWalletName = "Wallet 2"
 
         setupHooks().run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityStartedState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityStartedState)
-            }
-            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO' to '$channelsBannerAndDetailsState'") {
-                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsBannerAndDetailsState)
             }
             step("Open 'Main' screen with a hot wallet and a card wallet") { openMainScreenWithHotAndCardWallets() }
             step("Click on 'More' button") {

@@ -14,8 +14,11 @@ import com.tangem.utils.transformer.Transformer
 internal class UpdateMembersAccountTransformer(
     private val account: JointAccount,
     private val invites: List<String>,
+    private val sharedInvites: Set<String>,
     private val ownAddress: String?,
     private val callbacks: JointAccountToMembersUMConverter.Callbacks,
+    private val walletIconRes: Int? = null,
+    private val isActivating: Boolean = false,
 ) : Transformer<JointAccountMembersUM> {
 
     override fun transform(prevState: JointAccountMembersUM): JointAccountMembersUM =
@@ -23,7 +26,10 @@ internal class UpdateMembersAccountTransformer(
             value = JointAccountToMembersUMConverter.Input(
                 account = account,
                 invites = invites,
+                sharedInvites = sharedInvites,
                 ownAddress = ownAddress,
+                walletIconRes = walletIconRes,
+                isActivating = isActivating,
             ),
         )
 }

@@ -13,6 +13,7 @@ internal fun StateUpdater<TangemModalStory>.build(): TangemModalStory {
         isTallContent = false,
         isInputVisible = false,
         presentation = TangemModal.Presentation.Auto,
+        chromePlacement = TangemModal.ChromePlacement.Stacked,
         onShownChange = { shown ->
             updateStory { it.copy(isShown = shown, isStackedShown = it.isStackedShown && shown) }
         },
@@ -21,6 +22,7 @@ internal fun StateUpdater<TangemModalStory>.build(): TangemModalStory {
         onTallContentToggle = { updateStory { it.copy(isTallContent = !it.isTallContent) } },
         onInputToggle = { updateStory { it.copy(isInputVisible = !it.isInputVisible) } },
         onPresentationChange = { presentation -> updateStory { it.copy(presentation = presentation) } },
+        onChromePlacementChange = { placement -> updateStory { it.copy(chromePlacement = placement) } },
     )
 }
 

@@ -100,6 +100,14 @@ internal class DefaultDynamicAddressesRepository(
         return walletManagersFacade.getDynamicAddressesLastUsedReceiveAddress(userWalletId, network)
     }
 
+    override suspend fun getUsedAddresses(userWalletId: UserWalletId, network: Network): List<String> {
+        if (!DynamicAddressesSupportedBlockchains.isSupportedByNetworkId(network.id.rawId.value)) return emptyList()
+
+        return withContext(dispatchers.io) {
+            walletManagersFacade.usedDynamicAddresses(userWalletId, network).orEmpty()
+        }
+    }
+
     override suspend fun hasNonBaseBalances(userWalletId: UserWalletId, network: Network): Boolean {
         return walletManagersFacade.hasDynamicAddressesNonBaseBalances(userWalletId, network)
     }

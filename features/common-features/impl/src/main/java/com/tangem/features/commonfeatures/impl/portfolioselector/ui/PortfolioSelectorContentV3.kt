@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,7 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,6 +46,7 @@ import com.tangem.utils.StringsSigns.DOT
 import kotlinx.collections.immutable.toImmutableList
 
 private const val DISABLED_WALLET_ALPHA = 0.5f
+private const val MODAL_GROUP_BACKGROUND_ALPHA = 0.6f
 
 @Composable
 internal fun PortfolioSelectorContentV3(
@@ -80,9 +80,13 @@ internal fun PortfolioSelectorContentV3(
     }
 }
 
-/** Non-lazy [PortfolioSelectorContentV3] for containers that can't host a lazy list, like the DS3 modal. */
+/**
+ * Non-lazy [PortfolioSelectorContentV3] for containers that can't host a lazy list, like the DS3 modal.
+ * The modal is glass, so the groups are translucent and the rows show the balance alone.
+ */
 @Composable
 internal fun PortfolioSelectorColumnContent(state: PortfolioSelectorUM, modifier: Modifier = Modifier) {
+    val groupBackgroundColor = TangemTheme.colors3.bg.tertiary.copy(alpha = MODAL_GROUP_BACKGROUND_ALPHA)
     Column(modifier = modifier) {
         state.items.forEachIndexed { index, item ->
             key(item.id) {
@@ -90,6 +94,8 @@ internal fun PortfolioSelectorColumnContent(state: PortfolioSelectorUM, modifier
                     item = item,
                     index = index,
                     isMultiChoiceEnabled = state.isMultiChoiceEnabled,
+                    groupBackgroundColor = groupBackgroundColor,
+                    isInformationShown = false,
                 )
             }
         }
@@ -97,7 +103,13 @@ internal fun PortfolioSelectorColumnContent(state: PortfolioSelectorUM, modifier
 }
 
 @Composable
-private fun PortfolioSelectorListItem(item: PortfolioSelectorItemUM, index: Int, isMultiChoiceEnabled: Boolean) {
+private fun PortfolioSelectorListItem(
+    item: PortfolioSelectorItemUM,
+    index: Int,
+    isMultiChoiceEnabled: Boolean,
+    groupBackgroundColor: Color = TangemTheme.colors3.bg.tertiary,
+    isInformationShown: Boolean = true,
+) {
     val pos = item.groupPosition
     val decoration = Modifier
         .conditional(pos.isGroupStart && index != 0) {
@@ -106,7 +118,7 @@ private fun PortfolioSelectorListItem(item: PortfolioSelectorItemUM, index: Int,
         .roundedShapeItemDecoration(
             currentIndex = pos.indexInGroup,
             lastIndex = pos.lastIndexInGroup,
-            backgroundColor = TangemTheme.colors3.bg.tertiary,
+            backgroundColor = groupBackgroundColor,
             radius = 24.dp,
             addDefaultPadding = false,
         )
@@ -116,6 +128,7 @@ private fun PortfolioSelectorListItem(item: PortfolioSelectorItemUM, index: Int,
             walletModel = item.item,
             isSelected = item.isSelected,
             isMultiChoiceEnabled = isMultiChoiceEnabled,
+            isInformationShown = isInformationShown,
             modifier = decoration
                 .clickable(enabled = item.item.isEnabled, onClick = item.item.onClick)
                 .conditional(!item.item.isEnabled) { alpha(DISABLED_WALLET_ALPHA) },
@@ -133,6 +146,7 @@ private fun PortfolioSelectorItem(
     walletModel: UserWalletItemUM,
     isSelected: Boolean,
     isMultiChoiceEnabled: Boolean,
+    isInformationShown: Boolean,
     modifier: Modifier = Modifier,
 ) {
     TangemRow(
@@ -140,17 +154,19 @@ private fun PortfolioSelectorItem(
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = {
-            Box(
-                modifier = Modifier.clip(CircleShape),
-            ) {
-                CardImage(
-                    modifier = Modifier.size(40.dp),
-                    imageState = walletModel.imageState,
-                )
-            }
+            CardImage(
+                modifier = Modifier.size(width = 40.dp, height = 26.dp),
+                imageState = walletModel.imageState,
+            )
         },
         titleSlot = { TangemRowText(text = walletModel.name.resolveReference(), role = TangemRowTextRole.Title) },
-        subtitleSlot = { InfoRow(walletModel.information, walletModel.balance) },
+        subtitleSlot = {
+            if (isInformationShown) {
+                InfoRow(walletModel.information, walletModel.balance)
+            } else {
+                BalanceText(walletModel.balance)
+            }
+        },
         endSlot = {
             if (isMultiChoiceEnabled) {
                 TangemCheckmark(
@@ -175,6 +191,14 @@ private fun RowScope.InfoRow(informationModel: UserWalletItemUM.Information, bal
         TangemRowText(text = information, role = TangemRowTextRole.Subtitle)
     }
 
+    if (balance !is UserWalletItemUM.Balance.Locked) {
+        TangemRowText(text = " $DOT ", role = TangemRowTextRole.Subtitle)
+    }
+    BalanceText(balance)
+}
+
+@Composable
+private fun BalanceText(balance: UserWalletItemUM.Balance) {
     val (balanceValue, isFlickering) = getBalanceValueAndFlickerState(balance)
 
     when {
@@ -188,12 +212,8 @@ private fun RowScope.InfoRow(informationModel: UserWalletItemUM.Information, bal
                     .size(12.dp),
             )
         }
-        balanceValue == null -> {
-            TangemRowText(text = " $DOT ", role = TangemRowTextRole.Subtitle)
-            TangemShimmer(style = TangemTheme.typography3.caption.medium)
-        }
+        balanceValue == null -> TangemShimmer(style = TangemTheme.typography3.caption.medium)
         else -> {
-            TangemRowText(text = " $DOT ", role = TangemRowTextRole.Subtitle)
             Text(
                 text = balanceValue,
                 style = TangemTheme.typography3.caption.medium.applyBladeBrush(

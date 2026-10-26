@@ -384,6 +384,7 @@ private fun SwapAmountSubtitle(amountFieldUM: SwapAmountFieldUM) {
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
                     ellipsis = amountFieldUM.subtitleEllipsisRight,
+                    modifier = Modifier.testTag(SendScreenTestTags.SWAP_SUBTITLE_RIGHT),
                 )
             }
             if (amountFieldUM.sendSubtitle != null) {
@@ -400,7 +401,9 @@ private fun SwapAmountSubtitle(amountFieldUM: SwapAmountFieldUM) {
                         style = TangemTheme.typography.caption2,
                         color = TangemTheme.colors.text.primary1,
                         ellipsis = amountFieldUM.sendSubtitle.valueEllipsis,
-                        modifier = Modifier.weight(1f, fill = false),
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .testTag(SendScreenTestTags.SWAP_SEND_SUBTITLE_VALUE),
                     )
                 }
             }

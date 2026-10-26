@@ -14,7 +14,10 @@ import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.hotwallet.CheckHotWalletUpgradeBannerUseCase
 import com.tangem.domain.hotwallet.GetAccessCodeSkippedUseCase
+import com.tangem.domain.hotwallet.GetUpgradeBannerClosureTimestampUseCase
+import com.tangem.domain.hotwallet.ShouldShowUpgradeHotWalletBannerUseCase
 import com.tangem.domain.jointaccount.usecase.GetMissingJointOwnerKeysCountUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
@@ -26,6 +29,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
@@ -35,11 +39,10 @@ import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
-import com.tangem.utils.coroutines.combine6
+import com.tangem.utils.coroutines.combine7
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.orZero
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -64,6 +67,10 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getMissingJointOwnerKeysCountUseCase: GetMissingJointOwnerKeysCountUseCase,
     private val onboardingRepository: OnboardingRepository,
+    private val shouldShowUpgradeHotWalletBannerUseCase: ShouldShowUpgradeHotWalletBannerUseCase,
+    private val getUpgradeBannerClosureTimestampUseCase: GetUpgradeBannerClosureTimestampUseCase,
+    private val checkHotWalletUpgradeBannerUseCase: CheckHotWalletUpgradeBannerUseCase,
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase,
 ) {
     private fun assetsDiscoveryProgressFlow(userWallet: UserWallet): Flow<AssetsDiscoveryProgress> =
         if (userWallet is UserWallet.Hot) {
@@ -88,6 +95,16 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             .distinctUntilChanged()
     }
 
+    /**
+     * A social login wallet has to get an actual access code to finish its setup: skipping the code is
+     * honoured only for wallets without social recovery.
+     */
+    private fun isAccessCodeSkipHonouredFlow(userWallet: UserWallet): Flow<Boolean> = combine(
+        getAccessCodeSkippedUseCase(userWallet.walletId),
+        isSocialBackupCompletedUseCase.flow(userWallet.walletId),
+    ) { isSkipped, hasSocialBackup -> isSkipped && !hasSocialBackup }
+        .distinctUntilChanged()
+
     private fun accountStatusListWithPromoFlow(userWallet: UserWallet): Flow<Pair<AccountStatusList, Boolean>> {
         val params = SingleAccountStatusListProducer.Params(userWallet.walletId)
 
@@ -98,19 +115,42 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         )
     }
 
-    fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotificationUM>> {
+    /** The stored upgrade banner flag and the last closure time; a Cold wallet never gets the banner. */
+    private fun upgradeBannerPrefsFlow(userWallet: UserWallet): Flow<Pair<Boolean, Long?>> =
+        if (userWallet is UserWallet.Hot) {
+            combine(
+                shouldShowUpgradeHotWalletBannerUseCase(userWallet.walletId),
+                getUpgradeBannerClosureTimestampUseCase(userWallet.walletId),
+                ::Pair,
+            ).distinctUntilChanged()
+        } else {
+            flowOf(false to null)
+        }
+
+    @Suppress("LongMethod")
+    fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<WalletNotificationsSnapshot> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
-        return combine6(
+        return combine7(
             flow1 = accountStatusListWithPromoFlow(userWallet),
             flow2 = isNeedToBackupUseCase(userWallet.walletId).distinctUntilChanged(),
-            flow3 = getAccessCodeSkippedUseCase(userWallet.walletId).distinctUntilChanged(),
+            flow3 = isAccessCodeSkipHonouredFlow(userWallet),
             flow4 = assetsDiscoveryProgressFlow(userWallet),
             flow5 = getAppUpdateStateUseCase.getBannerStateFlow(),
             flow6 = freshWalletWithBackupFlow(userWallet),
-        ) { accountState, isNeedToBackup, shouldAccessCodeSkipped, discoveryProgress, appUpdateState, activationState ->
+            flow7 = upgradeBannerPrefsFlow(userWallet),
+        ) {
+                accountState,
+                isNeedToBackup,
+                shouldAccessCodeSkipped,
+                discoveryProgress,
+                appUpdateState,
+                activationState,
+                upgradeBannerPrefs,
+            ->
             val (accountList, isTangemPayPromoHidden) = accountState
             val (activationWallet, isWalletBackedUp) = activationState
+            val (shouldShowUpgradeBanner, upgradeBannerClosureTimestamp) = upgradeBannerPrefs
 
             val totalFiatBalance = accountList.totalFiatBalance
             val flattenCurrencies = accountList.flattenCurrencies()
@@ -122,7 +162,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
             val isAddFundsBannerShown = isAddFundsBannerVisible(totalFiatBalance)
 
-            buildList {
+            val notifications = buildList {
                 addUsedOutdatedDataNotification(totalFiatBalance)
 
                 addAddFundsBanner(
@@ -140,6 +180,15 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                         totalFiatBalance = totalFiatBalance,
                         clickIntents = clickIntents,
                         shouldAccessCodeSkipped = shouldAccessCodeSkipped,
+                    )
+
+                    addUpgradeHotWalletPromoNotification(
+                        userWallet = userWallet,
+                        totalFiatBalance = totalFiatBalance,
+                        flattenCurrencies = flattenCurrencies,
+                        shouldShowUpgradeBanner = shouldShowUpgradeBanner,
+                        closureTimestamp = upgradeBannerClosureTimestamp,
+                        clickIntents = clickIntents,
                     )
                 }
 
@@ -177,6 +226,25 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
                 addSoftUpdateBanner(appUpdateState, clickIntents)
             }.sortedBy { it.type.ordinal }.toImmutableList()
+
+            WalletNotificationsSnapshot(
+                notifications = notifications,
+                balanceState = getBalanceState(totalFiatBalance, flattenCurrencies),
+            )
+        }
+    }
+
+    /** Every network fetch marks the statuses as cache first, so a status still on cache is being refreshed */
+    private fun getBalanceState(
+        totalFiatBalance: TotalFiatBalance,
+        currencies: List<CryptoCurrencyStatus>,
+    ): NotificationsBalanceState {
+        val isRefreshing = currencies.any { it.value.sources.networkSource == StatusSource.CACHE }
+
+        return when {
+            totalFiatBalance is TotalFiatBalance.Loading -> NotificationsBalanceState.Loading
+            isRefreshing -> NotificationsBalanceState.Resolved
+            else -> NotificationsBalanceState.Settled
         }
     }
 
@@ -364,6 +432,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             is PaymentAccountStatusValue.Inactive,
             is PaymentAccountStatusValue.Loaded,
             is PaymentAccountStatusValue.Loading,
+            is PaymentAccountStatusValue.KycRequired,
             is PaymentAccountStatusValue.UnderReview,
             is PaymentAccountStatusValue.Empty,
             is PaymentAccountStatusValue.Deactivated,
@@ -445,6 +514,35 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             ),
             condition = shouldShowFinishActivation,
         )
+    }
+
+    @Suppress("LongParameterList")
+    private suspend fun MutableList<WalletNotificationUM>.addUpgradeHotWalletPromoNotification(
+        userWallet: UserWallet,
+        totalFiatBalance: TotalFiatBalance,
+        flattenCurrencies: List<CryptoCurrencyStatus>,
+        shouldShowUpgradeBanner: Boolean,
+        closureTimestamp: Long?,
+        clickIntents: WalletClickIntents,
+    ) {
+        if (userWallet !is UserWallet.Hot) return
+
+        // Until the balance is known, the Add funds banner may still replace this one.
+        if (totalFiatBalance is TotalFiatBalance.Loading) return
+
+        val shouldShow = checkHotWalletUpgradeBannerUseCase(
+            walletId = userWallet.walletId,
+            hasBalance = flattenCurrencies.any { it.value.amount.orZero().isPositive() },
+            shouldShowUpgradeBanner = shouldShowUpgradeBanner,
+            closureTimestamp = closureTimestamp,
+        ).getOrNull() == true
+
+        addIf(shouldShow) {
+            WalletNotificationUM.UpgradeHotWalletPromo(
+                onLaterClick = { clickIntents.onCloseUpgradeBannerClick(userWallet.walletId) },
+                onUpgradeClick = { clickIntents.onUpgradeHotWalletClick(userWallet.walletId) },
+            )
+        }
     }
 
     private suspend fun hasSignedHashes(

@@ -1,5 +1,7 @@
 package com.tangem.screens
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseBottomSheetTestTags
@@ -10,6 +12,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasAnyDescendant as withAnyDescendant
 import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
 
@@ -30,6 +33,22 @@ class SendSelectNetworkFeeBottomSheetPageObject(semanticsProvider: SemanticsNode
         hasAnyDescendant(withTestTag(SelectNetworkFeeBottomSheetTestTags.TOKEN_AMOUNT))
         hasAnyDescendant(withTestTag(SelectNetworkFeeBottomSheetTestTags.FIAT_AMOUNT))
         hasAnyDescendant(withTestTag(SelectNetworkFeeBottomSheetTestTags.DOT_SIGN))
+        useUnmergedTree = true
+    }
+
+    fun regularFeeOption(title: String): KNode = child {
+        addSemanticsMatcher(SemanticsMatcher.keyIsDefined(SemanticsProperties.Selected))
+        hasAnyDescendant(
+            withTestTag(SelectNetworkFeeBottomSheetTestTags.REGULAR_ITEM_TITLE) and withText(title),
+        )
+        useUnmergedTree = true
+    }
+
+    fun regularFeeTokenAmount(title: String): KNode = child {
+        hasParent(withTestTag(SelectNetworkFeeBottomSheetTestTags.TOKEN_AMOUNT))
+        hasAnyAncestor(
+            withTestTag(SelectNetworkFeeBottomSheetTestTags.REGULAR_FEE_ITEM) and withAnyDescendant(withText(title)),
+        )
         useUnmergedTree = true
     }
 

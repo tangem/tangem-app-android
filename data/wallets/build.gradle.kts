@@ -12,6 +12,7 @@ android {
     namespace = "com.tangem.data.wallet"
 }
 dependencies {
+    implementation(projects.core.remote)
 
     // region Kotlin
     api(deps.kotlin.coroutines)

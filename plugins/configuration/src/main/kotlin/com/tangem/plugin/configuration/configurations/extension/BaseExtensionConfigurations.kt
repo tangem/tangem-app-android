@@ -6,8 +6,9 @@ import com.tangem.plugin.configuration.utils.findPlugin
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 
-internal fun BaseExtension.configureCompileSdk() {
+internal fun BaseExtension.configureSdk() {
     compileSdkVersion(AppConfig.compileSdkVersion)
+    buildToolsVersion(AppConfig.buildToolsVersion)
 }
 
 internal fun BaseExtension.configureCompilerOptions() {
@@ -32,7 +33,9 @@ internal fun BaseExtension.configureCompose(project: Project) {
             contains(Regex(pattern = ":features:txhistory:api\$")) || // provides Composable function
             contains(Regex(pattern = ":features:promo-banners:api\$")) || // provides Composable function
             contains(Regex(pattern = ":features:marketing:api\$")) || // provides Composable function
-            contains(Regex(pattern = ":impl\$")) && !contains(":core:biometric-auth")
+            contains(Regex(pattern = ":impl\$")) &&
+                !contains(":core:biometric-auth") &&
+                !contains(":spend:push-provisioning")
     }
 
     buildFeatures.compose = useCompose

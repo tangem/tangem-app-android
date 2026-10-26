@@ -170,7 +170,7 @@ Each of these looks like a broken test and costs a run to find:
 | Symptom | Cause | Fix |
 |---|---|---|
 | Every test dies at the first step: `'Get started' is not displayed` | The stories screen shows only on the first launch; opening the app by hand consumed it | `adb shell pm clear com.tangem.wallet.mocked` before the run |
-| `Process crashed`, logcat `ANR … failed to complete startup` in `DexFileVerifier` | Both APKs are huge and installed unoptimized | `adb shell cmd package compile -m speed -f com.tangem.wallet.mocked` (and `.mocked.test`) after each install |
+| `Process crashed`, logcat `ANR … failed to complete startup` in `DexFileVerifier` | Both APKs are huge and installed unoptimized | `adb shell cmd package compile -m speed -f com.tangem.wallet.mocked` (and `.mocked.test`) after each install. `connectedGoogleMockedAndroidTest` reinstalls both APKs on every call and drops the compile, so when it reports `Starting 0 tests` / `Test instrumentation process crashed`, install + compile by hand and run raw `am instrument` one method at a time |
 | `No compose hierarchies found in the app`, black `screencap` | The emulator screen turned off | `adb shell svc power stayon true`, `settings put system screen_off_timeout 2147483647`, `input keyevent KEYCODE_WAKEUP` |
 | `Process crashed`, logcat `Zygote: … exited due to signal 9` | The emulator ran out of memory | Restart the AVD with `-memory 6144 -cores 4` |
 | `NoSuchMethodError` in `DaggerDefault_HiltComponents_SingletonC` | The installed app APK is older than the test APK | Build and install **both** APKs |
