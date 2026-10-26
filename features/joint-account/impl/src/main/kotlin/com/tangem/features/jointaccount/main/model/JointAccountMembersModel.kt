@@ -16,11 +16,8 @@ import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
-import com.tangem.domain.jointaccount.model.JointAccountInvite
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
-import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
-import com.tangem.domain.jointaccount.usecase.GetSharedJointAccountInvitesUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -42,7 +39,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -70,8 +66,6 @@ internal class JointAccountMembersModel @Inject constructor(
     private val jointAccountListFetcher: SingleJointAccountListFetcher,
     private val pollingCoordinator: JointAccountPollingCoordinator,
     private val singleAccountSupplier: SingleAccountSupplier,
-    private val getJointAccountInvitesUseCase: GetJointAccountInvitesUseCase,
-    private val getSharedJointAccountInvitesUseCase: GetSharedJointAccountInvitesUseCase,
     private val ownerAddressResolver: JointOwnerAddressResolver,
     private val stateController: JointAccountMembersStateController,
     private val inviteSharing: JointAccountInviteSharing,
@@ -102,7 +96,6 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private val converterCallbacks = JointAccountToMembersUMConverter.Callbacks(
         onMemberInfoClick = ::onMemberInfoClick,
-        onInviteClick = ::onInviteClick,
         onConfirmAddressClick = ::onConfirmAddressClick,
         onApprovalsInfoClick = ::onApprovalsInfoClick,
         onCloseClick = ::onCloseClick,
@@ -111,7 +104,6 @@ internal class JointAccountMembersModel @Inject constructor(
     init {
         stateController.update(UpdateMembersInitialStateTransformer(onCloseClick = ::onCloseClick))
         observeAccount()
-        recordSharedInvites()
         subscribePolling()
         refreshAccounts()
     }
@@ -130,21 +122,9 @@ internal class JointAccountMembersModel @Inject constructor(
             .flatMapLatest { account ->
                 if (account == null) return@flatMapLatest flowOf(null)
 
-                val invites = getJointAccountInvitesUseCase(
-                    userWalletId = params.userWalletId,
-                    cryptoAccountId = account.cryptoAccountId,
-                )
-                combine(
-                    flow = ownJointAccountFlow(cryptoAccountId = account.cryptoAccountId),
-                    flow2 = getSharedJointAccountInvitesUseCase(
-                        userWalletId = params.userWalletId,
-                        cryptoAccountId = account.cryptoAccountId,
-                    ),
-                ) { ownAccount, shared ->
+                ownJointAccountFlow(cryptoAccountId = account.cryptoAccountId).map { ownAccount ->
                     ResolvedAccount(
                         account = account,
-                        invites = invites,
-                        sharedInvites = shared,
                         ownAddress = ownAccount?.ownAddress,
                         name = ownAccount?.name,
                         icon = ownAccount?.icon,
@@ -167,8 +147,6 @@ internal class JointAccountMembersModel @Inject constructor(
     } else {
         UpdateMembersAccountTransformer(
             account = account,
-            invites = invites,
-            sharedInvites = sharedInvites,
             ownAddress = ownAddress,
             callbacks = converterCallbacks,
             accountName = name,
@@ -215,12 +193,6 @@ internal class JointAccountMembersModel @Inject constructor(
         .onLeft { TangemLogger.e("Unable to resolve the own owner address of the joint account", it) }
         .getOrNull()
 
-    private fun recordSharedInvites() {
-        inviteSharing
-            .recordShared(userWalletId = params.userWalletId, account = resolvedAccountFlow)
-            .launchIn(modelScope)
-    }
-
     /**
      * The backend does not push joint-account changes, so the screen polls while on top. An empty store (offline,
      * cold start, a failed refresh) must poll too, or it could never recover; [pollingCoordinator] paces itself.
@@ -265,14 +237,6 @@ internal class JointAccountMembersModel @Inject constructor(
         )
     }
 
-    private fun onInviteClick(inviteId: String, accountName: TextReference) {
-        bottomSheetNavigation.activate(
-            JointAccountMembersSheetConfig.InviteMember(
-                message = inviteSharing.message(inviteId = inviteId, accountName = accountName),
-            ),
-        )
-    }
-
     private fun onConfirmAddressClick(cryptoAccountId: String) {
         router.push(JointAccountMembersRoute.ConfirmAddress(cryptoAccountId = cryptoAccountId))
     }
@@ -291,8 +255,6 @@ internal class JointAccountMembersModel @Inject constructor(
     // region Models
     private data class ResolvedAccount(
         val account: JointAccount,
-        val invites: List<JointAccountInvite>,
-        val sharedInvites: Set<String>,
         val ownAddress: String?,
         val name: AccountName?,
         val icon: CryptoPortfolioIcon?,
