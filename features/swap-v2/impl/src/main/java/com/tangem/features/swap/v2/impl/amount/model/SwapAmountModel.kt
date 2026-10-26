@@ -540,6 +540,9 @@ internal class SwapAmountModel @Inject constructor(
 
     private fun subscribeOnHiddenProvidersUpdates() {
         params.hiddenProviderIdsFlow
+            // Skips the initial replay: params.amountUM already has these providers filtered out,
+            // and the immediate quotes reload would race with initCurrencies() (uninitialized boundaries)
+            .drop(1)
             .filter { hiddenProviderIds -> hiddenProviderIds.isNotEmpty() }
             .onEach { hiddenProviderIds ->
                 uiState.transformerUpdate(SwapAmountHideProvidersTransformer(providerIds = hiddenProviderIds))
