@@ -25,9 +25,12 @@ internal class DefaultBankOfframpRepository @Inject constructor(
             .mapLeft { error -> error.toBankOfframpError(operation = "getBankAccounts") }
     }
 
-    override suspend fun getOptions(userWalletId: UserWalletId): Either<BankOfframpError, BankOfframpOptions> {
+    override suspend fun getOptions(
+        userWalletId: UserWalletId,
+        productInstanceId: String?,
+    ): Either<BankOfframpError, BankOfframpOptions> {
         return requestPerformer.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.getBankOfframpOptions(authHeader = authHeader)
+            tangemPayApi.getBankOfframpOptions(authHeader = authHeader, productInstanceId = productInstanceId)
         }
             .map { response -> response.result?.let(BankOfframpOptionsConverter::convert) ?: EMPTY_OPTIONS }
             .mapLeft { error -> error.toBankOfframpError(operation = "getOptions") }

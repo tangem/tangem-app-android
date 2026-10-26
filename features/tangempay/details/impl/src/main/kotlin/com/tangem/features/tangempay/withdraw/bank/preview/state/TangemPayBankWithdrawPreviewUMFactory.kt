@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.amount.state.formatFiat
 import com.tangem.features.tangempay.withdraw.bank.amount.state.toText
 import com.tangem.features.tangempay.withdraw.bank.amount.state.toTextReference
@@ -16,6 +17,7 @@ import com.tangem.features.tangempay.withdraw.bank.amount.state.toTitleReference
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromFactory
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderFactory
 import com.tangem.features.tangempay.withdraw.bank.model.isRailLocked
 import com.tangem.features.tangempay.withdraw.bank.model.recipientDetails
@@ -37,9 +39,14 @@ import java.util.Currency
 
 private val ACCOUNT_FIELDS = setOf(BankWithdrawFormField.AccountNumber, BankWithdrawFormField.RoutingNumber)
 
-internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Callbacks) {
+internal class TangemPayBankWithdrawPreviewUMFactory(
+    sourceAccount: BankWithdrawSourceAccount,
+    private val callbacks: Callbacks,
+) {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter(shouldGrayscaleTestnet = false)
+
+    private val from = BankWithdrawFromFactory.create(sourceAccount)
 
     fun create(draft: BankWithdrawDraft, state: PreviewState): TangemPayBankWithdrawPreviewUM {
         val failure = state.failure
@@ -80,6 +87,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
         val fee = destination.fee.toText()
         return TransferUM(
             amount = AmountCardUM(
+                from = from,
                 balance = source.fiatBalance.formatFiat(currency).orMaskWithStars(isBalanceHidden),
                 amount = amount.formatFiat(currency),
                 icon = iconConverter.convert(source.token),

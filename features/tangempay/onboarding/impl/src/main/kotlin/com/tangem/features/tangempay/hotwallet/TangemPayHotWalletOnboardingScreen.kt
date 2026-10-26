@@ -5,22 +5,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.media.VideoSurfaceState
 import com.tangem.core.ui.components.legal.LegalCaption
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.tangempay.ui.TangemPayBundleIntroductionLayout
 import com.tangem.features.tangempay.ui.TangemPayOnboardingLayout
 
 @Composable
-internal fun TangemPayHotWalletOnboardingScreen(state: TangemPayHotWalletOnboardingUM, modifier: Modifier = Modifier) {
+internal fun TangemPayHotWalletOnboardingScreen(
+    state: TangemPayHotWalletOnboardingUM,
+    video: VideoSurfaceState?,
+    modifier: Modifier = Modifier,
+) {
     if (state.isPayBundleIntroductionEnabled) {
-        TangemPayBundleIntroductionLayout(
-            modifier = modifier,
-            isGetCardLoading = state.isLoading,
-            onGetCardClick = state.onGetCardClick,
-            onTermsClick = state.onTermsClick,
-            onTermsOfServiceClick = state.onTermsOfServiceClick,
-            onPrivacyPolicyClick = state.onPrivacyPolicyClick,
-        )
+        TangemPayBundleIntroductionLayout(state = state, video = video, modifier = modifier)
     } else {
         TangemPayOnboardingLayout(
             modifier = modifier,
@@ -50,6 +48,7 @@ private fun TangemPayHotWalletOnboardingScreenPreview() {
                 onTermsOfServiceClick = {},
                 onPrivacyPolicyClick = {},
             ),
+            video = null,
             modifier = Modifier.fillMaxSize(),
         )
     }
