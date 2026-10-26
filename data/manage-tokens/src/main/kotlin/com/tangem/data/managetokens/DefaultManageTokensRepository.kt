@@ -282,6 +282,7 @@ internal class DefaultManageTokensRepository(
                 ?.let(AccountDerivation::Joint)
             WalletAccountDTO.Type.CRYPTO, null -> DerivationIndex(derivationIndex).getOrNull()
                 ?.let(AccountDerivation::Personal)
+            WalletAccountDTO.Type.COLLECTIBLES -> null
         }
     }
 
