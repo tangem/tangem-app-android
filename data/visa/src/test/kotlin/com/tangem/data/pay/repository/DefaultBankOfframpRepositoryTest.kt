@@ -7,7 +7,13 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
+import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.model.bankofframp.BankRail
+import com.tangem.domain.pay.model.bankofframp.OfframpDestination
+import com.tangem.domain.pay.model.bankofframp.OfframpEta
+import com.tangem.domain.pay.model.bankofframp.OfframpFee
+import com.tangem.domain.pay.model.bankofframp.OfframpSource
+import com.tangem.domain.pay.model.bankofframp.OfframpToken
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.response.BankAccountsResponse
@@ -104,10 +110,10 @@ internal class DefaultBankOfframpRepositoryTest {
     @Test
     fun `GIVEN options WHEN getOptions THEN sources and destinations converted`() = runTest {
         // Arrange
-        coEvery { tangemPayApi.getBankOfframpOptions(AUTH_HEADER) } returns ApiResponse.Success(optionsResponse())
+        coEvery { tangemPayApi.getBankOfframpOptions(AUTH_HEADER, null) } returns ApiResponse.Success(optionsResponse())
 
         // Act
-        val actual = repository.getOptions(WALLET_ID)
+        val actual = repository.getOptions(WALLET_ID, productInstanceId = null)
 
         // Assert
         val options = requireNotNull(actual.getOrNull())
@@ -116,14 +122,58 @@ internal class DefaultBankOfframpRepositoryTest {
     }
 
     @Test
+    fun `GIVEN product instance id WHEN getOptions THEN the options of that instance requested and converted`() =
+        runTest {
+            // Arrange
+            coEvery {
+                tangemPayApi.getBankOfframpOptions(AUTH_HEADER, PRODUCT_INSTANCE_ID)
+            } returns ApiResponse.Success(optionsResponse())
+
+            // Act
+            val actual = repository.getOptions(WALLET_ID, productInstanceId = PRODUCT_INSTANCE_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                BankOfframpOptions(
+                    sources = listOf(
+                        OfframpSource(
+                            networkName = "polygon-pos",
+                            isTestnet = false,
+                            chainId = 137L,
+                            tokens = listOf(
+                                OfframpToken(
+                                    symbol = "USDC",
+                                    contractAddress = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+                                ),
+                            ),
+                        ),
+                    ),
+                    destinations = listOf(
+                        OfframpDestination(
+                            rail = BankRail.ACH,
+                            fee = OfframpFee(
+                                name = "ACH",
+                                amount = BigDecimal("1.50"),
+                                currency = "USD",
+                                description = null,
+                            ),
+                            eta = OfframpEta(minDays = 1, maxDays = 3),
+                        ),
+                    ),
+                ).right(),
+            )
+            coVerify(exactly = 1) { tangemPayApi.getBankOfframpOptions(AUTH_HEADER, PRODUCT_INSTANCE_ID) }
+        }
+
+    @Test
     fun `GIVEN response without a result WHEN getOptions THEN empty options`() = runTest {
         // Arrange
         coEvery {
-            tangemPayApi.getBankOfframpOptions(AUTH_HEADER)
+            tangemPayApi.getBankOfframpOptions(AUTH_HEADER, null)
         } returns ApiResponse.Success(BankOfframpOptionsResponse(result = null))
 
         // Act
-        val actual = repository.getOptions(WALLET_ID)
+        val actual = repository.getOptions(WALLET_ID, productInstanceId = null)
 
         // Assert
         val options = requireNotNull(actual.getOrNull())
@@ -134,11 +184,11 @@ internal class DefaultBankOfframpRepositoryTest {
     @Test
     fun `GIVEN failing request WHEN getOptions THEN unknown error`() = runTest {
         // Arrange
-        coEvery { tangemPayApi.getBankOfframpOptions(AUTH_HEADER) } returns
+        coEvery { tangemPayApi.getBankOfframpOptions(AUTH_HEADER, null) } returns
             ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<BankOfframpOptionsResponse>
 
         // Act
-        val actual = repository.getOptions(WALLET_ID)
+        val actual = repository.getOptions(WALLET_ID, productInstanceId = null)
 
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(BankOfframpError.Unknown::class.java)
@@ -210,5 +260,6 @@ internal class DefaultBankOfframpRepositoryTest {
     private companion object {
         val WALLET_ID = UserWalletId("0123456789abcdef")
         const val AUTH_HEADER = "Bearer token"
+        const val PRODUCT_INSTANCE_ID = "123e4567-e89b-12d3-a456-426614174000"
     }
 }
