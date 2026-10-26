@@ -108,6 +108,49 @@ internal class JointAccountDtoTest {
     }
 
     @Test
+    fun `GIVEN issue invite request WHEN round trip THEN object survives and field names match contract`() {
+        // Arrange
+        val request = IssueJointAccountInviteRequest(
+            cryptoAccountId = "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6",
+            slot = 2,
+        )
+        val adapter = moshi.adapter(IssueJointAccountInviteRequest::class.java)
+
+        // Act
+        val json = adapter.toJson(request)
+        val actual = adapter.fromJson(json)
+
+        // Assert
+        assertThat(actual).isEqualTo(request)
+        assertThat(json).contains("\"cryptoAccountId\"")
+        assertThat(json).contains("\"slot\":2")
+    }
+
+    @Test
+    fun `GIVEN issued invite json WHEN parse THEN whole object matches contract`() {
+        // Arrange
+        @Language("JSON")
+        val json = """
+            {
+              "id": "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66",
+              "slot": 2,
+              "expiresAt": "2026-10-29T12:00:00.000Z"
+            }
+        """.trimIndent()
+
+        // Act
+        val actual = moshi.adapter(JointAccountIssuedInviteDto::class.java).fromJson(json)
+
+        // Assert
+        val expected = JointAccountIssuedInviteDto(
+            id = "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66",
+            slot = 2,
+            expiresAt = "2026-10-29T12:00:00.000Z",
+        )
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
     fun `GIVEN status and role unknown to this build WHEN parse THEN values pass through as strings`() {
         // Arrange
         @Language("JSON")
