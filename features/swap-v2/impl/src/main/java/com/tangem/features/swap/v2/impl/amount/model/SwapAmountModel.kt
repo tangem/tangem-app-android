@@ -483,11 +483,12 @@ internal class SwapAmountModel @Inject constructor(
     private fun subscribeOnAmountUpdateTriggerUpdates() {
         swapAmountUpdateListener.updateAmountTriggerFlow
             .onEach { (amount, isEnterInFiat) ->
-                if (uiState.value is SwapAmountUM.Content) {
-                    onCurrencyChangeClick(isEnterInFiat)
-                    onAmountValueChange(amount)
-                    saveResult()
-                }
+                // The hand-off can arrive while the pair is still initializing; the trigger has no replay,
+                // so dropping it here would lose the amount for good.
+                uiState.first { it is SwapAmountUM.Content }
+                onCurrencyChangeClick(isEnterInFiat)
+                onAmountValueChange(amount)
+                saveResult()
             }
             .launchIn(modelScope)
     }
