@@ -11,7 +11,6 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.wallet.isColdWallet
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
@@ -57,6 +56,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     )
 
     private val umFactory = TangemPayBankWithdrawPreviewUMFactory(
+        sourceAccount = params.sourceAccount,
         callbacks = TangemPayBankWithdrawPreviewUMFactory.Callbacks(
             onBackClick = ::onBackClick,
             onCloseClick = ::onCloseClick,
@@ -134,7 +134,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
 
     private fun onCloseClick() {
         if (isSending) return
-        router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails)
+        params.onCloseFlow()
     }
 
     private fun onEditClick(target: BankWithdrawEditTarget) {

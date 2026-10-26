@@ -5,7 +5,6 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
@@ -16,7 +15,6 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
@@ -65,11 +63,12 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val onOrderCreated: (BankOfframpOrderResult) -> Unit = {}
+    private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private var completedCount = 0
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, uiMessageSender, completion, completionFactory, getUserWalletUseCase, analytics)
+        clearMocks(router, uiMessageSender, completion, completionFactory, getUserWalletUseCase, analytics, onCloseFlow)
         completedCount = 0
         every { getUserWalletUseCase(userWalletId) } returns mockk<UserWallet.Cold>().right()
         every { completionFactory.create(any(), any(), any()) } returns completion
@@ -201,7 +200,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
 
         // Assert
         verify(exactly = 0) { router.pop(any()) }
-        verify(exactly = 0) { router.popTo(any<Route>(), any()) }
+        verify(exactly = 0) { onCloseFlow() }
         model.onDestroy()
     }
 
@@ -219,7 +218,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     }
 
     @Test
-    fun `GIVEN summary WHEN close THEN wizard and hub popped to account details`() {
+    fun `GIVEN summary WHEN close THEN flow closed`() {
         // Arrange
         val model = createModel()
 
@@ -227,12 +226,12 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         summary(model).onCloseClick()
 
         // Assert
-        verify(exactly = 1) { router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails, any()) }
+        verify(exactly = 1) { onCloseFlow() }
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN failed WHEN close THEN wizard and hub popped to account details`() {
+    fun `GIVEN failed WHEN close THEN flow closed`() {
         // Arrange
         completionReports(CompletionState.Sending, CompletionState.Failed(PreviewFailure.General))
         val model = createModel()
@@ -242,7 +241,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         (model.uiState.value as Failed).onCloseClick()
 
         // Assert
-        verify(exactly = 1) { router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails, any()) }
+        verify(exactly = 1) { onCloseFlow() }
         model.onDestroy()
     }
 
@@ -590,6 +589,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
                     draft = MutableStateFlow(draft),
                     onOrderCreated = onOrderCreated,
                     onCompleted = { completedCount++ },
+                    onCloseFlow = onCloseFlow,
                 ),
             ),
             dispatchers = dispatchers,
