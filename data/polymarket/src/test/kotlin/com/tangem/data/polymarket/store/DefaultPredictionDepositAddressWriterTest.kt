@@ -86,7 +86,6 @@ internal class DefaultPredictionDepositAddressWriterTest {
         val ACTIVE = PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal("12.5"),
-            positionsValue = null,
             fiatRate = null,
             depositCurrency = COLLATERAL,
             depositAddress = null,

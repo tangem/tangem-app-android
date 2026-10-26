@@ -150,7 +150,7 @@ internal class PolymarketSearchModel @Inject constructor(
 
     private fun onOutcomeClick(eventId: String, marketId: String, assetId: String) {
         router.push(
-            PolymarketRoute.EventDetails(
+            PolymarketRoute.PlacePrediction(
                 eventId = eventId,
                 userWalletId = params.userWalletId,
                 marketId = marketId,

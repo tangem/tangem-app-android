@@ -35,4 +35,8 @@ internal class DefaultEarnDeepLinkHandler @AssistedInject constructor(
     interface Factory : EarnDeepLinkHandler.Factory {
         override fun create(queryParams: Map<String, String>): DefaultEarnDeepLinkHandler
     }
+
+    companion object {
+        const val DEEPLINK_KEY = "tangem://earn"
+    }
 }

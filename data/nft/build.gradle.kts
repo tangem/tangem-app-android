@@ -3,6 +3,7 @@ import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscati
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.kotlin.kapt)
     id("configuration")
 }
@@ -15,6 +16,8 @@ dependencies {
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization)
+    implementation(deps.kotlin.serialization.core)
     // endregion
 
     // region Other libraries
@@ -59,10 +62,12 @@ dependencies {
     // endregion
 
     // region Tests
+    testImplementation(deps.moshi.adapters)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
     // endregion
 }

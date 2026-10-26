@@ -57,6 +57,19 @@ internal object TangemPayMessagesFactory {
                     onClick { closeBs() }
                 }
             }
+            TangemPayDetailsErrorType.ServiceUnavailable -> bottomSheetMessage {
+                infoBlock {
+                    icon(R.drawable.img_attention_20) {
+                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Attention
+                    }
+                    title = TextReference.Res(R.string.tangempay_service_unavailable_title)
+                    body = TextReference.Res(R.string.tangempay_card_details_receive_error_description)
+                }
+                primaryButton {
+                    text = resourceReference(R.string.common_got_it)
+                    onClick { closeBs() }
+                }
+            }
         }
     }
 
@@ -167,6 +180,34 @@ internal object TangemPayMessagesFactory {
         return DialogMessage(
             title = resourceReference(R.string.common_something_went_wrong),
             message = resourceReference(R.string.common_try_again_later),
+        )
+    }
+
+    fun createAddToGoogleWalletError(): DialogMessage {
+        return DialogMessage(
+            title = resourceReference(R.string.tangempay_card_details_add_to_wallet_error_title),
+            message = resourceReference(R.string.tangempay_card_details_add_to_wallet_error_description),
+        )
+    }
+
+    fun createAddToGoogleWalletNetworkError(): DialogMessage {
+        return DialogMessage(
+            title = resourceReference(R.string.tangempay_card_details_add_to_wallet_error_title),
+            message = resourceReference(R.string.hw_cloud_backup_error_network),
+        )
+    }
+
+    fun createAddToGoogleWalletRateLimitError(): DialogMessage {
+        return DialogMessage(
+            title = resourceReference(R.string.tangempay_card_details_add_to_wallet_error_title),
+            message = resourceReference(R.string.tangempay_card_details_add_to_wallet_error_rate_limit),
+        )
+    }
+
+    fun createAddToGoogleWalletUnavailableError(): DialogMessage {
+        return DialogMessage(
+            title = resourceReference(R.string.tangempay_card_details_add_to_wallet_error_title),
+            message = resourceReference(R.string.tangempay_card_details_add_to_wallet_error_wallet_unavailable),
         )
     }
 

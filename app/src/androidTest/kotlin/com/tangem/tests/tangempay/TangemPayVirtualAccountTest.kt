@@ -1,6 +1,7 @@
 package com.tangem.tests.tangempay
 
 import com.tangem.common.BaseTestCase
+import com.tangem.core.res.R as CoreResR
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
@@ -13,6 +14,7 @@ import com.tangem.scenarios.*
 import com.tangem.screens.*
 import com.tangem.screens.tangempay.*
 import dagger.hilt.android.testing.HiltAndroidTest
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Assert.assertTrue
@@ -68,12 +70,10 @@ class TangemPayVirtualAccountTest : BaseTestCase() {
     private val expectedRoutingNumber = "101019644"
     private val expectedBankName = "Lead Bank"
 
-    // The deposit limit is a placeholder hardcoded in the app ([REDACTED_TASK_KEY]), so it has no string resource.
-    private val expectedDepositLimit = "Available to deposit per day: $10,000"
-    private val expectedDepositLimitHint = "Limit is resetting every day"
+    private val dailyDepositLimit = "$10,000"
 
     @AllureId("10292")
-    @DisplayName("Tangem Pay: Add funds opens a virtual account and reveals banking details once the order completes")
+    @DisplayName("Tangem Pay: Add funds requests a virtual account and shows banking details once the order completes")
     @Test
     fun openVirtualAccountViaAddFundsTest() {
         setupHooks(
@@ -87,7 +87,7 @@ class TangemPayVirtualAccountTest : BaseTestCase() {
             }
         ).run {
             step("Open Tangem Pay payment account") { openTangemPay() }
-            step("Open bank transfer sheet from 'Add funds'") { openTangemPayBankTransferSheet() }
+            step("Open bank transfer onboarding from 'Add funds'") { openTangemPayBankTransferOnboarding() }
             step("Assert '$achFeeTitle' fee is displayed") {
                 assertVirtualAccountFee(achFeeType, achFeeTitle, achFeeValue)
             }
@@ -95,22 +95,17 @@ class TangemPayVirtualAccountTest : BaseTestCase() {
                 assertVirtualAccountFee(fedwireFeeType, fedwireFeeTitle, fedwireFeeValue)
             }
             val orderPollsBefore = getWireMockRequestCount("GET", orderPollEndpointPattern)
-            step("Click on 'Show details' button") {
-                onTangemPayVirtualAccountDepositSheet { showDetailsButton.clickWithAssertion() }
+            step("Click on 'Continue' button") {
+                onTangemPayBankTransferOnboardingScreen { continueButton.clickWithAssertion() }
             }
-            step("Assert 'Preparing your banking details' screen is displayed") {
-                onTangemPayVirtualAccountSuccessScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { title.assertIsDisplayed() }
-                }
+            step("Assert 'Request sent' message is displayed") {
+                onTangemPayMainScreen { flakySafely { bankTransferRequestSentMessage.assertIsDisplayed() } }
             }
             step("Assert the virtual account order is being polled") {
                 awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
                     val polls = getWireMockRequestCount("GET", orderPollEndpointPattern) - orderPollsBefore
                     if (polls <= 0) throw AssertionError("Creating the order should start polling it")
                 }
-            }
-            step("Click on 'Close' button") {
-                onTangemPayVirtualAccountSuccessScreen { closeButton.clickWithAssertion() }
             }
             step("Assert payment account balance is displayed") {
                 awaitSuccess { onTangemPayMainScreen { balance.assertIsDisplayed() } }
@@ -131,9 +126,11 @@ class TangemPayVirtualAccountTest : BaseTestCase() {
                 }
                 waitForIdle()
             }
-            step("Open bank transfer sheet from 'Add funds'") { openTangemPayBankTransferSheet() }
-            step("Click on 'Show details' button") {
-                onTangemPayVirtualAccountDepositSheet { showDetailsButton.clickWithAssertion() }
+            step("Open 'Add funds' once the virtual account is available") {
+                openTangemPayAddFundsWithBankTransferAvailable()
+            }
+            step("Click on 'From a bank account' option") {
+                onTangemPayAddFundsSheet { bankTransferOption.performClick() }
             }
             step("Assert virtual account banking details are displayed") {
                 onVirtualAccountRequisitesBottomSheet {
@@ -148,7 +145,7 @@ class TangemPayVirtualAccountTest : BaseTestCase() {
     }
 
     @AllureId("10871")
-    @DisplayName("Tangem Pay: bank transfer sheet shows both ACH and FedWire fees")
+    @DisplayName("Tangem Pay: bank transfer onboarding shows both ACH and FedWire fees")
     @Test
     fun bankTransferSheetShowsBothFeesTest() {
         setupHooks(
@@ -161,7 +158,7 @@ class TangemPayVirtualAccountTest : BaseTestCase() {
             }
         ).run {
             step("Open Tangem Pay payment account") { openTangemPay() }
-            step("Open bank transfer sheet from 'Add funds'") { openTangemPayBankTransferSheet() }
+            step("Open bank transfer onboarding from 'Add funds'") { openTangemPayBankTransferOnboarding() }
             step("Assert '$achFeeTitle' fee is displayed") {
                 assertVirtualAccountFee(achFeeType, achFeeTitle, achFeeValue)
             }
@@ -172,7 +169,7 @@ class TangemPayVirtualAccountTest : BaseTestCase() {
     }
 
     @AllureId("10872")
-    @DisplayName("Tangem Pay: bank transfer sheet hides FedWire when the backend returns ACH only")
+    @DisplayName("Tangem Pay: bank transfer onboarding hides FedWire when the backend returns ACH only")
     @Test
     fun bankTransferSheetShowsAchOnlyTest() {
         setupHooks(
@@ -185,7 +182,7 @@ class TangemPayVirtualAccountTest : BaseTestCase() {
             }
         ).run {
             step("Open Tangem Pay payment account") { openTangemPay() }
-            step("Open bank transfer sheet from 'Add funds'") { openTangemPayBankTransferSheet() }
+            step("Open bank transfer onboarding from 'Add funds'") { openTangemPayBankTransferOnboarding() }
             step("Assert '$achFeeTitle' fee is displayed") {
                 assertVirtualAccountFee(achFeeType, achFeeTitle, achFeeValue)
             }
@@ -196,7 +193,7 @@ class TangemPayVirtualAccountTest : BaseTestCase() {
     }
 
     @AllureId("10873")
-    @DisplayName("Tangem Pay: bank transfer sheet hides ACH when the backend returns FedWire only")
+    @DisplayName("Tangem Pay: bank transfer onboarding hides ACH when the backend returns FedWire only")
     @Test
     fun bankTransferSheetShowsFedwireOnlyTest() {
         setupHooks(
@@ -209,7 +206,7 @@ class TangemPayVirtualAccountTest : BaseTestCase() {
             }
         ).run {
             step("Open Tangem Pay payment account") { openTangemPay() }
-            step("Open bank transfer sheet from 'Add funds'") { openTangemPayBankTransferSheet() }
+            step("Open bank transfer onboarding from 'Add funds'") { openTangemPayBankTransferOnboarding() }
             step("Assert '$fedwireFeeTitle' fee is displayed") {
                 assertVirtualAccountFee(fedwireFeeType, fedwireFeeTitle, fedwireFeeValue)
             }
@@ -233,9 +230,9 @@ class TangemPayVirtualAccountTest : BaseTestCase() {
             }
         ).run {
             step("Open Tangem Pay payment account") { openTangemPay() }
-            step("Open bank transfer sheet from 'Add funds'") { openTangemPayBankTransferSheet() }
+            step("Open bank transfer onboarding from 'Add funds'") { openTangemPayBankTransferOnboarding() }
             step("Assert fee error banner is displayed") {
-                onTangemPayVirtualAccountDepositSheet {
+                onTangemPayBankTransferOnboardingScreen {
                     flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { feeErrorTitle.assertIsDisplayed() }
                 }
             }
@@ -249,7 +246,7 @@ class TangemPayVirtualAccountTest : BaseTestCase() {
                 setWireMockScenarioState(feesScenario, feesBothState)
             }
             step("Click on fee error banner") {
-                onTangemPayVirtualAccountDepositSheet { feeErrorBanner.clickWithAssertion() }
+                onTangemPayBankTransferOnboardingScreen { feeErrorBanner.clickWithAssertion() }
             }
             step("Assert '$achFeeTitle' fee is displayed") {
                 assertVirtualAccountFee(achFeeType, achFeeTitle, achFeeValue)
@@ -264,14 +261,20 @@ class TangemPayVirtualAccountTest : BaseTestCase() {
     @DisplayName("Tangem Pay: virtual account details list every requisite, the deposit limit, copy and share")
     @Test
     fun virtualAccountRequisitesAreCopiedAndSharedTest() {
+        val expectedDepositLimitTitle =
+            getResourceString(CoreResR.string.tangempay_bank_transfer_details_daily_deposits)
+        val expectedDepositLimitHint = getResourceString(
+            CoreResR.string.tangempay_bank_transfer_details_daily_deposits_hint,
+            dailyDepositLimit,
+        )
         val expectedSharedText = listOf(
+            VirtualAccountRequisitesBottomSheetPageObject.ACCOUNT_NUMBER to expectedAccountNumber,
+            VirtualAccountRequisitesBottomSheetPageObject.ROUTING_NUMBER to expectedRoutingNumber,
             VirtualAccountRequisitesBottomSheetPageObject.BENEFICIARY_NAME to expectedBeneficiaryName,
             VirtualAccountRequisitesBottomSheetPageObject.BENEFICIARY_ADDRESS to expectedBeneficiaryAddress,
             VirtualAccountRequisitesBottomSheetPageObject.BANK_NAME to expectedBankName,
             VirtualAccountRequisitesBottomSheetPageObject.BANK_ADDRESS to expectedBankAddress,
-            VirtualAccountRequisitesBottomSheetPageObject.ACCOUNT_NUMBER to expectedAccountNumber,
-            VirtualAccountRequisitesBottomSheetPageObject.ROUTING_NUMBER to expectedRoutingNumber,
-        ).joinToString(separator = "") { (field, value) -> "$field: $value\n" }
+        ).joinToString(separator = "\n") { (field, value) -> "$field: $value" }
 
         setupHooks(
             additionalBeforeSection = {
@@ -316,7 +319,7 @@ class TangemPayVirtualAccountTest : BaseTestCase() {
             step("Assert the daily deposit limit block is displayed") {
                 onVirtualAccountRequisitesBottomSheet {
                     depositLimitTitle.performScrollTo()
-                    depositLimitTitle.assertTextEquals(expectedDepositLimit)
+                    depositLimitTitle.assertTextEquals(expectedDepositLimitTitle)
                     depositLimitSubtitle.assertTextEquals(expectedDepositLimitHint)
                 }
             }
@@ -347,10 +350,7 @@ class TangemPayVirtualAccountTest : BaseTestCase() {
                 )
             }
             step("Click on 'Share' button") {
-                onVirtualAccountRequisitesBottomSheet {
-                    shareButton.performScrollTo()
-                    shareButton.performClick()
-                }
+                onVirtualAccountRequisitesBottomSheet { shareButton.performClick() }
             }
             step("Assert the banking details are passed to the system share chooser") {
                 assertTextSharedViaChooser(expectedSharedText, times = 1)
@@ -374,10 +374,7 @@ class TangemPayVirtualAccountTest : BaseTestCase() {
             }
         ).run {
             step("Open Tangem Pay payment account") { openTangemPay() }
-            step("Open bank transfer sheet from 'Add funds'") { openTangemPayBankTransferSheet() }
-            step("Click on 'Show details' button") {
-                onTangemPayVirtualAccountDepositSheet { showDetailsButton.clickWithAssertion() }
-            }
+            step("Click on 'From a bank account' option in 'Add funds'") { clickTangemPayBankTransferOption() }
             step("Assert the banking details error state is displayed") {
                 awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
                     onTangemPayVaBankingDetailsErrorSheet { title.assertIsDisplayed() }

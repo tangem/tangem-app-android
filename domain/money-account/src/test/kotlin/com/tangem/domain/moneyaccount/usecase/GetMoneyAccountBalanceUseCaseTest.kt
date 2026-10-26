@@ -1,14 +1,21 @@
 package com.tangem.domain.moneyaccount.usecase
 
 import arrow.core.right
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
+import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
+import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.google.common.truth.Truth
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -25,11 +32,15 @@ internal class GetMoneyAccountBalanceUseCaseTest {
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory = mockk()
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher = mockk()
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier = mockk()
+    private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher = mockk()
+    private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier = mockk()
 
     private val useCase = GetMoneyAccountBalanceUseCase(
         tangemPayCurrencyFactory = tangemPayCurrencyFactory,
         singleNetworkStatusFetcher = singleNetworkStatusFetcher,
         singleNetworkStatusSupplier = singleNetworkStatusSupplier,
+        singleQuoteStatusFetcher = singleQuoteStatusFetcher,
+        singleQuoteStatusSupplier = singleQuoteStatusSupplier,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -39,27 +50,37 @@ internal class GetMoneyAccountBalanceUseCaseTest {
         every { this@mockk.network } returns this@GetMoneyAccountBalanceUseCaseTest.network
         every { id } returns tokenId
     }
+    private val networkParams = SingleNetworkStatusProducer.Params(userWalletId, network)
+    private val quoteParams = SingleQuoteStatusProducer.Params(rawCurrencyId = TangemPayCurrencyFactory.TOKEN_ID)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(tangemPayCurrencyFactory, singleNetworkStatusFetcher, singleNetworkStatusSupplier)
+        clearMocks(
+            tangemPayCurrencyFactory,
+            singleNetworkStatusFetcher,
+            singleNetworkStatusSupplier,
+            singleQuoteStatusFetcher,
+            singleQuoteStatusSupplier,
+        )
         every { tangemPayCurrencyFactory.createMoneyAccountToken(userWalletId) } returns token
         coEvery { singleNetworkStatusFetcher(any()) } returns Unit.right()
+        coEvery { singleQuoteStatusFetcher(any()) } returns Unit.right()
     }
 
     @Test
-    fun `GIVEN verified status WHEN invoke THEN token amount returned`() = runTest {
+    fun `GIVEN verified status and quote WHEN invoke THEN balance with rate returned`() = runTest {
         // Arrange
         val amount = BigDecimal("12.34")
-        coEvery {
-            singleNetworkStatusSupplier.getSyncOrNull(SingleNetworkStatusProducer.Params(userWalletId, network))
-        } returns networkStatusWith(NetworkStatus.Amount.Loaded(amount))
+        val fiatRate = BigDecimal("0.92")
+        coEvery { singleNetworkStatusSupplier.getSyncOrNull(networkParams) } returns
+            networkStatusWith(NetworkStatus.Amount.Loaded(amount))
+        coEvery { singleQuoteStatusSupplier.getSyncOrNull(quoteParams) } returns quoteStatusWith(fiatRate)
 
         // Act
         val actual = useCase(userWalletId)
 
         // Assert
-        Truth.assertThat(actual.getOrNull()).isEqualTo(amount)
+        Truth.assertThat(actual.getOrNull()).isEqualTo(expectedBalance(amount = amount, fiatRate = fiatRate))
         coVerify(exactly = 1) {
             singleNetworkStatusFetcher(
                 SingleNetworkStatusFetcher.Params(
@@ -68,15 +89,46 @@ internal class GetMoneyAccountBalanceUseCaseTest {
                     extraTokens = setOf(token),
                 ),
             )
+            singleQuoteStatusFetcher(
+                SingleQuoteStatusFetcher.Params(rawCurrencyId = TangemPayCurrencyFactory.TOKEN_ID, appCurrencyId = null),
+            )
         }
+    }
+
+    @Test
+    fun `GIVEN verified status without quote WHEN invoke THEN balance without rate returned`() = runTest {
+        // Arrange
+        val amount = BigDecimal("12.34")
+        coEvery { singleNetworkStatusSupplier.getSyncOrNull(networkParams) } returns
+            networkStatusWith(NetworkStatus.Amount.Loaded(amount))
+        coEvery { singleQuoteStatusSupplier.getSyncOrNull(quoteParams) } returns null
+
+        // Act
+        val actual = useCase(userWalletId)
+
+        // Assert
+        Truth.assertThat(actual.getOrNull()).isEqualTo(expectedBalance(amount = amount, fiatRate = null))
     }
 
     @Test
     fun `GIVEN no verified status WHEN invoke THEN left returned`() = runTest {
         // Arrange
-        coEvery {
-            singleNetworkStatusSupplier.getSyncOrNull(SingleNetworkStatusProducer.Params(userWalletId, network))
-        } returns null
+        coEvery { singleNetworkStatusSupplier.getSyncOrNull(networkParams) } returns null
+        coEvery { singleQuoteStatusSupplier.getSyncOrNull(quoteParams) } returns null
+
+        // Act
+        val actual = useCase(userWalletId)
+
+        // Assert
+        Truth.assertThat(actual.isLeft()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN token amount not loaded WHEN invoke THEN left returned`() = runTest {
+        // Arrange
+        coEvery { singleNetworkStatusSupplier.getSyncOrNull(networkParams) } returns
+            networkStatusWith(NetworkStatus.Amount.NotFound)
+        coEvery { singleQuoteStatusSupplier.getSyncOrNull(quoteParams) } returns null
 
         // Act
         val actual = useCase(userWalletId)
@@ -96,12 +148,41 @@ internal class GetMoneyAccountBalanceUseCaseTest {
         // Assert
         Truth.assertThat(actual.isLeft()).isTrue()
         coVerify(exactly = 0) { singleNetworkStatusFetcher(any()) }
+        coVerify(exactly = 0) { singleQuoteStatusFetcher(any()) }
     }
+
+    private fun expectedBalance(amount: BigDecimal, fiatRate: BigDecimal?) = MoneyAccountStatusValue.Balance(
+        cryptoAmount = amount,
+        cryptoCurrency = token,
+        depositAddress = DEPOSIT_ADDRESS,
+        currencyCode = "USD",
+        fiatRate = fiatRate,
+    )
 
     private fun networkStatusWith(amount: NetworkStatus.Amount): NetworkStatus {
         val verified: NetworkStatus.Verified = mockk {
             every { amounts } returns mapOf(tokenId to amount)
+            every { address } returns NetworkAddress.Single(
+                defaultAddress = NetworkAddress.Address(
+                    type = NetworkAddress.Address.Type.Primary,
+                    value = DEPOSIT_ADDRESS,
+                ),
+            )
         }
         return mockk { every { value } returns verified }
+    }
+
+    private fun quoteStatusWith(fiatRate: BigDecimal) = QuoteStatus(
+        rawCurrencyId = TangemPayCurrencyFactory.TOKEN_ID,
+        value = QuoteStatus.Data(
+            source = StatusSource.ACTUAL,
+            fiatRate = fiatRate,
+            fiatRateUSD = fiatRate,
+            priceChange = BigDecimal.ZERO,
+        ),
+    )
+
+    private companion object {
+        const val DEPOSIT_ADDRESS = "0xdeposit"
     }
 }

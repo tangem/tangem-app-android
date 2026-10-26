@@ -2,7 +2,6 @@ package com.tangem.features.polymarket.impl.placeprediction.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -33,6 +32,7 @@ internal data class PlacePredictionUM(
     val priceError: PriceErrorUM? = null,
     val submit: SubmitUM,
     val isPrimaryButtonEnabled: Boolean,
+    val isAwaitingFunds: Boolean = false,
 ) {
 
     companion object {
@@ -42,10 +42,10 @@ internal data class PlacePredictionUM(
                 title = "",
                 imageUrl = null,
                 outcomeTitle = "",
-                outcomePriceCents = null,
+                outcomePrice = null,
                 resolutionDateMillis = null,
             ),
-            collateral = CollateralUM(tokenSymbol = "", iconState = null),
+            collateral = CollateralUM(tokenSymbol = ""),
             order = when (side) {
                 PredictionOrderSide.BUY -> OrderSideUM.Buy(balance = null, hasSufficientBalance = false)
                 PredictionOrderSide.SELL -> OrderSideUM.Sell(
@@ -69,11 +69,16 @@ internal data class PlacePredictionUM(
 /**
  * The sum to quote, or `null` while what the user typed is not one yet.
  *
- * Anything below a cent is not one: the BFF normalises amounts onto a 2-decimal grid, so a finer figure
- * becomes zero there and comes back as a `400` rather than a quote.
+ * Anything below a cent is not one — the BFF normalises it to zero and answers `400` — except the sale of a whole
+ * position, which the BFF quotes at the position's own precision so that no remainder is left behind.
  */
 internal fun PlacePredictionUM.enteredAmount(): BigDecimal? =
-    amountValue.parseBigDecimalOrNull()?.takeIf { it >= MIN_QUOTABLE_AMOUNT }
+    amountValue.parseBigDecimalOrNull()?.takeIf { it >= MIN_QUOTABLE_AMOUNT || isWholePosition(amount = it) }
+
+private fun PlacePredictionUM.isWholePosition(amount: BigDecimal): Boolean {
+    val position = (order as? OrderSideUM.Sell)?.position as? SellPositionUM.Held ?: return false
+    return amount.signum() > 0 && amount.compareTo(position.available) == 0
+}
 
 private val MIN_QUOTABLE_AMOUNT: BigDecimal = BigDecimal("0.01")
 
@@ -121,11 +126,11 @@ internal data class MarketHeaderUM(
     val title: String,
     val imageUrl: String?,
     val outcomeTitle: String,
-    val outcomePriceCents: Int?,
+    val outcomePrice: String?,
     val resolutionDateMillis: Long?,
     val outcomeAccent: PolymarketOutcomeAccent = PolymarketOutcomeAccent.Neutral,
     val isPriceUnavailable: Boolean = false,
-    val entryPriceCents: Int? = null,
+    val entryPrice: String? = null,
 )
 
 @Immutable
@@ -144,12 +149,16 @@ internal enum class PaymentAmountErrorUM(val text: TextReference) {
 }
 
 @Immutable
-internal data class CollateralUM(val tokenSymbol: String, val iconState: CurrencyIconState?)
+internal data class CollateralUM(val tokenSymbol: String)
 
 @Immutable
 internal sealed interface OrderSideUM {
 
-    data class Buy(val balance: BigDecimal?, val hasSufficientBalance: Boolean) : OrderSideUM
+    data class Buy(
+        val balance: BigDecimal?,
+        val hasSufficientBalance: Boolean,
+        val isAddFundsEnabled: Boolean = false,
+    ) : OrderSideUM
 
     data class Sell(
         val position: SellPositionUM,
@@ -164,7 +173,7 @@ internal sealed interface SellPositionUM {
 
     data object Loading : SellPositionUM
 
-    /** @property available the held shares the market can accept, truncated onto its 2-decimal grid */
+    /** @property available the whole held position, at the on-chain share precision */
     data class Held(val available: BigDecimal) : SellPositionUM
 
     data object NotHeld : SellPositionUM
@@ -231,7 +240,7 @@ internal sealed interface QuoteUM {
         val signable: SignableQuoteUM,
     ) : QuoteUM
 
-    data class Unavailable(val status: PredictionQuoteStatus) : QuoteUM
+    data class Unavailable(val status: PredictionQuoteStatus, val expected: BigDecimal? = null) : QuoteUM
 
     data class Error(val reason: QuoteErrorUM) : QuoteUM
 }
