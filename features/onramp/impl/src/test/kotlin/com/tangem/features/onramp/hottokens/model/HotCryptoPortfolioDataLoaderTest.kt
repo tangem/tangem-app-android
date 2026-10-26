@@ -71,13 +71,23 @@ internal class HotCryptoPortfolioDataLoaderTest {
     )
     private val activeJoint = AccountStatus.Joint(
         account = MockAccounts.createJointAccount(ownerKeyIndex = 0),
-        value = JointAccountStatusValue.Active(StatusSource.ACTUAL, totalMembers = 3, safeAddress = SAFE),
+        value = JointAccountStatusValue.Active(
+            StatusSource.ACTUAL,
+            totalMembers = 3,
+            safeAddress = SAFE,
+            threshold = 2,
+        ),
         tokenList = TokenList.Empty,
         priceChangeLce = Unit.lceError(),
     )
     private val pendingJoint = AccountStatus.Joint(
         account = MockAccounts.createJointAccount(ownerKeyIndex = 1),
-        value = JointAccountStatusValue.Pending(StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 3),
+        value = JointAccountStatusValue.Pending(
+            StatusSource.ACTUAL,
+            joinedMembers = 1,
+            totalMembers = 3,
+            threshold = 2,
+        ),
         tokenList = TokenList.Empty,
         priceChangeLce = Unit.lceError(),
     )

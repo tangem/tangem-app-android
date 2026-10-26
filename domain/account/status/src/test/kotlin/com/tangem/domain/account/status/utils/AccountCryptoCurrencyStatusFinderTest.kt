@@ -126,6 +126,7 @@ internal class AccountCryptoCurrencyStatusFinderTest {
                 source = StatusSource.ACTUAL,
                 totalMembers = 3,
                 safeAddress = SAFE_ADDRESS,
+                threshold = 2,
             ),
             tokenList = TokenList.Ungrouped(
                 currencies = listOf(CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)),
