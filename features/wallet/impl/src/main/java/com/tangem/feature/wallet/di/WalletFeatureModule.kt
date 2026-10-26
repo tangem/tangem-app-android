@@ -4,11 +4,13 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.feature.wallet.DefaultWalletEntryComponent
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
+import com.tangem.feature.wallet.featuretoggles.DefaultWalletFeatureToggles
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedModel
 import com.tangem.feature.wallet.utils.DefaultUserWalletImageFetcher
 import com.tangem.feature.wallet.utils.DefaultUserWalletsFetcher
 import com.tangem.features.wallet.WalletEntryComponent
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.features.wallet.utils.UserWalletImageFetcher
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import dagger.Binds
@@ -33,6 +35,10 @@ internal interface WalletFeatureModule {
     @Binds
     @Singleton
     fun bindUserWalletImageFetcher(impl: DefaultUserWalletImageFetcher): UserWalletImageFetcher
+
+    @Binds
+    @Singleton
+    fun bindWalletFeatureToggles(impl: DefaultWalletFeatureToggles): WalletFeatureToggles
 
     @Binds
     @IntoSet
