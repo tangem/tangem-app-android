@@ -283,6 +283,7 @@ internal class EarnApyConverterTest {
             text = resourceReference(badgeRes, wrappedList(rateText)),
             isActive = isActive,
             rate = rateValue,
+            isStaking = true,
         )
     }
 

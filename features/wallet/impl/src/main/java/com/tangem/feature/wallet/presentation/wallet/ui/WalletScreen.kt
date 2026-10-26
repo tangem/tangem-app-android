@@ -101,6 +101,8 @@ internal fun WalletScreen(
     modifier: Modifier = Modifier,
     @RemoveWithToggle("TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED")
     isHideMarketingWhileSystemEnabled: Boolean = false,
+    @RemoveWithToggle("AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED")
+    isRedesignedAccountRowsEnabled: Boolean = false,
     isShtorkaBlurEnabled: () -> Boolean = { true },
     isShtorkaPartialExpansionSupported: Boolean = false,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
@@ -155,6 +157,7 @@ internal fun WalletScreen(
         jointAccountComponent = jointAccountComponent,
         behavior = behavior,
         isHideMarketingWhileSystemEnabled = isHideMarketingWhileSystemEnabled,
+        isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
         isShtorkaBlurEnabled = isShtorkaBlurEnabled,
         isShtorkaPartialExpansionSupported = isShtorkaPartialExpansionSupported,
         shtorkaHeaderContent = shtorkaHeaderContent,
@@ -192,6 +195,8 @@ private fun WalletContent(
     modifier: Modifier = Modifier,
     @RemoveWithToggle("TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED")
     isHideMarketingWhileSystemEnabled: Boolean = false,
+    @RemoveWithToggle("AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED")
+    isRedesignedAccountRowsEnabled: Boolean = false,
     isShtorkaBlurEnabled: () -> Boolean = { true },
     isShtorkaPartialExpansionSupported: Boolean = false,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
@@ -379,6 +384,7 @@ private fun WalletContent(
                                         currentWallet = currentWallet,
                                         listState = listState,
                                         isBalanceHidden = state.isHidingMode,
+                                        isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
                                         contentPadding = contentPadding,
                                         tangemPayComponent = tangemPayComponent,
                                         promoBannersBlockComponent = promoBannersBlockComponent?.takeIf {
