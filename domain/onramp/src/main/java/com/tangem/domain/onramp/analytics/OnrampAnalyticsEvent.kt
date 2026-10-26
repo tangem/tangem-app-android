@@ -16,7 +16,7 @@ import com.tangem.domain.onramp.model.OnrampSource
 
 sealed class OnrampAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(
     category = "Onramp",
     event = event,
@@ -154,8 +154,8 @@ sealed class OnrampAnalyticsEvent(
         event = "Errors",
         params = buildMap {
             put(TOKEN_PARAM, tokenSymbol)
-            providerName?.let { put(PROVIDER, providerName) }
-            paymentMethod?.let { put(PAYMENT_METHOD, paymentMethod) }
+            providerName?.let { put(PROVIDER, it) }
+            paymentMethod?.let { put(PAYMENT_METHOD, it) }
             put(ERROR_CODE, errorCode)
         },
     ), OtelIncludedEvent {

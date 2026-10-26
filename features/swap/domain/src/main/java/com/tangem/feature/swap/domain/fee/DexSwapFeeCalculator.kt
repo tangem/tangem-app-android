@@ -28,17 +28,21 @@ import com.tangem.domain.transaction.usecase.CreateTransactionDataExtrasUseCase
 import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
+import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.usecase.WrapYieldSwapCallDataWithUpgradeUseCase
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.domain.tron.toTransactionExtras
+import com.tangem.feature.swap.domain.tron.toTronGaslessSwapOrNull
 import com.tangem.feature.swap.domain.tron.tronSwapPayload
 import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
 import com.tangem.lib.crypto.BlockchainUtils.isPsbtSwapSupported
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.lib.crypto.BlockchainUtils.isTron
+import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -70,6 +74,8 @@ class DexSwapFeeCalculator(
     private val walletManagersFacade: WalletManagersFacade,
     private val patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
     private val wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase,
+    private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
+    private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
 ) {
 
     suspend fun calculate(
@@ -77,6 +83,7 @@ class DexSwapFeeCalculator(
         transaction: ExpressTransactionModel.DEX,
         selectedToken: CryptoCurrencyStatus? = null,
         permissionState: PermissionDataState = PermissionDataState.Empty,
+        isGasless: Boolean = false,
     ): Either<GetFeeError, DexFeeResult> = either {
         val networkRawId = fromSwapCurrencyStatus.currency.network.rawId
         val nativeCoinDecimals = Blockchain.fromNetworkId(networkRawId)?.decimals()
@@ -96,6 +103,11 @@ class DexSwapFeeCalculator(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 transaction = transaction,
                 otherNativeFee = otherNativeFee,
+            )
+            isTron(networkRawId) && isGasless -> calculateTronGaslessFee(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                transaction = transaction,
+                selectedToken = selectedToken,
             )
             isTron(networkRawId) -> calculateTronFee(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -239,6 +251,38 @@ class DexSwapFeeCalculator(
         return DexFeeResult(
             transactionFee = TransactionFeeResult.Loaded(fee),
             otherNativeFee = otherNativeFee,
+            gas = null,
+        )
+    }
+
+    private suspend fun Raise<GetFeeError>.calculateTronGaslessFee(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        transaction: ExpressTransactionModel.DEX,
+        selectedToken: CryptoCurrencyStatus?,
+    ): DexFeeResult {
+        val soldToken = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token
+            ?: raise(GetFeeError.GaslessError.NetworkIsNotSupported)
+        val hasBridgeFee = transaction.otherNativeFeeWei.orZero().signum() != 0
+        if (hasBridgeFee) raise(GetFeeError.GaslessError.NetworkIsNotSupported)
+        val feeToken = when (val selected = selectedToken?.currency) {
+            is CryptoCurrency.Token -> selected
+            is CryptoCurrency.Coin -> raise(GetFeeError.GaslessError.NetworkIsNotSupported)
+            null -> soldToken.takeIf {
+                isTronGaslessSupportedUseCase(soldToken.network, soldToken)
+            } ?: raise(GetFeeError.GaslessError.NoSupportedTokensFound)
+        }
+        val swap = transaction.toTronGaslessSwapOrNull(soldToken = soldToken)
+            ?: raise(GetFeeError.GaslessError.NetworkIsNotSupported)
+
+        val feeExtended = getTronGaslessFeeUseCase.forSwap(
+            userWalletId = fromSwapCurrencyStatus.userWalletId,
+            swap = swap,
+            feeToken = feeToken,
+        ).bind()
+
+        return DexFeeResult(
+            transactionFee = TransactionFeeResult.LoadedExtended(feeExtended),
+            otherNativeFee = BigDecimal.ZERO,
             gas = null,
         )
     }

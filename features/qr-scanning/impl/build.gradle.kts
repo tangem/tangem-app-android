@@ -17,7 +17,6 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.utils)
     implementation(projects.core.navigation)
-    implementation(projects.common.routing)
 
     implementation(deps.androidx.activity.compose)
     implementation(deps.lifecycle.compose)

@@ -2,14 +2,12 @@ package com.tangem.features.polymarket.impl.main.model.transformer
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PolymarketAccessMode
-import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchListState
-import com.tangem.domain.polymarket.model.PolymarketMarket
-import com.tangem.domain.polymarket.model.PolymarketOutcome
-import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.features.polymarket.impl.common.funding.RequisitesState
+import com.tangem.features.polymarket.impl.common.region.PredictionRegionStatus
+import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.features.polymarket.impl.main.model.PredictionBalanceMode
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
@@ -112,7 +110,7 @@ internal class PolymarketFeedContentTransformerTest {
             FooterModel(status = PaginationStatus.NextBatchLoading, expected = PolymarketFeedFooterUM.Loading::class),
             FooterModel(
                 status = PaginationStatus.Paginating(
-                    lastResult = BatchFetchResult.Success(data = batchOf(createEvent()), empty = false, last = false),
+                    lastResult = BatchFetchResult.Success(data = batchOf(createEvent()), isEmpty = false, isLast = false),
                 ),
                 expected = PolymarketFeedFooterUM.None::class,
             ),
@@ -121,6 +119,30 @@ internal class PolymarketFeedContentTransformerTest {
                 expected = PolymarketFeedFooterUM.Error::class,
             ),
             FooterModel(status = PaginationStatus.EndOfPagination, expected = PolymarketFeedFooterUM.None::class),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class EmptyFeed {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun transformEmptyFeed(model: EmptyFeedModel) {
+            // Act
+            val actual = transform(PolymarketEventsBatchListState(data = emptyList(), status = model.status))
+
+            // Assert
+            assertThat(actual.content).isEqualTo(PolymarketMainUM.ContentUM.Empty)
+        }
+
+        private fun provideTestModels(): List<EmptyFeedModel> = listOf(
+            EmptyFeedModel(status = PaginationStatus.EndOfPagination),
+            EmptyFeedModel(
+                status = PaginationStatus.Paginating(
+                    lastResult = BatchFetchResult.Success(data = batchOf(), isEmpty = true, isLast = false),
+                ),
+            ),
         )
     }
 
@@ -193,6 +215,8 @@ internal class PolymarketFeedContentTransformerTest {
 
     internal data class InitialLoadingModel(val status: PaginationStatus<PolymarketEventsBatch>)
 
+    internal data class EmptyFeedModel(val status: PaginationStatus<PolymarketEventsBatch>)
+
     internal data class FooterModel(
         val status: PaginationStatus<PolymarketEventsBatch>,
         val expected: KClass<out PolymarketFeedFooterUM>,
@@ -208,49 +232,9 @@ internal class PolymarketFeedContentTransformerTest {
         requestCursor = null,
     )
 
-    private fun createEvent(id: String = "event-1"): PolymarketEvent = PolymarketEvent(
+    private fun createEvent(id: String = "event-1"): PolymarketEvent = createPolymarketEvent(
         id = id,
         slug = "$id-slug",
-        title = "Event title",
-        description = "Event description",
-        rulesUrl = "https://polymarket.com/rules",
-        iconUrl = null,
-        imageUrl = null,
-        status = PolymarketStatus.ACTIVE,
-        startDate = null,
-        endDate = null,
-        volume = null,
-        volume24h = null,
-        liquidity = null,
-        totalMarketsCount = 1,
-        isNegRisk = false,
-        isLive = false,
-        displayMode = PolymarketDisplayMode.PLAIN_MARKETS,
-        markets = listOf(
-            PolymarketMarket(
-                id = "market-1",
-                conditionId = null,
-                eventId = id,
-                title = "Market question",
-                slug = "market-slug",
-                description = "Market description",
-                groupItemTitle = null,
-                iconUrl = null,
-                imageUrl = null,
-                status = PolymarketStatus.ACTIVE,
-                isNegRisk = false,
-                isAcceptingOrders = true,
-                startDate = null,
-                endDate = null,
-                startDateIso = null,
-                endDateIso = null,
-                volume = null,
-                volume24h = null,
-                liquidity = null,
-                orderIndex = 0,
-                outcomes = listOf(PolymarketOutcome(assetId = "asset-1", title = "Yes", probability = null)),
-            ),
-        ),
     )
 
     private companion object {
@@ -261,12 +245,12 @@ internal class PolymarketFeedContentTransformerTest {
                         status = PredictionAccountStatusValue.Loading,
                         positions = PredictionPositionsValue.Unknown,
                         requisites = RequisitesState.Loading,
-                        isTradingAllowed = false,
+                        regionStatus = PredictionRegionStatus.UNKNOWN,
                         mode = PredictionBalanceMode.AVAILABLE,
                     ),
                 ),
             categories = persistentListOf(
-                PolymarketCategoryTabUM(id = 1, label = "Politics", isSelected = true, onClick = {}),
+                PolymarketCategoryTabUM(id = 1, label = "Politics", icon = null, isSelected = true, onClick = {}),
             ),
             content = PolymarketMainUM.ContentUM.Loading,
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),

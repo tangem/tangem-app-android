@@ -29,6 +29,7 @@ import com.tangem.core.ui.res.generated.icons.ic_dot_24_filled
 import com.tangem.core.ui.res.generated.icons.ic_triangle_down_28
 import com.tangem.core.ui.res.generated.icons.ic_triangle_up_28
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardIcon
+import com.tangem.features.polymarket.impl.common.ui.polymarketPnlColor
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM.Summary
 
 @Composable
@@ -89,11 +90,7 @@ internal fun PolymarketPositionSummary(state: Summary, modifier: Modifier = Modi
 
 @Composable
 private fun PositionPnl(state: TangemPriceChange.State) {
-    val color = when (state.direction) {
-        TangemPriceChange.Direction.Up -> TangemTheme.colors3.text.accent.blue
-        TangemPriceChange.Direction.Down -> TangemTheme.colors3.text.accent.red
-        TangemPriceChange.Direction.Neutral -> TangemTheme.colors3.text.tertiary
-    }
+    val color = state.direction.polymarketPnlColor()
     val icon = when (state.direction) {
         TangemPriceChange.Direction.Up -> Icons.ic_triangle_up_28
         TangemPriceChange.Direction.Down -> Icons.ic_triangle_down_28

@@ -1,6 +1,7 @@
 package com.tangem.domain.models.account
 
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.TotalFiatBalance
 import kotlinx.serialization.Serializable
 
 /**
@@ -51,14 +52,18 @@ sealed class JointAccountStatusValue {
     ) : JointAccountStatusValue()
 
     /**
-     * Every slot is taken and the Safe address is computed; the creator has yet to activate the account.
+     * Every slot is taken and the Safe address is computed; the members have yet to confirm it.
      *
-     * @property totalMembers slots of the account, all of them taken in this state
+     * @property totalMembers    slots of the account, all of them taken in this state
+     * @property verifiedMembers members who confirmed the shared address
+     * @property isOwnVerified   this wallet confirmed the shared address
      */
     @Serializable
     data class Confirming(
         override val source: StatusSource,
         val totalMembers: Int,
+        val verifiedMembers: Int = 0,
+        val isOwnVerified: Boolean = false,
     ) : JointAccountStatusValue()
 
     /**
@@ -86,6 +91,24 @@ sealed class JointAccountStatusValue {
          */
         @Serializable
         data object Unavailable : Error() {
+            override val source: StatusSource = StatusSource.ACTUAL
+        }
+
+        /**
+         * The composition the backend states does not verify: this wallet's owner address is not among the members,
+         * or the Safe address does not follow from them. Nothing can be done with the account, and its tokens stay
+         * out of every flow; only the row is shown, so its figures travel here instead of in a token list.
+         *
+         * @property totalMembers members of the account
+         * @property tokensCount  tokens the account holds
+         * @property fiatBalance  what those tokens are worth, kept out of the wallet total
+         */
+        @Serializable
+        data class Compromised(
+            val totalMembers: Int,
+            val tokensCount: Int,
+            val fiatBalance: TotalFiatBalance,
+        ) : Error() {
             override val source: StatusSource = StatusSource.ACTUAL
         }
     }

@@ -26,6 +26,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.ui.R
@@ -63,7 +64,7 @@ internal fun GiveApprovalContent(
             color = TangemTheme.colors.text.secondary,
             style = TangemTheme.typography.body2,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing24),
+            modifier = Modifier.padding(horizontal = 24.dp),
         )
 
         SpacerH16()
@@ -79,7 +80,7 @@ internal fun GiveApprovalContent(
             isResetApproval = uiState.isResetApproval,
         )
 
-        SpacerH(height = TangemTheme.dimens.spacing20)
+        SpacerH(height = 20.dp)
 
         if (uiState.isHoldToConfirm) {
             HoldToConfirmButton(
@@ -89,7 +90,7 @@ internal fun GiveApprovalContent(
                 onConfirm = onApproveClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = TangemTheme.dimens.spacing16)
+                    .padding(horizontal = 16.dp)
                     .testTag(GiveApprovalTestTags.APPROVE_BUTTON),
             )
         } else {
@@ -99,7 +100,7 @@ internal fun GiveApprovalContent(
                 showProgress = uiState.isApproveLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = TangemTheme.dimens.spacing16)
+                    .padding(horizontal = 16.dp)
                     .testTag(GiveApprovalTestTags.APPROVE_BUTTON),
                 onClick = onApproveClick,
                 enabled = uiState.isApproveButtonEnabled,
@@ -139,7 +140,7 @@ private fun ApprovalInfo(
                 },
             )
         },
-        modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+        modifier = Modifier.padding(horizontal = 16.dp),
     ) {
         AmountItem(
             currency = currency,
@@ -155,7 +156,7 @@ private fun ApprovalInfo(
         } else {
             feeFooter
         },
-        modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+        modifier = Modifier.padding(horizontal = 16.dp),
     ) {
         feeSelectorBlockComponent.Content(
             modifier = Modifier
@@ -190,10 +191,10 @@ private fun AmountItem(
                 .fillMaxWidth()
                 .onSizeChanged { amountSize = it }
                 .padding(
-                    top = TangemTheme.dimens.spacing16,
-                    bottom = TangemTheme.dimens.spacing16,
-                    start = TangemTheme.dimens.spacing12,
-                    end = TangemTheme.dimens.spacing12,
+                    top = 16.dp,
+                    bottom = 16.dp,
+                    start = 12.dp,
+                    end = 12.dp,
                 ),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
@@ -215,7 +216,7 @@ private fun AmountItem(
                 painter = rememberVectorPainter(ImageVector.vectorResource(id = R.drawable.ic_chevron_24)),
                 contentDescription = null,
                 tint = TangemTheme.colors.icon.informative,
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing2),
+                modifier = Modifier.padding(start = 2.dp),
             )
         }
         DropdownSelector(
@@ -248,7 +249,7 @@ private fun DropdownSelector(
 
     MaterialTheme(
         colorScheme = MaterialTheme.colorScheme.copy(surface = TangemTheme.colors.background.action),
-        shapes = MaterialTheme.shapes.copy(extraSmall = RoundedCornerShape(TangemTheme.dimens.radius16)),
+        shapes = MaterialTheme.shapes.copy(extraSmall = RoundedCornerShape(16.dp)),
     ) {
         DropdownMenu(
             expanded = isExpanded,
@@ -289,7 +290,7 @@ private fun DropdownSelector(
                                 ),
                                 tint = color,
                                 contentDescription = null,
-                                modifier = Modifier.padding(start = TangemTheme.dimens.size20),
+                                modifier = Modifier.padding(start = 20.dp),
                             )
                         }
                     },

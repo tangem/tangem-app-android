@@ -125,6 +125,11 @@ object BlockchainUtils {
         return blockchain == Blockchain.Arbitrum
     }
 
+    fun isAvalanche(networkId: String): Boolean {
+        val blockchain = networkId.toBlockchain()
+        return blockchain == Blockchain.Avalanche || blockchain == Blockchain.AvalancheTestnet
+    }
+
     fun isSolana(networkId: String): Boolean {
         val blockchain = networkId.toBlockchain()
         return blockchain == Blockchain.Solana

@@ -50,13 +50,32 @@ internal class GoogleIdentityAuthorizer @Inject constructor(
     @Volatile
     private var selectedAccount: Account? = null
 
-    @Suppress("TooGenericExceptionCaught")
+    override val selectedAccountName: String?
+        get() = selectedAccount?.name
+
     override suspend fun authorize(
         scopes: List<GoogleAuthScope>,
         interactive: Boolean,
     ): Either<GoogleAuthError, GoogleAuthResult> {
+        return authorizeWith(scopes, interactive) { resolveAccount(interactive) }
+    }
+
+    override suspend fun authorizeAccount(
+        accountName: String?,
+        scopes: List<GoogleAuthScope>,
+        interactive: Boolean,
+    ): Either<GoogleAuthError, GoogleAuthResult> {
+        return authorizeWith(scopes, interactive) { accountName?.let(::googleAccount).right() }
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private suspend fun authorizeWith(
+        scopes: List<GoogleAuthScope>,
+        interactive: Boolean,
+        resolveAccount: suspend () -> Either<GoogleAuthError, Account?>,
+    ): Either<GoogleAuthError, GoogleAuthResult> {
         return try {
-            val account = resolveAccount(interactive).getOrElse { return it.left() }
+            val account = resolveAccount().getOrElse { return it.left() }
             val requestBuilder = AuthorizationRequest.builder()
                 .setRequestedScopes(scopes.map { Scope(it.value) })
             if (account != null) requestBuilder.setAccount(account)
@@ -85,8 +104,10 @@ internal class GoogleIdentityAuthorizer @Inject constructor(
     }
 
     override fun selectAccount(accountName: String) {
-        selectedAccount = Account(accountName, GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE)
+        selectedAccount = googleAccount(accountName)
     }
+
+    private fun googleAccount(name: String): Account = Account(name, GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE)
 
     override fun clearAuthorization() {
         selectedAccount = null
@@ -119,7 +140,7 @@ internal class GoogleIdentityAuthorizer @Inject constructor(
         val name = result.data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)
             ?: return GoogleAuthError.AuthCanceled.left()
 
-        val account = Account(name, GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE)
+        val account = googleAccount(name)
         selectedAccount = account
         return account.right()
     }
@@ -192,8 +213,12 @@ internal class GoogleIdentityAuthorizer @Inject constructor(
     private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { continuation ->
         addOnSuccessListener { if (continuation.isActive) continuation.resume(it) }
         addOnFailureListener { if (continuation.isActive) continuation.resumeWithException(it) }
-        addOnCanceledListener { continuation.cancel() }
+        // Google Play services cancelled the task, not the caller: a CancellationException would stop a caller
+        // that is still active without telling it why, so it surfaces as an ordinary failure instead
+        addOnCanceledListener { if (continuation.isActive) continuation.resumeWithException(TaskCanceledException()) }
     }
+
+    private class TaskCanceledException : Exception("Google Play services cancelled the authorization task")
 
     private companion object {
         const val TAG = "GoogleIdentityAuthorizer"

@@ -14,6 +14,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import io.mockk.clearMocks
@@ -163,18 +164,20 @@ internal class TronGaslessSentAmountQuoterTest {
                 normal = Fee.Common(amount = Amount(token = usdtToken, value = compensationValue)),
             ),
             feeTokenId = usdtCurrency.id,
-            tronGaslessQuote = TronGaslessQuote(
-                quoteId = "q_$quotedAmount",
-                quotedAmountRaw = BigDecimal(quotedAmount).movePointRight(usdtToken.decimals).toBigInteger(),
-                quotedToAddress = "TTo",
-                feeRecipient = "TFee",
-                compensationToken = usdtContract,
-                compensationAmountRaw = compensationValue.movePointRight(usdtToken.decimals).toBigInteger(),
-                compensationAmountDecimal = compensationValue,
-                energy = 1,
-                bandwidth = 1,
-                trxCost = BigDecimal.ONE,
-                expiresAtEpochMs = 1,
+            gaslessProtocolData = GaslessProtocolData.Tron(
+                quote = TronGaslessQuote(
+                    quoteId = "q_$quotedAmount",
+                    quotedAmountRaw = BigDecimal(quotedAmount).movePointRight(usdtToken.decimals).toBigInteger(),
+                    quotedToAddress = "TTo",
+                    feeRecipient = "TFee",
+                    compensationToken = usdtContract,
+                    compensationAmountRaw = compensationValue.movePointRight(usdtToken.decimals).toBigInteger(),
+                    compensationAmountDecimal = compensationValue,
+                    energy = 1,
+                    bandwidth = 1,
+                    trxCost = BigDecimal.ONE,
+                    expiresAtEpochMs = 1,
+                ),
             ),
         )
     }

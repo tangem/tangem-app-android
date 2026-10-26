@@ -134,7 +134,7 @@ internal class DefaultWcSessionsManager(
                 .find { account -> account.accountId == storeSession.accountId } as? Account.Personal
                 ?: return@mapNotNull null
             val networks = wcNetworksConverter.findWalletNetworks(wallet, account, sdkSession)
-            val originUrl = storeSession.url ?: sdkSession.metaData?.url ?: ""
+            val originUrl = storeSession.url ?: sdkSession.metaData?.url.orEmpty()
             WcSession(
                 wallet = wallet,
                 sdkModel = WcSdkSessionConverter.convert(
@@ -147,7 +147,7 @@ internal class DefaultWcSessionsManager(
                 networks = networks,
                 account = account,
                 connectingTime = storeSession.connectingTime,
-                showWalletInfo = wallets.size > 1,
+                shouldShowWalletInfo = wallets.size > 1,
             )
         }
         return wcSessions
@@ -160,34 +160,34 @@ internal class DefaultWcSessionsManager(
     ): Boolean {
         val unknownStoredSessions = storeSessions
             .filterNot { dto -> wcSessions.any { it.sdkModel.topic == dto.topic } }
-        val haveSomeUnknown = unknownStoredSessions.isNotEmpty()
+        val hasSomeUnknown = unknownStoredSessions.isNotEmpty()
         val unknownSdkSessions = inSdkSessions
             .filterNot { sdkSession -> wcSessions.any { it.sdkModel.topic == sdkSession.topic } }
-        val haveSomeUnknownSdkSessions = unknownSdkSessions.isNotEmpty()
+        val hasSomeUnknownSdkSessions = unknownSdkSessions.isNotEmpty()
 
-        if (haveSomeUnknown) {
+        if (hasSomeUnknown) {
             TangemLogger.withTag(WC_TAG).i("removeUnknownSessions $unknownStoredSessions")
             store.removeSessions(unknownStoredSessions.toSet())
         }
 
         val emptyNetworkSessions = wcSessions.filter { it.networks.isEmpty() }
         val emptyNetworksDto = storeSessions
-            .filter { dto -> emptyNetworkSessions.find { it.sdkModel.topic == dto.topic } != null }
+            .filter { dto -> emptyNetworkSessions.any { it.sdkModel.topic == dto.topic } }
             .toSet()
-        val haveEmptySessions = emptyNetworkSessions.isNotEmpty()
-        val haveEmptyDto = emptyNetworksDto.isNotEmpty()
+        val hasEmptySessions = emptyNetworkSessions.isNotEmpty()
+        val hasEmptyDto = emptyNetworksDto.isNotEmpty()
 
-        if (haveEmptyDto) {
+        if (hasEmptyDto) {
             TangemLogger.withTag(WC_TAG).i("remove sessions without networks $emptyNetworksDto")
             store.removeSessions(emptyNetworksDto)
         }
-        if (haveEmptySessions) {
+        if (hasEmptySessions) {
             emptyNetworkSessions.forEach { scope.launch { sdkDisconnectSession(it.sdkModel.topic) } }
         }
-        if (haveSomeUnknownSdkSessions) {
+        if (hasSomeUnknownSdkSessions) {
             unknownSdkSessions.forEach { scope.launch { sdkDisconnectSession(it.topic) } }
         }
-        return haveSomeUnknown || haveEmptyDto
+        return hasSomeUnknown || hasEmptyDto
     }
 
     private fun extendSessions() {

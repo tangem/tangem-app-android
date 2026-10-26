@@ -43,6 +43,8 @@ internal class TokenReceiveModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), TokenReceiveModelCallback {
 
+    val params = paramsContainer.require<TokenReceiveComponent.Params>()
+
     private val tokenReceiveStateFactory: TokenReceiveStateFactory by lazy {
         TokenReceiveStateFactory(
             cryptoCurrency = params.config.cryptoCurrency,
@@ -52,8 +54,6 @@ internal class TokenReceiveModel @Inject constructor(
             tokenReceiveType = params.config.type,
         )
     }
-
-    val params = paramsContainer.require<TokenReceiveComponent.Params>()
 
     val stackNavigation = StackNavigation<TokenReceiveRoutes>()
 

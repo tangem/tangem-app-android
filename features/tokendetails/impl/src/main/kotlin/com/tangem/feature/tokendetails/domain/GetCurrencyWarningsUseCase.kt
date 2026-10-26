@@ -165,7 +165,7 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
     ): Boolean {
         if (currencyChecksRepository.isNetworkSupportedForGaslessTx(coinStatus.currency.network)) return true
 
-        return isTronGaslessSupportedUseCase.isTokenSupported(
+        return isTronGaslessSupportedUseCase(
             network = tokenStatus.currency.network,
             currency = tokenStatus.currency,
         )

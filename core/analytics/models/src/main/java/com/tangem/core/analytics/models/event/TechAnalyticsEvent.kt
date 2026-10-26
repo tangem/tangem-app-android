@@ -10,7 +10,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
  */
 sealed class TechAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = "Tech", event = event, params = params) {
 
     class WindowObscured(state: ObscuredState) : TechAnalyticsEvent(
@@ -28,8 +28,8 @@ sealed class TechAnalyticsEvent(
         event = "Keyboard Identifier",
         params = buildMap {
             put("Id", id)
-            packageName?.let {
-                put("Package", it)
+            packageName?.let { appPackage ->
+                put("Package", appPackage)
                 put("GPUrl", "https://play.google.com/store/apps/details?id=$packageName")
             }
             put("isTrusted", isTrusted.toString())

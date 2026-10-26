@@ -208,7 +208,7 @@ private fun UnableToLoadCard(onRetryClick: (() -> Unit)?) {
 
 @Composable
 private fun RecipientAvatar(initial: String) {
-    IconCircle(background = TangemTheme.colors3.bg.opaque.secondary) {
+    IconCircle(background = TangemTheme.colors3.bg.transparent.secondary) {
         Text(
             text = initial,
             style = TangemTheme.typography3.body.medium,

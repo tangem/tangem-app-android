@@ -34,9 +34,6 @@ internal class TesterActionsViewModel @Inject constructor(
     private val usedeskTokenTtlManager: UsedeskTokenTtlManager,
 ) : ViewModel() {
 
-    var uiState: TesterActionsContentState by mutableStateOf(initialState)
-        private set
-
     private val initialState: TesterActionsContentState
         get() = TesterActionsContentState(
             hideAllCurrenciesUM = HideAllCurrenciesUM.Clickable(this::hideAllCurrencies),
@@ -53,6 +50,9 @@ internal class TesterActionsViewModel @Inject constructor(
             shareLogsUM = TesterActionsContentState.ShareLogsUM(file = feedbackRepository.getLogFile()),
             onBackClick = { /* no-op */ },
         )
+
+    var uiState: TesterActionsContentState by mutableStateOf(initialState)
+        private set
 
     init {
         bootstrapHotWalletRestrictionUpdates()

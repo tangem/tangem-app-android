@@ -1,6 +1,7 @@
 package com.tangem.features.jointaccount.main.state.transformers
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
@@ -15,14 +16,16 @@ internal class ClearMembersAccountTransformerTest {
         val topBar = JointAccountMembersUM.TopBarUM.Titled(title = stringReference("Members"), onBackClick = {})
         val prevState = createMembersUM(
             topBar = topBar,
-            header = JointAccountMembersUM.HeaderUM(
-                title = stringReference("Invite members"),
-                progress = stringReference("1 of 3"),
-            ),
-            shareSafely = JointAccountMembersUM.ShareSafelyUM(
-                title = stringReference("Share invites safely"),
-                description = stringReference(""),
-                onClick = {},
+            header = JointAccountMembersUM.HeaderUM(title = stringReference("Invite members")),
+            summaryCard = JointAccountMembersUM.SummaryCardUM(
+                icon = AccountIconUM.CryptoPortfolio(
+                    value = CryptoPortfolioIcon.Icon.Family,
+                    color = CryptoPortfolioIcon.Color.Azure,
+                ),
+                name = stringReference("Family"),
+                membersCount = stringReference("3 members"),
+                approvals = stringReference("Any 2 of 3"),
+                onApprovalsInfoClick = {},
             ),
             joined = persistentListOf(
                 JointAccountMembersUM.MemberUM.Joined(
@@ -32,7 +35,9 @@ internal class ClearMembersAccountTransformerTest {
                         color = CryptoPortfolioIcon.Color.Azure,
                     ),
                     name = stringReference("Ivan"),
-                    role = stringReference("Creator"),
+                    isYou = true,
+                    isCreator = true,
+                    status = JointAccountMembersUM.MemberStatusUM.Joined,
                     onInfoClick = {},
                 ),
             ),
@@ -40,13 +45,18 @@ internal class ClearMembersAccountTransformerTest {
                 JointAccountMembersUM.MemberUM.FreeSlot(
                     id = "slot_0",
                     title = stringReference(""),
-                    status = stringReference(""),
-                    canInvite = true,
-                    onInviteClick = {},
+                    status = JointAccountMembersUM.SlotStatusUM.NotInvited,
+                    action = JointAccountMembersUM.SlotActionUM.Invite(onClick = {}),
                 ),
             ),
-            otherMembersLabel = stringReference("Other members"),
-            activateButton = JointAccountMembersUM.ActivateButtonUM(walletIconRes = null, isLoading = false, onClick = {}),
+            membersLabel = stringReference("Members"),
+            footer = JointAccountMembersUM.FooterUM(
+                hint = null,
+                button = JointAccountMembersUM.ConfirmButtonUM(
+                    isEnabled = true,
+                    onClick = {},
+                ),
+            ),
         )
 
         // Act
@@ -55,10 +65,10 @@ internal class ClearMembersAccountTransformerTest {
         // Assert
         assertThat(actual.topBar).isEqualTo(topBar)
         assertThat(actual.header).isNull()
-        assertThat(actual.shareSafely).isNull()
+        assertThat(actual.summaryCard).isNull()
         assertThat(actual.joined).isEmpty()
         assertThat(actual.freeSlots).isEmpty()
-        assertThat(actual.otherMembersLabel).isNull()
-        assertThat(actual.activateButton).isNull()
+        assertThat(actual.membersLabel).isNull()
+        assertThat(actual.footer).isNull()
     }
 }
