@@ -105,13 +105,28 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     ) { isSkipped, hasSocialBackup -> isSkipped && !hasSocialBackup }
         .distinctUntilChanged()
 
-    private fun accountStatusListWithPromoFlow(userWallet: UserWallet): Flow<Pair<AccountStatusList, Boolean>> {
+    private fun accountStateFlow(userWallet: UserWallet): Flow<AccountState> {
         val params = SingleAccountStatusListProducer.Params(userWallet.walletId)
 
         return combine(
             accountDependencies.singleAccountStatusListSupplier(params),
             onboardingRepository.isMainOnboardingBannerHidden(userWallet.walletId).distinctUntilChanged(),
             ::Pair,
+        )
+            .runningFold(initial = null, operation = ::reduceAccountState)
+            .filterNotNull()
+    }
+
+    private fun reduceAccountState(previous: AccountState?, update: Pair<AccountStatusList, Boolean>): AccountState {
+        val (accountList, isTangemPayPromoHidden) = update
+
+        return AccountState(
+            accountList = accountList,
+            isOutdatedDataShown = nextOutdatedDataShown(
+                totalFiatBalance = accountList.totalFiatBalance,
+                wasShown = previous?.isOutdatedDataShown == true,
+            ),
+            isTangemPayPromoHidden = isTangemPayPromoHidden,
         )
     }
 
@@ -132,7 +147,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
         return combine7(
-            flow1 = accountStatusListWithPromoFlow(userWallet),
+            flow1 = accountStateFlow(userWallet),
             flow2 = isNeedToBackupUseCase(userWallet.walletId).distinctUntilChanged(),
             flow3 = isAccessCodeSkipHonouredFlow(userWallet),
             flow4 = assetsDiscoveryProgressFlow(userWallet),
@@ -148,7 +163,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                 activationState,
                 upgradeBannerPrefs,
             ->
-            val (accountList, isTangemPayPromoHidden) = accountState
+            val (accountList, isOutdatedDataShown, isTangemPayPromoHidden) = accountState
             val (activationWallet, isWalletBackedUp) = activationState
             val (shouldShowUpgradeBanner, upgradeBannerClosureTimestamp) = upgradeBannerPrefs
 
@@ -163,7 +178,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             val isAddFundsBannerShown = isAddFundsBannerVisible(totalFiatBalance)
 
             val notifications = buildList {
-                addUsedOutdatedDataNotification(totalFiatBalance)
+                addUsedOutdatedDataNotification(isOutdatedDataShown = isOutdatedDataShown)
 
                 addAddFundsBanner(
                     isVisible = isAddFundsBannerShown,
@@ -258,11 +273,19 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         )
     }
 
-    private fun MutableList<WalletNotificationUM>.addUsedOutdatedDataNotification(totalFiatBalance: TotalFiatBalance) {
-        addIf(
-            element = WalletNotificationUM.UsedOutdatedData,
-            condition = (totalFiatBalance as? TotalFiatBalance.Loaded)?.source == StatusSource.ONLY_CACHE,
-        )
+    /** A refresh resets the source from cache-only to cache, so the banner is kept until the data is actual */
+    private fun nextOutdatedDataShown(totalFiatBalance: TotalFiatBalance, wasShown: Boolean): Boolean {
+        val source = (totalFiatBalance as? TotalFiatBalance.Loaded)?.source
+
+        return when (source) {
+            StatusSource.ONLY_CACHE -> true
+            StatusSource.CACHE -> wasShown
+            StatusSource.ACTUAL, null -> false
+        }
+    }
+
+    private fun MutableList<WalletNotificationUM>.addUsedOutdatedDataNotification(isOutdatedDataShown: Boolean) {
+        addIf(element = WalletNotificationUM.UsedOutdatedData, condition = isOutdatedDataShown)
     }
 
     private fun isAddFundsBannerVisible(totalFiatBalance: TotalFiatBalance): Boolean {
@@ -558,6 +581,12 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             .distinctUntilChanged()
             .firstOrNull() == true
     }
+
+    private data class AccountState(
+        val accountList: AccountStatusList,
+        val isOutdatedDataShown: Boolean,
+        val isTangemPayPromoHidden: Boolean,
+    )
 
     private companion object {
         const val MAX_REMAINING_SIGNATURES_COUNT = 10
