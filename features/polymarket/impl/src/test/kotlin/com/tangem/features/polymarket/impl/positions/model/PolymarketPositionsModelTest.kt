@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.positions.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
@@ -209,6 +210,49 @@ internal class PolymarketPositionsModelTest {
         // Assert
         verify(exactly = 1) { finished.resume(any()) }
     }
+
+    @Test
+    fun `GIVEN a positions screen WHEN pulled to refresh THEN refreshes only the visible tab`() = runTest {
+        // Arrange
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        model.uiState.value.onTabSelect(Tab.Finished)
+        runCurrent()
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        model.onPause()
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+
+        // Assert
+        verify(exactly = 1) { active.refresh() }
+        verify(exactly = 1) { finished.refresh() }
+    }
+
+    @Test
+    fun `GIVEN Active refreshing WHEN switching to Finished THEN old progress and errors cannot replace its state`() =
+        runTest {
+            // Arrange
+            val model = createModel()
+            model.onResume()
+            activeState.value = FilteredContent(content = activeContent, isRefreshing = true)
+            runCurrent()
+            val refreshing = model.uiState.value
+
+            // Act
+            model.uiState.value.onTabSelect(Tab.Finished)
+            runCurrent()
+            activeState.value = FilteredContent(content = activeContent, onRefreshRetry = {})
+            runCurrent()
+
+            // Assert
+            assertThat(refreshing.pullToRefreshConfig.isRefreshing).isTrue()
+            assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+            assertThat(model.uiState.value.onRefreshRetry).isNull()
+            assertThat(model.uiState.value.content).isEqualTo(Content.Empty)
+        }
 
     @Test
     fun `GIVEN positions screen WHEN back tapped THEN pops the feature stack`() = runTest {

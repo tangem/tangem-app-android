@@ -1,14 +1,17 @@
 package com.tangem.features.tangempay.account
 
-import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
+import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayTariffPlanState
+import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.account.feeCurrencyOrDefault
 import com.tangem.domain.models.account.isPlanTransitioningState
 import com.tangem.domain.models.pay.TangemPayCard
@@ -33,6 +36,7 @@ internal class TangemPayDetailsStateFactory(
     private val onBack: () -> Unit,
     private val onOpenMenu: () -> Unit,
     private val intents: TangemPayDetailIntents,
+    private val isVisaOnrampV2Enabled: () -> Boolean,
 ) {
     private val notificationFactory = TangemPayDetailsNotificationFactory(intents = intents)
 
@@ -120,7 +124,25 @@ internal class TangemPayDetailsStateFactory(
             isBalanceHidden = false,
             messageBanner = (errorNotification ?: tiersNotification)?.let(::MessageBannerUM),
             cashbackBlockState = null,
+            bankTransferOnrampBanner = createBankTransferOnrampBanner(status.virtualAccount),
         )
+    }
+
+    private fun createBankTransferOnrampBanner(virtualAccount: VirtualAccountOnramp?): MessageBannerUM? {
+        if (!isVisaOnrampV2Enabled()) return null
+        return when (virtualAccount) {
+            VirtualAccountOnramp.Processing -> MessageBannerUM(
+                state = notificationFactory.createBankTransferOnrampCreatingBannerState(),
+            )
+            VirtualAccountOnramp.Failed -> MessageBannerUM(
+                state = notificationFactory.createBankTransferOnrampFailedBannerState(),
+                onClose = intents::onBankTransferOnrampFailedBannerDismissed,
+            )
+            VirtualAccountOnramp.Eligible,
+            is VirtualAccountOnramp.Available,
+            null,
+            -> null
+        }
     }
 
     /**
@@ -363,21 +385,17 @@ internal class TangemPayDetailsStateFactory(
         return persistentListOf(
             TangemPayActionButtonUM(
                 action = TangemPayAction.AddFunds,
-                config = ActionButtonConfig(
-                    text = resourceReference(id = R.string.tangempay_card_details_add_funds),
-                    iconResId = R.drawable.ic_arrow_down_24,
-                    onClick = intents::onClickAddFunds,
-                    isEnabled = isAddFundsEnabled,
-                ),
+                text = resourceReference(id = R.string.tangempay_card_details_add_funds),
+                icon = TangemIconUM.Icon(imageVector = Icons.ic_arrow_down_24),
+                onClick = intents::onClickAddFunds,
+                isEnabled = isAddFundsEnabled,
             ),
             TangemPayActionButtonUM(
                 action = TangemPayAction.Withdraw,
-                config = ActionButtonConfig(
-                    text = resourceReference(id = R.string.tangempay_card_details_withdraw),
-                    iconResId = R.drawable.ic_arrow_up_24,
-                    onClick = intents::onClickWithdraw,
-                    isEnabled = isWithdrawEnabled,
-                ),
+                text = resourceReference(id = R.string.tangempay_card_details_withdraw),
+                icon = TangemIconUM.Icon(imageVector = Icons.ic_arrow_up_24),
+                onClick = intents::onClickWithdraw,
+                isEnabled = isWithdrawEnabled,
             ),
         )
     }

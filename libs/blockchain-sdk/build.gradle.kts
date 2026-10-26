@@ -22,6 +22,8 @@ dependencies {
 
     // region Kotlin
     api(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization)
+    implementation(deps.kotlin.serialization.core)
     // endregion
 
     // region AndroidX
@@ -67,5 +69,6 @@ dependencies {
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
+    testImplementation(projects.test.core)
     // endregion
 }

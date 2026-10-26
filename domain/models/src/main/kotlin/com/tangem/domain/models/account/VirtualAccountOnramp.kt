@@ -31,4 +31,18 @@ sealed interface VirtualAccountOnramp {
      */
     @Serializable
     data object Processing : VirtualAccountOnramp
+
+    @Serializable
+    data object Failed : VirtualAccountOnramp
 }
+
+val VirtualAccountOnramp?.isOrderRequired: Boolean
+    get() = when (this) {
+        VirtualAccountOnramp.Eligible,
+        VirtualAccountOnramp.Failed,
+        -> true
+        is VirtualAccountOnramp.Available,
+        VirtualAccountOnramp.Processing,
+        null,
+        -> false
+    }

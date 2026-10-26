@@ -28,4 +28,7 @@ data class SessionTokens(
     val refreshToken: String?,
     val refreshTokenExpiresAt: Instant?,
     val walletIds: List<String>,
-)
+) {
+
+    override fun toString(): String = "SessionTokens(***)"
+}

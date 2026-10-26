@@ -97,7 +97,6 @@ internal class PolymarketWalletBlockConverterTest {
     ) = PredictionAccountStatusValue.Active(
         source = source,
         balance = BigDecimal.TEN,
-        positionsValue = null,
         fiatRate = fiatRate,
         depositCurrency = mockk(relaxed = true),
         depositAddress = null,

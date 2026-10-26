@@ -10,6 +10,10 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.AfterEach
@@ -168,12 +172,101 @@ internal class DefaultJointAccountInvitesStoreTest {
     }
 
     @Test
-    fun `GIVEN stored accounts WHEN clearAll THEN the wallet entry is deleted`() = runTest {
+    fun `GIVEN stored accounts WHEN clearAll THEN the wallet entries are deleted`() = runTest {
         // Act
         store.clearAll(userWalletId = USER_WALLET_ID)
 
         // Assert
         verify(exactly = 1) { secureStorage.delete(EXPECTED_KEY) }
+        verify(exactly = 1) { secureStorage.delete(EXPECTED_SHARED_KEY) }
+    }
+
+    @Test
+    fun `GIVEN nothing shared WHEN getShared THEN returns empty`() = runTest {
+        // Arrange
+        val store = createStore(InMemorySecureStorage())
+
+        // Act
+        val actual = store.observeShared(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID).first()
+
+        // Assert
+        assertThat(actual).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN an invite shared twice WHEN getShared THEN it is listed once under its own account`() = runTest {
+        // Arrange
+        val store = createStore(InMemorySecureStorage())
+
+        // Act
+        store.markShared(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID, inviteId = INVITES[0])
+        store.markShared(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID, inviteId = INVITES[0])
+        store.markShared(userWalletId = USER_WALLET_ID, cryptoAccountId = OTHER_ACCOUNT_ID, inviteId = OTHER_INVITES[0])
+
+        // Assert
+        assertThat(store.observeShared(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID).first())
+            .containsExactly(INVITES[0])
+        assertThat(store.observeShared(userWalletId = USER_WALLET_ID, cryptoAccountId = OTHER_ACCOUNT_ID).first())
+            .containsExactly(OTHER_INVITES[0])
+    }
+
+    @Test
+    fun `GIVEN an observer WHEN an invite is shared THEN it gets the updated set`() = runTest {
+        // Arrange
+        val store = createStore(InMemorySecureStorage())
+        val emitted = mutableListOf<Set<String>>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            store.observeShared(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID).toList(emitted)
+        }
+
+        // Act
+        store.markShared(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID, inviteId = INVITES[0])
+
+        // Assert
+        assertThat(emitted).containsExactly(emptySet<String>(), setOf(INVITES[0])).inOrder()
+    }
+
+    @Test
+    fun `GIVEN a failed read WHEN an invite is shared later THEN the observer still gets it`() = runTest {
+        // Arrange
+        val storage = InMemorySecureStorage()
+        val failingOnce = object : SecureStorage by storage {
+            private var hasFailed = false
+
+            override fun getAsString(key: String): String? {
+                if (!hasFailed) {
+                    hasFailed = true
+                    error("Keystore is unavailable")
+                }
+                return storage.getAsString(key)
+            }
+        }
+        val store = createStore(failingOnce)
+        val emitted = mutableListOf<Set<String>>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            store.observeShared(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID).toList(emitted)
+        }
+
+        // Act
+        store.markShared(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID, inviteId = INVITES[0])
+
+        // Assert
+        assertThat(emitted).containsExactly(emptySet<String>(), setOf(INVITES[0])).inOrder()
+    }
+
+    @Test
+    fun `GIVEN the only account with a shared invite WHEN clear it THEN nothing is left in storage`() = runTest {
+        // Arrange
+        val storage = InMemorySecureStorage()
+        val store = createStore(storage)
+        store.store(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID, invites = INVITES)
+        store.markShared(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID, inviteId = INVITES[0])
+
+        // Act
+        store.clear(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID)
+
+        // Assert
+        assertThat(storage.entries).isEmpty()
     }
 
     private fun createStore(storage: SecureStorage): DefaultJointAccountInvitesStore {
@@ -226,6 +319,8 @@ internal class DefaultJointAccountInvitesStoreTest {
         val USER_WALLET_ID = UserWalletId("FE7F9D116CF285B694715DAE477AF6DC1CFCA02DBD9DCDA2EE2AF523A93E920F")
         const val EXPECTED_KEY =
             "joint_account_invites_FE7F9D116CF285B694715DAE477AF6DC1CFCA02DBD9DCDA2EE2AF523A93E920F"
+        const val EXPECTED_SHARED_KEY =
+            "joint_account_shared_invites_FE7F9D116CF285B694715DAE477AF6DC1CFCA02DBD9DCDA2EE2AF523A93E920F"
 
         const val ACCOUNT_ID = "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6"
         const val OTHER_ACCOUNT_ID = "A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A64B2F1C8A9E7D6053"

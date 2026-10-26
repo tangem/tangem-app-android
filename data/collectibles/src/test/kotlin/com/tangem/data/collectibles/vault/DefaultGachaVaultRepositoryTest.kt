@@ -24,6 +24,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
+import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
 import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.collectibles.vault.GachaVaultLimits
@@ -73,6 +74,7 @@ internal class DefaultGachaVaultRepositoryTest {
     private val cardSdkConfigRepository: CardSdkConfigRepository = mockk()
     private val tangemSdkManager: TangemSdkManager = mockk()
     private val hotWalletSignerFactory: TangemHotWalletSigner.Factory = mockk()
+    private val hotDelegate: CollectiblesHotDelegate = mockk()
 
     private val currencyFactory = CollectiblesVaultCurrencyFactory(MockCollectibles::usdc)
 
@@ -92,6 +94,7 @@ internal class DefaultGachaVaultRepositoryTest {
         cardSdkConfigRepository = cardSdkConfigRepository,
         tangemSdkManager = tangemSdkManager,
         hotWalletSignerFactory = hotWalletSignerFactory,
+        hotDelegate = hotDelegate,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -440,7 +443,11 @@ internal class DefaultGachaVaultRepositoryTest {
 
             // Assert
             assertThat(actual).isEqualTo(
-                MockCollectibles.vaultBalance(amount = BigDecimal("12.5"), currency = expectedCurrency()).right(),
+                MockCollectibles.vaultBalance(
+                    amount = BigDecimal("12.5"),
+                    currency = expectedCurrency(),
+                    ataAddress = VAULT_USDC_ADDRESS,
+                ).right(),
             )
         }
 
@@ -476,19 +483,22 @@ internal class DefaultGachaVaultRepositoryTest {
             }
         }
 
-        /** Working the token out costs a request, and nothing about it can change while the program is deployed. */
         @Test
-        fun `GIVEN the token is already known WHEN getVaultBalance THEN the program is not asked for it again`() =
+        fun `GIVEN the vault is already known WHEN getVaultBalance THEN the program is not asked for it again`() =
             runTest {
                 // Arrange
-                val known = MockCollectibles.usdc(mint = MINT)
+                val known = MockCollectibles.vaultBalance(
+                    amount = BigDecimal.ZERO,
+                    currency = MockCollectibles.usdc(mint = MINT),
+                )
                 stubTokenBalances(tokenBalance(mint = MINT, amount = BigDecimal.ONE))
 
                 // Act
-                val actual = repository.getVaultBalance(userWallet, cachedToken = known)
+                val actual = repository.getVaultBalance(userWallet, cached = known)
 
                 // Assert
-                assertThat(actual.getOrNull()?.usdcToken).isEqualTo(known)
+                assertThat(actual.getOrNull()?.usdcToken).isEqualTo(known.usdcToken)
+                assertThat(actual.getOrNull()?.ataAddress).isEqualTo(known.ataAddress)
                 coVerify(exactly = 0) { walletManager.getCollectiblesVaultUsdc() }
             }
 
@@ -533,6 +543,83 @@ internal class DefaultGachaVaultRepositoryTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SendPurchasePack {
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(walletManagersFacade, networkProvider, walletManager, hotDelegate)
+            coEvery { networkProvider.create(userWallet) } returns network.right()
+            coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns walletManager
+        }
+
+        @Test
+        fun `GIVEN the purchase is sent WHEN sendPurchasePack THEN its hash is returned`() = runTest {
+            // Arrange
+            coEvery {
+                walletManager.sendPurchasePack(DELEGATE.base58, AMOUNT, FEE_AMOUNT, MEMO, any())
+            } returns Result.Success(TransactionSendResult(hash = TX_HASH))
+
+            // Act
+            val actual = sendPurchasePack()
+
+            // Assert
+            assertThat(actual).isEqualTo(TX_HASH.right())
+        }
+
+        @Test
+        fun `GIVEN the hot delegate fails to sign WHEN sendPurchasePack THEN its own error is returned`() = runTest {
+            // Arrange
+            val signingError = CollectiblesAccountError.DelegateSigningFailed(IllegalStateException())
+            coEvery { hotDelegate.sign(any(), any()) } returns signingError.left()
+            coEvery { walletManager.sendPurchasePack(any(), any(), any(), any(), any()) } coAnswers {
+                arg<suspend (ByteArray) -> Result<ByteArray>>(4).invoke(byteArrayOf(1))
+                Result.Failure(BlockchainSdkError.CustomError("signing failed"))
+            }
+
+            // Act
+            val actual = sendPurchasePack()
+
+            // Assert
+            assertThat(actual).isEqualTo(signingError.left())
+        }
+
+        @Test
+        fun `GIVEN the network rejects the purchase WHEN sendPurchasePack THEN it fails`() = runTest {
+            // Arrange
+            coEvery { walletManager.sendPurchasePack(any(), any(), any(), any(), any()) } returns
+                Result.Failure(BlockchainSdkError.CustomError("rpc is down"))
+
+            // Act
+            val actual = sendPurchasePack()
+
+            // Assert
+            assertThat(actual.isLeft()).isTrue()
+        }
+
+        @Test
+        fun `GIVEN no wallet manager WHEN sendPurchasePack THEN nothing is sent`() = runTest {
+            // Arrange
+            coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns null
+
+            // Act
+            val actual = sendPurchasePack()
+
+            // Assert
+            assertThat(actual.isLeft()).isTrue()
+            coVerify(exactly = 0) { walletManager.sendPurchasePack(any(), any(), any(), any(), any()) }
+        }
+
+        private suspend fun sendPurchasePack() = repository.sendPurchasePack(
+            userWallet = userWallet,
+            hotDelegate = DELEGATE,
+            amount = AMOUNT,
+            feeAmount = FEE_AMOUNT,
+            memo = MEMO,
+        )
+    }
+
     private companion object {
 
         val WALLET_ID = UserWalletId("011977")
@@ -545,6 +632,11 @@ internal class DefaultGachaVaultRepositoryTest {
         val DELEGATE = HotDelegatePublicKey("CfzgiAsor8k46oAr1zLybapCbAK44892DYxBJUerNX31")
         val OTHER_DELEGATE = HotDelegatePublicKey("A4ahkivAG4NoZAE8Sy4qv8nn2DU9yoXRQcttuCeGtTJv")
         val LIMITS = GachaVaultLimits.Default
+
+        const val AMOUNT = 50_000_000L
+        const val FEE_AMOUNT = 1_000_000L
+        const val MEMO = "cc-uuid"
+        const val TX_HASH = "hash"
 
         const val CARD_ID = "AC01000000041225"
         val SEED_KEY = byteArrayOf(2, 0xA.toByte(), 0xB.toByte())

@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.animation.TangemAnimationSpec
 import com.tangem.core.ui.ds2.animation.TangemTransition
 import com.tangem.core.ui.ds2.animation.WithoutMaterialWhileAnimating
@@ -74,6 +75,8 @@ private fun Modifier.revealFromBehindGroup(progress: () -> Float): Modifier = la
 
 /**
  * Top navigation bar from the redesigned design system.
+ *
+ * Version: 1.0.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=2270-3&m=dev)
  *
@@ -367,6 +370,8 @@ private fun ColumnScope.TitleSubtitle(title: TextReference, subtitle: TextRefere
 }
 
 object TangemTopNavigation {
+
+    val version = DsVersion(major = 1, minor = 0, patch = 0)
 
     /** Default inner padding of the row: top 8, bottom 16, horizontal 16. */
     @Suppress("MagicNumber")

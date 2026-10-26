@@ -9,7 +9,7 @@ import javax.inject.Inject
 
 /**
  * Resolves what a social login leads to: the recovery key of an existing binding, or
- * [SocialLoginError.BindingNotFound] telling the caller to create a wallet instead (FR-02).
+ * [SocialLoginError.BindingNotFound] telling the caller to create a wallet instead.
  */
 class GetSocialRecoveryKeyUseCase @Inject constructor(
     private val socialRecoveryRepository: SocialRecoveryRepository,

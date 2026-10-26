@@ -6,6 +6,7 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
+import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderState
 import com.tangem.domain.pay.repository.BankOfframpOrderRepository
 import kotlinx.coroutines.delay
@@ -21,18 +22,20 @@ class AwaitBankOfframpSignatureUseCase(
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         orderId: String,
+        request: BankOfframpOrderRequest,
         timeout: Duration = DEFAULT_TIMEOUT,
     ): Either<BankOfframpError, String> {
-        return withTimeoutOrNull(timeout) { pollUntilSignatureRequired(userWalletId, orderId) }
+        return withTimeoutOrNull(timeout) { pollUntilSignatureRequired(userWalletId, orderId, request) }
             ?: BankOfframpError.PollingTimeout.left()
     }
 
     private suspend fun pollUntilSignatureRequired(
         userWalletId: UserWalletId,
         orderId: String,
+        request: BankOfframpOrderRequest,
     ): Either<BankOfframpError, String> {
         while (true) {
-            val state = repository.getOrderState(userWalletId, orderId).getOrElse { return it.left() }
+            val state = repository.getOrderState(userWalletId, orderId, request).getOrElse { return it.left() }
             when (state) {
                 is BankOfframpOrderState.AwaitingSignature -> return state.payloadHash.right()
                 is BankOfframpOrderState.Processing -> delay(POLL_INTERVAL)

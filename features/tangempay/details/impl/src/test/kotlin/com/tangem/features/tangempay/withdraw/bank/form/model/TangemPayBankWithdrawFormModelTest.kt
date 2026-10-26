@@ -126,7 +126,7 @@ internal class TangemPayBankWithdrawFormModelTest {
     }
 
     @Test
-    fun `GIVEN empty value WHEN field loses focus THEN no error`() {
+    fun `GIVEN empty value WHEN field loses focus THEN required error shown`() {
         // Arrange
         val model = createModel()
 
@@ -134,7 +134,8 @@ internal class TangemPayBankWithdrawFormModelTest {
         textField(model, BankWithdrawFormField.AccountNumber).onFocusChange(false)
 
         // Assert
-        assertThat(textField(model, BankWithdrawFormField.AccountNumber).error).isNull()
+        assertThat(textField(model, BankWithdrawFormField.AccountNumber).error)
+            .isEqualTo(resourceReference(R.string.tangempay_order_data_field_required))
         model.onDestroy()
     }
 
@@ -953,7 +954,7 @@ internal class TangemPayBankWithdrawFormModelTest {
     }
 
     @Test
-    fun `GIVEN suggestions shown and blank fields WHEN continue clicked THEN suggestions hidden and blanks required`() {
+    fun `GIVEN suggestions shown and blank fields WHEN continue clicked THEN fields revealed without errors`() {
         // Arrange
         savedAccounts.value = listOf(didenko)
         val model = createModel()
@@ -965,12 +966,11 @@ internal class TangemPayBankWithdrawFormModelTest {
 
         // Assert
         assertThat(suggestions(model)).isEmpty()
-        assertThat(model.uiState.value.fields.map { it.error }).containsExactly(
-            null,
-            resourceReference(R.string.tangempay_order_data_field_required),
-            resourceReference(R.string.tangempay_order_data_field_required),
-        ).inOrder()
+        assertThat(model.uiState.value.fields.map { it.error }).containsExactly(null, null, null)
         verify(exactly = 0) { onContinue(any()) }
+        verify(exactly = 0) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.RecipientDetailsContinueClicked>())
+        }
         model.onDestroy()
     }
 

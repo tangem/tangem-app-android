@@ -11,6 +11,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
@@ -94,6 +95,7 @@ internal class SendAmountModelTest {
         fun availability(model: SwapModel) = runTest {
             // Arrange
             every { cryptoCurrency.isCustom } returns model.isCustom
+            every { cryptoCurrency.network.derivationPath } returns model.derivationPath
             val wallet = coldWallet(isMultiCurrency = model.isMultiCurrency)
             every { getUserWalletUseCase.invokeFlow(testUserWalletId) } returns flowOf(wallet.right())
             val predefined = if (model.isFromMainScreenQr) {
@@ -114,6 +116,20 @@ internal class SendAmountModelTest {
             SwapModel(isCustom = true, isMultiCurrency = true, isFromMainScreenQr = false, expected = false),
             SwapModel(isCustom = false, isMultiCurrency = false, isFromMainScreenQr = false, expected = false),
             SwapModel(isCustom = false, isMultiCurrency = true, isFromMainScreenQr = true, expected = false),
+            SwapModel(
+                isCustom = false,
+                isMultiCurrency = true,
+                isFromMainScreenQr = false,
+                derivationPath = Network.DerivationPath.Custom("m/44'/60'/1'/0/0"),
+                expected = true,
+            ),
+            SwapModel(
+                isCustom = false,
+                isMultiCurrency = true,
+                isFromMainScreenQr = false,
+                derivationPath = Network.DerivationPath.Joint("m/44'/60'/888888'/0/0"),
+                expected = false,
+            ),
         )
     }
 
@@ -298,6 +314,7 @@ internal class SendAmountModelTest {
         val isCustom: Boolean,
         val isMultiCurrency: Boolean,
         val isFromMainScreenQr: Boolean,
+        val derivationPath: Network.DerivationPath = Network.DerivationPath.Card("m/44'/60'/0'/0/0"),
         val expected: Boolean,
     )
 

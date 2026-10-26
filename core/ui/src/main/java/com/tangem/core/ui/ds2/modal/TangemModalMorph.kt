@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -119,16 +120,27 @@ internal class ModalMorphGeometry {
      */
     var contentBottomInset: Int = 0
 
+    /**
+     * Gap (px) between the card's bottom edge and the window's bottom edge — the resting margin plus the
+     * navigation-bar clearance that has not moved inside the card yet. [modalCardFill] subtracts it from the IME
+     * inset, which is measured from the window bottom. Plain value, like [contentBottomInset].
+     */
+    var cardBottomMargin: Int = 0
+
     /** Cache of the content's probed intrinsic height across morph frames. */
     val contentHeightCache = ModalContentHeightCache()
+
+    /** The card height chasing the content's, so swapping the content resizes the card smoothly. */
+    val contentHeight = ModalContentHeightAnimation()
 }
 
 /**
  * Caches the content's intrinsic height across morph animation frames: while one of the morph
- * springs is running, the extra layout passes are caused by the animated values — the content
- * itself has not changed — so the last probed height is reused instead of traversing the content
- * tree on every frame. The trade-off: content that resizes itself mid-morph keeps the previous
- * height until the spring settles, and the settling pass re-probes it.
+ * springs (fullness, focus or content height) is running, the extra layout passes are caused by
+ * the animated values — the content itself has not changed — so the last probed height is reused
+ * instead of traversing the content tree on every frame. The trade-off: content that resizes
+ * itself mid-morph keeps the previous height until the spring settles, and the settling pass
+ * re-probes it.
  */
 @PublishedApi
 internal class ModalContentHeightCache {
@@ -142,6 +154,40 @@ internal class ModalContentHeightCache {
             height = measurable.minIntrinsicHeight(width)
         }
         return height
+    }
+}
+
+/**
+ * The card is measured from its content's intrinsic height, and an intrinsic probe reports the final size of the
+ * content at once — an `animateContentSize` inside never reaches the card. So when the content changes height on a
+ * shown card (one screen of a modal replacing another), the card itself rides a spring to the new height. The first
+ * height is adopted as is: a modal opens at its size instead of growing out of nothing.
+ */
+@PublishedApi
+internal class ModalContentHeightAnimation {
+
+    /** Latest probed content height (px), written during layout; -1 until the first pass. */
+    var target: Int by mutableIntStateOf(-1)
+
+    private val animatedHeight = Animatable(initialValue = 0f)
+
+    /** Whether the first height has been adopted; until then — and in previews — the measured height renders as is. */
+    private var isAnimationDriven: Boolean by mutableStateOf(false)
+
+    val isRunning: Boolean
+        get() = animatedHeight.isRunning
+
+    fun heightOf(measuredHeight: Int): Int {
+        return if (isAnimationDriven) animatedHeight.value.roundToInt() else measuredHeight
+    }
+
+    suspend fun follow(height: Int) {
+        if (isAnimationDriven) {
+            animatedHeight.animateTo(targetValue = height.toFloat(), animationSpec = ModalMorphAnimationSpec)
+        } else {
+            animatedHeight.snapTo(targetValue = height.toFloat())
+            isAnimationDriven = true
+        }
     }
 }
 
@@ -174,6 +220,11 @@ internal fun ModalMorphAnimationEffect(geometry: ModalMorphGeometry) {
                 }
         }
         launch {
+            snapshotFlow { geometry.contentHeight.target }
+                .filter { it >= 0 }
+                .collectLatest { height -> geometry.contentHeight.follow(height = height) }
+        }
+        launch {
             snapshotFlow { geometry.isFocused }.collectLatest { isFocused ->
                 geometry.focusExpansion.animateTo(
                     targetValue = if (isFocused) 1f else 0f,
@@ -194,6 +245,17 @@ internal fun modalMorphTarget(intrinsicHeight: Int, maxHeight: Int): Float {
     if (maxHeight <= 0) return 0f
     val fraction = intrinsicHeight.toFloat() / maxHeight
     return ((fraction - TIER_FULL_START) / (1f - TIER_FULL_START)).coerceIn(0f, 1f)
+}
+
+/**
+ * Bottom strip of the card the content must keep clear of: the navigation-bar clearance [navClearance] or the part
+ * of the keyboard that overlaps the card, whichever is taller. The IME inset already spans the navigation bar and is
+ * measured from the window bottom, so the card's own [cardBottomMargin] above that edge is taken off it — adding
+ * the two would float the content a navigation bar above the keyboard.
+ */
+@PublishedApi
+internal fun modalContentBottomCarve(navClearance: Int, imeBottom: Int, cardBottomMargin: Int, cardHeight: Int): Int {
+    return max(navClearance, imeBottom - cardBottomMargin).coerceIn(0, cardHeight.coerceAtLeast(0))
 }
 
 /**
@@ -256,10 +318,15 @@ internal fun Modifier.modalCardLayout(geometry: ModalMorphGeometry, windowInsets
         val maxHeight = (constraints.maxHeight - windowInsets.getTop(this)).coerceAtLeast(0)
 
         val probeWidth = (maxWidth - 2 * ModalInsetMedium.roundToPx()).coerceAtLeast(0)
-        val isMorphing = geometry.animatedFullness.isRunning || geometry.focusExpansion.isRunning
+        val isMorphing = geometry.animatedFullness.isRunning ||
+            geometry.focusExpansion.isRunning ||
+            geometry.contentHeight.isRunning
         val intrinsicHeight = geometry.contentHeightCache
             .heightOf(measurable = measurable, width = probeWidth, isMorphing = isMorphing)
             .coerceAtMost(maxHeight)
+
+        if (geometry.contentHeight.target != intrinsicHeight) geometry.contentHeight.target = intrinsicHeight
+        val contentHeight = geometry.contentHeight.heightOf(measuredHeight = intrinsicHeight).coerceAtMost(maxHeight)
 
         val target = modalMorphTarget(intrinsicHeight = intrinsicHeight, maxHeight = maxHeight)
         if (geometry.target != target) geometry.target = target
@@ -275,9 +342,10 @@ internal fun Modifier.modalCardLayout(geometry: ModalMorphGeometry, windowInsets
         val baseInset = lerp(ModalInsetMedium.toPx(), 0f, fullness)
         val sideInset = baseInset.roundToInt().coerceAtLeast(0)
         val bottomInset = (baseInset + navBottom * (1f - fullness)).roundToInt().coerceAtLeast(0)
+        geometry.cardBottomMargin = bottomInset
 
         val maxCardHeight = (maxHeight - bottomInset).coerceAtLeast(0)
-        val naturalHeight = (intrinsicHeight + navInset).coerceAtMost(maxCardHeight)
+        val naturalHeight = (contentHeight + navInset).coerceAtMost(maxCardHeight)
         val cardHeight = lerp(naturalHeight, maxCardHeight, focusExpansion)
         val cardWidth = (maxWidth - 2 * sideInset).coerceAtLeast(0)
 
@@ -298,7 +366,9 @@ internal fun Modifier.modalCardLayout(geometry: ModalMorphGeometry, windowInsets
  * re-wrap its text shorter, and a centered card would then float its title below the top corner.
  *
  * The bottom of the card carves out [ModalMorphGeometry.contentBottomInset] — the navigation-bar
- * clearance an edge-to-edge card provides *inside* instead of as a bottom margin.
+ * clearance an edge-to-edge card provides *inside* instead of as a bottom margin — or, while the
+ * keyboard is up, the part of [imeInsets] that overlaps the card (see [modalContentBottomCarve]).
+ * The inset is read during measurement, so the content follows the keyboard animation frame by frame.
  *
  * Intrinsic queries pass straight through to the content — deliberately without the inset — so the
  * height probe of [modalCardLayout] reads the content's own intrinsics (a `Column` computes those
@@ -307,25 +377,37 @@ internal fun Modifier.modalCardLayout(geometry: ModalMorphGeometry, windowInsets
  * Expects the fixed constraints [modalCardLayout] measures the card with.
  */
 @PublishedApi
-internal fun Modifier.modalCardFill(geometry: ModalMorphGeometry): Modifier {
-    return this then ModalCardFillElement(geometry)
+internal fun Modifier.modalCardFill(geometry: ModalMorphGeometry, imeInsets: WindowInsets): Modifier {
+    return this then ModalCardFillElement(geometry = geometry, imeInsets = imeInsets)
 }
 
-private data class ModalCardFillElement(val geometry: ModalMorphGeometry) : ModifierNodeElement<ModalCardFillNode>() {
+private data class ModalCardFillElement(
+    val geometry: ModalMorphGeometry,
+    val imeInsets: WindowInsets,
+) : ModifierNodeElement<ModalCardFillNode>() {
 
-    override fun create(): ModalCardFillNode = ModalCardFillNode(geometry)
+    override fun create(): ModalCardFillNode = ModalCardFillNode(geometry = geometry, imeInsets = imeInsets)
 
     override fun update(node: ModalCardFillNode) {
         node.geometry = geometry
+        node.imeInsets = imeInsets
     }
 }
 
-private class ModalCardFillNode(var geometry: ModalMorphGeometry) : Modifier.Node(), LayoutModifierNode {
+private class ModalCardFillNode(
+    var geometry: ModalMorphGeometry,
+    var imeInsets: WindowInsets,
+) : Modifier.Node(), LayoutModifierNode {
 
     override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints): MeasureResult {
         val cardWidth = constraints.maxWidth
         val cardHeight = constraints.maxHeight
-        val bottomInset = geometry.contentBottomInset.coerceIn(0, cardHeight)
+        val bottomInset = modalContentBottomCarve(
+            navClearance = geometry.contentBottomInset,
+            imeBottom = imeInsets.getBottom(this),
+            cardBottomMargin = geometry.cardBottomMargin,
+            cardHeight = cardHeight,
+        )
         val placeable = measurable.measure(Constraints.fixed(width = cardWidth, height = cardHeight - bottomInset))
         return layout(cardWidth, cardHeight) {
             placeable.placeRelative(x = 0, y = 0)

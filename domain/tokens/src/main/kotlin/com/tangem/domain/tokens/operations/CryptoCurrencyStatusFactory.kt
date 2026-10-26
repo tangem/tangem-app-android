@@ -180,7 +180,6 @@ object CryptoCurrencyStatusFactory {
             hasCurrentNetworkTransactions = status.hasCurrentNetworkTransactions(),
             pendingTransactions = status.getCurrentTransactions(id),
             networkAddress = status.address,
-            stakingBalance = null,
             yieldSupplyStatus = status.getYieldSupplyStatus(id),
             contributions = contributions,
             sources = CryptoCurrencyStatus.Sources(
@@ -203,7 +202,6 @@ object CryptoCurrencyStatusFactory {
             hasCurrentNetworkTransactions = status.hasCurrentNetworkTransactions(),
             pendingTransactions = status.getCurrentTransactions(id),
             networkAddress = status.address,
-            stakingBalance = null,
             yieldSupplyStatus = status.getYieldSupplyStatus(id),
             contributions = contributions,
             sources = CryptoCurrencyStatus.Sources(
@@ -229,7 +227,6 @@ object CryptoCurrencyStatusFactory {
             hasCurrentNetworkTransactions = status.hasCurrentNetworkTransactions(),
             pendingTransactions = status.getCurrentTransactions(id),
             networkAddress = status.address,
-            stakingBalance = null,
             yieldSupplyStatus = status.getYieldSupplyStatus(id),
             contributions = contributions,
             sources = CryptoCurrencyStatus.Sources(

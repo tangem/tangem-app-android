@@ -88,7 +88,7 @@ internal class EstimateFeeForTokenUseCaseTest {
         } returns mockk<SmartContractCallData>(relaxed = true)
         coEvery { walletManager.getGasLimit(any(), MODULE_ADDRESS, any()) } returns Result.Success(WITHDRAW_GAS)
         // The plain-balance probe reverts whenever the EOA holds nothing liquid.
-        coEvery { walletManager.getGasLimit(any(), FEE_RECEIVER, any()) } returns insufficientFundsFailure()
+        coEvery { walletManager.getGasLimit(any(), FEE_RECEIVER, any()) } returns revertedEstimateFailure()
         coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns accountStatusList()
     }
 
@@ -270,7 +270,6 @@ internal class EstimateFeeForTokenUseCaseTest {
         fiatAmount = amount * fiatRate,
         fiatRate = fiatRate,
         priceChange = BigDecimal.ZERO,
-        stakingBalance = null,
         yieldSupplyStatus = yieldSupplyStatus,
         hasCurrentNetworkTransactions = false,
         pendingTransactions = emptySet(),
@@ -289,9 +288,9 @@ internal class EstimateFeeForTokenUseCaseTest {
         effectiveProtocolBalance = effectiveProtocolBalance,
     )
 
-    private fun insufficientFundsFailure() = Result.Failure(
+    private fun revertedEstimateFailure() = Result.Failure(
         BlockchainSdkError.WrappedThrowable(
-            BlockchainSdkError.Ethereum.InsufficientFundsForOperation("insufficient funds for transfer"),
+            BlockchainSdkError.Ethereum.ExecutionReverted(code = 3, message = "execution reverted"),
         ),
     )
 
