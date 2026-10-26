@@ -10,7 +10,9 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.repository.McpRepository
@@ -22,6 +24,7 @@ import com.tangem.domain.transaction.error.SendIntentError
 import com.tangem.domain.transaction.models.SendIntent
 import com.tangem.domain.transaction.usecase.GetSendIntentUseCase
 import com.tangem.features.send.api.mcp.SendIntentComponent
+import com.tangem.features.send.impl.R
 import com.tangem.features.send.mcp.SendIntentSendRouteConverter
 import com.tangem.features.send.mcp.SendIntentSource
 import com.tangem.features.send.mcp.SendIntentSourceResolver
@@ -139,7 +142,10 @@ internal class SendIntentModelTest {
 
         // Assert
         assertThat(model.shownOffer().title).isEqualTo(
-            stringReference("mcp.claude.com Agent wants to send 42.00\u00A0USDT"),
+            resourceReference(
+                R.string.mcp_send_intent_offer_title,
+                wrappedList(stringReference("mcp.claude.com"), "42.00\u00A0USDT"),
+            ),
         )
         model.onDestroy()
     }
@@ -169,7 +175,7 @@ internal class SendIntentModelTest {
 
             // Assert
             assertThat(model.shownOffer().agent).isEqualTo(
-                SendIntentAgentUM.Unknown(iconUrl = null, label = stringReference("Unknown")),
+                SendIntentAgentUM.Unknown(iconUrl = null, label = resourceReference(R.string.mcp_intent_host)),
             )
             model.onDestroy()
         }
@@ -190,7 +196,10 @@ internal class SendIntentModelTest {
         // Assert
         assertThat(offerBeforeTimeout).isNull()
         assertThat(model.shownOffer().title).isEqualTo(
-            stringReference("Unknown Agent wants to send 42.00\u00A0USDT"),
+            resourceReference(
+                R.string.mcp_send_intent_offer_title,
+                wrappedList(resourceReference(R.string.mcp_intent_unknown_agent_name), "42.00\u00A0USDT"),
+            ),
         )
         model.onDestroy()
     }
@@ -212,9 +221,9 @@ internal class SendIntentModelTest {
 
         // Assert
         assertThat(status.variant).isEqualTo(TangemModalStatus.Variant.Warning)
-        assertThat(status.title).isEqualTo(stringReference("Can’t reach intent"))
+        assertThat(status.title).isEqualTo(resourceReference(R.string.mcp_send_intent_cant_reach_title))
         assertThat(status.subtitle).isNull()
-        assertThat(status.primaryButton.text).isEqualTo(stringReference("Got it"))
+        assertThat(status.primaryButton.text).isEqualTo(resourceReference(R.string.common_got_it))
         verify(exactly = 1) { router.pop(any()) }
         verify(exactly = 0) { router.navigate(any(), any()) }
         coVerify(exactly = 0) { mcpRepository.getAgent(any()) }
@@ -294,9 +303,11 @@ internal class SendIntentModelTest {
 
             // Assert
             assertThat(status.variant).isEqualTo(TangemModalStatus.Variant.Info)
-            assertThat(status.title).isEqualTo(stringReference("This intent has already been processed"))
-            assertThat(status.subtitle).isEqualTo(stringReference("Send 42.00\u00a0USDT"))
-            assertThat(status.primaryButton.text).isEqualTo(stringReference("Got it"))
+            assertThat(status.title).isEqualTo(resourceReference(R.string.mcp_intent_processed_title))
+            assertThat(status.subtitle).isEqualTo(
+                resourceReference(R.string.mcp_send_intent_processed_subtitle, wrappedList("42.00\u00a0USDT")),
+            )
+            assertThat(status.primaryButton.text).isEqualTo(resourceReference(R.string.common_got_it))
             verify(exactly = 1) { router.pop(any()) }
             model.onDestroy()
         }
@@ -346,7 +357,7 @@ internal class SendIntentModelTest {
         // Assert
         val status = model.shownStatus()
         assertThat(status.variant).isEqualTo(TangemModalStatus.Variant.Warning)
-        assertThat(status.primaryButton.text).isEqualTo(stringReference("Try again"))
+        assertThat(status.primaryButton.text).isEqualTo(resourceReference(R.string.alert_button_try_again))
         verify(exactly = 0) { router.pop(any()) }
         model.onDestroy()
     }
@@ -484,7 +495,7 @@ internal class SendIntentModelTest {
             verify(exactly = 0) { router.pop(any()) }
             status.primaryButton.onClick()
             verify(exactly = 1) { router.pop(any()) }
-            assertThat(status.title).isEqualTo(stringReference("Can’t reach intent"))
+            assertThat(status.title).isEqualTo(resourceReference(R.string.mcp_send_intent_cant_reach_title))
             model.onDestroy()
         }
 
