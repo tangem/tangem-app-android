@@ -22,6 +22,7 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.isCollectibles
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.account.models.AccountList
@@ -124,7 +125,7 @@ internal class DefaultAccountsCRUDRepository(
         if (response != null) {
             val converter = ArchivedAccountConverter(userWalletId = userWalletId)
 
-            val archivedAccounts = converter.convertList(input = response.accounts)
+            val archivedAccounts = converter.convertList(input = response.accounts.filterNot { it.isCollectibles })
 
             store.store(value = archivedAccounts)
         }

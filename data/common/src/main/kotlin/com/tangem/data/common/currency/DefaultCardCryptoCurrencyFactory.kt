@@ -179,6 +179,7 @@ internal class DefaultCardCryptoCurrencyFactory(
             when (accountDTO.type) {
                 WalletAccountDTO.Type.JOINT -> createJointAccountCurrencies(accountDTO, userWallet, tokens)
                 WalletAccountDTO.Type.CRYPTO, null -> createPersonalAccountCurrencies(accountDTO, userWallet, tokens)
+                WalletAccountDTO.Type.COLLECTIBLES -> emptyList()
             }
         }
     }
